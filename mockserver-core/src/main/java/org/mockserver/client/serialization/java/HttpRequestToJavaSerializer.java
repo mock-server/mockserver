@@ -2,7 +2,6 @@ package org.mockserver.client.serialization.java;
 
 import com.google.common.base.Strings;
 import org.apache.commons.text.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.*;
 
@@ -16,23 +15,35 @@ import static org.mockserver.client.serialization.java.ExpectationToJavaSerializ
  */
 public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest> {
 
+    private final Base64Converter base64Converter = new Base64Converter();
+
+    public String serializeAsJava(int numberOfSpacesToIndent, HttpRequest[] httpRequests) {
+        StringBuilder output = new StringBuilder();
+        for (HttpRequest httpRequest : httpRequests) {
+            output.append(serializeAsJava(numberOfSpacesToIndent, httpRequest));
+            output.append(NEW_LINE);
+            output.append(NEW_LINE);
+        }
+        return output.toString();
+    }
+
     @Override
     public String serializeAsJava(int numberOfSpacesToIndent, HttpRequest httpRequest) {
         StringBuffer output = new StringBuffer();
         if (httpRequest != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output);
             output.append("request()");
-            if (httpRequest.getMethod() != null && StringUtils.isNotEmpty(httpRequest.getMethod().getValue())) {
+            if (!Strings.isNullOrEmpty(httpRequest.getMethod().getValue())) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withMethod(\"").append(httpRequest.getMethod().getValue()).append("\")");
             }
-            if (httpRequest.getPath() != null && StringUtils.isNotEmpty(httpRequest.getPath().getValue())) {
+            if (!Strings.isNullOrEmpty(httpRequest.getPath().getValue())) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withPath(\"").append(httpRequest.getPath().getValue()).append("\")");
             }
             outputHeaders(numberOfSpacesToIndent + 1, output, httpRequest.getHeaders());
             outputCookies(numberOfSpacesToIndent + 1, output, httpRequest.getCookies());
-            outputParameters(numberOfSpacesToIndent + 1, output, "QueryStringParameter", httpRequest.getQueryStringParameters());
+            outputQueryStringParameter(numberOfSpacesToIndent + 1, output, httpRequest.getQueryStringParameters());
             if (httpRequest.isSecure() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withSecure(").append(httpRequest.isSecure().toString()).append(")");
@@ -92,7 +103,7 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
                 } else if (httpRequest.getBody() instanceof BinaryBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     BinaryBody body = (BinaryBody) httpRequest.getBody();
-                    output.append(".withBody(Base64Converter.base64StringToBytes(\"").append(Base64Converter.bytesToBase64String(body.getRawBytes())).append("\"))");
+                    output.append(".withBody(new Base64Converter().base64StringToBytes(\"").append(base64Converter.bytesToBase64String(body.getRawBytes())).append("\"))");
                 }
             }
         }
@@ -100,9 +111,9 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
         return output.toString();
     }
 
-    private void outputParameters(int numberOfSpacesToIndent, StringBuffer output, String fieldName, List<Parameter> parameters) {
+    private void outputQueryStringParameter(int numberOfSpacesToIndent, StringBuffer output, List<Parameter> parameters) {
         if (parameters.size() > 0) {
-            appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".with").append(fieldName).append("s(");
+            appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".withQueryStringParameters(");
             appendObject(numberOfSpacesToIndent, output, new ParameterToJavaSerializer(), parameters);
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
         }
@@ -124,8 +135,8 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
         }
     }
 
-    private <T extends ObjectWithReflectiveEqualsHashCodeToString> StringBuffer appendObject(int numberOfSpacesToIndent, StringBuffer output, MultiValueToJavaSerializer<T> toJavaSerializer, List<T> objects) {
-        return output.append(toJavaSerializer.serializeAsJava(numberOfSpacesToIndent + 1, objects));
+    private <T extends ObjectWithReflectiveEqualsHashCodeToString> void appendObject(int numberOfSpacesToIndent, StringBuffer output, MultiValueToJavaSerializer<T> toJavaSerializer, List<T> objects) {
+        output.append(toJavaSerializer.serializeAsJava(numberOfSpacesToIndent + 1, objects));
     }
 
     private StringBuffer appendNewLineAndIndent(int numberOfSpacesToIndent, StringBuffer output) {

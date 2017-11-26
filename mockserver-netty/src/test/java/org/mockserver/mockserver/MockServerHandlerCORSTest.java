@@ -206,7 +206,7 @@ public class MockServerHandlerCORSTest extends MockServerHandlerTest {
     @Test
     public void shouldNotAddCORSHeadersForInvalidRequest() {
         // given - a request with missing body
-        HttpRequest request = request().withMethod("PUT").withPath("/bind").withBody("\n\n--- IGNORE THE FOLLOWING \"Exception while parsing PortBinding\" EXCEPTION ---\n\n");
+        HttpRequest request = request().withMethod("PUT").withPath("/bind").withBody(NEW_LINE + NEW_LINE + "--- IGNORE THE FOLLOWING \"Exception while parsing PortBinding\" EXCEPTION ---" + NEW_LINE + NEW_LINE);
 
         // when
         embeddedChannel.writeInbound(request);

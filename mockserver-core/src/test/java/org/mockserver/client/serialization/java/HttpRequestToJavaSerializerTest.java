@@ -7,6 +7,7 @@ import org.mockserver.model.*;
 
 import java.io.IOException;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 
@@ -14,6 +15,8 @@ import static org.mockserver.character.Character.NEW_LINE;
  * @author jamesdbloom
  */
 public class HttpRequestToJavaSerializerTest {
+
+    private final Base64Converter base64Converter = new Base64Converter();
 
     @Test
     public void shouldSerializeFullObjectAsJava() throws IOException {
@@ -86,11 +89,11 @@ public class HttpRequestToJavaSerializerTest {
         // when
         assertEquals(NEW_LINE +
                         "        request()" + NEW_LINE +
-                        "                .withBody(Base64Converter.base64StringToBytes(\"" + Base64Converter.bytesToBase64String("responseBody".getBytes()) + "\"))",
+                        "                .withBody(new Base64Converter().base64StringToBytes(\"" + base64Converter.bytesToBase64String("responseBody".getBytes(UTF_8)) + "\"))",
                 new HttpRequestToJavaSerializer().serializeAsJava(1,
                         new HttpRequest()
                                 .withBody(
-                                        new BinaryBody("responseBody".getBytes())
+                                        new BinaryBody("responseBody".getBytes(UTF_8))
                                 )
                 ));
     }

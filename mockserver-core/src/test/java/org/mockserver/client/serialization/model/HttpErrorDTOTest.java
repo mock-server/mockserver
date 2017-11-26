@@ -6,6 +6,7 @@ import org.mockserver.model.HttpError;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -20,7 +21,7 @@ public class HttpErrorDTOTest {
         // given
         Delay delay = new Delay(TimeUnit.HOURS, 1);
         Boolean dropConnection = Boolean.TRUE;
-        byte[] responseBytes = "some_bytes".getBytes();
+        byte[] responseBytes = "some_bytes".getBytes(UTF_8);
 
         HttpError httpError = new HttpError()
                 .withDelay(delay)
@@ -41,7 +42,7 @@ public class HttpErrorDTOTest {
         // given
         Delay delay = new Delay(TimeUnit.HOURS, 1);
         Boolean dropConnection = Boolean.TRUE;
-        byte[] responseBytes = "some_bytes".getBytes();
+        byte[] responseBytes = "some_bytes".getBytes(UTF_8);
 
         HttpError httpError = new HttpError()
                 .withDelay(delay)
@@ -62,7 +63,7 @@ public class HttpErrorDTOTest {
         // given
         DelayDTO delay = new DelayDTO(new Delay(TimeUnit.HOURS, 1));
         Boolean dropConnection = Boolean.TRUE;
-        byte[] responseBytes = "some_bytes".getBytes();
+        byte[] responseBytes = "some_bytes".getBytes(UTF_8);
 
         HttpError httpError = new HttpError();
 

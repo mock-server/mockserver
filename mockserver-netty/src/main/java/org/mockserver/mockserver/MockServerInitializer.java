@@ -39,6 +39,6 @@ public class MockServerInitializer extends PortUnificationHandler {
         pipeline.addLast(new MockServerServerCodec(isSecure));
 
         // add mock server handlers
-        pipeline.addLast(new MockServerHandler(mockServer, mockServerMatcher, webSocketClientRegistry, ctx.channel().attr(MockServer.LOG_FILTER).get()));
+        pipeline.addLast(new MockServerHandler(mockServer, mockServerMatcher, webSocketClientRegistry, ctx.channel().attr(MockServer.REQUEST_LOG_FILTER).get()));
     }
 }

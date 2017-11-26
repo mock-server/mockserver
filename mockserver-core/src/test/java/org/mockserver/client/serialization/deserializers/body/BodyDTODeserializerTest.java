@@ -12,6 +12,7 @@ import org.mockserver.model.*;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableString.not;
@@ -1152,7 +1153,7 @@ public class BodyDTODeserializerTest {
         String json = ("{" + NEW_LINE +
                 "    \"httpRequest\": {" + NEW_LINE +
                 "        \"body\" : {" + NEW_LINE +
-                "            \"base64Bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + NEW_LINE +
+                "            \"base64Bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes(UTF_8)) + "\"" + NEW_LINE +
                 "        }" + NEW_LINE +
                 "    }" + NEW_LINE +
                 "}");
@@ -1164,7 +1165,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
                 .setHttpRequest(
                         new HttpRequestDTO()
-                                .setBody(new BinaryBodyDTO(new BinaryBody("some_value".getBytes())))
+                                .setBody(new BinaryBodyDTO(new BinaryBody("some_value".getBytes(UTF_8))))
                 ), expectationDTO);
     }
 
@@ -1175,7 +1176,7 @@ public class BodyDTODeserializerTest {
                 "    \"httpRequest\": {" + NEW_LINE +
                 "        \"body\" : {" + NEW_LINE +
                 "            \"not\" : true," + NEW_LINE +
-                "            \"base64Bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + NEW_LINE +
+                "            \"base64Bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes(UTF_8)) + "\"" + NEW_LINE +
                 "        }" + NEW_LINE +
                 "    }" + NEW_LINE +
                 "}");
@@ -1187,7 +1188,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
                 .setHttpRequest(
                         new HttpRequestDTO()
-                                .setBody(new BinaryBodyDTO(new BinaryBody("some_value".getBytes()), true))
+                                .setBody(new BinaryBodyDTO(new BinaryBody("some_value".getBytes(UTF_8)), true))
                 ), expectationDTO);
     }
 
@@ -1198,7 +1199,7 @@ public class BodyDTODeserializerTest {
                 "    \"httpRequest\": {" + NEW_LINE +
                 "        \"body\" : {" + NEW_LINE +
                 "            \"contentType\" : \"" + MediaType.ANY_VIDEO_TYPE + "\"," + NEW_LINE +
-                "            \"base64Bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + NEW_LINE +
+                "            \"base64Bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes(UTF_8)) + "\"" + NEW_LINE +
                 "        }" + NEW_LINE +
                 "    }" + NEW_LINE +
                 "}");
@@ -1210,7 +1211,7 @@ public class BodyDTODeserializerTest {
         ExpectationDTO expected = new ExpectationDTO()
                 .setHttpRequest(
                         new HttpRequestDTO()
-                                .setBody(new BinaryBodyDTO(new BinaryBody("some_value".getBytes(), MediaType.ANY_VIDEO_TYPE)))
+                                .setBody(new BinaryBodyDTO(new BinaryBody("some_value".getBytes(UTF_8), MediaType.ANY_VIDEO_TYPE)))
                 );
         assertEquals(expected, expectationDTO);
     }
@@ -1222,7 +1223,7 @@ public class BodyDTODeserializerTest {
                 "    \"httpRequest\": {" + NEW_LINE +
                 "        \"body\" : {" + NEW_LINE +
                 "            \"type\" : \"BINARY\"," + NEW_LINE +
-                "            \"base64Bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes()) + "\"" + NEW_LINE +
+                "            \"base64Bytes\" : \"" + DatatypeConverter.printBase64Binary("some_value".getBytes(UTF_8)) + "\"" + NEW_LINE +
                 "        }" + NEW_LINE +
                 "    }" + NEW_LINE +
                 "}");
@@ -1234,7 +1235,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
                 .setHttpRequest(
                         new HttpRequestDTO()
-                                .setBody(new BinaryBodyDTO(new BinaryBody("some_value".getBytes())))
+                                .setBody(new BinaryBodyDTO(new BinaryBody("some_value".getBytes(UTF_8))))
                 ), expectationDTO);
     }
 

@@ -14,6 +14,9 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 
+import static com.google.common.base.Charsets.UTF_8;
+import static org.mockserver.character.Character.NEW_LINE;
+
 /**
  * @author jamesdbloom
  */
@@ -32,14 +35,14 @@ public class IOStreamUtils {
             if (line.length() == 0) {
 
                 if (contentLength != null) {
-                    result.append('\n');
+                    result.append(NEW_LINE);
                     for (int position = 0; position < contentLength; position++) {
                         result.append((char) bufferedReader.read());
                     }
                 }
                 break;
             }
-            result.append(line).append('\n');
+            result.append(line).append(NEW_LINE);
         }
         return result.toString();
     }
@@ -74,7 +77,7 @@ public class IOStreamUtils {
     }
 
     public static ByteBuffer createBasicByteBuffer(String input) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(input.length()).put(input.getBytes());
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(input.length()).put(input.getBytes(UTF_8));
         byteBuffer.flip();
         return byteBuffer;
     }

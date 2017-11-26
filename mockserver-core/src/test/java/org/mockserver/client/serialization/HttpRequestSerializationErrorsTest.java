@@ -19,6 +19,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
@@ -89,7 +90,7 @@ public class HttpRequestSerializationErrorsTest {
     public void shouldHandleExceptionWhileDeserializingArray() throws IOException {
         // given
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'requestBytes': was expecting ('true', 'false' or 'null')\n" +
+        thrown.expectMessage("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'requestBytes': was expecting ('true', 'false' or 'null')" + NEW_LINE +
                 " at [Source: (String)\"requestBytes\"; line: 1, column: 25]");
 
         // when
@@ -100,7 +101,7 @@ public class HttpRequestSerializationErrorsTest {
     public void shouldValidateInputForArray() throws IOException {
         // given
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("1 error:\n" +
+        thrown.expectMessage("1 error:" + NEW_LINE +
                 " - a request or request array is required but value was \"\"");
 
         // when

@@ -261,11 +261,6 @@
 
             <!-- templating -->
             <dependency>
-                <groupId>org.codehaus.groovy</groupId>
-                <artifactId>groovy-all</artifactId>
-                <version>2.4.8</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.velocity</groupId>
                 <artifactId>velocity-engine-scripting</artifactId>
                 <version>2.0</version>

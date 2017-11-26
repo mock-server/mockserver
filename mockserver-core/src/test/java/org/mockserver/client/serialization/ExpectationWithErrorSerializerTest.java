@@ -17,8 +17,10 @@ import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertThat;
@@ -48,7 +50,7 @@ public class ExpectationWithErrorSerializerTest {
                     error()
                             .withDelay(new Delay(TimeUnit.MICROSECONDS, 1))
                             .withDropConnection(true)
-                            .withResponseBytes("some_bytes".getBytes())
+                            .withResponseBytes("some_bytes".getBytes(UTF_8))
 
             );
     private final ExpectationDTO fullExpectationDTO = new ExpectationDTO()
@@ -56,17 +58,17 @@ public class ExpectationWithErrorSerializerTest {
                     new HttpRequestDTO()
                             .setMethod(string("GET"))
                             .setPath(string("somePath"))
-                            .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
+                            .setQueryStringParameters(Collections.singletonList(new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                             .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                            .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
-                            .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
+                            .setHeaders(Collections.singletonList(new HeaderDTO(new Header("headerName", Collections.singletonList("headerValue")))))
+                            .setCookies(Collections.singletonList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
             )
             .setHttpError(
                     new HttpErrorDTO(
                             new HttpError()
                                     .withDelay(new Delay(TimeUnit.MICROSECONDS, 1))
                                     .withDropConnection(true)
-                                    .withResponseBytes("some_bytes".getBytes())
+                                    .withResponseBytes("some_bytes".getBytes(UTF_8))
                     )
             )
             .setTimes(new TimesDTO(Times.once()))

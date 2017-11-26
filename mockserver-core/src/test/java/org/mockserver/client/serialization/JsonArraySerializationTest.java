@@ -22,6 +22,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
@@ -60,7 +61,7 @@ public class JsonArraySerializationTest {
     @Test
     public void shouldReturnArrayItems() throws IOException {
         // when
-        assertThat(new JsonArraySerializer().returnJSONObjects("[{'foo':'bar'},{'foo':'bar'}]"), hasItems("{\n  \"foo\" : \"bar\"\n}", "{\n  \"foo\" : \"bar\"\n}"));
+        assertThat(new JsonArraySerializer().returnJSONObjects("[{'foo':'bar'},{'foo':'bar'}]"), hasItems("{" + NEW_LINE + "  \"foo\" : \"bar\"" + NEW_LINE + "}", "{" + NEW_LINE + "  \"foo\" : \"bar\"" + NEW_LINE + "}"));
         assertThat(new JsonArraySerializer().returnJSONObjects("[{},{}]"), hasItems("{ }", "{ }"));
         assertThat(new JsonArraySerializer().returnJSONObjects("[{}]"), hasItems("{ }"));
         assertThat(new JsonArraySerializer().returnJSONObjects("[\"\"]"), hasItems("\"\""));

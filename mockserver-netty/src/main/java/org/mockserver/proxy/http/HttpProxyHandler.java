@@ -1,5 +1,6 @@
 package org.mockserver.proxy.http;
 
+import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
@@ -7,18 +8,20 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationSequenceSerializer;
-import org.mockserver.client.serialization.VerificationSerializer;
+import org.mockserver.client.serialization.*;
 import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
+import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
+import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.filters.Filters;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.filters.RequestResponseLogFilter;
 import org.mockserver.logging.LogFormatter;
+import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.PortBinding;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.proxy.unification.PortUnificationHandler;
@@ -28,8 +31,11 @@ import org.mockserver.verify.VerificationSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.BindException;
 import java.net.InetSocketAddress;
+import java.util.List;
 
+import static com.google.common.net.MediaType.JSON_UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
@@ -38,30 +44,35 @@ import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
+import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.PortBinding.portBinding;
 import static org.mockserver.proxy.Proxy.REMOTE_SOCKET;
-import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
 
 @ChannelHandler.Sharable
 public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final LogFormatter logFormatter = new LogFormatter(logger);
     // mockserver
-    private final Proxy server;
-    private final RequestLogFilter requestLogFilter;
-    private final RequestResponseLogFilter requestResponseLogFilter;
-    private final Filters filters = new Filters();
-    private LogFormatter logFormatter = new LogFormatter(logger);
+    private Proxy server;
+    private RequestLogFilter requestLogFilter;
+    private RequestResponseLogFilter requestResponseLogFilter;
+    private Filters filters = new Filters();
     // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
     // serializers
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
+    private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
+    private ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
     // CORS
     private CORSHeaders addCORSHeaders = new CORSHeaders();
 
@@ -98,11 +109,29 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else if (request.matches("PUT", "/status")) {
 
-                writeResponse(ctx, request, OK);
+                List<Integer> actualPortBindings = server.getPorts();
+                writeResponse(ctx, request, OK, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
+
+            } else if (request.matches("PUT", "/bind")) {
+
+                PortBinding requestedPortBindings = portBindingSerializer.deserialize(request.getBodyAsString());
+                try {
+                    List<Integer> actualPortBindings = server.bindToPorts(requestedPortBindings.getPorts());
+                    writeResponse(ctx, request, OK, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
+                } catch (RuntimeException e) {
+                    if (e.getCause() instanceof BindException) {
+                        writeResponse(ctx, request, BAD_REQUEST, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());
+                    } else {
+                        throw e;
+                    }
+                }
 
             } else if (request.matches("PUT", "/clear")) {
 
-                org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                HttpRequest httpRequest = null;
+                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                }
                 requestResponseLogFilter.clear(httpRequest);
                 requestLogFilter.clear(httpRequest);
                 logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
@@ -110,33 +139,62 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
             } else if (request.matches("PUT", "/reset")) {
 
+                requestResponseLogFilter.reset();
                 requestLogFilter.reset();
-                logFormatter.infoLog("resetting all expectations and request logs");
                 writeResponse(ctx, request, OK);
+                logFormatter.infoLog("resetting all expectations and request logs");
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
-                requestResponseLogFilter.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()), request.hasQueryStringParameter("type", "java"));
+                HttpRequest httpRequest = null;
+                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                }
+                boolean asJava = request.hasQueryStringParameter("type", "java") || request.hasQueryStringParameter("format", "java");
+                requestResponseLogFilter.dumpToLog(httpRequest, asJava);
                 writeResponse(ctx, request, OK);
+                logFormatter.infoLog("dumped all active expectations to the log in " + (asJava ? "java" : "json") + " that match:{}", httpRequest);
 
             } else if (request.matches("PUT", "/retrieve")) {
 
-                HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(request.getBodyAsString()));
-                writeResponse(ctx, request, OK, httpRequestSerializer.serialize(requests), "application/json");
+                HttpRequest httpRequest = null;
+                if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+                    httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+                }
+                StringBuilder responseBody = new StringBuilder();
+                boolean asJava = request.hasQueryStringParameter("format", "java");
+                boolean asExpectations = request.hasQueryStringParameter("type", "expectation");
+                if (asExpectations) {
+                    List<Expectation> expectations = requestResponseLogFilter.retrieveExpectations(httpRequest);
+                    if (asJava) {
+                        responseBody.append(expectationToJavaSerializer.serializeAsJava(0, expectations));
+                    } else {
+                        responseBody.append(expectationSerializer.serialize(expectations));
+                    }
+                } else {
+                    HttpRequest[] httpRequests = requestLogFilter.retrieve(httpRequest);
+                    if (asJava) {
+                        responseBody.append(httpRequestToJavaSerializer.serializeAsJava(0, httpRequests));
+                    } else {
+                        responseBody.append(httpRequestSerializer.serialize(httpRequests));
+                    }
+                }
+                writeResponse(ctx, request, OK, responseBody.toString(), JSON_UTF_8.toString().replace(asJava ? "json" : "", "java"));
+                logFormatter.infoLog("retrieving " + (asExpectations ? "expectations" : "requests") + " that match:{}", httpRequest);
 
             } else if (request.matches("PUT", "/verify")) {
 
                 Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
-                logFormatter.infoLog("verifying:{}", verification);
                 String result = requestLogFilter.verify(verification);
                 verifyResponse(ctx, request, result);
+                logFormatter.infoLog("verifying requests that match:{}", verification);
 
             } else if (request.matches("PUT", "/verifySequence")) {
 
                 VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
                 String result = requestLogFilter.verify(verificationSequence);
-                logFormatter.infoLog("verifying sequence:{}", verificationSequence);
                 verifyResponse(ctx, request, result);
+                logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
 
             } else if (request.matches("PUT", "/stop")) {
 
@@ -155,6 +213,9 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                 writeResponse(ctx, request, response);
 
             }
+        } catch (IllegalArgumentException iae) {
+            logger.error("Exception processing " + request, iae);
+            writeResponse(ctx, request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
             logger.error("Exception processing " + request, e);
             writeResponse(ctx, request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()));

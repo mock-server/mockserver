@@ -14,8 +14,8 @@ public class FileReader {
     public static String readFileFromClassPathOrPath(String filePath) {
         try {
             return IOUtils.toString(openStreamToFileFromClassPathOrPath(filePath), Charsets.UTF_8.name());
-        } catch (IOException e) {
-            throw new RuntimeException("Exception while loading \"" + filePath + "\"");
+        } catch (IOException ioe) {
+            throw new RuntimeException("Exception while loading \"" + filePath + "\"", ioe);
         }
     }
 

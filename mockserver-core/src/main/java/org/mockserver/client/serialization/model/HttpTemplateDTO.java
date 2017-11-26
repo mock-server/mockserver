@@ -9,11 +9,12 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString {
 
     private String template;
-    private HttpTemplate.TemplateType type;
+    private HttpTemplate.TemplateType templateType;
     private DelayDTO delay;
 
     public HttpTemplateDTO(HttpTemplate httpTemplate) {
         if (httpTemplate != null) {
+            templateType = httpTemplate.getTemplateType();
             template = httpTemplate.getTemplate();
             delay = (httpTemplate.getDelay() != null ? new DelayDTO(httpTemplate.getDelay()) : null);
         }
@@ -23,9 +24,18 @@ public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString 
     }
 
     public HttpTemplate buildObject() {
-        return new HttpTemplate(type)
+        return new HttpTemplate(templateType)
                 .withTemplate(template)
                 .withDelay((delay != null ? delay.buildObject() : null));
+    }
+
+    public HttpTemplate.TemplateType getTemplateType() {
+        return templateType;
+    }
+
+    public HttpTemplateDTO setTemplateType(HttpTemplate.TemplateType templateType) {
+        this.templateType = templateType;
+        return this;
     }
 
     public String getTemplate() {
@@ -43,15 +53,6 @@ public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString 
 
     public HttpTemplateDTO setDelay(DelayDTO delay) {
         this.delay = delay;
-        return this;
-    }
-
-    public HttpTemplate.TemplateType getType() {
-        return type;
-    }
-
-    public HttpTemplateDTO setType(HttpTemplate.TemplateType type) {
-        this.type = type;
         return this;
     }
 }

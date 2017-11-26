@@ -12,9 +12,9 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 public class HttpTemplate extends Action {
+    private final TemplateType templateType;
     private String template;
     private Delay delay;
-    private final TemplateType templateType;
 
     public HttpTemplate(TemplateType type) {
         this.templateType = type;
@@ -95,7 +95,6 @@ public class HttpTemplate extends Action {
     }
 
     public enum TemplateType {
-        GROOVY,
         JAVASCRIPT,
         VELOCITY
     }

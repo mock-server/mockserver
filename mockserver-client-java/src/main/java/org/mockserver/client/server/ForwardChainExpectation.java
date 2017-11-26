@@ -25,6 +25,11 @@ public class ForwardChainExpectation {
         mockServerClient.sendExpectation(expectation);
     }
 
+    public void respond(HttpTemplate httpTemplate) {
+        expectation.thenRespond(httpTemplate);
+        mockServerClient.sendExpectation(expectation);
+    }
+
     public void forward(HttpForward httpForward) {
         expectation.thenForward(httpForward);
         mockServerClient.sendExpectation(expectation);

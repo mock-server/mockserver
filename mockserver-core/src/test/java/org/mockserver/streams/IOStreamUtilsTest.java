@@ -1,5 +1,6 @@
 package org.mockserver.streams;
 
+import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -158,10 +159,10 @@ public class IOStreamUtilsTest {
         when(mockServletResponse.getOutputStream()).thenReturn(mockServletOutputStream);
 
         // when
-        IOStreamUtils.writeToOutputStream("data".getBytes(), mockServletResponse);
+        IOStreamUtils.writeToOutputStream("data".getBytes(UTF_8), mockServletResponse);
 
         // then
-        verify(mockServletOutputStream).write("data".getBytes());
+        verify(mockServletOutputStream).write("data".getBytes(UTF_8));
         verify(mockServletOutputStream).close();
     }
 
@@ -172,7 +173,7 @@ public class IOStreamUtilsTest {
         when(mockServletResponse.getOutputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        IOStreamUtils.writeToOutputStream("data".getBytes(), mockServletResponse);
+        IOStreamUtils.writeToOutputStream("data".getBytes(UTF_8), mockServletResponse);
     }
 
     @Test

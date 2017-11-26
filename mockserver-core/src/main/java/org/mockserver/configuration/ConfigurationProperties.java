@@ -17,6 +17,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.mockserver.character.Character.NEW_LINE;
+
 /**
  * @author jamesdbloom
  */
@@ -242,10 +244,10 @@ public class ConfigurationProperties {
             Enumeration<?> propertyNames = properties.propertyNames();
 
             StringBuilder propertiesLogDump = new StringBuilder();
-            propertiesLogDump.append("Reading properties from property file [").append(propertyFile()).append("]:\n");
+            propertiesLogDump.append("Reading properties from property file [").append(propertyFile()).append("]:" + NEW_LINE);
             while (propertyNames.hasMoreElements()) {
                 String propertyName = String.valueOf(propertyNames.nextElement());
-                propertiesLogDump.append("\t").append(propertyName).append(" = ").append(properties.getProperty(propertyName)).append("\n");
+                propertiesLogDump.append("\t").append(propertyName).append(" = ").append(properties.getProperty(propertyName)).append(NEW_LINE);
             }
             LOGGER.info(propertiesLogDump.toString());
         }

@@ -3,6 +3,7 @@ package org.mockserver.mock;
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.TimeToLive;
@@ -94,36 +95,34 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         this.expectations.clear();
     }
 
-    public void dumpToLog(HttpRequest httpRequest) {
+    public void dumpToLog(HttpRequest httpRequest, boolean asJava) {
         ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+        ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
         if (httpRequest != null) {
-            for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
+            for (Expectation expectation : new ArrayList<>(this.expectations)) {
                 if (expectation.matches(httpRequest)) {
-                    requestLogger.warn(cleanBase64Response(expectationSerializer.serialize(expectation)));
+                    if (asJava) {
+                        requestLogger.info(expectationToJavaSerializer.serializeAsJava(0, expectation));
+                    } else {
+                        requestLogger.info(expectationSerializer.serialize(expectation));
+                    }
                 }
             }
         } else {
-            for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
-                requestLogger.warn(cleanBase64Response(expectationSerializer.serialize(expectation)));
+            for (Expectation expectation : new ArrayList<>(this.expectations)) {
+                if (asJava) {
+                    requestLogger.info(expectationToJavaSerializer.serializeAsJava(0, expectation));
+                } else {
+                    requestLogger.info(expectationSerializer.serialize(expectation));
+                }
             }
         }
     }
 
-    @VisibleForTesting
-    String cleanBase64Response(String serializedExpectation) {
-        Pattern base64ResponseBodyPattern = Pattern.compile("[\\s\\S]*\\\"httpResponse\\\"\\s*\\:\\s*\\{[\\s\\S]*\\\"body\\\"\\s*\\:\\s*\\\"(([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==))\\\"[\\s\\S]*");
-        Matcher matcher = base64ResponseBodyPattern.matcher(serializedExpectation);
-        if (matcher.find()) {
-            return serializedExpectation.replace(matcher.group(1), new String(Base64Converter.base64StringToBytes(matcher.group(1))));
-        } else {
-            return serializedExpectation;
-        }
-    }
-
-    public Expectation[] retrieveExpectations(HttpRequest httpRequest) {
+    public List<Expectation> retrieveExpectations(HttpRequest httpRequest) {
         List<Expectation> expectations = new ArrayList<Expectation>();
         if (httpRequest != null) {
-            for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
+            for (Expectation expectation : new ArrayList<>(this.expectations)) {
                 if (expectation.matches(httpRequest)) {
                     expectations.add(expectation);
                 }
@@ -131,6 +130,6 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         } else {
             expectations.addAll(this.expectations);
         }
-        return expectations.toArray(new Expectation[expectations.size()]);
+        return expectations;
     }
 }

@@ -11,6 +11,7 @@ import org.mockserver.server.netty.codec.MockServerResponseEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -139,7 +140,7 @@ public class MockServerResponseEncoderBasicMappingTest {
     @Test
     public void shouldEncodeBinaryBody() {
         // given
-        httpResponse.withBody(binary("somebody".getBytes()));
+        httpResponse.withBody(binary("somebody".getBytes(UTF_8)));
 
         // when
         new MockServerResponseEncoder().encode(null, httpResponse, output);

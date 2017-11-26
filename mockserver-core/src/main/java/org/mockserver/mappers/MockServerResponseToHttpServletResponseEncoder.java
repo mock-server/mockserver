@@ -18,6 +18,8 @@ import static io.netty.handler.codec.http.HttpHeaderNames.*;
  */
 public class MockServerResponseToHttpServletResponseEncoder {
 
+    private final Base64Converter base64Converter = new Base64Converter();
+
     public void mapMockServerResponseToHttpServletResponse(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         setStatusCode(httpResponse, httpServletResponse);
         setHeaders(httpResponse, httpServletResponse);
@@ -76,7 +78,7 @@ public class MockServerResponseToHttpServletResponseEncoder {
     private void setBody(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getBodyAsString() != null) {
             if (httpResponse.getBody() instanceof BinaryBody) {
-                IOStreamUtils.writeToOutputStream(Base64Converter.base64StringToBytes(httpResponse.getBodyAsString()), httpServletResponse);
+                IOStreamUtils.writeToOutputStream(base64Converter.base64StringToBytes(httpResponse.getBodyAsString()), httpServletResponse);
             } else {
                 Charset bodyCharset = httpResponse.getBody().getCharset(ContentTypeMapper.getCharsetFromContentTypeHeader(httpResponse.getFirstHeader(CONTENT_TYPE.toString())));
                 IOStreamUtils.writeToOutputStream(httpResponse.getBodyAsString().getBytes(bodyCharset), httpServletResponse);

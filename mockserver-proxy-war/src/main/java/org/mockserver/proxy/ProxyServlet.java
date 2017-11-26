@@ -2,18 +2,20 @@ package org.mockserver.proxy;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
-import com.google.common.net.MediaType;
 import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.PortBindingSerializer;
-import org.mockserver.client.serialization.VerificationSequenceSerializer;
-import org.mockserver.client.serialization.VerificationSerializer;
+import org.mockserver.client.serialization.*;
 import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
+import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
+import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.cors.CORSHeaders;
-import org.mockserver.filters.*;
+import org.mockserver.filters.Filters;
+import org.mockserver.filters.HopByHopHeaderFilter;
+import org.mockserver.filters.RequestLogFilter;
+import org.mockserver.filters.RequestResponseLogFilter;
 import org.mockserver.logging.LogFormatter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
+import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.streams.IOStreamUtils;
@@ -26,7 +28,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.net.InetSocketAddress;
+import java.util.List;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
@@ -44,11 +48,11 @@ import static org.mockserver.model.PortBinding.portBinding;
 public class ProxyServlet extends HttpServlet {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final LogFormatter logFormatter = new LogFormatter(logger);
     // mockserver
-    private Filters filters = new Filters();
     private RequestLogFilter requestLogFilter = new RequestLogFilter();
     private RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
-    private LogFormatter logFormatter = new LogFormatter(logger);
+    private Filters filters = new Filters();
     // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
     // mappers
@@ -57,9 +61,12 @@ public class ProxyServlet extends HttpServlet {
     // serializers
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
+    private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
+    private ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
     // CORS
     private CORSHeaders addCORSHeaders = new CORSHeaders();
 
@@ -85,7 +92,7 @@ public class ProxyServlet extends HttpServlet {
 
                 httpServletResponse.setStatus(OK_200.code());
                 httpServletResponse.setHeader(CONTENT_TYPE.toString(), JSON_UTF_8.toString());
-                IOStreamUtils.writeToOutputStream(portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())).getBytes(), httpServletResponse);
+                IOStreamUtils.writeToOutputStream(portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())).getBytes(UTF_8), httpServletResponse);
                 addCORSHeadersForAPI(httpServletResponse);
 
             } else if (request.matches("PUT", "/bind")) {
@@ -99,6 +106,7 @@ public class ProxyServlet extends HttpServlet {
                 if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
                     httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 }
+                requestResponseLogFilter.clear(httpRequest);
                 requestLogFilter.clear(httpRequest);
                 logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
                 httpServletResponse.setStatus(OK_200.code());
@@ -106,10 +114,11 @@ public class ProxyServlet extends HttpServlet {
 
             } else if (request.matches("PUT", "/reset")) {
 
+                requestResponseLogFilter.reset();
                 requestLogFilter.reset();
-                logFormatter.infoLog("resetting all expectations and request logs");
                 httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
+                logFormatter.infoLog("resetting all expectations and request logs");
 
             } else if (request.matches("PUT", "/dumpToLog")) {
 
@@ -117,9 +126,11 @@ public class ProxyServlet extends HttpServlet {
                 if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
                     httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 }
-                requestResponseLogFilter.dumpToLog(httpRequest, request.hasQueryStringParameter("type", "java"));
+                boolean asJava = request.hasQueryStringParameter("type", "java") || request.hasQueryStringParameter("format", "java");
+                requestResponseLogFilter.dumpToLog(httpRequest, asJava);
                 httpServletResponse.setStatus(OK_200.code());
                 addCORSHeadersForAPI(httpServletResponse);
+                logFormatter.infoLog("dumped all active expectations to the log in " + (asJava ? "java" : "json") + " that match:{}", httpRequest);
 
             } else if (request.matches("PUT", "/retrieve")) {
 
@@ -127,28 +138,45 @@ public class ProxyServlet extends HttpServlet {
                 if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
                     httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 }
-                HttpRequest[] requests = requestLogFilter.retrieve(httpRequest);
-                logFormatter.infoLog("retrieving requests that match:{}", httpRequest);
+                StringBuilder responseBody = new StringBuilder();
+                boolean asJava = request.hasQueryStringParameter("format", "java");
+                boolean asExpectations = request.hasQueryStringParameter("type", "expectation");
+                if (asExpectations) {
+                    List<Expectation> expectations = requestResponseLogFilter.retrieveExpectations(httpRequest);
+                    if (asJava) {
+                        responseBody.append(expectationToJavaSerializer.serializeAsJava(0, expectations));
+                    } else {
+                        responseBody.append(expectationSerializer.serialize(expectations));
+                    }
+                } else {
+                    HttpRequest[] httpRequests = requestLogFilter.retrieve(httpRequest);
+                    if (asJava) {
+                        responseBody.append(httpRequestToJavaSerializer.serializeAsJava(0, httpRequests));
+                    } else {
+                        responseBody.append(httpRequestSerializer.serialize(httpRequests));
+                    }
+                }
                 httpServletResponse.setStatus(OK_200.code());
-                httpServletResponse.setHeader(CONTENT_TYPE.toString(), JSON_UTF_8.toString());
-                IOStreamUtils.writeToOutputStream(httpRequestSerializer.serialize(requests).getBytes(), httpServletResponse);
                 addCORSHeadersForAPI(httpServletResponse);
+                httpServletResponse.setHeader(CONTENT_TYPE.toString(), JSON_UTF_8.toString().replace(asJava ? "json" : "", "java"));
+                IOStreamUtils.writeToOutputStream(responseBody.toString().getBytes(UTF_8), httpServletResponse);
+                logFormatter.infoLog("retrieving " + (asExpectations ? "expectations" : "requests") + " that match:{}", httpRequest);
 
             } else if (request.matches("PUT", "/verify")) {
 
                 Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
                 String result = requestLogFilter.verify(verification);
-                logFormatter.infoLog("verifying requests that match:{}", verification);
                 verifyResponse(httpServletResponse, result);
                 addCORSHeadersForAPI(httpServletResponse);
+                logFormatter.infoLog("verifying requests that match:{}", verification);
 
             } else if (request.matches("PUT", "/verifySequence")) {
 
                 VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
                 String result = requestLogFilter.verify(verificationSequence);
-                logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
                 verifyResponse(httpServletResponse, result);
                 addCORSHeadersForAPI(httpServletResponse);
+                logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
 
             } else if (request.matches("PUT", "/stop")) {
 
@@ -174,7 +202,7 @@ public class ProxyServlet extends HttpServlet {
         } else {
             httpServletResponse.setStatus(NOT_ACCEPTABLE_406.code());
             httpServletResponse.setHeader(CONTENT_TYPE.toString(), PLAIN_TEXT_UTF_8.toString());
-            IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
+            IOStreamUtils.writeToOutputStream(result.getBytes(UTF_8), httpServletResponse);
         }
     }
 

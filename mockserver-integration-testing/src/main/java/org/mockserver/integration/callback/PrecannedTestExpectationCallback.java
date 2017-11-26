@@ -5,6 +5,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -18,7 +19,7 @@ public class PrecannedTestExpectationCallback implements ExpectationCallback {
             .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
             .withHeaders(
                     header("x-callback", "test_callback_header"),
-                    header("Content-Length", "a_callback_response".getBytes().length),
+                    header("Content-Length", "a_callback_response".getBytes(UTF_8).length),
                     header("Connection", "keep-alive")
             )
             .withBody("a_callback_response");

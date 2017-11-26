@@ -15,6 +15,7 @@ import org.mockserver.verify.VerificationTimes;
 
 import java.util.Arrays;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
@@ -194,7 +195,7 @@ public class MockServerClientIntegrationTest {
                 .error(
                         error()
                                 .withDropConnection(true)
-                                .withResponseBytes("silly_bytes".getBytes())
+                                .withResponseBytes("silly_bytes".getBytes(UTF_8))
                 );
 
         // then
@@ -216,10 +217,12 @@ public class MockServerClientIntegrationTest {
                                 "  \"httpRequest\" : {" + NEW_LINE +
                                 "    \"path\" : \"/some_path\"," + NEW_LINE +
                                 "    \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "  },\n  \"httpError\" : {" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"httpError\" : {" + NEW_LINE +
                                 "    \"dropConnection\" : true," + NEW_LINE +
                                 "    \"responseBytes\" : \"c2lsbHlfYnl0ZXM=\"" + NEW_LINE +
-                                "  },\n  \"times\" : {" + NEW_LINE +
+                                "  }," + NEW_LINE +
+                                "  \"times\" : {" + NEW_LINE +
                                 "    \"remainingTimes\" : 0," + NEW_LINE +
                                 "    \"unlimited\" : true" + NEW_LINE +
                                 "  }," + NEW_LINE +

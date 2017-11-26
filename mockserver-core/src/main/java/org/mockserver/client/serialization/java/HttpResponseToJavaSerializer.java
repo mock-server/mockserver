@@ -15,6 +15,8 @@ import static org.mockserver.client.serialization.java.ExpectationToJavaSerializ
  */
 public class HttpResponseToJavaSerializer implements ToJavaSerializer<HttpResponse> {
 
+    private final Base64Converter base64Converter = new Base64Converter();
+
     @Override
     public String serializeAsJava(int numberOfSpacesToIndent, HttpResponse httpResponse) {
         StringBuffer output = new StringBuffer();
@@ -25,11 +27,11 @@ public class HttpResponseToJavaSerializer implements ToJavaSerializer<HttpRespon
             }
             outputHeaders(numberOfSpacesToIndent + 1, output, httpResponse.getHeaders());
             outputCookies(numberOfSpacesToIndent + 1, output, httpResponse.getCookies());
-            if (httpResponse.getBodyAsString() != null && httpResponse.getBodyAsString().length() > 0) {
+            if (!Strings.isNullOrEmpty(httpResponse.getBodyAsString())) {
                 if (httpResponse.getBody() instanceof BinaryBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     BinaryBody body = (BinaryBody) httpResponse.getBody();
-                    output.append(".withBody(Base64Converter.base64StringToBytes(\"").append(Base64Converter.bytesToBase64String(body.getRawBytes())).append("\"))");
+                    output.append(".withBody(new Base64Converter().base64StringToBytes(\"").append(base64Converter.bytesToBase64String(body.getRawBytes())).append("\"))");
                 } else {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withBody(\"").append(StringEscapeUtils.escapeJava(httpResponse.getBodyAsString())).append("\")");
                 }
@@ -63,8 +65,8 @@ public class HttpResponseToJavaSerializer implements ToJavaSerializer<HttpRespon
         }
     }
 
-    private <T extends ObjectWithReflectiveEqualsHashCodeToString> StringBuffer appendObject(int numberOfSpacesToIndent, StringBuffer output, MultiValueToJavaSerializer<T> toJavaSerializer, List<T> objects) {
-        return output.append(toJavaSerializer.serializeAsJava(numberOfSpacesToIndent, objects));
+    private <T extends ObjectWithReflectiveEqualsHashCodeToString> void appendObject(int numberOfSpacesToIndent, StringBuffer output, MultiValueToJavaSerializer<T> toJavaSerializer, List<T> objects) {
+        output.append(toJavaSerializer.serializeAsJava(numberOfSpacesToIndent, objects));
     }
 
     private StringBuffer appendNewLineAndIndent(int numberOfSpacesToIndent, StringBuffer output) {

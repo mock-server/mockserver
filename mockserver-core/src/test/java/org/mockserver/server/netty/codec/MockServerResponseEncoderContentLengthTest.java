@@ -11,6 +11,7 @@ import org.mockserver.server.netty.codec.MockServerResponseEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
@@ -52,7 +53,7 @@ public class MockServerResponseEncoderContentLengthTest {
     @Test
     public void shouldSetContentLengthForBinaryBody() {
         // given - a request
-        byte[] body = "some_binary_content".getBytes();
+        byte[] body = "some_binary_content".getBytes(UTF_8);
         httpResponse = response().withBody(binary(body));
 
         // when

@@ -16,6 +16,7 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
@@ -53,7 +54,7 @@ public class ExpectationSerializationErrorsTest {
     public void shouldValidateInputForObject() throws IOException {
         // given
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("1 error:\n - an expectation is required but value was \"\"");
+        thrown.expectMessage("1 error:" + NEW_LINE + " - an expectation is required but value was \"\"");
         // when
         expectationSerializer.deserialize("");
     }
@@ -62,7 +63,7 @@ public class ExpectationSerializationErrorsTest {
     public void shouldValidateInputForArray() throws IOException {
         // given
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("1 error:\n - an expectation or expectation array is required but value was \"\"");
+        thrown.expectMessage("1 error:" + NEW_LINE + " - an expectation or expectation array is required but value was \"\"");
         // when
         expectationSerializer.deserializeArray("");
     }

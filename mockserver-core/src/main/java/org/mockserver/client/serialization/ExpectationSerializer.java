@@ -59,7 +59,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
 
     public Expectation deserialize(String jsonExpectation) {
         if (Strings.isNullOrEmpty(jsonExpectation)) {
-            throw new IllegalArgumentException("1 error:\n - an expectation is required but value was \"" + String.valueOf(jsonExpectation) + "\"");
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation is required but value was \"" + String.valueOf(jsonExpectation) + "\"");
         } else {
             String validationErrors = expectationValidator.isValid(jsonExpectation);
             if (validationErrors.isEmpty()) {
@@ -89,11 +89,11 @@ public class ExpectationSerializer implements Serializer<Expectation> {
     public Expectation[] deserializeArray(String jsonExpectations) {
         List<Expectation> expectations = new ArrayList<Expectation>();
         if (Strings.isNullOrEmpty(jsonExpectations)) {
-            throw new IllegalArgumentException("1 error:\n - an expectation or expectation array is required but value was \"" + String.valueOf(jsonExpectations) + "\"");
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation or expectation array is required but value was \"" + String.valueOf(jsonExpectations) + "\"");
         } else {
             List<String> jsonExpectationList = jsonArraySerializer.returnJSONObjects(jsonExpectations);
             if (jsonExpectationList.isEmpty()) {
-                throw new IllegalArgumentException("1 error:\n - an expectation or array of expectations is required");
+                throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation or array of expectations is required");
             } else {
                 List<String> validationErrorsList = new ArrayList<String>();
                 for (String jsonExpecation : jsonExpectationList) {
@@ -105,7 +105,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 }
                 if (!validationErrorsList.isEmpty()) {
                     if (validationErrorsList.size() > 1) {
-                        throw new IllegalArgumentException(("[\n" + Joiner.on(",\n").join(validationErrorsList)).replaceAll("\n", "\n  ") + "\n]");
+                        throw new IllegalArgumentException(("[" + NEW_LINE + Joiner.on("," + NEW_LINE).join(validationErrorsList)).replaceAll(NEW_LINE, NEW_LINE + "  ") + NEW_LINE + "]");
                     } else {
                         throw new IllegalArgumentException(validationErrorsList.get(0));
                     }

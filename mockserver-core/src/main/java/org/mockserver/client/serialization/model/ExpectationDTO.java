@@ -12,7 +12,7 @@ public class ExpectationDTO extends ObjectWithJsonToString {
 
     private HttpRequestDTO httpRequest;
     private HttpResponseDTO httpResponse;
-    private HttpTemplateDTO httpTemplate;
+    private HttpTemplateDTO httpResponseTemplate;
     private HttpForwardDTO httpForward;
     private HttpErrorDTO httpError;
     private HttpClassCallbackDTO httpClassCallback;
@@ -30,9 +30,9 @@ public class ExpectationDTO extends ObjectWithJsonToString {
             if (httpResponse != null) {
                 this.httpResponse = new HttpResponseDTO(httpResponse);
             }
-            HttpTemplate httpTemplate = expectation.getHttpTemplate();
+            HttpTemplate httpTemplate = expectation.getHttpResponseTemplate();
             if (httpTemplate != null) {
-                this.httpTemplate = new HttpTemplateDTO(httpTemplate);
+                this.httpResponseTemplate = new HttpTemplateDTO(httpTemplate);
             }
             HttpForward httpForward = expectation.getHttpForward();
             if (httpForward != null) {
@@ -80,8 +80,8 @@ public class ExpectationDTO extends ObjectWithJsonToString {
         if (this.httpResponse != null) {
             httpResponse = this.httpResponse.buildObject();
         }
-        if (this.httpTemplate != null) {
-            httpTemplate = this.httpTemplate.buildObject();
+        if (this.httpResponseTemplate != null) {
+            httpTemplate = this.httpResponseTemplate.buildObject();
         }
         if (this.httpForward != null) {
             httpForward = this.httpForward.buildObject();
@@ -132,12 +132,12 @@ public class ExpectationDTO extends ObjectWithJsonToString {
         return this;
     }
 
-    public HttpTemplateDTO getHttpTemplate() {
-        return httpTemplate;
+    public HttpTemplateDTO getHttpResponseTemplate() {
+        return httpResponseTemplate;
     }
 
-    public ExpectationDTO setHttpTemplate(HttpTemplateDTO httpTemplate) {
-        this.httpTemplate = httpTemplate;
+    public ExpectationDTO setHttpResponseTemplate(HttpTemplateDTO httpResponseTemplate) {
+        this.httpResponseTemplate = httpResponseTemplate;
         return this;
     }
 

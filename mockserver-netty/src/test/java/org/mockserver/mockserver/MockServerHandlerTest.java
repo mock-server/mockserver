@@ -4,6 +4,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
@@ -34,7 +35,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class MockServerHandlerTest {
 
-    // model objects
     @Mock
     Expectation mockExpectation;
     @Mock
@@ -96,6 +96,7 @@ public class MockServerHandlerTest {
         // given - an expectation that can be setup
         when(mockMockServerMatcher.when(any(HttpRequest.class), any(Times.class), any(TimeToLive.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenRespond(any(HttpResponse.class))).thenReturn(mockExpectation);
+        when(mockExpectation.thenRespond(any(HttpTemplate.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenForward(any(HttpForward.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenError(any(HttpError.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenCallback(any(HttpClassCallback.class))).thenReturn(mockExpectation);

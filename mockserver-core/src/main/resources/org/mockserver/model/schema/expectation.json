@@ -9,6 +9,9 @@
     "httpResponse": {
       "$ref": "#/definitions/httpResponse"
     },
+    "httpResponseTemplate": {
+      "$ref": "#/definitions/httpTemplate"
+    },
     "httpForward": {
       "$ref": "#/definitions/httpForward"
     },
@@ -32,6 +35,11 @@
     {
       "required": [
         "httpResponse"
+      ]
+    },
+    {
+      "required": [
+        "httpResponseTemplate"
       ]
     },
     {

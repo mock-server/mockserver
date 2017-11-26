@@ -26,6 +26,7 @@ import org.mockserver.verify.VerificationTimes;
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -147,7 +148,7 @@ public class MockServerClientTest {
         HttpError httpError =
                 new HttpError()
                         .withDropConnection(true)
-                        .withResponseBytes("silly_bytes".getBytes());
+                        .withResponseBytes("silly_bytes".getBytes(UTF_8));
 
         // when
         ForwardChainExpectation forwardChainExpectation = mockServerClient.when(httpRequest);
@@ -297,7 +298,7 @@ public class MockServerClientTest {
                 .error(
                         new HttpError()
                                 .withDelay(TimeUnit.MILLISECONDS, 100)
-                                .withResponseBytes("random_bytes".getBytes())
+                                .withResponseBytes("random_bytes".getBytes(UTF_8))
                 );
 
         // then
@@ -310,7 +311,7 @@ public class MockServerClientTest {
                                 new HttpErrorDTO(
                                         new HttpError()
                                                 .withDelay(TimeUnit.MILLISECONDS, 100)
-                                                .withResponseBytes("random_bytes".getBytes())
+                                                .withResponseBytes("random_bytes".getBytes(UTF_8))
                                 )
                         )
                         .setTimes(new TimesDTO(Times.exactly(3)))

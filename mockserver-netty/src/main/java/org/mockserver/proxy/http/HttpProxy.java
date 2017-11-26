@@ -3,10 +3,7 @@ package org.mockserver.proxy.http;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -22,9 +19,12 @@ import java.net.InetSocketAddress;
 import java.net.ProxySelector;
 import java.net.SocketAddress;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class should not be constructed directly instead use HttpProxyBuilder to build and configure this class
@@ -35,84 +35,102 @@ import java.util.concurrent.Future;
 public class HttpProxy implements Proxy {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpProxy.class);
-    private static ProxySelector previousProxySelector;
     // proxy
     private final RequestLogFilter requestLogFilter = new RequestLogFilter();
     private final RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
-    private final SettableFuture<String> hasStarted;
+    private final List<Future<Channel>> channelOpenedFutures = new ArrayList<Future<Channel>>();
     private final SettableFuture<String> stopping = SettableFuture.<String>create();
     // netty
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private final ServerBootstrap serverBootstrap;
     private StopEventQueue stopEventQueue = new StopEventQueue();
-    private Channel channel;
 
     /**
      * Start the instance using the ports provided
      *
-     * @param port the http port to use
+     * @param requestedPortBindings the local port(s) to use
      */
-    public HttpProxy(final Integer port) {
-        if (port == null) {
-            throw new IllegalArgumentException("You must specify a port");
+    public HttpProxy(final Integer... requestedPortBindings) {
+        if (requestedPortBindings == null || requestedPortBindings.length == 0) {
+            throw new IllegalArgumentException("You must specify at least one port");
         }
 
-        hasStarted = SettableFuture.create();
+        serverBootstrap = new ServerBootstrap()
+                .group(bossGroup, workerGroup)
+                .option(ChannelOption.SO_BACKLOG, 1024)
+                .channel(NioServerSocketChannel.class)
+                .childOption(ChannelOption.AUTO_READ, true)
+                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
+                .childHandler(new HttpProxyUnificationHandler())
+                .childAttr(HTTP_PROXY, HttpProxy.this)
+                .childAttr(HTTP_CONNECT_SOCKET, new InetSocketAddress(requestedPortBindings[0]))
+                .childAttr(REQUEST_LOG_FILTER, requestLogFilter)
+                .childAttr(REQUEST_RESPONSE_LOG_FILTER, requestResponseLogFilter);
 
-        new Thread(new Runnable() {
-            @Override
+        bindToPorts(Arrays.asList(requestedPortBindings));
+
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             public void run() {
+                // Shut down all event loops to terminate all threads.
+                bossGroup.shutdownGracefully();
+                workerGroup.shutdownGracefully();
+
+                // Wait until all threads are terminated.
                 try {
-                    channel = new ServerBootstrap()
-                            .group(bossGroup, workerGroup)
-                            .option(ChannelOption.SO_BACKLOG, 1024)
-                            .channel(NioServerSocketChannel.class)
-                            .childOption(ChannelOption.AUTO_READ, true)
-                            .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                            .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-                            .childHandler(new HttpProxyUnificationHandler())
-                            .childAttr(HTTP_PROXY, HttpProxy.this)
-                            .childAttr(HTTP_CONNECT_SOCKET, new InetSocketAddress(port))
-                            .childAttr(REQUEST_LOG_FILTER, requestLogFilter)
-                            .childAttr(REQUEST_RESPONSE_LOG_FILTER, requestResponseLogFilter)
-                            .bind(port)
-                            .syncUninterruptibly()
-                            .channel();
-
-                    logger.info("MockServer proxy started on port: {}", ((InetSocketAddress) channel.localAddress()).getPort());
-
-                    proxyStarted(port);
-                    hasStarted.set("STARTED");
-
-                    channel.closeFuture().syncUninterruptibly();
-                } finally {
-                    bossGroup.shutdownGracefully();
-                    workerGroup.shutdownGracefully();
+                    bossGroup.terminationFuture().sync();
+                    workerGroup.terminationFuture().sync();
+                } catch (InterruptedException e) {
+                    // ignore interrupted exceptions
                 }
             }
-        }, "MockServer HttpProxy Thread").start();
-
-        try {
-            hasStarted.get();
-        } catch (Exception e) {
-            logger.warn("Exception while waiting for MockServer proxy to complete starting up", e);
-        }
+        }));
     }
 
-    private static ProxySelector createProxySelector(final String host, final int port) {
-        return new ProxySelector() {
-            @Override
-            public List<java.net.Proxy> select(URI uri) {
-                return Collections.singletonList(
-                        new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(host, port))
-                );
-            }
+    public List<Integer> bindToPorts(final List<Integer> requestedPortBindings) {
+        List<Integer> actualPortBindings = new ArrayList<>();
+        for (final Integer portToBind : requestedPortBindings) {
+            try {
+                final SettableFuture<Channel> channelOpened = SettableFuture.create();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        channelOpenedFutures.add(channelOpened);
+                        try {
 
-            @Override
-            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+                            Channel channel =
+                                    serverBootstrap
+                                            .bind(portToBind)
+                                            .addListener(new ChannelFutureListener() {
+                                                @Override
+                                                public void operationComplete(ChannelFuture future) throws Exception {
+                                                    if (future.isSuccess()) {
+                                                        channelOpened.set(future.channel());
+                                                    } else {
+                                                        channelOpened.setException(future.cause());
+                                                    }
+                                                }
+                                            })
+                                            .channel();
+
+                            int boundPort = ((InetSocketAddress) channelOpened.get().localAddress()).getPort();
+                            proxyStarted(boundPort);
+                            logger.info("MockServer started on port: {}", boundPort);
+
+                            channel.closeFuture().syncUninterruptibly();
+                        } catch (Exception e) {
+                            throw new RuntimeException("Exception while binding MockServer to port " + portToBind, e.getCause());
+                        }
+                    }
+                }, "MockServer thread for port: " + portToBind).start();
+
+                actualPortBindings.add(((InetSocketAddress) channelOpened.get().localAddress()).getPort());
+            } catch (Exception e) {
+                throw new RuntimeException("Exception while binding MockServer to port " + portToBind, e.getCause());
             }
-        };
+        }
+        return actualPortBindings;
     }
 
     public Future<?> stop() {
@@ -130,8 +148,43 @@ public class HttpProxy implements Proxy {
         return !bossGroup.isShuttingDown() || !workerGroup.isShuttingDown() || !stopping.isDone();
     }
 
-    public Integer getPort() {
-        return ((InetSocketAddress) channel.localAddress()).getPort();
+    public List<Integer> getPorts() {
+        List<Integer> ports = new ArrayList<>();
+        for (Future<Channel> channelOpened : channelOpenedFutures) {
+            try {
+                ports.add(((InetSocketAddress) channelOpened.get(2, TimeUnit.SECONDS).localAddress()).getPort());
+            } catch (Exception e) {
+                logger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
+            }
+        }
+        return ports;
+    }
+
+    public int getPort() {
+        for (Future<Channel> channelOpened : channelOpenedFutures) {
+            try {
+                return ((InetSocketAddress) channelOpened.get(2, TimeUnit.SECONDS).localAddress()).getPort();
+            } catch (Exception e) {
+                logger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
+            }
+        }
+        return -1;
+    }
+
+    private static ProxySelector createProxySelector(final String host, final int port) {
+        return new ProxySelector() {
+            @Override
+            public List<java.net.Proxy> select(URI uri) {
+                return Collections.singletonList(
+                        new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(host, port))
+                );
+            }
+
+            @Override
+            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+            }
+        };
     }
 
     protected void proxyStarted(Integer port) {

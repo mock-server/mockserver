@@ -31,7 +31,7 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
 
     public VerificationSequence deserialize(String jsonVerificationSequence) {
         if (Strings.isNullOrEmpty(jsonVerificationSequence)) {
-            throw new IllegalArgumentException("1 error:\n - a verification sequence is required but value was \"" + String.valueOf(jsonVerificationSequence) + "\"");
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a verification sequence is required but value was \"" + String.valueOf(jsonVerificationSequence) + "\"");
         } else {
             String validationErrors = verificationSequenceValidator.isValid(jsonVerificationSequence);
             if (validationErrors.isEmpty()) {

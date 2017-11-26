@@ -10,6 +10,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.client.serialization.*;
+import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
+import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.logging.LogFormatter;
@@ -28,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.net.BindException;
 import java.util.List;
 
+import static com.google.common.net.MediaType.JSON_UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
@@ -48,7 +51,7 @@ import static org.mockserver.model.PortBinding.portBinding;
 public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private LogFormatter logFormatter = new LogFormatter(logger);
+    private final LogFormatter logFormatter = new LogFormatter(logger);
     // mockserver
     private MockServer server;
     private RequestLogFilter requestLogFilter;
@@ -56,11 +59,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private WebSocketClientRegistry webSocketClientRegistry;
     private ActionHandler actionHandler;
     // serializers
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
+    private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
+    private ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
     // CORS
     private CORSHeaders addCORSHeaders = new CORSHeaders();
 
@@ -76,6 +81,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     protected void channelRead0(final ChannelHandlerContext ctx, final HttpRequest request) {
 
         try {
+
+            logFormatter.traceLog("received request:{}" + NEW_LINE, request);
 
             if ((enableCORSForAPI() || enableCORSForAllResponses()) && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
 
@@ -107,6 +114,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     mockServerMatcher
                             .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
                             .thenRespond(expectation.getHttpResponse())
+                            .thenRespond(expectation.getHttpResponseTemplate())
                             .thenForward(expectation.getHttpForward())
                             .thenError(expectation.getHttpError())
                             .thenCallback(expectation.getHttpClassCallback())
@@ -136,8 +144,8 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             } else if (request.matches("PUT", "/reset")) {
 
-                requestLogFilter.reset();
                 mockServerMatcher.reset();
+                requestLogFilter.reset();
                 writeResponse(ctx, request, OK);
                 logFormatter.infoLog("resetting all expectations and request logs");
 
@@ -147,8 +155,10 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
                     httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 }
-                mockServerMatcher.dumpToLog(httpRequest);
+                boolean asJava = request.hasQueryStringParameter("type", "java") || request.hasQueryStringParameter("format", "java");
+                mockServerMatcher.dumpToLog(httpRequest, asJava);
                 writeResponse(ctx, request, OK);
+                logFormatter.infoLog("dumped all active expectations to the log in " + (asJava ? "java" : "json") + " that match:{}", httpRequest);
 
             } else if (request.matches("PUT", "/retrieve")) {
 
@@ -156,15 +166,26 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
                     httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
                 }
-                if (request.hasQueryStringParameter("type", "expectation")) {
-                    Expectation[] expectations = mockServerMatcher.retrieveExpectations(httpRequest);
-                    writeResponse(ctx, request, OK, expectationSerializer.serialize(expectations), "application/json");
-                    logFormatter.infoLog("retrieving expectations that match:{}", httpRequest);
+                StringBuilder responseBody = new StringBuilder();
+                boolean asJava = request.hasQueryStringParameter("format", "java");
+                boolean asExpectations = request.hasQueryStringParameter("type", "expectation");
+                if (asExpectations) {
+                    List<Expectation> expectations = mockServerMatcher.retrieveExpectations(httpRequest);
+                    if (asJava) {
+                        responseBody.append(expectationToJavaSerializer.serializeAsJava(0, expectations));
+                    } else {
+                        responseBody.append(expectationSerializer.serialize(expectations));
+                    }
                 } else {
-                    HttpRequest[] requests = requestLogFilter.retrieve(httpRequest);
-                    writeResponse(ctx, request, OK, httpRequestSerializer.serialize(requests), "application/json");
-                    logFormatter.infoLog("retrieving requests that match:{}", httpRequest);
+                    HttpRequest[] httpRequests = requestLogFilter.retrieve(httpRequest);
+                    if (asJava) {
+                        responseBody.append(httpRequestToJavaSerializer.serializeAsJava(0, httpRequests));
+                    } else {
+                        responseBody.append(httpRequestSerializer.serialize(httpRequests));
+                    }
                 }
+                writeResponse(ctx, request, OK, responseBody.toString(), JSON_UTF_8.toString().replace(asJava ? "json" : "", "java"));
+                logFormatter.infoLog("retrieving " + (asExpectations ? "expectations" : "requests") + " that match:{}", httpRequest);
 
             } else if (request.matches("PUT", "/verify")) {
 
@@ -226,6 +247,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             }
         } catch (IllegalArgumentException iae) {
+            logger.error("Exception processing " + request, iae);
             writeResponse(ctx, request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
             logger.error("Exception processing " + request, e);

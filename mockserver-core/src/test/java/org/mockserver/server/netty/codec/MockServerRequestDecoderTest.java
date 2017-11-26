@@ -17,6 +17,7 @@ import org.mockserver.server.netty.codec.MockServerRequestDecoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -280,7 +281,7 @@ public class MockServerRequestDecoderTest {
     @Test
     public void shouldDecodeBinaryBody() {
         // given
-        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("some_random_bytes".getBytes()));
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("some_random_bytes".getBytes(UTF_8)));
         fullHttpRequest.headers().add(CONTENT_TYPE, MediaType.JPEG);
 
         // when
@@ -288,7 +289,7 @@ public class MockServerRequestDecoderTest {
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        assertThat(body, Is.<Body>is(binary("some_random_bytes".getBytes())));
+        assertThat(body, Is.<Body>is(binary("some_random_bytes".getBytes(UTF_8))));
     }
 
 }

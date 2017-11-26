@@ -34,57 +34,57 @@ public class MockServerClientServerVallidationErrorsTest {
     @Test
     public void shouldHandleServerValidationFailure() {
         // given
-        String responseBody = "2 errors:\n" +
-                " - object instance has properties which are not allowed by the schema: [\"paths\"] for field \"/httpRequest\"\n" +
-                " - for field \"/httpRequest/body\" a plain string or one of the following example bodies must be specified \n" +
-                "   {\n" +
-                "     \"not\": false,\n" +
-                "     \"type\": \"BINARY\",\n" +
-                "     \"base64Bytes\": \"\",\n" +
-                "     \"contentType\": \"\"\n" +
-                "   }, \n" +
-                "   {\n" +
-                "     \"not\": false,\n" +
-                "     \"type\": \"JSON\",\n" +
-                "     \"json\": \"\",\n" +
-                "     \"contentType\": \"\",\n" +
-                "     \"matchType\": \"ONLY_MATCHING_FIELDS\"\n" +
-                "   },\n" +
-                "   {\n" +
-                "     \"not\": false,\n" +
-                "     \"type\": \"JSON_SCHEMA\",\n" +
-                "     \"jsonSchema\": \"\"\n" +
-                "   },\n" +
-                "   {\n" +
-                "     \"not\": false,\n" +
-                "     \"type\": \"PARAMETERS\",\n" +
-                "     \"parameters\": \"TO DO\"\n" +
-                "   },\n" +
-                "   {\n" +
-                "     \"not\": false,\n" +
-                "     \"type\": \"REGEX\",\n" +
-                "     \"regex\": \"\"\n" +
-                "   },\n" +
-                "   {\n" +
-                "     \"not\": false,\n" +
-                "     \"type\": \"STRING\",\n" +
-                "     \"string\": \"\"\n" +
-                "   },\n" +
-                "   {\n" +
-                "     \"not\": false,\n" +
-                "     \"type\": \"XML\",\n" +
-                "     \"xml\": \"\",\n" +
-                "     \"contentType\": \"\"\n" +
-                "   },\n" +
-                "   {\n" +
-                "     \"not\": false,\n" +
-                "     \"type\": \"XML_SCHEMA\",\n" +
-                "     \"xmlSchema\": \"\"\n" +
-                "   },\n" +
-                "   {\n" +
-                "     \"not\": false,\n" +
-                "     \"type\": \"XPATH\",\n" +
-                "     \"xpath\": \"\"\n" +
+        String responseBody = "2 errors:" + NEW_LINE +
+                " - object instance has properties which are not allowed by the schema: [\"paths\"] for field \"/httpRequest\"" + NEW_LINE +
+                " - for field \"/httpRequest/body\" a plain string or one of the following example bodies must be specified " + NEW_LINE +
+                "   {" + NEW_LINE +
+                "     \"not\": false," + NEW_LINE +
+                "     \"type\": \"BINARY\"," + NEW_LINE +
+                "     \"base64Bytes\": \"\"," + NEW_LINE +
+                "     \"contentType\": \"\"" + NEW_LINE +
+                "   }, " + NEW_LINE +
+                "   {" + NEW_LINE +
+                "     \"not\": false," + NEW_LINE +
+                "     \"type\": \"JSON\"," + NEW_LINE +
+                "     \"json\": \"\"," + NEW_LINE +
+                "     \"contentType\": \"\"," + NEW_LINE +
+                "     \"matchType\": \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
+                "   }," + NEW_LINE +
+                "   {" + NEW_LINE +
+                "     \"not\": false," + NEW_LINE +
+                "     \"type\": \"JSON_SCHEMA\"," + NEW_LINE +
+                "     \"jsonSchema\": \"\"" + NEW_LINE +
+                "   }," + NEW_LINE +
+                "   {" + NEW_LINE +
+                "     \"not\": false," + NEW_LINE +
+                "     \"type\": \"PARAMETERS\"," + NEW_LINE +
+                "     \"parameters\": \"TO DO\"" + NEW_LINE +
+                "   }," + NEW_LINE +
+                "   {" + NEW_LINE +
+                "     \"not\": false," + NEW_LINE +
+                "     \"type\": \"REGEX\"," + NEW_LINE +
+                "     \"regex\": \"\"" + NEW_LINE +
+                "   }," + NEW_LINE +
+                "   {" + NEW_LINE +
+                "     \"not\": false," + NEW_LINE +
+                "     \"type\": \"STRING\"," + NEW_LINE +
+                "     \"string\": \"\"" + NEW_LINE +
+                "   }," + NEW_LINE +
+                "   {" + NEW_LINE +
+                "     \"not\": false," + NEW_LINE +
+                "     \"type\": \"XML\"," + NEW_LINE +
+                "     \"xml\": \"\"," + NEW_LINE +
+                "     \"contentType\": \"\"" + NEW_LINE +
+                "   }," + NEW_LINE +
+                "   {" + NEW_LINE +
+                "     \"not\": false," + NEW_LINE +
+                "     \"type\": \"XML_SCHEMA\"," + NEW_LINE +
+                "     \"xmlSchema\": \"\"" + NEW_LINE +
+                "   }," + NEW_LINE +
+                "   {" + NEW_LINE +
+                "     \"not\": false," + NEW_LINE +
+                "     \"type\": \"XPATH\"," + NEW_LINE +
+                "     \"xpath\": \"\"" + NEW_LINE +
                 "   }";
         echoServer.withNextResponse(response()
                 .withStatusCode(400)

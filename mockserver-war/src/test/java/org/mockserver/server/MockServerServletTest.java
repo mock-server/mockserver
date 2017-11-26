@@ -27,7 +27,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.List;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
@@ -246,7 +249,7 @@ public class MockServerServletTest {
                 "        \"unlimited\": true" +
                 "    }" +
                 "}";
-        httpServletRequest.setContent(jsonExpectation.getBytes());
+        httpServletRequest.setContent(jsonExpectation.getBytes(UTF_8));
 
         // when
         new MockServerServlet().service(httpServletRequest, httpServletResponse);
@@ -265,7 +268,7 @@ public class MockServerServletTest {
                 "    \"httpResponse\": { }," +
                 "    \"times\": { }" +
                 "}";
-        httpServletRequest.setContent(jsonExpectation.getBytes());
+        httpServletRequest.setContent(jsonExpectation.getBytes(UTF_8));
 
         // when
         new MockServerServlet().service(httpServletRequest, httpServletResponse);
@@ -291,7 +294,7 @@ public class MockServerServletTest {
                 "        \"unlimited\": true" +
                 "    }" +
                 "}";
-        httpServletRequest.setContent(jsonExpectation.getBytes());
+        httpServletRequest.setContent(jsonExpectation.getBytes(UTF_8));
 
         // when
         new MockServerServlet().service(httpServletRequest, httpServletResponse);
@@ -394,7 +397,7 @@ public class MockServerServletTest {
     }
 
     @Test
-    public void shouldDumpAllExpectationsToLog() throws IOException {
+    public void shouldDumpAllExpectationsToLogInJson() throws IOException {
         // given
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
         HttpRequest httpRequest = new HttpRequest();
@@ -413,7 +416,31 @@ public class MockServerServletTest {
 
         // then
         verify(mockHttpRequestSerializer).deserialize("requestBytes");
-        verify(mockMockServerMatcher).dumpToLog(httpRequest);
+        verify(mockMockServerMatcher).dumpToLog(httpRequest, false);
+    }
+
+    @Test
+    public void shouldDumpAllExpectationsToLogInJava() throws IOException {
+        // given
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        HttpRequest httpRequest = new HttpRequest();
+
+        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
+                .thenReturn(
+                        request()
+                                .withMethod("PUT")
+                                .withPath("/dumpToLog")
+                                .withQueryStringParameter("type", "java")
+                                .withBody("requestBytes")
+                );
+        when(mockHttpRequestSerializer.deserialize("requestBytes")).thenReturn(httpRequest);
+
+        // when
+        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
+
+        // then
+        verify(mockHttpRequestSerializer).deserialize("requestBytes");
+        verify(mockMockServerMatcher).dumpToLog(httpRequest, true);
     }
 
     @Test
@@ -442,7 +469,7 @@ public class MockServerServletTest {
 
         // then
         verify(mockRequestLogFilter).retrieve(request);
-        assertThat(httpServletResponse.getContentAsByteArray(), is("request_response".getBytes()));
+        assertThat(httpServletResponse.getContentAsByteArray(), is("request_response".getBytes(UTF_8)));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
     }
 
@@ -465,7 +492,7 @@ public class MockServerServletTest {
 
         // and - a set of expectations retrieved from the matcher
         Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(new HttpResponse());
-        Expectation[] expectations = {expectation, expectation};
+        List<Expectation> expectations = Arrays.asList(expectation, expectation);
         when(mockMockServerMatcher.retrieveExpectations(any(HttpRequest.class))).thenReturn(expectations);
         when(mockExpectationSerializer.serialize(expectations)).thenReturn("expectations_response");
 
@@ -474,7 +501,7 @@ public class MockServerServletTest {
 
         // then
         verify(mockMockServerMatcher).retrieveExpectations(request);
-        assertThat(httpServletResponse.getContentAsByteArray(), is("expectations_response".getBytes()));
+        assertThat(httpServletResponse.getContentAsByteArray(), is("expectations_response".getBytes(UTF_8)));
         assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
     }
 

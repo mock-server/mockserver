@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
@@ -117,7 +118,7 @@ public class HttpProxyUnificationHandlerSOCKSErrorTest {
         assertThat(embeddedChannel.pipeline().get(HttpObjectAggregator.class), is(nullValue()));
 
         // when - basic HTTP request
-        embeddedChannel.writeInbound(Unpooled.wrappedBuffer("GET /somePath HTTP/1.1\r\nHost: some.random.host\r\n\r\n".getBytes()));
+        embeddedChannel.writeInbound(Unpooled.wrappedBuffer("GET /somePath HTTP/1.1\r\nHost: some.random.host\r\n\r\n".getBytes(UTF_8)));
 
         // then - should add HTTP handlers last
         if (LoggerFactory.getLogger(PortUnificationHandler.class).isTraceEnabled()) {
@@ -151,7 +152,7 @@ public class HttpProxyUnificationHandlerSOCKSErrorTest {
         assertThat(embeddedChannel.isOpen(), is(true));
 
         // when - basic HTTP request
-        embeddedChannel.writeInbound(Unpooled.wrappedBuffer("UNKNOWN_PROTOCOL".getBytes()));
+        embeddedChannel.writeInbound(Unpooled.wrappedBuffer("UNKNOWN_PROTOCOL".getBytes(UTF_8)));
 
         // then - should add no handlers
         assertThat(embeddedChannel.pipeline().names(), contains(

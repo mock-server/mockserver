@@ -7,6 +7,7 @@ import org.mockserver.client.serialization.Base64Converter;
 
 import javax.xml.bind.DatatypeConverter;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
@@ -19,6 +20,8 @@ import static org.mockserver.model.BinaryBody.binary;
  */
 public class BinaryBodyTest {
 
+    private final Base64Converter base64Converter = new Base64Converter();
+
     @Test
     public void shouldAlwaysCreateNewObject() {
         byte[] body = DatatypeConverter.parseBase64Binary("some_body");
@@ -29,7 +32,7 @@ public class BinaryBodyTest {
 
     @Test
     public void shouldReturnFormattedRequestInToString() {
-        assertEquals(Base64Converter.bytesToBase64String("some_body".getBytes()), binary("some_body".getBytes()).toString());
+        assertEquals(base64Converter.bytesToBase64String("some_body".getBytes(UTF_8)), binary("some_body".getBytes(UTF_8)).toString());
     }
 
     @Test

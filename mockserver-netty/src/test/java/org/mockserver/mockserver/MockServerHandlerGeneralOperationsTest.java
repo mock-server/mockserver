@@ -114,9 +114,12 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
     }
 
     @Test
-    public void shouldDumpExpectationsToLog() {
+    public void shouldDumpExpectationsToLogInJson() {
         // given
-        HttpRequest request = request("/dumpToLog").withMethod("PUT").withBody("some_content");
+        HttpRequest request = request()
+                .withPath("/dumpToLog")
+                .withMethod("PUT")
+                .withBody("some_content");
 
         // when
         embeddedChannel.writeInbound(request);
@@ -125,7 +128,31 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         verify(mockHttpRequestSerializer).deserialize("some_content");
 
         // then - expectations dumped to log
-        verify(mockMockServerMatcher).dumpToLog(mockHttpRequest);
+        verify(mockMockServerMatcher).dumpToLog(mockHttpRequest, false);
+
+        // and - correct response written to ChannelHandlerContext
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(OK.code()));
+        assertThat(httpResponse.getBodyAsString(), is(""));
+    }
+
+    @Test
+    public void shouldDumpExpectationsToLogInJava() {
+        // given
+        HttpRequest request = request()
+                .withMethod("PUT")
+                .withPath("/dumpToLog")
+                .withQueryStringParameter("type", "java")
+                .withBody("some_content");
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then - request deserialized
+        verify(mockHttpRequestSerializer).deserialize("some_content");
+
+        // then - expectations dumped to log
+        verify(mockMockServerMatcher).dumpToLog(mockHttpRequest, true);
 
         // and - correct response written to ChannelHandlerContext
         HttpResponse httpResponse = embeddedChannel.readOutbound();
@@ -147,6 +174,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         // and - expectation correctly setup
         verify(mockMockServerMatcher).when(any(HttpRequest.class), any(Times.class), any(TimeToLive.class));
         verify(mockExpectation).thenRespond(any(HttpResponse.class));
+        verify(mockExpectation).thenRespond(any(HttpTemplate.class));
         verify(mockExpectation).thenForward(any(HttpForward.class));
         verify(mockExpectation).thenError(any(HttpError.class));
         verify(mockExpectation).thenCallback(any(HttpClassCallback.class));
@@ -210,7 +238,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
     @Test
     public void shouldReturnSetupExpectationsRequests() {
         // given
-        Expectation[] expectations = {};
+        List<Expectation> expectations = Collections.emptyList();
         when(mockMockServerMatcher.retrieveExpectations(mockHttpRequest)).thenReturn(expectations);
         when(mockExpectationSerializer.serialize(expectations)).thenReturn("expectations");
         HttpRequest request = request("/retrieve").withQueryStringParameter("type", "expectation").withMethod("PUT").withBody("some_content");

@@ -60,7 +60,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
 
     public HttpRequest deserialize(String jsonHttpRequest) {
         if (Strings.isNullOrEmpty(jsonHttpRequest)) {
-            throw new IllegalArgumentException("1 error:\n - a request is required but value was \"" + String.valueOf(jsonHttpRequest) + "\"");
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request is required but value was \"" + String.valueOf(jsonHttpRequest) + "\"");
         } else {
             if (jsonHttpRequest.contains("\"httpRequest\"")) {
                 try {
@@ -101,11 +101,11 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
     public HttpRequest[] deserializeArray(String jsonHttpRequests) {
         List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
         if (Strings.isNullOrEmpty(jsonHttpRequests)) {
-            throw new IllegalArgumentException("1 error:\n - a request or request array is required but value was \"" + String.valueOf(jsonHttpRequests) + "\"");
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request or request array is required but value was \"" + String.valueOf(jsonHttpRequests) + "\"");
         } else {
             List<String> jsonRequestList = jsonArraySerializer.returnJSONObjects(jsonHttpRequests);
             if (jsonRequestList.isEmpty()) {
-                throw new IllegalArgumentException("1 error:\n - a request or array of request is required");
+                throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request or array of request is required");
             } else {
                 List<String> validationErrorsList = new ArrayList<String>();
                 for (String jsonExpecation : jsonRequestList) {
@@ -117,7 +117,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
 
                 }
                 if (!validationErrorsList.isEmpty()) {
-                    throw new IllegalArgumentException((validationErrorsList.size() > 1 ? "[" : "") + Joiner.on(",\n").join(validationErrorsList) + (validationErrorsList.size() > 1 ? "]" : ""));
+                    throw new IllegalArgumentException((validationErrorsList.size() > 1 ? "[" : "") + Joiner.on("," + NEW_LINE).join(validationErrorsList) + (validationErrorsList.size() > 1 ? "]" : ""));
                 }
             }
         }

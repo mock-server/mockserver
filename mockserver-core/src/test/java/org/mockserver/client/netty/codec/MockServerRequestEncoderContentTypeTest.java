@@ -13,6 +13,7 @@ import org.mockserver.model.HttpRequest;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -260,7 +261,7 @@ public class MockServerRequestEncoderContentTypeTest {
     @Test
     public void shouldReturnContentTypeForBinaryBody() {
         // given
-        httpRequest.withBody(binary("somebody".getBytes()));
+        httpRequest.withBody(binary("somebody".getBytes(UTF_8)));
 
         // when
         new MockServerRequestEncoder().encode(null, httpRequest, output);
@@ -273,7 +274,7 @@ public class MockServerRequestEncoderContentTypeTest {
     @Test
     public void shouldReturnContentTypeForBinaryBodyWithContentType() {
         // given - a request & response
-        httpRequest.withBody(binary("somebody".getBytes(), MediaType.QUICKTIME));
+        httpRequest.withBody(binary("somebody".getBytes(UTF_8), MediaType.QUICKTIME));
 
         // when
         new MockServerRequestEncoder().encode(null, httpRequest, output);

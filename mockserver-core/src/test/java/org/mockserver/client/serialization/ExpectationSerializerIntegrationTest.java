@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Rule;
 import org.junit.Test;
@@ -12,8 +13,10 @@ import org.mockserver.model.*;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -24,6 +27,7 @@ import static org.mockserver.model.NottableString.string;
  */
 public class ExpectationSerializerIntegrationTest {
 
+    private final Base64Converter base64Converter = new Base64Converter();
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
@@ -404,14 +408,14 @@ public class ExpectationSerializerIntegrationTest {
                                                 new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                                         ))
                                         .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                                        .setHeaders(Collections.singletonList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                                        .setCookies(Collections.singletonList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
                         .setHttpError(
                                 new HttpErrorDTO()
                                         .setDelay(new DelayDTO(new Delay(TimeUnit.HOURS, 1)))
                                         .setDropConnection(Boolean.TRUE)
-                                        .setResponseBytes("some_bytes".getBytes())
+                                        .setResponseBytes("some_bytes".getBytes(UTF_8))
                         )
                         .setTimes(new TimesDTO(Times.exactly(5)))
                         .setTimeToLive(new TimeToLiveDTO(TimeToLive.unlimited())).buildObject(), expectation
@@ -656,15 +660,15 @@ public class ExpectationSerializerIntegrationTest {
                                                 new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                                         ))
                                         .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                                        .setHeaders(ImmutableList.of(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                                        .setCookies(ImmutableList.of(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
                         .setHttpResponse(
                                 new HttpResponseDTO()
                                         .setStatusCode(304)
                                         .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                                        .setHeaders(ImmutableList.of(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                                        .setCookies(ImmutableList.of(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                                         .setDelay(
                                                 new DelayDTO()
                                                         .setTimeUnit(TimeUnit.MICROSECONDS)
@@ -819,12 +823,12 @@ public class ExpectationSerializerIntegrationTest {
                                                 new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
                                         ))
                                         .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                                        .setHeaders(ImmutableList.of(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                                        .setCookies(ImmutableList.of(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
                         )
                         .setHttpError(
                                 new HttpErrorDTO()
-                                        .setResponseBytes("some_bytes".getBytes())
+                                        .setResponseBytes("some_bytes".getBytes(UTF_8))
                                         .setDelay(new DelayDTO(new Delay(TimeUnit.HOURS, 1)))
                                         .setDropConnection(false)
                         )
@@ -861,7 +865,7 @@ public class ExpectationSerializerIntegrationTest {
                 "      \"value\" : 1" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"dropConnection\" : false," + NEW_LINE +
-                "    \"responseBytes\" : \"" + Base64Converter.bytesToBase64String("some_bytes".getBytes()) + "\"" + NEW_LINE +
+                "    \"responseBytes\" : \"" + base64Converter.bytesToBase64String("some_bytes".getBytes(UTF_8)) + "\"" + NEW_LINE +
                 "  }," + NEW_LINE +
                 "  \"times\" : {" + NEW_LINE +
                 "    \"remainingTimes\" : 5," + NEW_LINE +

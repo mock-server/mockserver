@@ -8,33 +8,36 @@ import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.BinaryBodyDTO;
 import org.mockserver.model.BinaryBody;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 public class BinaryBodyDTOSerializerTest {
 
+    private final Base64Converter base64Converter = new Base64Converter();
+
     @Test
     public void shouldSerializeBinaryBodyDTO() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new BinaryBodyDTO(new BinaryBody("someBytes".getBytes()))),
-                is("{\"type\":\"BINARY\",\"base64Bytes\":\"" + Base64Converter.bytesToBase64String("someBytes".getBytes()) + "\"}"));
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new BinaryBodyDTO(new BinaryBody("someBytes".getBytes(UTF_8)))),
+                is("{\"type\":\"BINARY\",\"base64Bytes\":\"" + base64Converter.bytesToBase64String("someBytes".getBytes(UTF_8)) + "\"}"));
     }
 
     @Test
     public void shouldSerializeBinaryBodyDTOWithContentType() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new BinaryBodyDTO(new BinaryBody("someBytes".getBytes(), MediaType.ANY_VIDEO_TYPE))),
-                is("{\"type\":\"BINARY\",\"base64Bytes\":\"" + Base64Converter.bytesToBase64String("someBytes".getBytes()) + "\",\"contentType\":\"video/*\"}"));
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new BinaryBodyDTO(new BinaryBody("someBytes".getBytes(UTF_8), MediaType.ANY_VIDEO_TYPE))),
+                is("{\"type\":\"BINARY\",\"base64Bytes\":\"" + base64Converter.bytesToBase64String("someBytes".getBytes(UTF_8)) + "\",\"contentType\":\"video/*\"}"));
     }
 
     @Test
     public void shouldSerializeBinaryBodyDTOWithNot() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new BinaryBodyDTO(new BinaryBody("someBytes".getBytes()), true)),
-                is("{\"not\":true,\"type\":\"BINARY\",\"base64Bytes\":\"" + Base64Converter.bytesToBase64String("someBytes".getBytes()) + "\"}"));
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new BinaryBodyDTO(new BinaryBody("someBytes".getBytes(UTF_8)), true)),
+                is("{\"not\":true,\"type\":\"BINARY\",\"base64Bytes\":\"" + base64Converter.bytesToBase64String("someBytes".getBytes(UTF_8)) + "\"}"));
     }
 
     @Test
     public void shouldSerializeBinaryBodyDTOWithNotWithContentType() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new BinaryBodyDTO(new BinaryBody("someBytes".getBytes(), MediaType.ANY_AUDIO_TYPE), true)),
-                is("{\"not\":true,\"type\":\"BINARY\",\"base64Bytes\":\"" + Base64Converter.bytesToBase64String("someBytes".getBytes()) + "\",\"contentType\":\"audio/*\"}"));
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new BinaryBodyDTO(new BinaryBody("someBytes".getBytes(UTF_8), MediaType.ANY_AUDIO_TYPE), true)),
+                is("{\"not\":true,\"type\":\"BINARY\",\"base64Bytes\":\"" + base64Converter.bytesToBase64String("someBytes".getBytes(UTF_8)) + "\",\"contentType\":\"audio/*\"}"));
     }
 
 }

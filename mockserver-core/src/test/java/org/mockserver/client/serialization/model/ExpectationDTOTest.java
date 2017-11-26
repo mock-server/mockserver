@@ -6,6 +6,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -22,7 +23,7 @@ public class ExpectationDTOTest {
         HttpRequest httpRequest = new HttpRequest().withBody("some_body");
         HttpResponse httpResponse = new HttpResponse().withBody("some_response_body");
         HttpForward httpForward = new HttpForward().withHost("some_host");
-        HttpError httpError = new HttpError().withResponseBytes("some_bytes".getBytes());
+        HttpError httpError = new HttpError().withResponseBytes("some_bytes".getBytes(UTF_8));
         HttpClassCallback httpClassCallback = new HttpClassCallback().withCallbackClass("some_class");
         HttpObjectCallback httpObjectCallback = new HttpObjectCallback().withClientId("some_client_id");
 
@@ -93,7 +94,7 @@ public class ExpectationDTOTest {
         HttpRequest httpRequest = new HttpRequest().withBody("some_body");
         HttpResponse httpResponse = new HttpResponse().withBody("some_response_body");
         HttpForward httpForward = new HttpForward().withHost("some_host");
-        HttpError httpError = new HttpError().withResponseBytes("some_bytes".getBytes());
+        HttpError httpError = new HttpError().withResponseBytes("some_bytes".getBytes(UTF_8));
         HttpClassCallback httpClassCallback = new HttpClassCallback().withCallbackClass("some_class");
         HttpObjectCallback httpObjectCallback = new HttpObjectCallback().withClientId("some_client_id");
 
@@ -180,7 +181,7 @@ public class ExpectationDTOTest {
         TimesDTO times = new TimesDTO(Times.exactly(3));
         HttpResponseDTO httpResponse = new HttpResponseDTO(new HttpResponse().withBody("some_response_body"));
         HttpForwardDTO httpForward = new HttpForwardDTO(new HttpForward().withHost("some_host"));
-        HttpErrorDTO httpError = new HttpErrorDTO(new HttpError().withResponseBytes("some_bytes".getBytes()));
+        HttpErrorDTO httpError = new HttpErrorDTO(new HttpError().withResponseBytes("some_bytes".getBytes(UTF_8)));
         HttpClassCallbackDTO httpClassCallback = new HttpClassCallbackDTO(new HttpClassCallback().withCallbackClass("some_class"));
         HttpObjectCallbackDTO httpObjectCallback = new HttpObjectCallbackDTO(new HttpObjectCallback().withClientId("some_client_id"));
 

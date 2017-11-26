@@ -207,6 +207,8 @@ components:
           $ref: "#/components/schemas/HttpRequest"
         httpResponse:
           $ref: "#/components/schemas/HttpResponse"
+        httpResponseTemplate:
+          $ref: "#/components/schemas/HttpTemplate"
         httpForward:
           $ref: "#/components/schemas/HttpForward"
         httpClassCallback:
@@ -268,6 +270,19 @@ components:
           $ref: "#/components/schemas/KeyToMultiValue"
         statusCode:
           type: integer
+    HttpTemplate:
+      title: "template to generate response / request"
+      type: object
+      additionalProperties: false
+      properties:
+        templateType:
+          enum:
+          - JAVASCRIPT
+          - VELOCITY
+        template:
+          type: string
+        delay:
+          $ref: "#/components/schemas/Delay"
     HttpForward:
       title: host and port to forward to
       type: object

@@ -1,7 +1,10 @@
 package org.mockserver.client.serialization.java;
 
 import com.google.common.base.Strings;
+import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.mock.Expectation;
+
+import java.util.List;
 
 import static org.mockserver.character.Character.NEW_LINE;
 
@@ -11,6 +14,16 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation> {
 
     public static final int INDENT_SIZE = 8;
+
+    public String serializeAsJava(int numberOfSpacesToIndent, List<Expectation> expectations) {
+        StringBuilder output = new StringBuilder();
+        for (Expectation expectation : expectations) {
+            output.append(serializeAsJava(numberOfSpacesToIndent, expectation));
+            output.append(NEW_LINE);
+            output.append(NEW_LINE);
+        }
+        return output.toString();
+    }
 
     @Override
     public String serializeAsJava(int numberOfSpacesToIndent, Expectation expectation) {
@@ -24,6 +37,11 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
             if (expectation.getHttpResponse() != null) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".respond(");
                 output.append(new HttpResponseToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 1, expectation.getHttpResponse()));
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
+            }
+            if (expectation.getHttpResponseTemplate() != null) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".respond(");
+                output.append(new HttpResponseTemplateToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 1, expectation.getHttpResponseTemplate()));
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
             }
             if (expectation.getHttpForward() != null) {
@@ -40,6 +58,9 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".callback(");
                 output.append(new HttpCallbackToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 1, expectation.getHttpClassCallback()));
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
+            }
+            if (expectation.getHttpObjectCallback() != null) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".callback(/*NOT POSSIBLE TO GENERATE CODE*/)");
             }
             output.append(";");
         }

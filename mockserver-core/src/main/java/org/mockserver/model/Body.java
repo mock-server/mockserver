@@ -5,6 +5,8 @@ import com.google.common.net.MediaType;
 
 import java.nio.charset.Charset;
 
+import static com.google.common.base.Charsets.UTF_8;
+
 /**
  * @author jamesdbloom
  */
@@ -24,7 +26,7 @@ public abstract class Body<T> extends Not {
 
     @JsonIgnore
     public byte[] getRawBytes() {
-        return toString().getBytes();
+        return toString().getBytes(UTF_8);
     }
 
     @JsonIgnore

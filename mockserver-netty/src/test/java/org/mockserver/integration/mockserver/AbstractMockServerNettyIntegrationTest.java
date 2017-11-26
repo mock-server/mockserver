@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
@@ -42,7 +43,6 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
-import static org.mockserver.verify.VerificationTimes.once;
 
 /**
  * @author jamesdbloom
@@ -316,7 +316,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
     @Test
     public void shouldErrorWhenBindingToUnavailableSocket() throws InterruptedException, IOException {
-        System.out.println("\n\n--- IGNORE THE FOLLOWING java.net.BindException EXCEPTION ---\n\n");
+        System.out.println(NEW_LINE + NEW_LINE + "--- IGNORE THE FOLLOWING java.net.BindException EXCEPTION ---" + NEW_LINE + NEW_LINE);
         ServerSocket server = null;
         try {
             // given
@@ -413,7 +413,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 )
                 .respond(
                         response()
-                                .withBody(binary("some_long_body".getBytes()))
+                                .withBody(binary("some_long_body".getBytes(UTF_8)))
                                 .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
                                 .withConnectionOptions(
                                         connectionOptions()
@@ -430,7 +430,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                         .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
                         .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
                         .withStatusCode(OK_200.code())
-                        .withBody(binary("some_lo".getBytes())),
+                        .withBody(binary("some_lo".getBytes(UTF_8))),
                 makeRequest(
                         request()
                                 .withPath(calculatePath("")),
@@ -443,7 +443,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                         .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
                         .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
                         .withStatusCode(OK_200.code())
-                        .withBody(binary("some_lo".getBytes())),
+                        .withBody(binary("some_lo".getBytes(UTF_8))),
                 makeRequest(
                         request()
                                 .withSecure(true)
@@ -461,7 +461,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 )
                 .respond(
                         response()
-                                .withBody(binary("some_long_body".getBytes()))
+                                .withBody(binary("some_long_body".getBytes(UTF_8)))
                                 .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
                                 .withConnectionOptions(
                                         connectionOptions()
@@ -554,7 +554,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 .error(
                         error()
                                 .withDropConnection(true)
-                                .withResponseBytes("some_random_bytes".getBytes())
+                                .withResponseBytes("some_random_bytes".getBytes(UTF_8))
                 );
 
         // then
@@ -615,7 +615,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 .error(
                         error()
                                 .withDropConnection(true)
-                                .withResponseBytes("some_random_bytes".getBytes())
+                                .withResponseBytes("some_random_bytes".getBytes(UTF_8))
                 );
 
         // then

@@ -1,7 +1,5 @@
 package org.mockserver.mockserver;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -17,12 +15,10 @@ import org.mockserver.stop.Stoppable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -31,11 +27,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class MockServer implements Stoppable {
 
-    static final AttributeKey<RequestLogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static final Logger logger = LoggerFactory.getLogger(MockServer.class);
     // mockserver
-    private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
+    static final AttributeKey<RequestLogFilter> REQUEST_LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     private final RequestLogFilter requestLogFilter = new RequestLogFilter();
+    private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
     private final WebSocketClientRegistry webSocketClientRegistry = new WebSocketClientRegistry();
     private final List<Future<Channel>> channelOpenedFutures = new ArrayList<Future<Channel>>();
     private final SettableFuture<String> stopping = SettableFuture.<String>create();
@@ -48,7 +44,7 @@ public class MockServer implements Stoppable {
     /**
      * Start the instance using the port provided
      *
-     * @param requestedPortBindings the http port to use
+     * @param requestedPortBindings the http port(s) to use
      */
     public MockServer(final Integer... requestedPortBindings) {
         if (requestedPortBindings == null || requestedPortBindings.length == 0) {
@@ -63,7 +59,7 @@ public class MockServer implements Stoppable {
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
                 .childHandler(new MockServerInitializer(mockServerMatcher, MockServer.this, webSocketClientRegistry))
-                .childAttr(LOG_FILTER, requestLogFilter);
+                .childAttr(REQUEST_LOG_FILTER, requestLogFilter);
 
         bindToPorts(Arrays.asList(requestedPortBindings));
 

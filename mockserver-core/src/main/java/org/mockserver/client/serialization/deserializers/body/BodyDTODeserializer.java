@@ -45,6 +45,8 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         fieldNameToType.put("xpath".toLowerCase(), Body.Type.XPATH);
     }
 
+    private final Base64Converter base64Converter = new Base64Converter();
+
     public BodyDTODeserializer() {
         super(BodyDTO.class);
     }
@@ -163,9 +165,9 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                 switch (type) {
                     case BINARY:
                         if (contentType != null) {
-                            return new BinaryBodyDTO(new BinaryBody(Base64Converter.base64StringToBytes(valueJsonValue), contentType), not);
+                            return new BinaryBodyDTO(new BinaryBody(base64Converter.base64StringToBytes(valueJsonValue), contentType), not);
                         } else {
-                            return new BinaryBodyDTO(new BinaryBody(Base64Converter.base64StringToBytes(valueJsonValue)), not);
+                            return new BinaryBodyDTO(new BinaryBody(base64Converter.base64StringToBytes(valueJsonValue)), not);
                         }
                     case JSON:
                         if (contentType != null) {

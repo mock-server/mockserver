@@ -7,12 +7,14 @@ import org.mockserver.client.serialization.Base64Converter;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.mockito.Mockito.*;
@@ -23,6 +25,8 @@ import static org.mockserver.model.HttpResponse.response;
  * @author jamesdbloom
  */
 public class HttpResponseTest {
+
+    private final Base64Converter base64Converter = new Base64Converter();
 
     @Test
     public void shouldAlwaysCreateNewObject() {
@@ -37,7 +41,7 @@ public class HttpResponseTest {
 
     @Test
     public void returnsBody() {
-        assertEquals(Base64Converter.bytesToBase64String("somebody".getBytes()), new HttpResponse().withBody("somebody".getBytes()).getBodyAsString());
+        assertEquals(base64Converter.bytesToBase64String("somebody".getBytes(UTF_8)), new HttpResponse().withBody("somebody".getBytes(UTF_8)).getBodyAsString());
         assertEquals("somebody", new HttpResponse().withBody("somebody").getBodyAsString());
         assertNull(new HttpResponse().withBody((byte[]) null).getBodyAsString());
         assertEquals(null, new HttpResponse().withBody((String) null).getBodyAsString());
@@ -143,16 +147,13 @@ public class HttpResponseTest {
     }
 
     @Test
-    @Ignore("TimeUnit in Java 9 is final so it is not possible to mock it")
     public void appliesDelay() throws InterruptedException {
-        // given
-        TimeUnit timeUnit = mock(TimeUnit.class);
-
         // when
-        new HttpResponse().withDelay(new Delay(timeUnit, 10)).applyDelay();
+        long before = System.currentTimeMillis();
+        new HttpResponse().withDelay(new Delay(TimeUnit.SECONDS, 3)).applyDelay();
 
         // then
-        verify(timeUnit).sleep(10);
+        assertThat(System.currentTimeMillis() - before, greaterThan(TimeUnit.SECONDS.toMillis(2)));
     }
 
     @Test(expected = RuntimeException.class)

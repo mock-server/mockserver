@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
@@ -19,7 +20,7 @@ public abstract class AbstractRestartableMockServerNettyIntegrationTest extends 
     @Test
     public void shouldThrowExceptionIfFailToBindToSocket() {
         // given
-        System.out.println("\n\n--- IGNORE THE FOLLOWING java.net.BindException EXCEPTION ---\n\n");
+        System.out.println(NEW_LINE + NEW_LINE + "--- IGNORE THE FOLLOWING java.net.BindException EXCEPTION ---" + NEW_LINE + NEW_LINE);
         expectedException.expect(RuntimeException.class);
         expectedException.expectMessage(containsString("Exception while binding MockServer to port "));
 

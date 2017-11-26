@@ -9,6 +9,7 @@ import org.mockserver.model.HttpResponse;
 
 import java.io.IOException;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.BinaryBody.binary;
@@ -17,6 +18,8 @@ import static org.mockserver.model.BinaryBody.binary;
  * @author jamesdbloom
  */
 public class HttpResponseToJavaSerializerTest {
+
+    private final Base64Converter base64Converter = new Base64Converter();
 
     @Test
     public void shouldSerializeFullObjectWithResponseAsJava() throws IOException {
@@ -53,10 +56,10 @@ public class HttpResponseToJavaSerializerTest {
         // when
         assertEquals(NEW_LINE +
                         "        response()" + NEW_LINE +
-                        "                .withBody(Base64Converter.base64StringToBytes(\"" + Base64Converter.bytesToBase64String("responseBody".getBytes()) + "\"))",
+                        "                .withBody(new Base64Converter().base64StringToBytes(\"" + base64Converter.bytesToBase64String("responseBody".getBytes(UTF_8)) + "\"))",
                 new HttpResponseToJavaSerializer().serializeAsJava(1,
                         new HttpResponse()
-                                .withBody(binary("responseBody".getBytes()))
+                                .withBody(binary("responseBody".getBytes(UTF_8)))
                 )
         );
     }

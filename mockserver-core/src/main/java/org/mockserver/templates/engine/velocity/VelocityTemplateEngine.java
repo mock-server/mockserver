@@ -5,9 +5,11 @@ import org.apache.velocity.script.VelocityScriptEngineFactory;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.client.serialization.model.HttpResponseDTO;
+import org.mockserver.logging.LogFormatter;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.templates.engine.TemplateEngine;
+import org.mockserver.templates.engine.velocity.model.HttpRequestTemplateObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,15 +23,16 @@ import java.io.Writer;
  * @author jamesdbloom
  */
 public class VelocityTemplateEngine implements TemplateEngine {
-    private final static ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
-    private final static Logger logger = LoggerFactory.getLogger(VelocityTemplateEngine.class);
+    private static ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private static Logger logger = LoggerFactory.getLogger(VelocityTemplateEngine.class);
+    private static LogFormatter logFormatter = new LogFormatter(logger);
 
-    private final ScriptEngineManager manager = new ScriptEngineManager();
-    private final ScriptEngine engine = manager.getEngineByName("velocity");
+    private static final ScriptEngineManager manager = new ScriptEngineManager();
+    private static final ScriptEngine engine;
 
-    public VelocityTemplateEngine() {
+    static {
         manager.registerEngineName("velocity", new VelocityScriptEngineFactory());
-//            System.setProperty(VelocityScriptEngine.VELOCITY_PROPERTIES_KEY, "path/to/velocity.properties");
+        engine = manager.getEngineByName("velocity");
     }
 
     @Override
@@ -38,11 +41,12 @@ public class VelocityTemplateEngine implements TemplateEngine {
             Writer writer = new StringWriter();
             ScriptContext context = engine.getContext();
             context.setWriter(writer);
-            context.setAttribute("request", new HttpRequestDTO(httpRequest), ScriptContext.ENGINE_SCOPE);
+            context.setAttribute("request", new HttpRequestTemplateObject(httpRequest), ScriptContext.ENGINE_SCOPE);
             engine.eval(template);
+            logFormatter.infoLog("Generated response:{}from template:{}for request:{}", writer.toString(), template, httpRequest);
             return objectMapper.readValue(writer.toString(), HttpResponseDTO.class).buildObject();
         } catch (Exception e) {
-            logger.error("Exception transforming template:\n\"" + template + "\" with request:\n" + httpRequest, e);
+            logFormatter.errorLog(e, "Exception transforming template:{}for request:{}", template, httpRequest);
         }
         return null;
     }

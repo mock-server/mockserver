@@ -31,7 +31,7 @@ public class VerificationSerializer implements Serializer<Verification> {
 
     public Verification deserialize(String jsonVerification) {
         if (Strings.isNullOrEmpty(jsonVerification)) {
-            throw new IllegalArgumentException("1 error:\n - a verification is required but value was \"" + String.valueOf(jsonVerification) + "\"");
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a verification is required but value was \"" + String.valueOf(jsonVerification) + "\"");
         } else {
             String validationErrors = verificationValidator.isValid(jsonVerification);
             if (validationErrors.isEmpty()) {

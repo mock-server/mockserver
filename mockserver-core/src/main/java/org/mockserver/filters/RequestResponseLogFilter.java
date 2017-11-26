@@ -77,26 +77,30 @@ public class RequestResponseLogFilter implements ResponseFilter, RequestFilter {
     public void dumpToLog(HttpRequest httpRequest, boolean asJava) {
         ExpectationSerializer expectationSerializer = new ExpectationSerializer();
         ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
+        for (Expectation expectation : retrieveExpectations(httpRequest)) {
+            if (asJava) {
+                requestLogger.info(expectationToJavaSerializer.serializeAsJava(0, expectation));
+            } else {
+                requestLogger.info(expectationSerializer.serialize(expectation));
+            }
+        }
+    }
+
+    public List<Expectation> retrieveExpectations(HttpRequest httpRequest) {
+        List<Expectation> matchingExpectations = new ArrayList<>();
         if (httpRequest != null) {
             HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
                 if (httpRequestMatcher.matches(entry.getKey(), true)) {
-                    if (asJava) {
-                        requestLogger.warn(expectationToJavaSerializer.serializeAsJava(0, new Expectation(entry.getKey(), Times.once(), TimeToLive.unlimited()).thenRespond(entry.getValue())));
-                    } else {
-                        requestLogger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once(), TimeToLive.unlimited()).thenRespond(entry.getValue())));
-                    }
+                    matchingExpectations.add(new Expectation(entry.getKey(), Times.once(), TimeToLive.unlimited()).thenRespond(entry.getValue()));
                 }
             }
         } else {
             for (Map.Entry<HttpRequest, HttpResponse> entry : requestResponseLog.entrySet()) {
-                if (asJava) {
-                    requestLogger.warn(expectationToJavaSerializer.serializeAsJava(0, new Expectation(entry.getKey(), Times.once(), TimeToLive.unlimited()).thenRespond(entry.getValue())));
-                } else {
-                    requestLogger.warn(expectationSerializer.serialize(new Expectation(entry.getKey(), Times.once(), TimeToLive.unlimited()).thenRespond(entry.getValue())));
-                }
+                matchingExpectations.add(new Expectation(entry.getKey(), Times.once(), TimeToLive.unlimited()).thenRespond(entry.getValue()));
             }
         }
+        return matchingExpectations;
     }
 
 }

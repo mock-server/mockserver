@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.model.*;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -815,31 +816,31 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void matchesMatchingBinaryBody() {
-        byte[] matched = "some binary value".getBytes();
-        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(binary("some binary value".getBytes()))).matches(new HttpRequest().withBody(binary(matched))));
+        byte[] matched = "some binary value".getBytes(UTF_8);
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(binary("some binary value".getBytes(UTF_8)))).matches(new HttpRequest().withBody(binary(matched))));
     }
 
     @Test
     public void matchesMatchingBinaryBodyDTO() {
         assertTrue(new HttpRequestMatcher(
-                        new HttpRequest().withBody(binary("some binary value".getBytes()))
+                        new HttpRequest().withBody(binary("some binary value".getBytes(UTF_8)))
                 ).matches(
-                        new HttpRequest().withBody(new BinaryBodyDTO(binary("some binary value".getBytes())).toString()))
+                        new HttpRequest().withBody(new BinaryBodyDTO(binary("some binary value".getBytes(UTF_8))).toString()))
         );
     }
 
     @Test
     public void doesNotMatchIncorrectBinaryBody() {
-        byte[] matched = "some other binary value".getBytes();
-        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(binary("some binary value".getBytes()))).matches(new HttpRequest().withBody(binary(matched))));
+        byte[] matched = "some other binary value".getBytes(UTF_8);
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(binary("some binary value".getBytes(UTF_8)))).matches(new HttpRequest().withBody(binary(matched))));
     }
 
     @Test
     public void doesNotMatchIncorrectBinaryBodyDTO() {
         assertFalse(new HttpRequestMatcher(
-                        new HttpRequest().withBody(binary("some binary value".getBytes()))
+                        new HttpRequest().withBody(binary("some binary value".getBytes(UTF_8)))
                 ).matches(
-                        new HttpRequest().withBody(new BinaryBodyDTO(binary("some other binary value".getBytes())).toString()))
+                        new HttpRequest().withBody(new BinaryBodyDTO(binary("some other binary value".getBytes(UTF_8))).toString()))
         );
     }
 

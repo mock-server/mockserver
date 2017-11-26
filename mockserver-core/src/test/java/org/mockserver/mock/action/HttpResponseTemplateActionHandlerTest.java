@@ -9,6 +9,7 @@ import javax.script.ScriptEngineManager;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -22,16 +23,16 @@ public class HttpResponseTemplateActionHandlerTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptTemplateFirstExample() {
         // given
-        HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "if (request.method === 'POST' && request.path === '/somePath') {\n" +
-                "    return {\n" +
-                "        'statusCode': 200,\n" +
-                "        'body': JSON.stringify({name: 'value'})\n" +
-                "    };\n" +
-                "} else {\n" +
-                "    return {\n" +
-                "        'statusCode': 406,\n" +
-                "        'body': request.body\n" +
-                "    };\n" +
+        HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': JSON.stringify({name: 'value'})" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
                 "}");
 
         // when
@@ -58,16 +59,16 @@ public class HttpResponseTemplateActionHandlerTest {
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptTemplateSecondExample() {
         // given
-        HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "if (request.method === 'POST' && request.path === '/somePath') {\n" +
-                "    return {\n" +
-                "        'statusCode': 200,\n" +
-                "        'body': JSON.stringify({name: 'value'})\n" +
-                "    };\n" +
-                "} else {\n" +
-                "    return {\n" +
-                "        'statusCode': 406,\n" +
-                "        'body': request.body\n" +
-                "    };\n" +
+        HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': JSON.stringify({name: 'value'})" + NEW_LINE +
+                "    };" + NEW_LINE +
+                "} else {" + NEW_LINE +
+                "    return {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': request.body" + NEW_LINE +
+                "    };" + NEW_LINE +
                 "}");
 
         // when
@@ -93,16 +94,16 @@ public class HttpResponseTemplateActionHandlerTest {
     @Test
     public void shouldHandleHttpRequestsWithVelocityTemplateFirstExample() {
         // given
-        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "#if ( $request.method.value == \"POST\" )\n" +
-                "    {\n" +
-                "        'statusCode': 200,\n" +
-                "        'body': \"{'name': 'value'}\"\n" +
-                "    }\n" +
-                "#else\n" +
-                "    {\n" +
-                "        'statusCode': 406,\n" +
-                "        'body': $request.body\n" +
-                "    }\n" +
+        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "#if ( $request.method == 'POST' && $request.path == '/somePath' )" + NEW_LINE +
+                "    {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': \"{'name': 'value'}\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "#else" + NEW_LINE +
+                "    {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': \"$!request.body\"" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "#end");
 
         // when
@@ -123,39 +124,17 @@ public class HttpResponseTemplateActionHandlerTest {
     @Test
     public void shouldHandleHttpRequestsWithVelocityTemplateSecondExample() {
         // given
-        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "#if ( $request.method.value == \"POST\" )\n" +
-                "    {\n" +
-                "        'statusCode': 200,\n" +
-                "        'body': \"{'name': 'value'}\"\n" +
-                "    }\n" +
-                "#else\n" +
-                "    {\n" +
-                "        'statusCode': 406,\n" +
-                "        'body': $request.body\n" +
-                "    }\n" +
+        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "#if ( $request.method == 'POST' && $request.path == '/somePath' )" + NEW_LINE +
+                "    {" + NEW_LINE +
+                "        'statusCode': 200," + NEW_LINE +
+                "        'body': \"{'name': 'value'}\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "#else" + NEW_LINE +
+                "    {" + NEW_LINE +
+                "        'statusCode': 406," + NEW_LINE +
+                "        'body': \"$!request.body\"" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "#end");
-
-        // when
-        HttpResponse actualHttpResponse = new HttpResponseTemplateActionHandler().handle(template, request()
-                .withPath("/someOtherPath")
-                .withBody("some_body")
-        );
-
-        // then
-        assertThat(actualHttpResponse, is(
-                response()
-                        .withStatusCode(406)
-                        .withBody("some_body")
-        ));
-    }
-
-    @Test
-    public void shouldHandleHttpRequestsWithGroovyTemplateSecondExample() {
-        // given
-        HttpTemplate template = template(HttpTemplate.TemplateType.GROOVY, "{\n" +
-                "    'statusCode': 406,\n" +
-                "    'body': '$request.body'\n" +
-                "}");
 
         // when
         HttpResponse actualHttpResponse = new HttpResponseTemplateActionHandler().handle(template, request()

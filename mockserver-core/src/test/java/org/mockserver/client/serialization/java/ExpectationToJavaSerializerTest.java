@@ -3,23 +3,31 @@ package org.mockserver.client.serialization.java;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.client.serialization.Base64Converter;
-import org.mockserver.matchers.TimeToLive;
-import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.matchers.TimeToLive.unlimited;
+import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
+import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
+import static org.mockserver.model.HttpForward.forward;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpTemplate.template;
 
 /**
  * @author jamesdbloom
  */
 public class ExpectationToJavaSerializerTest {
+
+    private final Base64Converter base64Converter = new Base64Converter();
 
     @Test
     public void shouldSerializeFullObjectWithResponseAsJava() throws IOException {
@@ -68,7 +76,7 @@ public class ExpectationToJavaSerializerTest {
                         "        );",
                 new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
-                                new HttpRequest()
+                                request()
                                         .withMethod("GET")
                                         .withPath("somePath")
                                         .withQueryStringParameters(
@@ -84,29 +92,97 @@ public class ExpectationToJavaSerializerTest {
                                                 new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
                                         .withBody(new StringBody("somebody")),
-                                Times.once(),
-                                TimeToLive.unlimited()).thenRespond(
-                                new HttpResponse()
-                                        .withStatusCode(304)
+                                once(),
+                                unlimited()
+                        )
+                                .thenRespond(
+                                        response()
+                                                .withStatusCode(304)
+                                                .withHeaders(
+                                                        new Header("responseHeaderNameOne", "responseHeaderValueOneOne", "responseHeaderValueOneTwo"),
+                                                        new Header("responseHeaderNameTwo", "responseHeaderValueTwo")
+                                                )
+                                                .withCookies(
+                                                        new Cookie("responseCookieNameOne", "responseCookieValueOne"),
+                                                        new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
+                                                )
+                                                .withBody("responseBody")
+                                                .withDelay(new Delay(TimeUnit.MINUTES, 1))
+                                                .withConnectionOptions(
+                                                        connectionOptions()
+                                                                .withSuppressContentLengthHeader(true)
+                                                                .withContentLengthHeaderOverride(10)
+                                                                .withSuppressConnectionHeader(true)
+                                                                .withKeepAliveOverride(true)
+                                                                .withCloseSocket(true)
+                                                )
+                                )
+                )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithResponseTemplateAsJava() throws IOException {
+        assertEquals(NEW_LINE +
+                        "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                        "        .when(" + NEW_LINE +
+                        "                request()" + NEW_LINE +
+                        "                        .withMethod(\"GET\")" + NEW_LINE +
+                        "                        .withPath(\"somePath\")" + NEW_LINE +
+                        "                        .withHeaders(" + NEW_LINE +
+                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                        "                        )" + NEW_LINE +
+                        "                        .withCookies(" + NEW_LINE +
+                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                        "                        )" + NEW_LINE +
+                        "                        .withQueryStringParameters(" + NEW_LINE +
+                        "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                        "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                        "                        )" + NEW_LINE +
+                        "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                        "                Times.once()" + NEW_LINE +
+                        "        )" + NEW_LINE +
+                        "        .respond(" + NEW_LINE +
+                        "                template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
+                        "                        .withTemplate(\"if (request.method === 'POST' && request.path === '/somePath') {\\n    return {\\n        'statusCode': 200,\\n        'body': JSON.stringify({name: 'value'})\\n    };\\n} else {\\n    return {\\n        'statusCode': 406,\\n        'body': request.body\\n    };\\n}\")" + NEW_LINE +
+                        "        );",
+                new ExpectationToJavaSerializer().serializeAsJava(1,
+                        new Expectation(
+                                request()
+                                        .withMethod("GET")
+                                        .withPath("somePath")
+                                        .withQueryStringParameters(
+                                                new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                                                new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                                        )
                                         .withHeaders(
-                                                new Header("responseHeaderNameOne", "responseHeaderValueOneOne", "responseHeaderValueOneTwo"),
-                                                new Header("responseHeaderNameTwo", "responseHeaderValueTwo")
+                                                new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                                                new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
                                         )
                                         .withCookies(
-                                                new Cookie("responseCookieNameOne", "responseCookieValueOne"),
-                                                new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
+                                                new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                                                new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
-                                        .withBody("responseBody")
-                                        .withDelay(new Delay(TimeUnit.MINUTES, 1))
-                                        .withConnectionOptions(
-                                                connectionOptions()
-                                                        .withSuppressContentLengthHeader(true)
-                                                        .withContentLengthHeaderOverride(10)
-                                                        .withSuppressConnectionHeader(true)
-                                                        .withKeepAliveOverride(true)
-                                                        .withCloseSocket(true)
-                                        )
+                                        .withBody(new StringBody("somebody")),
+                                once(),
+                                unlimited()
                         )
+                                .thenRespond(
+                                        template(HttpTemplate.TemplateType.JAVASCRIPT, "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                                                "    return {" + NEW_LINE +
+                                                "        'statusCode': 200," + NEW_LINE +
+                                                "        'body': JSON.stringify({name: 'value'})" + NEW_LINE +
+                                                "    };" + NEW_LINE +
+                                                "} else {" + NEW_LINE +
+                                                "    return {" + NEW_LINE +
+                                                "        'statusCode': 406," + NEW_LINE +
+                                                "        'body': request.body" + NEW_LINE +
+                                                "    };" + NEW_LINE +
+                                                "}"
+                                        )
+                                )
                 )
         );
     }
@@ -131,17 +207,18 @@ public class ExpectationToJavaSerializerTest {
                         "        );",
                 new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
-                                new HttpRequest()
+                                request()
                                         .withBody(
                                                 new ParameterBody(
                                                         new Parameter("requestBodyParameterNameOne", "requestBodyParameterValueOneOne", "requestBodyParameterValueOneTwo"),
                                                         new Parameter("requestBodyParameterNameTwo", "requestBodyParameterValueTwo")
                                                 )
                                         ),
-                                Times.once(),
-                                TimeToLive.unlimited())
+                                once(),
+                                unlimited()
+                        )
                                 .thenRespond(
-                                        new HttpResponse()
+                                        response()
                                                 .withBody("responseBody")
                                 )
                 )
@@ -155,7 +232,7 @@ public class ExpectationToJavaSerializerTest {
                         "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
                         "        .when(" + NEW_LINE +
                         "                request()" + NEW_LINE +
-                        "                        .withBody(Base64Converter.base64StringToBytes(\"" + Base64Converter.bytesToBase64String("request body".getBytes()) + "\"))," + NEW_LINE +
+                        "                        .withBody(new Base64Converter().base64StringToBytes(\"" + base64Converter.bytesToBase64String("request body".getBytes(UTF_8)) + "\"))," + NEW_LINE +
                         "                Times.once()" + NEW_LINE +
                         "        )" + NEW_LINE +
                         "        .respond(" + NEW_LINE +
@@ -164,14 +241,15 @@ public class ExpectationToJavaSerializerTest {
                         "        );",
                 new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
-                                new HttpRequest()
+                                request()
                                         .withBody(
-                                                new BinaryBody("request body".getBytes())
+                                                new BinaryBody("request body".getBytes(UTF_8))
                                         ),
-                                Times.once(),
-                                TimeToLive.unlimited())
+                                once(),
+                                unlimited()
+                        )
                                 .thenRespond(
-                                        new HttpResponse()
+                                        response()
                                                 .withBody("responseBody")
                                 )
                 )
@@ -209,7 +287,7 @@ public class ExpectationToJavaSerializerTest {
                         "        );",
                 new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
-                                new HttpRequest()
+                                request()
                                         .withMethod("GET")
                                         .withPath("somePath")
                                         .withQueryStringParameters(
@@ -225,10 +303,11 @@ public class ExpectationToJavaSerializerTest {
                                                 new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
                                         .withBody(new StringBody("somebody")),
-                                Times.once(),
-                                TimeToLive.unlimited())
+                                once(),
+                                unlimited()
+                        )
                                 .thenForward(
-                                        new HttpForward()
+                                        forward()
                                                 .withHost("some_host")
                                                 .withPort(9090)
                                                 .withScheme(HttpForward.Scheme.HTTPS)
@@ -264,11 +343,11 @@ public class ExpectationToJavaSerializerTest {
                         "                error()" + NEW_LINE +
                         "                        .withDelay(new Delay(TimeUnit.MINUTES, 1))" + NEW_LINE +
                         "                        .withDropConnection(true)" + NEW_LINE +
-                        "                        .withResponseBytes(Base64Converter.base64StringToBytes(\"" + Base64Converter.bytesToBase64String("some_bytes".getBytes()) + "\"))" + NEW_LINE +
+                        "                        .withResponseBytes(new Base64Converter().base64StringToBytes(\"" + base64Converter.bytesToBase64String("some_bytes".getBytes(UTF_8)) + "\"))" + NEW_LINE +
                         "        );",
                 new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
-                                new HttpRequest()
+                                request()
                                         .withMethod("GET")
                                         .withPath("somePath")
                                         .withQueryStringParameters(
@@ -284,21 +363,21 @@ public class ExpectationToJavaSerializerTest {
                                                 new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
                                         .withBody(new StringBody("somebody")),
-                                Times.once(),
-                                TimeToLive.unlimited()
+                                once(),
+                                unlimited()
                         )
                                 .thenError(
                                         error()
                                                 .withDelay(new Delay(TimeUnit.MINUTES, 1))
                                                 .withDropConnection(true)
-                                                .withResponseBytes("some_bytes".getBytes())
+                                                .withResponseBytes("some_bytes".getBytes(UTF_8))
                                 )
                 )
         );
     }
 
     @Test
-    public void shouldSerializeFullObjectWithCallbackAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithClassCallbackAsJava() throws IOException {
         assertEquals(NEW_LINE +
                         "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
                         "        .when(" + NEW_LINE +
@@ -326,7 +405,7 @@ public class ExpectationToJavaSerializerTest {
                         "        );",
                 new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
-                                new HttpRequest()
+                                request()
                                         .withMethod("GET")
                                         .withPath("somePath")
                                         .withQueryStringParameters(
@@ -342,11 +421,65 @@ public class ExpectationToJavaSerializerTest {
                                                 new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
                                         )
                                         .withBody(new StringBody("somebody")),
-                                Times.once(),
-                                TimeToLive.unlimited())
+                                once(),
+                                unlimited()
+                        )
                                 .thenCallback(
-                                        new HttpClassCallback()
+                                        callback()
                                                 .withCallbackClass("some_class")
+                                )
+                )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithObjectCallbackAsJava() throws IOException {
+        assertEquals(NEW_LINE +
+                        "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                        "        .when(" + NEW_LINE +
+                        "                request()" + NEW_LINE +
+                        "                        .withMethod(\"GET\")" + NEW_LINE +
+                        "                        .withPath(\"somePath\")" + NEW_LINE +
+                        "                        .withHeaders(" + NEW_LINE +
+                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                        "                        )" + NEW_LINE +
+                        "                        .withCookies(" + NEW_LINE +
+                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                        "                        )" + NEW_LINE +
+                        "                        .withQueryStringParameters(" + NEW_LINE +
+                        "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                        "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                        "                        )" + NEW_LINE +
+                        "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                        "                Times.once()" + NEW_LINE +
+                        "        )" + NEW_LINE +
+                        "        .callback(/*NOT POSSIBLE TO GENERATE CODE*/);",
+                new ExpectationToJavaSerializer().serializeAsJava(1,
+                        new Expectation(
+                                request()
+                                        .withMethod("GET")
+                                        .withPath("somePath")
+                                        .withQueryStringParameters(
+                                                new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                                                new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                                        )
+                                        .withHeaders(
+                                                new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                                                new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                        )
+                                        .withCookies(
+                                                new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                                                new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                        )
+                                        .withBody(new StringBody("somebody")),
+                                once(),
+                                unlimited()
+                        )
+                                .thenCallback(
+                                        new HttpObjectCallback()
+                                                .withClientId("some_client_id")
                                 )
                 )
         );
@@ -369,7 +502,7 @@ public class ExpectationToJavaSerializerTest {
                         "        );",
                 new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
-                                new HttpRequest()
+                                request()
                                         .withPath("somePath")
                                         .withBody(new JsonBody("[" + NEW_LINE +
                                                 "    {" + NEW_LINE +
@@ -394,34 +527,36 @@ public class ExpectationToJavaSerializerTest {
                                                 "        \"publicationDate\": \"1990\"" + NEW_LINE +
                                                 "    }" + NEW_LINE +
                                                 "]")),
-                                Times.once(),
-                                TimeToLive.unlimited()).thenRespond(
-                                new HttpResponse()
-                                        .withStatusCode(304)
-                                        .withBody("[" + NEW_LINE +
-                                                "    {" + NEW_LINE +
-                                                "        \"id\": \"1\"," + NEW_LINE +
-                                                "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\"," + NEW_LINE +
-                                                "        \"author\": \"James Tatum\"," + NEW_LINE +
-                                                "        \"isbn\": \"0691067570\"," + NEW_LINE +
-                                                "        \"publicationDate\": \"1989\"" + NEW_LINE +
-                                                "    }," + NEW_LINE +
-                                                "    {" + NEW_LINE +
-                                                "        \"id\": \"2\"," + NEW_LINE +
-                                                "        \"title\": \"You are here : personal geographies and other maps of the imagination\"," + NEW_LINE +
-                                                "        \"author\": \"Katharine A. Harmon\"," + NEW_LINE +
-                                                "        \"isbn\": \"1568984308\"," + NEW_LINE +
-                                                "        \"publicationDate\": \"2004\"" + NEW_LINE +
-                                                "    }," + NEW_LINE +
-                                                "    {" + NEW_LINE +
-                                                "        \"id\": \"3\"," + NEW_LINE +
-                                                "        \"title\": \"You just don't understand : women and men in conversation\"," + NEW_LINE +
-                                                "        \"author\": \"Deborah Tannen\"," + NEW_LINE +
-                                                "        \"isbn\": \"0345372050\"," + NEW_LINE +
-                                                "        \"publicationDate\": \"1990\"" + NEW_LINE +
-                                                "    }" + NEW_LINE +
-                                                "]")
+                                once(),
+                                unlimited()
                         )
+                                .thenRespond(
+                                        response()
+                                                .withStatusCode(304)
+                                                .withBody("[" + NEW_LINE +
+                                                        "    {" + NEW_LINE +
+                                                        "        \"id\": \"1\"," + NEW_LINE +
+                                                        "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\"," + NEW_LINE +
+                                                        "        \"author\": \"James Tatum\"," + NEW_LINE +
+                                                        "        \"isbn\": \"0691067570\"," + NEW_LINE +
+                                                        "        \"publicationDate\": \"1989\"" + NEW_LINE +
+                                                        "    }," + NEW_LINE +
+                                                        "    {" + NEW_LINE +
+                                                        "        \"id\": \"2\"," + NEW_LINE +
+                                                        "        \"title\": \"You are here : personal geographies and other maps of the imagination\"," + NEW_LINE +
+                                                        "        \"author\": \"Katharine A. Harmon\"," + NEW_LINE +
+                                                        "        \"isbn\": \"1568984308\"," + NEW_LINE +
+                                                        "        \"publicationDate\": \"2004\"" + NEW_LINE +
+                                                        "    }," + NEW_LINE +
+                                                        "    {" + NEW_LINE +
+                                                        "        \"id\": \"3\"," + NEW_LINE +
+                                                        "        \"title\": \"You just don't understand : women and men in conversation\"," + NEW_LINE +
+                                                        "        \"author\": \"Deborah Tannen\"," + NEW_LINE +
+                                                        "        \"isbn\": \"0345372050\"," + NEW_LINE +
+                                                        "        \"publicationDate\": \"1990\"" + NEW_LINE +
+                                                        "    }" + NEW_LINE +
+                                                        "]")
+                                )
                 )
         );
     }
@@ -473,15 +608,17 @@ public class ExpectationToJavaSerializerTest {
                         "        );",
                 new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
-                                new HttpRequest()
+                                request()
                                         .withPath("somePath")
                                         .withBody(new JsonSchemaBody(jsonSchema)),
-                                Times.once(),
-                                TimeToLive.unlimited()).thenRespond(
-                                new HttpResponse()
-                                        .withStatusCode(304)
-                                        .withBody("responseBody")
+                                once(),
+                                unlimited()
                         )
+                                .thenRespond(
+                                        response()
+                                                .withStatusCode(304)
+                                                .withBody("responseBody")
+                                )
                 )
         );
     }
@@ -524,14 +661,14 @@ public class ExpectationToJavaSerializerTest {
                         "        );",
                 new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
-                                new HttpRequest()
+                                request()
                                         .withPath("somePath")
                                         .withBody(new XmlSchemaBody(xmlSchema)),
-                                Times.once(),
-                                TimeToLive.unlimited()
+                                once(),
+                                unlimited()
                         )
                                 .thenRespond(
-                                        new HttpResponse()
+                                        response()
                                                 .withStatusCode(304)
                                                 .withBody("responseBody")
                                 )
@@ -555,14 +692,16 @@ public class ExpectationToJavaSerializerTest {
                         "        );",
                 new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
-                                new HttpRequest()
+                                request()
                                         .withPath("somePath")
                                         .withBody(new StringBody("responseBody")),
-                                Times.once(),
-                                TimeToLive.unlimited()).thenRespond(
-                                new HttpResponse()
-                                        .withStatusCode(304)
+                                once(),
+                                unlimited()
                         )
+                                .thenRespond(
+                                        response()
+                                                .withStatusCode(304)
+                                )
                 )
         );
     }

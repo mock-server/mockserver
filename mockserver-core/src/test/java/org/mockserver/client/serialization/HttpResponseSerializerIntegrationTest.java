@@ -41,7 +41,7 @@ public class HttpResponseSerializerIntegrationTest {
 
         // then
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("1 error:\n" +
+        thrown.expectMessage("1 error:" + NEW_LINE +
                 " - object instance has properties which are not allowed by the schema: [\"extra_field\"]");
 
         // when

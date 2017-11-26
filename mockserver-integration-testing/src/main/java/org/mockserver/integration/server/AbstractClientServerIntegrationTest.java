@@ -7,7 +7,6 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
@@ -51,6 +50,7 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
 import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.NottableString.not;
@@ -62,6 +62,7 @@ import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
 import static org.mockserver.model.XmlBody.xml;
 import static org.mockserver.model.XmlSchemaBody.xmlSchema;
+import static org.mockserver.model.XmlSchemaBody.xmlSchemaFromResource;
 
 /**
  * @author jamesdbloom
@@ -1406,12 +1407,11 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    @Ignore
     public void shouldReturnResponseByMatchingBodyWithXmlSchemaByClasspath() {
         // when
         mockServerClient.when(request()
                 .withBody(
-                        xmlSchema("org/mockserver/model/testXmlSchema.xsd")), exactly(2)
+                        xmlSchemaFromResource("org/mockserver/model/testXmlSchema.xsd")), exactly(2)
         )
                 .respond(
                         response()
@@ -1780,6 +1780,56 @@ public abstract class AbstractClientServerIntegrationTest {
                         request()
                                 .withSecure(true)
                                 .withPath(calculatePath("some_path1")),
+                        headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseFromVelocityTemplate() {
+        // when
+        mockServerClient
+                .when(
+                        request()
+                                .withPath(calculatePath("some_path"))
+                )
+                .respond(
+                        template(
+                                HttpTemplate.TemplateType.VELOCITY,
+                                "{" + NEW_LINE +
+                                        "     \"statusCode\": 200," + NEW_LINE +
+                                        "     \"headers\": $!request.headers," + NEW_LINE +
+                                        "     \"cookies\": $!request.cookies," + NEW_LINE +
+                                        "     \"body\": \"$!request.body\"" + NEW_LINE +
+                                        "}" + NEW_LINE
+                        )
+                );
+
+        // then
+        // - in http
+        assertEquals(
+                response()
+                        .withStatusCode(OK_200.code())
+                        .withHeader("name", "value")
+                        .withBody("some_request_body"),
+                makeRequest(
+                        request()
+                                .withPath(calculatePath("some_path"))
+                                .withHeader("name", "value")
+                                .withBody("some_request_body"),
+                        headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+                response()
+                        .withStatusCode(OK_200.code())
+                        .withHeader("name", "value")
+                        .withBody("some_request_body"),
+                makeRequest(
+                        request()
+                                .withSecure(true)
+                                .withPath(calculatePath("some_path"))
+                                .withHeader("name", "value")
+                                .withBody("some_request_body"),
                         headersToIgnore)
         );
     }
@@ -5759,7 +5809,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertThat(httpResponse.getStatusCode(), is(400));
         assertThat(httpResponse.getBodyAsString(), is("2 errors:" + NEW_LINE +
                 " - object instance has properties which are not allowed by the schema: [\"incorrectField\"]" + NEW_LINE +
-                " - oneOf of the following must be specified \"httpResponse\" \"httpForward\" \"httpClassCallback\" \"httpError\" \"httpObjectCallback\" "));
+                " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpForward\" \"httpClassCallback\" \"httpError\" \"httpObjectCallback\" "));
     }
 
     @Test

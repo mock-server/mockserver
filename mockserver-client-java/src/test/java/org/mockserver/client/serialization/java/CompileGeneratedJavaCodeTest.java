@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -27,7 +28,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-@Ignore
+@Ignore("ignored due to issue with classpath during maven build")
 public class CompileGeneratedJavaCodeTest {
 
     @Test
@@ -90,7 +91,7 @@ public class CompileGeneratedJavaCodeTest {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
         JavaCompiler.CompilationTask task = compiler.getTask(null, compiler.getStandardFileManager(null, null, null), null, null, null,
-                Arrays.asList(
+                Collections.singletonList(
                         new SimpleJavaFileObject(new URI("TestClass"), JavaFileObject.Kind.SOURCE) {
                             public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
                                 return javaCode;

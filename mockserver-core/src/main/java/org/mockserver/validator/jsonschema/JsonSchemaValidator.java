@@ -160,6 +160,6 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 validationErrors.add(processingMessage.getMessage() + (fieldPointer.isEmpty() ? "" : " for field \"" + fieldPointer + "\""));
             }
         }
-        return validationErrors.size() + " error" + (validationErrors.size() > 1 ? "s" : "") + ":\n - " + Joiner.on("\n - ").join(validationErrors);
+        return validationErrors.size() + " error" + (validationErrors.size() > 1 ? "s" : "") + ":" + NEW_LINE + " - " + Joiner.on(NEW_LINE + " - ").join(validationErrors);
     }
 }

@@ -1,5 +1,6 @@
 package org.mockserver.client.serialization.java;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.mockserver.model.NottableString;
 
 /**
@@ -9,9 +10,9 @@ public class NottableStringToJavaSerializer {
 
     public static String serializeNottableString(NottableString nottableString) {
         if (nottableString.isNot()) {
-            return "not(\"" + nottableString.getValue() + "\")";
+            return "not(\"" + StringEscapeUtils.escapeJava(nottableString.getValue()) + "\")";
         } else {
-            return "\"" + nottableString.getValue() + "\"";
+            return "\"" + StringEscapeUtils.escapeJava(nottableString.getValue()) + "\"";
         }
     }
 }
