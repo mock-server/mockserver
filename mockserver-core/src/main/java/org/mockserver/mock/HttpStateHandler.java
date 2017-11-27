@@ -9,7 +9,6 @@ import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.filters.RequestResponseLogFilter;
 import org.mockserver.logging.LogFormatter;
 import org.mockserver.model.HttpRequest;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
@@ -19,8 +18,7 @@ import java.util.List;
  */
 public class HttpStateHandler {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final LogFormatter logFormatter = new LogFormatter(logger);
+    private LogFormatter logFormatter = new LogFormatter(LoggerFactory.getLogger(this.getClass()));
     // mockserver
     private final RequestLogFilter requestLogFilter;
     private final RequestResponseLogFilter requestResponseLogFilter;
