@@ -105,7 +105,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.5</version>
+                <version>3.0.2</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -117,8 +117,9 @@
             </plugin>
             <!-- generate single runnable jar (assembly:single) -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.5.1</version>
+                <version>3.1.0</version>
                 <configuration>
                     <tarLongFileMode>posix</tarLongFileMode>
                     <archive>
@@ -240,7 +241,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
-                        <version>1.4.0</version>
+                        <version>1.6.0</version>
                         <executions>
                             <execution>
                                 <id>lintian</id>

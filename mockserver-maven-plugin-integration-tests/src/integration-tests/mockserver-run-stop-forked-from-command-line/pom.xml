@@ -19,7 +19,7 @@
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-integration-testing</artifactId>
-            <version>${mockserver.version}</version>
+            <version>@mockserver.version@</version>
         </dependency>
     </dependencies>
 
@@ -29,7 +29,7 @@
             <plugin>
                 <groupId>org.mock-server</groupId>
                 <artifactId>mockserver-maven-plugin</artifactId>
-                <version>${mockserver.version}</version>
+                <version>@mockserver.version@</version>
                 <configuration>
                     <logLevel>OFF</logLevel>
                     <serverPort>1086,2086</serverPort>
@@ -39,7 +39,7 @@
                     <dependency>
                         <groupId>org.mock-server</groupId>
                         <artifactId>mockserver-integration-testing</artifactId>
-                        <version>${mockserver.version}</version>
+                        <version>@mockserver.version@</version>
                     </dependency>
                 </dependencies>
             </plugin>

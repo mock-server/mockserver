@@ -78,8 +78,9 @@
         <plugins>
             <!-- create war classes jar -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>2.4</version>
+                <version>3.2.0</version>
                 <configuration>
                     <attachClasses>true</attachClasses>
                 </configuration>
