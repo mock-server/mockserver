@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertThat;
@@ -27,13 +29,14 @@ import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.model.HttpForward.forward;
+import static org.mockserver.model.HttpClassCallback.callback;
+import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
  */
-public class ExpectationWithForwardSerializerTest {
+public class ExpectationWithHttpTemplateResponseSerializerTest {
 
     private final Expectation fullExpectation = new Expectation(
             new HttpRequest()
@@ -44,33 +47,30 @@ public class ExpectationWithForwardSerializerTest {
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue")),
             Times.once(),
-            TimeToLive.exactly(TimeUnit.HOURS, 2l))
-            .thenForward(
-                    forward()
-                            .withHost("some_host")
-                            .withPort(9090)
-                            .withScheme(HttpForward.Scheme.HTTPS)
+            TimeToLive.exactly(HOURS, 2l))
+            .thenRespond(
+                    template(HttpTemplate.TemplateType.JAVASCRIPT, "some_random_template")
+                            .withDelay(SECONDS, 5)
             );
     private final ExpectationDTO fullExpectationDTO = new ExpectationDTO()
             .setHttpRequest(
                     new HttpRequestDTO()
                             .setMethod(string("GET"))
                             .setPath(string("somePath"))
-                            .setQueryStringParameters(Collections.singletonList(new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
+                            .setQueryStringParameters(Collections.singletonList(new ParameterDTO(new Parameter("queryParameterName", Collections.singletonList("queryParameterValue")))))
                             .setBody(BodyDTO.createDTO(new StringBody("somebody")))
                             .setHeaders(Collections.singletonList(new HeaderDTO(new Header("headerName", Collections.singletonList("headerValue")))))
                             .setCookies(Collections.singletonList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
             )
-            .setHttpForward(
-                    new HttpForwardDTO(
-                            new HttpForward()
-                                    .withHost("some_host")
-                                    .withPort(9090)
-                                    .withScheme(HttpForward.Scheme.HTTPS)
+            .setHttpResponseTemplate(
+                    new HttpTemplateDTO(
+                            new HttpTemplate(HttpTemplate.TemplateType.JAVASCRIPT)
+                                    .withTemplate("some_random_template")
+                            .withDelay(new Delay(SECONDS, 5))
                     )
             )
             .setTimes(new TimesDTO(Times.once()))
-            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)));
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(HOURS, 2l)));
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -112,7 +112,7 @@ public class ExpectationWithForwardSerializerTest {
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
 
         // when
-        expectationSerializer.serialize(new Expectation[]{fullExpectation, fullExpectation});
+        expectationSerializer.serialize(fullExpectation, fullExpectation);
 
         // then
         verify(objectMapper).writerWithDefaultPrettyPrinter();

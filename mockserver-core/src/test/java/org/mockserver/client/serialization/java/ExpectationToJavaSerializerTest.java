@@ -7,6 +7,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Charsets.UTF_8;
@@ -28,6 +29,57 @@ import static org.mockserver.model.HttpTemplate.template;
 public class ExpectationToJavaSerializerTest {
 
     private final Base64Converter base64Converter = new Base64Converter();
+
+    @Test
+    public void shouldSerializeArrayOfObjectsAsJava() throws IOException {
+        assertEquals(NEW_LINE +
+                        "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                        "        .when(" + NEW_LINE +
+                        "                request()" + NEW_LINE +
+                        "                        .withPath(\"somePathOne\")," + NEW_LINE +
+                        "                Times.once()" + NEW_LINE +
+                        "        )" + NEW_LINE +
+                        "        .respond(" + NEW_LINE +
+                        "                response()" + NEW_LINE +
+                        "                        .withStatusCode(200)" + NEW_LINE +
+                        "                        .withBody(\"responseBodyOne\")" + NEW_LINE +
+                        "        );" + NEW_LINE +
+                        NEW_LINE +
+                        NEW_LINE +
+                        "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                        "        .when(" + NEW_LINE +
+                        "                request()" + NEW_LINE +
+                        "                        .withPath(\"somePathOne\")," + NEW_LINE +
+                        "                Times.once()" + NEW_LINE +
+                        "        )" + NEW_LINE +
+                        "        .respond(" + NEW_LINE +
+                        "                response()" + NEW_LINE +
+                        "                        .withStatusCode(200)" + NEW_LINE +
+                        "                        .withBody(\"responseBodyOne\")" + NEW_LINE +
+                        "        );" + NEW_LINE +
+                        NEW_LINE,
+                new ExpectationToJavaSerializer().serializeAsJava(1,
+                        Arrays.asList(
+                                new Expectation(
+                                        request("somePathOne"),
+                                        once(),
+                                        unlimited()
+                                )
+                                        .thenRespond(
+                                                response("responseBodyOne")
+                                        ),
+                                new Expectation(
+                                        request("somePathOne"),
+                                        once(),
+                                        unlimited()
+                                )
+                                        .thenRespond(
+                                                response("responseBodyOne")
+                                        )
+                        )
+                )
+        );
+    }
 
     @Test
     public void shouldSerializeFullObjectWithResponseAsJava() throws IOException {
@@ -455,7 +507,7 @@ public class ExpectationToJavaSerializerTest {
                         "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
                         "                Times.once()" + NEW_LINE +
                         "        )" + NEW_LINE +
-                        "        .callback(/*NOT POSSIBLE TO GENERATE CODE*/);",
+                        "        /*NOT POSSIBLE TO GENERATE CODE FOR OBJECT CALLBACK*/;",
                 new ExpectationToJavaSerializer().serializeAsJava(1,
                         new Expectation(
                                 request()

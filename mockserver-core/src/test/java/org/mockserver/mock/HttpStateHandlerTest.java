@@ -290,10 +290,10 @@ public class HttpStateHandlerTest {
         HttpRequest requestMatcher = request().withBody("some_body");
         HttpRequest request = request()
                 .withBody(httpRequestSerializer.serialize(requestMatcher));
-        HttpRequest[] httpRequests = new HttpRequest[]{
+        List<HttpRequest> httpRequests = Arrays.asList(
                 request("some_path_one"),
                 request("some_path_two")
-        };
+        );
         when(mockRequestLogFilter.retrieve(requestMatcher)).thenReturn(httpRequests);
 
         // when
@@ -315,10 +315,10 @@ public class HttpStateHandlerTest {
         HttpRequest request = request()
                 .withQueryStringParameter("format", "java")
                 .withBody(httpRequestSerializer.serialize(requestMatcher));
-        HttpRequest[] httpRequests = new HttpRequest[]{
+        List<HttpRequest> httpRequests = Arrays.asList(
                 request("some_path_one"),
                 request("some_path_two")
-        };
+        );
         when(mockRequestLogFilter.retrieve(requestMatcher)).thenReturn(httpRequests);
 
         // when
@@ -327,12 +327,10 @@ public class HttpStateHandlerTest {
         // then
         assertThat(retrieve, is(NEW_LINE +
                 "request()" + NEW_LINE +
-                "        .withPath(\"some_path_one\")" + NEW_LINE +
-                NEW_LINE +
+                "        .withPath(\"some_path_one\");" + NEW_LINE +
                 NEW_LINE +
                 "request()" + NEW_LINE +
-                "        .withPath(\"some_path_two\")" + NEW_LINE +
-                NEW_LINE));
+                "        .withPath(\"some_path_two\");" + NEW_LINE));
         verify(mockLogFormatter).infoLog("retrieving requests that match:{}", requestMatcher);
     }
 

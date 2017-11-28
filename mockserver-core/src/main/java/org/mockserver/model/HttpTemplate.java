@@ -66,7 +66,7 @@ public class HttpTemplate extends Action {
      * @param value    a the number of time units to delay the response
      */
     public HttpTemplate withDelay(TimeUnit timeUnit, long value) {
-        this.delay = new Delay(timeUnit, value);
+        withDelay(new Delay(timeUnit, value));
         return this;
     }
 

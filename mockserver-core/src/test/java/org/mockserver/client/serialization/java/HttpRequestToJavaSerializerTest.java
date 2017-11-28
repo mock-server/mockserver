@@ -6,6 +6,7 @@ import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -17,6 +18,33 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class HttpRequestToJavaSerializerTest {
 
     private final Base64Converter base64Converter = new Base64Converter();
+
+    @Test
+    public void shouldSerializeArrayOfObjectsAsJava() throws IOException {
+        assertEquals(NEW_LINE +
+                        "request()" + NEW_LINE +
+                        "        .withMethod(\"GET\")" + NEW_LINE +
+                        "        .withPath(\"somePathOne\")" + NEW_LINE +
+                        "        .withBody(new StringBody(\"responseBodyOne\"));" + NEW_LINE +
+                        NEW_LINE +
+                        "request()" + NEW_LINE +
+                        "        .withMethod(\"GET\")" + NEW_LINE +
+                        "        .withPath(\"somePathTwo\")" + NEW_LINE +
+                        "        .withBody(new StringBody(\"responseBodyTwo\"));" + NEW_LINE,
+                new HttpRequestToJavaSerializer().serializeAsJava(0,
+                        Arrays.asList(
+                                new HttpRequest()
+                                        .withMethod("GET")
+                                        .withPath("somePathOne")
+                                        .withBody(new StringBody("responseBodyOne")),
+                                new HttpRequest()
+                                        .withMethod("GET")
+                                        .withPath("somePathTwo")
+                                        .withBody(new StringBody("responseBodyTwo"))
+                        )
+                )
+        );
+    }
 
     @Test
     public void shouldSerializeFullObjectAsJava() throws IOException {

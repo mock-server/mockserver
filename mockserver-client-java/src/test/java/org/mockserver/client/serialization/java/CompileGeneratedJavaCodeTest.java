@@ -5,10 +5,7 @@ import org.junit.Test;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.Parameter;
-import org.mockserver.model.StringBody;
+import org.mockserver.model.*;
 
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -17,13 +14,15 @@ import javax.tools.ToolProvider;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.model.HttpClassCallback.callback;
+import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpTemplate.template;
 
 /**
  * @author jamesdbloom
@@ -32,7 +31,7 @@ import static org.mockserver.model.HttpResponse.response;
 public class CompileGeneratedJavaCodeTest {
 
     @Test
-    public void shouldCompileGeneratedCode() throws URISyntaxException {
+    public void shouldCompileExpectationWithHttpResponse() throws URISyntaxException {
 
         String expectationAsJavaCode = new ExpectationToJavaSerializer().serializeAsJava(1,
                 new Expectation(
@@ -73,17 +72,206 @@ public class CompileGeneratedJavaCodeTest {
         );
 
         assertTrue(compileJavaCode("" +
-                        "import org.mockserver.client.server.MockServerClient;" + NEW_LINE +
-                        "import org.mockserver.matchers.Times;" + NEW_LINE +
-                        "import org.mockserver.mock.Expectation;" + NEW_LINE +
-                        "import org.mockserver.model.*;" + NEW_LINE +
-                        "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE +
-                        "import static org.mockserver.model.HttpResponse.response;" + NEW_LINE + NEW_LINE +
-                        "class TestClass {" + NEW_LINE +
-                        "   static {" +
-                        "      " + expectationAsJavaCode + "" + NEW_LINE +
-                        "   }" + NEW_LINE +
-                        "}")
+                "import org.mockserver.client.server.MockServerClient;" + NEW_LINE +
+                "import org.mockserver.matchers.Times;" + NEW_LINE +
+                "import org.mockserver.mock.Expectation;" + NEW_LINE +
+                "import org.mockserver.model.*;" + NEW_LINE +
+                "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE +
+                "import static org.mockserver.model.HttpResponse.response;" + NEW_LINE + NEW_LINE +
+                "class TestClass {" + NEW_LINE +
+                "   static {" +
+                "      " + expectationAsJavaCode + "" + NEW_LINE +
+                "   }" + NEW_LINE +
+                "}")
+        );
+    }
+
+    @Test
+    public void shouldCompileExpectationWithHttpResponseTemplate() throws URISyntaxException {
+
+        String expectationAsJavaCode = new ExpectationToJavaSerializer().serializeAsJava(1,
+                new Expectation(
+                        request()
+                                .withMethod("GET")
+                                .withPath("somePath")
+                                .withQueryStringParameters(
+                                        new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                                        new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                                )
+                                .withHeaders(
+                                        new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                                        new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                )
+                                .withCookies(
+                                        new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                                        new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                )
+                                .withSecure(false)
+                                .withKeepAlive(true)
+                                .withBody(new StringBody("somebody")),
+                        Times.once(),
+                        TimeToLive.unlimited()
+                )
+                        .thenRespond(
+                                template(HttpTemplate.TemplateType.JAVASCRIPT)
+                                        .withTemplate("some_random_template")
+                        )
+        );
+
+        assertTrue(compileJavaCode("" +
+                "import org.mockserver.client.server.MockServerClient;" + NEW_LINE +
+                "import org.mockserver.matchers.Times;" + NEW_LINE +
+                "import org.mockserver.mock.Expectation;" + NEW_LINE +
+                "import org.mockserver.model.*;" + NEW_LINE +
+                "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE +
+                "import static org.mockserver.model.HttpTemplate.template;" + NEW_LINE + NEW_LINE +
+                "class TestClass {" + NEW_LINE +
+                "   static {" +
+                "      " + expectationAsJavaCode + "" + NEW_LINE +
+                "   }" + NEW_LINE +
+                "}")
+        );
+    }
+
+    @Test
+    public void shouldCompileExpectationWithHttpForward() throws URISyntaxException {
+
+        String expectationAsJavaCode = new ExpectationToJavaSerializer().serializeAsJava(1,
+                new Expectation(
+                        request()
+                                .withMethod("GET")
+                                .withPath("somePath")
+                                .withQueryStringParameters(
+                                        new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                                        new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                                )
+                                .withHeaders(
+                                        new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                                        new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                )
+                                .withCookies(
+                                        new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                                        new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                )
+                                .withSecure(false)
+                                .withKeepAlive(true)
+                                .withBody(new StringBody("somebody")),
+                        Times.once(),
+                        TimeToLive.unlimited()
+                )
+                        .thenForward(
+                                forward()
+                                        .withHost("localhost")
+                                        .withPort(1080)
+                                        .withScheme(HttpForward.Scheme.HTTPS)
+                        )
+        );
+
+        assertTrue(compileJavaCode("" +
+                "import org.mockserver.client.server.MockServerClient;" + NEW_LINE +
+                "import org.mockserver.matchers.Times;" + NEW_LINE +
+                "import org.mockserver.mock.Expectation;" + NEW_LINE +
+                "import org.mockserver.model.*;" + NEW_LINE +
+                "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE +
+                "import static org.mockserver.model.HttpForward.forward;" + NEW_LINE + NEW_LINE +
+                "class TestClass {" + NEW_LINE +
+                "   static {" +
+                "      " + expectationAsJavaCode + "" + NEW_LINE +
+                "   }" + NEW_LINE +
+                "}")
+        );
+    }
+
+    @Test
+    public void shouldCompileExpectationWithClassCallback() throws URISyntaxException {
+
+        String expectationAsJavaCode = new ExpectationToJavaSerializer().serializeAsJava(1,
+                new Expectation(
+                        request()
+                                .withMethod("GET")
+                                .withPath("somePath")
+                                .withQueryStringParameters(
+                                        new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                                        new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                                )
+                                .withHeaders(
+                                        new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                                        new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                )
+                                .withCookies(
+                                        new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                                        new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                )
+                                .withSecure(false)
+                                .withKeepAlive(true)
+                                .withBody(new StringBody("somebody")),
+                        Times.once(),
+                        TimeToLive.unlimited()
+                )
+                        .thenCallback(
+                                callback()
+                                        .withCallbackClass("some_random_class")
+                        )
+        );
+
+        assertTrue(compileJavaCode("" +
+                "import org.mockserver.client.server.MockServerClient;" + NEW_LINE +
+                "import org.mockserver.matchers.Times;" + NEW_LINE +
+                "import org.mockserver.mock.Expectation;" + NEW_LINE +
+                "import org.mockserver.model.*;" + NEW_LINE +
+                "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE +
+                "import static org.mockserver.model.HttpClassCallback.callback;" + NEW_LINE + NEW_LINE +
+                "class TestClass {" + NEW_LINE +
+                "   static {" +
+                "      " + expectationAsJavaCode + "" + NEW_LINE +
+                "   }" + NEW_LINE +
+                "}")
+        );
+    }
+
+    @Test
+    public void shouldCompileExpectationWithObjectCallback() throws URISyntaxException {
+
+        String expectationAsJavaCode = new ExpectationToJavaSerializer().serializeAsJava(1,
+                new Expectation(
+                        request()
+                                .withMethod("GET")
+                                .withPath("somePath")
+                                .withQueryStringParameters(
+                                        new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                                        new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                                )
+                                .withHeaders(
+                                        new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                                        new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                )
+                                .withCookies(
+                                        new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                                        new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                )
+                                .withSecure(false)
+                                .withKeepAlive(true)
+                                .withBody(new StringBody("somebody")),
+                        Times.once(),
+                        TimeToLive.unlimited()
+                )
+                        .thenCallback(
+                                new HttpObjectCallback()
+                                        .withClientId("some_random_clientId")
+                        )
+        );
+
+        assertTrue(compileJavaCode("" +
+                "import org.mockserver.client.server.MockServerClient;" + NEW_LINE +
+                "import org.mockserver.matchers.Times;" + NEW_LINE +
+                "import org.mockserver.mock.Expectation;" + NEW_LINE +
+                "import org.mockserver.model.*;" + NEW_LINE +
+                "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE + NEW_LINE +
+                "class TestClass {" + NEW_LINE +
+                "   static {" +
+                "      " + expectationAsJavaCode + "" + NEW_LINE +
+                "   }" + NEW_LINE +
+                "}")
         );
     }
 

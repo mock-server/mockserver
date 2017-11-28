@@ -11,6 +11,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
@@ -57,8 +60,8 @@ public class RequestLogFilterTest {
             assertEquals(httpRequest, returnedHttpRequest);
         }
 
-        HttpRequest[] retrievedLogs = requestLogFilter.retrieve(new HttpRequest());
-        assertEquals(100, retrievedLogs.length);
+        List<HttpRequest> retrievedLogs = requestLogFilter.retrieve(new HttpRequest());
+        assertEquals(100, retrievedLogs.size());
     }
 
     @Test
@@ -123,27 +126,27 @@ public class RequestLogFilterTest {
         requestLogFilter.onRequest(request("some_path"));
 
         // then
-        assertArrayEquals(requestLogFilter.retrieve(null),
-                new HttpRequest[]{
+        assertThat(requestLogFilter.retrieve(null),
+                hasItems(
                         request("some_path"),
                         request("some_other_path"),
                         request("some_path")
-                });
-        assertArrayEquals(requestLogFilter.retrieve(request()),
-                new HttpRequest[]{
+                ));
+        assertThat(requestLogFilter.retrieve(request()),
+                hasItems(
                         request("some_path"),
                         request("some_other_path"),
                         request("some_path")
-                });
-        assertArrayEquals(requestLogFilter.retrieve(request("some_path")),
-                new HttpRequest[]{
+                ));
+        assertThat(requestLogFilter.retrieve(request("some_path")),
+                hasItems(
                         request("some_path"),
                         request("some_path")
-                });
-        assertArrayEquals(requestLogFilter.retrieve(request("some_other_path")),
-                new HttpRequest[]{
+                ));
+        assertThat(requestLogFilter.retrieve(request("some_other_path")),
+                hasItems(
                         request("some_other_path")
-                });
+                ));
     }
 
     @Test

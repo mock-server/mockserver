@@ -76,8 +76,8 @@ public class RequestLogFilter implements ResponseFilter, RequestFilter {
         }
     }
 
-    public HttpRequest[] retrieve(HttpRequest httpRequestToMatch) {
-        LinkedList<HttpRequest> requestLog = new LinkedList<HttpRequest>(this.requestLog);
+    public List<HttpRequest> retrieve(HttpRequest httpRequestToMatch) {
+        List<HttpRequest> requestLog = new LinkedList<HttpRequest>(this.requestLog);
 
         List<HttpRequest> matchingRequests = new ArrayList<HttpRequest>();
         if (httpRequestToMatch != null) {
@@ -90,7 +90,7 @@ public class RequestLogFilter implements ResponseFilter, RequestFilter {
         } else {
             matchingRequests.addAll(requestLog);
         }
-        return matchingRequests.toArray(new HttpRequest[matchingRequests.size()]);
+        return matchingRequests;
     }
 
     public String verify(Verification verification) {

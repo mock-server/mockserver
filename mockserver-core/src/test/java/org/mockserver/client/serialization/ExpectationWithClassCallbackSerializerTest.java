@@ -17,6 +17,7 @@ import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.core.Is.is;
@@ -38,7 +39,7 @@ public class ExpectationWithClassCallbackSerializerTest {
             new HttpRequest()
                     .withMethod("GET")
                     .withPath("somePath")
-                    .withQueryStringParameters(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))
+                    .withQueryStringParameters(new Parameter("queryParameterName", Collections.singletonList("queryParameterValue")))
                     .withBody(new StringBody("somebody"))
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue")),
@@ -52,10 +53,10 @@ public class ExpectationWithClassCallbackSerializerTest {
                     new HttpRequestDTO()
                             .setMethod(string("GET"))
                             .setPath(string("somePath"))
-                            .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
+                            .setQueryStringParameters(Collections.singletonList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
                             .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                            .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
-                            .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
+                            .setHeaders(Collections.singletonList(new HeaderDTO(new Header("headerName", Collections.singletonList("headerValue")))))
+                            .setCookies(Collections.singletonList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
             )
             .setHttpClassCallback(
                     new HttpClassCallbackDTO(

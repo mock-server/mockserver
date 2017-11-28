@@ -79,7 +79,7 @@ public class HttpStateHandler {
                 responseBody.append(expectationSerializer.serialize(expectations));
             }
         } else {
-            HttpRequest[] httpRequests = requestLogFilter.retrieve(httpRequest);
+            List<HttpRequest> httpRequests = requestLogFilter.retrieve(httpRequest);
             if (asJava) {
                 responseBody.append(httpRequestToJavaSerializer.serializeAsJava(0, httpRequests));
             } else {

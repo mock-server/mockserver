@@ -17,11 +17,11 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
 
     private final Base64Converter base64Converter = new Base64Converter();
 
-    public String serializeAsJava(int numberOfSpacesToIndent, HttpRequest[] httpRequests) {
+    public String serializeAsJava(int numberOfSpacesToIndent, List<HttpRequest> httpRequests) {
         StringBuilder output = new StringBuilder();
         for (HttpRequest httpRequest : httpRequests) {
             output.append(serializeAsJava(numberOfSpacesToIndent, httpRequest));
-            output.append(NEW_LINE);
+            output.append(";");
             output.append(NEW_LINE);
         }
         return output.toString();

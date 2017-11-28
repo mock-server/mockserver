@@ -40,7 +40,7 @@ public class ExpectationWithErrorSerializerTest {
             new HttpRequest()
                     .withMethod("GET")
                     .withPath("somePath")
-                    .withQueryStringParameters(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))
+                    .withQueryStringParameters(new Parameter("queryParameterName", Collections.singletonList("queryParameterValue")))
                     .withBody(new StringBody("somebody"))
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue")),
@@ -58,7 +58,7 @@ public class ExpectationWithErrorSerializerTest {
                     new HttpRequestDTO()
                             .setMethod(string("GET"))
                             .setPath(string("somePath"))
-                            .setQueryStringParameters(Collections.singletonList(new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
+                            .setQueryStringParameters(Collections.singletonList(new ParameterDTO(new Parameter("queryParameterName", Collections.singletonList("queryParameterValue")))))
                             .setBody(BodyDTO.createDTO(new StringBody("somebody")))
                             .setHeaders(Collections.singletonList(new HeaderDTO(new Header("headerName", Collections.singletonList("headerValue")))))
                             .setCookies(Collections.singletonList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))

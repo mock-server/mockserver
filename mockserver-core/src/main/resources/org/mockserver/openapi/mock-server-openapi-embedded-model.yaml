@@ -6,69 +6,25 @@ info:
   title: Mock Server API
   version: '4.0.0'
   description: >-
-    MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby.  MockServer also includes a proxy that introspects all proxied traffic including encrypted SSL traffic and supports Port Forwarding, Web Proxying (i.e. HTTP proxy), HTTPS Tunneling Proxying (using HTTP CONNECT) and SOCKS Proxying (i.e. dynamic port forwarding).
+    MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby and a simple REST API (as shown below).
+
+
+    MockServer Proxy is a proxy that introspects all proxied traffic including encrypted SSL traffic and supports Port Forwarding, Web Proxying (i.e. HTTP proxy), HTTPS Tunneling Proxying (using HTTP CONNECT) and SOCKS Proxying (i.e. dynamic port forwarding).
+
+
+    Both MockServer and the MockServer Proxy record all received requests so that it is possible to verify exactly what requests have been sent by the system under test.
   license:
     url: 'https://github.com/jamesdbloom/mockserver/blob/master/LICENSE.md'
     name: Apache 2.0
 tags:
   - name: expectation
-    description: Create expectations
+    description: Create expectations (only supported by MockServer)
   - name: verify
-    description: Verify requests
+    description: Verify requests (both MockServer & MockServer Proxy)
   - name: control
-    description: Manage MockServer process
+    description: Manage state or process (both MockServer & MockServer Proxy)
+
 paths:
-  /status:
-    put:
-      tags:
-        - control
-      summary: return listening ports
-      responses:
-        '200':
-          description: MockServer is running and listening on the listed ports
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Ports"
-  /bind:
-    put:
-      tags:
-        - control
-      summary: bind additional listening ports
-      description: only supported on Netty version
-      responses:
-        '202':
-          description: >-
-            listening on additional requested ports, note: the response ony
-            contains ports added for the request, to list all ports use /status
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Ports"
-        '400':
-          description: incorrect request format
-        '406':
-          description: >-
-            unable to bind to ports (i.e. already bound or JVM process doesn't
-            have permission)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Ports"
-        description: >-
-          list of ports to bind to, where 0 indicates dynamically bind to any
-          available port
-        required: true
-  /stop:
-    put:
-      tags:
-        - control
-      summary: stop running process
-      description: only supported on Netty version
-      responses:
-        '202':
-          description: MockServer process is stopping
   /expectation:
     put:
       tags:
@@ -95,10 +51,10 @@ paths:
   /clear:
     put:
       tags:
-        - expectation
+        - control
       summary: clears expectations and recorded requests that match the request matcher
       responses:
-        '202':
+        '200':
           description: expectations and recorded requests cleared
         '400':
           description: incorrect request format
@@ -111,24 +67,24 @@ paths:
   /reset:
     put:
       tags:
-        - expectation
+        - control
       summary: clears all expectations and recorded requests
       responses:
-        '202':
+        '200':
           description: expectations and recorded requests cleared
   /dumpToLog:
     put:
       tags:
-        - expectation
+        - control
       summary: write all requests to the request log that match the request matcher
       parameters:
         - in: query
-          name: type
+          name: format
           schema:
             type: string
           description: changes response format from json to java if the value is "java"
       responses:
-        '202':
+        '200':
           description: recorded requests written to request log
         '400':
           description: incorrect request format
@@ -138,15 +94,58 @@ paths:
             schema:
               $ref: "#/components/schemas/HttpRequest"
         description: >-
-          request used to match which recored requests to write to the request
-          log
+          request used to match which recorded requests to write to the request log
+  /retrieve:
+    put:
+      tags:
+        - control
+      summary: retrieve either - recorded requests or - the active expectations
+      parameters:
+        - in: query
+          name: format
+          schema:
+            type: string
+          description: changes response format from json to java if the value is "java"
+        - in: query
+          name: type
+          schema:
+            type: string
+          description: changes type of object that is retrieve from recorded requests to active expectations if the value is "expectation"
+      responses:
+        '200':
+          description: recorded requests or active expectations returned
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    additionalProperties: false
+                    items:
+                      $ref: "#/components/schemas/Expectation"
+                  - type: array
+                    additionalProperties: false
+                    items:
+                      $ref: "#/components/schemas/HttpResponse"
+            application/java:
+              schema:
+                type: string
+                description: 'Java code for the list of either Expectations or HttpResponses'
+        '400':
+          description: incorrect request format
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HttpRequest"
+        description: >-
+          request used to match which recorded requests or active expectations to return
   /verify:
     put:
       tags:
         - verify
       summary: verify a request has been received a specific number of times
       responses:
-        '202':
+        '200':
           description: matching request has been received specified number of times
         '400':
           description: incorrect request format
@@ -188,6 +187,57 @@ paths:
               $ref: "#/components/schemas/VerificationSequence"
         description: the sequence of requests matchers
         required: true
+  /status:
+    put:
+      tags:
+        - control
+      summary: return listening ports
+      responses:
+        '200':
+          description: MockServer is running and listening on the listed ports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ports"
+  /bind:
+    put:
+      tags:
+        - control
+      summary: bind additional listening ports
+      description: only supported on Netty version
+      responses:
+        '200':
+          description: >-
+            listening on additional requested ports, note: the response ony
+            contains ports added for the request, to list all ports use /status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ports"
+        '400':
+          description: incorrect request format
+        '406':
+          description: >-
+            unable to bind to ports (i.e. already bound or JVM process doesn't
+            have permission)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Ports"
+        description: >-
+          list of ports to bind to, where 0 indicates dynamically bind to any
+          available port
+        required: true
+  /stop:
+    put:
+      tags:
+        - control
+      summary: stop running process
+      description: only supported on Netty version
+      responses:
+        '200':
+          description: MockServer process is stopping
 components:
   schemas:
     Expectations:
