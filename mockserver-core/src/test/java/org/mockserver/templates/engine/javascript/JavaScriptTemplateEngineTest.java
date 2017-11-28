@@ -9,6 +9,7 @@ import javax.script.ScriptEngineManager;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
@@ -51,9 +52,7 @@ public class JavaScriptTemplateEngineTest {
                             .withBody("{\"name\":\"value\"}")
             ));
         } else {
-            assertThat(actualHttpResponse, is(
-                    notFoundResponse()
-            ));
+            assertThat(actualHttpResponse, nullValue());
         }
     }
 
@@ -86,9 +85,7 @@ public class JavaScriptTemplateEngineTest {
                             .withBody("some_body")
             ));
         } else {
-            assertThat(actualHttpResponse, is(
-                    notFoundResponse()
-            ));
+            assertThat(actualHttpResponse, nullValue());
         }
     }
 
