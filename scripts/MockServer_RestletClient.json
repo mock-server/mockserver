@@ -5,7 +5,7 @@
     {
       "type": "Project",
       "id": "a8eca49e-d7f3-4198-ae78-dfd36a17275b",
-      "lastModified": "2017-11-28T18:53:26.386+00:00",
+      "lastModified": "2017-11-28T19:42:19.265+00:00",
       "name": "Mock Server"
     },
     {
@@ -1145,7 +1145,7 @@
         "bodyType": "Text",
         "autoSetLength": true,
         "textBodyEditorHeight": 422,
-        "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/simple\"\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"some response\"\n    }, \n    \"times\": {\n        \"remainingTimes\": 1, \n        \"unlimited\": false\n    }\n}"
+        "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/simple\"\n    }, \n    \"httpResponseTemplate\": {\n        \"statusCode\": 200, \n        \"body\": \"some response\"\n    }, \n    \"times\": {\n        \"remainingTimes\": 1, \n        \"unlimited\": false\n    }\n}"
       },
       "headersType": "Form",
       "uri": {
@@ -1161,8 +1161,80 @@
       },
       "description": "",
       "id": "1ba9e939-6006-40ce-bdac-f0adbcb8c8fb",
-      "lastModified": "2017-11-18T09:22:58.000+00:00",
+      "lastModified": "2017-11-28T19:03:02.559+00:00",
       "name": "expectation - simple",
+      "headers": [],
+      "metaInfo": {},
+      "parentId": "a8eca49e-d7f3-4198-ae78-dfd36a17275b"
+    },
+    {
+      "type": "Request",
+      "method": {
+        "requestBody": true,
+        "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+        "name": "PUT"
+      },
+      "body": {
+        "formBody": {
+          "overrideContentType": true
+        },
+        "bodyType": "Text",
+        "autoSetLength": true,
+        "textBodyEditorHeight": 422,
+        "textBody": "{\n    \"httpRequest\": {\n        \"path\": \"/templatePath\"\n    }, \n    \"httpResponseTemplate\": {\n        \"templateType\": \"JAVASCRIPT\", \n        \"template\": \"if (request.method === 'POST' && request.path === '/templatePath') { return { 'statusCode': 200, 'body': JSON.stringify({name: 'value'}) }; } else { return { 'statusCode': 406, 'body': request.body }; }\", \n        \"delay\": {\n            \"timeUnit\": \"MICROSECONDS\", \n            \"value\": 1\n        }\n    }, \n    \"times\": {\n        \"remainingTimes\": 3, \n        \"unlimited\": false\n    }\n}"
+      },
+      "headersType": "Form",
+      "uri": {
+        "query": {
+          "delimiter": "&",
+          "items": []
+        },
+        "scheme": {
+          "name": "http",
+          "version": "v11"
+        },
+        "path": "localhost:1080/expectation"
+      },
+      "description": "",
+      "id": "e59a733d-4f78-48cc-ac6d-bf37afef9861",
+      "lastModified": "2017-11-28T19:36:05.303+00:00",
+      "name": "expectation - template javascript",
+      "headers": [],
+      "metaInfo": {},
+      "parentId": "a8eca49e-d7f3-4198-ae78-dfd36a17275b"
+    },
+    {
+      "type": "Request",
+      "method": {
+        "requestBody": true,
+        "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+        "name": "PUT"
+      },
+      "body": {
+        "formBody": {
+          "overrideContentType": true
+        },
+        "bodyType": "Text",
+        "autoSetLength": true,
+        "textBodyEditorHeight": 422,
+        "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/simple\"\n    }, \n    \"httpResponseTemplate\": {\n        \"templateType\": \"VELOCITY\", \n        \"template\": \"#if ( $request.method == 'POST' && $request.path == '/somePath' ) { 'statusCode': 200, 'body': \\\"{'name': 'value'}\\\" } #else { 'statusCode': 406, 'body': \\\"$!request.body\\\" } #end\", \n        \"delay\": {\n            \"timeUnit\": \"MICROSECONDS\", \n            \"value\": 1\n        }\n    }, \n    \"times\": {\n        \"remainingTimes\": 1, \n        \"unlimited\": false\n    }\n}"
+      },
+      "headersType": "Form",
+      "uri": {
+        "query": {
+          "delimiter": "&",
+          "items": []
+        },
+        "scheme": {
+          "name": "http",
+          "version": "v11"
+        },
+        "path": "localhost:1080/expectation"
+      },
+      "description": "",
+      "id": "1b9debb4-ef85-413c-bce8-ed99431e859d",
+      "lastModified": "2017-11-28T19:41:53.848+00:00",
+      "name": "expectation - template velocity ",
       "headers": [],
       "metaInfo": {},
       "parentId": "a8eca49e-d7f3-4198-ae78-dfd36a17275b"
@@ -1642,6 +1714,48 @@
       "id": "0337cc21-8f69-4dd9-b7e0-39f95d421a74",
       "lastModified": "2017-08-25T06:50:58.716+01:00",
       "name": "request - simple",
+      "headers": [
+        {
+          "enabled": true,
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "metaInfo": {},
+      "parentId": "a8eca49e-d7f3-4198-ae78-dfd36a17275b"
+    },
+    {
+      "type": "Request",
+      "method": {
+        "requestBody": true,
+        "link": "http://tools.ietf.org/html/rfc7231#section-4.3.3",
+        "name": "POST"
+      },
+      "body": {
+        "formBody": {
+          "overrideContentType": true
+        },
+        "bodyType": "Text",
+        "autoSetLength": true,
+        "textBodyEditorHeight": 422,
+        "textBody": ""
+      },
+      "headersType": "Form",
+      "uri": {
+        "query": {
+          "delimiter": "&",
+          "items": []
+        },
+        "scheme": {
+          "name": "http",
+          "version": "V11"
+        },
+        "host": "localhost:1080",
+        "path": "/templatePath"
+      },
+      "id": "9da9a6ee-4ad9-4c9d-b411-33685901c2ef",
+      "lastModified": "2017-11-28T19:42:19.266+00:00",
+      "name": "request - template",
       "headers": [
         {
           "enabled": true,
