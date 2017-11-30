@@ -65,4 +65,4 @@ Pull requests are, of course, very welcome! Please read our [contributing to the
 # Maintainers
 * [James D Bloom](http://blog.jamesdbloom.com)
 
-[![Analytics](https://ga-beacon.appspot.com/UA-32687194-4/README.md)](https://github.com/igrigorik/ga-beacon)
+[![Analytics](https://ga-beacon.appspot.com/UA-32687194-4/mockserver/README.md)](https://github.com/igrigorik/ga-beacon)
