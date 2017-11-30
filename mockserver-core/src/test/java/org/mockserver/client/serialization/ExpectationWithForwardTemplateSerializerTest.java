@@ -18,7 +18,6 @@ import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -29,14 +28,13 @@ import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
  */
-public class ExpectationWithHttpTemplateResponseSerializerTest {
+public class ExpectationWithForwardTemplateSerializerTest {
 
     private final Expectation fullExpectation = new Expectation(
             new HttpRequest()
@@ -48,7 +46,7 @@ public class ExpectationWithHttpTemplateResponseSerializerTest {
                     .withCookies(new Cookie("cookieName", "cookieValue")),
             Times.once(),
             TimeToLive.exactly(HOURS, 2l))
-            .thenRespond(
+            .thenForward(
                     template(HttpTemplate.TemplateType.JAVASCRIPT, "some_random_template")
                             .withDelay(SECONDS, 5)
             );
@@ -62,7 +60,7 @@ public class ExpectationWithHttpTemplateResponseSerializerTest {
                             .setHeaders(Collections.singletonList(new HeaderDTO(new Header("headerName", Collections.singletonList("headerValue")))))
                             .setCookies(Collections.singletonList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
             )
-            .setHttpResponseTemplate(
+            .setHttpForwardTemplate(
                     new HttpTemplateDTO(
                             new HttpTemplate(HttpTemplate.TemplateType.JAVASCRIPT)
                                     .withTemplate("some_random_template")

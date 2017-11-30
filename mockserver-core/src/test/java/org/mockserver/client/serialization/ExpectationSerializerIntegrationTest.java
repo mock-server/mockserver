@@ -289,6 +289,75 @@ public class ExpectationSerializerIntegrationTest {
     }
 
     @Test
+    public void shouldDeserializeCompleteObjectWithResponseTemplate() throws IOException {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"someMethod\"," + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"STRING\"," + NEW_LINE +
+                "      \"string\" : \"someBody\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponseTemplate\" : {" + NEW_LINE +
+                "    \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
+                "    \"template\" : \"some_random_template\"," + NEW_LINE +
+                "    \"delay\" : {" + NEW_LINE +
+                "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+                "      \"value\" : 1" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setMethod(string("someMethod"))
+                                .setPath(string("somePath"))
+                                .setQueryStringParameters(Arrays.asList(
+                                        new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
+                                        new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
+                                ))
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
+                                .setHeaders(Collections.singletonList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                                .setCookies(Collections.singletonList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                )
+                .setHttpResponseTemplate(
+                        new HttpTemplateDTO()
+                                .setTemplateType(HttpTemplate.TemplateType.JAVASCRIPT)
+                                .setTemplate("some_random_template")
+                                .setDelay(new DelayDTO(new Delay(MICROSECONDS, 1)))
+
+                )
+                .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
+        );
+    }
+
+    @Test
     public void shouldDeserializeCompleteObjectWithForward() throws IOException {
         // given
         String requestBytes = ("{" + NEW_LINE +
@@ -351,6 +420,75 @@ public class ExpectationSerializerIntegrationTest {
                 )
                 .setTimes(new TimesDTO(Times.exactly(5)))
                 .setTimeToLive(new TimeToLiveDTO(TimeToLive.unlimited())).buildObject(), expectation
+        );
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithForwardTemplate() throws IOException {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"someMethod\"," + NEW_LINE +
+                "    \"path\" : \"somePath\"," + NEW_LINE +
+                "    \"queryStringParameters\" : [ {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+                "    }, {" + NEW_LINE +
+                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"body\" : {" + NEW_LINE +
+                "      \"type\" : \"STRING\"," + NEW_LINE +
+                "      \"string\" : \"someBody\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"cookies\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someCookieName\"," + NEW_LINE +
+                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+                "    } ]," + NEW_LINE +
+                "    \"headers\" : [ {" + NEW_LINE +
+                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+                "    } ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpForwardTemplate\" : {" + NEW_LINE +
+                "    \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
+                "    \"template\" : \"some_random_template\"," + NEW_LINE +
+                "    \"delay\" : {" + NEW_LINE +
+                "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+                "      \"value\" : 1" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"remainingTimes\" : 5," + NEW_LINE +
+                "    \"unlimited\" : false" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+                .setHttpRequest(
+                        new HttpRequestDTO()
+                                .setMethod(string("someMethod"))
+                                .setPath(string("somePath"))
+                                .setQueryStringParameters(Arrays.asList(
+                                        new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
+                                        new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
+                                ))
+                                .setBody(new StringBodyDTO(new StringBody("someBody")))
+                                .setHeaders(Collections.singletonList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
+                                .setCookies(Collections.singletonList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
+                )
+                .setHttpForwardTemplate(
+                        new HttpTemplateDTO()
+                                .setTemplateType(HttpTemplate.TemplateType.JAVASCRIPT)
+                                .setTemplate("some_random_template")
+                                .setDelay(new DelayDTO(new Delay(MICROSECONDS, 1)))
+
+                )
+                .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
         );
     }
 
@@ -479,75 +617,6 @@ public class ExpectationSerializerIntegrationTest {
                 .setHttpClassCallback(
                         new HttpClassCallbackDTO()
                                 .setCallbackClass("someClass")
-                )
-                .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
-        );
-    }
-
-    @Test
-    public void shouldDeserializeCompleteObjectWithHttpResponseTemplate() throws IOException {
-        // given
-        String requestBytes = ("{" + NEW_LINE +
-                "  \"httpRequest\" : {" + NEW_LINE +
-                "    \"method\" : \"someMethod\"," + NEW_LINE +
-                "    \"path\" : \"somePath\"," + NEW_LINE +
-                "    \"queryStringParameters\" : [ {" + NEW_LINE +
-                "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
-                "    }, {" + NEW_LINE +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
-                "    } ]," + NEW_LINE +
-                "    \"body\" : {" + NEW_LINE +
-                "      \"type\" : \"STRING\"," + NEW_LINE +
-                "      \"string\" : \"someBody\"" + NEW_LINE +
-                "    }," + NEW_LINE +
-                "    \"cookies\" : [ {" + NEW_LINE +
-                "      \"name\" : \"someCookieName\"," + NEW_LINE +
-                "      \"value\" : \"someCookieValue\"" + NEW_LINE +
-                "    } ]," + NEW_LINE +
-                "    \"headers\" : [ {" + NEW_LINE +
-                "      \"name\" : \"someHeaderName\"," + NEW_LINE +
-                "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
-                "    } ]" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"httpResponseTemplate\" : {" + NEW_LINE +
-                "    \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
-                "    \"template\" : \"some_random_template\"," + NEW_LINE +
-                "    \"delay\" : {" + NEW_LINE +
-                "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
-                "      \"value\" : 1" + NEW_LINE +
-                "    }" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"remainingTimes\" : 5," + NEW_LINE +
-                "    \"unlimited\" : false" + NEW_LINE +
-                "  }" + NEW_LINE +
-                "}");
-
-        // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setMethod(string("someMethod"))
-                                .setPath(string("somePath"))
-                                .setQueryStringParameters(Arrays.asList(
-                                        new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                                        new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
-                                ))
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                .setHeaders(Collections.singletonList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                .setCookies(Collections.singletonList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
-                )
-                .setHttpResponseTemplate(
-                        new HttpTemplateDTO()
-                                .setTemplateType(HttpTemplate.TemplateType.JAVASCRIPT)
-                                .setTemplate("some_random_template")
-                                .setDelay(new DelayDTO(new Delay(MICROSECONDS, 1)))
-
                 )
                 .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
         );

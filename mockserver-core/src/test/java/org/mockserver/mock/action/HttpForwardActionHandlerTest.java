@@ -8,11 +8,15 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 
 import java.net.InetSocketAddress;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
@@ -20,7 +24,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class HttpForwardActionHandlerTest {
 
     @InjectMocks
-    HttpForwardActionHandler httpForwardActionHandler = new HttpForwardActionHandler();
+    private HttpForwardActionHandler httpForwardActionHandler = new HttpForwardActionHandler();
     @Mock
     private HttpRequest httpRequest;
     @Mock
@@ -38,12 +42,15 @@ public class HttpForwardActionHandlerTest {
     @Test
     public void shouldHandleHttpRequests() {
         // given
+        HttpResponse httpResponse = response("some_body");
         when(httpForward.getScheme()).thenReturn(HttpForward.Scheme.HTTP);
+        when(mockHttpClient.sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()))).thenReturn(httpResponse);
 
         // when
-        httpForwardActionHandler.handle(httpForward, httpRequest);
+        HttpResponse actualHttpResponse = httpForwardActionHandler.handle(httpForward, httpRequest);
 
         // then
+        assertThat(actualHttpResponse, is(httpResponse));
         verify(httpRequest).withSecure(false);
         verify(mockHttpClient).sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()));
     }
@@ -51,12 +58,15 @@ public class HttpForwardActionHandlerTest {
     @Test
     public void shouldHandleSecureHttpRequests() {
         // given
+        HttpResponse httpResponse = response("some_body");
         when(httpForward.getScheme()).thenReturn(HttpForward.Scheme.HTTPS);
+        when(mockHttpClient.sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()))).thenReturn(httpResponse);
 
         // when
-        httpForwardActionHandler.handle(httpForward, httpRequest);
+        HttpResponse actualHttpResponse = httpForwardActionHandler.handle(httpForward, httpRequest);
 
         // then
+        assertThat(actualHttpResponse, is(httpResponse));
         verify(httpRequest).withSecure(true);
         verify(mockHttpClient).sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()));
     }

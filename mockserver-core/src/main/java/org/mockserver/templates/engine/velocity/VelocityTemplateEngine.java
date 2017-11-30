@@ -16,6 +16,8 @@ import javax.script.ScriptEngineManager;
 import java.io.StringWriter;
 import java.io.Writer;
 
+import static org.mockserver.character.Character.NEW_LINE;
+
 /**
  * @author jamesdbloom
  */
@@ -41,11 +43,10 @@ public class VelocityTemplateEngine implements TemplateEngine {
             context.setWriter(writer);
             context.setAttribute("request", new HttpRequestTemplateObject(httpRequest), ScriptContext.ENGINE_SCOPE);
             engine.eval(template);
-            logFormatter.infoLog("Generated output:{}from template:{}for request:{}", writer.toString(), template, httpRequest);
+            logFormatter.infoLog("Generated output:{}" + NEW_LINE + " from template:{}" + NEW_LINE + " for request:{}", writer.toString(), template, httpRequest);
             return httpTemplateOutputDeserializer.deserializer(writer.toString(), dtoClass);
         } catch (Exception e) {
-            logFormatter.errorLog(e, "Exception transforming template:{}for request:{}", template, httpRequest);
+            throw new RuntimeException(logFormatter.formatLogMessage("Exception transforming template:{}" + NEW_LINE + " for request:{}", template, httpRequest).toString(), e);
         }
-        return null;
     }
 }
