@@ -8,12 +8,13 @@ import org.mockserver.model.*;
 /**
  * @author jamesdbloom
  */
-public class ExpectationDTO extends ObjectWithJsonToString {
+public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expectation> {
 
     private HttpRequestDTO httpRequest;
     private HttpResponseDTO httpResponse;
     private HttpTemplateDTO httpResponseTemplate;
     private HttpForwardDTO httpForward;
+    private HttpTemplateDTO httpForwardTemplate;
     private HttpErrorDTO httpError;
     private HttpClassCallbackDTO httpClassCallback;
     private HttpObjectCallbackDTO httpObjectCallback;
@@ -30,13 +31,17 @@ public class ExpectationDTO extends ObjectWithJsonToString {
             if (httpResponse != null) {
                 this.httpResponse = new HttpResponseDTO(httpResponse);
             }
-            HttpTemplate httpTemplate = expectation.getHttpResponseTemplate();
-            if (httpTemplate != null) {
-                this.httpResponseTemplate = new HttpTemplateDTO(httpTemplate);
+            HttpTemplate httpResponseTemplate = expectation.getHttpResponseTemplate();
+            if (httpResponseTemplate != null) {
+                this.httpResponseTemplate = new HttpTemplateDTO(httpResponseTemplate);
             }
             HttpForward httpForward = expectation.getHttpForward();
             if (httpForward != null) {
                 this.httpForward = new HttpForwardDTO(httpForward);
+            }
+            HttpTemplate httpForwardTemplate = expectation.getHttpForwardTemplate();
+            if (httpForwardTemplate != null) {
+                this.httpForwardTemplate = new HttpTemplateDTO(httpForwardTemplate);
             }
             HttpError httpError = expectation.getHttpError();
             if (httpError != null) {
@@ -67,8 +72,9 @@ public class ExpectationDTO extends ObjectWithJsonToString {
     public Expectation buildObject() {
         HttpRequest httpRequest = null;
         HttpResponse httpResponse = null;
-        HttpTemplate httpTemplate = null;
+        HttpTemplate httpResponseTemplate = null;
         HttpForward httpForward = null;
+        HttpTemplate httpForwardTemplate = null;
         HttpError httpError = null;
         HttpClassCallback httpClassCallback = null;
         HttpObjectCallback httpObjectCallback = null;
@@ -81,10 +87,13 @@ public class ExpectationDTO extends ObjectWithJsonToString {
             httpResponse = this.httpResponse.buildObject();
         }
         if (this.httpResponseTemplate != null) {
-            httpTemplate = this.httpResponseTemplate.buildObject();
+            httpResponseTemplate = this.httpResponseTemplate.buildObject();
         }
         if (this.httpForward != null) {
             httpForward = this.httpForward.buildObject();
+        }
+        if (this.httpForwardTemplate != null) {
+            httpForwardTemplate = this.httpForwardTemplate.buildObject();
         }
         if (this.httpError != null) {
             httpError = this.httpError.buildObject();
@@ -107,8 +116,9 @@ public class ExpectationDTO extends ObjectWithJsonToString {
         }
         return new Expectation(httpRequest, times, timeToLive)
                 .thenRespond(httpResponse)
-                .thenRespond(httpTemplate)
+                .thenRespond(httpResponseTemplate)
                 .thenForward(httpForward)
+                .thenForward(httpForwardTemplate)
                 .thenError(httpError)
                 .thenCallback(httpClassCallback)
                 .thenCallback(httpObjectCallback);
@@ -147,6 +157,15 @@ public class ExpectationDTO extends ObjectWithJsonToString {
 
     public ExpectationDTO setHttpForward(HttpForwardDTO httpForward) {
         this.httpForward = httpForward;
+        return this;
+    }
+
+    public HttpTemplateDTO getHttpForwardTemplate() {
+        return httpForwardTemplate;
+    }
+
+    public ExpectationDTO setHttpForwardTemplate(HttpTemplateDTO httpForwardTemplate) {
+        this.httpForwardTemplate = httpForwardTemplate;
         return this;
     }
 

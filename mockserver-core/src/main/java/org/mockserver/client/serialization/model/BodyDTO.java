@@ -5,7 +5,7 @@ import org.mockserver.model.*;
 /**
  * @author jamesdbloom
  */
-public abstract class BodyDTO extends NotDTO {
+public abstract class BodyDTO extends NotDTO implements DTO<Body> {
 
     private Body.Type type;
 

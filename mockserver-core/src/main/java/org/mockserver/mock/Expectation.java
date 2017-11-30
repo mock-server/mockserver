@@ -19,6 +19,7 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpResponse httpResponse;
     private HttpTemplate httpResponseTemplate;
     private HttpForward httpForward;
+    private HttpTemplate httpForwardTemplate;
     private HttpError httpError;
     private HttpClassCallback httpClassCallback;
     private HttpObjectCallback httpObjectCallback;
@@ -40,6 +41,10 @@ public class Expectation extends ObjectWithJsonToString {
 
     public HttpTemplate getHttpResponseTemplate() {
         return httpResponseTemplate;
+    }
+
+    public HttpTemplate getHttpForwardTemplate() {
+        return httpForwardTemplate;
     }
 
     public HttpForward getHttpForward() {
@@ -65,6 +70,8 @@ public class Expectation extends ObjectWithJsonToString {
             return getHttpResponseTemplate();
         } else if (httpForward != null) {
             return getHttpForward();
+        } else if (httpForwardTemplate != null) {
+            return getHttpForwardTemplate();
         } else if (httpError != null) {
             return getHttpError();
         } else if (httpClassCallback != null) {
@@ -92,6 +99,9 @@ public class Expectation extends ObjectWithJsonToString {
             if (httpForward != null) {
                 throw new IllegalArgumentException("It is not possible to set a response once a forward has been set");
             }
+            if (httpForwardTemplate != null) {
+                throw new IllegalArgumentException("It is not possible to set a response once a forward template has been set");
+            }
             if (httpError != null) {
                 throw new IllegalArgumentException("It is not possible to set a response once an error has been set");
             }
@@ -114,6 +124,9 @@ public class Expectation extends ObjectWithJsonToString {
             if (httpForward != null) {
                 throw new IllegalArgumentException("It is not possible to set a response template once a forward has been set");
             }
+            if (httpForwardTemplate != null) {
+                throw new IllegalArgumentException("It is not possible to set a response once a forward template has been set");
+            }
             if (httpError != null) {
                 throw new IllegalArgumentException("It is not possible to set a response template once an error has been set");
             }
@@ -123,6 +136,7 @@ public class Expectation extends ObjectWithJsonToString {
             if (httpObjectCallback != null) {
                 throw new IllegalArgumentException("It is not possible to set a response template once an object callback has been set");
             }
+            httpTemplate.setActionType(Action.Type.RESPONSE_TEMPLATE);
             this.httpResponseTemplate = httpTemplate;
         }
         return this;
@@ -135,6 +149,9 @@ public class Expectation extends ObjectWithJsonToString {
             }
             if (httpResponseTemplate != null) {
                 throw new IllegalArgumentException("It is not possible to set a forward once a response template has been set");
+            }
+            if (httpForwardTemplate != null) {
+                throw new IllegalArgumentException("It is not possible to set a response once a forward template has been set");
             }
             if (httpError != null) {
                 throw new IllegalArgumentException("It is not possible to set a forward once an error has been set");
@@ -150,6 +167,32 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
+    public Expectation thenForward(HttpTemplate httpTemplate) {
+        if (httpTemplate != null) {
+            if (httpResponse != null) {
+                throw new IllegalArgumentException("It is not possible to set a forward once a response has been set");
+            }
+            if (httpResponseTemplate != null) {
+                throw new IllegalArgumentException("It is not possible to set a forward once a response template has been set");
+            }
+            if (httpForward != null) {
+                throw new IllegalArgumentException("It is not possible to set a response once a forward has been set");
+            }
+            if (httpError != null) {
+                throw new IllegalArgumentException("It is not possible to set a forward once an error has been set");
+            }
+            if (httpClassCallback != null) {
+                throw new IllegalArgumentException("It is not possible to set a forward once a class callback has been set");
+            }
+            if (httpObjectCallback != null) {
+                throw new IllegalArgumentException("It is not possible to set a forward once an object callback has been set");
+            }
+            httpTemplate.setActionType(Action.Type.FORWARD_TEMPLATE);
+            this.httpForwardTemplate = httpTemplate;
+        }
+        return this;
+    }
+
     public Expectation thenError(HttpError httpError) {
         if (httpError != null) {
             if (httpResponse != null) {
@@ -160,6 +203,9 @@ public class Expectation extends ObjectWithJsonToString {
             }
             if (httpForward != null) {
                 throw new IllegalArgumentException("It is not possible to set an error once a forward has been set");
+            }
+            if (httpForwardTemplate != null) {
+                throw new IllegalArgumentException("It is not possible to set a response once a forward template has been set");
             }
             if (httpClassCallback != null) {
                 throw new IllegalArgumentException("It is not possible to set a error once a class callback has been set");
@@ -180,11 +226,14 @@ public class Expectation extends ObjectWithJsonToString {
             if (httpResponseTemplate != null) {
                 throw new IllegalArgumentException("It is not possible to set a class callback once a response template has been set");
             }
-            if (httpError != null) {
-                throw new IllegalArgumentException("It is not possible to set a class callback once an error has been set");
-            }
             if (httpForward != null) {
                 throw new IllegalArgumentException("It is not possible to set a class callback once a forward has been set");
+            }
+            if (httpForwardTemplate != null) {
+                throw new IllegalArgumentException("It is not possible to set a response once a forward template has been set");
+            }
+            if (httpError != null) {
+                throw new IllegalArgumentException("It is not possible to set a class callback once an error has been set");
             }
             if (httpObjectCallback != null) {
                 throw new IllegalArgumentException("It is not possible to set a class callback once an object callback has been set");
@@ -202,11 +251,14 @@ public class Expectation extends ObjectWithJsonToString {
             if (httpResponseTemplate != null) {
                 throw new IllegalArgumentException("It is not possible to set an object callback once a response template has been set");
             }
-            if (httpError != null) {
-                throw new IllegalArgumentException("It is not possible to set an object callback once an error has been set");
-            }
             if (httpForward != null) {
                 throw new IllegalArgumentException("It is not possible to set an object callback once a forward has been set");
+            }
+            if (httpForwardTemplate != null) {
+                throw new IllegalArgumentException("It is not possible to set a response once a forward template has been set");
+            }
+            if (httpError != null) {
+                throw new IllegalArgumentException("It is not possible to set an object callback once an error has been set");
             }
             if (httpClassCallback != null) {
                 throw new IllegalArgumentException("It is not possible to set an object callback once an class callback has been set");
@@ -224,7 +276,6 @@ public class Expectation extends ObjectWithJsonToString {
         return times == null || times.greaterThenZero();
     }
 
-    @JsonIgnore
     public boolean isStillAlive() {
         return timeToLive == null || timeToLive.stillAlive();
     }

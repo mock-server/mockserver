@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class VerificationSequenceDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class VerificationSequenceDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<VerificationSequence> {
     private List<HttpRequestDTO> httpRequests = new ArrayList<HttpRequestDTO>();
 
     public VerificationSequenceDTO(VerificationSequence verification) {

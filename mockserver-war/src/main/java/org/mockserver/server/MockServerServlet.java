@@ -106,6 +106,7 @@ public class MockServerServlet extends HttpServlet {
                                 .thenRespond(expectation.getHttpResponse())
                                 .thenRespond(expectation.getHttpResponseTemplate())
                                 .thenForward(expectation.getHttpForward())
+                                .thenForward(expectation.getHttpForwardTemplate())
                                 .thenCallback(expectation.getHttpClassCallback());
                         logFormatter.infoLog("creating expectation:{}", expectation);
                     }

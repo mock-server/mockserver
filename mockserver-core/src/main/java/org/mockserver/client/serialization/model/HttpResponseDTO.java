@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<HttpResponse> {
     private Integer statusCode;
     private BodyWithContentTypeDTO body;
     private List<CookieDTO> cookies = new ArrayList<CookieDTO>();

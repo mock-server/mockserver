@@ -6,7 +6,7 @@ import org.mockserver.model.HttpForward;
 /**
  * @author jamesdbloom
  */
-public class HttpForwardDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class HttpForwardDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<HttpForward> {
     private String host;
     private Integer port;
     private HttpForward.Scheme scheme;

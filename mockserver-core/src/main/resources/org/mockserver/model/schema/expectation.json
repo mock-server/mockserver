@@ -15,6 +15,9 @@
     "httpForward": {
       "$ref": "#/definitions/httpForward"
     },
+    "httpForwardTemplate": {
+      "$ref": "#/definitions/httpTemplate"
+    },
     "httpClassCallback": {
       "$ref": "#/definitions/httpClassCallback"
     },
@@ -45,6 +48,11 @@
     {
       "required": [
         "httpForward"
+      ]
+    },
+    {
+      "required": [
+        "httpForwardTemplate"
       ]
     },
     {

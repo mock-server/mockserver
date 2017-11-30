@@ -27,6 +27,19 @@ public class LogFormatter {
         }
     }
 
+    public void errorLog(String message, Object... arguments) {
+        StringBuilder errorMessage = new StringBuilder();
+        Object[] formattedArguments = formatArguments(arguments);
+        String[] messageParts = (message + NEW_LINE).split("\\{\\}");
+        for (int messagePartIndex = 0; messagePartIndex < messageParts.length; messagePartIndex++) {
+            errorMessage.append(messageParts[messagePartIndex]);
+            if (formattedArguments.length > messagePartIndex) {
+                errorMessage.append(formattedArguments[messagePartIndex]);
+            }
+        }
+        logger.error(errorMessage.toString());
+    }
+
     public void errorLog(Throwable throwable, String message, Object... arguments) {
         StringBuilder errorMessage = new StringBuilder();
         Object[] formattedArguments = formatArguments(arguments);

@@ -30,6 +30,9 @@ public class ActionHandlerTest {
     private HttpForwardActionHandler mockHttpForwardActionHandler;
 
     @Mock
+    private HttpForwardTemplateActionHandler mockHttpForwardTemplateActionHandler;
+
+    @Mock
     private HttpResponseActionHandler mockHttpResponseActionHandler;
 
     @Mock
@@ -98,6 +101,7 @@ public class ActionHandlerTest {
     public void shouldProcessResponseTemplateAction() {
         // given
         HttpTemplate httpTemplate = template(HttpTemplate.TemplateType.JAVASCRIPT, "");
+        httpTemplate.setActionType(Action.Type.RESPONSE_TEMPLATE);
         when(mockHttpResponseTemplateActionHandler.handle(httpTemplate, httpRequest)).thenReturn(httpResponse);
 
         // when
@@ -105,6 +109,21 @@ public class ActionHandlerTest {
 
         // then
         assertThat(actualHttpResponse, is(httpResponse));
+        verify(requestLogFilter, times(1)).onRequest(httpRequest);
+    }
+
+    @Test
+    public void shouldProcessForwardTemplateAction() {
+        // given
+        HttpTemplate httpTemplate = template(HttpTemplate.TemplateType.JAVASCRIPT, "");
+        httpTemplate.setActionType(Action.Type.FORWARD_TEMPLATE);
+        when(mockHttpForwardTemplateActionHandler.handle(httpTemplate, httpRequest)).thenReturn(httpResponse);
+
+        // when
+        HttpResponse actualHttpForward = actionHandler.processAction(httpTemplate, httpRequest);
+
+        // then
+        assertThat(actualHttpForward, is(httpResponse));
         verify(requestLogFilter, times(1)).onRequest(httpRequest);
     }
 }

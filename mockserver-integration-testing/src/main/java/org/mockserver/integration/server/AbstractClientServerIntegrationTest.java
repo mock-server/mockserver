@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
@@ -218,6 +219,77 @@ public abstract class AbstractClientServerIntegrationTest {
                                     .withMethod("POST")
                                     .withHeaders(
                                             header("x-test", "test_headers_and_body")
+                                    )
+                                    .withBody("an_example_body_https"),
+                            headersToIgnore)
+            );
+        } finally {
+            secureEchoServer.stop();
+        }
+    }
+
+    @Test
+    public void shouldForwardTemplateInVelocity() {
+        int testServerHttpsPort = PortFactory.findFreePort();
+        EchoServer secureEchoServer = new EchoServer(testServerHttpsPort, false);
+        try {
+            // when
+            mockServerClient
+                    .when(
+                            request()
+                                    .withPath(calculatePath("echo"))
+                    )
+                    .forward(
+                            template(HttpTemplate.TemplateType.VELOCITY,
+                                    "{" + NEW_LINE +
+                                            "    'path' : \"/somePath\"," + NEW_LINE +
+                                            "    'headers' : [ {" + NEW_LINE +
+                                            "        'name' : \"Host\"," + NEW_LINE +
+                                            "        'values' : [ \"127.0.0.1:" + testServerHttpsPort + "\" ]" + NEW_LINE +
+                                            "    }, {" + NEW_LINE +
+                                            "        'name' : \"x-test\"," + NEW_LINE +
+                                            "        'values' : [ \"$!request.headers['x-test'][0]\" ]" + NEW_LINE +
+                                            "    } ]," + NEW_LINE +
+                                            "    'body': \"{'name': 'value'}\"" + NEW_LINE +
+                                            "}")
+                                    .withDelay(MILLISECONDS, 10)
+                    );
+
+            // then
+            // - in http
+            assertEquals(
+                    response()
+                            .withStatusCode(OK_200.code())
+                            .withHeaders(
+                                    header("x-test", "test_headers_and_body")
+                            )
+                            .withBody("{'name': 'value'}"),
+                    makeRequest(
+                            request()
+                                    .withPath(calculatePath("echo"))
+                                    .withMethod("POST")
+                                    .withHeaders(
+                                            header("x-test", "test_headers_and_body")
+                                    )
+                                    .withBody("an_example_body_http"),
+                            headersToIgnore
+                    )
+            );
+            // - in https
+            assertEquals(
+                    response()
+                            .withStatusCode(OK_200.code())
+                            .withHeaders(
+                                    header("x-test", "test_headers_and_body_https")
+                            )
+                            .withBody("{'name': 'value'}"),
+                    makeRequest(
+                            request()
+                                    .withSecure(true)
+                                    .withPath(calculatePath("echo"))
+                                    .withMethod("POST")
+                                    .withHeaders(
+                                            header("x-test", "test_headers_and_body_https")
                                     )
                                     .withBody("an_example_body_https"),
                             headersToIgnore)
@@ -1728,7 +1800,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .respond(
                         response()
                                 .withBody("some_body1")
-                                .withDelay(new Delay(TimeUnit.MILLISECONDS, 10))
+                                .withDelay(new Delay(MILLISECONDS, 10))
                 );
         mockServerClient
                 .when(
@@ -1738,7 +1810,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .respond(
                         response()
                                 .withBody("some_body2")
-                                .withDelay(new Delay(TimeUnit.MILLISECONDS, 20))
+                                .withDelay(new Delay(MILLISECONDS, 20))
                 );
 
         // then
@@ -1797,8 +1869,7 @@ public abstract class AbstractClientServerIntegrationTest {
                                 HttpTemplate.TemplateType.VELOCITY,
                                 "{" + NEW_LINE +
                                         "     \"statusCode\": 200," + NEW_LINE +
-                                        "     \"headers\": $!request.headers," + NEW_LINE +
-                                        "     \"cookies\": $!request.cookies," + NEW_LINE +
+                                        "     \"headers\": [ { \"name\": \"name\", \"values\": [ \"$!request.headers['name'][0]\" ] } ]," + NEW_LINE +
                                         "     \"body\": \"$!request.body\"" + NEW_LINE +
                                         "}" + NEW_LINE
                         )
@@ -5809,7 +5880,7 @@ public abstract class AbstractClientServerIntegrationTest {
         assertThat(httpResponse.getStatusCode(), is(400));
         assertThat(httpResponse.getBodyAsString(), is("2 errors:" + NEW_LINE +
                 " - object instance has properties which are not allowed by the schema: [\"incorrectField\"]" + NEW_LINE +
-                " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpForward\" \"httpClassCallback\" \"httpError\" \"httpObjectCallback\" "));
+                " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpForward\" \"httpForwardTemplate\" \"httpClassCallback\" \"httpError\" \"httpObjectCallback\" "));
     }
 
     @Test
@@ -5897,7 +5968,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 attemptsRemaining--;
                 logger.info("Retrying connection to mock server, attempts remaining: " + attemptsRemaining);
                 try {
-                    TimeUnit.MILLISECONDS.sleep(50);
+                    MILLISECONDS.sleep(50);
                 } catch (InterruptedException e) {
                     // do nothing
                 }

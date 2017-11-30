@@ -324,6 +324,7 @@ public class MockServerHandlerGeneralOperationsTest extends MockServerHandlerTes
         verify(mockExpectation).thenRespond(any(HttpResponse.class));
         verify(mockExpectation).thenRespond(any(HttpTemplate.class));
         verify(mockExpectation).thenForward(any(HttpForward.class));
+        verify(mockExpectation).thenForward(any(HttpTemplate.class));
         verify(mockExpectation).thenError(any(HttpError.class));
         verify(mockExpectation).thenCallback(any(HttpClassCallback.class));
 

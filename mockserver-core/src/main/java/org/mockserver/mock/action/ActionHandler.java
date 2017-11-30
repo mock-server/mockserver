@@ -14,9 +14,10 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 public class ActionHandler {
 
     private HttpForwardActionHandler httpForwardActionHandler = new HttpForwardActionHandler();
-    private HttpCallbackActionHandler httpCallbackActionHandler = new HttpCallbackActionHandler();
+    private HttpForwardTemplateActionHandler httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler();
     private HttpResponseActionHandler httpResponseActionHandler = new HttpResponseActionHandler();
     private HttpResponseTemplateActionHandler httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler();
+    private HttpCallbackActionHandler httpCallbackActionHandler = new HttpCallbackActionHandler();
     private Filters filters = new Filters();
 
     public ActionHandler(RequestLogFilter requestLogFilter) {
@@ -31,6 +32,9 @@ public class ActionHandler {
             switch (action.getType()) {
                 case FORWARD:
                     httpResponse = httpForwardActionHandler.handle((HttpForward) action, httpRequest);
+                    break;
+                case FORWARD_TEMPLATE:
+                    httpResponse = httpForwardTemplateActionHandler.handle((HttpTemplate) action, httpRequest);
                     break;
                 case CALLBACK:
                     httpResponse = httpCallbackActionHandler.handle((HttpClassCallback) action, httpRequest);

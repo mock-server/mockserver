@@ -95,6 +95,7 @@ public class MockServerHandlerTest {
         when(mockExpectation.thenRespond(any(HttpResponse.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenRespond(any(HttpTemplate.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenForward(any(HttpForward.class))).thenReturn(mockExpectation);
+        when(mockExpectation.thenForward(any(HttpTemplate.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenError(any(HttpError.class))).thenReturn(mockExpectation);
         when(mockExpectation.thenCallback(any(HttpClassCallback.class))).thenReturn(mockExpectation);
 

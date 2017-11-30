@@ -332,7 +332,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                         "}"),
                 is(
                         "1 error:" + NEW_LINE +
-                                " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpForward\" \"httpClassCallback\" \"httpError\" \"httpObjectCallback\" "
+                                " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpForward\" \"httpForwardTemplate\" \"httpClassCallback\" \"httpError\" \"httpObjectCallback\" "
                 ));
     }
 
@@ -345,7 +345,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 is(
                         "2 errors:" + NEW_LINE +
                                 " - object instance has properties which are not allowed by the schema: [\"invalidField\"]" + NEW_LINE +
-                                " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpForward\" \"httpClassCallback\" \"httpError\" \"httpObjectCallback\" "
+                                " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpForward\" \"httpForwardTemplate\" \"httpClassCallback\" \"httpError\" \"httpObjectCallback\" "
                 ));
     }
 

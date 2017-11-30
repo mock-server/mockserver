@@ -6,7 +6,7 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 /**
  * @author jamesdbloom
  */
-public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<HttpTemplate> {
 
     private String template;
     private HttpTemplate.TemplateType templateType;

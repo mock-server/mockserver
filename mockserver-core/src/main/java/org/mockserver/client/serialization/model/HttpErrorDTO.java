@@ -6,7 +6,7 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 /**
  * @author jamesdbloom
  */
-public class HttpErrorDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class HttpErrorDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<HttpError> {
     private DelayDTO delay;
     private Boolean dropConnection;
     private byte[] responseBytes;

@@ -1,21 +1,17 @@
 package org.mockserver.templates.engine.javascript;
 
 import org.junit.Test;
-import org.mockserver.mock.action.HttpResponseTemplateActionHandler;
+import org.mockserver.client.serialization.model.HttpResponseDTO;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.model.HttpTemplate;
 
 import javax.script.ScriptEngineManager;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.junit.Assert.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpTemplate.template;
 
 /**
  * @author jamesdbloom
@@ -41,7 +37,8 @@ public class JavaScriptTemplateEngineTest {
         HttpResponse actualHttpResponse = new JavaScriptTemplateEngine().executeTemplate(template, request()
                 .withPath("/somePath")
                 .withMethod("POST")
-                .withBody("some_body")
+                .withBody("some_body"),
+                HttpResponseDTO.class
         );
 
         // then
@@ -74,7 +71,8 @@ public class JavaScriptTemplateEngineTest {
         // when
         HttpResponse actualHttpResponse = new JavaScriptTemplateEngine().executeTemplate(template, request()
                 .withPath("/someOtherPath")
-                .withBody("some_body")
+                .withBody("some_body"),
+                HttpResponseDTO.class
         );
 
         // then

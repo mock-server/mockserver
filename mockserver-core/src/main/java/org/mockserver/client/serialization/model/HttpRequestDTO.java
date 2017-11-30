@@ -12,7 +12,7 @@ import static org.mockserver.model.NottableString.string;
 /**
  * @author jamesdbloom
  */
-public class HttpRequestDTO extends NotDTO {
+public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
     private NottableString method = string("");
     private NottableString path = string("");
     private List<ParameterDTO> queryStringParameters = new ArrayList<ParameterDTO>();

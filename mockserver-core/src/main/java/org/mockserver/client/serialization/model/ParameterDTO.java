@@ -6,7 +6,7 @@ import org.mockserver.model.Parameter;
 /**
  * @author jamesdbloom
  */
-public class ParameterDTO extends KeyToMultiValueDTO {
+public class ParameterDTO extends KeyToMultiValueDTO implements DTO<Parameter> {
 
     public ParameterDTO(Parameter parameter) {
         super(parameter);

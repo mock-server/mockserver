@@ -6,7 +6,7 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 /**
  * @author jamesdbloom
  */
-public class TimesDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class TimesDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<Times> {
 
     private int remainingTimes;
     private boolean unlimited;

@@ -12,6 +12,7 @@ public abstract class Action extends ObjectWithJsonToString {
 
     public enum Type {
         FORWARD,
+        FORWARD_TEMPLATE,
         RESPONSE,
         RESPONSE_TEMPLATE,
         CALLBACK,

@@ -103,7 +103,7 @@ public class ExpectationTest {
     @Test
     public void shouldAllowForNulls() {
         // when
-        Expectation expectation = new Expectation(null, null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward(null).thenCallback((HttpClassCallback)null).thenCallback((HttpObjectCallback)null);
+        Expectation expectation = new Expectation(null, null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).thenCallback((HttpClassCallback)null).thenCallback((HttpObjectCallback)null);
 
         // then
         expectation.setNotUnlimitedResponses();
@@ -121,27 +121,27 @@ public class ExpectationTest {
     @Test
     public void shouldMatchCorrectly() {
         // when request null should return true
-        assertTrue(new Expectation(null, null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward(null).matches(null));
-        assertTrue(new Expectation(null, Times.unlimited(), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward(null).matches(null));
+        assertTrue(new Expectation(null, null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(null));
+        assertTrue(new Expectation(null, Times.unlimited(), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(null));
 
         // when basic matching request should return true
-        assertTrue(new Expectation(request(), null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward(null).matches(request()));
-        assertTrue(new Expectation(request(), Times.unlimited(), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward(null).matches(request()));
+        assertTrue(new Expectation(request(), null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request()));
+        assertTrue(new Expectation(request(), Times.unlimited(), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request()));
 
         // when un-matching request should return false
-        assertFalse(new Expectation(request().withPath("some_path"), null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward(null).matches(request().withPath("some_other_path")));
-        assertFalse(new Expectation(request().withPath("some_path"), Times.unlimited(), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward(null).matches(request().withPath("some_other_path")));
-        assertFalse(new Expectation(request().withPath("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward(null).matches(request().withPath("some_other_path")));
+        assertFalse(new Expectation(request().withPath("some_path"), null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request().withPath("some_other_path")));
+        assertFalse(new Expectation(request().withPath("some_path"), Times.unlimited(), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request().withPath("some_other_path")));
+        assertFalse(new Expectation(request().withPath("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request().withPath("some_other_path")));
 
         // when no times left should return false
-        assertFalse(new Expectation(null, Times.exactly(0), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward(null).matches(null));
-        assertFalse(new Expectation(request(), Times.exactly(0), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward(null).matches(request()));
-        assertFalse(new Expectation(request().withPath("un-matching"), Times.exactly(0), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward(null).matches(request()));
+        assertFalse(new Expectation(null, Times.exactly(0), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(null));
+        assertFalse(new Expectation(request(), Times.exactly(0), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request()));
+        assertFalse(new Expectation(request().withPath("un-matching"), Times.exactly(0), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request()));
 
         // when ttl expired should return false
-        assertFalse(new Expectation(null, Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward(null).matches(null));
-        assertFalse(new Expectation(request(), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward(null).matches(request()));
-        assertFalse(new Expectation(request().withPath("un-matching"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward(null).matches(request()));
+        assertFalse(new Expectation(null, Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(null));
+        assertFalse(new Expectation(request(), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request()));
+        assertFalse(new Expectation(request().withPath("un-matching"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request()));
     }
 
     @Test

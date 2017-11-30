@@ -113,6 +113,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                             .thenRespond(expectation.getHttpResponse())
                             .thenRespond(expectation.getHttpResponseTemplate())
                             .thenForward(expectation.getHttpForward())
+                            .thenForward(expectation.getHttpForwardTemplate())
                             .thenError(expectation.getHttpError())
                             .thenCallback(expectation.getHttpClassCallback())
                             .thenCallback(expectation.getHttpObjectCallback());

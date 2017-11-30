@@ -2,6 +2,7 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
+import org.mockserver.client.serialization.model.HttpRequestDTO;
 
 import java.nio.charset.Charset;
 import java.util.*;
@@ -216,7 +217,7 @@ public class HttpRequest extends Not {
     }
 
     public List<Parameter> getQueryStringParameters() {
-        return new ArrayList<Parameter>(queryStringParameters.values());
+        return new ArrayList<>(queryStringParameters.values());
     }
 
     public boolean hasQueryStringParameter(String name, String expectedValue) {
@@ -571,5 +572,9 @@ public class HttpRequest extends Not {
                 .withCookies(getCookies())
                 .withKeepAlive(keepAlive)
                 .withSecure(secure);
+    }
+
+    public static Class getDTOClass() {
+        return HttpRequestDTO.class;
     }
 }

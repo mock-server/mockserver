@@ -6,7 +6,7 @@ import org.mockserver.verify.VerificationTimes;
 /**
  * @author jamesdbloom
  */
-public class VerificationTimesDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class VerificationTimesDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<VerificationTimes> {
 
     private int count;
     private boolean exact;

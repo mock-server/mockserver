@@ -6,7 +6,7 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 /**
  * @author jamesdbloom
  */
-public class HttpClassCallbackDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class HttpClassCallbackDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<HttpClassCallback> {
 
     private String callbackClass;
 

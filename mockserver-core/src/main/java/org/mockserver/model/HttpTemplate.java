@@ -4,10 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.mockserver.model.Cookie.cookie;
-import static org.mockserver.model.Header.header;
-import static org.mockserver.model.NottableString.string;
-
 /**
  * @author jamesdbloom
  */
@@ -15,6 +11,7 @@ public class HttpTemplate extends Action {
     private final TemplateType templateType;
     private String template;
     private Delay delay;
+    private Type actionType;
 
     public HttpTemplate(TemplateType type) {
         this.templateType = type;
@@ -82,10 +79,14 @@ public class HttpTemplate extends Action {
         return this;
     }
 
+    public void setActionType(Type actionType) {
+        this.actionType = actionType;
+    }
+
     @Override
     @JsonIgnore
     public Type getType() {
-        return Type.RESPONSE_TEMPLATE;
+        return actionType;
     }
 
     public HttpTemplate shallowClone() {

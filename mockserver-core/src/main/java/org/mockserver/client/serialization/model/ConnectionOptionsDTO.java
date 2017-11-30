@@ -6,7 +6,7 @@ import org.mockserver.model.ObjectWithJsonToString;
 /**
  * @author jamesdbloom
  */
-public class ConnectionOptionsDTO extends ObjectWithJsonToString {
+public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<ConnectionOptions> {
 
     private Boolean suppressContentLengthHeader = null;
     private Integer contentLengthHeaderOverride = null;

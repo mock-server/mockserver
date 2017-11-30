@@ -14,8 +14,6 @@ import java.net.InetSocketAddress;
  */
 public class HttpForwardActionHandler {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    // http client
     private NettyHttpClient httpClient = new NettyHttpClient();
 
     public HttpResponse handle(HttpForward httpForward, HttpRequest httpRequest) {
