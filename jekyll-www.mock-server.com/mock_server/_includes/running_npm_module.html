@@ -2,17 +2,17 @@
 
 <p>You may install this plugin / node module with the following command:</p>
 
-<pre><code class="code">npm install mockserver-grunt --save-dev</code></pre>
+<pre><code class="code">npm install mockserver-node --save-dev</code></pre>
 
 <p><strong>Node Module</strong></p>
 
-<p>To start or stop the MockServer from any Node.js code you need to import this module using <span class="inline_code">require(<span class="string_literal">'mockserver-grunt'</span>)</span> as follows:</p>
+<p>To start or stop the MockServer from any Node.js code you need to import this module using <span class="inline_code">require(<span class="string_literal">'mockserver-node'</span>)</span> as follows:</p>
 
-<pre><code class="code">var mockserver = require(<span class="string_literal">'mockserver-grunt'</span>);</code></pre>
+<pre><code class="code">var mockserver = require(<span class="string_literal">'mockserver-node'</span>);</code></pre>
 
 <p>Then you can use either the <span class="inline_code">start_mockserver</span> or <span class="inline_code">stop_mockserver</span> functions as follows:</p>
 
-<pre><code class="code">var mockserver = require(<span class="string_literal">'mockserver-grunt'</span>);
+<pre><code class="code">var mockserver = require(<span class="string_literal">'mockserver-node'</span>);
 mockserver.start_mockserver({
                 serverPort: <span class="numeric_literal">1080</span>,
                 proxyPort: <span class="numeric_literal">1090</span>,
@@ -57,7 +57,7 @@ mockserver.stop_mockserver();</code></pre>
     }
 });
 
-grunt.loadNpmTasks(<span class="string_literal">'mockserver-grunt'</span>);</code></pre>
+grunt.loadNpmTasks(<span class="string_literal">'mockserver-node'</span>);</code></pre>
 
 <p><strong>Grunt Plugin & NPM Module Options</strong></p>
 

@@ -37,7 +37,7 @@ sitemap:
 
 <p>The <strong>TRACE</strong> level logging results in a lot of verbose logging but can be very helpful to debug why a complex matcher (such as the JSON Schema matcher) is not matching.</p>
 
-<p>When MockServer is run from the command line, Maven plugin, Grunt plugin or npm module the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running.</p>
+<p>When MockServer is run from the command line, Maven plugin, npm module or Grunt plugin the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running.</p>
 
 <a name="logging_with_api" class="anchor" href="#logging_with_api">&nbsp;</a>
 
@@ -102,10 +102,10 @@ sitemap:
 
 <a name="logging-with-node" class="anchor" href="#logging-with-node">&nbsp;</a>
 
-<h3>Logging with Grunt plugin or npm module</h3>
+<h3>Logging with npm module or Grunt plugin</h3>
 
-<p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver_grunt"><strong>mockserver-grunt</strong></a> Grunt plugin and Node.js (npm) module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the
-	<span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging. In addition the <span class="inline_code">--verbose</span> command line flag can be used for Grunt builds to enable the <strong>mockserver-grunt</strong> verbose option dynamically.</p>
+<p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver_grunt"><strong>mockserver-node</strong></a> Grunt plugin and Node.js (npm) module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the
+	<span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging. In addition the <span class="inline_code">--verbose</span> command line flag can be used for Grunt builds to enable the <strong>mockserver-node</strong> verbose option dynamically.</p>
 
 <a name="disabling-logging" class="anchor" href="#disabling-logging">&nbsp;</a>
 
@@ -207,13 +207,13 @@ client.dump_log(request(<span class="ruby_constant">:GET</span>, <span class="st
 
 <a name="debugging-with-node" class="anchor" href="#debugging-with-node">&nbsp;</a>
 
-<h3>Debugging Grunt plugin or npm module</h3>
+<h3>Debugging npm module or Grunt plugin</h3>
 
-<p>To debug the Grunt plugin or npm module you need to provide the <span class="inline_code">javaDebugPort</span> option.  This option will enable the following command line switch <span class="inline_code">'-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=' + options.javaDebugPort</span>.</p>
+<p>To debug the npm module or Grunt plugin you need to provide the <span class="inline_code">javaDebugPort</span> option.  This option will enable the following command line switch <span class="inline_code">'-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=' + options.javaDebugPort</span>.</p>
 
 <p>For example debug <strong>node module</strong>, as follows:</p>
 
-<pre><code class="code">var mockserver = require(<span class="string_literal">'mockserver-grunt'</span>);
+<pre><code class="code">var mockserver = require(<span class="string_literal">'mockserver-node'</span>);
 mockserver.start_mockserver({
                 serverPort: <span class="numeric_literal">1080</span>,
                 proxyPort: <span class="numeric_literal">1090</span>,
@@ -243,4 +243,4 @@ mockserver.stop_mockserver();</code></pre>
     }
 });
 
-grunt.loadNpmTasks(<span class="string_literal">'mockserver-grunt'</span>);</code></pre>
+grunt.loadNpmTasks(<span class="string_literal">'mockserver-node'</span>);</code></pre>

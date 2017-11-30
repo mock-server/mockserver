@@ -31,14 +31,14 @@ sitemap:
   <span class="string_literal">"version"</span>: <span class="string_literal">"1.0.0"</span>,
   <span class="string_literal">"main"</span>: <span class="string_literal">"index.js"</span>,
   <span class="string_literal">"dependencies"</span>: {
-     <span class="string_literal">"mockserver-grunt"</span>: <span class="string_literal">"~1"</span>,
+     <span class="string_literal">"mockserver-node"</span>: <span class="string_literal">"~1"</span>,
      <span class="string_literal">"mockserver-client"</span>: <span class="string_literal">"~1"</span>
   }
 }</code></pre>
 
 <p>Then create the <strong>index.js</strong> file that starts MockServer and sets up the forwarding rules as different expectations, as follows:</p>
 
-<pre><code class="code"><span class="keyword">var</span> mockserver = require(<span class="string_literal">'mockserver-grunt'</span>);
+<pre><code class="code"><span class="keyword">var</span> mockserver = require(<span class="string_literal">'mockserver-node'</span>);
 <span class="keyword">var</span> mockServerClient = require(<span class="string_literal">'mockserver-client'</span>).mockServerClient;
 <span class="keyword">var</span> HTTP_PORT = <span class="numeric_literal">1080</span>;
 

@@ -436,7 +436,7 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-4.0.0-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
 
-<p>All interactions with the MockServer are logged including setting up expectations, matching expectations, clearing expectations and verifying requests.  The when running from the command line, Maven plugin, Grunt plugin or npm module the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running. This log can be particularly helpful when trying to debug why a test is failing or expectations are not being matched.</p>
+<p>All interactions with the MockServer are logged including setting up expectations, matching expectations, clearing expectations and verifying requests.  The when running from the command line, Maven plugin, npm module or Grunt plugin the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running. This log can be particularly helpful when trying to debug why a test is failing or expectations are not being matched.</p>
 
 <p>The system property <span class="inline_code">mockserver.logLevel</span> can be used to set the <a href="/mock_server/debugging_issues.html#logging-levels">log level</a>, as shown above.</p>
 
@@ -508,7 +508,7 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <a name="mockserver_grunt" class="anchor" href="#mockserver_grunt">&nbsp;</a>
 
-<h2>MockServer Grunt Plugin & NPM Module</h2>
+<h2>NPM Module & MockServer Grunt Plugin</h2>
 
 {% include_subpage ../mock_server/_includes/running_npm_module.html %}
 
