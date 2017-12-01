@@ -73,6 +73,28 @@ public class ConfigurationPropertiesTest {
     }
     
     @Test
+    public void shouldSetAndReadMaxExpectations() {
+        // given
+        System.clearProperty("mockserver.maxExpectations");
+
+        // when
+        assertEquals(ConfigurationProperties.DEFAULT_MAX_EXPECTATIONS, ConfigurationProperties.maxExpectations());
+        ConfigurationProperties.maxExpectations(100);
+
+        // then
+        assertEquals(100, ConfigurationProperties.maxExpectations());
+    }
+
+    @Test
+    public void shouldHandleInvalidMaxExpectations() {
+        // given
+        System.setProperty("mockserver.maxExpectations", "invalid");
+
+        // then
+        assertEquals(ConfigurationProperties.DEFAULT_MAX_EXPECTATIONS, ConfigurationProperties.maxExpectations());
+    }
+
+    @Test
     public void shouldSetAndReadMaxSocketTimeout() {
         // given
         System.clearProperty("mockserver.maxTimeout");

@@ -25,6 +25,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class ConfigurationProperties {
 
     static final long DEFAULT_MAX_TIMEOUT = 120;
+    static final int DEFAULT_MAX_EXPECTATIONS = 1000;
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationProperties.class);
     private static final Properties PROPERTIES = readPropertyFile();
 
@@ -60,6 +61,15 @@ public class ConfigurationProperties {
 
     public static void enableCORSForAllResponses(boolean enableCORSForAPI) {
         System.setProperty("mockserver.enableCORSForAllResponses", "" + enableCORSForAPI);
+    }
+
+    // socket config
+    public static int maxExpectations() {
+        return readIntegerProperty("mockserver.maxExpectations", DEFAULT_MAX_EXPECTATIONS);
+    }
+
+    public static void maxExpectations(int count) {
+        System.setProperty("mockserver.maxExpectations", "" + count);
     }
 
     // socket config
@@ -174,7 +184,7 @@ public class ConfigurationProperties {
 
     // mockserver config
     public static List<Integer> mockServerPort() {
-        return readIntegerProperty("mockserver.mockServerPort", -1);
+        return readIntegerListProperty("mockserver.mockServerPort", -1);
     }
 
     public static void mockServerPort(Integer... port) {
@@ -183,7 +193,7 @@ public class ConfigurationProperties {
 
     // proxy config
     public static Integer proxyPort() {
-        List<Integer> ports = readIntegerProperty("mockserver.proxyPort", -1);
+        List<Integer> ports = readIntegerListProperty("mockserver.proxyPort", -1);
         if (!ports.isEmpty()) {
             return ports.get(0);
         } else {
@@ -195,12 +205,21 @@ public class ConfigurationProperties {
         System.setProperty("mockserver.proxyPort", INTEGER_STRING_LIST_PARSER.toString(port));
     }
 
-    private static List<Integer> readIntegerProperty(String key, Integer defaultValue) {
+    private static List<Integer> readIntegerListProperty(String key, Integer defaultValue) {
         try {
             return INTEGER_STRING_LIST_PARSER.toList(readPropertyHierarchically(key, "" + defaultValue));
         } catch (NumberFormatException nfe) {
             LOGGER.error("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, "" + defaultValue) + "]", nfe);
             return Collections.emptyList();
+        }
+    }
+
+    private static Integer readIntegerProperty(String key, int defaultValue) {
+        try {
+            return Integer.parseInt(readPropertyHierarchically(key, "" + defaultValue));
+        } catch (NumberFormatException nfe) {
+            LOGGER.error("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, "" + defaultValue) + "]", nfe);
+            return defaultValue;
         }
     }
 

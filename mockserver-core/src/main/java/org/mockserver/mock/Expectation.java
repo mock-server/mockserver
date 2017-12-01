@@ -280,10 +280,11 @@ public class Expectation extends ObjectWithJsonToString {
         return timeToLive == null || timeToLive.stillAlive();
     }
 
-    public void decrementRemainingMatches() {
+    public Expectation decrementRemainingMatches() {
         if (times != null) {
             times.decrement();
         }
+        return this;
     }
 
     public void setNotUnlimitedResponses() {
