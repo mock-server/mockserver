@@ -75,7 +75,6 @@ public class MockServerClientTest {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage(containsString("Host can not be null or empty"));
 
-
         // when
         new MockServerClient(null, 1080);
     }
@@ -85,7 +84,6 @@ public class MockServerClientTest {
         // given
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage(containsString("ContextPath can not be null"));
-
 
         // when
         new MockServerClient("localhost", 1080, null);

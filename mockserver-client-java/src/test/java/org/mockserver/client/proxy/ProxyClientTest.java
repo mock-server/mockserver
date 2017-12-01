@@ -1,14 +1,17 @@
 package org.mockserver.client.proxy;
 
+import com.google.common.base.Charsets;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mock.Expectation;
@@ -48,6 +51,8 @@ public class ProxyClientTest {
     private NettyHttpClient mockHttpClient;
     @Mock
     private ExpectationSerializer mockExpectationSerializer;
+    @Spy
+    private HttpRequestSerializer mockHttpRequestSerializer;
     @Mock
     private VerificationSerializer mockVerificationSerializer;
     @Mock
@@ -142,7 +147,7 @@ public class ProxyClientTest {
         proxyClient.dumpToLogAsJava();
 
         // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/dumpToLog?type=java").withBody(""));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/dumpToLog?format=java").withBody(""));
     }
 
     @Test
@@ -156,20 +161,23 @@ public class ProxyClientTest {
 
     @Test
     public void shouldSendClearRequest() throws Exception {
+        // given
+        HttpRequest someRequestMatcher = new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
+        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+
         // when
-        proxyClient
-                .clear(
-                        new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))
-                );
+        proxyClient.clear(someRequestMatcher);
 
         // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/clear").withBody("" +
-                "{" + NEW_LINE +
-                "  \"path\" : \"/some_path\"," + NEW_LINE +
-                "  \"body\" : \"some_request_body\"" + NEW_LINE +
-                "}"));
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/clear")
+                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8)
+        );
     }
 
     @Test
@@ -179,7 +187,7 @@ public class ProxyClientTest {
                 .clear(null);
 
         // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/clear").withBody(""));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/clear").withBody("", Charsets.UTF_8));
     }
 
     @Test
@@ -272,7 +280,7 @@ public class ProxyClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
-            verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verifySequence").withBody("verification_json"));
+            verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verifySequence").withBody("verification_json", Charsets.UTF_8));
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
@@ -293,7 +301,7 @@ public class ProxyClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest, httpRequest));
-            verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verifySequence").withBody("verification_json"));
+            verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verifySequence").withBody("verification_json", Charsets.UTF_8));
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
@@ -317,7 +325,7 @@ public class ProxyClientTest {
 
         // then
         verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verifySequence").withBody("verification_json"));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verifySequence").withBody("verification_json", Charsets.UTF_8));
     }
 
     @Test
@@ -339,7 +347,7 @@ public class ProxyClientTest {
 
         // then
         verify(mockVerificationSerializer).serialize(verification().withRequest(httpRequest).withTimes(once()));
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verify").withBody("verification_json"));
+        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verify").withBody("verification_json", Charsets.UTF_8));
     }
 
     @Test
@@ -358,7 +366,7 @@ public class ProxyClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSerializer).serialize(verification().withRequest(httpRequest).withTimes(atLeast(1)));
-            verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verify").withBody("verification_json"));
+            verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verify").withBody("verification_json", Charsets.UTF_8));
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }

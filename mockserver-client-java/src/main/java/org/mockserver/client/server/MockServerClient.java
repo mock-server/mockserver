@@ -26,7 +26,7 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 /**
  * @author jamesdbloom
  */
-public class MockServerClient extends AbstractClient implements Closeable {
+public class MockServerClient extends AbstractClient<MockServerClient> {
 
     /**
      * Start the client communicating to a MockServer at the specified host and port
@@ -52,7 +52,7 @@ public class MockServerClient extends AbstractClient implements Closeable {
      * @param contextPath the context path that the MockServer war is deployed to
      */
     public MockServerClient(String host, int port, String contextPath) {
-        super(host, port, contextPath);
+        super(host, port, contextPath, MockServerClient.class);
     }
 
     /**
@@ -153,188 +153,11 @@ public class MockServerClient extends AbstractClient implements Closeable {
         return this;
     }
 
-    /**
-     * Returns whether MockServer is running
-     */
-    public boolean isRunning() {
-        return isRunning(10, 500, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * Returns whether MockServer is running, by polling the MockServer a configurable amount of times
-     */
-    public boolean isRunning(int attempts, long timeout, TimeUnit timeUnit) {
-        try {
-            HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")));
-            if (httpResponse.getStatusCode() == HttpStatusCode.OK_200.code()) {
-                return true;
-            } else if (attempts == 0) {
-                return false;
-            } else {
-                try {
-                    timeUnit.sleep(timeout);
-                } catch (InterruptedException e) {
-                    // ignore interrupted exception
-                }
-                return isRunning(attempts - 1, timeout, timeUnit);
-            }
-        } catch (SocketConnectionException sce) {
-            return false;
-        }
-    }
-
-    /**
-     * Stop MockServer gracefully (only support for Netty and Vert.X versions, not supported for WAR version)
-     */
-    public MockServerClient stop() {
-        return stop(false);
-    }
-
-    public MockServerClient stop(boolean ignoreFailure) {
-        try {
-            sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
-            if (isRunning()) {
-                for (int i = 0; isRunning() && i < 50; i++) {
-                    TimeUnit.MILLISECONDS.sleep(5);
-                }
-            }
-        } catch (Exception e) {
-            if (!ignoreFailure) {
-                logger.warn("Failed to send stop request to MockServer " + e.getMessage());
-            }
-        }
-        return this;
-    }
-
-    @Override
-    public void close() throws IOException {
-        stop();
-    }
-
-    /**
-     * Reset MockServer by clearing all expectations
-     */
-    public MockServerClient reset() {
-        sendRequest(request().withMethod("PUT").withPath(calculatePath("reset")));
-        return this;
-    }
-
-    /**
-     * Clear all expectations and logs that match the http
-     *
-     * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
-     */
-    public MockServerClient clear(HttpRequest httpRequest) {
-        sendRequest(request().withMethod("PUT").withPath(calculatePath("clear")).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
-        return this;
-    }
-
-
-    /**
-     * Clear expectations, logs or both that match the http
-     *
-     * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
-     * @param type the type to clear, EXPECTATION, LOG or BOTH
-     */
-    public MockServerClient clear(HttpRequest httpRequest, TYPE type) {
-        sendRequest(request().withMethod("PUT").withPath(calculatePath("clear")).withQueryStringParameter("type", type.name().toLowerCase()).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
-        return this;
-    }
-
     void sendExpectation(Expectation expectation) {
         HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", Charsets.UTF_8));
         if (httpResponse != null && httpResponse.getStatusCode() != 201) {
             throw new ClientException(formatErrorMessage(NEW_LINE + "error:%s" + NEW_LINE + "while submitted expectation:%s", httpResponse.getBody(), expectation));
         }
-    }
-
-    public enum TYPE {
-        LOG,
-        EXPECTATION,
-        BOTH;
-    }
-
-    /**
-     * Verify a list of requests have been sent in the order specified for example:
-     *
-     *   mockServerClient
-     *           .verify(
-     *                   request()
-     *                           .withPath("/first_request")
-     *                           .withBody("some_request_body"),
-     *                   request()
-     *                           .withPath("/second_request")
-     *                           .withBody("some_request_body")
-     *           );
-     *
-     * @param httpRequests the http requests that must be matched for this verification to pass
-     * @throws AssertionError if the request has not been found
-     */
-    public MockServerClient verify(HttpRequest... httpRequests) throws AssertionError {
-        if (httpRequests == null || httpRequests.length == 0 || httpRequests[0] == null) {
-            throw new IllegalArgumentException("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects");
-        }
-
-        VerificationSequence verificationSequence = new VerificationSequence().withRequests(httpRequests);
-        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verifySequence")).withBody(verificationSequenceSerializer.serialize(verificationSequence), Charsets.UTF_8)).getBodyAsString();
-
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
-        }
-        return this;
-    }
-
-    /**
-     * Verify a request has been sent for example:
-     *
-     *   mockServerClient
-     *           .verify(
-     *                   request()
-     *                           .withPath("/some_path")
-     *                           .withBody("some_request_body"),
-     *                   VerificationTimes.exactly(3)
-     *           );
-     *
-     * VerificationTimes supports multiple static factory methods:
-     *
-     *   once()      - verify the request was only received once
-     *   exactly(n)  - verify the request was only received exactly n times
-     *   atLeast(n)  - verify the request was only received at least n times
-     *
-     * @param httpRequest the http request that must be matched for this verification to pass
-     * @param times the number of times this request must be matched
-     * @throws AssertionError if the request has not been found
-     */
-    public MockServerClient verify(HttpRequest httpRequest, VerificationTimes times) throws AssertionError {
-        if (httpRequest == null) {
-            throw new IllegalArgumentException("verify(HttpRequest, VerificationTimes) requires a non null HttpRequest object");
-        }
-        if (times == null) {
-            throw new IllegalArgumentException("verify(HttpRequest, VerificationTimes) requires a non null VerificationTimes object");
-        }
-
-        Verification verification = verification().withRequest(httpRequest).withTimes(times);
-        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification), Charsets.UTF_8)).getBodyAsString();
-
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
-        }
-        return this;
-    }
-
-    /**
-     * Verify no requests have been have been sent.
-     *
-     * @throws AssertionError if any request has been found
-     */
-    public MockServerClient verifyZeroInteractions() throws AssertionError {
-        Verification verification = verification().withRequest(request()).withTimes(exactly(0));
-        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification), Charsets.UTF_8)).getBodyAsString();
-
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
-        }
-        return this;
     }
 
     /**

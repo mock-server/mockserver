@@ -29,6 +29,10 @@ public class ClientAndServer extends MockServerClient {
         return new ClientAndServer(port);
     }
 
+    public boolean isRunning() {
+        return mockServer.isRunning();
+    }
+
     public Integer getPort() {
         return mockServer.getPort();
     }
