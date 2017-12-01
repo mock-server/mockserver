@@ -121,8 +121,8 @@ public class RequestLogFilter implements ResponseFilter, RequestFilter {
 
             if (!verified) {
                 HttpRequest[] allRequestsArray = requestLog.toArray(new HttpRequest[requestLog.size()]);
-                String serializedRequestToBeVerified = httpRequestSerializer.serialize(verification.getHttpRequest());
-                String serializedAllRequestInLog = allRequestsArray.length == 1 ? httpRequestSerializer.serialize(allRequestsArray[0]) : httpRequestSerializer.serialize(allRequestsArray);
+                String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verification.getHttpRequest());
+                String serializedAllRequestInLog = allRequestsArray.length == 1 ? httpRequestSerializer.serialize(true, allRequestsArray[0]) : httpRequestSerializer.serialize(true, allRequestsArray);
                 logFormatter.infoLog("request not found " + verification.getTimes() + ", expected:{}" + NEW_LINE + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
                 failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
             }
@@ -151,8 +151,8 @@ public class RequestLogFilter implements ResponseFilter, RequestFilter {
                         }
                     }
                     if (!foundRequest) {
-                        String serializedRequestToBeVerified = httpRequestSerializer.serialize(verificationSequence.getHttpRequests());
-                        String serializedAllRequestInLog = httpRequestSerializer.serialize(requestLog);
+                        String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verificationSequence.getHttpRequests());
+                        String serializedAllRequestInLog = httpRequestSerializer.serialize(true, requestLog);
                         failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
                         logFormatter.infoLog("request sequence not found, expected:{}" + NEW_LINE + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
                         break;

@@ -576,7 +576,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "} ]> but was:<[ {" + NEW_LINE +
                     "  \"method\" : \"GET\"," + NEW_LINE +
                     "  \"path\" : \"/test_headers_and_body\"," + NEW_LINE +
-                    "  \"headers\" : [ {"));
+                    "  \"headers\" : {"));
         }
     }
 

@@ -6,6 +6,7 @@ import com.google.common.base.Joiner;
 import joptsimple.internal.Strings;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,10 +27,20 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
     private JsonSchemaHttpRequestValidator httpRequestValidator = new JsonSchemaHttpRequestValidator();
 
     public String serialize(HttpRequest httpRequest) {
+        return serialize(false, httpRequest);
+    }
+
+    public String serialize(boolean prettyPrint, HttpRequest httpRequest) {
         try {
-            return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(new HttpRequestDTO(httpRequest));
+            if (prettyPrint) {
+                return objectMapper
+                        .writerWithDefaultPrettyPrinter()
+                        .writeValueAsString(new HttpRequestTemplateObject(httpRequest));
+            } else {
+                return objectMapper
+                        .writerWithDefaultPrettyPrinter()
+                        .writeValueAsString(new HttpRequestDTO(httpRequest));
+            }
         } catch (Exception e) {
             logger.error(String.format("Exception while serializing httpRequest to JSON with value %s", httpRequest), e);
             throw new RuntimeException(String.format("Exception while serializing httpRequest to JSON with value %s", httpRequest), e);
@@ -37,19 +48,37 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
     }
 
     public String serialize(List<HttpRequest> httpRequests) {
-        return serialize(httpRequests.toArray(new HttpRequest[httpRequests.size()]));
+        return serialize(false, httpRequests);
+    }
+
+    public String serialize(boolean prettyPrint, List<HttpRequest> httpRequests) {
+        return serialize(prettyPrint, httpRequests.toArray(new HttpRequest[httpRequests.size()]));
     }
 
     public String serialize(HttpRequest... httpRequests) {
+        return serialize(false, httpRequests);
+    }
+
+    public String serialize(boolean prettyPrint, HttpRequest... httpRequests) {
         try {
             if (httpRequests != null && httpRequests.length > 0) {
-                HttpRequestDTO[] httpRequestDTOs = new HttpRequestDTO[httpRequests.length];
-                for (int i = 0; i < httpRequests.length; i++) {
-                    httpRequestDTOs[i] = new HttpRequestDTO(httpRequests[i]);
+                if (prettyPrint) {
+                    HttpRequestTemplateObject[] httpRequestTemplateObjects = new HttpRequestTemplateObject[httpRequests.length];
+                    for (int i = 0; i < httpRequests.length; i++) {
+                        httpRequestTemplateObjects[i] = new HttpRequestTemplateObject(httpRequests[i]);
+                    }
+                    return objectMapper
+                            .writerWithDefaultPrettyPrinter()
+                            .writeValueAsString(httpRequestTemplateObjects);
+                } else {
+                    HttpRequestDTO[] httpRequestDTOs = new HttpRequestDTO[httpRequests.length];
+                    for (int i = 0; i < httpRequests.length; i++) {
+                        httpRequestDTOs[i] = new HttpRequestDTO(httpRequests[i]);
+                    }
+                    return objectMapper
+                            .writerWithDefaultPrettyPrinter()
+                            .writeValueAsString(httpRequestDTOs);
                 }
-                return objectMapper
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(httpRequestDTOs);
             }
             return "";
         } catch (Exception e) {

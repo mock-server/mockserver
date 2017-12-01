@@ -218,10 +218,9 @@ public class JavaScriptTemplateEngineTest {
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"path\" : \"/someOtherPath\"," + NEW_LINE +
-                    "\t  \"queryStringParameters\" : [ {" + NEW_LINE +
-                    "\t    \"name\" : \"queryParameter\"," + NEW_LINE +
-                    "\t    \"values\" : [ \"someValue\" ]" + NEW_LINE +
-                    "\t  } ]," + NEW_LINE +
+                    "\t  \"queryStringParameters\" : {" + NEW_LINE +
+                    "\t    \"queryParameter\" : [ \"someValue\" ]" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
                     "\t  \"body\" : \"some_body\"" + NEW_LINE +
                     "\t}"));
         }
