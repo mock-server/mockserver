@@ -6,8 +6,12 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collection;
 
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+import static org.mockito.Matchers.same;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.NottableString.string;
@@ -96,22 +100,56 @@ public class HttpRequestTest {
     @Test
     public void shouldReturnFormattedRequestInToString() {
         TestCase.assertEquals("{" + NEW_LINE +
+                        "  \"method\" : \"METHOD\"," + NEW_LINE +
+                        "  \"path\" : \"some_path\"," + NEW_LINE +
+                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
+                        "    \"name\" : \"some_parameter\"," + NEW_LINE +
+                        "    \"values\" : [ \"some_parameter_value\" ]" + NEW_LINE +
+                        "  } ]," + NEW_LINE +
                         "  \"headers\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"name\"," + NEW_LINE +
-                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
+                        "    \"name\" : \"some_header\"," + NEW_LINE +
+                        "    \"values\" : [ \"some_header_value\" ]" + NEW_LINE +
                         "  } ]," + NEW_LINE +
                         "  \"cookies\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"name\"," + NEW_LINE +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "    \"name\" : \"some_cookie\"," + NEW_LINE +
+                        "    \"value\" : \"some_cookie_value\"" + NEW_LINE +
                         "  } ]," + NEW_LINE +
+                        "  \"keepAlive\" : true," + NEW_LINE +
+                        "  \"secure\" : true," + NEW_LINE +
                         "  \"body\" : \"some_body\"" + NEW_LINE +
                         "}",
                 request()
+                        .withPath("some_path")
                         .withBody("some_body")
-                        .withHeaders(new Header("name", "value"))
-                        .withCookies(new Cookie("name", "[A-Z]{0,10}"))
+                        .withMethod("METHOD")
+                        .withHeaders(new Header("some_header", "some_header_value"))
+                        .withCookies(new Cookie("some_cookie", "some_cookie_value"))
+                        .withSecure(true)
+                        .withQueryStringParameters(new Parameter("some_parameter", "some_parameter_value"))
+                        .withKeepAlive(true)
                         .toString()
         );
+    }
+
+    @Test
+    public void shouldClone() {
+        // given
+        HttpRequest requestOne = request()
+                .withPath("some_path")
+                .withBody("some_body")
+                .withMethod("METHOD")
+                .withHeader("some_header", "some_header_value")
+                .withSecure(true)
+                .withCookie("some_cookie", "some_cookie_value")
+                .withQueryStringParameter("some_parameter", "some_parameter_value")
+                .withKeepAlive(true);
+
+        // when
+        HttpRequest requestTwo = requestOne.clone();
+
+        // then
+        assertThat(requestOne, not(same(requestTwo)));
+        assertThat(requestOne, is(requestTwo));
     }
 
 }

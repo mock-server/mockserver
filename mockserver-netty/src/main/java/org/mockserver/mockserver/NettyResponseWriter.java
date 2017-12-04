@@ -97,7 +97,7 @@ public class NettyResponseWriter implements ResponseWriter {
         if (closeChannel) {
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         } else {
-            ctx.write(response);
+            ctx.writeAndFlush(response);
         }
     }
 

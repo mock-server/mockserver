@@ -1,6 +1,5 @@
 package org.mockserver.model;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.serialization.Base64Converter;
 
@@ -8,17 +7,19 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Charsets.UTF_8;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertNull;
-import static junit.framework.TestCase.assertTrue;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static junit.framework.TestCase.*;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.core.Is.is;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.mockito.Mockito.*;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
@@ -150,10 +151,10 @@ public class HttpResponseTest {
     public void appliesDelay() throws InterruptedException {
         // when
         long before = System.currentTimeMillis();
-        new HttpResponse().withDelay(new Delay(TimeUnit.SECONDS, 3)).applyDelay();
+        new HttpResponse().withDelay(new Delay(SECONDS, 3)).applyDelay();
 
         // then
-        assertThat(System.currentTimeMillis() - before, greaterThan(TimeUnit.SECONDS.toMillis(2)));
+        assertThat(System.currentTimeMillis() - before, greaterThan(SECONDS.toMillis(2)));
     }
 
     @Test(expected = RuntimeException.class)
@@ -169,21 +170,64 @@ public class HttpResponseTest {
     @Test
     public void shouldReturnFormattedRequestInToString() {
         assertEquals("{" + NEW_LINE +
+                        "  \"statusCode\" : 666," + NEW_LINE +
                         "  \"headers\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"name\"," + NEW_LINE +
-                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
+                        "    \"name\" : \"some_header\"," + NEW_LINE +
+                        "    \"values\" : [ \"some_header_value\" ]" + NEW_LINE +
                         "  } ]," + NEW_LINE +
                         "  \"cookies\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"name\"," + NEW_LINE +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "    \"name\" : \"some_cookie\"," + NEW_LINE +
+                        "    \"value\" : \"some_cookie_value\"" + NEW_LINE +
                         "  } ]," + NEW_LINE +
-                        "  \"body\" : \"some_body\"" + NEW_LINE +
+                        "  \"body\" : {" + NEW_LINE +
+                        "    \"contentType\" : \"text/plain; charset=utf-8\"," + NEW_LINE +
+                        "    \"type\" : \"STRING\"," + NEW_LINE +
+                        "    \"string\" : \"some_body\"" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"delay\" : {" + NEW_LINE +
+                        "    \"timeUnit\" : \"SECONDS\"," + NEW_LINE +
+                        "    \"value\" : 15" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"connectionOptions\" : {" + NEW_LINE +
+                        "    \"contentLengthHeaderOverride\" : 10," + NEW_LINE +
+                        "    \"keepAliveOverride\" : true" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}",
                 response()
-                        .withBody("some_body")
-                        .withHeaders(new Header("name", "value"))
-                        .withCookies(new Cookie("name", "[A-Z]{0,10}"))
+                        .withBody("some_body", UTF_8)
+                        .withStatusCode(666)
+                        .withHeaders(new Header("some_header", "some_header_value"))
+                        .withCookies(new Cookie("some_cookie", "some_cookie_value"))
+                        .withConnectionOptions(
+                                connectionOptions()
+                                        .withContentLengthHeaderOverride(10)
+                                        .withKeepAliveOverride(true)
+                        )
+                        .withDelay(SECONDS, 15)
                         .toString()
         );
+    }
+
+    @Test
+    public void shouldClone() {
+        // given
+        HttpResponse responseOne = response()
+                .withBody("some_body", UTF_8)
+                .withStatusCode(666)
+                .withHeader("some_header", "some_header_value")
+                .withCookie("some_cookie", "some_cookie_value")
+                .withConnectionOptions(
+                        connectionOptions()
+                                .withContentLengthHeaderOverride(10)
+                                .withKeepAliveOverride(true)
+                )
+                .withDelay(SECONDS, 15);
+
+        // when
+        HttpResponse responseTwo = responseOne.clone();
+
+        // then
+        assertThat(responseOne, not(same(responseTwo)));
+        assertThat(responseOne, is(responseTwo));
     }
 }

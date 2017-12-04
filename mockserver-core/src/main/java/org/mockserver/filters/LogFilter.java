@@ -5,7 +5,7 @@ import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.collections.CircularMultiMap;
+import org.mockserver.log.model.ExpectationLogEntry;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
@@ -31,7 +31,6 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class LogFilter {
 
     private static LoggingFormatter logFormatter = new LoggingFormatter(LoggerFactory.getLogger(LogFilter.class));
-    private CircularMultiMap<HttpRequest, RequestResponseLogEntry> requestToLogEntry = new CircularMultiMap<>(1000, 1);
     private Queue<LogEntry> requestLog = Queues.synchronizedQueue(EvictingQueue.<LogEntry>create(100));
     private MatcherBuilder matcherBuilder = new MatcherBuilder();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
@@ -43,22 +42,11 @@ public class LogFilter {
     };
 
     public void onRequest(LogEntry logEntry) {
-        if (logEntry instanceof RequestResponseLogEntry) {
-            RequestResponseLogEntry requestResponseLogEntry = requestToLogEntry.get(logEntry.getHttpRequest());
-            if (requestResponseLogEntry != null) {
-                requestResponseLogEntry.addHttpResponses(((RequestResponseLogEntry) logEntry).getHttpResponses());
-            } else {
-                requestLog.add(logEntry);
-                requestToLogEntry.put(logEntry.getHttpRequest(), (RequestResponseLogEntry) logEntry);
-            }
-        } else {
-            requestLog.add(logEntry);
-        }
+        requestLog.add(logEntry);
     }
 
     public void reset() {
         requestLog.clear();
-        requestToLogEntry.clear();
     }
 
     public void clear(HttpRequest request) {
@@ -67,7 +55,6 @@ public class LogFilter {
             for (LogEntry logEntry : new LinkedList<>(requestLog)) {
                 if (requestMatcher.matches(logEntry.getHttpRequest(), false)) {
                     requestLog.remove(logEntry);
-                    requestToLogEntry.remove(logEntry.getHttpRequest());
                 }
             }
         } else {
@@ -83,10 +70,8 @@ public class LogFilter {
         List<Expectation> matchingExpectations = new ArrayList<>();
         List<LogEntry> logEntries = retrieveLogEntries(httpRequest);
         for (LogEntry logEntry : logEntries) {
-            if (logEntry instanceof ExpectationMatchLogEntry) {
-                matchingExpectations.add(((ExpectationMatchLogEntry) logEntry).getExpectation());
-            } else if (logEntry instanceof RequestResponseLogEntry) {
-                matchingExpectations.addAll(((RequestResponseLogEntry) logEntry).getExpectations());
+            if (logEntry instanceof ExpectationLogEntry) {
+                matchingExpectations.add(((ExpectationLogEntry) logEntry).getExpectation());
             }
         }
         return matchingExpectations;

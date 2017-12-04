@@ -22,7 +22,7 @@ public class HttpResponseActionHandlerTest {
 
         // then
         verify(httpResponse).applyDelay();
-        verify(httpResponse).shallowClone();
+        verify(httpResponse).clone();
     }
 
 }

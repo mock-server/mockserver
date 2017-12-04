@@ -358,7 +358,7 @@ public class HttpResponse extends Action {
         return Type.RESPONSE;
     }
 
-    public HttpResponse shallowClone() {
+    public HttpResponse clone() {
         return response()
                 .withStatusCode(getStatusCode())
                 .withBody(getBody())
