@@ -12,7 +12,7 @@ public class HttpObjectCallback extends Action {
     @Override
     @JsonIgnore
     public Type getType() {
-        return Type.CALLBACK;
+        return Type.OBJECT_CALLBACK;
     }
 
     public String getClientId() {

@@ -14,6 +14,7 @@ import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.socket.KeyAndCertificateFactory;
@@ -39,6 +40,7 @@ public class HttpStateHandler {
     // mockserver
     private LogFilter logFilter = new LogFilter();
     private MockServerMatcher mockServerMatcher = new MockServerMatcher();
+    private WebSocketClientRegistry webSocketClientRegistry = new WebSocketClientRegistry();
     private LoggingFormatter logFormatter = new LoggingFormatter(LoggerFactory.getLogger(this.getClass()));
     // serializers
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
@@ -252,6 +254,10 @@ public class HttpStateHandler {
             valid = false;
         }
         return valid;
+    }
+
+    public WebSocketClientRegistry getWebSocketClientRegistry() {
+        return webSocketClientRegistry;
     }
 
     public enum RetrieveType {

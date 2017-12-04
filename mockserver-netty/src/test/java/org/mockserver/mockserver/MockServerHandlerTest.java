@@ -62,7 +62,7 @@ public class MockServerHandlerTest {
         mockActionHandler = mock(ActionHandler.class);
 
         httpStateHandler = new HttpStateHandler();
-        mockServerHandler = new MockServerHandler(mockMockServer, httpStateHandler, mock(WebSocketClientRegistry.class));
+        mockServerHandler = new MockServerHandler(mockMockServer, httpStateHandler);
 
         initMocks(this);
 

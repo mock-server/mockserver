@@ -40,11 +40,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     // expectations
     private ActionHandler actionHandler;
 
-    public MockServerHandler(MockServer server, HttpStateHandler httpStateHandler, WebSocketClientRegistry webSocketClientRegistry) {
+    public MockServerHandler(MockServer server, HttpStateHandler httpStateHandler) {
         super(false);
         this.server = server;
         this.httpStateHandler = httpStateHandler;
-        this.actionHandler = new ActionHandler(httpStateHandler, webSocketClientRegistry);
+        this.actionHandler = new ActionHandler(httpStateHandler);
     }
 
     @Override

@@ -14,11 +14,11 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 /**
  * @author jamesdbloom
  */
-public class HttpCallbackActionHandler {
+public class HttpClassCallbackActionHandler {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public HttpResponse handle(HttpClassCallback httpClassCallback, HttpRequest httpRequest) {
-        return invokeCallbackMethod(httpClassCallback, httpRequest);
+    public HttpResponse handle(HttpClassCallback httpClassCallback, HttpRequest request) {
+        return invokeCallbackMethod(httpClassCallback, request);
     }
 
     private ExpectationCallback instantiateCallback(HttpClassCallback httpClassCallback) {

@@ -14,15 +14,15 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public class HttpCallbackActionHandlerTest {
+public class HttpClassCallbackActionHandlerTest {
 
     @Test
     public void shouldHandleHttpRequests() {
         // given
-        HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.HttpCallbackActionHandlerTest$TestCallback");
+        HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.HttpClassCallbackActionHandlerTest$TestCallback");
 
         // when
-        HttpResponse actualHttpResponse = new HttpCallbackActionHandler().handle(httpClassCallback, request().withBody("some_body"));
+        HttpResponse actualHttpResponse = new HttpClassCallbackActionHandler().handle(httpClassCallback, request().withBody("some_body"));
 
         // then
         assertThat(actualHttpResponse, is(response("some_body")));

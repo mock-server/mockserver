@@ -15,7 +15,6 @@ public class MockServerInitializer extends PortUnificationHandler {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final HttpStateHandler httpStateHandler = new HttpStateHandler();
-    private final WebSocketClientRegistry webSocketClientRegistry = new WebSocketClientRegistry();
     private final MockServer mockServer;
 
     MockServerInitializer(MockServer mockServer) {
@@ -33,10 +32,10 @@ public class MockServerInitializer extends PortUnificationHandler {
         if (ctx.channel().attr(PortUnificationHandler.SSL_ENABLED).get() != null) {
             isSecure = ctx.channel().attr(PortUnificationHandler.SSL_ENABLED).get();
         }
-        pipeline.addLast(new WebSocketServerHandler(webSocketClientRegistry));
+        pipeline.addLast(new WebSocketServerHandler(httpStateHandler.getWebSocketClientRegistry()));
         pipeline.addLast(new MockServerServerCodec(isSecure));
 
         // add mock server handlers
-        pipeline.addLast(new MockServerHandler(mockServer, httpStateHandler, webSocketClientRegistry));
+        pipeline.addLast(new MockServerHandler(mockServer, httpStateHandler));
     }
 }

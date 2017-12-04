@@ -33,7 +33,7 @@ public class HttpClassCallback extends Action {
     @Override
     @JsonIgnore
     public Type getType() {
-        return Type.CALLBACK;
+        return Type.CLASS_CALLBACK;
     }
 
     public String getCallbackClass() {

@@ -3,6 +3,7 @@ package org.mockserver.mock;
 import org.mockserver.collections.CircularLinkedList;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
+import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.slf4j.Logger;
@@ -20,7 +21,6 @@ import static org.mockserver.configuration.ConfigurationProperties.maxExpectatio
 public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToString {
 
     protected final List<Expectation> expectations = Collections.synchronizedList(new CircularLinkedList<Expectation>(maxExpectations()));
-    private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
 
     public void add(Expectation expectation) {
         this.expectations.add(expectation);
@@ -35,6 +35,10 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
             if (!expectation.isStillAlive() || !expectation.hasRemainingMatches()) {
                 if (this.expectations.contains(expectation)) {
                     this.expectations.remove(expectation);
+                }
+                HttpObjectCallback httpObjectCallback = expectation.getHttpObjectCallback();
+                if (httpObjectCallback != null) {
+
                 }
             }
             if (matchingExpectation != null) {

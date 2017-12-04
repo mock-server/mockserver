@@ -1,15 +1,8 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Strings;
 
-import java.nio.charset.Charset;
-import java.util.*;
 import java.util.concurrent.TimeUnit;
-
-import static org.mockserver.model.Cookie.cookie;
-import static org.mockserver.model.Header.header;
-import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -65,7 +58,7 @@ public class HttpError extends Action {
      * The delay before responding with this request as a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
      *
      * @param timeUnit a the time unit, for example TimeUnit.SECONDS
-     * @param value a the number of time units to delay the response
+     * @param value    a the number of time units to delay the response
      */
     public HttpError withDelay(TimeUnit timeUnit, long value) {
         this.delay = new Delay(timeUnit, value);
