@@ -30,71 +30,49 @@ public class MockServerMatcherSequentialResponsesTest {
     }
 
     @Test
-    public void shouldUpdatePreviousMatchingExpectationsToOnce() {
-        // when
-        mockServerMatcher.when(new HttpRequest().withPath("somepath"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse[0].withBody("somebody1"));
-        mockServerMatcher.when(new HttpRequest().withPath("somepath"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse[1].withBody("somebody2"));
-        mockServerMatcher.when(new HttpRequest().withPath("somepath"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse[2].withBody("somebody3"));
-
-        // then
-        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[2], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[2], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[2], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
-    }
-
-    @Test
-    public void respondWhenPathMatchesMultipleSequentialExpectation() {
-        // when
-        mockServerMatcher.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[0].withBody("somebody1"));
-        mockServerMatcher.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[1].withBody("somebody2"));
-        mockServerMatcher.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[2].withBody("somebody3"));
-
-        // then
-        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[2], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
-    }
-
-    @Test
     public void respondWhenPathMatchesExpectationWithMultipleResponses() {
         // when
-        mockServerMatcher.when(new HttpRequest().withPath("somepath"), Times.exactly(2), TimeToLive.unlimited()).thenRespond(httpResponse[0].withBody("somebody1"));
-        mockServerMatcher.when(new HttpRequest().withPath("somepath"), Times.exactly(1), TimeToLive.unlimited()).thenRespond(httpResponse[1].withBody("somebody2"));
-        mockServerMatcher.when(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[2].withBody("somebody3"));
+        Expectation expectationZero = new Expectation(new HttpRequest().withPath("somepath"), Times.exactly(2), TimeToLive.unlimited()).thenRespond(httpResponse[0].withBody("somebody1"));
+        mockServerMatcher.add(expectationZero);
+        Expectation expectationOne = new Expectation(new HttpRequest().withPath("somepath"), Times.exactly(1), TimeToLive.unlimited()).thenRespond(httpResponse[1].withBody("somebody2"));
+        mockServerMatcher.add(expectationOne);
+        Expectation expectationTwo = new Expectation(new HttpRequest().withPath("somepath")).thenRespond(httpResponse[2].withBody("somebody3"));
+        mockServerMatcher.add(expectationTwo);
 
         // then
-        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[2], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(expectationZero, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
+        assertEquals(expectationZero, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
+        assertEquals(expectationOne, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
+        assertEquals(expectationTwo, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
     }
 
     @Test
     public void respondWhenPathMatchesMultipleDifferentResponses() {
         // when
-        mockServerMatcher.when(new HttpRequest().withPath("somepath1")).thenRespond(httpResponse[0].withBody("somebody1"));
-        mockServerMatcher.when(new HttpRequest().withPath("somepath2")).thenRespond(httpResponse[1].withBody("somebody2"));
+        Expectation expectationZero = new Expectation(new HttpRequest().withPath("somepath1")).thenRespond(httpResponse[0].withBody("somebody1"));
+        mockServerMatcher.add(expectationZero);
+        Expectation expectationOne = new Expectation(new HttpRequest().withPath("somepath2")).thenRespond(httpResponse[1].withBody("somebody2"));
+        mockServerMatcher.add(expectationOne);
 
         // then
-        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath1")));
-        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath1")));
-        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath2")));
-        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath2")));
-        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath1")));
-        assertEquals(httpResponse[1], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath2")));
+        assertEquals(expectationZero, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath1")));
+        assertEquals(expectationZero, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath1")));
+        assertEquals(expectationOne, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath2")));
+        assertEquals(expectationOne, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath2")));
+        assertEquals(expectationZero, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath1")));
+        assertEquals(expectationOne, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath2")));
     }
 
     @Test
     public void doesNotRespondAfterMatchesFinishedExpectedTimes() {
         // when
-        mockServerMatcher.when(new HttpRequest().withPath("somepath"), Times.exactly(2), TimeToLive.unlimited()).thenRespond(httpResponse[0].withBody("somebody"));
+        Expectation expectationZero = new Expectation(new HttpRequest().withPath("somepath"), Times.exactly(2), TimeToLive.unlimited()).thenRespond(httpResponse[0].withBody("somebody"));
+        mockServerMatcher.add(expectationZero);
 
         // then
-        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
-        assertEquals(httpResponse[0], mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
-        assertNull(mockServerMatcher.retrieveAction(new HttpRequest().withPath("somepath")));
+        assertEquals(expectationZero, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
+        assertEquals(expectationZero, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
+        assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
     }
 
 

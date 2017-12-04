@@ -31,33 +31,10 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
     public ExpectedException exception = ExpectedException.none();
 
     @Test
-    public void shouldReturnErrorResponseForExpectationWithObjectCallback() {
-        // given
-        exception.expect(WebSocketException.class);
-        exception.expectMessage(containsString("ExpectationCallback is not supported by MockServer deployable WAR"));
-
-        // when
-        mockServerClient
-                .when(
-                        request()
-                                .withPath(calculatePath("object_callback"))
-                )
-                .callback(
-                        new ExpectationCallback() {
-                            @Override
-                            public HttpResponse handle(HttpRequest httpRequest) {
-                                return response();
-                            }
-                        }
-                );
-
-    }
-
-    @Test
     public void shouldReturnErrorResponseForExpectationWithConnectionOptions() {
         // given
         exception.expect(ClientException.class);
-        exception.expectMessage(containsString("ConnectionOptions is not supported by MockServer deployable WAR"));
+        exception.expectMessage(containsString("ConnectionOptions is not supported by MockServer deployed as a WAR"));
 
         // when
         mockServerClient
@@ -79,7 +56,7 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
     public void shouldReturnErrorResponseForExpectationWithHttpError() {
         // given
         exception.expect(ClientException.class);
-        exception.expectMessage(containsString("HttpError is not supported by MockServer deployable WAR"));
+        exception.expectMessage(containsString("HttpError is not supported by MockServer deployed as a WAR"));
 
         // when
         mockServerClient

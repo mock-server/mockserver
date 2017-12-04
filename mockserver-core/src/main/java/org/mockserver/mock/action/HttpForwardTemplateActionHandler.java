@@ -2,6 +2,7 @@ package org.mockserver.mock.action;
 
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
+import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
@@ -22,6 +23,7 @@ public class HttpForwardTemplateActionHandler {
     private JavaScriptTemplateEngine javaScriptTemplateEngine = new JavaScriptTemplateEngine();
     private VelocityTemplateEngine velocityTemplateEngine = new VelocityTemplateEngine();
     private NettyHttpClient httpClient = new NettyHttpClient();
+    private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
 
     public HttpResponse handle(HttpTemplate httpTemplate, HttpRequest httpRequest) {
         HttpResponse httpResponse = notFoundResponse();
@@ -49,6 +51,7 @@ public class HttpForwardTemplateActionHandler {
     }
 
     private HttpResponse sendRequest(HttpRequest httpRequest) {
+        httpRequest = hopByHopHeaderFilter.onRequest(httpRequest);
         if (httpRequest != null) {
             try {
                 return httpClient.sendRequest(httpRequest);

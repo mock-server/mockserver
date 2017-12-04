@@ -17,10 +17,10 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
 
     private final Base64Converter base64Converter = new Base64Converter();
 
-    public String serializeAsJava(int numberOfSpacesToIndent, List<HttpRequest> httpRequests) {
+    public String serialize(List<HttpRequest> httpRequests) {
         StringBuilder output = new StringBuilder();
         for (HttpRequest httpRequest : httpRequests) {
-            output.append(serializeAsJava(numberOfSpacesToIndent, httpRequest));
+            output.append(serialize(0, httpRequest));
             output.append(";");
             output.append(NEW_LINE);
         }
@@ -28,81 +28,81 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
     }
 
     @Override
-    public String serializeAsJava(int numberOfSpacesToIndent, HttpRequest httpRequest) {
+    public String serialize(int numberOfSpacesToIndent, HttpRequest request) {
         StringBuffer output = new StringBuffer();
-        if (httpRequest != null) {
+        if (request != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output);
             output.append("request()");
-            if (!Strings.isNullOrEmpty(httpRequest.getMethod().getValue())) {
+            if (!Strings.isNullOrEmpty(request.getMethod().getValue())) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
-                output.append(".withMethod(\"").append(httpRequest.getMethod().getValue()).append("\")");
+                output.append(".withMethod(\"").append(request.getMethod().getValue()).append("\")");
             }
-            if (!Strings.isNullOrEmpty(httpRequest.getPath().getValue())) {
+            if (!Strings.isNullOrEmpty(request.getPath().getValue())) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
-                output.append(".withPath(\"").append(httpRequest.getPath().getValue()).append("\")");
+                output.append(".withPath(\"").append(request.getPath().getValue()).append("\")");
             }
-            outputHeaders(numberOfSpacesToIndent + 1, output, httpRequest.getHeaders());
-            outputCookies(numberOfSpacesToIndent + 1, output, httpRequest.getCookies());
-            outputQueryStringParameter(numberOfSpacesToIndent + 1, output, httpRequest.getQueryStringParameters());
-            if (httpRequest.isSecure() != null) {
+            outputHeaders(numberOfSpacesToIndent + 1, output, request.getHeaders());
+            outputCookies(numberOfSpacesToIndent + 1, output, request.getCookies());
+            outputQueryStringParameter(numberOfSpacesToIndent + 1, output, request.getQueryStringParameters());
+            if (request.isSecure() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
-                output.append(".withSecure(").append(httpRequest.isSecure().toString()).append(")");
+                output.append(".withSecure(").append(request.isSecure().toString()).append(")");
             }
-            if (httpRequest.isKeepAlive() != null) {
+            if (request.isKeepAlive() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
-                output.append(".withKeepAlive(").append(httpRequest.isKeepAlive().toString()).append(")");
+                output.append(".withKeepAlive(").append(request.isKeepAlive().toString()).append(")");
             }
-            if (httpRequest.getBody() != null) {
-                if (httpRequest.getBody() instanceof JsonBody) {
+            if (request.getBody() != null) {
+                if (request.getBody() instanceof JsonBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     output.append(".withBody(");
-                    JsonBody jsonBody = (JsonBody) httpRequest.getBody();
+                    JsonBody jsonBody = (JsonBody) request.getBody();
                     output.append("new JsonBody(\"").append(StringEscapeUtils.escapeJava(jsonBody.getValue())).append("\", JsonBodyMatchType.").append(jsonBody.getMatchType()).append(")");
                     output.append(")");
-                } else if (httpRequest.getBody() instanceof JsonSchemaBody) {
+                } else if (request.getBody() instanceof JsonSchemaBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     output.append(".withBody(");
-                    JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) httpRequest.getBody();
+                    JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) request.getBody();
                     output.append("new JsonSchemaBody(\"").append(StringEscapeUtils.escapeJava(jsonSchemaBody.getValue())).append("\")");
                     output.append(")");
-                } else if (httpRequest.getBody() instanceof XPathBody) {
+                } else if (request.getBody() instanceof XPathBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     output.append(".withBody(");
-                    XPathBody xPathBody = (XPathBody) httpRequest.getBody();
+                    XPathBody xPathBody = (XPathBody) request.getBody();
                     output.append("new XPathBody(\"").append(StringEscapeUtils.escapeJava(xPathBody.getValue())).append("\")");
                     output.append(")");
-                } else if (httpRequest.getBody() instanceof XmlSchemaBody) {
+                } else if (request.getBody() instanceof XmlSchemaBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     output.append(".withBody(");
-                    XmlSchemaBody xmlSchemaBody = (XmlSchemaBody) httpRequest.getBody();
+                    XmlSchemaBody xmlSchemaBody = (XmlSchemaBody) request.getBody();
                     output.append("new XmlSchemaBody(\"").append(StringEscapeUtils.escapeJava(xmlSchemaBody.getValue())).append("\")");
                     output.append(")");
-                } else if (httpRequest.getBody() instanceof RegexBody) {
+                } else if (request.getBody() instanceof RegexBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     output.append(".withBody(");
-                    RegexBody regexBody = (RegexBody) httpRequest.getBody();
+                    RegexBody regexBody = (RegexBody) request.getBody();
                     output.append("new RegexBody(\"").append(StringEscapeUtils.escapeJava(regexBody.getValue())).append("\")");
                     output.append(")");
-                } else if (httpRequest.getBody() instanceof StringBody) {
+                } else if (request.getBody() instanceof StringBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     output.append(".withBody(");
-                    StringBody stringBody = (StringBody) httpRequest.getBody();
+                    StringBody stringBody = (StringBody) request.getBody();
                     output.append("new StringBody(\"").append(StringEscapeUtils.escapeJava(stringBody.getValue())).append("\")");
                     output.append(")");
-                } else if (httpRequest.getBody() instanceof ParameterBody) {
+                } else if (request.getBody() instanceof ParameterBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     output.append(".withBody(");
                     appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output);
                     output.append("new ParameterBody(");
-                    List<Parameter> bodyParameters = ((ParameterBody) httpRequest.getBody()).getValue();
+                    List<Parameter> bodyParameters = ((ParameterBody) request.getBody()).getValue();
                     output.append(new ParameterToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 3, bodyParameters));
                     appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output);
                     output.append(")");
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     output.append(")");
-                } else if (httpRequest.getBody() instanceof BinaryBody) {
+                } else if (request.getBody() instanceof BinaryBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
-                    BinaryBody body = (BinaryBody) httpRequest.getBody();
+                    BinaryBody body = (BinaryBody) request.getBody();
                     output.append(".withBody(new Base64Converter().base64StringToBytes(\"").append(base64Converter.bytesToBase64String(body.getRawBytes())).append("\"))");
                 }
             }

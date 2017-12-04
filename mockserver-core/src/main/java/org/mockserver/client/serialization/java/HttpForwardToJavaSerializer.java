@@ -12,7 +12,7 @@ import static org.mockserver.client.serialization.java.ExpectationToJavaSerializ
 public class HttpForwardToJavaSerializer implements ToJavaSerializer<HttpForward> {
 
     @Override
-    public String serializeAsJava(int numberOfSpacesToIndent, HttpForward httpForward) {
+    public String serialize(int numberOfSpacesToIndent, HttpForward httpForward) {
         StringBuffer output = new StringBuffer();
         if (httpForward != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("forward()");

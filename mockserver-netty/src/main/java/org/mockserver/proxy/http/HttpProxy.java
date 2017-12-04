@@ -6,8 +6,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.filters.RequestLogFilter;
-import org.mockserver.filters.RequestResponseLogFilter;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.proxy.Proxy;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +49,7 @@ public class HttpProxy extends Proxy<HttpProxy> {
                 .childHandler(new HttpProxyUnificationHandler())
                 .childAttr(HTTP_PROXY, HttpProxy.this)
                 .childAttr(HTTP_CONNECT_SOCKET, new InetSocketAddress(requestedPortBindings[0]))
-                .childAttr(REQUEST_LOG_FILTER, new RequestLogFilter())
-                .childAttr(REQUEST_RESPONSE_LOG_FILTER, new RequestResponseLogFilter());
+                .childAttr(STATE_HANDLER, new HttpStateHandler());
 
         bindToPorts(Arrays.asList(requestedPortBindings));
 

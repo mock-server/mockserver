@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.filters.RequestLogFilter;
+import org.mockserver.model.Header;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -37,6 +37,8 @@ public class HttpForwardActionHandlerTest {
         initMocks(this);
         when(httpForward.getHost()).thenReturn("some_host");
         when(httpForward.getPort()).thenReturn(1080);
+        when(httpRequest.clone()).thenReturn(httpRequest);
+        when(httpRequest.withHeaders(anyListOf(Header.class))).thenReturn(httpRequest);
     }
 
     @Test

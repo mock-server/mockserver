@@ -31,7 +31,7 @@ public class HttpRequestToJavaSerializerTest {
                         "        .withMethod(\"GET\")" + NEW_LINE +
                         "        .withPath(\"somePathTwo\")" + NEW_LINE +
                         "        .withBody(new StringBody(\"responseBodyTwo\"));" + NEW_LINE,
-                new HttpRequestToJavaSerializer().serializeAsJava(0,
+                new HttpRequestToJavaSerializer().serialize(
                         Arrays.asList(
                                 new HttpRequest()
                                         .withMethod("GET")
@@ -67,7 +67,7 @@ public class HttpRequestToJavaSerializerTest {
                         "                .withSecure(true)" + NEW_LINE +
                         "                .withKeepAlive(false)" + NEW_LINE +
                         "                .withBody(new StringBody(\"responseBody\"))",
-                new HttpRequestToJavaSerializer().serializeAsJava(1,
+                new HttpRequestToJavaSerializer().serialize(1,
                         new HttpRequest()
                                 .withMethod("GET")
                                 .withPath("somePath")
@@ -100,7 +100,7 @@ public class HttpRequestToJavaSerializerTest {
                         "                                new Parameter(\"requestBodyParameterNameTwo\", \"requestBodyParameterValueTwo\")" + NEW_LINE +
                         "                        )" + NEW_LINE +
                         "                )",
-                new HttpRequestToJavaSerializer().serializeAsJava(1,
+                new HttpRequestToJavaSerializer().serialize(1,
                         new HttpRequest()
                                 .withBody(
                                         new ParameterBody(
@@ -118,7 +118,7 @@ public class HttpRequestToJavaSerializerTest {
         assertEquals(NEW_LINE +
                         "        request()" + NEW_LINE +
                         "                .withBody(new Base64Converter().base64StringToBytes(\"" + base64Converter.bytesToBase64String("responseBody".getBytes(UTF_8)) + "\"))",
-                new HttpRequestToJavaSerializer().serializeAsJava(1,
+                new HttpRequestToJavaSerializer().serialize(1,
                         new HttpRequest()
                                 .withBody(
                                         new BinaryBody("responseBody".getBytes(UTF_8))
@@ -154,7 +154,7 @@ public class HttpRequestToJavaSerializerTest {
                         "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
                         "    }" + StringEscapeUtils.escapeJava(NEW_LINE) +
                         "]\", JsonBodyMatchType.ONLY_MATCHING_FIELDS))",
-                new HttpRequestToJavaSerializer().serializeAsJava(1,
+                new HttpRequestToJavaSerializer().serialize(1,
                         new HttpRequest()
                                 .withPath("somePath")
                                 .withBody(new JsonBody("[" + NEW_LINE +
@@ -220,7 +220,7 @@ public class HttpRequestToJavaSerializerTest {
                         "        request()" + NEW_LINE +
                         "                .withPath(\"somePath\")" + NEW_LINE +
                         "                .withBody(new JsonSchemaBody(\"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"))",
-                new HttpRequestToJavaSerializer().serializeAsJava(1,
+                new HttpRequestToJavaSerializer().serialize(1,
                         new HttpRequest()
                                 .withPath("somePath")
                                 .withBody(new JsonSchemaBody(jsonSchema))
@@ -264,7 +264,7 @@ public class HttpRequestToJavaSerializerTest {
                         "        request()" + NEW_LINE +
                         "                .withPath(\"somePath\")" + NEW_LINE +
                         "                .withBody(new XmlSchemaBody(\"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"))",
-                new HttpRequestToJavaSerializer().serializeAsJava(1,
+                new HttpRequestToJavaSerializer().serialize(1,
                         new HttpRequest()
                                 .withPath("somePath")
                                 .withBody(new XmlSchemaBody(xmlSchema))
@@ -278,7 +278,7 @@ public class HttpRequestToJavaSerializerTest {
                         "        request()" + NEW_LINE +
                         "                .withPath(\"somePath\")" + NEW_LINE +
                         "                .withBody(new StringBody(\"responseBody\"))",
-                new HttpRequestToJavaSerializer().serializeAsJava(1,
+                new HttpRequestToJavaSerializer().serialize(1,
                         new HttpRequest()
                                 .withPath("somePath")
                                 .withBody("responseBody")

@@ -12,7 +12,7 @@ import static org.mockserver.client.serialization.java.ExpectationToJavaSerializ
 public class HttpCallbackToJavaSerializer implements ToJavaSerializer<HttpClassCallback> {
 
     @Override
-    public String serializeAsJava(int numberOfSpacesToIndent, HttpClassCallback httpClassCallback) {
+    public String serialize(int numberOfSpacesToIndent, HttpClassCallback httpClassCallback) {
         StringBuffer output = new StringBuffer();
         if (httpClassCallback != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("callback()");

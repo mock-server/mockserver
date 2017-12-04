@@ -18,7 +18,7 @@ public class HttpResponseToJavaSerializer implements ToJavaSerializer<HttpRespon
     private final Base64Converter base64Converter = new Base64Converter();
 
     @Override
-    public String serializeAsJava(int numberOfSpacesToIndent, HttpResponse httpResponse) {
+    public String serialize(int numberOfSpacesToIndent, HttpResponse httpResponse) {
         StringBuffer output = new StringBuffer();
         if (httpResponse != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("response()");
@@ -37,11 +37,11 @@ public class HttpResponseToJavaSerializer implements ToJavaSerializer<HttpRespon
                 }
             }
             if (httpResponse.getDelay() != null) {
-                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDelay(").append(new DelayToJavaSerializer().serializeAsJava(0, httpResponse.getDelay())).append(")");
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDelay(").append(new DelayToJavaSerializer().serialize(0, httpResponse.getDelay())).append(")");
             }
             if (httpResponse.getConnectionOptions() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withConnectionOptions(");
-                output.append(new ConnectionOptionsToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 2, httpResponse.getConnectionOptions()));
+                output.append(new ConnectionOptionsToJavaSerializer().serialize(numberOfSpacesToIndent + 2, httpResponse.getConnectionOptions()));
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(")");
             }
         }

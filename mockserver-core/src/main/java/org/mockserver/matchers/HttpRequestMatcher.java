@@ -5,7 +5,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.*;
-import org.mockserver.logging.LogFormatter;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.*;
 
 import java.io.IOException;
@@ -20,7 +20,7 @@ import static org.mockserver.model.NottableString.string;
  */
 public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
-    private LogFormatter logFormatter = new LogFormatter(logger);
+    private LoggingFormatter logFormatter = new LoggingFormatter(logger);
     private HttpRequest httpRequest;
     private RegexStringMatcher methodMatcher = null;
     private RegexStringMatcher pathMatcher = null;

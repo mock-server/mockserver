@@ -1,7 +1,7 @@
 package org.mockserver.templates.engine.javascript;
 
 import org.mockserver.client.serialization.model.DTO;
-import org.mockserver.logging.LogFormatter;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
@@ -14,6 +14,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.formatting.StringFormatter.indentAndToString;
 
 /**
@@ -23,7 +24,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
 
     private static final ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
     private static Logger logger = LoggerFactory.getLogger(JavaScriptTemplateEngine.class);
-    private static LogFormatter logFormatter = new LogFormatter(logger);
+    private static LoggingFormatter logFormatter = new LoggingFormatter(logger);
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer();
 
     public <T> T executeTemplate(String template, HttpRequest httpRequest, Class<? extends DTO<T>> dtoClass) {
@@ -40,7 +41,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                         "please use a JVM with the \"nashorn\" JavaScript engine, such as Oracle Java 8+", new RuntimeException("\"nashorn\" JavaScript engine not available"));
             }
         } catch (Exception e) {
-            throw new RuntimeException(logFormatter.formatLogMessage("Exception transforming template:{}" + NEW_LINE + " for request:{}", script, httpRequest).toString(), e);
+            throw new RuntimeException(formatLogMessage("Exception transforming template:{}" + NEW_LINE + " for request:{}", script, httpRequest).toString(), e);
         }
         return null;
     }

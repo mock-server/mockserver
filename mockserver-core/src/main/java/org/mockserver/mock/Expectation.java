@@ -1,6 +1,5 @@
 package org.mockserver.mock;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.TimeToLive;
@@ -23,6 +22,10 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpError httpError;
     private HttpClassCallback httpClassCallback;
     private HttpObjectCallback httpObjectCallback;
+
+    public Expectation(HttpRequest httpRequest) {
+        this(httpRequest, Times.unlimited(), TimeToLive.unlimited());
+    }
 
     public Expectation(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
         this.httpRequest = httpRequest;

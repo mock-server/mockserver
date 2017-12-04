@@ -15,12 +15,12 @@ public class HttpErrorToJavaSerializer implements ToJavaSerializer<HttpError> {
     private final Base64Converter base64Converter = new Base64Converter();
 
     @Override
-    public String serializeAsJava(int numberOfSpacesToIndent, HttpError httpError) {
+    public String serialize(int numberOfSpacesToIndent, HttpError httpError) {
         StringBuffer output = new StringBuffer();
         if (httpError != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("error()");
             if (httpError.getDelay() != null) {
-                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDelay(").append(new DelayToJavaSerializer().serializeAsJava(0, httpError.getDelay())).append(")");
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDelay(").append(new DelayToJavaSerializer().serialize(0, httpError.getDelay())).append(")");
             }
             if (httpError.getDropConnection() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDropConnection(").append(httpError.getDropConnection()).append(")");

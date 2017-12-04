@@ -7,5 +7,5 @@ import org.mockserver.model.HttpResponse;
  */
 public interface ExpectationCallbackResponse {
 
-    public void handle(HttpResponse httpResponse);
+    void handle(HttpResponse httpResponse);
 }

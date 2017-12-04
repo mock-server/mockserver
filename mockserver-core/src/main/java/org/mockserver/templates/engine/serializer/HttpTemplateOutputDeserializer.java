@@ -6,7 +6,7 @@ import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.DTO;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.client.serialization.model.HttpResponseDTO;
-import org.mockserver.logging.LogFormatter;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
 import org.slf4j.Logger;
@@ -19,7 +19,7 @@ public class HttpTemplateOutputDeserializer {
 
     private static ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private static Logger logger = LoggerFactory.getLogger(HttpTemplateOutputDeserializer.class);
-    private static LogFormatter logFormatter = new LogFormatter(logger);
+    private static LoggingFormatter logFormatter = new LoggingFormatter(logger);
     private JsonSchemaHttpRequestValidator httpRequestValidator = new JsonSchemaHttpRequestValidator();
     private JsonSchemaHttpResponseValidator httpResponseValidator = new JsonSchemaHttpResponseValidator();
 

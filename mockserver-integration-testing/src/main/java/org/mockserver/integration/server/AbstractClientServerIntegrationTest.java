@@ -18,6 +18,7 @@ import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
@@ -4961,7 +4962,7 @@ public abstract class AbstractClientServerIntegrationTest {
 
         // then
         assertThat(
-                mockServerClient.retrieveExistingExpectations(request().withPath(calculatePath("some_path.*"))),
+                mockServerClient.retrieveActiveExpectations(request().withPath(calculatePath("some_path.*"))),
                 arrayContaining(
                         new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
                                 .thenRespond(response().withBody("some_body")),
@@ -4971,7 +4972,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
 
         assertThat(
-                mockServerClient.retrieveExistingExpectations(null),
+                mockServerClient.retrieveActiveExpectations(null),
                 arrayContaining(
                         new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
                                 .thenRespond(response().withBody("some_body")),
@@ -4985,7 +4986,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
 
         assertThat(
-                mockServerClient.retrieveExistingExpectations(request()),
+                mockServerClient.retrieveActiveExpectations(request()),
                 arrayContaining(
                         new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
                                 .thenRespond(response().withBody("some_body")),
@@ -5110,7 +5111,7 @@ public abstract class AbstractClientServerIntegrationTest {
 
         // then - expectations cleared
         assertThat(
-                mockServerClient.retrieveExistingExpectations(null),
+                mockServerClient.retrieveActiveExpectations(null),
                 arrayContaining(
                         expectation(
                                 request()
@@ -5196,12 +5197,12 @@ public abstract class AbstractClientServerIntegrationTest {
                 .clear(
                         request()
                                 .withPath(calculatePath("some_path1")),
-                        MockServerClient.TYPE.EXPECTATION
+                        HttpStateHandler.ClearType.EXPECTATIONS
                 );
 
         // then - expectations cleared
         assertThat(
-                mockServerClient.retrieveExistingExpectations(null),
+                mockServerClient.retrieveActiveExpectations(null),
                 arrayContaining(
                         expectation(
                                 request()
@@ -5269,12 +5270,12 @@ public abstract class AbstractClientServerIntegrationTest {
                 .clear(
                         request()
                                 .withPath(calculatePath("some_path1")),
-                        MockServerClient.TYPE.LOG
+                        HttpStateHandler.ClearType.LOG
                 );
 
         // then - expectations cleared
         assertThat(
-                mockServerClient.retrieveExistingExpectations(null),
+                mockServerClient.retrieveActiveExpectations(null),
                 arrayContaining(
                         expectation(
                                 request()
@@ -5337,7 +5338,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient.clear(null);
 
         // then
-        assertThat(mockServerClient.retrieveExistingExpectations(null), emptyArray());
+        assertThat(mockServerClient.retrieveActiveExpectations(null), emptyArray());
         assertThat(mockServerClient.retrieveRecordedRequests(null), emptyArray());
     }
 
@@ -5376,7 +5377,7 @@ public abstract class AbstractClientServerIntegrationTest {
         mockServerClient.clear(request());
 
         // then
-        assertThat(mockServerClient.retrieveExistingExpectations(null), emptyArray());
+        assertThat(mockServerClient.retrieveActiveExpectations(null), emptyArray());
         assertThat(mockServerClient.retrieveRecordedRequests(null), emptyArray());
     }
 
@@ -5446,7 +5447,7 @@ public abstract class AbstractClientServerIntegrationTest {
 
         // then
         assertThat(
-                mockServerClient.retrieveExistingExpectations(null),
+                mockServerClient.retrieveActiveExpectations(null),
                 arrayContaining(
                         expectation(
                                 request()
@@ -5588,7 +5589,7 @@ public abstract class AbstractClientServerIntegrationTest {
 
         // then
         assertThat(
-                mockServerClient.retrieveExistingExpectations(null),
+                mockServerClient.retrieveActiveExpectations(null),
                 arrayContaining(
                         expectation(
                                 request()
@@ -5675,7 +5676,7 @@ public abstract class AbstractClientServerIntegrationTest {
 
         // then
         assertThat(
-                mockServerClient.retrieveExistingExpectations(null),
+                mockServerClient.retrieveActiveExpectations(null),
                 arrayContaining(
                         expectation(
                                 request()

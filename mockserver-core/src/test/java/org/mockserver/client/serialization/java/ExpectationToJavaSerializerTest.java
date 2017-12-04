@@ -33,32 +33,32 @@ public class ExpectationToJavaSerializerTest {
     @Test
     public void shouldSerializeArrayOfObjectsAsJava() throws IOException {
         assertEquals(NEW_LINE +
-                        "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
-                        "        .when(" + NEW_LINE +
-                        "                request()" + NEW_LINE +
-                        "                        .withPath(\"somePathOne\")," + NEW_LINE +
-                        "                Times.once()" + NEW_LINE +
-                        "        )" + NEW_LINE +
-                        "        .respond(" + NEW_LINE +
-                        "                response()" + NEW_LINE +
-                        "                        .withStatusCode(200)" + NEW_LINE +
-                        "                        .withBody(\"responseBodyOne\")" + NEW_LINE +
-                        "        );" + NEW_LINE +
+                        "new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                        ".when(" + NEW_LINE +
+                        "        request()" + NEW_LINE +
+                        "                .withPath(\"somePathOne\")," + NEW_LINE +
+                        "        Times.once()" + NEW_LINE +
+                        ")" + NEW_LINE +
+                        ".respond(" + NEW_LINE +
+                        "        response()" + NEW_LINE +
+                        "                .withStatusCode(200)" + NEW_LINE +
+                        "                .withBody(\"responseBodyOne\")" + NEW_LINE +
+                        ");" + NEW_LINE +
                         NEW_LINE +
                         NEW_LINE +
-                        "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
-                        "        .when(" + NEW_LINE +
-                        "                request()" + NEW_LINE +
-                        "                        .withPath(\"somePathOne\")," + NEW_LINE +
-                        "                Times.once()" + NEW_LINE +
-                        "        )" + NEW_LINE +
-                        "        .respond(" + NEW_LINE +
-                        "                response()" + NEW_LINE +
-                        "                        .withStatusCode(200)" + NEW_LINE +
-                        "                        .withBody(\"responseBodyOne\")" + NEW_LINE +
-                        "        );" + NEW_LINE +
+                        "new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                        ".when(" + NEW_LINE +
+                        "        request()" + NEW_LINE +
+                        "                .withPath(\"somePathOne\")," + NEW_LINE +
+                        "        Times.once()" + NEW_LINE +
+                        ")" + NEW_LINE +
+                        ".respond(" + NEW_LINE +
+                        "        response()" + NEW_LINE +
+                        "                .withStatusCode(200)" + NEW_LINE +
+                        "                .withBody(\"responseBodyOne\")" + NEW_LINE +
+                        ");" + NEW_LINE +
                         NEW_LINE,
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(
                         Arrays.asList(
                                 new Expectation(
                                         request("somePathOne"),
@@ -126,7 +126,7 @@ public class ExpectationToJavaSerializerTest {
                         "                                        .withCloseSocket(true)" + NEW_LINE +
                         "                        )" + NEW_LINE +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(1,
                         new Expectation(
                                 request()
                                         .withMethod("GET")
@@ -200,7 +200,7 @@ public class ExpectationToJavaSerializerTest {
                         "                template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
                         "                        .withTemplate(\"if (request.method === 'POST' && request.path === '/somePath') {\\n    return {\\n        'statusCode': 200,\\n        'body': JSON.stringify({name: 'value'})\\n    };\\n} else {\\n    return {\\n        'statusCode': 406,\\n        'body': request.body\\n    };\\n}\")" + NEW_LINE +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(1,
                         new Expectation(
                                 request()
                                         .withMethod("GET")
@@ -257,7 +257,7 @@ public class ExpectationToJavaSerializerTest {
                         "                response()" + NEW_LINE +
                         "                        .withBody(\"responseBody\")" + NEW_LINE +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(1,
                         new Expectation(
                                 request()
                                         .withBody(
@@ -291,7 +291,7 @@ public class ExpectationToJavaSerializerTest {
                         "                response()" + NEW_LINE +
                         "                        .withBody(\"responseBody\")" + NEW_LINE +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(1,
                         new Expectation(
                                 request()
                                         .withBody(
@@ -337,7 +337,7 @@ public class ExpectationToJavaSerializerTest {
                         "                        .withPort(9090)" + NEW_LINE +
                         "                        .withScheme(HttpForward.Scheme.HTTPS)" + NEW_LINE +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(1,
                         new Expectation(
                                 request()
                                         .withMethod("GET")
@@ -395,7 +395,7 @@ public class ExpectationToJavaSerializerTest {
                         "                template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
                         "                        .withTemplate(\"return { 'path': \\\"somePath\\\", 'body': JSON.stringify({name: 'value'}) };\")" + NEW_LINE +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(1,
                         new Expectation(
                                 request()
                                         .withMethod("GET")
@@ -453,7 +453,7 @@ public class ExpectationToJavaSerializerTest {
                         "                        .withDropConnection(true)" + NEW_LINE +
                         "                        .withResponseBytes(new Base64Converter().base64StringToBytes(\"" + base64Converter.bytesToBase64String("some_bytes".getBytes(UTF_8)) + "\"))" + NEW_LINE +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(1,
                         new Expectation(
                                 request()
                                         .withMethod("GET")
@@ -511,7 +511,7 @@ public class ExpectationToJavaSerializerTest {
                         "                callback()" + NEW_LINE +
                         "                        .withCallbackClass(\"some_class\")" + NEW_LINE +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(1,
                         new Expectation(
                                 request()
                                         .withMethod("GET")
@@ -564,7 +564,7 @@ public class ExpectationToJavaSerializerTest {
                         "                Times.once()" + NEW_LINE +
                         "        )" + NEW_LINE +
                         "        /*NOT POSSIBLE TO GENERATE CODE FOR OBJECT CALLBACK*/;",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(1,
                         new Expectation(
                                 request()
                                         .withMethod("GET")
@@ -608,7 +608,7 @@ public class ExpectationToJavaSerializerTest {
                         "                        .withStatusCode(304)" + NEW_LINE +
                         "                        .withBody(\"[" + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }," + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }," + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }" + StringEscapeUtils.escapeJava(NEW_LINE) + "]\")" + NEW_LINE +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(1,
                         new Expectation(
                                 request()
                                         .withPath("somePath")
@@ -714,7 +714,7 @@ public class ExpectationToJavaSerializerTest {
                         "                        .withStatusCode(304)" + NEW_LINE +
                         "                        .withBody(\"responseBody\")" + NEW_LINE +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(1,
                         new Expectation(
                                 request()
                                         .withPath("somePath")
@@ -767,7 +767,7 @@ public class ExpectationToJavaSerializerTest {
                         "                        .withStatusCode(304)" + NEW_LINE +
                         "                        .withBody(\"responseBody\")" + NEW_LINE +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(1,
                         new Expectation(
                                 request()
                                         .withPath("somePath")
@@ -798,7 +798,7 @@ public class ExpectationToJavaSerializerTest {
                         "                response()" + NEW_LINE +
                         "                        .withStatusCode(304)" + NEW_LINE +
                         "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
+                new ExpectationToJavaSerializer().serialize(1,
                         new Expectation(
                                 request()
                                         .withPath("somePath")

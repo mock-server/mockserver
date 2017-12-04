@@ -5,9 +5,10 @@ import org.junit.rules.ExpectedException;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.filters.RequestLogFilter;
+import org.mockserver.filters.LogFilter;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
@@ -19,7 +20,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.client.AbstractClient.TYPE.LOG;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.unlimited;
 import static org.mockserver.model.HttpClassCallback.callback;
@@ -38,7 +38,7 @@ public class MockServerClientIntegrationTest {
 
     private static MockServerClient mockServerClient;
     private static EchoServer echoServer;
-    private static RequestLogFilter requestLogFilter;
+    private static LogFilter logFilter;
     private static int freePort;
 
     @Rule
@@ -48,7 +48,7 @@ public class MockServerClientIntegrationTest {
     public static void startEchoServer() {
         freePort = PortFactory.findFreePort();
         echoServer = new EchoServer(freePort, false);
-        requestLogFilter = echoServer.requestLogFilter();
+        logFilter = echoServer.requestLogFilter();
         mockServerClient = new MockServerClient("localhost", freePort);
     }
 
@@ -59,7 +59,7 @@ public class MockServerClientIntegrationTest {
 
     @Before
     public void clearRequestLog() {
-        requestLogFilter.reset();
+        logFilter.reset();
     }
 
     @Test
@@ -81,8 +81,8 @@ public class MockServerClientIntegrationTest {
                 );
 
         // then
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/expectation")
@@ -141,8 +141,8 @@ public class MockServerClientIntegrationTest {
                 );
 
         // then
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/expectation")
@@ -198,8 +198,8 @@ public class MockServerClientIntegrationTest {
                 );
 
         // then
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/expectation")
@@ -253,8 +253,8 @@ public class MockServerClientIntegrationTest {
                 );
 
         // then
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/expectation")
@@ -309,8 +309,8 @@ public class MockServerClientIntegrationTest {
                 );
 
         // then
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/expectation")
@@ -351,35 +351,6 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
-    public void shouldSendDumpToLogRequest() throws Exception {
-        // given
-        echoServer.withNextResponse(response().withStatusCode(201));
-
-        // when
-        mockServerClient.dumpToLog();
-
-        // then
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/dumpToLog")
-                        .withHeaders(
-                                new Header("host", "localhost:" + freePort),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("content-length", "0"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-        ));
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
-        }
-    }
-
-    @Test
     public void shouldSendStopRequest() throws Exception {
         // given
         echoServer.withNextResponse(response().withStatusCode(201));
@@ -388,7 +359,7 @@ public class MockServerClientIntegrationTest {
         mockServerClient.stop();
 
         // then
-        String result = requestLogFilter.verify(verificationSequence().withRequests(
+        String result = logFilter.verify(verificationSequence().withRequests(
                 request()
                         .withMethod("PUT")
                         .withPath("/stop")
@@ -427,8 +398,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(isRunning, is(true));
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/status")
@@ -459,8 +430,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(isRunning, is(false));
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(numberOfRetries));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(numberOfRetries));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/status")
@@ -487,8 +458,8 @@ public class MockServerClientIntegrationTest {
         mockServerClient.reset();
 
         // then
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/reset")
@@ -520,8 +491,8 @@ public class MockServerClientIntegrationTest {
                 );
 
         // then
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/clear")
@@ -555,12 +526,12 @@ public class MockServerClientIntegrationTest {
                         request()
                                 .withPath("/some_path")
                                 .withBody(new StringBody("some_request_body")),
-                        LOG
+                        HttpStateHandler.ClearType.LOG
                 );
 
         // then
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/clear")
@@ -592,8 +563,8 @@ public class MockServerClientIntegrationTest {
         mockServerClient.clear(null);
 
         // then
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/clear")
@@ -636,8 +607,8 @@ public class MockServerClientIntegrationTest {
                 request("/some_request_one"),
                 request("/some_request_two")
         ));
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/retrieve")
@@ -679,8 +650,8 @@ public class MockServerClientIntegrationTest {
                 request("/some_request_one"),
                 request("/some_request_two")
         ));
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/retrieve")
@@ -712,7 +683,7 @@ public class MockServerClientIntegrationTest {
         );
 
         // when
-        Expectation[] actualResponse = mockServerClient.retrieveExistingExpectations(
+        Expectation[] actualResponse = mockServerClient.retrieveActiveExpectations(
                 request()
                         .withPath("/some_path")
                         .withBody(new StringBody("some_request_body"))
@@ -723,8 +694,8 @@ public class MockServerClientIntegrationTest {
                 new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                 new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/retrieve")
@@ -735,7 +706,7 @@ public class MockServerClientIntegrationTest {
                                 new Header("content-type", "text/plain; charset=utf-8")
                         )
                         .withQueryStringParameters(
-                                new Parameter("type", "expectation")
+                                new Parameter("type", "ACTIVE_EXPECTATIONS")
                         )
                         .withSecure(false)
                         .withKeepAlive(true)
@@ -762,15 +733,15 @@ public class MockServerClientIntegrationTest {
         );
 
         // when
-        Expectation[] actualResponse = mockServerClient.retrieveExistingExpectations(null);
+        Expectation[] actualResponse = mockServerClient.retrieveActiveExpectations(null);
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
                 new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                 new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/retrieve")
@@ -782,7 +753,7 @@ public class MockServerClientIntegrationTest {
                                 new Header("content-type", "text/plain; charset=utf-8")
                         )
                         .withQueryStringParameters(
-                                new Parameter("type", "expectation")
+                                new Parameter("type", "ACTIVE_EXPECTATIONS")
                         )
                         .withSecure(false)
                         .withKeepAlive(true)
@@ -808,8 +779,8 @@ public class MockServerClientIntegrationTest {
         );
 
         // then
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/verifySequence")
@@ -853,8 +824,8 @@ public class MockServerClientIntegrationTest {
         );
 
         // then
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/verifySequence")
@@ -899,8 +870,8 @@ public class MockServerClientIntegrationTest {
         );
 
         // then
-        assertThat(requestLogFilter.httpRequests(request()).size(), is(1));
-        String result = requestLogFilter.verify(verification().withRequest(
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
                 request()
                         .withMethod("PUT")
                         .withPath("/verify")

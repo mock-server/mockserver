@@ -33,19 +33,14 @@ public class NettyHttpClient {
         return sendRequest(httpRequest, socketAddressFromHostHeader(httpRequest));
     }
 
-    private InetSocketAddress socketAddressFromHostHeader(HttpRequest httpRequest) {
-        if (!Strings.isNullOrEmpty(httpRequest.getFirstHeader(HOST.toString()))) {
-            boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
-            String[] hostHeaderParts = httpRequest.getFirstHeader(HOST.toString()).split(":");
-            return new InetSocketAddress(hostHeaderParts[0],
-                    hostHeaderParts.length > 1 ?
-                            Integer.parseInt(hostHeaderParts[1]) :
-                            isSsl ?
-                                    443 :
-                                    80
+    private InetSocketAddress socketAddressFromHostHeader(HttpRequest request) {
+        if (!Strings.isNullOrEmpty(request.getFirstHeader(HOST.toString()))) {
+            boolean isSsl = request.isSecure() != null && request.isSecure();
+            String[] hostHeaderParts = request.getFirstHeader(HOST.toString()).split(":");
+            return new InetSocketAddress(hostHeaderParts[0], hostHeaderParts.length > 1 ? Integer.parseInt(hostHeaderParts[1]) : isSsl ? 443 : 80
             );
         } else {
-            throw new IllegalArgumentException("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + NEW_LINE + httpRequest);
+            throw new IllegalArgumentException("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + NEW_LINE + request);
         }
     }
 

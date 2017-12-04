@@ -1,12 +1,11 @@
 package org.mockserver.proxy.direct;
 
-import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.*;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import org.mockserver.filters.RequestLogFilter;
-import org.mockserver.filters.RequestResponseLogFilter;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.proxy.Proxy;
 
 import java.net.InetSocketAddress;
@@ -51,8 +50,7 @@ public class DirectProxy extends Proxy<DirectProxy> {
                 .childHandler(new DirectProxyUnificationHandler())
                 .childAttr(HTTP_PROXY, DirectProxy.this)
                 .childAttr(REMOTE_SOCKET, remoteSocket)
-                .childAttr(REQUEST_LOG_FILTER, new RequestLogFilter())
-                .childAttr(REQUEST_RESPONSE_LOG_FILTER, new RequestResponseLogFilter());
+                .childAttr(STATE_HANDLER, new HttpStateHandler());
 
         bindToPorts(Arrays.asList(localPorts));
 

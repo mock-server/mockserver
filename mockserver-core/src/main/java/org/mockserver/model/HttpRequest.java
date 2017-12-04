@@ -242,6 +242,23 @@ public class HttpRequest extends Not {
         return false;
     }
 
+    public String getFirstQueryStringParameter(String name) {
+        String firstParameterValue = "";
+        Parameter parameter = queryStringParameters.get(string(name));
+        if (parameter == null) {
+            parameter = queryStringParameters.get(string(name.toLowerCase()));
+        }
+        if (parameter == null) {
+            parameter = queryStringParameters.get(string(name).capitalize());
+        }
+        if (parameter != null) {
+            if (!parameter.getValues().isEmpty() && !Strings.isNullOrEmpty(parameter.getValues().get(0).getValue())) {
+                firstParameterValue = parameter.getValues().get(0).getValue();
+            }
+        }
+        return firstParameterValue;
+    }
+
     /**
      * The exact string body to match on such as "this is an exact string body"
      *
@@ -468,7 +485,7 @@ public class HttpRequest extends Not {
     }
 
     public String getFirstHeader(String name) {
-        String firstHeadValue = "";
+        String firstHeaderValue = "";
         Header header = headers.get(string(name));
         if (header == null) {
             header = headers.get(string(name.toLowerCase()));
@@ -478,10 +495,10 @@ public class HttpRequest extends Not {
         }
         if (header != null) {
             if (!header.getValues().isEmpty() && !Strings.isNullOrEmpty(header.getValues().get(0).getValue())) {
-                firstHeadValue = header.getValues().get(0).getValue();
+                firstHeaderValue = header.getValues().get(0).getValue();
             }
         }
-        return firstHeadValue;
+        return firstHeaderValue;
     }
 
     /**
@@ -572,9 +589,5 @@ public class HttpRequest extends Not {
                 .withCookies(getCookies())
                 .withKeepAlive(keepAlive)
                 .withSecure(secure);
-    }
-
-    public static Class getDTOClass() {
-        return HttpRequestDTO.class;
     }
 }

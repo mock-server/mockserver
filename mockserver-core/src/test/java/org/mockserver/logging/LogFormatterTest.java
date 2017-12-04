@@ -12,7 +12,7 @@ public class LogFormatterTest {
     public void shouldFormatLogMessages() {
         // given
         Logger mockLogger = mock(Logger.class);
-        LogFormatter logFormatter = new LogFormatter(mockLogger);
+        LoggingFormatter logFormatter = new LoggingFormatter(mockLogger);
         when(mockLogger.isInfoEnabled()).thenReturn(true);
 
         // when
@@ -25,19 +25,17 @@ public class LogFormatterTest {
         // then
         verify(mockLogger).isInfoEnabled();
         verify(mockLogger).info(
-                "some random message with {} and {}" + NEW_LINE,
-                new Object[]{
-                        NEW_LINE +
-                                NEW_LINE +
-                                "\tsome" + NEW_LINE +
-                                "\tmulti-line" + NEW_LINE +
-                                "\tobject" + NEW_LINE,
-                        NEW_LINE +
-                                NEW_LINE +
-                                "\tanother" + NEW_LINE +
-                                "\tmulti-line" + NEW_LINE +
-                                "\tobject" + NEW_LINE
-                }
+                "some random message with " + NEW_LINE +
+                        "" + NEW_LINE +
+                        "\tsome" + NEW_LINE +
+                        "\tmulti-line" + NEW_LINE +
+                        "\tobject" + NEW_LINE +
+                        " and " + NEW_LINE +
+                        "" + NEW_LINE +
+                        "\tanother" + NEW_LINE +
+                        "\tmulti-line" + NEW_LINE +
+                        "\tobject" + NEW_LINE +
+                        "" + NEW_LINE + NEW_LINE
         );
     }
 

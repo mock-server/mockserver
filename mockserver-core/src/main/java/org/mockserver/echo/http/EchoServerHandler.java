@@ -4,8 +4,9 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import org.mockserver.filters.RequestLogFilter;
-import org.mockserver.logging.LogFormatter;
+import org.mockserver.filters.LogFilter;
+import org.mockserver.log.model.RequestLogEntry;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.BodyWithContentType;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -27,21 +28,21 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final EchoServer.Error error;
-    private final RequestLogFilter requestLogFilter;
+    private final LogFilter logFilter;
     private final EchoServer.NextResponse nextResponse;
-    private LogFormatter logFormatter = new LogFormatter(logger);
+    private LoggingFormatter logFormatter = new LoggingFormatter(logger);
 
-    public EchoServerHandler(EchoServer.Error error, RequestLogFilter requestLogFilter, EchoServer.NextResponse nextResponse) {
+    public EchoServerHandler(EchoServer.Error error, LogFilter logFilter, EchoServer.NextResponse nextResponse) {
         this.error = error;
-        this.requestLogFilter = requestLogFilter;
+        this.logFilter = logFilter;
         this.nextResponse = nextResponse;
     }
 
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
 
-        logFormatter.traceLog("received request:{}" + NEW_LINE, request);
+        logFormatter.traceLog("received request:{}", request);
 
-        requestLogFilter.onRequest(request);
+        logFilter.onRequest(new RequestLogEntry(request));
 
         if (!nextResponse.httpResponse.isEmpty()) {
             // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!

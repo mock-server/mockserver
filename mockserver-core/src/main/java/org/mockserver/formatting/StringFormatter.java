@@ -21,4 +21,17 @@ public class StringFormatter {
         }
         return indentedObjects;
     }
+
+    public static String formatLogMessage(String message, Object... arguments) {
+        StringBuilder errorMessage = new StringBuilder();
+        Object[] formattedArguments = indentAndToString(arguments);
+        String[] messageParts = (message + NEW_LINE).split("\\{\\}");
+        for (int messagePartIndex = 0; messagePartIndex < messageParts.length; messagePartIndex++) {
+            errorMessage.append(messageParts[messagePartIndex]);
+            if (formattedArguments.length > messagePartIndex) {
+                errorMessage.append(formattedArguments[messagePartIndex]);
+            }
+        }
+        return errorMessage.toString();
+    }
 }

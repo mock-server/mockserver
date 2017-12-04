@@ -476,7 +476,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
                     "  \"path\" : \"" + "/other_path" + "\"" + NEW_LINE +
-                    "} ]> but was:<[ {" + NEW_LINE +
+                    "} ]> but was:<{" + NEW_LINE +
                     "  \"method\" : \"GET\"," + NEW_LINE +
                     "  \"path\" : \"" + "/test_headers_and_body" + "\"," + NEW_LINE));
         }
@@ -521,7 +521,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found at least 3 times, expected:<{" + NEW_LINE +
                     "  \"path\" : \"" + "/test_headers_and_body" + "\"" + NEW_LINE +
-                    "}> but was:<[ {" + NEW_LINE +
+                    "}> but was:<{" + NEW_LINE +
                     "  \"method\" : \"GET\"," + NEW_LINE +
                     "  \"path\" : \"" + "/test_headers_and_body" + "\"," + NEW_LINE));
         }

@@ -20,7 +20,7 @@ public class HttpForwardToJavaSerializerTest {
                         "                .withHost(\"some_host\")" + NEW_LINE +
                         "                .withPort(9090)" + NEW_LINE +
                         "                .withScheme(HttpForward.Scheme.HTTPS)",
-                new HttpForwardToJavaSerializer().serializeAsJava(1,
+                new HttpForwardToJavaSerializer().serialize(1,
                         new HttpForward()
                                 .withHost("some_host")
                                 .withPort(9090)

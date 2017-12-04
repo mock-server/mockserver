@@ -10,7 +10,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.AttributeKey;
-import org.mockserver.filters.RequestLogFilter;
+import org.mockserver.filters.LogFilter;
 import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,10 +23,10 @@ import java.util.concurrent.TimeUnit;
 
 public class EchoServer {
 
-    static final AttributeKey<RequestLogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
+    static final AttributeKey<LogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     static final AttributeKey<NextResponse> NEXT_RESPONSE = AttributeKey.valueOf("NEXT_RESPONSE");
 
-    private final RequestLogFilter requestLogFilter = new RequestLogFilter();
+    private final LogFilter logFilter = new LogFilter();
     private final NextResponse nextResponse = new NextResponse();
     private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
@@ -49,7 +49,7 @@ public class EchoServer {
                         .option(ChannelOption.SO_BACKLOG, 100)
                         .handler(new LoggingHandler("EchoServer Handler"))
                         .childHandler(new EchoServerInitializer(secure, error))
-                        .childAttr(LOG_FILTER, requestLogFilter)
+                        .childAttr(LOG_FILTER, logFilter)
                         .childAttr(NEXT_RESPONSE, nextResponse)
                         .bind(port)
                         .addListener(new ChannelFutureListener() {
@@ -79,8 +79,8 @@ public class EchoServer {
         eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
     }
 
-    public RequestLogFilter requestLogFilter() {
-        return requestLogFilter;
+    public LogFilter requestLogFilter() {
+        return logFilter;
     }
 
     public EchoServer withNextResponse(HttpResponse... httpResponses) {

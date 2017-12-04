@@ -2,9 +2,8 @@ package org.mockserver.mockserver;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
-import org.mockserver.filters.RequestLogFilter;
 import org.mockserver.logging.LoggingHandler;
-import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.mockserver.callback.WebSocketServerHandler;
 import org.mockserver.server.netty.codec.MockServerServerCodec;
@@ -15,8 +14,7 @@ import org.slf4j.LoggerFactory;
 public class MockServerInitializer extends PortUnificationHandler {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final MockServerMatcher mockServerMatcher = new MockServerMatcher();
-    private final RequestLogFilter requestLogFilter = new RequestLogFilter();
+    private final HttpStateHandler httpStateHandler = new HttpStateHandler();
     private final WebSocketClientRegistry webSocketClientRegistry = new WebSocketClientRegistry();
     private final MockServer mockServer;
 
@@ -39,6 +37,6 @@ public class MockServerInitializer extends PortUnificationHandler {
         pipeline.addLast(new MockServerServerCodec(isSecure));
 
         // add mock server handlers
-        pipeline.addLast(new MockServerHandler(mockServer, mockServerMatcher, webSocketClientRegistry, requestLogFilter));
+        pipeline.addLast(new MockServerHandler(mockServer, httpStateHandler, webSocketClientRegistry));
     }
 }

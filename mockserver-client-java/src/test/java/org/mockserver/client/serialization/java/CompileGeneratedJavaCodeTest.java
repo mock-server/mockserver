@@ -33,7 +33,7 @@ public class CompileGeneratedJavaCodeTest {
     @Test
     public void shouldCompileExpectationWithHttpResponse() throws URISyntaxException {
 
-        String expectationAsJavaCode = new ExpectationToJavaSerializer().serializeAsJava(1,
+        String expectationAsJavaCode = new ExpectationToJavaSerializer().serialize(1,
                 new Expectation(
                         request()
                                 .withMethod("GET")
@@ -89,7 +89,7 @@ public class CompileGeneratedJavaCodeTest {
     @Test
     public void shouldCompileExpectationWithHttpResponseTemplate() throws URISyntaxException {
 
-        String expectationAsJavaCode = new ExpectationToJavaSerializer().serializeAsJava(1,
+        String expectationAsJavaCode = new ExpectationToJavaSerializer().serialize(1,
                 new Expectation(
                         request()
                                 .withMethod("GET")
@@ -136,7 +136,7 @@ public class CompileGeneratedJavaCodeTest {
     @Test
     public void shouldCompileExpectationWithHttpForward() throws URISyntaxException {
 
-        String expectationAsJavaCode = new ExpectationToJavaSerializer().serializeAsJava(1,
+        String expectationAsJavaCode = new ExpectationToJavaSerializer().serialize(1,
                 new Expectation(
                         request()
                                 .withMethod("GET")
@@ -185,7 +185,7 @@ public class CompileGeneratedJavaCodeTest {
     @Test
     public void shouldCompileExpectationWithClassCallback() throws URISyntaxException {
 
-        String expectationAsJavaCode = new ExpectationToJavaSerializer().serializeAsJava(1,
+        String expectationAsJavaCode = new ExpectationToJavaSerializer().serialize(1,
                 new Expectation(
                         request()
                                 .withMethod("GET")
@@ -232,7 +232,7 @@ public class CompileGeneratedJavaCodeTest {
     @Test
     public void shouldCompileExpectationWithObjectCallback() throws URISyntaxException {
 
-        String expectationAsJavaCode = new ExpectationToJavaSerializer().serializeAsJava(1,
+        String expectationAsJavaCode = new ExpectationToJavaSerializer().serialize(1,
                 new Expectation(
                         request()
                                 .withMethod("GET")

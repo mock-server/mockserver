@@ -6,7 +6,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.*;
-import org.mockserver.client.server.MockServerClient;
+import org.mockserver.mock.Expectation;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
@@ -83,16 +84,16 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
         return (!cleanedPath.startsWith("/") ? "/" : "") + cleanedPath;
     }
 
-    protected HttpResponse sendRequest(HttpRequest httpRequest) {
-        HttpResponse httpResponse = nettyHttpClient.sendRequest(
-                httpRequest.withHeader(HOST.toString(), host + ":" + port)
+    protected HttpResponse sendRequest(HttpRequest request) {
+        HttpResponse response = nettyHttpClient.sendRequest(
+                request.withHeader(HOST.toString(), host + ":" + port)
         );
-        if (httpResponse != null &&
-                httpResponse.getStatusCode() != null &&
-                httpResponse.getStatusCode() == BAD_REQUEST.code()) {
-            throw new IllegalArgumentException(httpResponse.getBodyAsString());
+        if (response != null &&
+                response.getStatusCode() != null &&
+                response.getStatusCode() == BAD_REQUEST.code()) {
+            throw new IllegalArgumentException(response.getBodyAsString());
         }
-        return httpResponse;
+        return response;
     }
 
     protected String formatErrorMessage(String message, Object... objects) {
@@ -109,12 +110,6 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
 
     public String contextPath() {
         return contextPath;
-    }
-
-    public enum TYPE {
-        LOG,
-        EXPECTATION,
-        BOTH;
     }
 
     /**
@@ -208,25 +203,25 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
      * Clear expectations, logs or both that match the http
      *
      * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
-     * @param type the type to clear, EXPECTATION, LOG or BOTH
+     * @param type        the type to clear, EXPECTATION, LOG or BOTH
      */
-    public T clear(HttpRequest httpRequest, MockServerClient.TYPE type) {
+    public T clear(HttpRequest httpRequest, HttpStateHandler.ClearType type) {
         sendRequest(request().withMethod("PUT").withPath(calculatePath("clear")).withQueryStringParameter("type", type.name().toLowerCase()).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
         return clientClass.cast(this);
     }
 
     /**
      * Verify a list of requests have been sent in the order specified for example:
-     *
-     *   mockServerClient
-     *           .verify(
-     *                   request()
-     *                           .withPath("/first_request")
-     *                           .withBody("some_request_body"),
-     *                   request()
-     *                           .withPath("/second_request")
-     *                           .withBody("some_request_body")
-     *           );
+     * <p>
+     * mockServerClient
+     * .verify(
+     * request()
+     * .withPath("/first_request")
+     * .withBody("some_request_body"),
+     * request()
+     * .withPath("/second_request")
+     * .withBody("some_request_body")
+     * );
      *
      * @param httpRequests the http requests that must be matched for this verification to pass
      * @throws AssertionError if the request has not been found
@@ -247,23 +242,23 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
 
     /**
      * Verify a request has been sent for example:
-     *
-     *   mockServerClient
-     *           .verify(
-     *                   request()
-     *                           .withPath("/some_path")
-     *                           .withBody("some_request_body"),
-     *                   VerificationTimes.exactly(3)
-     *           );
-     *
+     * <p>
+     * mockServerClient
+     * .verify(
+     * request()
+     * .withPath("/some_path")
+     * .withBody("some_request_body"),
+     * VerificationTimes.exactly(3)
+     * );
+     * <p>
      * VerificationTimes supports multiple static factory methods:
-     *
-     *   once()      - verify the request was only received once
-     *   exactly(n)  - verify the request was only received exactly n times
-     *   atLeast(n)  - verify the request was only received at least n times
+     * <p>
+     * once()      - verify the request was only received once
+     * exactly(n)  - verify the request was only received exactly n times
+     * atLeast(n)  - verify the request was only received at least n times
      *
      * @param httpRequest the http request that must be matched for this verification to pass
-     * @param times the number of times this request must be matched
+     * @param times       the number of times this request must be matched
      * @throws AssertionError if the request has not been found
      */
     public T verify(HttpRequest httpRequest, VerificationTimes times) throws AssertionError {
@@ -296,5 +291,47 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
             throw new AssertionError(result);
         }
         return clientClass.cast(this);
+    }
+
+    /**
+     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
+     */
+    public HttpRequest[] retrieveRecordedRequests(HttpRequest httpRequest) {
+        HttpResponse httpResponse = sendRequest(
+                request()
+                        .withMethod("PUT")
+                        .withPath(calculatePath("retrieve"))
+                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.REQUESTS.name())
+                        .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
+        );
+        if (StringUtils.isNotEmpty(httpResponse.getBodyAsString())) {
+            return httpRequestSerializer.deserializeArray(httpResponse.getBodyAsString());
+        } else {
+            return new HttpRequest[0];
+        }
+    }
+
+    /**
+     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
+     */
+    public Expectation[] retrieveRecordedExpectations(HttpRequest httpRequest) {
+        HttpResponse httpResponse = sendRequest(
+                request()
+                        .withMethod("PUT")
+                        .withPath(calculatePath("retrieve"))
+                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.RECORDED_EXPECTATIONS.name())
+                        .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
+        );
+        if (!joptsimple.internal.Strings.isNullOrEmpty(httpResponse.getBodyAsString())) {
+            return expectationSerializer.deserializeArray(httpResponse.getBodyAsString());
+        } else {
+            return new Expectation[0];
+        }
     }
 }

@@ -15,7 +15,7 @@ public class HeaderToJavaSerializerTest {
     public void shouldSerializeHeader() throws IOException {
         assertEquals(NEW_LINE +
                         "        new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")",
-                new HeaderToJavaSerializer().serializeAsJava(1, new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"))
+                new HeaderToJavaSerializer().serialize(1, new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"))
         );
     }
 

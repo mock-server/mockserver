@@ -15,7 +15,7 @@ public class ParameterToJavaSerializerTest {
     public void shouldSerializeParameter() throws IOException {
         assertEquals(NEW_LINE +
                         "        new Parameter(\"requestParameterNameOne\", \"requestParameterValueOneOne\", \"requestParameterValueOneTwo\")",
-                new ParameterToJavaSerializer().serializeAsJava(1, new Parameter("requestParameterNameOne", "requestParameterValueOneOne", "requestParameterValueOneTwo"))
+                new ParameterToJavaSerializer().serialize(1, new Parameter("requestParameterNameOne", "requestParameterValueOneOne", "requestParameterValueOneTwo"))
         );
     }
 

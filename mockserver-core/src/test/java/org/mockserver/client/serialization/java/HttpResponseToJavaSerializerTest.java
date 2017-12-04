@@ -35,7 +35,7 @@ public class HttpResponseToJavaSerializerTest {
                         "                        new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")" + NEW_LINE +
                         "                )" + NEW_LINE +
                         "                .withBody(\"responseBody\")",
-                new HttpResponseToJavaSerializer().serializeAsJava(1,
+                new HttpResponseToJavaSerializer().serialize(1,
                         new HttpResponse()
                                 .withStatusCode(304)
                                 .withHeaders(
@@ -57,7 +57,7 @@ public class HttpResponseToJavaSerializerTest {
         assertEquals(NEW_LINE +
                         "        response()" + NEW_LINE +
                         "                .withBody(new Base64Converter().base64StringToBytes(\"" + base64Converter.bytesToBase64String("responseBody".getBytes(UTF_8)) + "\"))",
-                new HttpResponseToJavaSerializer().serializeAsJava(1,
+                new HttpResponseToJavaSerializer().serialize(1,
                         new HttpResponse()
                                 .withBody(binary("responseBody".getBytes(UTF_8)))
                 )
@@ -70,7 +70,7 @@ public class HttpResponseToJavaSerializerTest {
                         "        response()" + NEW_LINE +
                         "                .withStatusCode(304)" + NEW_LINE +
                         "                .withBody(\"[" + StringEscapeUtils.escapeJava(NEW_LINE) + "          {" + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "          }," + StringEscapeUtils.escapeJava(NEW_LINE) + "          {" + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "          }," + StringEscapeUtils.escapeJava(NEW_LINE) + "          {" + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "              \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "          }" + StringEscapeUtils.escapeJava(NEW_LINE) + "]\")",
-                new HttpResponseToJavaSerializer().serializeAsJava(1,
+                new HttpResponseToJavaSerializer().serialize(1,
 
                         new HttpResponse()
                                 .withStatusCode(304)
@@ -106,7 +106,7 @@ public class HttpResponseToJavaSerializerTest {
         assertEquals(NEW_LINE +
                         "        response()" + NEW_LINE +
                         "                .withStatusCode(304)",
-                new HttpResponseToJavaSerializer().serializeAsJava(1,
+                new HttpResponseToJavaSerializer().serialize(1,
                         new HttpResponse()
                                 .withStatusCode(304)
                 )

@@ -23,23 +23,27 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
  */
 public class HttpRequestToCurlSerializer {
 
-    public String toCurl(HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) {
+    public String toCurl(HttpRequest request) {
+        return toCurl(request, null);
+    }
+
+    public String toCurl(HttpRequest request, @Nullable InetSocketAddress remoteAddress) {
         StringBuilder curlString = new StringBuilder();
-        if (httpRequest != null) {
-            if (!Strings.isNullOrEmpty(httpRequest.getFirstHeader(HOST.toString())) || remoteAddress != null) {
-                boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
+        if (request != null) {
+            if (!Strings.isNullOrEmpty(request.getFirstHeader(HOST.toString())) || remoteAddress != null) {
+                boolean isSsl = request.isSecure() != null && request.isSecure();
                 curlString.append("curl -v");
                 curlString.append(" ");
                 curlString.append("'");
                 curlString.append((isSsl ? "https" : "http"));
                 curlString.append("://");
-                curlString.append(getHostAndPort(httpRequest, remoteAddress));
-                curlString.append(getUri(httpRequest));
+                curlString.append(getHostAndPort(request, remoteAddress));
+                curlString.append(getUri(request));
                 curlString.append("'");
-                if (!hasDefaultMethod(httpRequest)) {
-                    curlString.append(" -X ").append(httpRequest.getMethod().getValue());
+                if (!hasDefaultMethod(request)) {
+                    curlString.append(" -X ").append(request.getMethod().getValue());
                 }
-                for (Header header : httpRequest.getHeaders()) {
+                for (Header header : request.getHeaders()) {
                     for (NottableString headerValue : header.getValues()) {
                         curlString.append(" -H '").append(header.getName().getValue()).append(": ").append(headerValue.getValue()).append("'");
                         if (header.getName().getValue().toLowerCase().contains("Accept-Encoding".toLowerCase())) {
@@ -52,7 +56,7 @@ public class HttpRequestToCurlSerializer {
                         }
                     }
                 }
-                curlString.append(getCookieHeader(httpRequest));
+                curlString.append(getCookieHeader(request));
             } else {
                 curlString.append("no host header or remote address specified");
             }
@@ -62,12 +66,12 @@ public class HttpRequestToCurlSerializer {
         return curlString.toString();
     }
 
-    private boolean hasDefaultMethod(HttpRequest httpRequest) {
-        return Strings.isNullOrEmpty(httpRequest.getMethod().getValue()) || httpRequest.getMethod().getValue().equalsIgnoreCase("GET");
+    private boolean hasDefaultMethod(HttpRequest request) {
+        return Strings.isNullOrEmpty(request.getMethod().getValue()) || request.getMethod().getValue().equalsIgnoreCase("GET");
     }
 
-    private String getUri(HttpRequest outboundHttpRequest) {
-        String uri = new MockServerHttpRequestToFullHttpRequest().getURI(outboundHttpRequest);
+    private String getUri(HttpRequest request) {
+        String uri = new MockServerHttpRequestToFullHttpRequest().getURI(request);
         if (Strings.isNullOrEmpty(uri)) {
             uri = "/";
         } else if (!StringUtils.startsWith(uri, "/")) {
@@ -76,17 +80,17 @@ public class HttpRequestToCurlSerializer {
         return uri;
     }
 
-    private String getHostAndPort(HttpRequest httpRequest, InetSocketAddress remoteAddress) {
-        String host = httpRequest.getFirstHeader("Host");
+    private String getHostAndPort(HttpRequest request, InetSocketAddress remoteAddress) {
+        String host = request.getFirstHeader("Host");
         if (Strings.isNullOrEmpty(host)) {
             host = remoteAddress.getHostName() + ":" + remoteAddress.getPort();
         }
         return host;
     }
 
-    private String getCookieHeader(HttpRequest httpRequest) {
+    private String getCookieHeader(HttpRequest request) {
         List<Cookie> cookies = new ArrayList<Cookie>();
-        for (org.mockserver.model.Cookie cookie : httpRequest.getCookies()) {
+        for (org.mockserver.model.Cookie cookie : request.getCookies()) {
             cookies.add(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
         }
         if (cookies.size() > 0) {

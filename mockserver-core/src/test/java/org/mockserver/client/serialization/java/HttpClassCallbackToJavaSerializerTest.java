@@ -18,7 +18,7 @@ public class HttpClassCallbackToJavaSerializerTest {
         assertEquals(NEW_LINE +
                         "        callback()" + NEW_LINE +
                         "                .withCallbackClass(\"some_class\")",
-                new HttpCallbackToJavaSerializer().serializeAsJava(1,
+                new HttpCallbackToJavaSerializer().serialize(1,
                         new HttpClassCallback()
                                 .withCallbackClass("some_class")
                 )

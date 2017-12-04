@@ -13,7 +13,7 @@ import static org.mockserver.client.serialization.java.ExpectationToJavaSerializ
 public class HttpResponseTemplateToJavaSerializer implements ToJavaSerializer<HttpTemplate> {
 
     @Override
-    public String serializeAsJava(int numberOfSpacesToIndent, HttpTemplate httpTemplate) {
+    public String serialize(int numberOfSpacesToIndent, HttpTemplate httpTemplate) {
         StringBuffer output = new StringBuffer();
         if (httpTemplate != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("template(HttpTemplate.TemplateType." + httpTemplate.getTemplateType().name() + ")");
@@ -21,7 +21,7 @@ public class HttpResponseTemplateToJavaSerializer implements ToJavaSerializer<Ht
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withTemplate(\"").append(StringEscapeUtils.escapeJava(httpTemplate.getTemplate())).append("\")");
             }
             if (httpTemplate.getDelay() != null) {
-                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDelay(").append(new DelayToJavaSerializer().serializeAsJava(0, httpTemplate.getDelay())).append(")");
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDelay(").append(new DelayToJavaSerializer().serialize(0, httpTemplate.getDelay())).append(")");
             }
         }
 

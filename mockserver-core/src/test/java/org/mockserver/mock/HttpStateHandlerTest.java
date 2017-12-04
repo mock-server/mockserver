@@ -1,348 +1,420 @@
 package org.mockserver.mock;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
-import org.mockserver.filters.RequestLogFilter;
-import org.mockserver.filters.RequestResponseLogFilter;
-import org.mockserver.logging.LogFormatter;
-import org.mockserver.matchers.TimeToLive;
+import org.mockserver.log.model.ExpectationMatchLogEntry;
+import org.mockserver.log.model.RequestLogEntry;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.HttpRequest;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.matchers.TimeToLive.unlimited;
-import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
  */
 public class HttpStateHandlerTest {
 
-    @Mock
-    private LogFormatter mockLogFormatter;
-    // mockserver
-    private RequestLogFilter mockRequestLogFilter;
-    private RequestResponseLogFilter mockRequestResponseLogFilter;
-    private MockServerMatcher mockMockServerMatcher;
-    // serializers
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
-    private ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
+    private ExpectationSerializer httpExpectationSerializer = new ExpectationSerializer();
+    private ExpectationToJavaSerializer httpExpectationToJavaSerializer = new ExpectationToJavaSerializer();
+    @Mock
+    private LoggingFormatter mockLogFormatter;
     @InjectMocks
     private HttpStateHandler httpStateHandler;
 
     @Before
     public void prepareTestFixture() {
-        mockRequestLogFilter = mock(RequestLogFilter.class);
-        mockRequestResponseLogFilter = mock(RequestResponseLogFilter.class);
-        mockMockServerMatcher = mock(MockServerMatcher.class);
-        httpStateHandler = new HttpStateHandler(mockRequestLogFilter, mockRequestResponseLogFilter, mockMockServerMatcher);
+        httpStateHandler = new HttpStateHandler();
         initMocks(this);
     }
 
     @Test
     public void shouldClearLogsAndExpectationsForNullRequestMatcher() {
-        // given
+        // given - a request
         HttpRequest request = request();
+        // given - some existing expectations
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        // given - some log entries
+        httpStateHandler.log(new RequestLogEntry(request("request_one")));
 
         // when
         httpStateHandler.clear(request);
 
-        // then
-        verify(mockMockServerMatcher).clear(null);
-        verify(mockRequestResponseLogFilter).clear(null);
-        verify(mockRequestLogFilter).clear(null);
+        // then - correct log entries removed
+        assertThat(httpStateHandler.retrieve(request), is(""));
+        // then - correct expectations removed
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
+        // then - activity logged
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationOne);
         verify(mockLogFormatter).infoLog("clearing expectations and request logs that match:{}", (Object) null);
     }
 
     @Test
     public void shouldClearLogsAndExpectations() {
-        // given
-        HttpRequest requestMatcher = request().withBody("some_body");
-        HttpRequest request = request().withBody(httpRequestSerializer.serialize(requestMatcher));
+        // given - a request
+        HttpRequest request = request().withBody(httpRequestSerializer.serialize(request("request_one")));
+        // given - some existing expectations
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
+        httpStateHandler.add(expectationTwo);
+        // given - some log entries
+        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+        httpStateHandler.log(new RequestLogEntry(request("request_two")));
 
         // when
         httpStateHandler.clear(request);
 
-        // then
-        verify(mockMockServerMatcher).clear(requestMatcher);
-        verify(mockRequestResponseLogFilter).clear(requestMatcher);
-        verify(mockRequestLogFilter).clear(requestMatcher);
-        verify(mockLogFormatter).infoLog("clearing expectations and request logs that match:{}", requestMatcher);
+        // then - correct log entries removed
+        assertThat(
+                httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_one")))),
+                is("")
+        );
+        assertThat(
+                httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_two")))),
+                is(httpRequestSerializer.serialize(Collections.singletonList(
+                        request("request_two")
+                )))
+        );
+        // then - correct expectations removed
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_two")), is(expectationTwo));
+        // then - activity logged
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).infoLog("clearing expectations and request logs that match:{}", request("request_one"));
     }
 
     @Test
     public void shouldClearLogsOnly() {
-        // given
-        HttpRequest requestMatcher = request().withBody("some_body");
+        // given - a request
         HttpRequest request = request()
                 .withQueryStringParameter("type", "log")
-                .withBody(httpRequestSerializer.serialize(requestMatcher));
+                .withBody(httpRequestSerializer.serialize(request("request_one")));
+        // given - some existing expectations
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
+        httpStateHandler.add(expectationTwo);
+        // given - some log entries
+        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+        httpStateHandler.log(new RequestLogEntry(request("request_two")));
 
         // when
         httpStateHandler.clear(request);
 
-        // then
-        verifyZeroInteractions(mockMockServerMatcher);
-        verifyZeroInteractions(mockRequestResponseLogFilter);
-        verify(mockRequestLogFilter).clear(requestMatcher);
-        verify(mockLogFormatter).infoLog("clearing request logs that match:{}", requestMatcher);
+        // then - correct log entries removed
+        assertThat(
+                httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_one")))),
+                is("")
+        );
+        assertThat(
+                httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_two")))),
+                is(httpRequestSerializer.serialize(Collections.singletonList(
+                        request("request_two")
+                )))
+        );
+        // then - correct expectations removed
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(expectationOne));
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_two")), is(expectationTwo));
+        // then - activity logged
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).infoLog("clearing request logs that match:{}", request("request_one"));
     }
 
     @Test
     public void shouldClearExpectationsOnly() {
-        // given
-        HttpRequest requestMatcher = request().withBody("some_body");
+        // given - a request
         HttpRequest request = request()
-                .withQueryStringParameter("type", "expectation")
-                .withBody(httpRequestSerializer.serialize(requestMatcher));
+                .withQueryStringParameter("type", "expectations")
+                .withBody(httpRequestSerializer.serialize(request("request_one")));
+        // given - some existing expectations
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
+        httpStateHandler.add(expectationTwo);
+        // given - some log entries
+        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+        httpStateHandler.log(new RequestLogEntry(request("request_two")));
 
         // when
         httpStateHandler.clear(request);
 
-        // then
-        verify(mockMockServerMatcher).clear(requestMatcher);
-        verify(mockRequestResponseLogFilter).clear(requestMatcher);
-        verifyZeroInteractions(mockRequestLogFilter);
-        verify(mockLogFormatter).infoLog("clearing expectations that match:{}", requestMatcher);
-    }
-
-    @Test
-    public void shouldDumpRecordedRequestResponsesToLogAsJavaFormatParameter() {
-        // given
-        HttpRequest requestMatcher = request().withBody("some_body");
-        HttpRequest request = request()
-                .withQueryStringParameter("format", "java")
-                .withBody(httpRequestSerializer.serialize(requestMatcher));
-
-        // when
-        httpStateHandler.dumpRecordedRequestResponsesToLog(request);
-
-        // then
-        verify(mockRequestResponseLogFilter).dumpToLog(requestMatcher, true);
-        verify(mockLogFormatter).infoLog("dumped all requests and responses to the log in java that match:{}", requestMatcher);
-    }
-
-    @Test
-    public void shouldDumpRecordedRequestResponsesToLogAsJavaTypeParameter() {
-        // given
-        HttpRequest requestMatcher = request().withBody("some_body");
-        HttpRequest request = request()
-                .withQueryStringParameter("type", "java")
-                .withBody(httpRequestSerializer.serialize(requestMatcher));
-
-        // when
-        httpStateHandler.dumpRecordedRequestResponsesToLog(request);
-
-        // then
-        verify(mockRequestResponseLogFilter).dumpToLog(requestMatcher, true);
-        verify(mockLogFormatter).infoLog("dumped all requests and responses to the log in java that match:{}", requestMatcher);
-    }
-
-    @Test
-    public void shouldDumpRecordedRequestResponsesToLogAsJson() {
-        // given
-        HttpRequest requestMatcher = request().withBody("some_body");
-        HttpRequest request = request()
-                .withBody(httpRequestSerializer.serialize(requestMatcher));
-
-        // when
-        httpStateHandler.dumpRecordedRequestResponsesToLog(request);
-
-        // then
-        verify(mockRequestResponseLogFilter).dumpToLog(requestMatcher, false);
-        verify(mockLogFormatter).infoLog("dumped all requests and responses to the log in json that match:{}", requestMatcher);
-    }
-
-    @Test
-    public void shouldDumpRecordedRequestResponsesToLogAsJsonForNullRequestMatcher() {
-        // given
-        HttpRequest request = request();
-
-        // when
-        httpStateHandler.dumpRecordedRequestResponsesToLog(request);
-
-        // then
-        verify(mockRequestResponseLogFilter).dumpToLog(null, false);
-        verify(mockLogFormatter).infoLog("dumped all requests and responses to the log in json that match:{}", null);
-    }
-
-    @Test
-    public void shouldDumpExpectationsToLogAsJavaFormatParameter() {
-        // given
-        HttpRequest requestMatcher = request().withBody("some_body");
-        HttpRequest request = request()
-                .withQueryStringParameter("format", "java")
-                .withBody(httpRequestSerializer.serialize(requestMatcher));
-
-        // when
-        httpStateHandler.dumpExpectationsToLog(request);
-
-        // then
-        verify(mockMockServerMatcher).dumpToLog(requestMatcher, true);
-        verify(mockLogFormatter).infoLog("dumped all active expectations to the log in java that match:{}", requestMatcher);
-    }
-
-    @Test
-    public void shouldDumpExpectationsToLogAsJavaTypeParameter() {
-        // given
-        HttpRequest requestMatcher = request().withBody("some_body");
-        HttpRequest request = request()
-                .withQueryStringParameter("type", "java")
-                .withBody(httpRequestSerializer.serialize(requestMatcher));
-
-        // when
-        httpStateHandler.dumpExpectationsToLog(request);
-
-        // then
-        verify(mockMockServerMatcher).dumpToLog(requestMatcher, true);
-        verify(mockLogFormatter).infoLog("dumped all active expectations to the log in java that match:{}", requestMatcher);
-    }
-
-    @Test
-    public void shouldDumpExpectationsToLogAsJson() {
-        // given
-        HttpRequest requestMatcher = request().withBody("some_body");
-        HttpRequest request = request()
-                .withBody(httpRequestSerializer.serialize(requestMatcher));
-
-        // when
-        httpStateHandler.dumpExpectationsToLog(request);
-
-        // then
-        verify(mockMockServerMatcher).dumpToLog(requestMatcher, false);
-        verify(mockLogFormatter).infoLog("dumped all active expectations to the log in json that match:{}", requestMatcher);
-    }
-
-    @Test
-    public void shouldRetrieveExpectationsAsJson() {
-        // given
-        HttpRequest requestMatcher = request().withBody("some_body");
-        HttpRequest request = request()
-                .withQueryStringParameter("type", "expectation")
-                .withBody(httpRequestSerializer.serialize(requestMatcher));
-        List<Expectation> expectations = Collections.singletonList(new Expectation(requestMatcher, once(), unlimited()));
-        when(mockMockServerMatcher.retrieveExpectations(requestMatcher)).thenReturn(expectations);
-
-        // when
-        String retrieve = httpStateHandler.retrieve(request);
-
-        // then
-        assertThat(retrieve, is("[ {" + NEW_LINE +
-                "  \"httpRequest\" : {" + NEW_LINE +
-                "    \"body\" : \"some_body\"" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"times\" : {" + NEW_LINE +
-                "    \"remainingTimes\" : 1," + NEW_LINE +
-                "    \"unlimited\" : false" + NEW_LINE +
-                "  }," + NEW_LINE +
-                "  \"timeToLive\" : {" + NEW_LINE +
-                "    \"unlimited\" : true" + NEW_LINE +
-                "  }" + NEW_LINE +
-                "} ]"));
-        verify(mockLogFormatter).infoLog("retrieving expectations that match:{}", requestMatcher);
-    }
-
-    @Test
-    public void shouldRetrieveExpectationsAsJava() {
-        // given
-        HttpRequest requestMatcher = request().withBody("some_body");
-        HttpRequest request = request()
-                .withQueryStringParameter("type", "expectation")
-                .withQueryStringParameter("format", "java")
-                .withBody(httpRequestSerializer.serialize(requestMatcher));
-        List<Expectation> expectations = Collections.singletonList(new Expectation(requestMatcher, once(), unlimited()));
-        when(mockMockServerMatcher.retrieveExpectations(requestMatcher)).thenReturn(expectations);
-
-        // when
-        String retrieve = httpStateHandler.retrieve(request);
-
-        // then
-        assertThat(retrieve, is(NEW_LINE +
-                "new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
-                ".when(" + NEW_LINE +
-                "        request()" + NEW_LINE +
-                "                .withBody(new StringBody(\"some_body\"))," + NEW_LINE +
-                "        Times.once()" + NEW_LINE +
-                ");" + NEW_LINE +
-                NEW_LINE));
-        verify(mockLogFormatter).infoLog("retrieving expectations that match:{}", requestMatcher);
-    }
-
-    @Test
-    public void shouldRetrieveRequestsAsJson() {
-        // given
-        HttpRequest requestMatcher = request().withBody("some_body");
-        HttpRequest request = request()
-                .withBody(httpRequestSerializer.serialize(requestMatcher));
-        List<HttpRequest> httpRequests = Arrays.asList(
-                request("some_path_one"),
-                request("some_path_two")
+        // then - correct log entries removed
+        assertThat(
+                httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_one")))),
+                is(httpRequestSerializer.serialize(Collections.singletonList(
+                        request("request_one")
+                )))
         );
-        when(mockRequestLogFilter.retrieve(requestMatcher)).thenReturn(httpRequests);
-
-        // when
-        String retrieve = httpStateHandler.retrieve(request);
-
-        // then
-        assertThat(retrieve, is("[ {" + NEW_LINE +
-                "  \"path\" : \"some_path_one\"" + NEW_LINE +
-                "}, {" + NEW_LINE +
-                "  \"path\" : \"some_path_two\"" + NEW_LINE +
-                "} ]"));
-        verify(mockLogFormatter).infoLog("retrieving requests that match:{}", requestMatcher);
+        assertThat(
+                httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_two")))),
+                is(httpRequestSerializer.serialize(Collections.singletonList(
+                        request("request_two")
+                )))
+        );
+        // then - correct expectations removed
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_two")), is(expectationTwo));
+        // then - activity logged
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).infoLog("clearing expectations that match:{}", request("request_one"));
     }
 
     @Test
-    public void shouldRetrieveRequestsAsJava() {
+    public void shouldThrowExceptionForInvalidClearType() {
         // given
-        HttpRequest requestMatcher = request().withBody("some_body");
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("\"invalid\" is not a valid value for \"type\" parameter, only the following values are supported [log, expectations, all]"));
+
+        // when
+        httpStateHandler.clear(request().withQueryStringParameter("type", "invalid"));
+    }
+
+    @Test
+    public void shouldRetrieveRecordedRequestsAsJson() {
+        // given - a request
         HttpRequest request = request()
-                .withQueryStringParameter("format", "java")
-                .withBody(httpRequestSerializer.serialize(requestMatcher));
-        List<HttpRequest> httpRequests = Arrays.asList(
-                request("some_path_one"),
-                request("some_path_two")
-        );
-        when(mockRequestLogFilter.retrieve(requestMatcher)).thenReturn(httpRequests);
+                .withBody(httpRequestSerializer.serialize(request("request_one")));
+        // given - some existing expectations
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
+        httpStateHandler.add(expectationTwo);
+        // given - some log entries
+        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+        httpStateHandler.log(new RequestLogEntry(request("request_two")));
+        httpStateHandler.log(new RequestLogEntry(request("request_one")));
 
         // when
         String retrieve = httpStateHandler.retrieve(request);
 
         // then
-        assertThat(retrieve, is(NEW_LINE +
-                "request()" + NEW_LINE +
-                "        .withPath(\"some_path_one\");" + NEW_LINE +
-                NEW_LINE +
-                "request()" + NEW_LINE +
-                "        .withPath(\"some_path_two\");" + NEW_LINE));
-        verify(mockLogFormatter).infoLog("retrieving requests that match:{}", requestMatcher);
+        assertThat(retrieve, is(httpRequestSerializer.serialize(Arrays.asList(
+                request("request_one"),
+                request("request_one")
+        ))));
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).infoLog("retrieving requests in json that match:{}", request("request_one"));
+    }
+
+    @Test
+    public void shouldRetrieveRecordedRequestsAsJava() {
+        // given - a request
+        HttpRequest request = request()
+                .withQueryStringParameter("format", "java")
+                .withBody(httpRequestSerializer.serialize(request("request_one")));
+        // given - some existing expectations
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
+        httpStateHandler.add(expectationTwo);
+        // given - some log entries
+        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+        httpStateHandler.log(new RequestLogEntry(request("request_two")));
+        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+
+        // when
+        String retrieve = httpStateHandler.retrieve(request);
+
+        // then
+        assertThat(retrieve, is(httpRequestToJavaSerializer.serialize(Arrays.asList(
+                request("request_one"),
+                request("request_one")
+        ))));
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).infoLog("retrieving requests in java that match:{}", request("request_one"));
+    }
+
+    @Test
+    public void shouldRetrieveRecordedExpectationsAsJson() {
+        // given - a request
+        HttpRequest request = request()
+                .withQueryStringParameter("type", "recorded_expectations")
+                .withBody(httpRequestSerializer.serialize(request("request_one")));
+        // given - some existing expectations
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
+        httpStateHandler.add(expectationTwo);
+        Expectation expectationThree = new Expectation(request("request_three")).thenRespond(response("request_three"));
+        // given - some log entries
+        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_one"), expectationOne));
+        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_two"), expectationTwo));
+        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_one"), expectationThree));
+
+        // when
+        String retrieve = httpStateHandler.retrieve(request);
+
+        // then
+        assertThat(retrieve, is(httpExpectationSerializer.serialize(Arrays.asList(
+                expectationOne,
+                expectationThree
+        ))));
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).infoLog("retrieving recorded_expectations in json that match:{}", request("request_one"));
+    }
+
+    @Test
+    public void shouldRetrieveRecordedExpectationsAsJava() {
+        // given - a request
+        HttpRequest request = request()
+                .withQueryStringParameter("type", "recorded_expectations")
+                .withQueryStringParameter("format", "java")
+                .withBody(httpRequestSerializer.serialize(request("request_one")));
+        // given - some existing expectations
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
+        httpStateHandler.add(expectationTwo);
+        Expectation expectationThree = new Expectation(request("request_three")).thenRespond(response("request_three"));
+        // given - some log entries
+        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_one"), expectationOne));
+        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_two"), expectationTwo));
+        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_one"), expectationThree));
+
+        // when
+        String retrieve = httpStateHandler.retrieve(request);
+
+        // then
+        assertThat(retrieve, is(httpExpectationToJavaSerializer.serialize(Arrays.asList(
+                expectationOne,
+                expectationThree
+        ))));
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).infoLog("retrieving recorded_expectations in java that match:{}", request("request_one"));
+    }
+
+    @Test
+    public void shouldRetrieveActiveExpectationsAsJson() {
+        // given - a request
+        HttpRequest request = request()
+                .withQueryStringParameter("type", "active_expectations")
+                .withBody(httpRequestSerializer.serialize(request("request_one")));
+        // given - some existing expectations
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
+        httpStateHandler.add(expectationTwo);
+        Expectation expectationThree = new Expectation(request("request_one")).thenRespond(response("request_three"));
+        httpStateHandler.add(expectationThree);
+        // given - some log entries
+        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_one"), expectationOne));
+        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_two"), expectationTwo));
+
+        // when
+        String retrieve = httpStateHandler.retrieve(request);
+
+        // then
+        assertThat(retrieve, is(httpExpectationSerializer.serialize(Arrays.asList(
+                expectationOne,
+                expectationThree
+        ))));
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationThree);
+        verify(mockLogFormatter).infoLog("retrieving active_expectations in json that match:{}", request("request_one"));
+    }
+
+    @Test
+    public void shouldRetrieveActiveExpectationsAsJava() {
+        // given - a request
+        HttpRequest request = request()
+                .withQueryStringParameter("type", "active_expectations")
+                .withQueryStringParameter("format", "java")
+                .withBody(httpRequestSerializer.serialize(request("request_one")));
+        // given - some existing expectations
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
+        httpStateHandler.add(expectationTwo);
+        Expectation expectationThree = new Expectation(request("request_one")).thenRespond(response("request_three"));
+        httpStateHandler.add(expectationThree);
+        // given - some log entries
+        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_one"), expectationOne));
+        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_two"), expectationTwo));
+
+        // when
+        String retrieve = httpStateHandler.retrieve(request);
+
+        // then
+        assertThat(retrieve, is(httpExpectationToJavaSerializer.serialize(Arrays.asList(
+                expectationOne,
+                expectationThree
+        ))));
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationThree);
+        verify(mockLogFormatter).infoLog("retrieving active_expectations in java that match:{}", request("request_one"));
+    }
+
+    @Test
+    public void shouldThrowExceptionForInvalidRetrieveType() {
+        // given
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("\"invalid\" is not a valid value for \"type\" parameter, only the following values are supported [requests, recorded_expectations, active_expectations]"));
+
+        // when
+        httpStateHandler.retrieve(request().withQueryStringParameter("type", "invalid"));
+    }
+
+    @Test
+    public void shouldThrowExceptionForInvalidRetrieveFormat() {
+        // given
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("\"invalid\" is not a valid value for \"format\" parameter, only the following values are supported [java, json]"));
+
+        // when
+        httpStateHandler.retrieve(request().withQueryStringParameter("format", "invalid"));
     }
 
     @Test
     public void shouldReset() {
+        // given - a request
+        HttpRequest request = request();
+        // given - some existing expectations
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        // given - some log entries
+        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+
         // when
         httpStateHandler.reset();
 
-        // then
-        verify(mockMockServerMatcher).reset();
-        verify(mockRequestResponseLogFilter).reset();
-        verify(mockRequestLogFilter).reset();
+        // then - correct log entries removed
+        assertThat(httpStateHandler.retrieve(request), is(""));
+        // then - correct expectations removed
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
+        // then - activity logged
+        verify(mockLogFormatter).infoLog("creating expectation:{}", expectationOne);
         verify(mockLogFormatter).infoLog("resetting all expectations and request logs");
     }
 

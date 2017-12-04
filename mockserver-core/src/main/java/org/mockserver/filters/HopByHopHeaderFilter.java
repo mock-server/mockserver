@@ -11,10 +11,10 @@ import java.util.Locale;
 /**
  * @author jamesdbloom
  */
-public class HopByHopHeaderFilter implements RequestFilter {
+public class HopByHopHeaderFilter {
 
-    public HttpRequest onRequest(HttpRequest httpRequest) {
-        if (httpRequest != null) {
+    public HttpRequest onRequest(HttpRequest request) {
+        if (request != null) {
             List<String> headersToRemove = Arrays.asList(
                     "proxy-connection",
                     "connection",
@@ -27,12 +27,12 @@ public class HopByHopHeaderFilter implements RequestFilter {
                     "upgrade"
             );
             List<Header> filteredHeaders = new ArrayList<Header>();
-            for (Header header : httpRequest.getHeaders()) {
+            for (Header header : request.getHeaders()) {
                 if (!headersToRemove.contains(header.getName().getValue().toLowerCase(Locale.ENGLISH))) {
                     filteredHeaders.add(header);
                 }
             }
-            return httpRequest.clone().withHeaders(filteredHeaders);
+            return request.clone().withHeaders(filteredHeaders);
         } else {
             return null;
         }

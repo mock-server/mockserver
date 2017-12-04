@@ -15,7 +15,7 @@ public class CookieToJavaSerializerTest {
     public void shouldSerializeCookie() throws IOException {
         assertEquals(NEW_LINE +
                         "        new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")",
-                new CookieToJavaSerializer().serializeAsJava(1, new Cookie("requestCookieNameOne", "requestCookieValueOne"))
+                new CookieToJavaSerializer().serialize(1, new Cookie("requestCookieNameOne", "requestCookieValueOne"))
         );
     }
 

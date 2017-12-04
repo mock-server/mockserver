@@ -1,0 +1,22 @@
+package org.mockserver.log.model;
+
+import org.mockserver.mock.Expectation;
+import org.mockserver.model.HttpRequest;
+
+/**
+ * @author jamesdbloom
+ */
+public class ExpectationMatchLogEntry extends LogEntry {
+
+    private final Expectation expectation;
+
+    public ExpectationMatchLogEntry(HttpRequest httpRequest, Expectation expectation) {
+        super(httpRequest);
+        this.expectation = expectation;
+    }
+
+    public Expectation getExpectation() {
+        return expectation;
+    }
+
+}
