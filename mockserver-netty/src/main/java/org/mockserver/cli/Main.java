@@ -19,11 +19,18 @@ import static org.mockserver.character.Character.NEW_LINE;
  * @author jamesdbloom
  */
 public class Main {
-    public static final String SERVER_PORT_KEY = "serverPort";
-    public static final String PROXY_PORT_KEY = "proxyPort";
-    public static final String PROXY_REMOTE_PORT_KEY = "proxyRemotePort";
-    public static final String PROXY_REMOTE_HOST_KEY = "proxyRemoteHost";
-    public static final String USAGE = "" +
+    static {
+        if (System.getProperty("logback.configurationFile") == null) {
+            System.setProperty("logback.configurationFile", "example_logback.xml");
+            System.setProperty("mockserver.logLevel", "WARN");
+        }
+    }
+
+    private static final String SERVER_PORT_KEY = "serverPort";
+    private static final String PROXY_PORT_KEY = "proxyPort";
+    private static final String PROXY_REMOTE_PORT_KEY = "proxyRemotePort";
+    private static final String PROXY_REMOTE_HOST_KEY = "proxyRemoteHost";
+    static final String USAGE = "" +
             "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]" + NEW_LINE +
             "                                                                                       " + NEW_LINE +
             "     valid options are:                                                                " + NEW_LINE +
