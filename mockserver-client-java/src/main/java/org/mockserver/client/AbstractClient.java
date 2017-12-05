@@ -7,10 +7,8 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.*;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.HttpStatusCode;
+import org.mockserver.model.Format;
+import org.mockserver.model.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
@@ -205,7 +203,7 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
      * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
      * @param type        the type to clear, EXPECTATION, LOG or BOTH
      */
-    public T clear(HttpRequest httpRequest, HttpStateHandler.ClearType type) {
+    public T clear(HttpRequest httpRequest, ClearType type) {
         sendRequest(request().withMethod("PUT").withPath(calculatePath("clear")).withQueryStringParameter("type", type.name().toLowerCase()).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
         return clientClass.cast(this);
     }
@@ -300,15 +298,9 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
      * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
     public HttpRequest[] retrieveRecordedRequests(HttpRequest httpRequest) {
-        HttpResponse httpResponse = sendRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath(calculatePath("retrieve"))
-                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.REQUESTS.name())
-                        .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
-        );
-        if (StringUtils.isNotEmpty(httpResponse.getBodyAsString())) {
-            return httpRequestSerializer.deserializeArray(httpResponse.getBodyAsString());
+        String recordedRequests = retrieveRecordedRequests(httpRequest, Format.JSON);
+        if (StringUtils.isNotEmpty(recordedRequests)) {
+            return httpRequestSerializer.deserializeArray(recordedRequests);
         } else {
             return new HttpRequest[0];
         }
@@ -320,18 +312,48 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
      * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
      * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
-    public Expectation[] retrieveRecordedExpectations(HttpRequest httpRequest) {
+    public String retrieveRecordedRequests(HttpRequest httpRequest, Format format) {
         HttpResponse httpResponse = sendRequest(
                 request()
                         .withMethod("PUT")
                         .withPath(calculatePath("retrieve"))
-                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.RECORDED_EXPECTATIONS.name())
+                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                        .withQueryStringParameter("format", format.name())
                         .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
         );
-        if (!joptsimple.internal.Strings.isNullOrEmpty(httpResponse.getBodyAsString())) {
-            return expectationSerializer.deserializeArray(httpResponse.getBodyAsString());
+        return httpResponse.getBodyAsString();
+    }
+
+    /**
+     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
+     */
+    public Expectation[] retrieveRecordedExpectations(HttpRequest httpRequest) {
+        String recordedExpectations = retrieveRecordedExpectations(httpRequest, Format.JSON);
+        if (!Strings.isNullOrEmpty(recordedExpectations)) {
+            return expectationSerializer.deserializeArray(recordedExpectations);
         } else {
             return new Expectation[0];
         }
+    }
+
+    /**
+     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
+     */
+    public String retrieveRecordedExpectations(HttpRequest httpRequest, Format format) {
+        HttpResponse httpResponse = sendRequest(
+                request()
+                        .withMethod("PUT")
+                        .withPath(calculatePath("retrieve"))
+                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                        .withQueryStringParameter("format", format.name())
+                        .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
+        );
+        return httpResponse.getBodyAsString();
     }
 }

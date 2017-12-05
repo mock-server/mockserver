@@ -17,7 +17,6 @@ import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.model.*;
 import org.mockserver.verify.Verification;
@@ -535,7 +534,7 @@ public class MockServerClientTest {
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // when
-        mockServerClient.clear(someRequestMatcher, HttpStateHandler.ClearType.LOG);
+        mockServerClient.clear(someRequestMatcher, ClearType.LOG);
 
         // then
         verify(mockHttpClient).sendRequest(
@@ -588,7 +587,8 @@ public class MockServerClientTest {
                         .withHeader(HOST.toString(), "localhost:" + 1080)
                         .withMethod("PUT")
                         .withPath("/retrieve")
-                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.REQUESTS.name())
+                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
                         .withBody(someRequestMatcher.toString(), Charsets.UTF_8));
         verify(mockHttpRequestSerializer).deserializeArray("body");
     }
@@ -609,7 +609,8 @@ public class MockServerClientTest {
                         .withHeader(HOST.toString(), "localhost:" + 1080)
                         .withMethod("PUT")
                         .withPath("/retrieve")
-                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.REQUESTS.name())
+                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
                         .withBody("", Charsets.UTF_8)
         );
         verify(mockHttpRequestSerializer).deserializeArray("body");
@@ -639,14 +640,15 @@ public class MockServerClientTest {
                         .withHeader(HOST.toString(), "localhost:" + 1080)
                         .withMethod("PUT")
                         .withPath("/retrieve")
-                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.ACTIVE_EXPECTATIONS.name())
+                        .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
                         .withBody(someRequestMatcher.toString(), Charsets.UTF_8)
         );
         verify(mockExpectationSerializer).deserializeArray("body");
     }
 
     @Test
-    public void shouldRetrieveSetupExpectationsWithNullRequest() throws UnsupportedEncodingException {
+    public void shouldRetrieveActiveExpectationsWithNullRequest() throws UnsupportedEncodingException {
         // given
         Expectation[] expectations = {};
         when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("body"));
@@ -661,7 +663,8 @@ public class MockServerClientTest {
                         .withHeader(HOST.toString(), "localhost:" + 1080)
                         .withMethod("PUT")
                         .withPath("/retrieve")
-                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.ACTIVE_EXPECTATIONS.name())
+                        .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
                         .withBody("", Charsets.UTF_8)
         );
         verify(mockExpectationSerializer).deserializeArray("body");
@@ -691,7 +694,8 @@ public class MockServerClientTest {
                         .withHeader(HOST.toString(), "localhost:" + 1080)
                         .withMethod("PUT")
                         .withPath("/retrieve")
-                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.RECORDED_EXPECTATIONS.name())
+                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
                         .withBody(someRequestMatcher.toString(), Charsets.UTF_8)
         );
         verify(mockExpectationSerializer).deserializeArray("body");
@@ -713,7 +717,8 @@ public class MockServerClientTest {
                         .withHeader(HOST.toString(), "localhost:" + 1080)
                         .withMethod("PUT")
                         .withPath("/retrieve")
-                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.RECORDED_EXPECTATIONS.name())
+                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
                         .withBody("", Charsets.UTF_8)
         );
         verify(mockExpectationSerializer).deserializeArray("body");

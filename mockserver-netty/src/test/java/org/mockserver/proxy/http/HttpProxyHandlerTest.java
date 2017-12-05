@@ -18,6 +18,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.RetrieveType;
 import org.mockserver.proxy.Proxy;
 
 import java.net.InetSocketAddress;
@@ -181,7 +182,7 @@ public class HttpProxyHandlerTest {
         ));
         HttpRequest expectationRetrieveExpectationsRequest = request("/retrieve")
                 .withMethod("PUT")
-                .withQueryStringParameter("type", HttpStateHandler.RetrieveType.RECORDED_EXPECTATIONS.name())
+                .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withBody(
                         httpRequestSerializer.serialize(request("request_one"))
                 );

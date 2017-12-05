@@ -1,5 +1,6 @@
 package org.mockserver.client.netty.websocket;
 
+import com.google.common.base.Strings;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -7,7 +8,6 @@ import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.websocketx.*;
-import joptsimple.internal.Strings;
 import org.mockserver.client.netty.codec.mappers.FullHttpResponseToMockServerResponse;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.slf4j.Logger;

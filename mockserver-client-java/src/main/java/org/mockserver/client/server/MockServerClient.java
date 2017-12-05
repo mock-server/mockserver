@@ -1,14 +1,15 @@
 package org.mockserver.client.server;
 
 import com.google.common.base.Charsets;
-import joptsimple.internal.Strings;
+import com.google.common.base.Strings;
 import org.mockserver.client.AbstractClient;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.model.Format;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.RetrieveType;
 
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
@@ -107,17 +108,29 @@ public class MockServerClient extends AbstractClient<MockServerClient> {
      * @return an array of all expectations that have been setup
      */
     public Expectation[] retrieveActiveExpectations(HttpRequest httpRequest) {
+        String activeExpectations = retrieveActiveExpectations(httpRequest, Format.JSON);
+        if (!Strings.isNullOrEmpty(activeExpectations)) {
+            return expectationSerializer.deserializeArray(activeExpectations);
+        } else {
+            return new Expectation[0];
+        }
+    }
+
+    /**
+     * Retrieve the already setup expectations match the httpRequest parameter, use null for the parameter to retrieve all expectations
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * @return an array of all expectations that have been setup
+     */
+    public String retrieveActiveExpectations(HttpRequest httpRequest, Format format) {
         HttpResponse httpResponse = sendRequest(
                 request()
                         .withMethod("PUT")
                         .withPath(calculatePath("retrieve"))
-                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.ACTIVE_EXPECTATIONS.name())
+                        .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+                        .withQueryStringParameter("format", format.name())
                         .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
         );
-        if (!Strings.isNullOrEmpty(httpResponse.getBodyAsString())) {
-            return expectationSerializer.deserializeArray(httpResponse.getBodyAsString());
-        } else {
-            return new Expectation[0];
-        }
+        return httpResponse.getBodyAsString();
     }
 }

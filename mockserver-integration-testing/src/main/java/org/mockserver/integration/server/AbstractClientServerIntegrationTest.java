@@ -7,10 +7,14 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
+import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.matchers.HttpRequestMatcher;
@@ -18,7 +22,6 @@ import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
@@ -4904,103 +4907,6 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldRetrieveSequenceOfRequestsReceivedIncludingThoseNotMatchingAnException() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_one")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                notFoundResponse(),
-                makeRequest(
-                        request().withPath(calculatePath("not_found")),
-                        headersToIgnore)
-        );
-        assertEquals(
-                response("some_body"),
-                makeRequest(
-                        request().withPath(calculatePath("some_path_three")),
-                        headersToIgnore)
-        );
-
-        // then
-        verifyRequestMatches(
-                mockServerClient.retrieveRecordedRequests(request().withPath(calculatePath("some_path.*"))),
-                request(calculatePath("some_path_one")),
-                request(calculatePath("some_path_three"))
-        );
-
-        verifyRequestMatches(
-                mockServerClient.retrieveRecordedRequests(request()),
-                request(calculatePath("some_path_one")),
-                request(calculatePath("not_found")),
-                request(calculatePath("some_path_three"))
-        );
-
-        verifyRequestMatches(
-                mockServerClient.retrieveRecordedRequests(null),
-                request(calculatePath("some_path_one")),
-                request(calculatePath("not_found")),
-                request(calculatePath("some_path_three"))
-        );
-    }
-
-    @Test
-    public void shouldRetrieveSequenceOfExpectationsSetup() {
-        // when
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4))
-                .respond(response().withBody("some_body"));
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")))
-                .respond(response().withBody("some_body"));
-        mockServerClient.when(request().withPath(calculatePath("some_other_path")))
-                .respond(response().withBody("some_other_body"));
-        mockServerClient.when(request().withPath(calculatePath("some_forward_path")))
-                .forward(forward());
-
-        // then
-        assertThat(
-                mockServerClient.retrieveActiveExpectations(request().withPath(calculatePath("some_path.*"))),
-                arrayContaining(
-                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
-                                .thenRespond(response().withBody("some_body")),
-                        expectation(request().withPath(calculatePath("some_path.*")))
-                                .thenRespond(response().withBody("some_body"))
-                )
-        );
-
-        assertThat(
-                mockServerClient.retrieveActiveExpectations(null),
-                arrayContaining(
-                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
-                                .thenRespond(response().withBody("some_body")),
-                        expectation(request().withPath(calculatePath("some_path.*")))
-                                .thenRespond(response().withBody("some_body")),
-                        expectation(request().withPath(calculatePath("some_other_path")))
-                                .thenRespond(response().withBody("some_other_body")),
-                        expectation(request().withPath(calculatePath("some_forward_path")))
-                                .thenForward(forward())
-                )
-        );
-
-        assertThat(
-                mockServerClient.retrieveActiveExpectations(request()),
-                arrayContaining(
-                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
-                                .thenRespond(response().withBody("some_body")),
-                        expectation(request().withPath(calculatePath("some_path.*")))
-                                .thenRespond(response().withBody("some_body")),
-                        expectation(request().withPath(calculatePath("some_other_path")))
-                                .thenRespond(response().withBody("some_other_body")),
-                        expectation(request().withPath(calculatePath("some_forward_path")))
-                                .thenForward(forward())
-                )
-        );
-    }
-
-    @Test
     public void shouldVerifySequenceOfRequestsNotReceived() {
         // when
         mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(6)).respond(response().withBody("some_body"));
@@ -5057,6 +4963,392 @@ public abstract class AbstractClientServerIntegrationTest {
                     "} ]> but was:<[ {" + NEW_LINE +
                     "  \"method\" : \"GET\"," + NEW_LINE +
                     "  \"path\" : \"" + calculatePath("some_path_one") + "\"," + NEW_LINE));
+        }
+    }
+
+    @Test
+    public void shouldRetrieveRecordedRequests() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_one")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                notFoundResponse(),
+                makeRequest(
+                        request().withPath(calculatePath("not_found")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_three")),
+                        headersToIgnore)
+        );
+
+        // then
+        verifyRequestsMatches(
+                mockServerClient.retrieveRecordedRequests(request().withPath(calculatePath("some_path.*"))),
+                request(calculatePath("some_path_one")),
+                request(calculatePath("some_path_three"))
+        );
+
+        verifyRequestsMatches(
+                mockServerClient.retrieveRecordedRequests(request()),
+                request(calculatePath("some_path_one")),
+                request(calculatePath("not_found")),
+                request(calculatePath("some_path_three"))
+        );
+
+        verifyRequestsMatches(
+                mockServerClient.retrieveRecordedRequests(null),
+                request(calculatePath("some_path_one")),
+                request(calculatePath("not_found")),
+                request(calculatePath("some_path_three"))
+        );
+    }
+
+    @Test
+    public void shouldRetrieveRecordedRequestsAsJson() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_one")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                notFoundResponse(),
+                makeRequest(
+                        request().withPath(calculatePath("not_found")),
+                        headersToIgnore)
+        );
+        assertEquals(
+                response("some_body"),
+                makeRequest(
+                        request().withPath(calculatePath("some_path_three")),
+                        headersToIgnore)
+        );
+
+        // then
+        verifyRequestsMatches(
+                new HttpRequestSerializer().deserializeArray(mockServerClient.retrieveRecordedRequests(request().withPath(calculatePath("some_path.*")), Format.JSON)),
+                request(calculatePath("some_path_one")),
+                request(calculatePath("some_path_three"))
+        );
+
+        verifyRequestsMatches(
+                new HttpRequestSerializer().deserializeArray(mockServerClient.retrieveRecordedRequests(request(), Format.JSON)),
+                request(calculatePath("some_path_one")),
+                request(calculatePath("not_found")),
+                request(calculatePath("some_path_three"))
+        );
+
+        verifyRequestsMatches(
+                new HttpRequestSerializer().deserializeArray(mockServerClient.retrieveRecordedRequests(null, Format.JSON)),
+                request(calculatePath("some_path_one")),
+                request(calculatePath("not_found")),
+                request(calculatePath("some_path_three"))
+        );
+    }
+
+    @Test
+    public void shouldRetrieveActiveExpectations() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4))
+                .respond(response().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")))
+                .respond(response().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_other_path")))
+                .respond(response().withBody("some_other_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_forward_path")))
+                .forward(forward());
+
+        // then
+        assertThat(
+                mockServerClient.retrieveActiveExpectations(request().withPath(calculatePath("some_path.*"))),
+                arrayContaining(
+                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_path.*")))
+                                .thenRespond(response().withBody("some_body"))
+                )
+        );
+
+        assertThat(
+                mockServerClient.retrieveActiveExpectations(null),
+                arrayContaining(
+                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_path.*")))
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_other_path")))
+                                .thenRespond(response().withBody("some_other_body")),
+                        expectation(request().withPath(calculatePath("some_forward_path")))
+                                .thenForward(forward())
+                )
+        );
+
+        assertThat(
+                mockServerClient.retrieveActiveExpectations(request()),
+                arrayContaining(
+                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_path.*")))
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_other_path")))
+                                .thenRespond(response().withBody("some_other_body")),
+                        expectation(request().withPath(calculatePath("some_forward_path")))
+                                .thenForward(forward())
+                )
+        );
+    }
+
+    @Test
+    public void shouldRetrieveActiveExpectationsAsJson() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4))
+                .respond(response().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")))
+                .respond(response().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_other_path")))
+                .respond(response().withBody("some_other_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_forward_path")))
+                .forward(forward());
+
+        // then
+        assertThat(
+                mockServerClient.retrieveActiveExpectations(request().withPath(calculatePath("some_path.*")), Format.JSON),
+                is(new ExpectationSerializer().serialize(Arrays.asList(
+                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_path.*")))
+                                .thenRespond(response().withBody("some_body"))
+                )))
+        );
+
+        assertThat(
+                mockServerClient.retrieveActiveExpectations(null, Format.JSON),
+                is(new ExpectationSerializer().serialize(Arrays.asList(
+                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_path.*")))
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_other_path")))
+                                .thenRespond(response().withBody("some_other_body")),
+                        expectation(request().withPath(calculatePath("some_forward_path")))
+                                .thenForward(forward())
+                )))
+        );
+
+        assertThat(
+                mockServerClient.retrieveActiveExpectations(request(), Format.JSON),
+                is(new ExpectationSerializer().serialize(Arrays.asList(
+                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_path.*")))
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_other_path")))
+                                .thenRespond(response().withBody("some_other_body")),
+                        expectation(request().withPath(calculatePath("some_forward_path")))
+                                .thenForward(forward())
+                )))
+        );
+    }
+
+    @Test
+    public void shouldRetrieveActiveExpectationsAsJava() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4))
+                .respond(response().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")))
+                .respond(response().withBody("some_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_other_path")))
+                .respond(response().withBody("some_other_body"));
+        mockServerClient.when(request().withPath(calculatePath("some_forward_path")))
+                .forward(forward());
+
+        // then
+        assertThat(
+                mockServerClient.retrieveActiveExpectations(request().withPath(calculatePath("some_path.*")), Format.JAVA),
+                is(new ExpectationToJavaSerializer().serialize(Arrays.asList(
+                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_path.*")))
+                                .thenRespond(response().withBody("some_body"))
+                )))
+        );
+
+        assertThat(
+                mockServerClient.retrieveActiveExpectations(null, Format.JAVA),
+                is(new ExpectationToJavaSerializer().serialize(Arrays.asList(
+                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_path.*")))
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_other_path")))
+                                .thenRespond(response().withBody("some_other_body")),
+                        expectation(request().withPath(calculatePath("some_forward_path")))
+                                .thenForward(forward())
+                )))
+        );
+
+        assertThat(
+                mockServerClient.retrieveActiveExpectations(request(), Format.JAVA),
+                is(new ExpectationToJavaSerializer().serialize(Arrays.asList(
+                        new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_path.*")))
+                                .thenRespond(response().withBody("some_body")),
+                        expectation(request().withPath(calculatePath("some_other_path")))
+                                .thenRespond(response().withBody("some_other_body")),
+                        expectation(request().withPath(calculatePath("some_forward_path")))
+                                .thenForward(forward())
+                )))
+        );
+    }
+
+    @Test
+    public void shouldRetrieveRecordedExpectations() {
+        // when
+        int testServerHttpPort = PortFactory.findFreePort();
+        EchoServer secureEchoServer = new EchoServer(testServerHttpPort, false);
+        try {
+            mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).forward(
+                    forward()
+                            .withHost("127.0.0.1")
+                            .withPort(testServerHttpPort)
+            );
+            assertEquals(
+                    response("some_body_one"),
+                    makeRequest(
+                            request().withPath(calculatePath("some_path_one")).withBody("some_body_one"),
+                            headersToIgnore
+                    )
+            );
+            assertEquals(
+                    response("some_body_three"),
+                    makeRequest(
+                            request().withPath(calculatePath("some_path_three")).withBody("some_body_three"),
+                            headersToIgnore
+                    )
+            );
+
+            // then
+            Expectation[] recordedExpectations = mockServerClient.retrieveRecordedExpectations(request().withPath(calculatePath("some_path_one")));
+            assertThat(recordedExpectations.length, is(1));
+            verifyRequestsMatches(
+                    new HttpRequest[]{
+                            recordedExpectations[0].getHttpRequest()
+                    },
+                    request(calculatePath("some_path_one")).withBody("some_body_one")
+            );
+            assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
+            // and
+            recordedExpectations =  mockServerClient.retrieveRecordedExpectations(request());
+            assertThat(recordedExpectations.length, is(2));
+            verifyRequestsMatches(
+                    new HttpRequest[]{
+                            recordedExpectations[0].getHttpRequest(),
+                            recordedExpectations[1].getHttpRequest()
+                    },
+                    request(calculatePath("some_path_one")).withBody("some_body_one"),
+                    request(calculatePath("some_path_three")).withBody("some_body_three")
+            );
+            assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
+            assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
+            // and
+            recordedExpectations =  mockServerClient.retrieveRecordedExpectations(null);
+            assertThat(recordedExpectations.length, is(2));
+            verifyRequestsMatches(
+                    new HttpRequest[]{
+                            recordedExpectations[0].getHttpRequest(),
+                            recordedExpectations[1].getHttpRequest()
+                    },
+                    request(calculatePath("some_path_one")).withBody("some_body_one"),
+                    request(calculatePath("some_path_three")).withBody("some_body_three")
+            );
+            assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
+            assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
+        } finally {
+            secureEchoServer.stop();
+        }
+    }
+
+    @Test
+    public void shouldRetrieveRecordedExpectationsAsJson() {
+        // when
+        int testServerHttpPort = PortFactory.findFreePort();
+        EchoServer secureEchoServer = new EchoServer(testServerHttpPort, false);
+        try {
+            mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).forward(
+                    forward()
+                            .withHost("127.0.0.1")
+                            .withPort(testServerHttpPort)
+            );
+            assertEquals(
+                    response("some_body_one"),
+                    makeRequest(
+                            request().withPath(calculatePath("some_path_one")).withBody("some_body_one"),
+                            headersToIgnore
+                    )
+            );
+            assertEquals(
+                    response("some_body_three"),
+                    makeRequest(
+                            request().withPath(calculatePath("some_path_three")).withBody("some_body_three"),
+                            headersToIgnore
+                    )
+            );
+
+            // then
+            Expectation[] recordedExpectations = new ExpectationSerializer().deserializeArray(
+                    mockServerClient.retrieveRecordedExpectations(request().withPath(calculatePath("some_path_one")), Format.JSON)
+            );
+            assertThat(recordedExpectations.length, is(1));
+            verifyRequestsMatches(
+                    new HttpRequest[]{
+                            recordedExpectations[0].getHttpRequest()
+                    },
+                    request(calculatePath("some_path_one")).withBody("some_body_one")
+            );
+            assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
+            // and
+            recordedExpectations = new ExpectationSerializer().deserializeArray(
+                    mockServerClient.retrieveRecordedExpectations(request(), Format.JSON)
+            );
+            assertThat(recordedExpectations.length, is(2));
+            verifyRequestsMatches(
+                    new HttpRequest[]{
+                            recordedExpectations[0].getHttpRequest(),
+                            recordedExpectations[1].getHttpRequest()
+                    },
+                    request(calculatePath("some_path_one")).withBody("some_body_one"),
+                    request(calculatePath("some_path_three")).withBody("some_body_three")
+            );
+            assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
+            assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
+            // and
+            recordedExpectations = new ExpectationSerializer().deserializeArray(
+                    mockServerClient.retrieveRecordedExpectations(null, Format.JSON)
+            );
+            assertThat(recordedExpectations.length, is(2));
+            verifyRequestsMatches(
+                    new HttpRequest[]{
+                            recordedExpectations[0].getHttpRequest(),
+                            recordedExpectations[1].getHttpRequest()
+                    },
+                    request(calculatePath("some_path_one")).withBody("some_body_one"),
+                    request(calculatePath("some_path_three")).withBody("some_body_three")
+            );
+            assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
+            assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
+        } finally {
+            secureEchoServer.stop();
         }
     }
 
@@ -5125,7 +5417,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
 
         // and then - request log cleared
-        verifyRequestMatches(
+        verifyRequestsMatches(
                 mockServerClient.retrieveRecordedRequests(null),
                 request(calculatePath("some_path2"))
         );
@@ -5197,7 +5489,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .clear(
                         request()
                                 .withPath(calculatePath("some_path1")),
-                        HttpStateHandler.ClearType.EXPECTATIONS
+                        ClearType.EXPECTATIONS
                 );
 
         // then - expectations cleared
@@ -5216,7 +5508,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
 
         // and then - request log not cleared
-        verifyRequestMatches(
+        verifyRequestsMatches(
                 mockServerClient.retrieveRecordedRequests(null),
                 request(calculatePath("some_path1")),
                 request(calculatePath("some_path2"))
@@ -5270,7 +5562,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .clear(
                         request()
                                 .withPath(calculatePath("some_path1")),
-                        HttpStateHandler.ClearType.LOG
+                        ClearType.LOG
                 );
 
         // then - expectations cleared
@@ -5297,7 +5589,7 @@ public abstract class AbstractClientServerIntegrationTest {
         );
 
         // and then - request log cleared
-        verifyRequestMatches(
+        verifyRequestsMatches(
                 mockServerClient.retrieveRecordedRequests(null),
                 request(calculatePath("some_path2"))
         );
@@ -5907,7 +6199,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/path\""));
     }
 
-    protected void verifyRequestMatches(HttpRequest[] httpRequests, HttpRequest... httpRequestMatchers) {
+    protected void verifyRequestsMatches(HttpRequest[] httpRequests, HttpRequest... httpRequestMatchers) {
         if (httpRequests.length != httpRequestMatchers.length) {
             throw new AssertionError("Number of request matchers does not match number of requests, expected:<" + httpRequestMatchers.length + "> but was:<" + httpRequests.length + ">");
         } else {

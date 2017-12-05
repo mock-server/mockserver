@@ -14,6 +14,7 @@ import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.RetrieveType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -179,7 +180,7 @@ public class ProxyServletTest {
                 "/retrieve",
                 httpRequestSerializer.serialize(request("request_one"))
         );
-        expectationRetrieveExpectationsRequest.setQueryString("type=" + HttpStateHandler.RetrieveType.RECORDED_EXPECTATIONS.name());
+        expectationRetrieveExpectationsRequest.setQueryString("type=" + RetrieveType.RECORDED_EXPECTATIONS.name());
 
         // when
         proxyServlet.service(expectationRetrieveExpectationsRequest, response);

@@ -12,6 +12,7 @@ import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.model.RetrieveType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -174,7 +175,7 @@ public class MockServerServletTest {
                 "/retrieve",
                 httpRequestSerializer.serialize(request("request_one"))
         );
-        expectationRetrieveExpectationsRequest.setQueryString("type=" + HttpStateHandler.RetrieveType.RECORDED_EXPECTATIONS.name());
+        expectationRetrieveExpectationsRequest.setQueryString("type=" + RetrieveType.RECORDED_EXPECTATIONS.name());
 
         // when
         mockServerServlet.service(expectationRetrieveExpectationsRequest, response);
@@ -213,7 +214,7 @@ public class MockServerServletTest {
                 "/retrieve",
                 httpRequestSerializer.serialize(request("request_one"))
         );
-        expectationRetrieveExpectationsRequest.setQueryString("type=" + HttpStateHandler.RetrieveType.ACTIVE_EXPECTATIONS.name());
+        expectationRetrieveExpectationsRequest.setQueryString("type=" + RetrieveType.ACTIVE_EXPECTATIONS.name());
 
         // when
         mockServerServlet.service(expectationRetrieveExpectationsRequest, response);

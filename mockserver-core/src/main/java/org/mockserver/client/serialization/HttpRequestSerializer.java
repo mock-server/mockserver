@@ -3,7 +3,7 @@ package org.mockserver.client.serialization;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
-import joptsimple.internal.Strings;
+import com.google.common.base.Strings;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;

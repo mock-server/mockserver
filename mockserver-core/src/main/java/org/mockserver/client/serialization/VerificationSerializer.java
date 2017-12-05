@@ -1,7 +1,7 @@
 package org.mockserver.client.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import joptsimple.internal.Strings;
+import com.google.common.base.Strings;
 import org.mockserver.client.serialization.model.VerificationDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaVerificationValidator;
 import org.mockserver.verify.Verification;

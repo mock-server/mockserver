@@ -15,9 +15,9 @@ import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
-import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.RetrieveType;
 import org.mockserver.responsewriter.ResponseWriter;
 
 import java.util.Arrays;
@@ -179,7 +179,7 @@ public class MockServerHandlerTest {
         ));
         HttpRequest expectationRetrieveExpectationsRequest = request("/retrieve")
                 .withMethod("PUT")
-                .withQueryStringParameter("type", HttpStateHandler.RetrieveType.RECORDED_EXPECTATIONS.name())
+                .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withBody(
                         httpRequestSerializer.serialize(request("request_one"))
                 );
@@ -216,7 +216,7 @@ public class MockServerHandlerTest {
         httpStateHandler.add(expectationOne);
         HttpRequest expectationRetrieveExpectationsRequest = request("/retrieve")
                 .withMethod("PUT")
-                .withQueryStringParameter("type", HttpStateHandler.RetrieveType.ACTIVE_EXPECTATIONS.name())
+                .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withBody(
                         httpRequestSerializer.serialize(request("request_one"))
                 );

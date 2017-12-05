@@ -260,20 +260,4 @@ public class HttpStateHandler {
         return webSocketClientRegistry;
     }
 
-    public enum RetrieveType {
-        REQUESTS,
-        RECORDED_EXPECTATIONS,
-        ACTIVE_EXPECTATIONS
-    }
-
-    public enum ClearType {
-        LOG,
-        EXPECTATIONS,
-        ALL
-    }
-
-    public enum Format {
-        JAVA,
-        JSON
-    }
 }

@@ -1,6 +1,7 @@
 package org.mockserver.client.proxy;
 
 import com.google.common.base.Charsets;
+import org.apache.velocity.runtime.directive.contrib.For;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -14,15 +15,13 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpStatusCode;
-import org.mockserver.model.StringBody;
+import org.mockserver.model.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
 import java.io.UnsupportedEncodingException;
+import java.text.Normalizer;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.CoreMatchers.is;
@@ -195,7 +194,7 @@ public class ProxyClientTest {
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // when
-        proxyClient.clear(someRequestMatcher, HttpStateHandler.ClearType.LOG);
+        proxyClient.clear(someRequestMatcher, ClearType.LOG);
 
         // then
         verify(mockHttpClient).sendRequest(
@@ -248,7 +247,8 @@ public class ProxyClientTest {
                         .withHeader(HOST.toString(), "localhost:" + 1090)
                         .withMethod("PUT")
                         .withPath("/retrieve")
-                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.REQUESTS.name())
+                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
                         .withBody(someRequestMatcher.toString(), Charsets.UTF_8));
         verify(mockHttpRequestSerializer).deserializeArray("body");
     }
@@ -269,7 +269,8 @@ public class ProxyClientTest {
                         .withHeader(HOST.toString(), "localhost:" + 1090)
                         .withMethod("PUT")
                         .withPath("/retrieve")
-                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.REQUESTS.name())
+                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
                         .withBody("", Charsets.UTF_8)
         );
         verify(mockHttpRequestSerializer).deserializeArray("body");
@@ -299,7 +300,8 @@ public class ProxyClientTest {
                         .withHeader(HOST.toString(), "localhost:" + 1090)
                         .withMethod("PUT")
                         .withPath("/retrieve")
-                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.RECORDED_EXPECTATIONS.name())
+                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
                         .withBody(someRequestMatcher.toString(), Charsets.UTF_8)
         );
         verify(mockExpectationSerializer).deserializeArray("body");
@@ -321,7 +323,8 @@ public class ProxyClientTest {
                         .withHeader(HOST.toString(), "localhost:" + 1090)
                         .withMethod("PUT")
                         .withPath("/retrieve")
-                        .withQueryStringParameter("type", HttpStateHandler.RetrieveType.RECORDED_EXPECTATIONS.name())
+                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
                         .withBody("", Charsets.UTF_8)
         );
         verify(mockExpectationSerializer).deserializeArray("body");

@@ -2,7 +2,7 @@ package org.mockserver.client.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
-import joptsimple.internal.Strings;
+import com.google.common.base.Strings;
 import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.mock.Expectation;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;

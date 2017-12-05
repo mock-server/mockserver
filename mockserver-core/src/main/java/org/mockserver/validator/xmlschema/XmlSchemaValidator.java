@@ -1,6 +1,6 @@
 package org.mockserver.validator.xmlschema;
 
-import joptsimple.internal.Strings;
+import com.google.common.base.Strings;
 import org.mockserver.file.FileReader;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.validator.Validator;
