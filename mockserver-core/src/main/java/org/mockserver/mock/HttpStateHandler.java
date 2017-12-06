@@ -185,8 +185,7 @@ public class HttpStateHandler {
 
             responseWriter.writeResponse(request, OK);
 
-        }
-        if (request.matches("PUT", "/expectation")) {
+        } else if (request.matches("PUT", "/expectation")) {
 
             for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString())) {
                 if (!warDeployment || validateSupportedFeatures(expectation, request, responseWriter)) {
