@@ -11,6 +11,8 @@ import io.netty.handler.codec.socks.SocksInitRequestDecoder;
 import io.netty.handler.codec.socks.SocksMessageEncoder;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
+import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.relay.RelayConnectHandler;
 import org.mockserver.proxy.socks.SocksProxyHandler;
 import org.mockserver.proxy.unification.PortUnificationHandler;
@@ -29,6 +31,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockserver.proxy.Proxy.HTTP_PROXY;
+import static org.mockserver.proxy.Proxy.STATE_HANDLER;
 
 public class HttpProxyUnificationHandlerSOCKSErrorTest {
 
@@ -110,7 +114,10 @@ public class HttpProxyUnificationHandlerSOCKSErrorTest {
     @Test
     public void shouldSwitchToHttp() {
         // given
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationHandler());
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel();
+        embeddedChannel.attr(STATE_HANDLER).set(new HttpStateHandler());
+        embeddedChannel.attr(HTTP_PROXY).set(mock(Proxy.class));
+        embeddedChannel.pipeline().addLast(new HttpProxyUnificationHandler());
 
         // and - no HTTP handlers
         assertThat(embeddedChannel.pipeline().get(HttpServerCodec.class), is(nullValue()));

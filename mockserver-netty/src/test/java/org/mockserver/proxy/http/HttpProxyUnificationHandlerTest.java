@@ -12,6 +12,8 @@ import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.ssl.SslHandler;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
+import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.relay.RelayConnectHandler;
 import org.mockserver.proxy.socks.SocksProxyHandler;
 import org.slf4j.Logger;
@@ -25,6 +27,8 @@ import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.proxy.Proxy.HTTP_PROXY;
+import static org.mockserver.proxy.Proxy.STATE_HANDLER;
 
 public class HttpProxyUnificationHandlerTest {
 
@@ -96,7 +100,10 @@ public class HttpProxyUnificationHandlerTest {
     @Test
     public void shouldSwitchToHttp() {
         // given
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationHandler());
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel();
+        embeddedChannel.attr(STATE_HANDLER).set(new HttpStateHandler());
+        embeddedChannel.attr(HTTP_PROXY).set(mock(Proxy.class));
+        embeddedChannel.pipeline().addLast(new HttpProxyUnificationHandler());
 
         // and - no HTTP handlers
         assertThat(embeddedChannel.pipeline().get(HttpServerCodec.class), is(nullValue()));
