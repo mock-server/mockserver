@@ -29,14 +29,14 @@ public class HttpRequestSerializer extends StdSerializer<HttpRequest> {
         if (httpRequest.getPath() != null && !Strings.isNullOrEmpty(httpRequest.getPath().getValue())) {
             jgen.writeObjectField("path", httpRequest.getPath());
         }
-        if (httpRequest.getQueryStringParameters() != null && !httpRequest.getQueryStringParameters().isEmpty()) {
-            jgen.writeObjectField("queryStringParameters", httpRequest.getQueryStringParameters());
+        if (httpRequest.getQueryStringParameterList() != null && !httpRequest.getQueryStringParameterList().isEmpty()) {
+            jgen.writeObjectField("queryStringParameters", httpRequest.getQueryStringParameterList());
         }
-        if (httpRequest.getHeaders() != null && !httpRequest.getHeaders().isEmpty()) {
-            jgen.writeObjectField("headers", httpRequest.getHeaders());
+        if (httpRequest.getHeaderList() != null && !httpRequest.getHeaderList().isEmpty()) {
+            jgen.writeObjectField("headers", httpRequest.getHeaderList());
         }
-        if (httpRequest.getCookies() != null && !httpRequest.getCookies().isEmpty()) {
-            jgen.writeObjectField("cookies", httpRequest.getCookies());
+        if (httpRequest.getCookieList() != null && !httpRequest.getCookieList().isEmpty()) {
+            jgen.writeObjectField("cookies", httpRequest.getCookieList());
         }
         if (httpRequest.isKeepAlive() != null) {
             jgen.writeBooleanField("keepAlive", httpRequest.isKeepAlive());

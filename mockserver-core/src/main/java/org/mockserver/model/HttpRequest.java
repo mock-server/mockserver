@@ -2,15 +2,11 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
-import org.mockserver.client.serialization.model.HttpRequestDTO;
 
 import java.nio.charset.Charset;
 import java.util.*;
 
-import static org.mockserver.model.Cookie.cookie;
-import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
-import static org.mockserver.model.Parameter.param;
 
 /**
  * @author jamesdbloom
@@ -18,10 +14,10 @@ import static org.mockserver.model.Parameter.param;
 public class HttpRequest extends Not {
     private NottableString method = string("");
     private NottableString path = string("");
-    private Map<NottableString, Parameter> queryStringParameters = new LinkedHashMap<NottableString, Parameter>();
+    private Parameters queryStringParameters = new Parameters();
     private Body body = null;
-    private Map<NottableString, Header> headers = new LinkedHashMap<NottableString, Header>();
-    private Map<NottableString, Cookie> cookies = new LinkedHashMap<NottableString, Cookie>();
+    private Headers headers = new Headers();
+    private Cookies cookies = new Cookies();
     private Boolean keepAlive = null;
     private Boolean secure = null;
 
@@ -134,10 +130,7 @@ public class HttpRequest extends Not {
      * @param parameters the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
     public HttpRequest withQueryStringParameters(List<Parameter> parameters) {
-        this.queryStringParameters.clear();
-        for (Parameter parameter : parameters) {
-            withQueryStringParameter(parameter);
-        }
+        this.queryStringParameters.withEntries(parameters);
         return this;
     }
 
@@ -148,7 +141,8 @@ public class HttpRequest extends Not {
      * @param parameters the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
     public HttpRequest withQueryStringParameters(Parameter... parameters) {
-        return withQueryStringParameters(Arrays.asList(parameters));
+        this.queryStringParameters.withEntries(parameters);
+        return this;
     }
 
     /**
@@ -158,12 +152,7 @@ public class HttpRequest extends Not {
      * @param parameters the Map<String, List<String>> object where the values or keys of each parameter can be either a string or a regex
      */
     public HttpRequest withQueryStringParameters(Map<String, List<String>> parameters) {
-        this.queryStringParameters.clear();
-        for (String name : parameters.keySet()) {
-            for (String value : parameters.get(name)) {
-                withQueryStringParameter(new Parameter(name, value));
-            }
-        }
+        this.queryStringParameters.withEntries(parameters);
         return this;
     }
 
@@ -174,11 +163,7 @@ public class HttpRequest extends Not {
      * @param parameter the Parameter object which can have a values list of strings or regular expressions
      */
     public HttpRequest withQueryStringParameter(Parameter parameter) {
-        if (this.queryStringParameters.containsKey(parameter.getName())) {
-            this.queryStringParameters.get(parameter.getName()).addNottableValues(parameter.getValues());
-        } else {
-            this.queryStringParameters.put(parameter.getName(), parameter);
-        }
+        this.queryStringParameters.withEntry(parameter);
         return this;
     }
 
@@ -190,11 +175,7 @@ public class HttpRequest extends Not {
      * @param values the parameter values which can be a varags of strings or regular expressions
      */
     public HttpRequest withQueryStringParameter(String name, String... values) {
-        if (this.queryStringParameters.containsKey(string(name))) {
-            this.queryStringParameters.get(string(name)).addValues(values);
-        } else {
-            this.queryStringParameters.put(string(name), param(name, values));
-        }
+        this.queryStringParameters.withEntry(name, values);
         return this;
     }
 
@@ -208,55 +189,28 @@ public class HttpRequest extends Not {
      * @param values the parameter values which can be a varags of NottableStrings
      */
     public HttpRequest withQueryStringParameter(NottableString name, NottableString... values) {
-        if (this.queryStringParameters.containsKey(name)) {
-            this.queryStringParameters.get(name).addValues(values);
-        } else {
-            this.queryStringParameters.put(name, param(name, values));
-        }
+        this.queryStringParameters.withEntry(name, values);
         return this;
     }
 
-    public List<Parameter> getQueryStringParameters() {
-        return new ArrayList<>(queryStringParameters.values());
+    public Parameters getQueryStringParameters() {
+        return this.queryStringParameters;
     }
 
-    public boolean hasQueryStringParameter(String name, String expectedValue) {
-        return hasQueryStringParameter(string(name), string(expectedValue));
+    public List<Parameter> getQueryStringParameterList() {
+        return this.queryStringParameters.getEntries();
     }
 
-    public boolean hasQueryStringParameter(NottableString name, NottableString expectedValue) {
-        if (name == null) {
-            throw new IllegalArgumentException("Name must not be null");
-        }
-        if (expectedValue == null) {
-            throw new IllegalArgumentException("Expected value must not be null");
-        }
-        Parameter parameter = queryStringParameters.get(name);
-        if (parameter != null) {
-            for (NottableString actualValue : parameter.getValues()) {
-                if (expectedValue.equals(actualValue)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    public boolean hasQueryStringParameter(String name, String value) {
+        return this.queryStringParameters.containsEntry(name, value);
+    }
+
+    public boolean hasQueryStringParameter(NottableString name, NottableString value) {
+        return this.queryStringParameters.containsEntry(name, value);
     }
 
     public String getFirstQueryStringParameter(String name) {
-        String firstParameterValue = "";
-        Parameter parameter = queryStringParameters.get(string(name));
-        if (parameter == null) {
-            parameter = queryStringParameters.get(string(name.toLowerCase()));
-        }
-        if (parameter == null) {
-            parameter = queryStringParameters.get(string(name).capitalize());
-        }
-        if (parameter != null) {
-            if (!parameter.getValues().isEmpty() && !Strings.isNullOrEmpty(parameter.getValues().get(0).getValue())) {
-                firstParameterValue = parameter.getValues().get(0).getValue();
-            }
-        }
-        return firstParameterValue;
+        return this.queryStringParameters.getFirstValue(name);
     }
 
     /**
@@ -395,10 +349,7 @@ public class HttpRequest extends Not {
      * @param headers the list of Header objects where the values or keys of each header can be either a string or a regex
      */
     public HttpRequest withHeaders(List<Header> headers) {
-        this.headers.clear();
-        for (Header header : headers) {
-            withHeader(header);
-        }
+        this.headers.withEntries(headers);
         return this;
     }
 
@@ -409,9 +360,7 @@ public class HttpRequest extends Not {
      * @param headers the varags of Header objects where the values or keys of each header can be either a string or a regex
      */
     public HttpRequest withHeaders(Header... headers) {
-        if (headers != null) {
-            withHeaders(Arrays.asList(headers));
-        }
+        this.headers.withEntries(headers);
         return this;
     }
 
@@ -422,11 +371,7 @@ public class HttpRequest extends Not {
      * @param header the Header object which can have a values list of strings or regular expressions
      */
     public HttpRequest withHeader(Header header) {
-        if (this.headers.containsKey(header.getName())) {
-            this.headers.get(header.getName()).addNottableValues(header.getValues());
-        } else {
-            this.headers.put(header.getName(), header);
-        }
+        this.headers.withEntry(header);
         return this;
     }
 
@@ -438,11 +383,7 @@ public class HttpRequest extends Not {
      * @param values the header values which can be a varags of strings or regular expressions
      */
     public HttpRequest withHeader(String name, String... values) {
-        if (this.headers.containsKey(string(name))) {
-            this.headers.get(string(name)).addValues(values);
-        } else {
-            this.headers.put(string(name), header(name, values));
-        }
+        this.headers.withEntry(name, values);
         return this;
     }
 
@@ -456,11 +397,7 @@ public class HttpRequest extends Not {
      * @param values the header values which can be a varags of NottableStrings
      */
     public HttpRequest withHeader(NottableString name, NottableString... values) {
-        if (this.headers.containsKey(name)) {
-            this.headers.get(name).addValues(values);
-        } else {
-            this.headers.put(name, header(name, values));
-        }
+        this.headers.withEntry(name, values);
         return this;
     }
 
@@ -471,34 +408,24 @@ public class HttpRequest extends Not {
      * @param header the Header object which can have a values list of strings or regular expressions
      */
     public HttpRequest replaceHeader(Header header) {
-        for (NottableString key : new HashSet<NottableString>(this.headers.keySet())) {
-            if (header.getName().getValue().equalsIgnoreCase(key.getValue()) && header.getName().isNot() == key.isNot()) {
-                this.headers.remove(key);
-            }
-        }
-        this.headers.put(header.getName(), header);
+        this.headers.replaceEntry(header);
         return this;
     }
 
-    public List<Header> getHeaders() {
-        return new ArrayList<Header>(headers.values());
+    public List<Header> getHeaderList() {
+        return this.headers.getEntries();
+    }
+
+    public Headers getHeaders() {
+        return this.headers;
+    }
+
+    public List<String> getHeader(String name) {
+        return this.headers.getValues(name);
     }
 
     public String getFirstHeader(String name) {
-        String firstHeaderValue = "";
-        Header header = headers.get(string(name));
-        if (header == null) {
-            header = headers.get(string(name.toLowerCase()));
-        }
-        if (header == null) {
-            header = headers.get(string(name).capitalize());
-        }
-        if (header != null) {
-            if (!header.getValues().isEmpty() && !Strings.isNullOrEmpty(header.getValues().get(0).getValue())) {
-                firstHeaderValue = header.getValues().get(0).getValue();
-            }
-        }
-        return firstHeaderValue;
+        return this.headers.getFirstValue(name);
     }
 
     /**
@@ -508,20 +435,17 @@ public class HttpRequest extends Not {
      * @return true if a header has been added with that name otherwise false
      */
     public boolean containsHeader(String name) {
-        return headers.containsKey(string(name)) || headers.containsKey(string(name.toLowerCase()));
+        return this.headers.containsEntry(name);
     }
 
     /**
      * The cookies to match on as a list of Cookie objects where the values or keys of each cookie can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
-     * @param cookies the list of Cookie objects where the values or keys of each cookie can be either a string or a regex
+     * @param cookies a list of Cookie objects
      */
     public HttpRequest withCookies(List<Cookie> cookies) {
-        this.cookies.clear();
-        for (Cookie cookie : cookies) {
-            withCookie(cookie);
-        }
+        this.cookies.withEntries(cookies);
         return this;
     }
 
@@ -529,12 +453,10 @@ public class HttpRequest extends Not {
      * The cookies to match on as a varags Cookie objects where the values or keys of each cookie can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
-     * @param cookies the varags Cookie objects where the values or keys of each cookie can be either a string or a regex
+     * @param cookies a varargs of Cookie objects
      */
     public HttpRequest withCookies(Cookie... cookies) {
-        if (cookies != null) {
-            withCookies(Arrays.asList(cookies));
-        }
+        this.cookies.withEntries(cookies);
         return this;
     }
 
@@ -542,10 +464,10 @@ public class HttpRequest extends Not {
      * Adds one cookie to match on as a Cookie object where the cookie values list can be a list of strings or regular expressions
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
-     * @param cookie the Cookie object which can have a values list of strings or regular expressions
+     * @param cookie a Cookie object
      */
     public HttpRequest withCookie(Cookie cookie) {
-        this.cookies.put(cookie.getName(), cookie);
+        this.cookies.withEntry(cookie);
         return this;
     }
 
@@ -554,10 +476,10 @@ public class HttpRequest extends Not {
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param name  the cookies name
-     * @param value the cookies value which can be a string or regular expression
+     * @param value the cookies value
      */
     public HttpRequest withCookie(String name, String value) {
-        this.cookies.put(string(name), cookie(name, value));
+        this.cookies.withEntry(name, value);
         return this;
     }
 
@@ -568,25 +490,29 @@ public class HttpRequest extends Not {
      * http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
      *
      * @param name  the cookies name
-     * @param value the cookies value which can be a string or regular expression
+     * @param value the cookies value
      */
     public HttpRequest withCookie(NottableString name, NottableString value) {
-        this.cookies.put(name, cookie(name, value));
+        this.cookies.withEntry(name, value);
         return this;
     }
 
-    public List<Cookie> getCookies() {
-        return new ArrayList<Cookie>(cookies.values());
+    public List<Cookie> getCookieList() {
+        return this.cookies.getEntries();
+    }
+
+    public Cookies getCookies() {
+        return this.cookies;
     }
 
     public HttpRequest clone() {
         return not(request(), not)
                 .withMethod(method)
                 .withPath(path)
-                .withQueryStringParameters(getQueryStringParameters())
+                .withQueryStringParameters(getQueryStringParameterList())
                 .withBody(body)
-                .withHeaders(getHeaders())
-                .withCookies(getCookies())
+                .withHeaders(getHeaderList())
+                .withCookies(getCookieList())
                 .withKeepAlive(keepAlive)
                 .withSecure(secure);
     }

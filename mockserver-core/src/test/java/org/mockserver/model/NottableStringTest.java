@@ -88,4 +88,15 @@ public class NottableStringTest {
         assertFalse(string("value").equalsIgnoreCase(NottableString.not("VALUE")));
     }
 
+    @Test
+    public void shouldConvertToString() {
+        assertThat(NottableString.not("value").toString(), is("!value"));
+        assertThat("" + NottableString.not("value"), is("!value"));
+        assertThat(String.valueOf(NottableString.not("value")), is("!value"));
+
+        assertThat(NottableString.string("value").toString(), is("value"));
+        assertThat("" + NottableString.string("value"), is("value"));
+        assertThat(String.valueOf(NottableString.string("value")), is("value"));
+    }
+
 }

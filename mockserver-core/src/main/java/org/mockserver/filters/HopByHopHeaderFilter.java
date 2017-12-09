@@ -27,7 +27,7 @@ public class HopByHopHeaderFilter {
                     "upgrade"
             );
             List<Header> filteredHeaders = new ArrayList<Header>();
-            for (Header header : request.getHeaders()) {
+            for (Header header : request.getHeaderList()) {
                 if (!headersToRemove.contains(header.getName().getValue().toLowerCase(Locale.ENGLISH))) {
                     filteredHeaders.add(header);
                 }

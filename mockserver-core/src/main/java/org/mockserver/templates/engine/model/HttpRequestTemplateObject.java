@@ -26,17 +26,17 @@ public class HttpRequestTemplateObject extends ObjectWithJsonToString {
         if (httpRequest != null) {
             method = httpRequest.getMethod().getValue();
             path = httpRequest.getPath().getValue();
-            for (Header header : httpRequest.getHeaders()) {
+            for (Header header : httpRequest.getHeaderList()) {
                 headers.put(header.getName().getValue(), Lists.transform(header.getValues(), new Function<NottableString, String>() {
                     public String apply(NottableString input) {
                         return input.getValue();
                     }
                 }));
             }
-            for (Cookie cookie : httpRequest.getCookies()) {
+            for (Cookie cookie : httpRequest.getCookieList()) {
                 cookies.put(cookie.getName().getValue(), cookie.getValue().getValue());
             }
-            for (Parameter parameter : httpRequest.getQueryStringParameters()) {
+            for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
                 queryStringParameters.put(parameter.getName().getValue(), Lists.transform(parameter.getValues(), new Function<NottableString, String>() {
                     public String apply(NottableString input) {
                         return input.getValue();

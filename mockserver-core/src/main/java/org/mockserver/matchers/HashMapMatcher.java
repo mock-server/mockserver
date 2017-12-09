@@ -2,7 +2,9 @@ package org.mockserver.matchers;
 
 import org.mockserver.collections.CaseInsensitiveRegexHashMap;
 import org.mockserver.model.KeyAndValue;
+import org.mockserver.model.KeysAndValues;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -15,15 +17,19 @@ public class HashMapMatcher extends NotMatcher<List<KeyAndValue>> {
         this.hashMap = hashMap;
     }
 
+    public boolean matches(KeyAndValue... values) {
+        return matches(Arrays.asList(values));
+    }
+
     public boolean matches(List<KeyAndValue> values) {
         boolean result = false;
 
         if (hashMap == null) {
             result = true;
-        } else if (KeyAndValue.toHashMap(values).containsAll(hashMap)) {
+        } else if (KeysAndValues.toCaseInsensitiveRegexMultiMap(values).containsAll(hashMap)) {
             result = true;
         } else {
-            logger.trace("Map [{}] is not a subset of [{}]", this.hashMap, KeyAndValue.toHashMap(values));
+            logger.trace("Map [{}] is not a subset of {}", this.hashMap, values);
         }
 
         return reverseResultIfNot(result);

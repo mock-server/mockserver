@@ -29,7 +29,7 @@ import static org.mockserver.model.NottableString.string;
  */
 public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
 
-    private static final Logger logger = LoggerFactory.getLogger(ObjectMapperFactory.class);
+    private static final Logger logger = LoggerFactory.getLogger(BodyDTODeserializer.class);
 
     private static Map<String, Body.Type> fieldNameToType = new HashMap<String, Body.Type>();
 

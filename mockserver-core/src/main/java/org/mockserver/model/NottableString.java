@@ -1,6 +1,8 @@
 package org.mockserver.model;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -15,9 +17,42 @@ public class NottableString extends Not {
 
     private final String value;
 
+
     private NottableString(String value, Boolean not) {
         this.value = value;
         this.not = not;
+    }
+
+    public static NottableString deserializeNottableString(String string) {
+        if (string.startsWith("!")) {
+            return not(string.replaceFirst("^!", ""));
+        } else {
+            return string(string.replaceFirst("^!", ""));
+        }
+    }
+
+    public static List<NottableString> deserializeNottableStrings(String... strings) {
+        return deserializeNottableStrings(Arrays.asList(strings));
+    }
+
+    public static List<NottableString> deserializeNottableStrings(List<String> strings) {
+        return Lists.transform(strings, new Function<String, NottableString>() {
+            public NottableString apply(String input) {
+                return deserializeNottableString(input);
+            }
+        });
+    }
+
+    public static String serialiseNottableString(NottableString nottableString) {
+        return (nottableString.isNot() ? "!" : "") + nottableString.value;
+    }
+
+    public static List<String> serialiseNottableString(List<NottableString> strings) {
+        return Lists.transform(strings, new Function<NottableString, String>() {
+            public String apply(NottableString input) {
+                return serialiseNottableString(input);
+            }
+        });
     }
 
     public static NottableString string(String value, Boolean not) {

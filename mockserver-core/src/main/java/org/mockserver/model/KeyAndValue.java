@@ -23,20 +23,6 @@ public class KeyAndValue extends ObjectWithJsonToString {
         this.value = value;
     }
 
-    public static CaseInsensitiveRegexHashMap toHashMap(List<? extends KeyAndValue> keyAndValue) {
-        CaseInsensitiveRegexHashMap caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap();
-        if (keyAndValue != null) {
-            for (KeyAndValue keyToMultiValue : keyAndValue) {
-                caseInsensitiveRegexHashMap.put(keyToMultiValue.getName(), keyToMultiValue.getValue());
-            }
-        }
-        return caseInsensitiveRegexHashMap;
-    }
-
-    public static CaseInsensitiveRegexHashMap toHashMap(KeyAndValue... keyToMultiValues) {
-        return toHashMap(Arrays.asList(keyToMultiValues));
-    }
-
     public NottableString getName() {
         return name;
     }

@@ -43,7 +43,7 @@ public class HttpRequestToCurlSerializer {
                 if (!hasDefaultMethod(request)) {
                     curlString.append(" -X ").append(request.getMethod().getValue());
                 }
-                for (Header header : request.getHeaders()) {
+                for (Header header : request.getHeaderList()) {
                     for (NottableString headerValue : header.getValues()) {
                         curlString.append(" -H '").append(header.getName().getValue()).append(": ").append(headerValue.getValue()).append("'");
                         if (header.getName().getValue().toLowerCase().contains("Accept-Encoding".toLowerCase())) {
@@ -90,7 +90,7 @@ public class HttpRequestToCurlSerializer {
 
     private String getCookieHeader(HttpRequest request) {
         List<Cookie> cookies = new ArrayList<Cookie>();
-        for (org.mockserver.model.Cookie cookie : request.getCookies()) {
+        for (org.mockserver.model.Cookie cookie : request.getCookieList()) {
             cookies.add(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
         }
         if (cookies.size() > 0) {

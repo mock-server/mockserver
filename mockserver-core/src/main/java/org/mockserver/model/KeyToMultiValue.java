@@ -2,10 +2,7 @@ package org.mockserver.model;
 
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.NottableString.strings;
@@ -31,27 +28,11 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
 
     public KeyToMultiValue(NottableString name, Collection<NottableString> values) {
         this.name = name;
-        if (values != null) {
-            this.values = new ArrayList<NottableString>(values);
+        if (values == null || values.isEmpty()) {
+            this.values = Collections.singletonList(string(".*"));
         } else {
-            this.values = new ArrayList<NottableString>();
+            this.values = new ArrayList<>(values);
         }
-    }
-
-    public static CaseInsensitiveRegexMultiMap toMultiMap(List<? extends KeyToMultiValue> keyToMultiValues) {
-        CaseInsensitiveRegexMultiMap caseInsensitiveRegexMultiMap = new CaseInsensitiveRegexMultiMap();
-        if (keyToMultiValues != null) {
-            for (KeyToMultiValue keyToMultiValue : keyToMultiValues) {
-                for (NottableString value : keyToMultiValue.getValues()) {
-                    caseInsensitiveRegexMultiMap.put(keyToMultiValue.getName(), value);
-                }
-            }
-        }
-        return caseInsensitiveRegexMultiMap;
-    }
-
-    public static CaseInsensitiveRegexMultiMap toMultiMap(KeyToMultiValue... keyToMultiValues) {
-        return toMultiMap(Arrays.asList(keyToMultiValues));
     }
 
     public NottableString getName() {

@@ -80,11 +80,11 @@ public class HttpRequestDTOTest {
 
         // then
         assertThat(builtHttpRequest.getBody(), Is.<org.mockserver.model.Body>is(exact(body)));
-        assertThat(builtHttpRequest.getCookies(), containsInAnyOrder(cookie));
-        assertThat(builtHttpRequest.getHeaders(), containsInAnyOrder(header));
+        assertThat(builtHttpRequest.getCookieList(), containsInAnyOrder(cookie));
+        assertThat(builtHttpRequest.getHeaderList(), containsInAnyOrder(header));
         assertThat(builtHttpRequest.getMethod(), is(string(method)));
         assertThat(builtHttpRequest.getPath(), is(string(path)));
-        assertThat(builtHttpRequest.getQueryStringParameters(), containsInAnyOrder(parameter));
+        assertThat(builtHttpRequest.getQueryStringParameterList(), containsInAnyOrder(parameter));
         assertThat(builtHttpRequest.isKeepAlive(), is(Boolean.TRUE));
         assertThat(builtHttpRequest.isSecure(), is(Boolean.TRUE));
     }

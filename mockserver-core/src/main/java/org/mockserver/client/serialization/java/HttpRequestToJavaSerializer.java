@@ -41,9 +41,9 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withPath(\"").append(request.getPath().getValue()).append("\")");
             }
-            outputHeaders(numberOfSpacesToIndent + 1, output, request.getHeaders());
-            outputCookies(numberOfSpacesToIndent + 1, output, request.getCookies());
-            outputQueryStringParameter(numberOfSpacesToIndent + 1, output, request.getQueryStringParameters());
+            outputHeaders(numberOfSpacesToIndent + 1, output, request.getHeaderList());
+            outputCookies(numberOfSpacesToIndent + 1, output, request.getCookieList());
+            outputQueryStringParameter(numberOfSpacesToIndent + 1, output, request.getQueryStringParameterList());
             if (request.isSecure() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withSecure(").append(request.isSecure().toString()).append(")");

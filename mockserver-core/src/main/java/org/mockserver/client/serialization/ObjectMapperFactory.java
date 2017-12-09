@@ -6,11 +6,15 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.mockserver.client.serialization.deserializers.collections.HeadersDeserializer;
 import org.mockserver.client.serialization.deserializers.body.BodyDTODeserializer;
 import org.mockserver.client.serialization.deserializers.body.BodyWithContentTypeDTODeserializer;
+import org.mockserver.client.serialization.deserializers.collections.ParametersDeserializer;
 import org.mockserver.client.serialization.deserializers.string.NottableStringDeserializer;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.client.serialization.serializers.collections.HeadersSerializer;
 import org.mockserver.client.serialization.serializers.body.*;
+import org.mockserver.client.serialization.serializers.collections.ParametersSerializer;
 import org.mockserver.client.serialization.serializers.request.HttpRequestDTOSerializer;
 import org.mockserver.client.serialization.serializers.response.HttpResponseDTOSerializer;
 import org.mockserver.client.serialization.serializers.response.HttpResponseSerializer;
@@ -92,6 +96,11 @@ public class ObjectMapperFactory {
             // response
             addSerializer(HttpResponse.class, new HttpResponseSerializer());
             addSerializer(HttpResponseDTO.class, new HttpResponseDTOSerializer());
+            // key and multivalue
+            addDeserializer(Headers.class, new HeadersDeserializer());
+            addSerializer(Headers.class, new HeadersSerializer());
+            addDeserializer(Parameters.class, new ParametersDeserializer());
+            addSerializer(Parameters.class, new ParametersSerializer());
         }
 
     }

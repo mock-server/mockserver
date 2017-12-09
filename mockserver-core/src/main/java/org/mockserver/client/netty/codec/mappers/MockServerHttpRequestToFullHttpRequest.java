@@ -40,7 +40,7 @@ public class MockServerHttpRequestToFullHttpRequest {
 
     public String getURI(HttpRequest httpRequest) {
         QueryStringEncoder queryStringEncoder = new QueryStringEncoder(httpRequest.getPath().getValue());
-        for (Parameter parameter : httpRequest.getQueryStringParameters()) {
+        for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
             for (NottableString value : parameter.getValues()) {
                 queryStringEncoder.addParam(parameter.getName().getValue(), value.getValue());
             }
@@ -68,7 +68,7 @@ public class MockServerHttpRequestToFullHttpRequest {
 
     private void setCookies(HttpRequest httpRequest, FullHttpRequest request) {
         List<io.netty.handler.codec.http.cookie.Cookie> cookies = new ArrayList<io.netty.handler.codec.http.cookie.Cookie>();
-        for (org.mockserver.model.Cookie cookie : httpRequest.getCookies()) {
+        for (org.mockserver.model.Cookie cookie : httpRequest.getCookieList()) {
             cookies.add(new io.netty.handler.codec.http.cookie.DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
         }
         if (cookies.size() > 0) {
@@ -80,7 +80,7 @@ public class MockServerHttpRequestToFullHttpRequest {
     }
 
     private void setHeader(HttpRequest httpRequest, FullHttpRequest request) {
-        for (Header header : httpRequest.getHeaders()) {
+        for (Header header : httpRequest.getHeaderList()) {
             String headerName = header.getName().getValue();
             // do not set hop-by-hop headers
             if (!headerName.equalsIgnoreCase(CONTENT_LENGTH.toString())

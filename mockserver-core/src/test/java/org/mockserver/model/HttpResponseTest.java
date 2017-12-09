@@ -52,8 +52,8 @@ public class HttpResponseTest {
     public void returnsHeaders() {
         assertEquals(new Header("name", "value"), new HttpResponse().withHeaders(new Header("name", "value")).getHeaders().get(0));
         assertEquals(new Header("name", "value"), new HttpResponse().withHeaders(Arrays.asList(new Header("name", "value"))).getHeaders().get(0));
-        assertEquals(new Header("name", "value"), new HttpRequest().withHeader(new Header("name", "value")).getHeaders().get(0));
-        assertEquals(new Header("name", "value_one", "value_two"), new HttpRequest().withHeader(new Header("name", "value_one")).withHeader(new Header("name", "value_two")).getHeaders().get(0));
+        assertEquals(new Header("name", "value"), new HttpRequest().withHeader(new Header("name", "value")).getHeaderList().get(0));
+        assertEquals(new Header("name", "value_one", "value_two"), new HttpRequest().withHeader(new Header("name", "value_one")).withHeader(new Header("name", "value_two")).getHeaderList().get(0));
     }
 
     @Test
@@ -67,7 +67,9 @@ public class HttpResponseTest {
     public void returnsFirstHeaderIgnoringCase() {
         assertEquals("value1", new HttpResponse().withHeaders(new Header("NAME", "value1")).getFirstHeader("name"));
         assertEquals("value1", new HttpResponse().withHeaders(new Header("name", "value1", "value2")).getFirstHeader("NAME"));
-        assertEquals("value1", new HttpResponse().withHeaders(new Header("NAME", "value1", "value2"), new Header("name", "value3")).getFirstHeader("name"));
+        assertEquals("value1", new HttpResponse().withHeaders(new Header("NAME", "value1", "value2"), new Header("NAME", "value3"), new Header("NAME", "value4")).getFirstHeader("NAME"));
+        assertEquals("value1", new HttpResponse().withHeaders(new Header("name", "value1", "value2"), new Header("name", "value3"), new Header("name", "value4")).getFirstHeader("NAME"));
+        assertEquals("value1", new HttpResponse().withHeaders(new Header("NAME", "value1", "value2"), new Header("name", "value3"), new Header("name", "value4")).getFirstHeader("name"));
     }
 
     @Test
@@ -109,8 +111,8 @@ public class HttpResponseTest {
 
     @Test
     public void updatesExistingHeader() {
-        assertThat(new HttpResponse().withHeader(new Header("name", "valueOne")).updateHeader(new Header("name", "valueTwo")).getHeaders(), containsInAnyOrder(new Header("name", "valueTwo")));
-        assertThat(new HttpResponse().withHeader(new Header("name", "valueOne")).updateHeader("name", "valueTwo").getHeaders(), containsInAnyOrder(new Header("name", "valueTwo")));
+        assertThat(new HttpResponse().withHeader(new Header("name", "valueOne")).replaceHeader(new Header("name", "valueTwo")).getHeaders(), containsInAnyOrder(new Header("name", "valueTwo")));
+        assertThat(new HttpResponse().withHeader(new Header("name", "valueOne")).replaceHeader("name", "valueTwo").getHeaders(), containsInAnyOrder(new Header("name", "valueTwo")));
     }
 
     @Test

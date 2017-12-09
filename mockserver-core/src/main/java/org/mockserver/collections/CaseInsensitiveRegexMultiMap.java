@@ -78,6 +78,8 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
                     && RegexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
                 result = true;
                 break;
+            } else {
+                result = false;
             }
         }
 

@@ -2,8 +2,8 @@ package org.mockserver.matchers;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.mockserver.model.KeyToMultiValue;
-import org.mockserver.model.NottableString;
 import org.mockserver.model.Parameter;
+import org.mockserver.model.Parameters;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +17,7 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
     private final MultiValueMapMatcher matcher;
 
     public ParameterStringMatcher(List<Parameter> parameters) {
-        this.matcher = new MultiValueMapMatcher(KeyToMultiValue.toMultiMap(parameters));
+        this.matcher = new MultiValueMapMatcher(new Parameters().withEntries(parameters).toCaseInsensitiveRegexMultiMap());
     }
 
     public boolean matches(String matched) {

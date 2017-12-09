@@ -31,17 +31,17 @@ public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
         if (httpRequest != null) {
             method = httpRequest.getMethod();
             path = httpRequest.getPath();
-            headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
+            headers = Lists.transform(httpRequest.getHeaderList(), new Function<Header, HeaderDTO>() {
                 public HeaderDTO apply(Header header) {
                     return new HeaderDTO(header);
                 }
             });
-            cookies = Lists.transform(httpRequest.getCookies(), new Function<Cookie, CookieDTO>() {
+            cookies = Lists.transform(httpRequest.getCookieList(), new Function<Cookie, CookieDTO>() {
                 public CookieDTO apply(Cookie cookie) {
                     return new CookieDTO(cookie);
                 }
             });
-            queryStringParameters = Lists.transform(httpRequest.getQueryStringParameters(), new Function<Parameter, ParameterDTO>() {
+            queryStringParameters = Lists.transform(httpRequest.getQueryStringParameterList(), new Function<Parameter, ParameterDTO>() {
                 public ParameterDTO apply(Parameter parameter) {
                     return new ParameterDTO(parameter);
                 }

@@ -41,7 +41,7 @@ public class ServletResponseWriter implements ResponseWriter {
                 .withStatusCode(responseStatus.code())
                 .withBody(body);
         if (body != null && !body.isEmpty()) {
-            response.updateHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
+            response.replaceHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
         }
         if (enableCORSForAPI()) {
             addCORSHeaders.addCORSHeaders(response);
@@ -68,9 +68,9 @@ public class ServletResponseWriter implements ResponseWriter {
             Charset bodyCharset = response.getBody().getCharset(null);
             String bodyContentType = response.getBody().getContentType();
             if (bodyCharset != null) {
-                response.updateHeader(header(CONTENT_TYPE.toString(), bodyContentType + "; charset=" + bodyCharset.name().toLowerCase()));
+                response.replaceHeader(header(CONTENT_TYPE.toString(), bodyContentType + "; charset=" + bodyCharset.name().toLowerCase()));
             } else if (bodyContentType != null) {
-                response.updateHeader(header(CONTENT_TYPE.toString(), bodyContentType));
+                response.replaceHeader(header(CONTENT_TYPE.toString(), bodyContentType));
             }
         }
     }

@@ -10,7 +10,6 @@ import org.mockserver.model.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableString.string;
@@ -58,8 +57,8 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         return this;
     }
 
-    private HttpRequestMatcher withQueryStringParameters(List<Parameter> parameters) {
-        this.queryStringParameterMatcher = new MultiValueMapMatcher(KeyToMultiValue.toMultiMap(parameters));
+    private HttpRequestMatcher withQueryStringParameters(Parameters parameters) {
+        this.queryStringParameterMatcher = new MultiValueMapMatcher(parameters.toCaseInsensitiveRegexMultiMap());
         return this;
     }
 
@@ -119,23 +118,13 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         return this;
     }
 
-    private HttpRequestMatcher withHeaders(Header... headers) {
-        this.headerMatcher = new MultiValueMapMatcher(KeyToMultiValue.toMultiMap(headers));
+    private HttpRequestMatcher withHeaders(Headers headers) {
+        this.headerMatcher = new MultiValueMapMatcher(headers.toCaseInsensitiveRegexMultiMap());
         return this;
     }
 
-    private HttpRequestMatcher withHeaders(List<Header> headers) {
-        this.headerMatcher = new MultiValueMapMatcher(KeyToMultiValue.toMultiMap(headers));
-        return this;
-    }
-
-    private HttpRequestMatcher withCookies(Cookie... cookies) {
-        this.cookieMatcher = new HashMapMatcher(KeyAndValue.toHashMap(cookies));
-        return this;
-    }
-
-    private HttpRequestMatcher withCookies(List<Cookie> cookies) {
-        this.cookieMatcher = new HashMapMatcher(KeyAndValue.toHashMap(cookies));
+    private HttpRequestMatcher withCookies(Cookies cookies) {
+        this.cookieMatcher = new HashMapMatcher(cookies.toCaseInsensitiveRegexMultiMap());
         return this;
     }
 
@@ -162,7 +151,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             if (httpRequest != null) {
                 boolean methodMatches = Strings.isNullOrEmpty(httpRequest.getMethod().getValue()) || matches(methodMatcher, httpRequest.getMethod());
                 boolean pathMatches = Strings.isNullOrEmpty(httpRequest.getPath().getValue()) || matches(pathMatcher, httpRequest.getPath());
-                boolean queryStringParametersMatches = matches(queryStringParameterMatcher, (httpRequest.getQueryStringParameters() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getQueryStringParameters()) : null));
+                boolean queryStringParametersMatches = matches(queryStringParameterMatcher, (httpRequest.getQueryStringParameterList() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getQueryStringParameterList()) : null));
                 boolean bodyMatches;
                 String bodyAsString = httpRequest.getBody() != null ? new String(httpRequest.getBody().getRawBytes(), httpRequest.getBody().getCharset(Charsets.UTF_8)) : "";
                 BodyDTO bodyDTO = null;
@@ -184,8 +173,8 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                 } else {
                     bodyMatches = bodyDTOMatcher.equals(bodyDTO);
                 }
-                boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaders() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaders()) : null));
-                boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookies() != null ? new ArrayList<KeyAndValue>(httpRequest.getCookies()) : null));
+                boolean headersMatch = matches(headerMatcher, (httpRequest.getHeaderList() != null ? new ArrayList<KeyToMultiValue>(httpRequest.getHeaderList()) : null));
+                boolean cookiesMatch = matches(cookieMatcher, (httpRequest.getCookieList() != null ? new ArrayList<KeyAndValue>(httpRequest.getCookieList()) : null));
                 boolean keepAliveMatches = matches(keepAliveMatcher, httpRequest.isKeepAlive());
                 boolean sslMatches = matches(sslMatcher, httpRequest.isSecure());
 

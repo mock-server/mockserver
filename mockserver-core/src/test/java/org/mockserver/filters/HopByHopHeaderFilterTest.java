@@ -33,7 +33,7 @@ public class HopByHopHeaderFilterTest {
         httpRequest = new HopByHopHeaderFilter().onRequest(httpRequest);
 
         // then
-        assertEquals(httpRequest.getHeaders().size(), 1);
+        assertEquals(httpRequest.getHeaderList().size(), 1);
     }
 
     @Test

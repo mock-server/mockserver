@@ -12,7 +12,6 @@ import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.server.netty.codec.MockServerRequestDecoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +69,7 @@ public class MockServerRequestDecoderTest {
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
 
         // then
-        List<Parameter> queryStringParameters = ((HttpRequest) output.get(0)).getQueryStringParameters();
+        List<Parameter> queryStringParameters = ((HttpRequest) output.get(0)).getQueryStringParameterList();
         assertThat(queryStringParameters, containsInAnyOrder(
                 param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                 param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
@@ -102,7 +101,7 @@ public class MockServerRequestDecoderTest {
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
 
         // then
-        List<Header> headers = ((HttpRequest) output.get(0)).getHeaders();
+        List<Header> headers = ((HttpRequest) output.get(0)).getHeaderList();
         assertThat(headers, containsInAnyOrder(
                 header("headerName1", "headerValue1_1", "headerValue1_2"),
                 header("headerName2", "headerValue2")
@@ -148,7 +147,7 @@ public class MockServerRequestDecoderTest {
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
 
         // then
-        List<Cookie> cookies = ((HttpRequest) output.get(0)).getCookies();
+        List<Cookie> cookies = ((HttpRequest) output.get(0)).getCookieList();
         assertThat(cookies, containsInAnyOrder(
                 cookie("cookieName1", "cookieValue1  "),
                 cookie("cookieName2", "cookieValue2"),
@@ -166,7 +165,7 @@ public class MockServerRequestDecoderTest {
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
 
         // then
-        List<Cookie> cookies = ((HttpRequest) output.get(0)).getCookies();
+        List<Cookie> cookies = ((HttpRequest) output.get(0)).getCookieList();
         assertThat(cookies, containsInAnyOrder(
                 cookie("cookieName1", "cookie=Value1  "),
                 cookie("cookieName2", "cookie==Value2")
@@ -188,7 +187,7 @@ public class MockServerRequestDecoderTest {
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
 
         // then
-        List<Cookie> cookies = ((HttpRequest) output.get(0)).getCookies();
+        List<Cookie> cookies = ((HttpRequest) output.get(0)).getCookieList();
         assertThat(cookies, containsInAnyOrder(
                 cookie("Customer", "WILE_E_COYOTE")
         ));

@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
@@ -52,7 +51,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             HttpResponse httpResponse =
                     response()
                             .withStatusCode(request.getPath().equalsIgnoreCase("/not_found") ? NOT_FOUND.code() : OK.code())
-                            .withHeaders(request.getHeaders());
+                            .withHeaders(request.getHeaderList());
 
             if (request.getBody() instanceof BodyWithContentType) {
                 httpResponse.withBody((BodyWithContentType) request.getBody());
@@ -63,11 +62,11 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             // set hop-by-hop headers
             final int length = httpResponse.getBodyAsString() != null ? httpResponse.getBodyAsString().length() : 0;
             if (error == EchoServer.Error.LARGER_CONTENT_LENGTH) {
-                httpResponse.updateHeader(CONTENT_LENGTH.toString(), String.valueOf(length * 2));
+                httpResponse.replaceHeader(CONTENT_LENGTH.toString(), String.valueOf(length * 2));
             } else if (error == EchoServer.Error.SMALLER_CONTENT_LENGTH) {
-                httpResponse.updateHeader(CONTENT_LENGTH.toString(), String.valueOf(length / 2));
+                httpResponse.replaceHeader(CONTENT_LENGTH.toString(), String.valueOf(length / 2));
             } else {
-                httpResponse.updateHeader(CONTENT_LENGTH.toString(), String.valueOf(length));
+                httpResponse.replaceHeader(CONTENT_LENGTH.toString(), String.valueOf(length));
             }
 
             // write and flush

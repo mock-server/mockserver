@@ -44,7 +44,7 @@ public class NettyResponseWriter implements ResponseWriter {
                 .withStatusCode(responseStatus.code())
                 .withBody(body);
         if (body != null && !body.isEmpty()) {
-            response.updateHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
+            response.replaceHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
         }
         if (enableCORSForAPI()) {
             addCORSHeaders.addCORSHeaders(response);
@@ -70,16 +70,16 @@ public class NettyResponseWriter implements ResponseWriter {
         ConnectionOptions connectionOptions = response.getConnectionOptions();
         if (connectionOptions != null && connectionOptions.getKeepAliveOverride() != null) {
             if (connectionOptions.getKeepAliveOverride()) {
-                response.updateHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
+                response.replaceHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
             } else {
-                response.updateHeader(header(CONNECTION.toString(), CLOSE.toString()));
+                response.replaceHeader(header(CONNECTION.toString(), CLOSE.toString()));
             }
         } else if (connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressConnectionHeader())) {
             if (request.isKeepAlive() != null && request.isKeepAlive()
                     && (connectionOptions == null || isFalseOrNull(connectionOptions.getCloseSocket()))) {
-                response.updateHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
+                response.replaceHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
             } else {
-                response.updateHeader(header(CONNECTION.toString(), CLOSE.toString()));
+                response.replaceHeader(header(CONNECTION.toString(), CLOSE.toString()));
             }
         }
     }
