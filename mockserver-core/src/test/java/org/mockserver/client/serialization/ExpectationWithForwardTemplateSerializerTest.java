@@ -17,7 +17,6 @@ import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -28,8 +27,12 @@ import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.StringBody.exact;
 
 /**
  * @author jamesdbloom
@@ -37,38 +40,50 @@ import static org.mockserver.model.NottableString.string;
 public class ExpectationWithForwardTemplateSerializerTest {
 
     private final Expectation fullExpectation = new Expectation(
-            new HttpRequest()
-                    .withMethod("GET")
-                    .withPath("somePath")
-                    .withQueryStringParameters(new Parameter("queryParameterName", Collections.singletonList("queryParameterValue")))
-                    .withBody(new StringBody("somebody"))
-                    .withHeaders(new Header("headerName", "headerValue"))
-                    .withCookies(new Cookie("cookieName", "cookieValue")),
-            Times.once(),
-            TimeToLive.exactly(HOURS, 2l))
-            .thenForward(
-                    template(HttpTemplate.TemplateType.JAVASCRIPT, "some_random_template")
-                            .withDelay(SECONDS, 5)
-            );
+        new HttpRequest()
+            .withMethod("GET")
+            .withPath("somePath")
+            .withQueryStringParameters(new Parameters().withEntries(
+                param("queryParameterName", "queryParameterValue")
+            ))
+            .withBody(exact("someBody"))
+            .withHeaders(new Headers().withEntries(
+                header("headerName", "headerValue")
+            ))
+            .withCookies(new Cookies().withEntries(
+                cookie("cookieName", "cookieValue")
+            )),
+        Times.once(),
+        TimeToLive.exactly(HOURS, 2l))
+        .thenForward(
+            template(HttpTemplate.TemplateType.JAVASCRIPT, "some_random_template")
+                .withDelay(SECONDS, 5)
+        );
     private final ExpectationDTO fullExpectationDTO = new ExpectationDTO()
-            .setHttpRequest(
-                    new HttpRequestDTO()
-                            .setMethod(string("GET"))
-                            .setPath(string("somePath"))
-                            .setQueryStringParameters(Collections.singletonList(new ParameterDTO(new Parameter("queryParameterName", Collections.singletonList("queryParameterValue")))))
-                            .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                            .setHeaders(Collections.singletonList(new HeaderDTO(new Header("headerName", Collections.singletonList("headerValue")))))
-                            .setCookies(Collections.singletonList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
+        .setHttpRequest(
+            new HttpRequestDTO()
+                .setMethod(string("GET"))
+                .setPath(string("somePath"))
+                .setQueryStringParameters(new Parameters().withEntries(
+                    param("queryParameterName", "queryParameterValue")
+                ))
+                .setBody(new StringBodyDTO(exact("someBody")))
+                .setHeaders(new Headers().withEntries(
+                    header("headerName", "headerValue")
+                ))
+                .setCookies(new Cookies().withEntries(
+                    cookie("cookieName", "cookieValue")
+                ))
+        )
+        .setHttpForwardTemplate(
+            new HttpTemplateDTO(
+                new HttpTemplate(HttpTemplate.TemplateType.JAVASCRIPT)
+                    .withTemplate("some_random_template")
+                    .withDelay(new Delay(SECONDS, 5))
             )
-            .setHttpForwardTemplate(
-                    new HttpTemplateDTO(
-                            new HttpTemplate(HttpTemplate.TemplateType.JAVASCRIPT)
-                                    .withTemplate("some_random_template")
-                            .withDelay(new Delay(SECONDS, 5))
-                    )
-            )
-            .setTimes(new TimesDTO(Times.once()))
-            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(HOURS, 2l)));
+        )
+        .setTimes(new TimesDTO(Times.once()))
+        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(HOURS, 2l)));
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -168,10 +183,10 @@ public class ExpectationWithForwardTemplateSerializerTest {
         // then
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("" +
-                "[" + NEW_LINE +
-                "  an error," + NEW_LINE +
-                "  an error" + NEW_LINE +
-                "]");
+            "[" + NEW_LINE +
+            "  an error," + NEW_LINE +
+            "  an error" + NEW_LINE +
+            "]");
 
         // when
         expectationSerializer.deserializeArray("requestBytes");

@@ -6,39 +6,36 @@ import com.fasterxml.jackson.core.JsonTokenId;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import org.mockserver.model.KeysToMultiValues;
+import org.mockserver.model.Cookies;
 import org.mockserver.model.NottableString;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-import static org.mockserver.model.NottableString.*;
+import static org.mockserver.model.NottableString.deserializeNottableString;
+import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
  */
-public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues> extends StdDeserializer<T> {
+public class CookiesDeserializer extends StdDeserializer<Cookies> {
 
-    KeysToMultiValuesDeserializer(Class<T> valueClass) {
-        super(valueClass);
+    public CookiesDeserializer() {
+        super(Cookies.class);
     }
 
-    public abstract T build();
-
     @Override
-    public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public Cookies deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         if (p.isExpectedStartArrayToken()) {
             return deserializeArray(p, ctxt, ctxt.getNodeFactory());
         } else if (p.isExpectedStartObjectToken()) {
             return deserializeObject(p, ctxt, ctxt.getNodeFactory());
         } else {
-            return (T) ctxt.handleUnexpectedToken(_valueClass, p);
+            return (Cookies) ctxt.handleUnexpectedToken(Cookies.class, p);
         }
     }
 
-    private T deserializeObject(JsonParser p, DeserializationContext ctxt, JsonNodeFactory nodeFactory) throws IOException {
-        T enteries = build();
+    private Cookies deserializeObject(JsonParser p, DeserializationContext ctxt, JsonNodeFactory nodeFactory) throws IOException {
+        Cookies cookies = new Cookies();
         NottableString key = string("");
         while (true) {
             JsonToken t = p.nextToken();
@@ -46,40 +43,43 @@ public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues>
                 case JsonTokenId.ID_FIELD_NAME:
                     key = deserializeNottableString(ctxt.readValue(p, String.class));
                     break;
-                case JsonTokenId.ID_START_ARRAY:
-                    enteries.withEntry(key, deserializeNottableStrings(ctxt.readValue(p, List.class)));
+                case JsonTokenId.ID_STRING:
+                    cookies.withEntry(key, deserializeNottableString(ctxt.readValue(p, String.class)));
                     break;
                 case JsonTokenId.ID_END_OBJECT:
-                    return enteries;
+                    return cookies;
                 default:
                     throw new RuntimeException("Unexpected token: \"" + t + "\" id: \"" + t.id() + "\" text: \"" + p.getText());
             }
         }
     }
 
-    private T deserializeArray(JsonParser p, DeserializationContext ctxt, JsonNodeFactory nodeFactory) throws IOException {
-        T entries = build();
+    private Cookies deserializeArray(JsonParser p, DeserializationContext ctxt, JsonNodeFactory nodeFactory) throws IOException {
+        Cookies headers = new Cookies();
         NottableString key = null;
-        List<NottableString> values = new ArrayList<>();
+        NottableString value = null;
+        String fieldName = null;
         while (true) {
             JsonToken t = p.nextToken();
             switch (t.id()) {
                 case JsonTokenId.ID_END_ARRAY:
-                    return entries;
+                    return headers;
                 case JsonTokenId.ID_START_OBJECT:
                     key = null;
-                    values = new ArrayList<>();
+                    value = null;
                     break;
                 case JsonTokenId.ID_FIELD_NAME:
+                    fieldName = ctxt.readValue(p, String.class);
                     break;
                 case JsonTokenId.ID_STRING:
-                    key = deserializeNottableString(ctxt.readValue(p, String.class));
-                    break;
-                case JsonTokenId.ID_START_ARRAY:
-                    values = deserializeNottableStrings(ctxt.readValue(p, List.class));
+                    if ("name".equals(fieldName)) {
+                        key = deserializeNottableString(ctxt.readValue(p, String.class));
+                    } else if ("value".equals(fieldName)) {
+                        value = deserializeNottableString(ctxt.readValue(p, String.class));
+                    }
                     break;
                 case JsonTokenId.ID_END_OBJECT:
-                    entries.withEntry(key, values);
+                    headers.withEntry(key, value);
                     break;
                 default:
                     throw new RuntimeException("Unexpected token: \"" + t + "\" id: \"" + t.id() + "\" text: \"" + p.getText());

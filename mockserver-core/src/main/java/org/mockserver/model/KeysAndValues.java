@@ -73,4 +73,8 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
     public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap() {
         return toCaseInsensitiveRegexMultiMap(this.getEntries());
     }
+
+    public boolean isEmpty() {
+        return map.isEmpty();
+    }
 }

@@ -123,6 +123,15 @@ public class HttpRequest extends Not {
         return this.method.getValue().equals(method) && this.path.getValue().equals(path);
     }
 
+    public Parameters getQueryStringParameters() {
+        return this.queryStringParameters;
+    }
+
+    public HttpRequest withQueryStringParameters(Parameters parameters) {
+        this.queryStringParameters = parameters;
+        return this;
+    }
+
     /**
      * The query string parameters to match on as a list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
@@ -191,10 +200,6 @@ public class HttpRequest extends Not {
     public HttpRequest withQueryStringParameter(NottableString name, NottableString... values) {
         this.queryStringParameters.withEntry(name, values);
         return this;
-    }
-
-    public Parameters getQueryStringParameters() {
-        return this.queryStringParameters;
     }
 
     public List<Parameter> getQueryStringParameterList() {
@@ -342,6 +347,15 @@ public class HttpRequest extends Not {
         }
     }
 
+    public Headers getHeaders() {
+        return this.headers;
+    }
+
+    public HttpRequest withHeaders(Headers headers) {
+        this.headers = headers;
+        return this;
+    }
+
     /**
      * The headers to match on as a list of Header objects where the values or keys of each header can be either a string or a regex
      * (for more details of the supported regex syntax see http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
@@ -416,10 +430,6 @@ public class HttpRequest extends Not {
         return this.headers.getEntries();
     }
 
-    public Headers getHeaders() {
-        return this.headers;
-    }
-
     public List<String> getHeader(String name) {
         return this.headers.getValues(name);
     }
@@ -436,6 +446,15 @@ public class HttpRequest extends Not {
      */
     public boolean containsHeader(String name) {
         return this.headers.containsEntry(name);
+    }
+
+    public Cookies getCookies() {
+        return this.cookies;
+    }
+
+    public HttpRequest withCookies(Cookies cookies) {
+        this.cookies = cookies;
+        return this;
     }
 
     /**
@@ -499,10 +518,6 @@ public class HttpRequest extends Not {
 
     public List<Cookie> getCookieList() {
         return this.cookies.getEntries();
-    }
-
-    public Cookies getCookies() {
-        return this.cookies;
     }
 
     public HttpRequest clone() {

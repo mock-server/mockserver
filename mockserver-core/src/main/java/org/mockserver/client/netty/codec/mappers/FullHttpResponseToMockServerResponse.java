@@ -45,7 +45,7 @@ public class FullHttpResponseToMockServerResponse {
 
     private void setCookies(HttpResponse httpResponse) {
         Map<String, Cookie> mappedCookies = new HashMap<String, Cookie>();
-        for (Header header : httpResponse.getHeaders()) {
+        for (Header header : httpResponse.getHeaderList()) {
             if (header.getName().getValue().equalsIgnoreCase("Set-Cookie")) {
                 for (NottableString cookieHeader : header.getValues()) {
                     io.netty.handler.codec.http.cookie.Cookie httpCookie = ClientCookieDecoder.LAX.decode(cookieHeader.getValue());

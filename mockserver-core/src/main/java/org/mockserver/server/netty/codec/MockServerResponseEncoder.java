@@ -63,8 +63,8 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
     }
 
     private void setHeaders(HttpResponse response, DefaultFullHttpResponse defaultFullHttpResponse) {
-        if (response.getHeaders() != null) {
-            for (Header header : response.getHeaders()) {
+        if (response.getHeaderList() != null) {
+            for (Header header : response.getHeaderList()) {
                 for (NottableString value : header.getValues()) {
                     defaultFullHttpResponse.headers().add(header.getName().getValue(), value.getValue());
                 }
@@ -106,9 +106,9 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
     }
 
     private void setCookies(HttpResponse response, DefaultFullHttpResponse httpServletResponse) {
-        if (response.getCookies() != null) {
+        if (response.getCookieList() != null) {
             List<Cookie> cookieValues = new ArrayList<Cookie>();
-            for (org.mockserver.model.Cookie cookie : response.getCookies()) {
+            for (org.mockserver.model.Cookie cookie : response.getCookieList()) {
                 if (!cookieHeaderAlreadyExists(response, cookie)) {
                     cookieValues.add(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
                 }

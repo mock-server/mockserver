@@ -102,10 +102,9 @@ public class MockServerClientIntegrationTest {
                                 "    \"body\" : \"some_request_body\"" + NEW_LINE +
                                 "  }," + NEW_LINE +
                                 "  \"httpResponse\" : {" + NEW_LINE +
-                                "    \"headers\" : [ {" + NEW_LINE +
-                                "      \"name\" : \"responseName\"," + NEW_LINE +
-                                "      \"values\" : [ \"responseValue\" ]" + NEW_LINE +
-                                "    } ]," + NEW_LINE +
+                                "    \"headers\" : {" + NEW_LINE +
+                                "      \"responseName\" : [ \"responseValue\" ]" + NEW_LINE +
+                                "    }," + NEW_LINE +
                                 "    \"body\" : \"some_response_body\"" + NEW_LINE +
                                 "  }," + NEW_LINE +
                                 "  \"times\" : {" + NEW_LINE +
@@ -330,11 +329,9 @@ public class MockServerClientIntegrationTest {
                                 "    \"body\" : \"some_request_body\"" + NEW_LINE +
                                 "  }," + NEW_LINE +
                                 "  \"httpResponse\" : {" + NEW_LINE +
-                                "    \"headers\" : [ {" + NEW_LINE +
-                                "      \"name\" : \"responseName\"," + NEW_LINE +
-                                "" +
-                                "      \"values\" : [ \"responseValue\" ]" + NEW_LINE +
-                                "    } ]," + NEW_LINE +
+                                "    \"headers\" : {" + NEW_LINE +
+                                "      \"responseName\" : [ \"responseValue\" ]" + NEW_LINE +
+                                "    }," + NEW_LINE +
                                 "    \"body\" : \"some_response_body\"" + NEW_LINE +
                                 "  }," + NEW_LINE +
                                 "  \"times\" : {" + NEW_LINE +

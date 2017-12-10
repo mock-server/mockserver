@@ -25,8 +25,8 @@ public class HttpResponseToJavaSerializer implements ToJavaSerializer<HttpRespon
             if (httpResponse.getStatusCode() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withStatusCode(").append(httpResponse.getStatusCode()).append(")");
             }
-            outputHeaders(numberOfSpacesToIndent + 1, output, httpResponse.getHeaders());
-            outputCookies(numberOfSpacesToIndent + 1, output, httpResponse.getCookies());
+            outputHeaders(numberOfSpacesToIndent + 1, output, httpResponse.getHeaderList());
+            outputCookies(numberOfSpacesToIndent + 1, output, httpResponse.getCookieList());
             if (!Strings.isNullOrEmpty(httpResponse.getBodyAsString())) {
                 if (httpResponse.getBody() instanceof BinaryBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);

@@ -132,6 +132,15 @@ public class HttpResponse extends Action {
         }
     }
 
+    public Headers getHeaders() {
+        return this.headers;
+    }
+
+    public HttpResponse withHeaders(Headers headers) {
+        this.headers = headers;
+        return this;
+    }
+
     /**
      * The headers to return as a list of Header objects
      *
@@ -200,7 +209,7 @@ public class HttpResponse extends Action {
         return this;
     }
 
-    public List<Header> getHeaders() {
+    public List<Header> getHeaderList() {
         return this.headers.getEntries();
     }
 
@@ -220,6 +229,15 @@ public class HttpResponse extends Action {
      */
     public boolean containsHeader(String name) {
         return this.headers.containsEntry(name);
+    }
+
+    public Cookies getCookies() {
+        return this.cookies;
+    }
+
+    public HttpResponse withCookies(Cookies cookies) {
+        this.cookies = cookies;
+        return this;
     }
 
     /**
@@ -288,7 +306,7 @@ public class HttpResponse extends Action {
         return this;
     }
 
-    public List<Cookie> getCookies() {
+    public List<Cookie> getCookieList() {
         return this.cookies.getEntries();
     }
 
@@ -350,8 +368,8 @@ public class HttpResponse extends Action {
         return response()
                 .withStatusCode(getStatusCode())
                 .withBody(getBody())
-                .withHeaders(getHeaders())
-                .withCookies(getCookies())
+                .withHeaders(getHeaderList())
+                .withCookies(getCookieList())
                 .withDelay(getDelay())
                 .withConnectionOptions(getConnectionOptions());
     }

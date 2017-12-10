@@ -2,10 +2,7 @@ package org.mockserver.client.serialization.model;
 
 import org.hamcrest.core.Is;
 import org.junit.Test;
-import org.mockserver.model.ConnectionOptions;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpResponse;
+import org.mockserver.model.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -15,6 +12,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertTrue;
+import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.StringBody.exact;
 
 /**
@@ -26,8 +26,8 @@ public class HttpResponseDTOTest {
     public void shouldReturnValuesSetInConstructor() {
         // given
         BodyDTO body = BodyDTO.createDTO(exact("body"));
-        List<CookieDTO> cookies = Arrays.asList(new CookieDTO(new Cookie("name", "value")));
-        List<HeaderDTO> headers = Arrays.asList(new HeaderDTO(new Header("name", "value")));
+        Cookies cookies = new Cookies().withEntries(cookie("name", "value"));
+        Headers headers = new Headers().withEntries(header("name", "value"));
         Integer statusCode = 200;
         ConnectionOptionsDTO connectionOptions = new ConnectionOptionsDTO().setContentLengthHeaderOverride(50);
 
@@ -70,8 +70,8 @@ public class HttpResponseDTOTest {
 
         // then
         assertThat(builtHttpResponse.getBody(), Is.<org.mockserver.model.Body>is(exact(body)));
-        assertThat(builtHttpResponse.getCookies(), containsInAnyOrder(cookie));
-        assertThat(builtHttpResponse.getHeaders(), containsInAnyOrder(header));
+        assertThat(builtHttpResponse.getCookieList(), containsInAnyOrder(cookie));
+        assertThat(builtHttpResponse.getHeaderList(), containsInAnyOrder(header));
         assertThat(builtHttpResponse.getStatusCode(), is(statusCode));
         assertThat(builtHttpResponse.getConnectionOptions(), is(connectionOptions));
     }
@@ -80,8 +80,8 @@ public class HttpResponseDTOTest {
     public void shouldReturnValuesSetInSetter() {
         // given
         BodyWithContentTypeDTO body = BodyWithContentTypeDTO.createDTO(exact("body"));
-        List<CookieDTO> cookies = Arrays.asList(new CookieDTO());
-        List<HeaderDTO> headers = Arrays.asList(new HeaderDTO());
+        Cookies cookies = new Cookies().withEntries(cookie("name", "value"));
+        Headers headers = new Headers().withEntries(header("name", "value"));
         Integer statusCode = 200;
         ConnectionOptionsDTO connectionOptions = new ConnectionOptionsDTO().setContentLengthHeaderOverride(50);
 
@@ -111,8 +111,8 @@ public class HttpResponseDTOTest {
 
         // then
         assertThat(httpResponseDTO.getBody(), is(nullValue()));
-        assertThat(httpResponseDTO.getCookies(), is(empty()));
-        assertThat(httpResponseDTO.getHeaders(), is(empty()));
+        assertTrue(httpResponseDTO.getCookies().isEmpty());
+        assertTrue(httpResponseDTO.getHeaders().isEmpty());
         assertThat(httpResponseDTO.getStatusCode(), is(nullValue()));
         assertThat(httpResponseDTO.getConnectionOptions(), is(nullValue()));
     }
@@ -124,8 +124,8 @@ public class HttpResponseDTOTest {
 
         // then
         assertThat(httpResponseDTO.getBody(), is(nullValue()));
-        assertThat(httpResponseDTO.getCookies(), is(empty()));
-        assertThat(httpResponseDTO.getHeaders(), is(empty()));
+        assertTrue(httpResponseDTO.getCookies().isEmpty());
+        assertTrue(httpResponseDTO.getHeaders().isEmpty());
         assertThat(httpResponseDTO.getStatusCode(), is(nullValue()));
         assertThat(httpResponseDTO.getConnectionOptions(), is(nullValue()));
     }

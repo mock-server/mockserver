@@ -141,9 +141,26 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                         "    \"headers\" : [ \"invalidValueOne\", \"invalidValueTwo\" ]" + NEW_LINE +
                         "  }"),
                 is(
-                        "2 errors:" + NEW_LINE +
-                                " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/headers/0\"" + NEW_LINE +
-                                " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/headers/1\""
+                        "1 error:" + NEW_LINE +
+                            " - for field \"/headers\" only one of the following example formats is allowed: " + NEW_LINE +
+                            NEW_LINE +
+                            "    \"/headers\" : {" + NEW_LINE +
+                            "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+                            "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            NEW_LINE +
+                            "   or:" + NEW_LINE +
+                            NEW_LINE +
+                            "    \"/headers\" : [" + NEW_LINE +
+                            "        {" + NEW_LINE +
+                            "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
+                            "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+                            "        }," + NEW_LINE +
+                            "        {" + NEW_LINE +
+                            "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
+                            "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+                            "        }" + NEW_LINE +
+                            "    ]"
                 ));
     }
 

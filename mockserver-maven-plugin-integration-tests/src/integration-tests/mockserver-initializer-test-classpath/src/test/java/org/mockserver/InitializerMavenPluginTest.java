@@ -73,7 +73,7 @@ public class InitializerMavenPluginTest {
         int port = (isSsl ? SERVER_HTTPS_PORT : SERVER_HTTP_PORT);
         HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port));
         List<Header> headers = new ArrayList<Header>();
-        for (Header header : httpResponse.getHeaders()) {
+        for (Header header : httpResponse.getHeaderList()) {
             if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
                 headers.add(header);
             }

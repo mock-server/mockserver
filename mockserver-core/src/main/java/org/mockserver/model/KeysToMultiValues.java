@@ -169,4 +169,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         return toCaseInsensitiveRegexMultiMap(this.getEntries());
     }
 
+    public boolean isEmpty() {
+        return listMultimap.isEmpty();
+    }
 }

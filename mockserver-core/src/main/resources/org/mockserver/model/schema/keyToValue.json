@@ -1,15 +1,28 @@
 {
-  "type": "array",
-  "additionalProperties": false,
-  "items": {
-    "type": "object",
-    "properties": {
-      "name": {
-        "type": "string"
-      },
-      "value": {
-        "type": "string"
-      }
-    }
-  }
+    "oneOf": [
+        {
+            "type": "array",
+            "additionalProperties": false,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        {
+            "type": "object",
+            "additionalProperties": false,
+            "patternProperties": {
+                "^\\S+$": {
+                    "type": "string"
+                }
+            }
+        }
+    ]
 }

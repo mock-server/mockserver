@@ -8,18 +8,22 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.client.serialization.model.*;
+import org.mockserver.client.serialization.model.HttpRequestDTO;
+import org.mockserver.client.serialization.model.StringBodyDTO;
 import org.mockserver.model.*;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.StringBody.exact;
 
 /**
  * @author jamesdbloom
@@ -27,31 +31,35 @@ import static org.mockserver.model.NottableString.string;
 public class HttpRequestSerializerTest {
 
     private final HttpRequest fullHttpRequest =
-            new HttpRequest()
-                    .withMethod("GET")
-                    .withPath("somepath")
-                    .withQueryStringParameters(
-                            new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
-                            new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
-                    )
-                    .withBody(new StringBody("somebody"))
-                    .withHeaders(new Header("headerName", "headerValue"))
-                    .withCookies(new Cookie("cookieName", "cookieValue"))
-                    .withSecure(true)
-                    .withKeepAlive(true);
+        new HttpRequest()
+            .withMethod("GET")
+            .withPath("somepath")
+            .withQueryStringParameters(
+                new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+            )
+            .withBody(new StringBody("someBody"))
+            .withHeaders(new Header("headerName", "headerValue"))
+            .withCookies(new Cookie("cookieName", "cookieValue"))
+            .withSecure(true)
+            .withKeepAlive(true);
     private final HttpRequestDTO fullHttpRequestDTO =
-            new HttpRequestDTO()
-                    .setMethod(string("GET"))
-                    .setPath(string("somepath"))
-                    .setQueryStringParameters(Arrays.asList(
-                            new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                            new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
-                    ))
-                    .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                    .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
-                    .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
-                    .setSecure(true)
-                    .setKeepAlive(true);
+        new HttpRequestDTO()
+            .setMethod(string("GET"))
+            .setPath(string("somepath"))
+            .setQueryStringParameters(new Parameters().withEntries(
+                param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+            ))
+            .setBody(new StringBodyDTO(exact("someBody")))
+            .setHeaders(new Headers().withEntries(
+                header("headerName", "headerValue")
+            ))
+            .setCookies(new Cookies().withEntries(
+                cookie("cookieName", "cookieValue")
+            ))
+            .setSecure(true)
+            .setKeepAlive(true);
     @Rule
     public ExpectedException thrown = ExpectedException.none();
     @Mock

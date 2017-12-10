@@ -1,11 +1,9 @@
 package org.mockserver.client.serialization.model;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import org.mockserver.model.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.mockserver.model.Cookies;
+import org.mockserver.model.Headers;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 /**
  * @author jamesdbloom
@@ -13,8 +11,8 @@ import java.util.List;
 public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<HttpResponse> {
     private Integer statusCode;
     private BodyWithContentTypeDTO body;
-    private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
-    private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
+    private Cookies cookies = new Cookies();
+    private Headers headers = new Headers();
     private DelayDTO delay;
     private ConnectionOptionsDTO connectionOptions;
 
@@ -22,16 +20,8 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
         if (httpResponse != null) {
             statusCode = httpResponse.getStatusCode();
             body = BodyWithContentTypeDTO.createDTO(httpResponse.getBody());
-            headers = Lists.transform(httpResponse.getHeaders(), new Function<Header, HeaderDTO>() {
-                public HeaderDTO apply(Header header) {
-                    return new HeaderDTO(header);
-                }
-            });
-            cookies = Lists.transform(httpResponse.getCookies(), new Function<Cookie, CookieDTO>() {
-                public CookieDTO apply(Cookie cookie) {
-                    return new CookieDTO(cookie);
-                }
-            });
+            headers = httpResponse.getHeaders();
+            cookies = httpResponse.getCookies();
             delay = (httpResponse.getDelay() != null ? new DelayDTO(httpResponse.getDelay()) : null);
             connectionOptions = (httpResponse.getConnectionOptions() != null ? new ConnectionOptionsDTO(httpResponse.getConnectionOptions()) : null);
         }
@@ -42,20 +32,12 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
 
     public HttpResponse buildObject() {
         return new HttpResponse()
-                .withStatusCode(statusCode)
-                .withBody(body != null ? body.buildObject() : null)
-                .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
-                    public Header apply(HeaderDTO header) {
-                        return header.buildObject();
-                    }
-                }))
-                .withCookies(Lists.transform(cookies, new Function<CookieDTO, Cookie>() {
-                    public Cookie apply(CookieDTO cookie) {
-                        return cookie.buildObject();
-                    }
-                }))
-                .withDelay((delay != null ? delay.buildObject() : null))
-                .withConnectionOptions((connectionOptions != null ? connectionOptions.buildObject() : null));
+            .withStatusCode(statusCode)
+            .withBody(body != null ? body.buildObject() : null)
+            .withHeaders(headers)
+            .withCookies(cookies)
+            .withDelay((delay != null ? delay.buildObject() : null))
+            .withConnectionOptions((connectionOptions != null ? connectionOptions.buildObject() : null));
     }
 
     public Integer getStatusCode() {
@@ -76,21 +58,21 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
         return this;
     }
 
-    public List<CookieDTO> getCookies() {
-        return cookies;
-    }
-
-    public HttpResponseDTO setCookies(List<CookieDTO> cookies) {
-        this.cookies = cookies;
-        return this;
-    }
-
-    public List<HeaderDTO> getHeaders() {
+    public Headers getHeaders() {
         return headers;
     }
 
-    public HttpResponseDTO setHeaders(List<HeaderDTO> headers) {
+    public HttpResponseDTO setHeaders(Headers headers) {
         this.headers = headers;
+        return this;
+    }
+
+    public Cookies getCookies() {
+        return cookies;
+    }
+
+    public HttpResponseDTO setCookies(Cookies cookies) {
+        this.cookies = cookies;
         return this;
     }
 
@@ -112,4 +94,3 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
         return this;
     }
 }
-

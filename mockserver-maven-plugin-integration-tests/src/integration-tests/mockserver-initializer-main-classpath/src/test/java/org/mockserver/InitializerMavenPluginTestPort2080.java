@@ -70,7 +70,7 @@ public class InitializerMavenPluginTestPort2080 {
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {
         HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", SERVER_HTTP_PORT));
         List<Header> headers = new ArrayList<Header>();
-        for (Header header : httpResponse.getHeaders()) {
+        for (Header header : httpResponse.getHeaderList()) {
             if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
                 headers.add(header);
             }

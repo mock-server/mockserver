@@ -7,14 +7,12 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
-import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.matchers.HttpRequestMatcher;
@@ -6241,7 +6239,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 httpRequest.withHeader(HOST.toString(), "localhost:" + port);
                 HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port));
                 List<Header> headers = new ArrayList<Header>();
-                for (Header header : httpResponse.getHeaders()) {
+                for (Header header : httpResponse.getHeaderList()) {
                     if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
                         if (header.getName().getValue().equalsIgnoreCase(CONTENT_TYPE.toString())) {
                             // this fixes Tomcat which removes the space between

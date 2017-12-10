@@ -31,6 +31,7 @@ public abstract class KeysToMultiValuesSerializer<T extends KeysToMultiValues<? 
             }
             jgen.writeEndArray();
         }
+        jgen.writeEndObject();
     }
 
 }

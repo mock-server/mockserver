@@ -8,18 +8,22 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.client.serialization.model.*;
+import org.mockserver.client.serialization.model.BodyWithContentTypeDTO;
+import org.mockserver.client.serialization.model.DelayDTO;
+import org.mockserver.client.serialization.model.HttpResponseDTO;
 import org.mockserver.model.*;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.Header.header;
+import static org.mockserver.model.StringBody.exact;
 
 /**
  * @author jamesdbloom
@@ -27,19 +31,24 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class HttpResponseSerializerTest {
 
     private final HttpResponse fullHttpResponse =
-            new HttpResponse()
-                    .withStatusCode(123)
-                    .withBody(new StringBody("somebody"))
-                    .withHeaders(new Header("headerName", "headerValue"))
-                    .withCookies(new Cookie("cookieName", "cookieValue"))
-                    .withDelay(new Delay(TimeUnit.MICROSECONDS, 3));
+        new HttpResponse()
+            .withStatusCode(123)
+            .withBody(exact("somebody"))
+            .withHeaders(header("headerName", "headerValue"))
+            .withCookies(cookie("cookieName", "cookieValue"))
+            .withDelay(new Delay(TimeUnit.MICROSECONDS, 3));
     private final HttpResponseDTO fullHttpResponseDTO =
-            new HttpResponseDTO()
-                    .setStatusCode(123)
-                    .setBody(BodyWithContentTypeDTO.createDTO(new StringBody("somebody")))
-                    .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
-                    .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
-                    .setDelay(new DelayDTO(new Delay(TimeUnit.MICROSECONDS, 3)));
+        new HttpResponseDTO()
+            .setStatusCode(123)
+            .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
+            .setHeaders(new Headers().withEntries(
+                header("headerName", "headerValue")
+            ))
+            .setCookies(new Cookies().withEntries(
+                cookie("cookieName", "cookieValue")
+            ))
+            .setDelay(new DelayDTO(new Delay(TimeUnit.MICROSECONDS, 3)));
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
     @Mock

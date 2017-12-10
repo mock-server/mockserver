@@ -65,7 +65,7 @@ public class MockServerResponseDecoderTest {
         mockServerResponseDecoder.decode(null, fullHttpResponse, output);
 
         // then
-        List<Header> headers = ((HttpResponse) output.get(0)).getHeaders();
+        List<Header> headers = ((HttpResponse) output.get(0)).getHeaderList();
         assertThat(headers, containsInAnyOrder(
                 header("headerName1", "headerValue1_1", "headerValue1_2"),
                 header("headerName2", "headerValue2")
@@ -83,7 +83,7 @@ public class MockServerResponseDecoderTest {
         mockServerResponseDecoder.decode(null, fullHttpResponse, output);
 
         // then
-        List<Cookie> cookies = ((HttpResponse) output.get(0)).getCookies();
+        List<Cookie> cookies = ((HttpResponse) output.get(0)).getCookieList();
         assertThat(cookies, containsInAnyOrder(
                 cookie("cookieName1", "cookieValue1"),
                 cookie("cookieName2", "cookieValue2"),
@@ -102,7 +102,7 @@ public class MockServerResponseDecoderTest {
         mockServerResponseDecoder.decode(null, fullHttpResponse, output);
 
         // then
-        List<Cookie> cookies = ((HttpResponse) output.get(0)).getCookies();
+        List<Cookie> cookies = ((HttpResponse) output.get(0)).getCookieList();
         assertThat(cookies, containsInAnyOrder(
                 cookie("cookieName1", "cookie=Value1"),
                 cookie("cookieName2", "cookie==Value2")

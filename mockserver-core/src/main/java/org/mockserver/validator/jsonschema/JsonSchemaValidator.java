@@ -51,15 +51,15 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             if (definitions != null && definitions instanceof ObjectNode) {
                 for (String definitionName : referenceFiles) {
                     ((ObjectNode) definitions).set(
-                            definitionName,
-                            objectMapper.readTree(FileReader.readFileFromClassPathOrPath(routePath + definitionName + ".json"))
+                        definitionName,
+                        objectMapper.readTree(FileReader.readFileFromClassPathOrPath(routePath + definitionName + ".json"))
                     );
                 }
             }
             combinedSchema = ObjectMapperFactory
-                    .createObjectMapper()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(jsonSchema);
+                .createObjectMapper()
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(jsonSchema);
         } catch (Exception e) {
             logger.error("Exception loading JSON Schema for Exceptions", e);
         }
@@ -73,11 +73,11 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             try {
 
                 ProcessingReport processingReport = validator
-                        .validate(
-                                objectMapper.readTree(schema),
-                                objectMapper.readTree(json),
-                                true
-                        );
+                    .validate(
+                        objectMapper.readTree(schema),
+                        objectMapper.readTree(json),
+                        true
+                    );
 
                 if (!processingReport.isSuccess()) {
                     validationResult = formatProcessingReport(processingReport);
@@ -97,57 +97,108 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             if (processingMessage.asJson().get("instance") != null && processingMessage.asJson().get("instance").get("pointer") != null) {
                 fieldPointer = String.valueOf(processingMessage.asJson().get("instance").get("pointer")).replaceAll("\"", "");
             }
-            if (fieldPointer.endsWith("/body")) {
+            if (fieldPointer.endsWith("/headers")) {
+                validationErrors.add("for field \"" + fieldPointer + "\" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
+                    "    \"" + fieldPointer + "\" : {" + NEW_LINE +
+                    "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+                    "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+                    "    }" + NEW_LINE + NEW_LINE +
+                    "   or:" + NEW_LINE + NEW_LINE +
+                    "    \"" + fieldPointer + "\" : [" + NEW_LINE +
+                    "        {" + NEW_LINE +
+                    "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
+                    "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        {" + NEW_LINE +
+                    "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
+                    "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    ]");
+            } else if (fieldPointer.endsWith("/queryStringParameters")) {
+                validationErrors.add("for field \"" + fieldPointer + "\" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
+                    "    \"" + fieldPointer + "\" : {" + NEW_LINE +
+                    "        \"exampleParameterName\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
+                    "        \"exampleMultiValuedParameterName\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
+                    "    }" + NEW_LINE + NEW_LINE +
+                    "   or:" + NEW_LINE + NEW_LINE +
+                    "    \"" + fieldPointer + "\" : [" + NEW_LINE +
+                    "        {" + NEW_LINE +
+                    "            \"name\" : \"exampleParameterName\"," + NEW_LINE +
+                    "            \"values\" : [ \"exampleParameterValue\" ]" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        {" + NEW_LINE +
+                    "            \"name\" : \"exampleMultiValuedParameterName\"," + NEW_LINE +
+                    "            \"values\" : [ \"exampleParameterValueOne\", \"exampleParameterValueTwo\" ]" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    ]");
+            } else if (fieldPointer.endsWith("/cookies")) {
+                validationErrors.add("for field \"" + fieldPointer + "\" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
+                    "    \"" + fieldPointer + "\" : {" + NEW_LINE +
+                    "        \"exampleCookieNameOne\" : \"exampleCookieValueOne\"" + NEW_LINE +
+                    "        \"exampleCookieNameTwo\" : \"exampleCookieValueTwo\"" + NEW_LINE +
+                    "    }" + NEW_LINE + NEW_LINE +
+                    "   or:" + NEW_LINE + NEW_LINE +
+                    "    \"" + fieldPointer + "\" : [" + NEW_LINE +
+                    "        {" + NEW_LINE +
+                    "            \"name\" : \"exampleCookieNameOne\"," + NEW_LINE +
+                    "            \"values\" : \"exampleCookieValueOne\"" + NEW_LINE +
+                    "        }," + NEW_LINE +
+                    "        {" + NEW_LINE +
+                    "            \"name\" : \"exampleCookieNameTwo\"," + NEW_LINE +
+                    "            \"values\" : \"exampleCookieValueTwo\"" + NEW_LINE +
+                    "        }" + NEW_LINE +
+                    "    ]");
+            } else if (fieldPointer.endsWith("/body")) {
                 validationErrors.add("for field \"" + fieldPointer + "\" a plain string or one of the following example bodies must be specified " + NEW_LINE +
-                                "   {" + NEW_LINE +
-                                "     \"not\": false," + NEW_LINE +
-                                "     \"type\": \"BINARY\"," + NEW_LINE +
-                                "     \"base64Bytes\": \"\"," + NEW_LINE +
-                                "     \"contentType\": \"\"" + NEW_LINE +
-                                "   }, " + NEW_LINE +
-                                "   {" + NEW_LINE +
-                                "     \"not\": false," + NEW_LINE +
-                                "     \"type\": \"JSON\"," + NEW_LINE +
-                                "     \"json\": \"\"," + NEW_LINE +
-                                "     \"contentType\": \"\"," + NEW_LINE +
-                                "     \"matchType\": \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
-                                "   }," + NEW_LINE +
-                                "   {" + NEW_LINE +
-                                "     \"not\": false," + NEW_LINE +
-                                "     \"type\": \"JSON_SCHEMA\"," + NEW_LINE +
-                                "     \"jsonSchema\": \"\"" + NEW_LINE +
-                                "   }," + NEW_LINE +
-                                "   {" + NEW_LINE +
-                                "     \"not\": false," + NEW_LINE +
-                                "     \"type\": \"PARAMETERS\"," + NEW_LINE +
-                                "     \"parameters\": \"TO DO\"" + NEW_LINE +
-                                "   }," + NEW_LINE +
-                                "   {" + NEW_LINE +
-                                "     \"not\": false," + NEW_LINE +
-                                "     \"type\": \"REGEX\"," + NEW_LINE +
-                                "     \"regex\": \"\"" + NEW_LINE +
-                                "   }," + NEW_LINE +
-                                "   {" + NEW_LINE +
-                                "     \"not\": false," + NEW_LINE +
-                                "     \"type\": \"STRING\"," + NEW_LINE +
-                                "     \"string\": \"\"" + NEW_LINE +
-                                "   }," + NEW_LINE +
-                                "   {" + NEW_LINE +
-                                "     \"not\": false," + NEW_LINE +
-                                "     \"type\": \"XML\"," + NEW_LINE +
-                                "     \"xml\": \"\"," + NEW_LINE +
-                                "     \"contentType\": \"\"" + NEW_LINE +
-                                "   }," + NEW_LINE +
-                                "   {" + NEW_LINE +
-                                "     \"not\": false," + NEW_LINE +
-                                "     \"type\": \"XML_SCHEMA\"," + NEW_LINE +
-                                "     \"xmlSchema\": \"\"" + NEW_LINE +
-                                "   }," + NEW_LINE +
-                                "   {" + NEW_LINE +
-                                "     \"not\": false," + NEW_LINE +
-                                "     \"type\": \"XPATH\"," + NEW_LINE +
-                                "     \"xpath\": \"\"" + NEW_LINE +
-                                "   }");
+                    "   {" + NEW_LINE +
+                    "     \"not\": false," + NEW_LINE +
+                    "     \"type\": \"BINARY\"," + NEW_LINE +
+                    "     \"base64Bytes\": \"\"," + NEW_LINE +
+                    "     \"contentType\": \"\"" + NEW_LINE +
+                    "   }, " + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"not\": false," + NEW_LINE +
+                    "     \"type\": \"JSON\"," + NEW_LINE +
+                    "     \"json\": \"\"," + NEW_LINE +
+                    "     \"contentType\": \"\"," + NEW_LINE +
+                    "     \"matchType\": \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"not\": false," + NEW_LINE +
+                    "     \"type\": \"JSON_SCHEMA\"," + NEW_LINE +
+                    "     \"jsonSchema\": \"\"" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"not\": false," + NEW_LINE +
+                    "     \"type\": \"PARAMETERS\"," + NEW_LINE +
+                    "     \"parameters\": \"TO DO\"" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"not\": false," + NEW_LINE +
+                    "     \"type\": \"REGEX\"," + NEW_LINE +
+                    "     \"regex\": \"\"" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"not\": false," + NEW_LINE +
+                    "     \"type\": \"STRING\"," + NEW_LINE +
+                    "     \"string\": \"\"" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"not\": false," + NEW_LINE +
+                    "     \"type\": \"XML\"," + NEW_LINE +
+                    "     \"xml\": \"\"," + NEW_LINE +
+                    "     \"contentType\": \"\"" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"not\": false," + NEW_LINE +
+                    "     \"type\": \"XML_SCHEMA\"," + NEW_LINE +
+                    "     \"xmlSchema\": \"\"" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"not\": false," + NEW_LINE +
+                    "     \"type\": \"XPATH\"," + NEW_LINE +
+                    "     \"xpath\": \"\"" + NEW_LINE +
+                    "   }");
             } else if (String.valueOf(processingMessage.asJson().get("keyword")).equals("\"oneOf\"")) {
                 StringBuilder oneOfErrorMessage = new StringBuilder("oneOf of the following must be specified ");
                 for (JsonNode jsonNode : processingMessage.asJson().get("reports")) {

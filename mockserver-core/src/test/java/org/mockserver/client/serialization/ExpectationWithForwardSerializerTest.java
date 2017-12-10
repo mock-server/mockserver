@@ -27,8 +27,12 @@ import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.StringBody.exact;
 
 /**
  * @author jamesdbloom
@@ -39,10 +43,16 @@ public class ExpectationWithForwardSerializerTest {
             new HttpRequest()
                     .withMethod("GET")
                     .withPath("somePath")
-                    .withQueryStringParameters(new Parameter("queryParameterName", Collections.singletonList("queryParameterValue")))
-                    .withBody(new StringBody("somebody"))
-                    .withHeaders(new Header("headerName", "headerValue"))
-                    .withCookies(new Cookie("cookieName", "cookieValue")),
+                    .withQueryStringParameters(
+                        param("queryParameterName", "queryParameterValue")
+                    )
+                    .withBody("somebody")
+                    .withHeaders(
+                        header("headerName", "headerValue")
+                    )
+                    .withCookies(
+                        cookie("cookieName", "cookieValue")
+                    ),
             Times.once(),
             TimeToLive.exactly(TimeUnit.HOURS, 2l))
             .thenForward(
@@ -56,10 +66,16 @@ public class ExpectationWithForwardSerializerTest {
                     new HttpRequestDTO()
                             .setMethod(string("GET"))
                             .setPath(string("somePath"))
-                            .setQueryStringParameters(Collections.singletonList(new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
-                            .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                            .setHeaders(Collections.singletonList(new HeaderDTO(new Header("headerName", Collections.singletonList("headerValue")))))
-                            .setCookies(Collections.singletonList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
+                            .setQueryStringParameters(new Parameters().withEntries(
+                                param("queryParameterName", "queryParameterValue")
+                            ))
+                            .setBody(BodyDTO.createDTO(exact("somebody")))
+                            .setHeaders(new Headers().withEntries(
+                                header("headerName", "headerValue")
+                            ))
+                            .setCookies(new Cookies().withEntries(
+                                cookie("cookieName", "cookieValue")
+                            ))
             )
             .setHttpForward(
                     new HttpForwardDTO(

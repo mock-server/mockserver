@@ -413,11 +413,45 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                         "  }" + NEW_LINE +
                         "}"),
                 is(
-                        "4 errors:" + NEW_LINE +
-                                " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/httpRequest/headers/0\"" + NEW_LINE +
-                                " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/httpRequest/headers/1\"" + NEW_LINE +
-                                " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/httpResponse/headers/0\"" + NEW_LINE +
-                                " - instance type (string) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/httpResponse/headers/1\""
+                        "2 errors:" + NEW_LINE +
+                            " - for field \"/httpRequest/headers\" only one of the following example formats is allowed: " + NEW_LINE +
+                            NEW_LINE +
+                            "    \"/httpRequest/headers\" : {" + NEW_LINE +
+                            "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+                            "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            NEW_LINE +
+                            "   or:" + NEW_LINE +
+                            NEW_LINE +
+                            "    \"/httpRequest/headers\" : [" + NEW_LINE +
+                            "        {" + NEW_LINE +
+                            "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
+                            "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+                            "        }," + NEW_LINE +
+                            "        {" + NEW_LINE +
+                            "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
+                            "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+                            "        }" + NEW_LINE +
+                            "    ]" + NEW_LINE +
+                            " - for field \"/httpResponse/headers\" only one of the following example formats is allowed: " + NEW_LINE +
+                            NEW_LINE +
+                            "    \"/httpResponse/headers\" : {" + NEW_LINE +
+                            "        \"exampleHeaderName\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+                            "        \"exampleMultiValuedHeaderName\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            NEW_LINE +
+                            "   or:" + NEW_LINE +
+                            NEW_LINE +
+                            "    \"/httpResponse/headers\" : [" + NEW_LINE +
+                            "        {" + NEW_LINE +
+                            "            \"name\" : \"exampleHeaderName\"," + NEW_LINE +
+                            "            \"values\" : [ \"exampleHeaderValue\" ]" + NEW_LINE +
+                            "        }," + NEW_LINE +
+                            "        {" + NEW_LINE +
+                            "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
+                            "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
+                            "        }" + NEW_LINE +
+                            "    ]"
                 ));
     }
 }

@@ -36,8 +36,8 @@ public class MockServerResponseToHttpServletResponseEncoder {
     }
 
     private void setHeaders(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
-        if (httpResponse.getHeaders() != null) {
-            for (Header header : httpResponse.getHeaders()) {
+        if (httpResponse.getHeaderList() != null) {
+            for (Header header : httpResponse.getHeaderList()) {
                 String headerName = header.getName().getValue();
                 if (!headerName.equalsIgnoreCase(CONTENT_LENGTH.toString())
                         && !headerName.equalsIgnoreCase(TRANSFER_ENCODING.toString())
@@ -54,8 +54,8 @@ public class MockServerResponseToHttpServletResponseEncoder {
     }
 
     private void setCookies(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
-        if (httpResponse.getCookies() != null) {
-            for (Cookie cookie : httpResponse.getCookies()) {
+        if (httpResponse.getCookieList() != null) {
+            for (Cookie cookie : httpResponse.getCookieList()) {
                 if (!cookieHeaderAlreadyExists(httpResponse, cookie)) {
                     httpServletResponse.addHeader(SET_COOKIE.toString(), ServerCookieEncoder.LAX.encode(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue())));
                 }

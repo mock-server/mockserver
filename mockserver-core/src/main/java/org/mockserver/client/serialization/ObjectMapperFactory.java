@@ -6,12 +6,14 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.mockserver.client.serialization.deserializers.collections.CookiesDeserializer;
 import org.mockserver.client.serialization.deserializers.collections.HeadersDeserializer;
 import org.mockserver.client.serialization.deserializers.body.BodyDTODeserializer;
 import org.mockserver.client.serialization.deserializers.body.BodyWithContentTypeDTODeserializer;
 import org.mockserver.client.serialization.deserializers.collections.ParametersDeserializer;
 import org.mockserver.client.serialization.deserializers.string.NottableStringDeserializer;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.client.serialization.serializers.collections.CookiesSerializer;
 import org.mockserver.client.serialization.serializers.collections.HeadersSerializer;
 import org.mockserver.client.serialization.serializers.body.*;
 import org.mockserver.client.serialization.serializers.collections.ParametersSerializer;
@@ -101,6 +103,8 @@ public class ObjectMapperFactory {
             addSerializer(Headers.class, new HeadersSerializer());
             addDeserializer(Parameters.class, new ParametersDeserializer());
             addSerializer(Parameters.class, new ParametersSerializer());
+            addDeserializer(Cookies.class, new CookiesDeserializer());
+            addSerializer(Cookies.class, new CookiesSerializer());
         }
 
     }
