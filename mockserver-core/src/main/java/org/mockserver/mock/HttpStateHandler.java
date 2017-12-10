@@ -30,6 +30,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
+import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
@@ -38,10 +39,10 @@ import static org.mockserver.model.HttpResponse.response;
 public class HttpStateHandler {
 
     // mockserver
-    private LogFilter logFilter = new LogFilter();
-    private MockServerMatcher mockServerMatcher = new MockServerMatcher();
+    private LoggingFormatter logFormatter = new LoggingFormatter(LoggerFactory.getLogger(this.getClass()), this);
+    private LogFilter logFilter = new LogFilter(logFormatter);
+    private MockServerMatcher mockServerMatcher = new MockServerMatcher(logFormatter);
     private WebSocketClientRegistry webSocketClientRegistry = new WebSocketClientRegistry();
-    private LoggingFormatter logFormatter = new LoggingFormatter(LoggerFactory.getLogger(this.getClass()));
     // serializers
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
@@ -50,26 +51,30 @@ public class HttpStateHandler {
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
+    public LoggingFormatter getLogFormatter() {
+        return logFormatter;
+    }
+
     public void clear(HttpRequest request) {
-        HttpRequest httpRequest = null;
+        HttpRequest requestMatcher = null;
         if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
-            httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
+            requestMatcher = httpRequestSerializer.deserialize(request.getBodyAsString());
         }
         try {
             ClearType retrieveType = ClearType.valueOf(StringUtils.defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "ALL"));
             switch (retrieveType) {
                 case LOG:
-                    logFilter.clear(httpRequest);
-                    logFormatter.infoLog("clearing request logs that match:{}", httpRequest);
+                    logFilter.clear(requestMatcher);
+                    logFormatter.infoLog(requestMatcher, "clearing request logs that match:{}", requestMatcher);
                     break;
                 case EXPECTATIONS:
-                    mockServerMatcher.clear(httpRequest);
-                    logFormatter.infoLog("clearing expectations that match:{}", httpRequest);
+                    mockServerMatcher.clear(requestMatcher);
+                    logFormatter.infoLog(requestMatcher, "clearing expectations that match:{}", requestMatcher);
                     break;
                 case ALL:
-                    logFilter.clear(httpRequest);
-                    mockServerMatcher.clear(httpRequest);
-                    logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
+                    logFilter.clear(requestMatcher);
+                    mockServerMatcher.clear(requestMatcher);
+                    logFormatter.infoLog(requestMatcher, "clearing expectations and request logs that match:{}", requestMatcher);
                     break;
             }
         } catch (IllegalArgumentException iae) {
@@ -84,14 +89,14 @@ public class HttpStateHandler {
     public void reset() {
         mockServerMatcher.reset();
         logFilter.reset();
-        logFormatter.infoLog("resetting all expectations and request logs");
+        logFormatter.infoLog(request(), "resetting all expectations and request logs");
     }
 
     public void add(Expectation... expectations) {
         for (Expectation expectation : expectations) {
             KeyAndCertificateFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
             mockServerMatcher.add(expectation);
-            logFormatter.infoLog("creating expectation:{}", expectation);
+            logFormatter.infoLog(expectation.getHttpRequest(), "creating expectation:{}", expectation);
         }
     }
 
@@ -150,7 +155,7 @@ public class HttpStateHandler {
                     break;
                 }
             }
-            logFormatter.infoLog("retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", httpRequest);
+            logFormatter.infoLog(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", httpRequest);
         } catch (IllegalArgumentException iae) {
             if (iae.getMessage().contains(RetrieveType.class.getSimpleName())) {
                 throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Lists.transform(Arrays.asList(RetrieveType.values()), new Function<RetrieveType, String>() {
@@ -207,7 +212,7 @@ public class HttpStateHandler {
         } else if (request.matches("PUT", "/retrieve")) {
 
             responseWriter.writeResponse(request, OK, retrieve(request),
-                    JSON_UTF_8.toString().replace(request.hasQueryStringParameter("format", "java") ? "json" : "", "java")
+                JSON_UTF_8.toString().replace(request.hasQueryStringParameter("format", "java") ? "json" : "", "java")
             );
 
         } else if (request.matches("PUT", "/verify")) {
@@ -219,7 +224,7 @@ public class HttpStateHandler {
             } else {
                 responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
             }
-            logFormatter.infoLog("verifying requests that match:{}", verification);
+            logFormatter.infoLog(request, "verifying requests that match:{}", verification);
 
         } else if (request.matches("PUT", "/verifySequence")) {
 
@@ -230,7 +235,7 @@ public class HttpStateHandler {
             } else {
                 responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
             }
-            logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
+            logFormatter.infoLog(request, "verifying sequence that match:{}", verificationSequence);
 
         } else {
             return false;

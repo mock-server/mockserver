@@ -29,11 +29,11 @@ public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<
 
     public ConnectionOptions buildObject() {
         return new ConnectionOptions()
-                .withSuppressContentLengthHeader(suppressContentLengthHeader)
-                .withContentLengthHeaderOverride(contentLengthHeaderOverride)
-                .withSuppressConnectionHeader(suppressConnectionHeader)
-                .withKeepAliveOverride(keepAliveOverride)
-                .withCloseSocket(closeSocket);
+            .withSuppressContentLengthHeader(suppressContentLengthHeader)
+            .withContentLengthHeaderOverride(contentLengthHeaderOverride)
+            .withSuppressConnectionHeader(suppressConnectionHeader)
+            .withKeepAliveOverride(keepAliveOverride)
+            .withCloseSocket(closeSocket);
     }
 
     public Boolean getSuppressContentLengthHeader() {

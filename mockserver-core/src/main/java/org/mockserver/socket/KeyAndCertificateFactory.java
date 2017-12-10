@@ -197,9 +197,9 @@ public class KeyAndCertificateFactory {
         if (subjectAlternativeNameIps != null) {
             for (String subjectAlternativeNameIp : subjectAlternativeNameIps) {
                 if (IPAddress.isValidIPv6WithNetmask(subjectAlternativeNameIp)
-                        || IPAddress.isValidIPv6(subjectAlternativeNameIp)
-                        || IPAddress.isValidIPv4WithNetmask(subjectAlternativeNameIp)
-                        || IPAddress.isValidIPv4(subjectAlternativeNameIp)) {
+                    || IPAddress.isValidIPv6(subjectAlternativeNameIp)
+                    || IPAddress.isValidIPv4WithNetmask(subjectAlternativeNameIp)
+                    || IPAddress.isValidIPv4(subjectAlternativeNameIp)) {
                     subjectAlternativeNames.add(new GeneralName(GeneralName.iPAddress, subjectAlternativeNameIp));
                 }
             }
@@ -248,13 +248,13 @@ public class KeyAndCertificateFactory {
 
             // generate mockServer certificate
             X509Certificate mockServerCert = createCASignedCert(
-                    mockServerPublicKey,
-                    caCert,
-                    caPrivateKey,
-                    caCert.getPublicKey(),
-                    ConfigurationProperties.sslCertificateDomainName(),
-                    ConfigurationProperties.sslSubjectAlternativeNameDomains(),
-                    ConfigurationProperties.sslSubjectAlternativeNameIps()
+                mockServerPublicKey,
+                caCert,
+                caPrivateKey,
+                caCert.getPublicKey(),
+                ConfigurationProperties.sslCertificateDomainName(),
+                ConfigurationProperties.sslSubjectAlternativeNameDomains(),
+                ConfigurationProperties.sslSubjectAlternativeNameIps()
             );
             saveCertificateAsPEMFile(mockServerCert, "MockServerCertificate.pem", true);
             saveCertificateAsPEMFile(mockServerPublicKey, "MockServerPublicKey.pem", true);

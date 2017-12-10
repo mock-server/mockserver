@@ -5,6 +5,7 @@ import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.model.HttpRequest;
@@ -31,6 +32,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.model.BinaryBody.binary;
@@ -68,7 +70,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                                                 header("x-test", "test_headers_and_body")
                                         )
                                         .withBody("an_example_body_http");
-                                if (new MatcherBuilder().transformsToMatcher(expectation).matches(httpRequest)) {
+                                if (new MatcherBuilder(mock(LoggingFormatter.class)).transformsToMatcher(expectation).matches(httpRequest)) {
                                     return response()
                                             .withStatusCode(ACCEPTED_202.code())
                                             .withHeaders(

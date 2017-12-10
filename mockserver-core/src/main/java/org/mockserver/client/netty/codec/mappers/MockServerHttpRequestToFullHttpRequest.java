@@ -73,8 +73,8 @@ public class MockServerHttpRequestToFullHttpRequest {
         }
         if (cookies.size() > 0) {
             request.headers().set(
-                    COOKIE.toString(),
-                    io.netty.handler.codec.http.cookie.ClientCookieEncoder.LAX.encode(cookies)
+                COOKIE.toString(),
+                io.netty.handler.codec.http.cookie.ClientCookieEncoder.LAX.encode(cookies)
             );
         }
     }
@@ -84,9 +84,9 @@ public class MockServerHttpRequestToFullHttpRequest {
             String headerName = header.getName().getValue();
             // do not set hop-by-hop headers
             if (!headerName.equalsIgnoreCase(CONTENT_LENGTH.toString())
-                    && !headerName.equalsIgnoreCase(TRANSFER_ENCODING.toString())
-                    && !headerName.equalsIgnoreCase(HOST.toString())
-                    && !headerName.equalsIgnoreCase(ACCEPT_ENCODING.toString())) {
+                && !headerName.equalsIgnoreCase(TRANSFER_ENCODING.toString())
+                && !headerName.equalsIgnoreCase(HOST.toString())
+                && !headerName.equalsIgnoreCase(ACCEPT_ENCODING.toString())) {
                 if (!header.getValues().isEmpty()) {
                     for (NottableString headerValue : header.getValues()) {
                         request.headers().add(headerName, headerValue.getValue());
@@ -110,7 +110,7 @@ public class MockServerHttpRequestToFullHttpRequest {
 
         if (!request.headers().contains(CONTENT_TYPE)) {
             if (httpRequest.getBody() != null
-                    && httpRequest.getBody().getContentType() != null) {
+                && httpRequest.getBody().getContentType() != null) {
                 request.headers().set(CONTENT_TYPE, httpRequest.getBody().getContentType());
             }
         }

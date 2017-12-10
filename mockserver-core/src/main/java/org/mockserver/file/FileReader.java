@@ -4,7 +4,6 @@ import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
-import java.net.URL;
 
 /**
  * @author jamesdbloom

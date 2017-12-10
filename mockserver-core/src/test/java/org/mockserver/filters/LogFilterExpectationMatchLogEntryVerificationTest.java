@@ -2,13 +2,14 @@ package org.mockserver.filters;
 
 import org.junit.Test;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
-import org.mockserver.log.model.RequestResponseLogEntry;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.verify.Verification;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -26,7 +27,7 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
@@ -42,7 +43,7 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
@@ -51,21 +52,21 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
 
         // then
         assertThat(logFilter.verify(
-                verification()
-                        .withRequest(
-                                new HttpRequest()
-                                        .withPath("some_path")
-                        )
-                ),
-                is(""));
+            verification()
+                .withRequest(
+                    new HttpRequest()
+                        .withPath("some_path")
+                )
+            ),
+            is(""));
         assertThat(logFilter.verify(
-                verification()
-                        .withRequest(
-                                new HttpRequest()
-                                        .withPath("some_other_path")
-                        )
-                ),
-                is(""));
+            verification()
+                .withRequest(
+                    new HttpRequest()
+                        .withPath("some_other_path")
+                )
+            ),
+            is(""));
     }
 
     @Test
@@ -73,7 +74,7 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
@@ -82,13 +83,13 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
 
         // then
         assertThat(logFilter.verify(
-                verification()
-                        .withRequest(
-                                new HttpRequest().withPath("some_path")
-                        )
-                        .withTimes(atLeast(2))
-                ),
-                is(""));
+            verification()
+                .withRequest(
+                    new HttpRequest().withPath("some_path")
+                )
+                .withTimes(atLeast(2))
+            ),
+            is(""));
     }
 
     @Test
@@ -96,7 +97,7 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
@@ -105,13 +106,13 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
 
         // then
         assertThat(logFilter.verify(
-                verification()
-                        .withRequest(
-                                new HttpRequest().withPath("some_non_matching_path")
-                        )
-                        .withTimes(atLeast(0))
-                ),
-                is(""));
+            verification()
+                .withRequest(
+                    new HttpRequest().withPath("some_non_matching_path")
+                )
+                .withTimes(atLeast(0))
+            ),
+            is(""));
     }
 
     @Test
@@ -119,7 +120,7 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
@@ -128,14 +129,14 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
 
         // then
         assertThat(logFilter.verify(
-                verification()
-                        .withRequest(
-                                new HttpRequest()
-                                        .withPath("some_path")
-                        )
-                        .withTimes(exactly(2))
-                ),
-                is(""));
+            verification()
+                .withRequest(
+                    new HttpRequest()
+                        .withPath("some_path")
+                )
+                .withTimes(exactly(2))
+            ),
+            is(""));
     }
 
     @Test
@@ -143,7 +144,7 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
@@ -152,20 +153,20 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
 
         // then
         assertThat(logFilter.verify(
-                verification()
-                        .withRequest(
-                                new HttpRequest()
-                                        .withPath("some_non_matching_path")
-                        )
-                        .withTimes(exactly(0))
-                ),
-                is(""));
+            verification()
+                .withRequest(
+                    new HttpRequest()
+                        .withPath("some_non_matching_path")
+                )
+                .withTimes(exactly(0))
+            ),
+            is(""));
     }
 
     @Test
     public void shouldFailVerificationWithNullRequest() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // then
         assertThat(logFilter.verify((Verification) null), is(""));
@@ -176,7 +177,7 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
@@ -185,20 +186,20 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
 
         // then
         assertThat(logFilter.verify(
-                verification()
-                        .withRequest(
-                                new HttpRequest().withPath("some_non_matching_path")
-                        )
-                ),
-                is("Request not found at least once, expected:<{" + NEW_LINE +
-                        "  \"path\" : \"some_non_matching_path\"" + NEW_LINE +
-                        "}> but was:<[ {" + NEW_LINE +
-                        "  \"path\" : \"some_path\"" + NEW_LINE +
-                        "}, {" + NEW_LINE +
-                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
-                        "}, {" + NEW_LINE +
-                        "  \"path\" : \"some_path\"" + NEW_LINE +
-                        "} ]>"));
+            verification()
+                .withRequest(
+                    new HttpRequest().withPath("some_non_matching_path")
+                )
+            ),
+            is("Request not found at least once, expected:<{" + NEW_LINE +
+                "  \"path\" : \"some_non_matching_path\"" + NEW_LINE +
+                "}> but was:<[ {" + NEW_LINE +
+                "  \"path\" : \"some_path\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"some_path\"" + NEW_LINE +
+                "} ]>"));
     }
 
     @Test
@@ -206,7 +207,7 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
@@ -215,21 +216,21 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
 
         // then
         assertThat(logFilter.verify(
-                verification()
-                        .withRequest(
-                                new HttpRequest().withPath("some_other_path")
-                        )
-                        .withTimes(atLeast(2))
-                ),
-                is("Request not found at least 2 times, expected:<{" + NEW_LINE +
-                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
-                        "}> but was:<[ {" + NEW_LINE +
-                        "  \"path\" : \"some_path\"" + NEW_LINE +
-                        "}, {" + NEW_LINE +
-                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
-                        "}, {" + NEW_LINE +
-                        "  \"path\" : \"some_path\"" + NEW_LINE +
-                        "} ]>"));
+            verification()
+                .withRequest(
+                    new HttpRequest().withPath("some_other_path")
+                )
+                .withTimes(atLeast(2))
+            ),
+            is("Request not found at least 2 times, expected:<{" + NEW_LINE +
+                "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                "}> but was:<[ {" + NEW_LINE +
+                "  \"path\" : \"some_path\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"some_path\"" + NEW_LINE +
+                "} ]>"));
     }
 
     @Test
@@ -237,7 +238,7 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
@@ -246,41 +247,41 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
 
         // then
         assertThat(logFilter.verify(
-                verification()
-                        .withRequest(
-                                new HttpRequest()
-                                        .withPath("some_other_path")
-                        )
-                        .withTimes(exactly(2))
-                ),
-                is("Request not found exactly 2 times, expected:<{" + NEW_LINE +
-                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
-                        "}> but was:<[ {" + NEW_LINE +
-                        "  \"path\" : \"some_path\"" + NEW_LINE +
-                        "}, {" + NEW_LINE +
-                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
-                        "}, {" + NEW_LINE +
-                        "  \"path\" : \"some_path\"" + NEW_LINE +
-                        "} ]>"));
+            verification()
+                .withRequest(
+                    new HttpRequest()
+                        .withPath("some_other_path")
+                )
+                .withTimes(exactly(2))
+            ),
+            is("Request not found exactly 2 times, expected:<{" + NEW_LINE +
+                "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                "}> but was:<[ {" + NEW_LINE +
+                "  \"path\" : \"some_path\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"some_path\"" + NEW_LINE +
+                "} ]>"));
     }
 
     @Test
     public void shouldFailVerificationWithExactOneTime() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // then
         assertThat(logFilter.verify(
-                verification()
-                        .withRequest(
-                                new HttpRequest()
-                                        .withPath("some_other_path")
-                        )
-                        .withTimes(exactly(1))
-                ),
-                is("Request not found exactly once, expected:<{" + NEW_LINE +
-                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
-                        "}> but was:<>"));
+            verification()
+                .withRequest(
+                    new HttpRequest()
+                        .withPath("some_other_path")
+                )
+                .withTimes(exactly(1))
+            ),
+            is("Request not found exactly once, expected:<{" + NEW_LINE +
+                "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                "}> but was:<>"));
     }
 
     @Test
@@ -288,7 +289,7 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
@@ -297,39 +298,39 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
 
         // then
         assertThat(logFilter.verify(
-                verification()
-                        .withRequest(
-                                new HttpRequest()
-                                        .withPath("some_other_path")
-                        )
-                        .withTimes(exactly(0))
-                ),
-                is("Request not found exactly 0 times, expected:<{" + NEW_LINE +
-                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
-                        "}> but was:<[ {" + NEW_LINE +
-                        "  \"path\" : \"some_path\"" + NEW_LINE +
-                        "}, {" + NEW_LINE +
-                        "  \"path\" : \"some_other_path\"" + NEW_LINE +
-                        "}, {" + NEW_LINE +
-                        "  \"path\" : \"some_path\"" + NEW_LINE +
-                        "} ]>"));
+            verification()
+                .withRequest(
+                    new HttpRequest()
+                        .withPath("some_other_path")
+                )
+                .withTimes(exactly(0))
+            ),
+            is("Request not found exactly 0 times, expected:<{" + NEW_LINE +
+                "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                "}> but was:<[ {" + NEW_LINE +
+                "  \"path\" : \"some_path\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"some_other_path\"" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"path\" : \"some_path\"" + NEW_LINE +
+                "} ]>"));
     }
 
     @Test
     public void shouldFailVerificationWithNoInteractions() {
         // given
         HttpRequest httpRequest = new HttpRequest();
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
 
         // then
         assertThat(logFilter.verify(
-                verification()
-                        .withRequest(request())
-                        .withTimes(exactly(0))
-                ),
-                is("Request not found exactly 0 times, expected:<{ }> but was:<{ }>"));
+            verification()
+                .withRequest(request())
+                .withTimes(exactly(0))
+            ),
+            is("Request not found exactly 0 times, expected:<{ }> but was:<{ }>"));
     }
 }

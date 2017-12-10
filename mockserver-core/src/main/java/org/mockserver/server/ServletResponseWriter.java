@@ -38,8 +38,8 @@ public class ServletResponseWriter implements ResponseWriter {
     @Override
     public void writeResponse(HttpRequest request, HttpResponseStatus responseStatus, String body, String contentType) {
         HttpResponse response = response()
-                .withStatusCode(responseStatus.code())
-                .withBody(body);
+            .withStatusCode(responseStatus.code())
+            .withBody(body);
         if (body != null && !body.isEmpty()) {
             response.replaceHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
         }

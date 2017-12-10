@@ -21,7 +21,7 @@ public class HttpObjectCallbackDTO extends ObjectWithReflectiveEqualsHashCodeToS
 
     public HttpObjectCallback buildObject() {
         return new HttpObjectCallback()
-                .withClientId(clientId);
+            .withClientId(clientId);
     }
 
     public String getClientId() {

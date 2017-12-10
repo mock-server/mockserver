@@ -28,8 +28,8 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
     public String serialize(HttpResponse httpResponse) {
         try {
             return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(new HttpResponseDTO(httpResponse));
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(new HttpResponseDTO(httpResponse));
         } catch (Exception e) {
             logger.error(String.format("Exception while serializing httpResponse to JSON with value %s", httpResponse), e);
             throw new RuntimeException(String.format("Exception while serializing httpResponse to JSON with value %s", httpResponse), e);
@@ -48,8 +48,8 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                     httpResponseDTOs[i] = new HttpResponseDTO(httpResponses[i]);
                 }
                 return objectMapper
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(httpResponseDTOs);
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(httpResponseDTOs);
             }
             return "";
         } catch (Exception e) {

@@ -1,7 +1,7 @@
 package org.mockserver.client.serialization.model;
 
-import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.verify.VerificationSequence;
 
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ public class VerificationSequenceDTO extends ObjectWithReflectiveEqualsHashCodeT
             httpRequests.add(httpRequest.buildObject());
         }
         return new VerificationSequence()
-                .withRequests(httpRequests);
+            .withRequests(httpRequests);
     }
 
     public List<HttpRequestDTO> getHttpRequests() {

@@ -1,6 +1,5 @@
 package org.mockserver.client.serialization.model;
 
-import org.mockserver.model.Not;
 import org.mockserver.model.Parameter;
 
 /**

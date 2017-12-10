@@ -2,8 +2,6 @@ package org.mockserver.cors;
 
 import org.mockserver.model.HttpResponse;
 
-import javax.servlet.http.HttpServletResponse;
-
 /**
  * @author jamesdbloom
  */

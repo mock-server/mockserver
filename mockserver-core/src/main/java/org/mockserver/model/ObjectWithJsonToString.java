@@ -11,13 +11,13 @@ public abstract class ObjectWithJsonToString extends ObjectWithReflectiveEqualsH
     public String toString() {
         try {
             String valueAsString = ObjectMapperFactory
-                    .createObjectMapper()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(this);
+                .createObjectMapper()
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(this);
             if (valueAsString.startsWith("\"") && valueAsString.endsWith("\"")) {
                 valueAsString = valueAsString
-                        .replaceAll("^\"", "")
-                        .replaceAll("\"$", "");
+                    .replaceAll("^\"", "")
+                    .replaceAll("\"$", "");
             }
             return valueAsString;
         } catch (Exception e) {

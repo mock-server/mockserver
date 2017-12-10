@@ -2,14 +2,25 @@ package org.mockserver.mock;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.matchers.HttpRequestMatcher;
+import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 /**
  * @author jamesdbloom
@@ -17,10 +28,12 @@ import static org.junit.Assert.assertEquals;
 public class MockServerMatcherClearAndResetTest {
 
     private MockServerMatcher mockServerMatcher;
+    private LoggingFormatter logFormatter;
 
     @Before
     public void prepareTestFixture() {
-        mockServerMatcher = new MockServerMatcher();
+        logFormatter = mock(LoggingFormatter.class);
+        mockServerMatcher = new MockServerMatcher(logFormatter);
     }
 
     @Test
@@ -35,7 +48,7 @@ public class MockServerMatcherClearAndResetTest {
         // then
         assertEquals(expectation, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
         assertEquals(expectation, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
-        assertArrayEquals(new Expectation[]{}, mockServerMatcher.expectations.toArray());
+        assertThat(mockServerMatcher.httpRequestMatchers, is(empty()));
         assertEquals(null, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
     }
 
@@ -50,7 +63,7 @@ public class MockServerMatcherClearAndResetTest {
         mockServerMatcher.clear(new HttpRequest().withPath("somepath"));
 
         // then
-        assertArrayEquals(new Expectation[]{}, mockServerMatcher.expectations.toArray());
+        assertThat(mockServerMatcher.httpRequestMatchers, is(empty()));
     }
 
     @Test
@@ -64,7 +77,7 @@ public class MockServerMatcherClearAndResetTest {
         mockServerMatcher.clear(null);
 
         // then
-        assertArrayEquals(new Expectation[]{}, mockServerMatcher.expectations.toArray());
+        assertThat(mockServerMatcher.httpRequestMatchers, is(empty()));
     }
 
     @Test
@@ -78,7 +91,7 @@ public class MockServerMatcherClearAndResetTest {
         mockServerMatcher.reset();
 
         // then
-        assertArrayEquals(new Expectation[]{}, mockServerMatcher.expectations.toArray());
+        assertThat(mockServerMatcher.httpRequestMatchers, is(empty()));
     }
 
     @Test
@@ -93,7 +106,7 @@ public class MockServerMatcherClearAndResetTest {
         mockServerMatcher.clear(new HttpRequest().withPath("abc"));
 
         // then
-        assertArrayEquals(new Expectation[]{expectation}, mockServerMatcher.expectations.toArray());
+        assertThat(mockServerMatcher.httpRequestMatchers, hasItems(new MatcherBuilder(logFormatter).transformsToMatcher(expectation)));
     }
 
     @Test
@@ -109,7 +122,7 @@ public class MockServerMatcherClearAndResetTest {
         mockServerMatcher.clear(new HttpRequest().withMethod("GET"));
 
         // then
-        assertArrayEquals(new Expectation[]{expectation}, mockServerMatcher.expectations.toArray());
+        assertThat(mockServerMatcher.httpRequestMatchers, hasItems(new MatcherBuilder(logFormatter).transformsToMatcher(expectation)));
     }
 
     @Test
@@ -125,7 +138,7 @@ public class MockServerMatcherClearAndResetTest {
         mockServerMatcher.clear(new HttpRequest().withHeader(new Header("headerOneName", "headerOneValue")));
 
         // then
-        assertArrayEquals(new Expectation[]{expectation}, mockServerMatcher.expectations.toArray());
+        assertThat(mockServerMatcher.httpRequestMatchers, hasItems(new MatcherBuilder(logFormatter).transformsToMatcher(expectation)));
     }
 
     @Test
@@ -139,12 +152,13 @@ public class MockServerMatcherClearAndResetTest {
         for (Expectation expectation : expectations) {
             mockServerMatcher.add(expectation);
         }
+        List<HttpRequestMatcher> httpRequestMatchers = new ArrayList<>(mockServerMatcher.httpRequestMatchers);
 
         // when
         mockServerMatcher.clear(new HttpRequest().withPath("foobar"));
 
         // then
-        assertArrayEquals(expectations, mockServerMatcher.expectations.toArray());
+        assertThat(mockServerMatcher.httpRequestMatchers, is(httpRequestMatchers));
     }
 
 }

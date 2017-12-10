@@ -5,16 +5,16 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.netty.NettyHttpClient;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
 
 import javax.script.ScriptEngineManager;
 
-import java.net.InetSocketAddress;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -32,10 +32,14 @@ public class HttpForwardTemplateActionHandlerTest {
     @Mock
     private NettyHttpClient mockHttpClient;
     @InjectMocks
-    private HttpForwardTemplateActionHandler httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler();
+    private HttpForwardTemplateActionHandler httpForwardTemplateActionHandler;
+
+    private LoggingFormatter mockLogFormatter;
 
     @Before
     public void setupMocks() {
+        mockLogFormatter = mock(LoggingFormatter.class);
+        httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(mockLogFormatter);
         initMocks(this);
     }
 

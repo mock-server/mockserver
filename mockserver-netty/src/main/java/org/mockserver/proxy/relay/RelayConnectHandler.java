@@ -35,60 +35,60 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
     @Override
     public void channelRead0(final ChannelHandlerContext serverCtx, final T request) throws Exception {
         Bootstrap bootstrap = new Bootstrap()
-                .group(serverCtx.channel().eventLoop())
-                .channel(NioSocketChannel.class)
-                .handler(new ChannelInboundHandlerAdapter() {
-                    @Override
-                    public void channelActive(final ChannelHandlerContext clientCtx) throws Exception {
-                        serverCtx.channel()
-                                .writeAndFlush(successResponse(request))
-                                .addListener(new ChannelFutureListener() {
-                                    @Override
-                                    public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                                        removeCodecSupport(serverCtx);
+            .group(serverCtx.channel().eventLoop())
+            .channel(NioSocketChannel.class)
+            .handler(new ChannelInboundHandlerAdapter() {
+                @Override
+                public void channelActive(final ChannelHandlerContext clientCtx) throws Exception {
+                    serverCtx.channel()
+                        .writeAndFlush(successResponse(request))
+                        .addListener(new ChannelFutureListener() {
+                            @Override
+                            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                                removeCodecSupport(serverCtx);
 
-                                        // downstream
-                                        ChannelPipeline downstreamPipeline = clientCtx.channel().pipeline();
+                                // downstream
+                                ChannelPipeline downstreamPipeline = clientCtx.channel().pipeline();
 
-                                        if (PortUnificationHandler.isSslEnabledDownstream(serverCtx.channel())) {
-                                            downstreamPipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(clientCtx.alloc(), host, port));
-                                        }
+                                if (PortUnificationHandler.isSslEnabledDownstream(serverCtx.channel())) {
+                                    downstreamPipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(clientCtx.alloc(), host, port));
+                                }
 
-                                        if (logger.isTraceEnabled()) {
-                                            downstreamPipeline.addLast(new LoggingHandler("downstream                -->"));
-                                        }
+                                if (logger.isTraceEnabled()) {
+                                    downstreamPipeline.addLast(new LoggingHandler("downstream                -->"));
+                                }
 
-                                        downstreamPipeline.addLast(new HttpClientCodec());
+                                downstreamPipeline.addLast(new HttpClientCodec());
 
-                                        downstreamPipeline.addLast(new HttpContentDecompressor());
+                                downstreamPipeline.addLast(new HttpContentDecompressor());
 
-                                        downstreamPipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+                                downstreamPipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-                                        downstreamPipeline.addLast(new DownstreamProxyRelayHandler(serverCtx.channel(), logger));
+                                downstreamPipeline.addLast(new DownstreamProxyRelayHandler(serverCtx.channel(), logger));
 
 
-                                        // upstream
-                                        ChannelPipeline upstreamPipeline = serverCtx.channel().pipeline();
+                                // upstream
+                                ChannelPipeline upstreamPipeline = serverCtx.channel().pipeline();
 
-                                        if (PortUnificationHandler.isSslEnabledUpstream(serverCtx.channel())) {
-                                            upstreamPipeline.addLast(nettySslContextFactory().createServerSslContext().newHandler(serverCtx.alloc()));
-                                        }
+                                if (PortUnificationHandler.isSslEnabledUpstream(serverCtx.channel())) {
+                                    upstreamPipeline.addLast(nettySslContextFactory().createServerSslContext().newHandler(serverCtx.alloc()));
+                                }
 
-                                        if (logger.isTraceEnabled()) {
-                                            upstreamPipeline.addLast(new LoggingHandler("upstream <-- "));
-                                        }
+                                if (logger.isTraceEnabled()) {
+                                    upstreamPipeline.addLast(new LoggingHandler("upstream <-- "));
+                                }
 
-                                        upstreamPipeline.addLast(new HttpServerCodec(8192, 8192, 8192));
+                                upstreamPipeline.addLast(new HttpServerCodec(8192, 8192, 8192));
 
-                                        upstreamPipeline.addLast(new HttpContentDecompressor());
+                                upstreamPipeline.addLast(new HttpContentDecompressor());
 
-                                        upstreamPipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+                                upstreamPipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-                                        upstreamPipeline.addLast(new UpstreamProxyRelayHandler(serverCtx.channel(), clientCtx.channel(), logger));
-                                    }
-                                });
-                    }
-                });
+                                upstreamPipeline.addLast(new UpstreamProxyRelayHandler(serverCtx.channel(), clientCtx.channel(), logger));
+                            }
+                        });
+                }
+            });
 
         final InetSocketAddress remoteSocket = getDownstreamSocket(serverCtx.channel());
         bootstrap.connect(remoteSocket).addListener(new ChannelFutureListener() {

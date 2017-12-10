@@ -58,28 +58,28 @@ public class NettyHttpClient {
 
             // make the connection attempt
             new Bootstrap()
-                    .group(group)
-                    .channel(NioSocketChannel.class)
-                    .option(ChannelOption.AUTO_READ, true)
-                    .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-                    .handler(channelInitializer)
-                    .connect(remoteAddress)
-                    .addListener(new ChannelFutureListener() {
-                        @Override
-                        public void operationComplete(ChannelFuture future) throws Exception {
-                            if (future.isSuccess()) {
-                                // send the HTTP request
-                                future.channel().writeAndFlush(httpRequest);
-                            } else {
-                                channelInitializer.getResponseFuture().setException(future.cause());
-                            }
+                .group(group)
+                .channel(NioSocketChannel.class)
+                .option(ChannelOption.AUTO_READ, true)
+                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
+                .handler(channelInitializer)
+                .connect(remoteAddress)
+                .addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture future) throws Exception {
+                        if (future.isSuccess()) {
+                            // send the HTTP request
+                            future.channel().writeAndFlush(httpRequest);
+                        } else {
+                            channelInitializer.getResponseFuture().setException(future.cause());
                         }
-                    });
+                    }
+                });
 
             // wait for response
             HttpResponse httpResponse = channelInitializer.getResponseFuture().get(ConfigurationProperties.maxSocketTimeout(), TimeUnit.MILLISECONDS);
-            logger.debug("Received response: {}", httpResponse);
+            logger.trace("Received response: {}", httpResponse);
 
             // shutdown client
             group.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);

@@ -18,8 +18,8 @@ public class DirectProxyUnificationHandler extends PortUnificationHandler {
     protected void configurePipeline(ChannelHandlerContext ctx, ChannelPipeline pipeline) {
         pipeline.addLast(new MockServerServerCodec(isSslEnabledDownstream(ctx.channel())));
         pipeline.addLast(new HttpProxyHandler(
-                ctx.channel().attr(Proxy.HTTP_PROXY).get(),
-                ctx.channel().attr(Proxy.STATE_HANDLER).get()
+            ctx.channel().attr(Proxy.HTTP_PROXY).get(),
+            ctx.channel().attr(Proxy.STATE_HANDLER).get()
         ));
     }
 }

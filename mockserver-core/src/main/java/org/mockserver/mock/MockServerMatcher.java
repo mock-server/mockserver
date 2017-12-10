@@ -1,13 +1,11 @@
 package org.mockserver.mock;
 
 import org.mockserver.collections.CircularLinkedList;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
-import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,25 +18,26 @@ import static org.mockserver.configuration.ConfigurationProperties.maxExpectatio
  */
 public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToString {
 
-    protected final List<Expectation> expectations = Collections.synchronizedList(new CircularLinkedList<Expectation>(maxExpectations()));
+    protected final List<HttpRequestMatcher> httpRequestMatchers = Collections.synchronizedList(new CircularLinkedList<HttpRequestMatcher>(maxExpectations()));
+    private MatcherBuilder matcherBuilder;
+
+    public MockServerMatcher(LoggingFormatter logFormatter) {
+        this.matcherBuilder = new MatcherBuilder(logFormatter);
+    }
 
     public void add(Expectation expectation) {
-        this.expectations.add(expectation);
+        this.httpRequestMatchers.add(matcherBuilder.transformsToMatcher(expectation));
     }
 
     public Expectation firstMatchingExpectation(HttpRequest httpRequest) {
         Expectation matchingExpectation = null;
-        for (Expectation expectation : new ArrayList<>(this.expectations)) {
-            if (expectation.matches(httpRequest)) {
-                matchingExpectation = expectation.decrementRemainingMatches();
+        for (HttpRequestMatcher httpRequestMatcher : new ArrayList<>(this.httpRequestMatchers)) {
+            if (httpRequestMatcher.matches(httpRequest)) {
+                matchingExpectation = httpRequestMatcher.decrementRemainingMatches();
             }
-            if (!expectation.isStillAlive() || !expectation.hasRemainingMatches()) {
-                if (this.expectations.contains(expectation)) {
-                    this.expectations.remove(expectation);
-                }
-                HttpObjectCallback httpObjectCallback = expectation.getHttpObjectCallback();
-                if (httpObjectCallback != null) {
-
+            if (!httpRequestMatcher.isActive()) {
+                if (this.httpRequestMatchers.contains(httpRequestMatcher)) {
+                    this.httpRequestMatchers.remove(httpRequestMatcher);
                 }
             }
             if (matchingExpectation != null) {
@@ -50,11 +49,12 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
 
     public void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
-            HttpRequestMatcher httpRequestMatcher = new MatcherBuilder().transformsToMatcher(httpRequest);
-            for (Expectation expectation : new ArrayList<>(this.expectations)) {
-                if (httpRequestMatcher.matches(expectation.getHttpRequest(), true)) {
-                    if (this.expectations.contains(expectation)) {
-                        this.expectations.remove(expectation);
+            HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+            for (HttpRequestMatcher httpRequestMatcher : new ArrayList<>(this.httpRequestMatchers)) {
+                boolean matches = clearHttpRequestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest(), true);
+                if (matches) {
+                    if (this.httpRequestMatchers.contains(httpRequestMatcher)) {
+                        this.httpRequestMatchers.remove(httpRequestMatcher);
                     }
                 }
             }
@@ -64,19 +64,15 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
     }
 
     public void reset() {
-        this.expectations.clear();
+        this.httpRequestMatchers.clear();
     }
 
     public List<Expectation> retrieveExpectations(HttpRequest httpRequest) {
         List<Expectation> expectations = new ArrayList<Expectation>();
-        if (httpRequest != null) {
-            for (Expectation expectation : new ArrayList<>(this.expectations)) {
-                if (expectation.matches(httpRequest)) {
-                    expectations.add(expectation);
-                }
+        for (HttpRequestMatcher httpRequestMatcher : new ArrayList<>(this.httpRequestMatchers)) {
+            if (httpRequest == null || httpRequestMatcher.matches(httpRequest)) {
+                expectations.add(httpRequestMatcher.getExpectation());
             }
-        } else {
-            expectations.addAll(this.expectations);
         }
         return expectations;
     }

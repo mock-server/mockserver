@@ -107,7 +107,7 @@ public class MockServerClientTest {
 
         // then
         Expectation expectation = forwardChainExpectation.getExpectation();
-        assertTrue(expectation.matches(httpRequest));
+        assertTrue(expectation.isActive());
         assertSame(httpResponse, expectation.getHttpResponse());
         assertEquals(Times.unlimited(), expectation.getTimes());
     }
@@ -131,7 +131,7 @@ public class MockServerClientTest {
 
         // then
         Expectation expectation = forwardChainExpectation.getExpectation();
-        assertTrue(expectation.matches(httpRequest));
+        assertTrue(expectation.isActive());
         assertSame(httpForward, expectation.getHttpForward());
         assertEquals(Times.unlimited(), expectation.getTimes());
     }
@@ -154,7 +154,7 @@ public class MockServerClientTest {
 
         // then
         Expectation expectation = forwardChainExpectation.getExpectation();
-        assertTrue(expectation.matches(httpRequest));
+        assertTrue(expectation.isActive());
         assertSame(httpError, expectation.getHttpError());
         assertEquals(Times.unlimited(), expectation.getTimes());
     }
@@ -176,7 +176,7 @@ public class MockServerClientTest {
 
         // then
         Expectation expectation = forwardChainExpectation.getExpectation();
-        assertTrue(expectation.matches(httpRequest));
+        assertTrue(expectation.isActive());
         assertSame(httpClassCallback, expectation.getHttpClassCallback());
         assertEquals(Times.unlimited(), expectation.getTimes());
     }
@@ -211,7 +211,7 @@ public class MockServerClientTest {
 
         // then
         Expectation expectation = forwardChainExpectation.getExpectation();
-        assertTrue(expectation.matches(httpRequest));
+        assertTrue(expectation.isActive());
         assertThat(expectation.getHttpClassCallback(), nullValue());
         assertThat(expectation.getHttpObjectCallback(), is(new HttpObjectCallback().withClientId("some_client_id")));
         assertEquals(Times.unlimited(), expectation.getTimes());

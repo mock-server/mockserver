@@ -41,8 +41,8 @@ public class NettyResponseWriter implements ResponseWriter {
     @Override
     public void writeResponse(HttpRequest request, HttpResponseStatus responseStatus, String body, String contentType) {
         HttpResponse response = response()
-                .withStatusCode(responseStatus.code())
-                .withBody(body);
+            .withStatusCode(responseStatus.code())
+            .withBody(body);
         if (body != null && !body.isEmpty()) {
             response.replaceHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
         }
@@ -76,7 +76,7 @@ public class NettyResponseWriter implements ResponseWriter {
             }
         } else if (connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressConnectionHeader())) {
             if (request.isKeepAlive() != null && request.isKeepAlive()
-                    && (connectionOptions == null || isFalseOrNull(connectionOptions.getCloseSocket()))) {
+                && (connectionOptions == null || isFalseOrNull(connectionOptions.getCloseSocket()))) {
                 response.replaceHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
             } else {
                 response.replaceHeader(header(CONNECTION.toString(), CLOSE.toString()));

@@ -97,11 +97,11 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
     private void setCookies(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
         for (String cookieHeader : fullHttpResponse.headers().getAll(COOKIE)) {
             Set<io.netty.handler.codec.http.cookie.Cookie> decodedCookies =
-                    ServerCookieDecoder.LAX.decode(cookieHeader);
+                ServerCookieDecoder.LAX.decode(cookieHeader);
             for (io.netty.handler.codec.http.cookie.Cookie decodedCookie : decodedCookies) {
                 httpRequest.withCookie(new Cookie(
-                        decodedCookie.name(),
-                        decodedCookie.value()
+                    decodedCookie.name(),
+                    decodedCookie.value()
                 ));
             }
         }

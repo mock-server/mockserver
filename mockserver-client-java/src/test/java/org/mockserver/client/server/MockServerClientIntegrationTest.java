@@ -15,6 +15,7 @@ import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;

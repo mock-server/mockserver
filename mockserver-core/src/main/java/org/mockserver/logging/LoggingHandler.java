@@ -196,12 +196,12 @@ public class LoggingHandler extends ChannelDuplexHandler {
         StringBuilder dump = new StringBuilder(rows * 80 + eventName.length() + 16);
 
         dump.append(eventName).append('(').append(length).append('B').append(')')
-                .append(NEWLINE)
-                .append("         +-------------------------------------------------+")
-                .append(NEWLINE)
-                .append("         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |")
-                .append(NEWLINE)
-                .append("+--------+-------------------------------------------------+----------------+");
+            .append(NEWLINE)
+            .append("         +-------------------------------------------------+")
+            .append(NEWLINE)
+            .append("         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |")
+            .append(NEWLINE)
+            .append("+--------+-------------------------------------------------+----------------+");
 
         final int startIndex = buf.readerIndex();
         final int endIndex = buf.writerIndex();

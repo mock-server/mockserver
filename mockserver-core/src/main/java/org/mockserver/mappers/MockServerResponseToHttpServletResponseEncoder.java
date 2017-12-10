@@ -40,10 +40,10 @@ public class MockServerResponseToHttpServletResponseEncoder {
             for (Header header : httpResponse.getHeaderList()) {
                 String headerName = header.getName().getValue();
                 if (!headerName.equalsIgnoreCase(CONTENT_LENGTH.toString())
-                        && !headerName.equalsIgnoreCase(TRANSFER_ENCODING.toString())
-                        && !headerName.equalsIgnoreCase(HOST.toString())
-                        && !headerName.equalsIgnoreCase(ACCEPT_ENCODING.toString())
-                        && !headerName.equalsIgnoreCase(CONNECTION.toString())) {
+                    && !headerName.equalsIgnoreCase(TRANSFER_ENCODING.toString())
+                    && !headerName.equalsIgnoreCase(HOST.toString())
+                    && !headerName.equalsIgnoreCase(ACCEPT_ENCODING.toString())
+                    && !headerName.equalsIgnoreCase(CONNECTION.toString())) {
                     for (NottableString value : header.getValues()) {
                         httpServletResponse.addHeader(headerName, value.getValue());
                     }
@@ -88,8 +88,8 @@ public class MockServerResponseToHttpServletResponseEncoder {
 
     private void addContentTypeHeader(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpServletResponse.getContentType() == null
-                && httpResponse.getBody() != null
-                && httpResponse.getBody().getContentType() != null) {
+            && httpResponse.getBody() != null
+            && httpResponse.getBody().getContentType() != null) {
             httpServletResponse.addHeader(CONTENT_TYPE.toString(), httpResponse.getBody().getContentType());
         }
     }

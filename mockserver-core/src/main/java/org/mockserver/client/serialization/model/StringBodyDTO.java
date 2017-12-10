@@ -3,8 +3,6 @@ package org.mockserver.client.serialization.model;
 import com.google.common.net.MediaType;
 import org.mockserver.model.StringBody;
 
-import java.nio.charset.Charset;
-
 /**
  * @author jamesdbloom
  */

@@ -5,28 +5,36 @@ import org.junit.Test;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
+import static org.mockito.Mockito.mock;
+import static org.mockserver.filters.LogFilter.REQUEST_LOG_TYPES;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 public class LogFilterTest {
 
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    private ExpectationSerializer httpExpectationSerializer = new ExpectationSerializer();
     private LogFilter logFilter;
 
+    private LoggingFormatter mockLogFormatter;
+
     @Before
-    public void prepareTestFixture() {
-        logFilter = new LogFilter();
+    public void setupTestFixture() {
+        mockLogFormatter = mock(LoggingFormatter.class);
+        logFilter = new LogFilter(mockLogFormatter);
     }
 
     @Test

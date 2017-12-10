@@ -10,23 +10,23 @@ public class JsonSchemaExpectationValidator extends JsonSchemaValidator {
 
     public static Logger logger = LoggerFactory.getLogger(JsonSchemaExpectationValidator.class);
     private static String jsonSchema = addReferencesIntoSchema(
-                "org/mockserver/model/schema/",
-                "expectation",
-                "httpRequest",
-                "httpResponse",
-                "httpTemplate",
-                "httpForward",
-                "httpClassCallback",
-                "httpObjectCallback",
-                "httpError",
-                "times",
-                "timeToLive",
-                "body",
-                "bodyWithContentType",
-                "delay",
-                "connectionOptions",
-                "keyToMultiValue",
-                "keyToValue"
+        "org/mockserver/model/schema/",
+        "expectation",
+        "httpRequest",
+        "httpResponse",
+        "httpTemplate",
+        "httpForward",
+        "httpClassCallback",
+        "httpObjectCallback",
+        "httpError",
+        "times",
+        "timeToLive",
+        "body",
+        "bodyWithContentType",
+        "delay",
+        "connectionOptions",
+        "keyToMultiValue",
+        "keyToValue"
     );
 
     public JsonSchemaExpectationValidator() {

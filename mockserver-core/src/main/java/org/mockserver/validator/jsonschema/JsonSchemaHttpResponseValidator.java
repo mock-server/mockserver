@@ -10,13 +10,13 @@ public class JsonSchemaHttpResponseValidator extends JsonSchemaValidator {
 
     public static Logger logger = LoggerFactory.getLogger(JsonSchemaHttpResponseValidator.class);
     private static String jsonSchema = addReferencesIntoSchema(
-            "org/mockserver/model/schema/",
-            "httpResponse",
-            "bodyWithContentType",
-            "delay",
-            "connectionOptions",
-            "keyToMultiValue",
-            "keyToValue"
+        "org/mockserver/model/schema/",
+        "httpResponse",
+        "bodyWithContentType",
+        "delay",
+        "connectionOptions",
+        "keyToMultiValue",
+        "keyToValue"
     );
 
     public JsonSchemaHttpResponseValidator() {

@@ -115,13 +115,13 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             timeToLive = TimeToLive.unlimited();
         }
         return new Expectation(httpRequest, times, timeToLive)
-                .thenRespond(httpResponse)
-                .thenRespond(httpResponseTemplate)
-                .thenForward(httpForward)
-                .thenForward(httpForwardTemplate)
-                .thenError(httpError)
-                .thenCallback(httpClassCallback)
-                .thenCallback(httpObjectCallback);
+            .thenRespond(httpResponse)
+            .thenRespond(httpResponseTemplate)
+            .thenForward(httpForward)
+            .thenForward(httpForwardTemplate)
+            .thenError(httpError)
+            .thenCallback(httpClassCallback)
+            .thenCallback(httpObjectCallback);
     }
 
     public HttpRequestDTO getHttpRequest() {

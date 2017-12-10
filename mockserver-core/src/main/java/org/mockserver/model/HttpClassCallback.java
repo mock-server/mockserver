@@ -18,7 +18,7 @@ public class HttpClassCallback extends Action {
 
     /**
      * Static builder to create a callback, which take a callback class as a string.
-     *
+     * <p>
      * The callback class must:
      * - implement org.mockserver.mock.action.ExpectationCallback
      * - have a zero argument constructor
@@ -42,7 +42,7 @@ public class HttpClassCallback extends Action {
 
     /**
      * The class to callback as a fully qualified class name
-     *
+     * <p>
      * The callback class must:
      * - implement org.mockserver.mock.action.ExpectationCallback
      * - have a zero argument constructor

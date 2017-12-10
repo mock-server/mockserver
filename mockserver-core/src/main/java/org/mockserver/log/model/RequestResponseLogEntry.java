@@ -7,8 +7,6 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
-import java.util.List;
-
 /**
  * @author jamesdbloom
  */

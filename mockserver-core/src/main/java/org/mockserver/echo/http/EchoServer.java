@@ -11,6 +11,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.AttributeKey;
 import org.mockserver.filters.LogFilter;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,7 @@ public class EchoServer {
     static final AttributeKey<LogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     static final AttributeKey<NextResponse> NEXT_RESPONSE = AttributeKey.valueOf("NEXT_RESPONSE");
 
-    private final LogFilter logFilter = new LogFilter();
+    private final LogFilter logFilter = new LogFilter(new LoggingFormatter(LoggerFactory.getLogger(this.getClass()), null));
     private final NextResponse nextResponse = new NextResponse();
     private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
@@ -45,24 +46,24 @@ public class EchoServer {
                 EventLoopGroup bossGroup = new NioEventLoopGroup(1);
                 EventLoopGroup workerGroup = new NioEventLoopGroup();
                 new ServerBootstrap().group(bossGroup, workerGroup)
-                        .channel(NioServerSocketChannel.class)
-                        .option(ChannelOption.SO_BACKLOG, 100)
-                        .handler(new LoggingHandler("EchoServer Handler"))
-                        .childHandler(new EchoServerInitializer(secure, error))
-                        .childAttr(LOG_FILTER, logFilter)
-                        .childAttr(NEXT_RESPONSE, nextResponse)
-                        .bind(port)
-                        .addListener(new ChannelFutureListener() {
-                            @Override
-                            public void operationComplete(ChannelFuture future) throws Exception {
-                                if (future.isSuccess()) {
-                                    hasStarted.set("STARTED");
-                                } else {
-                                    hasStarted.setException(future.cause());
-                                    eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-                                }
+                    .channel(NioServerSocketChannel.class)
+                    .option(ChannelOption.SO_BACKLOG, 100)
+                    .handler(new LoggingHandler("EchoServer Handler"))
+                    .childHandler(new EchoServerInitializer(secure, error))
+                    .childAttr(LOG_FILTER, logFilter)
+                    .childAttr(NEXT_RESPONSE, nextResponse)
+                    .bind(port)
+                    .addListener(new ChannelFutureListener() {
+                        @Override
+                        public void operationComplete(ChannelFuture future) throws Exception {
+                            if (future.isSuccess()) {
+                                hasStarted.set("STARTED");
+                            } else {
+                                hasStarted.setException(future.cause());
+                                eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                             }
-                        });
+                        }
+                    });
             }
         }, "MockServer EchoServer Thread").start();
 

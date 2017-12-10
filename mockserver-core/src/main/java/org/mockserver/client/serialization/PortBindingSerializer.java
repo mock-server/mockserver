@@ -15,8 +15,8 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
     public String serialize(PortBinding portBinding) {
         try {
             return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(portBinding);
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(portBinding);
         } catch (Exception e) {
             logger.error(String.format("Exception while serializing portBinding to JSON with value %s", portBinding), e);
             throw new RuntimeException(String.format("Exception while serializing portBinding to JSON with value %s", portBinding), e);

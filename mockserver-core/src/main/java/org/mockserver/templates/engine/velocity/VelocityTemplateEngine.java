@@ -4,11 +4,9 @@ import org.apache.velocity.script.VelocityScriptEngineFactory;
 import org.mockserver.client.serialization.model.DTO;
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -26,28 +24,33 @@ public class VelocityTemplateEngine implements TemplateEngine {
 
     private static final ScriptEngineManager manager = new ScriptEngineManager();
     private static final ScriptEngine engine;
-    private static Logger logger = LoggerFactory.getLogger(VelocityTemplateEngine.class);
-    private static LoggingFormatter logFormatter = new LoggingFormatter(logger);
+    private final LoggingFormatter logFormatter;
+    private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
 
     static {
         manager.registerEngineName("velocity", new VelocityScriptEngineFactory());
         engine = manager.getEngineByName("velocity");
     }
 
-    private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer();
+    public VelocityTemplateEngine(LoggingFormatter logFormatter) {
+        this.logFormatter = logFormatter;
+        this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(logFormatter);
+    }
 
     @Override
-    public <T> T executeTemplate(String template, HttpRequest httpRequest, Class<? extends DTO<T>> dtoClass) {
+    public <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass) {
+        T result = null;
         try {
             Writer writer = new StringWriter();
             ScriptContext context = engine.getContext();
             context.setWriter(writer);
-            context.setAttribute("request", new HttpRequestTemplateObject(httpRequest), ScriptContext.ENGINE_SCOPE);
+            context.setAttribute("request", new HttpRequestTemplateObject(request), ScriptContext.ENGINE_SCOPE);
             engine.eval(template);
-            logFormatter.infoLog("Generated output:{}" + NEW_LINE + " from template:{}" + NEW_LINE + " for request:{}", writer.toString(), template, httpRequest);
-            return httpTemplateOutputDeserializer.deserializer(writer.toString(), dtoClass);
+            logFormatter.infoLog(request, "Generated output:{}" + NEW_LINE + " from template:{}" + NEW_LINE + " for request:{}", writer.toString(), template, request);
+            result = httpTemplateOutputDeserializer.deserializer(request, writer.toString(), dtoClass);
         } catch (Exception e) {
-            throw new RuntimeException(formatLogMessage("Exception transforming template:{}" + NEW_LINE + " for request:{}", template, httpRequest).toString(), e);
+            throw new RuntimeException(formatLogMessage("Exception transforming template:{}" + NEW_LINE + " for request:{}", template, request), e);
         }
+        return result;
     }
 }

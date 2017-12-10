@@ -64,9 +64,9 @@ public class ConnectionOptions extends ObjectWithJsonToString {
 
     /**
      * Override the "Connection" header:
-     *    if true the "Connection" header is specified with a value of "keep-alive"
-     *    if false the "Connection" header is specified with a value of "close"
-     *    if not set the "Connection" header will have a a value of "close" unless the request received is HTTP 1.1 and contains a "Connection" header with a value of "keep-alive"
+     * if true the "Connection" header is specified with a value of "keep-alive"
+     * if false the "Connection" header is specified with a value of "close"
+     * if not set the "Connection" header will have a a value of "close" unless the request received is HTTP 1.1 and contains a "Connection" header with a value of "keep-alive"
      *
      * @param keepAliveOverride if true "keep-alive" is used if false "close" is used for the "Connection" header
      */
@@ -81,9 +81,9 @@ public class ConnectionOptions extends ObjectWithJsonToString {
 
     /**
      * Override whether the socket is closed after a response is sent:
-     *    if true the socket will always be closed,
-     *    if false the socket will never be closed,
-     *    if not set the socket will be closed unless the request received is HTTP 1.1 and contains a "Connection" header with a value of "keep-alive"
+     * if true the socket will always be closed,
+     * if false the socket will never be closed,
+     * if not set the socket will be closed unless the request received is HTTP 1.1 and contains a "Connection" header with a value of "keep-alive"
      *
      * @param closeSocket set whether the socket is closed after a response is sent
      */

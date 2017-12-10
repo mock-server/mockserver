@@ -13,8 +13,6 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.server.ServletResponseWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -33,7 +31,7 @@ import static org.mockserver.model.PortBinding.portBinding;
  */
 public class ProxyServlet extends HttpServlet {
 
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private LoggingFormatter logFormatter;
     // generic handling
     private HttpStateHandler httpStateHandler;
     // serializers
@@ -43,11 +41,11 @@ public class ProxyServlet extends HttpServlet {
     // forwarding
     private NettyHttpClient httpClient = new NettyHttpClient();
     private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
-    private LoggingFormatter logFormatter = new LoggingFormatter(logger);
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
     public ProxyServlet() {
         this.httpStateHandler = new HttpStateHandler();
+        this.logFormatter = httpStateHandler.getLogFormatter();
     }
 
     @Override
@@ -81,20 +79,21 @@ public class ProxyServlet extends HttpServlet {
                     responseWriter.writeResponse(request, response);
                     httpStateHandler.log(new RequestResponseLogEntry(request, response));
                     logFormatter.infoLog(
-                            "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
-                            response,
-                            request,
-                            httpRequestToCurlSerializer.toCurl(request)
+                        request,
+                        "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
+                        response,
+                        request,
+                        httpRequestToCurlSerializer.toCurl(request)
                     );
 
                 }
             }
         } catch (IllegalArgumentException iae) {
-            logger.error("Exception processing " + request, iae);
+            logFormatter.errorLog(request, iae, "Exception processing " + request);
             // send request without API CORS headers
             responseWriter.writeResponse(request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
-            logger.error("Exception processing " + request, e);
+            logFormatter.errorLog(request, e, "Exception processing " + request);
             responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()));
         }
     }

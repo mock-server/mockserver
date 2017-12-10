@@ -26,9 +26,9 @@ public class HttpErrorDTO extends ObjectWithReflectiveEqualsHashCodeToString imp
 
     public HttpError buildObject() {
         return new HttpError()
-                .withDelay((delay != null ? delay.buildObject() : null))
-                .withDropConnection(dropConnection)
-                .withResponseBytes(responseBytes);
+            .withDelay((delay != null ? delay.buildObject() : null))
+            .withDropConnection(dropConnection)
+            .withResponseBytes(responseBytes);
     }
 
     public DelayDTO getDelay() {

@@ -1,7 +1,5 @@
 package org.mockserver.model;
 
-import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
-
 import java.util.*;
 
 import static org.mockserver.model.NottableString.string;

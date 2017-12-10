@@ -4,8 +4,6 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLException;
 import java.security.cert.X509Certificate;
@@ -33,8 +31,8 @@ public class NettySslContextFactory {
         if (clientSslContext == null || ConfigurationProperties.rebuildKeyStore()) {
             try {
                 clientSslContext = SslContextBuilder.forClient()
-                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                        .build();
+                    .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                    .build();
             } catch (SSLException e) {
                 throw new RuntimeException("Exception creating SSL context for client", e);
             }
@@ -60,13 +58,13 @@ public class NettySslContextFactory {
         keyAndCertificateFactory().buildAndSaveCertificates();
 
         return SslContextBuilder.forServer(
-                keyAndCertificateFactory().mockServerPrivateKey(),
-                // do we need this password??
-                ConfigurationProperties.javaKeyStorePassword(),
-                new X509Certificate[]{
-                        keyAndCertificateFactory().mockServerX509Certificate(),
-                        keyAndCertificateFactory().mockServerCertificateAuthorityX509Certificate()
-                }
+            keyAndCertificateFactory().mockServerPrivateKey(),
+            // do we need this password??
+            ConfigurationProperties.javaKeyStorePassword(),
+            new X509Certificate[]{
+                keyAndCertificateFactory().mockServerX509Certificate(),
+                keyAndCertificateFactory().mockServerCertificateAuthorityX509Certificate()
+            }
         ).build();
     }
 

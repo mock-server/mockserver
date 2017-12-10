@@ -91,8 +91,8 @@ public class HttpTemplate extends Action {
 
     public HttpTemplate shallowClone() {
         return template(getTemplateType())
-                .withTemplate(getTemplate())
-                .withDelay(getDelay());
+            .withTemplate(getTemplate())
+            .withDelay(getDelay());
     }
 
     public enum TemplateType {

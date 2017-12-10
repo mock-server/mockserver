@@ -1,7 +1,5 @@
 package org.mockserver.mock;
 
-import org.mockserver.matchers.HttpRequestMatcher;
-import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
@@ -14,7 +12,6 @@ public class Expectation extends ObjectWithJsonToString {
     private final HttpRequest httpRequest;
     private final Times times;
     private final TimeToLive timeToLive;
-    private final HttpRequestMatcher httpRequestMatcher;
     private HttpResponse httpResponse;
     private HttpTemplate httpResponseTemplate;
     private HttpForward httpForward;
@@ -31,7 +28,6 @@ public class Expectation extends ObjectWithJsonToString {
         this.httpRequest = httpRequest;
         this.times = times;
         this.timeToLive = timeToLive;
-        this.httpRequestMatcher = new MatcherBuilder().transformsToMatcher(this.httpRequest);
     }
 
     public HttpRequest getHttpRequest() {
@@ -271,15 +267,15 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
-    public boolean matches(HttpRequest httpRequest) {
-        return hasRemainingMatches() && isStillAlive() && httpRequestMatcher.matches(httpRequest, true);
+    public boolean isActive() {
+        return hasRemainingMatches() && isStillAlive();
     }
 
-    public boolean hasRemainingMatches() {
+    private boolean hasRemainingMatches() {
         return times == null || times.greaterThenZero();
     }
 
-    public boolean isStillAlive() {
+    private boolean isStillAlive() {
         return timeToLive == null || timeToLive.stillAlive();
     }
 

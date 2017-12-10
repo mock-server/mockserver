@@ -12,9 +12,9 @@ import java.util.regex.Pattern;
 public class ExceptionHandler {
 
     private static final Pattern IGNORABLE_CLASS_IN_STACK = Pattern.compile(
-            "^.*(?:Socket|Datagram|Sctp|Udt)Channel.*$");
+        "^.*(?:Socket|Datagram|Sctp|Udt)Channel.*$");
     private static final Pattern IGNORABLE_ERROR_MESSAGE = Pattern.compile(
-            "^.*(?:connection.*(?:reset|closed|abort|broken)|broken.*pipe).*$", Pattern.CASE_INSENSITIVE);
+        "^.*(?:connection.*(?:reset|closed|abort|broken)|broken.*pipe).*$", Pattern.CASE_INSENSITIVE);
 
     /**
      * Closes the specified channel after all queued write requests are flushed.
@@ -66,13 +66,13 @@ public class ExceptionHandler {
                 Class<?> clazz = PlatformDependent.getClassLoader(ExceptionHandler.class).loadClass(classname);
 
                 if (SocketChannel.class.isAssignableFrom(clazz)
-                        || DatagramChannel.class.isAssignableFrom(clazz)) {
+                    || DatagramChannel.class.isAssignableFrom(clazz)) {
                     return true;
                 }
 
                 // also match against SctpChannel via String matching as it may not present.
                 if (PlatformDependent.javaVersion() >= 7
-                        && "com.sun.nio.sctp.SctpChannel".equals(clazz.getSuperclass().getName())) {
+                    && "com.sun.nio.sctp.SctpChannel".equals(clazz.getSuperclass().getName())) {
                     return true;
                 }
             } catch (ClassNotFoundException e) {

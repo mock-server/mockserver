@@ -21,7 +21,7 @@ public class HttpClassCallbackDTO extends ObjectWithReflectiveEqualsHashCodeToSt
 
     public HttpClassCallback buildObject() {
         return new HttpClassCallback()
-                .withCallbackClass(callbackClass);
+            .withCallbackClass(callbackClass);
     }
 
     public String getCallbackClass() {

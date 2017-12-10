@@ -30,12 +30,12 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     public WebSocketClientHandler(InetSocketAddress serverAddress, String contextPath, WebSocketClient webSocketClient) throws URISyntaxException {
         this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(
-                new URI("ws://" + serverAddress.getHostName() + ":" + serverAddress.getPort() + cleanContextPath(contextPath) + "/_mockserver_callback_websocket"),
-                WebSocketVersion.V13,
-                null,
-                false,
-                new DefaultHttpHeaders(),
-                Integer.MAX_VALUE
+            new URI("ws://" + serverAddress.getHostName() + ":" + serverAddress.getPort() + cleanContextPath(contextPath) + "/_mockserver_callback_websocket"),
+            WebSocketVersion.V13,
+            null,
+            false,
+            new DefaultHttpHeaders(),
+            Integer.MAX_VALUE
         );
         this.webSocketClient = webSocketClient;
     }

@@ -21,8 +21,8 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
     public String serialize(VerificationSequence verificationSequence) {
         try {
             return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(new VerificationSequenceDTO(verificationSequence));
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(new VerificationSequenceDTO(verificationSequence));
         } catch (Exception e) {
             logger.error("Exception while serializing verificationSequence to JSON with value " + verificationSequence, e);
             throw new RuntimeException("Exception while serializing verificationSequence to JSON with value " + verificationSequence, e);

@@ -22,8 +22,8 @@ public class HttpForwardActionHandler {
             httpRequest.withSecure(false);
         }
         return httpClient.sendRequest(
-                hopByHopHeaderFilter.onRequest(httpRequest),
-                new InetSocketAddress(httpForward.getHost(), httpForward.getPort())
+            hopByHopHeaderFilter.onRequest(httpRequest),
+            new InetSocketAddress(httpForward.getHost(), httpForward.getPort())
         );
     }
 

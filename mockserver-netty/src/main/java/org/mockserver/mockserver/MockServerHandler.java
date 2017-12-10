@@ -5,13 +5,12 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.mockserver.client.serialization.PortBindingSerializer;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
-import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.PortBinding;
 import org.mockserver.responsewriter.ResponseWriter;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.BindException;
@@ -30,7 +29,7 @@ import static org.mockserver.model.PortBinding.portBinding;
 @ChannelHandler.Sharable
 public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final LoggingFormatter logFormatter;
     // generic handling
     private HttpStateHandler httpStateHandler;
     // serializers
@@ -44,6 +43,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         super(false);
         this.server = server;
         this.httpStateHandler = httpStateHandler;
+        this.logFormatter = httpStateHandler.getLogFormatter();
         this.actionHandler = new ActionHandler(httpStateHandler);
     }
 
@@ -90,11 +90,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 }
             }
         } catch (IllegalArgumentException iae) {
-            logger.error("Exception processing " + request, iae);
+            logFormatter.errorLog(request, iae, "Exception processing " + request);
             // send request without API CORS headers
             responseWriter.writeResponse(request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
-            logger.error("Exception processing " + request, e);
+            logFormatter.errorLog(request, e, "Exception processing " + request);
             responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()));
         }
     }
@@ -107,7 +107,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (!shouldIgnoreException(cause)) {
-            logger.warn("Exception caught by " + server.getClass() + " handler -> closing pipeline " + ctx.channel(), cause);
+            LoggerFactory.getLogger(this.getClass()).warn("Exception caught by " + server.getClass() + " handler -> closing pipeline " + ctx.channel(), cause);
         }
         closeOnFlush(ctx.channel());
     }

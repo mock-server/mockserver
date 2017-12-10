@@ -2,10 +2,13 @@ package org.mockserver.mock;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
@@ -30,7 +33,7 @@ public class MockServerMatcherManageExpectationsTest {
     public void prepareTestFixture() {
         httpRequest = new HttpRequest();
         httpResponse = new HttpResponse();
-        mockServerMatcher = new MockServerMatcher();
+        mockServerMatcher = new MockServerMatcher(new LoggingFormatter(LoggerFactory.getLogger(this.getClass()), null));
     }
 
     @Test
@@ -40,7 +43,7 @@ public class MockServerMatcherManageExpectationsTest {
 
         // then
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somePath")), nullValue());
-        assertThat(mockServerMatcher.expectations, empty());
+        assertThat(mockServerMatcher.httpRequestMatchers, empty());
     }
 
     @Test
@@ -50,7 +53,7 @@ public class MockServerMatcherManageExpectationsTest {
 
         // then
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
-        assertThat(mockServerMatcher.expectations, empty());
+        assertThat(mockServerMatcher.httpRequestMatchers, empty());
     }
 
     @Test
@@ -61,16 +64,15 @@ public class MockServerMatcherManageExpectationsTest {
         mockServerMatcher.add(expectationToExpireAfter3Seconds.thenRespond(httpResponse.withBody("someBody")));
 
         // then
-        assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somePath")),
-                is(expectationToExpireAfter3Seconds));
-        assertThat(mockServerMatcher.expectations, contains(expectationToExpireAfter3Seconds));
+        assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somePath")), is(expectationToExpireAfter3Seconds));
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
 
         // when
         TimeUnit.SECONDS.sleep(3);
 
         // then - after 3 seconds
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
-        assertThat(mockServerMatcher.expectations, empty());
+        assertThat(mockServerMatcher.httpRequestMatchers, empty());
     }
 
     @Test
@@ -81,7 +83,7 @@ public class MockServerMatcherManageExpectationsTest {
 
         // then
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somePath")), is(expectation));
-        assertThat(mockServerMatcher.expectations.size(), is(1));
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
     }
 
     @Test
@@ -91,7 +93,7 @@ public class MockServerMatcherManageExpectationsTest {
 
         // then
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
-        assertThat(mockServerMatcher.expectations.size(), is(1));
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
     }
 
     @Test
@@ -103,7 +105,7 @@ public class MockServerMatcherManageExpectationsTest {
         // then
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somePath")), is(expectation));
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somePath")), nullValue());
-        assertThat(mockServerMatcher.expectations, empty());
+        assertThat(mockServerMatcher.httpRequestMatchers, empty());
     }
 
     @Test
@@ -114,7 +116,7 @@ public class MockServerMatcherManageExpectationsTest {
 
         // then
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somePath")), is(expectation));
-        assertThat(mockServerMatcher.expectations.size(), is(1));
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
     }
 
     @Test
@@ -129,7 +131,11 @@ public class MockServerMatcherManageExpectationsTest {
         assertEquals(expectation, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
         assertEquals(expectation, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
         assertEquals(notRemovedExpectation, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")));
-        assertThat(mockServerMatcher.expectations, contains(notRemovedExpectation));
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+
+        // then
+        assertEquals(notRemovedExpectation, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")));
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
     }
 
     @Test
@@ -142,6 +148,6 @@ public class MockServerMatcherManageExpectationsTest {
         // then
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")), nullValue());
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
-        assertThat(mockServerMatcher.expectations, empty());
+        assertThat(mockServerMatcher.httpRequestMatchers, empty());
     }
 }

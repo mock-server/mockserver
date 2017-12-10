@@ -2,13 +2,12 @@ package org.mockserver.server;
 
 import com.google.common.net.MediaType;
 import org.mockserver.client.serialization.PortBindingSerializer;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.responsewriter.ResponseWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -23,7 +22,7 @@ import static org.mockserver.model.PortBinding.portBinding;
  */
 public class MockServerServlet extends HttpServlet {
 
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private LoggingFormatter logFormatter;
     // generic handling
     private HttpStateHandler httpStateHandler;
     // serializers
@@ -35,6 +34,7 @@ public class MockServerServlet extends HttpServlet {
 
     public MockServerServlet() {
         this.httpStateHandler = new HttpStateHandler();
+        this.logFormatter = httpStateHandler.getLogFormatter();
         this.actionHandler = new ActionHandler(httpStateHandler);
     }
 
@@ -67,11 +67,11 @@ public class MockServerServlet extends HttpServlet {
                 }
             }
         } catch (IllegalArgumentException iae) {
-            logger.error("Exception processing " + request, iae);
+            logFormatter.errorLog(request, iae, "Exception processing " + request);
             // send request without API CORS headers
             responseWriter.writeResponse(request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
-            logger.error("Exception processing " + request, e);
+            logFormatter.errorLog(request, e, "Exception processing " + request);
             responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()));
         }
     }

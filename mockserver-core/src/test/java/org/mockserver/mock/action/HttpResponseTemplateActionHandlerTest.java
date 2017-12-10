@@ -1,6 +1,8 @@
 package org.mockserver.mock.action;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
 
@@ -9,6 +11,8 @@ import javax.script.ScriptEngineManager;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.Mockito.mock;
+import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -19,6 +23,17 @@ import static org.mockserver.model.HttpTemplate.template;
  * @author jamesdbloom
  */
 public class HttpResponseTemplateActionHandlerTest {
+
+    private HttpResponseTemplateActionHandler httpResponseTemplateActionHandler;
+
+    private LoggingFormatter mockLogFormatter;
+
+    @Before
+    public void setupMocks() {
+        mockLogFormatter = mock(LoggingFormatter.class);
+        httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(mockLogFormatter);
+        initMocks(this);
+    }
 
     @Test
     public void shouldHandleHttpRequestsWithJavaScriptTemplateFirstExample() {
@@ -36,7 +51,7 @@ public class HttpResponseTemplateActionHandlerTest {
                 "}");
 
         // when
-        HttpResponse actualHttpResponse = new HttpResponseTemplateActionHandler().handle(template, request()
+        HttpResponse actualHttpResponse = httpResponseTemplateActionHandler.handle(template, request()
                 .withPath("/somePath")
                 .withMethod("POST")
                 .withBody("some_body")
@@ -72,7 +87,7 @@ public class HttpResponseTemplateActionHandlerTest {
                 "}");
 
         // when
-        HttpResponse actualHttpResponse = new HttpResponseTemplateActionHandler().handle(template, request()
+        HttpResponse actualHttpResponse = httpResponseTemplateActionHandler.handle(template, request()
                 .withPath("/someOtherPath")
                 .withBody("some_body")
         );
@@ -107,7 +122,7 @@ public class HttpResponseTemplateActionHandlerTest {
                 "#end");
 
         // when
-        HttpResponse actualHttpResponse = new HttpResponseTemplateActionHandler().handle(template, request()
+        HttpResponse actualHttpResponse = httpResponseTemplateActionHandler.handle(template, request()
                 .withPath("/somePath")
                 .withMethod("POST")
                 .withBody("some_body")
@@ -137,7 +152,7 @@ public class HttpResponseTemplateActionHandlerTest {
                 "#end");
 
         // when
-        HttpResponse actualHttpResponse = new HttpResponseTemplateActionHandler().handle(template, request()
+        HttpResponse actualHttpResponse = httpResponseTemplateActionHandler.handle(template, request()
                 .withPath("/someOtherPath")
                 .withBody("some_body")
         );

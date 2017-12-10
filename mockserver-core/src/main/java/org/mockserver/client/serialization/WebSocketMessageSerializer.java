@@ -20,8 +20,8 @@ public class WebSocketMessageSerializer {
 
     static {
         for (Serializer serializer : Arrays.asList(
-                new HttpRequestSerializer(),
-                new HttpResponseSerializer()
+            new HttpRequestSerializer(),
+            new HttpResponseSerializer()
         )) {
             serializers.put(serializer.supportsType(), serializer);
         }

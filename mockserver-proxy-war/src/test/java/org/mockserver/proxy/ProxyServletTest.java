@@ -78,9 +78,9 @@ public class ProxyServletTest {
     public void shouldRetrieveRequests() {
         // given
         MockHttpServletRequest expectationRetrieveRequestsRequest = buildHttpServletRequest(
-                "PUT",
-                "/retrieve",
-                httpRequestSerializer.serialize(request("request_one"))
+            "PUT",
+            "/retrieve",
+            httpRequestSerializer.serialize(request("request_one"))
         );
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
 
@@ -89,7 +89,7 @@ public class ProxyServletTest {
 
         // then
         assertResponse(response, 200, httpRequestSerializer.serialize(Collections.singletonList(
-                request("request_one")
+            request("request_one")
         )));
     }
 
@@ -99,9 +99,9 @@ public class ProxyServletTest {
         httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
         MockHttpServletRequest clearRequest = buildHttpServletRequest(
-                "PUT",
-                "/clear",
-                httpRequestSerializer.serialize(request("request_one"))
+            "PUT",
+            "/clear",
+            httpRequestSerializer.serialize(request("request_one"))
         );
 
         // when
@@ -111,19 +111,19 @@ public class ProxyServletTest {
         assertResponse(response, 200, "");
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(nullValue()));
         assertThat(httpStateHandler.retrieve(request("/retrieve")
-                .withMethod("PUT")
-                .withBody(
-                        httpRequestSerializer.serialize(request("request_one"))
-                )), is(""));
+            .withMethod("PUT")
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            )), is(""));
     }
 
     @Test
     public void shouldReturnStatus() {
         // given
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
-                "PUT",
-                "/status",
-                ""
+            "PUT",
+            "/status",
+            ""
         );
 
         // when
@@ -131,7 +131,7 @@ public class ProxyServletTest {
 
         // then
         assertResponse(response, 200, portBindingSerializer.serialize(
-                portBinding(80)
+            portBinding(80)
         ));
     }
 
@@ -139,10 +139,10 @@ public class ProxyServletTest {
     public void shouldBindNewPorts() {
         // given
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
-                "PUT",
-                "/bind", portBindingSerializer.serialize(
-                        portBinding(1080, 1090)
-                ));
+            "PUT",
+            "/bind", portBindingSerializer.serialize(
+                portBinding(1080, 1090)
+            ));
 
         // when
         proxyServlet.service(statusRequest, response);
@@ -155,9 +155,9 @@ public class ProxyServletTest {
     public void shouldStop() throws InterruptedException {
         // given
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
-                "PUT",
-                "/stop",
-                ""
+            "PUT",
+            "/stop",
+            ""
         );
 
         // when
@@ -172,13 +172,13 @@ public class ProxyServletTest {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         httpStateHandler.log(new ExpectationMatchLogEntry(
-                request("request_one"),
-                expectationOne
+            request("request_one"),
+            expectationOne
         ));
         MockHttpServletRequest expectationRetrieveExpectationsRequest = buildHttpServletRequest(
-                "PUT",
-                "/retrieve",
-                httpRequestSerializer.serialize(request("request_one"))
+            "PUT",
+            "/retrieve",
+            httpRequestSerializer.serialize(request("request_one"))
         );
         expectationRetrieveExpectationsRequest.setQueryString("type=" + RetrieveType.RECORDED_EXPECTATIONS.name());
 
@@ -187,7 +187,7 @@ public class ProxyServletTest {
 
         // then
         assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
-                expectationOne
+            expectationOne
         )));
     }
 
@@ -205,20 +205,21 @@ public class ProxyServletTest {
         // then
         verify(mockHttpClient).sendRequest(request.withSecure(false));
         assertThat(
-                httpStateHandler.retrieve(request("/retrieve")
-                        .withMethod("PUT")
-                        .withBody(
-                                httpRequestSerializer.serialize(request("request_one"))
-                        )),
-                is(httpRequestSerializer.serialize(Collections.singletonList(
-                        request
-                )))
+            httpStateHandler.retrieve(request("/retrieve")
+                .withMethod("PUT")
+                .withBody(
+                    httpRequestSerializer.serialize(request("request_one"))
+                )),
+            is(httpRequestSerializer.serialize(Collections.singletonList(
+                request
+            )))
         );
         verify(mockLogFormatter).infoLog(
-                "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
-                response("response_one"),
-                request,
-                new HttpRequestToCurlSerializer().toCurl(request, null)
+            request,
+            "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
+            response("response_one"),
+            request,
+            new HttpRequestToCurlSerializer().toCurl(request, null)
         );
     }
 

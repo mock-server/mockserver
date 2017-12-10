@@ -26,8 +26,8 @@ public class VerificationDTO extends ObjectWithReflectiveEqualsHashCodeToString 
 
     public Verification buildObject() {
         return verification()
-                .withRequest((httpRequest != null ? httpRequest.buildObject() : request()))
-                .withTimes((times != null ? times.buildObject() : once()));
+            .withRequest((httpRequest != null ? httpRequest.buildObject() : request()))
+            .withTimes((times != null ? times.buildObject() : once()));
     }
 
     public HttpRequestDTO getHttpRequest() {

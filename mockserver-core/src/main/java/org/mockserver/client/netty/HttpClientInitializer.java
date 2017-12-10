@@ -10,7 +10,6 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import org.mockserver.client.netty.codec.MockServerClientCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.socket.NettySslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

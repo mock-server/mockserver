@@ -48,8 +48,8 @@ public class HttpRequestToCurlSerializer {
                         curlString.append(" -H '").append(header.getName().getValue()).append(": ").append(headerValue.getValue()).append("'");
                         if (header.getName().getValue().toLowerCase().contains("Accept-Encoding".toLowerCase())) {
                             if (headerValue.getValue().toLowerCase().contains("gzip")
-                                    || headerValue.getValue().toLowerCase().contains("deflate")
-                                    || headerValue.getValue().toLowerCase().contains("sdch")) {
+                                || headerValue.getValue().toLowerCase().contains("deflate")
+                                || headerValue.getValue().toLowerCase().contains("sdch")) {
                                 curlString.append(" ");
                                 curlString.append("--compress");
                             }

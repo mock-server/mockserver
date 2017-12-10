@@ -1,11 +1,14 @@
 package org.mockserver.filters;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.log.model.RequestLogEntry;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.verify.VerificationSequence;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 
@@ -14,10 +17,17 @@ import static org.mockserver.model.HttpRequest.request;
  */
 public class LogFilterRequestLogEntryVerificationSequenceTest {
 
+    private LoggingFormatter mockLogFormatter;
+
+    @Before
+    public void setupTestFixture() {
+        mockLogFormatter = mock(LoggingFormatter.class);
+    }
+
     @Test
     public void shouldPassVerificationWithNullRequest() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mockLogFormatter);
 
         // when
         logFilter.onRequest(new RequestLogEntry(request("one")));
@@ -33,7 +43,7 @@ public class LogFilterRequestLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationSequenceWithNoRequest() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mockLogFormatter);
 
         // when
         logFilter.onRequest(new RequestLogEntry(request("one")));
@@ -55,7 +65,7 @@ public class LogFilterRequestLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationSequenceWithOneRequest() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mockLogFormatter);
 
         // when
         logFilter.onRequest(new RequestLogEntry(request("one")));
@@ -98,7 +108,7 @@ public class LogFilterRequestLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationSequenceWithTwoRequests() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mockLogFormatter);
 
         // when
         logFilter.onRequest(new RequestLogEntry(request("one")));
@@ -178,7 +188,7 @@ public class LogFilterRequestLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithOneRequest() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mockLogFormatter);
 
         // when
         logFilter.onRequest(new RequestLogEntry(request("one")));
@@ -212,7 +222,7 @@ public class LogFilterRequestLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithTwoRequestsWrongOrder() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mockLogFormatter);
 
         // when
         logFilter.onRequest(new RequestLogEntry(request("one")));
@@ -338,7 +348,7 @@ public class LogFilterRequestLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithTwoRequestsFirstIncorrect() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mockLogFormatter);
 
         // when
         logFilter.onRequest(new RequestLogEntry(request("one")));
@@ -419,7 +429,7 @@ public class LogFilterRequestLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithTwoRequestsSecondIncorrect() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mockLogFormatter);
 
         // when
         logFilter.onRequest(new RequestLogEntry(request("one")));
@@ -500,7 +510,7 @@ public class LogFilterRequestLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithThreeRequestsWrongOrder() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mockLogFormatter);
 
         // when
         logFilter.onRequest(new RequestLogEntry(request("one")));
@@ -617,7 +627,7 @@ public class LogFilterRequestLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithThreeRequestsDuplicateMissing() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mockLogFormatter);
 
         // when
         logFilter.onRequest(new RequestLogEntry(request("one")));

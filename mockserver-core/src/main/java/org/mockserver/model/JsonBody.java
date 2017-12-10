@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.net.MediaType;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.matchers.MatchType;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;

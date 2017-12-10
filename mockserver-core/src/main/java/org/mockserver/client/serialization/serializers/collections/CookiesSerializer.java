@@ -3,7 +3,8 @@ package org.mockserver.client.serialization.serializers.collections;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.mockserver.model.*;
+import org.mockserver.model.Cookie;
+import org.mockserver.model.Cookies;
 
 import java.io.IOException;
 

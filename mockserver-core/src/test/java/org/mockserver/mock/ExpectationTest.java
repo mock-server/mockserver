@@ -107,8 +107,7 @@ public class ExpectationTest {
 
         // then
         expectation.setNotUnlimitedResponses();
-        assertTrue(expectation.matches(null));
-        assertTrue(expectation.matches(new HttpRequest()));
+        assertTrue(expectation.isActive());
         assertFalse(expectation.contains(null));
         assertNull(expectation.getHttpRequest());
         assertNull(expectation.getHttpResponse());
@@ -119,29 +118,16 @@ public class ExpectationTest {
     }
 
     @Test
-    public void shouldMatchCorrectly() {
-        // when request null should return true
-        assertTrue(new Expectation(null, null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(null));
-        assertTrue(new Expectation(null, Times.unlimited(), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(null));
-
-        // when basic matching request should return true
-        assertTrue(new Expectation(request(), null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request()));
-        assertTrue(new Expectation(request(), Times.unlimited(), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request()));
-
-        // when un-matching request should return false
-        assertFalse(new Expectation(request().withPath("some_path"), null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request().withPath("some_other_path")));
-        assertFalse(new Expectation(request().withPath("some_path"), Times.unlimited(), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request().withPath("some_other_path")));
-        assertFalse(new Expectation(request().withPath("some_path"), Times.once(), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request().withPath("some_other_path")));
-
+    public void shouldReturnAliveStatus() {
         // when no times left should return false
-        assertFalse(new Expectation(null, Times.exactly(0), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(null));
-        assertFalse(new Expectation(request(), Times.exactly(0), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request()));
-        assertFalse(new Expectation(request().withPath("un-matching"), Times.exactly(0), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request()));
+        assertFalse(new Expectation(null, Times.exactly(0), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).isActive());
+        assertFalse(new Expectation(request(), Times.exactly(0), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).isActive());
+        assertFalse(new Expectation(request().withPath("un-matching"), Times.exactly(0), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).isActive());
 
         // when ttl expired should return false
-        assertFalse(new Expectation(null, Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(null));
-        assertFalse(new Expectation(request(), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request()));
-        assertFalse(new Expectation(request().withPath("un-matching"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).matches(request()));
+        assertFalse(new Expectation(null, Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).isActive());
+        assertFalse(new Expectation(request(), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).isActive());
+        assertFalse(new Expectation(request().withPath("un-matching"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).isActive());
     }
 
     @Test
@@ -158,21 +144,21 @@ public class ExpectationTest {
 
     @Test
     public void shouldCalculateRemainingMatches() {
-        assertThat(new Expectation(null, Times.once(), TimeToLive.unlimited()).hasRemainingMatches(), is(true));
-        assertThat(new Expectation(null, Times.unlimited(), TimeToLive.unlimited()).hasRemainingMatches(), is(true));
-        assertThat(new Expectation(null, Times.exactly(1), TimeToLive.unlimited()).hasRemainingMatches(), is(true));
-        assertThat(new Expectation(null, null, TimeToLive.unlimited()).hasRemainingMatches(), is(true));
+        assertThat(new Expectation(null, Times.once(), TimeToLive.unlimited()).isActive(), is(true));
+        assertThat(new Expectation(null, Times.unlimited(), TimeToLive.unlimited()).isActive(), is(true));
+        assertThat(new Expectation(null, Times.exactly(1), TimeToLive.unlimited()).isActive(), is(true));
+        assertThat(new Expectation(null, null, TimeToLive.unlimited()).isActive(), is(true));
 
-        assertThat(new Expectation(null, Times.exactly(0), TimeToLive.unlimited()).hasRemainingMatches(), is(false));
+        assertThat(new Expectation(null, Times.exactly(0), TimeToLive.unlimited()).isActive(), is(false));
     }
 
     @Test
     public void shouldCalculateRemainingLife() {
-        assertThat(new Expectation(null, Times.unlimited(), TimeToLive.unlimited()).isStillAlive(), is(true));
-        assertThat(new Expectation(null, Times.unlimited(), TimeToLive.exactly(TimeUnit.MINUTES, 5L)).isStillAlive(), is(true));
-        assertThat(new Expectation(null, Times.unlimited(), null).hasRemainingMatches(), is(true));
+        assertThat(new Expectation(null, Times.unlimited(), TimeToLive.unlimited()).isActive(), is(true));
+        assertThat(new Expectation(null, Times.unlimited(), TimeToLive.exactly(TimeUnit.MINUTES, 5L)).isActive(), is(true));
+        assertThat(new Expectation(null, Times.unlimited(), null).isActive(), is(true));
 
-        assertThat(new Expectation(null, Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).isStillAlive(), is(false));
+        assertThat(new Expectation(null, Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).isActive(), is(false));
     }
 
     @Test

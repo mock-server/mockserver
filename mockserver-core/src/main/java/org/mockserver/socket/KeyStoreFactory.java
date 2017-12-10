@@ -161,17 +161,17 @@ public class KeyStoreFactory {
         keyAndCertificateFactory().buildAndSaveCertificates();
 
         return KeyStoreFactory.saveCertificateAsKeyStore(
-                keyStore,
-                ConfigurationProperties.deleteGeneratedKeyStoreOnExit(),
-                ConfigurationProperties.javaKeyStoreFilePath(),
-                KEY_STORE_CERT_ALIAS,
-                keyAndCertificateFactory().mockServerPrivateKey(),
-                ConfigurationProperties.javaKeyStorePassword().toCharArray(),
-                new X509Certificate[]{
-                        keyAndCertificateFactory().mockServerX509Certificate(),
-                        keyAndCertificateFactory().mockServerCertificateAuthorityX509Certificate()
-                },
+            keyStore,
+            ConfigurationProperties.deleteGeneratedKeyStoreOnExit(),
+            ConfigurationProperties.javaKeyStoreFilePath(),
+            KEY_STORE_CERT_ALIAS,
+            keyAndCertificateFactory().mockServerPrivateKey(),
+            ConfigurationProperties.javaKeyStorePassword().toCharArray(),
+            new X509Certificate[]{
+                keyAndCertificateFactory().mockServerX509Certificate(),
                 keyAndCertificateFactory().mockServerCertificateAuthorityX509Certificate()
+            },
+            keyAndCertificateFactory().mockServerCertificateAuthorityX509Certificate()
         );
     }
 

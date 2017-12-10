@@ -21,7 +21,7 @@ public class HttpObjectCallback extends Action {
 
     /**
      * The client id of the web socket client that will handle the callback
-     *
+     * <p>
      * The client id must be for client with an open web socket,
      * if no client is found with id a 404 response will be returned
      *

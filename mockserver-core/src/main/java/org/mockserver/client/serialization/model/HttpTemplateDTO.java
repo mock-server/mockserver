@@ -25,8 +25,8 @@ public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString 
 
     public HttpTemplate buildObject() {
         return new HttpTemplate(templateType)
-                .withTemplate(template)
-                .withDelay((delay != null ? delay.buildObject() : null));
+            .withTemplate(template)
+            .withDelay((delay != null ? delay.buildObject() : null));
     }
 
     public HttpTemplate.TemplateType getTemplateType() {

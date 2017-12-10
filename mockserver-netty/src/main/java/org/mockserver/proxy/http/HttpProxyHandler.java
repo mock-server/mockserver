@@ -20,7 +20,6 @@ import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.proxy.unification.PortUnificationHandler;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.socket.KeyAndCertificateFactory;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.BindException;
@@ -43,7 +42,7 @@ import static org.mockserver.proxy.Proxy.REMOTE_SOCKET;
 @ChannelHandler.Sharable
 public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private LoggingFormatter logFormatter;
     // generic handling
     private HttpStateHandler httpStateHandler;
     // serializers
@@ -53,13 +52,13 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     // forwarding
     private NettyHttpClient httpClient = new NettyHttpClient();
     private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
-    private LoggingFormatter logFormatter = new LoggingFormatter(logger);
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
     public HttpProxyHandler(Proxy server, HttpStateHandler httpStateHandler) {
         super(false);
         this.server = server;
         this.httpStateHandler = httpStateHandler;
+        this.logFormatter = httpStateHandler.getLogFormatter();
     }
 
     @Override
@@ -118,20 +117,21 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
                     responseWriter.writeResponse(request, response);
                     httpStateHandler.log(new RequestResponseLogEntry(request, response));
                     logFormatter.infoLog(
-                            "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
-                            response,
-                            request,
-                            httpRequestToCurlSerializer.toCurl(request, remoteAddress)
+                        request,
+                        "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
+                        response,
+                        request,
+                        httpRequestToCurlSerializer.toCurl(request, remoteAddress)
                     );
 
                 }
             }
         } catch (IllegalArgumentException iae) {
-            logger.error("Exception processing " + request, iae);
+            logFormatter.errorLog(request, iae, "Exception processing " + request);
             // send request without API CORS headers
             responseWriter.writeResponse(request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
-            logger.error("Exception processing " + request, e);
+            logFormatter.errorLog(request, e, "Exception processing " + request);
             responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()));
         }
     }
@@ -144,7 +144,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (!shouldIgnoreException(cause)) {
-            logger.warn("Exception caught by " + server.getClass() + " handler -> closing pipeline " + ctx.channel(), cause);
+            LoggerFactory.getLogger(this.getClass()).warn("Exception caught by " + server.getClass() + " handler -> closing pipeline " + ctx.channel(), cause);
         }
         closeOnFlush(ctx.channel());
     }

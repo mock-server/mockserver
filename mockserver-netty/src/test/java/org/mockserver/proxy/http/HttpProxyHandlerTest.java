@@ -49,10 +49,12 @@ public class HttpProxyHandlerTest {
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
 
-    private HttpStateHandler httpStateHandler;
     private Proxy mockProxy;
     private NettyHttpClient mockHttpClient;
     private LoggingFormatter mockLogFormatter;
+
+    @InjectMocks
+    private HttpStateHandler httpStateHandler;
 
     @InjectMocks
     private HttpProxyHandler httpProxyHandler;
@@ -84,18 +86,19 @@ public class HttpProxyHandlerTest {
         // given
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
         HttpRequest expectationRetrieveRequestsRequest = request("/retrieve")
-                .withMethod("PUT")
-                .withBody(
-                        httpRequestSerializer.serialize(request("request_one"))
-                );
+            .withMethod("PUT")
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            );
 
         // when
         embeddedChannel.writeInbound(expectationRetrieveRequestsRequest);
 
         // then
         assertResponse(200, httpRequestSerializer.serialize(Collections.singletonList(
-                request("request_one")
+            request("request_one")
         )));
+        verify(mockLogFormatter).infoLog(request("request_one"), "retrieving requests in json that match:{}", request("request_one"));
     }
 
     @Test
@@ -104,10 +107,10 @@ public class HttpProxyHandlerTest {
         httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
         HttpRequest clearRequest = request("/clear")
-                .withMethod("PUT")
-                .withBody(
-                        httpRequestSerializer.serialize(request("request_one"))
-                );
+            .withMethod("PUT")
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            );
 
         // when
         embeddedChannel.writeInbound(clearRequest);
@@ -116,10 +119,11 @@ public class HttpProxyHandlerTest {
         assertResponse(200, "");
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(nullValue()));
         assertThat(httpStateHandler.retrieve(request("/retrieve")
-                .withMethod("PUT")
-                .withBody(
-                        httpRequestSerializer.serialize(request("request_one"))
-                )), is(""));
+            .withMethod("PUT")
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            )), is(""));
+        verify(mockLogFormatter).infoLog(request("request_one"), "clearing expectations and request logs that match:{}", request("request_one"));
     }
 
     @Test
@@ -133,7 +137,7 @@ public class HttpProxyHandlerTest {
 
         // then
         assertResponse(200, portBindingSerializer.serialize(
-                portBinding(1080, 1090)
+            portBinding(1080, 1090)
         ));
     }
 
@@ -142,10 +146,10 @@ public class HttpProxyHandlerTest {
         // given
         when(mockProxy.bindToPorts(anyListOf(Integer.class))).thenReturn(Arrays.asList(1080, 1090));
         HttpRequest statusRequest = request("/bind")
-                .withMethod("PUT")
-                .withBody(portBindingSerializer.serialize(
-                        portBinding(1080, 1090)
-                ));
+            .withMethod("PUT")
+            .withBody(portBindingSerializer.serialize(
+                portBinding(1080, 1090)
+            ));
 
         // when
         embeddedChannel.writeInbound(statusRequest);
@@ -153,7 +157,7 @@ public class HttpProxyHandlerTest {
         // then
         verify(mockProxy).bindToPorts(Arrays.asList(1080, 1090));
         assertResponse(200, portBindingSerializer.serialize(
-                portBinding(1080, 1090)
+            portBinding(1080, 1090)
         ));
     }
 
@@ -161,7 +165,7 @@ public class HttpProxyHandlerTest {
     public void shouldStop() throws InterruptedException {
         // given
         HttpRequest statusRequest = request("/stop")
-                .withMethod("PUT");
+            .withMethod("PUT");
 
         // when
         embeddedChannel.writeInbound(statusRequest);
@@ -177,23 +181,24 @@ public class HttpProxyHandlerTest {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         httpStateHandler.log(new ExpectationMatchLogEntry(
-                request("request_one"),
-                expectationOne
+            request("request_one"),
+            expectationOne
         ));
         HttpRequest expectationRetrieveExpectationsRequest = request("/retrieve")
-                .withMethod("PUT")
-                .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
-                .withBody(
-                        httpRequestSerializer.serialize(request("request_one"))
-                );
+            .withMethod("PUT")
+            .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            );
 
         // when
         embeddedChannel.writeInbound(expectationRetrieveExpectationsRequest);
 
         // then
         assertResponse(200, expectationSerializer.serialize(Collections.singletonList(
-                expectationOne
+            expectationOne
         )));
+        verify(mockLogFormatter).infoLog(request("request_one"), "retrieving recorded_expectations in json that match:{}", request("request_one"));
     }
 
     @Test
@@ -210,20 +215,21 @@ public class HttpProxyHandlerTest {
         // then
         verify(mockHttpClient).sendRequest(request, remoteAddress);
         assertThat(
-                httpStateHandler.retrieve(request("/retrieve")
-                        .withMethod("PUT")
-                        .withBody(
-                                httpRequestSerializer.serialize(request("request_one"))
-                        )),
-                is(httpRequestSerializer.serialize(Collections.singletonList(
-                        request("request_one")
-                )))
+            httpStateHandler.retrieve(request("/retrieve")
+                .withMethod("PUT")
+                .withBody(
+                    httpRequestSerializer.serialize(request("request_one"))
+                )),
+            is(httpRequestSerializer.serialize(Collections.singletonList(
+                request("request_one")
+            )))
         );
         verify(mockLogFormatter).infoLog(
-                "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
-                response("response_one").withHeader("connection", "close"),
-                request,
-                new HttpRequestToCurlSerializer().toCurl(request, remoteAddress)
+            request,
+            "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
+            response("response_one").withHeader("connection", "close"),
+            request,
+            new HttpRequestToCurlSerializer().toCurl(request, remoteAddress)
         );
     }
 

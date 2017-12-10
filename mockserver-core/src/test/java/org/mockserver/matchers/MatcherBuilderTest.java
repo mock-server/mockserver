@@ -1,9 +1,12 @@
 package org.mockserver.matchers;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.*;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 /**
  * @author jamesdbloom
@@ -17,12 +20,17 @@ public class MatcherBuilderTest {
             .withBody(new StringBody("some_body"))
             .withHeaders(new Header("name", "value"))
             .withCookies(new Cookie("name", "value"));
-    ;
+    private LoggingFormatter mockLogFormatter;
+
+    @Before
+    public void setupTestFixture() {
+        mockLogFormatter = mock(LoggingFormatter.class);
+    }
 
     @Test
     public void shouldCreateMatcherThatMatchesAllFields() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(httpRequest);
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockLogFormatter).transformsToMatcher(httpRequest);
 
         // then
         assertTrue(httpRequestMapper.matches(httpRequest));
@@ -31,7 +39,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresMethod() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockLogFormatter).transformsToMatcher(
                 new HttpRequest()
                         .withMethod("")
                         .withPath("some_path")
@@ -48,7 +56,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresPath() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockLogFormatter).transformsToMatcher(
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("")
@@ -65,7 +73,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresQueryString() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockLogFormatter).transformsToMatcher(
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")
@@ -82,7 +90,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresBodyParameters() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockLogFormatter).transformsToMatcher(
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")
@@ -99,7 +107,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresBody() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockLogFormatter).transformsToMatcher(
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")
@@ -116,7 +124,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresHeaders() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockLogFormatter).transformsToMatcher(
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")
@@ -133,7 +141,7 @@ public class MatcherBuilderTest {
     @Test
     public void shouldCreateMatcherThatIgnoresCookies() {
         // when
-        HttpRequestMatcher httpRequestMapper = new MatcherBuilder().transformsToMatcher(
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockLogFormatter).transformsToMatcher(
                 new HttpRequest()
                         .withMethod("GET")
                         .withPath("some_path")

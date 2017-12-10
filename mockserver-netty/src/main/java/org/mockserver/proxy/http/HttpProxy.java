@@ -40,16 +40,16 @@ public class HttpProxy extends Proxy<HttpProxy> {
         }
 
         serverBootstrap = new ServerBootstrap()
-                .group(bossGroup, workerGroup)
-                .option(ChannelOption.SO_BACKLOG, 1024)
-                .channel(NioServerSocketChannel.class)
-                .childOption(ChannelOption.AUTO_READ, true)
-                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-                .childHandler(new HttpProxyUnificationHandler())
-                .childAttr(HTTP_PROXY, HttpProxy.this)
-                .childAttr(HTTP_CONNECT_SOCKET, new InetSocketAddress(requestedPortBindings[0]))
-                .childAttr(STATE_HANDLER, new HttpStateHandler());
+            .group(bossGroup, workerGroup)
+            .option(ChannelOption.SO_BACKLOG, 1024)
+            .channel(NioServerSocketChannel.class)
+            .childOption(ChannelOption.AUTO_READ, true)
+            .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+            .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
+            .childHandler(new HttpProxyUnificationHandler())
+            .childAttr(HTTP_PROXY, HttpProxy.this)
+            .childAttr(HTTP_CONNECT_SOCKET, new InetSocketAddress(requestedPortBindings[0]))
+            .childAttr(STATE_HANDLER, new HttpStateHandler());
 
         bindToPorts(Arrays.asList(requestedPortBindings));
 
@@ -75,7 +75,7 @@ public class HttpProxy extends Proxy<HttpProxy> {
             @Override
             public List<java.net.Proxy> select(URI uri) {
                 return Collections.singletonList(
-                        new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(host, port))
+                    new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(host, port))
                 );
             }
 

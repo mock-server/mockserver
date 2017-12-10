@@ -1,6 +1,5 @@
 package org.mockserver.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.net.MediaType;
 
 import java.nio.charset.Charset;

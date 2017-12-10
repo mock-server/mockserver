@@ -7,10 +7,9 @@ import org.mockserver.client.serialization.model.DTO;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.client.serialization.model.HttpResponseDTO;
 import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author jamesdbloom
@@ -18,12 +17,15 @@ import org.slf4j.LoggerFactory;
 public class HttpTemplateOutputDeserializer {
 
     private static ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
-    private static Logger logger = LoggerFactory.getLogger(HttpTemplateOutputDeserializer.class);
-    private static LoggingFormatter logFormatter = new LoggingFormatter(logger);
+    private final LoggingFormatter logFormatter;
     private JsonSchemaHttpRequestValidator httpRequestValidator = new JsonSchemaHttpRequestValidator();
     private JsonSchemaHttpResponseValidator httpResponseValidator = new JsonSchemaHttpResponseValidator();
 
-    public <T> T deserializer(String json, Class<? extends DTO<T>> dtoClass) {
+    public HttpTemplateOutputDeserializer(LoggingFormatter logFormatter) {
+        this.logFormatter = logFormatter;
+    }
+
+    public <T> T deserializer(HttpRequest request, String json, Class<? extends DTO<T>> dtoClass) {
         T result = null;
         try {
             String validationErrors = "", schema = "";
@@ -37,10 +39,10 @@ public class HttpTemplateOutputDeserializer {
             if (StringUtils.isEmpty(validationErrors)) {
                 result = objectMapper.readValue(json, dtoClass).buildObject();
             } else {
-                logFormatter.errorLog("Validation failed:{}for:{}against schema:{}", validationErrors, json, schema);
+                logFormatter.errorLog(request, "Validation failed:{}for:{}against schema:{}", validationErrors, json, schema);
             }
         } catch (Exception e) {
-            logFormatter.errorLog(e, "Exception transforming json:{}", json);
+            logFormatter.errorLog(request, e, "Exception transforming json:{}", json);
         }
         return result;
     }

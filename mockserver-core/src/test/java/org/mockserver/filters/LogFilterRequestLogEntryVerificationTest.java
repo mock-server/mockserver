@@ -2,11 +2,13 @@ package org.mockserver.filters;
 
 import org.junit.Test;
 import org.mockserver.log.model.RequestLogEntry;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.verify.Verification;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.Verification.verification;
@@ -23,7 +25,7 @@ public class LogFilterRequestLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new RequestLogEntry(httpRequest));
@@ -39,7 +41,7 @@ public class LogFilterRequestLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new RequestLogEntry(httpRequest));
@@ -70,7 +72,7 @@ public class LogFilterRequestLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new RequestLogEntry(httpRequest));
@@ -93,7 +95,7 @@ public class LogFilterRequestLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new RequestLogEntry(httpRequest));
@@ -116,7 +118,7 @@ public class LogFilterRequestLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new RequestLogEntry(httpRequest));
@@ -140,7 +142,7 @@ public class LogFilterRequestLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new RequestLogEntry(httpRequest));
@@ -162,7 +164,7 @@ public class LogFilterRequestLogEntryVerificationTest {
     @Test
     public void shouldFailVerificationWithNullRequest() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // then
         assertThat(logFilter.verify((Verification) null), is(""));
@@ -173,7 +175,7 @@ public class LogFilterRequestLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new RequestLogEntry(httpRequest));
@@ -203,7 +205,7 @@ public class LogFilterRequestLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new RequestLogEntry(httpRequest));
@@ -234,7 +236,7 @@ public class LogFilterRequestLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new RequestLogEntry(httpRequest));
@@ -264,7 +266,7 @@ public class LogFilterRequestLogEntryVerificationTest {
     @Test
     public void shouldFailVerificationWithExactOneTime() {
         // given
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // then
         assertThat(logFilter.verify(
@@ -285,7 +287,7 @@ public class LogFilterRequestLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new RequestLogEntry(httpRequest));
@@ -316,7 +318,7 @@ public class LogFilterRequestLogEntryVerificationTest {
     public void shouldFailVerificationWithNoInteractions() {
         // given
         HttpRequest httpRequest = new HttpRequest();
-        LogFilter logFilter = new LogFilter();
+        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
 
         // when
         logFilter.onRequest(new RequestLogEntry(httpRequest));

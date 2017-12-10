@@ -25,13 +25,13 @@ public class MockServer extends LifeCycle<MockServer> {
         }
 
         serverBootstrap = new ServerBootstrap()
-                .group(bossGroup, workerGroup)
-                .option(ChannelOption.SO_BACKLOG, 1024)
-                .channel(NioServerSocketChannel.class)
-                .childOption(ChannelOption.AUTO_READ, true)
-                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-                .childHandler(new MockServerInitializer(MockServer.this));
+            .group(bossGroup, workerGroup)
+            .option(ChannelOption.SO_BACKLOG, 1024)
+            .channel(NioServerSocketChannel.class)
+            .childOption(ChannelOption.AUTO_READ, true)
+            .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+            .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
+            .childHandler(new MockServerInitializer(MockServer.this));
 
         bindToPorts(Arrays.asList(requestedPortBindings));
 

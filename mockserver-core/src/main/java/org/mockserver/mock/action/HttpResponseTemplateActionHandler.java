@@ -1,6 +1,7 @@
 package org.mockserver.mock.action;
 
 import org.mockserver.client.serialization.model.HttpResponseDTO;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
@@ -15,8 +16,13 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
  */
 public class HttpResponseTemplateActionHandler {
 
-    private JavaScriptTemplateEngine javaScriptTemplateEngine = new JavaScriptTemplateEngine();
-    private VelocityTemplateEngine velocityTemplateEngine = new VelocityTemplateEngine();
+    private JavaScriptTemplateEngine javaScriptTemplateEngine;
+    private VelocityTemplateEngine velocityTemplateEngine;
+
+    public HttpResponseTemplateActionHandler(LoggingFormatter logFormatter) {
+        javaScriptTemplateEngine = new JavaScriptTemplateEngine(logFormatter);
+        velocityTemplateEngine = new VelocityTemplateEngine(logFormatter);
+    }
 
     public HttpResponse handle(HttpTemplate httpTemplate, HttpRequest httpRequest) {
         HttpResponse httpResponse = notFoundResponse();

@@ -68,7 +68,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
 
         for (Entry<NottableString, NottableString> matcherEntry : entrySet()) {
             if (RegexStringMatcher.matches(value, matcherEntry.getValue(), true)
-                    && RegexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
+                && RegexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
                 result = true;
                 break;
             }

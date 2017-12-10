@@ -67,14 +67,14 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
         int letterTwo = (int) msg.getUnsignedByte(msg.readerIndex() + 1);
         int letterThree = (int) msg.getUnsignedByte(msg.readerIndex() + 2);
         return letterOne == 'G' && letterTwo == 'E' && letterThree == 'T' ||  // GET
-                letterOne == 'P' && letterTwo == 'O' && letterThree == 'S' || // POST
-                letterOne == 'P' && letterTwo == 'U' && letterThree == 'T' || // PUT
-                letterOne == 'H' && letterTwo == 'E' && letterThree == 'A' || // HEAD
-                letterOne == 'O' && letterTwo == 'P' && letterThree == 'T' || // OPTIONS
-                letterOne == 'P' && letterTwo == 'A' && letterThree == 'T' || // PATCH
-                letterOne == 'D' && letterTwo == 'E' && letterThree == 'L' || // DELETE
-                letterOne == 'T' && letterTwo == 'R' && letterThree == 'A' || // TRACE
-                letterOne == 'C' && letterTwo == 'O' && letterThree == 'N';   // CONNECT
+            letterOne == 'P' && letterTwo == 'O' && letterThree == 'S' || // POST
+            letterOne == 'P' && letterTwo == 'U' && letterThree == 'T' || // PUT
+            letterOne == 'H' && letterTwo == 'E' && letterThree == 'A' || // HEAD
+            letterOne == 'O' && letterTwo == 'P' && letterThree == 'T' || // OPTIONS
+            letterOne == 'P' && letterTwo == 'A' && letterThree == 'T' || // PATCH
+            letterOne == 'D' && letterTwo == 'E' && letterThree == 'L' || // DELETE
+            letterOne == 'T' && letterTwo == 'R' && letterThree == 'A' || // TRACE
+            letterOne == 'C' && letterTwo == 'O' && letterThree == 'N';   // CONNECT
     }
 
     private void enableSsl(ChannelHandlerContext ctx, ByteBuf msg) {

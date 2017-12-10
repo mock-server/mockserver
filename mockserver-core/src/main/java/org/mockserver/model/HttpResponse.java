@@ -3,10 +3,8 @@ package org.mockserver.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
@@ -243,7 +241,7 @@ public class HttpResponse extends Action {
     /**
      * Returns true if a header with the specified name has been added
      *
-     * @param name the header name
+     * @param name  the header name
      * @param value the header value
      * @return true if a header has been added with that name otherwise false
      */
@@ -366,11 +364,11 @@ public class HttpResponse extends Action {
 
     public HttpResponse clone() {
         return response()
-                .withStatusCode(getStatusCode())
-                .withBody(getBody())
-                .withHeaders(getHeaderList())
-                .withCookies(getCookieList())
-                .withDelay(getDelay())
-                .withConnectionOptions(getConnectionOptions());
+            .withStatusCode(getStatusCode())
+            .withBody(getBody())
+            .withHeaders(getHeaderList())
+            .withCookies(getCookieList())
+            .withDelay(getDelay())
+            .withConnectionOptions(getConnectionOptions());
     }
 }

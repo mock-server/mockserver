@@ -27,8 +27,8 @@ public class ExpectationSerializer implements Serializer<Expectation> {
     public String serialize(Expectation expectation) {
         try {
             return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(new ExpectationDTO(expectation));
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(new ExpectationDTO(expectation));
         } catch (Exception e) {
             logger.error(String.format("Exception while serializing expectation to JSON with value %s", expectation), e);
             throw new RuntimeException(String.format("Exception while serializing expectation to JSON with value %s", expectation), e);
@@ -47,8 +47,8 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                     expectationDTOs[i] = new ExpectationDTO(expectations[i]);
                 }
                 return objectMapper
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(expectationDTOs);
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(expectationDTOs);
             }
             return "";
         } catch (Exception e) {

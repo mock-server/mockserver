@@ -10,13 +10,13 @@ public class JsonSchemaVerificationValidator extends JsonSchemaValidator {
 
     public static Logger logger = LoggerFactory.getLogger(JsonSchemaVerificationValidator.class);
     private static String jsonSchema = addReferencesIntoSchema(
-            "org/mockserver/model/schema/",
-            "verification",
-            "httpRequest",
-            "body",
-            "keyToMultiValue",
-            "keyToValue",
-            "verificationTimes"
+        "org/mockserver/model/schema/",
+        "verification",
+        "httpRequest",
+        "body",
+        "keyToMultiValue",
+        "keyToValue",
+        "verificationTimes"
     );
 
     public JsonSchemaVerificationValidator() {

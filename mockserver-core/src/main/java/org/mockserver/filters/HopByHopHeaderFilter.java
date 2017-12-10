@@ -16,15 +16,15 @@ public class HopByHopHeaderFilter {
     public HttpRequest onRequest(HttpRequest request) {
         if (request != null) {
             List<String> headersToRemove = Arrays.asList(
-                    "proxy-connection",
-                    "connection",
-                    "keep-alive",
-                    "transfer-encoding",
-                    "te",
-                    "trailer",
-                    "proxy-authorization",
-                    "proxy-authenticate",
-                    "upgrade"
+                "proxy-connection",
+                "connection",
+                "keep-alive",
+                "transfer-encoding",
+                "te",
+                "trailer",
+                "proxy-authorization",
+                "proxy-authenticate",
+                "upgrade"
             );
             List<Header> filteredHeaders = new ArrayList<Header>();
             for (Header header : request.getHeaderList()) {

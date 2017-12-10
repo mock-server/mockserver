@@ -81,19 +81,19 @@ public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
                         try {
 
                             Channel channel =
-                                    serverBootstrap
-                                            .bind(portToBind)
-                                            .addListener(new ChannelFutureListener() {
-                                                @Override
-                                                public void operationComplete(ChannelFuture future) throws Exception {
-                                                    if (future.isSuccess()) {
-                                                        channelOpened.set(future.channel());
-                                                    } else {
-                                                        channelOpened.setException(future.cause());
-                                                    }
-                                                }
-                                            })
-                                            .channel();
+                                serverBootstrap
+                                    .bind(portToBind)
+                                    .addListener(new ChannelFutureListener() {
+                                        @Override
+                                        public void operationComplete(ChannelFuture future) throws Exception {
+                                            if (future.isSuccess()) {
+                                                channelOpened.set(future.channel());
+                                            } else {
+                                                channelOpened.setException(future.cause());
+                                            }
+                                        }
+                                    })
+                                    .channel();
 
                             int boundPort = ((InetSocketAddress) channelOpened.get().localAddress()).getPort();
                             started(boundPort);

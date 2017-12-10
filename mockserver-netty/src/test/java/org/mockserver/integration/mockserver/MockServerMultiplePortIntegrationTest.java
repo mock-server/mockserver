@@ -49,7 +49,9 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
         }
 
         // stop echo server
-        echoServer.stop();
+        if (echoServer != null) {
+            echoServer.stop();
+        }
     }
 
     @Override

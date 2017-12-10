@@ -6,7 +6,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import org.mockserver.filters.LogFilter;
 import org.mockserver.log.model.RequestLogEntry;
-import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.BodyWithContentType;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -29,7 +28,6 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private final EchoServer.Error error;
     private final LogFilter logFilter;
     private final EchoServer.NextResponse nextResponse;
-    private LoggingFormatter logFormatter = new LoggingFormatter(logger);
 
     public EchoServerHandler(EchoServer.Error error, LogFilter logFilter, EchoServer.NextResponse nextResponse) {
         this.error = error;
@@ -39,7 +37,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
 
-        logFormatter.traceLog("received request:{}", request);
+        logger.trace("received request:{}", request);
 
         logFilter.onRequest(new RequestLogEntry(request));
 
@@ -49,9 +47,9 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             ctx.writeAndFlush(httpResponse);
         } else {
             HttpResponse httpResponse =
-                    response()
-                            .withStatusCode(request.getPath().equalsIgnoreCase("/not_found") ? NOT_FOUND.code() : OK.code())
-                            .withHeaders(request.getHeaderList());
+                response()
+                    .withStatusCode(request.getPath().equalsIgnoreCase("/not_found") ? NOT_FOUND.code() : OK.code())
+                    .withHeaders(request.getHeaderList());
 
             if (request.getBody() instanceof BodyWithContentType) {
                 httpResponse.withBody((BodyWithContentType) request.getBody());

@@ -1,6 +1,8 @@
 package org.mockserver.echo.http;
 
-import io.netty.channel.*;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
 
 /**
  * @author jamesdbloom

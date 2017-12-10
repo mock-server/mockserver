@@ -1,10 +1,5 @@
 package org.mockserver.model;
 
-import org.mockserver.collections.CaseInsensitiveRegexHashMap;
-
-import java.util.Arrays;
-import java.util.List;
-
 import static org.mockserver.model.NottableString.string;
 
 /**

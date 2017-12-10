@@ -6,7 +6,7 @@ import org.mockserver.model.HttpRequest;
 /**
  * @author jamesdbloom
  */
-public class ExpectationMatchLogEntry extends LogEntry implements ExpectationLogEntry{
+public class ExpectationMatchLogEntry extends LogEntry implements ExpectationLogEntry {
 
     private final Expectation expectation;
 

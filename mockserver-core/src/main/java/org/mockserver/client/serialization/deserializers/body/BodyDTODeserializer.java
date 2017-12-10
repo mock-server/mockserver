@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.net.MediaType;
 import org.mockserver.client.serialization.Base64Converter;
-import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.model.*;

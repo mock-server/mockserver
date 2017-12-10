@@ -31,34 +31,34 @@ public class Main {
     private static final String PROXY_REMOTE_PORT_KEY = "proxyRemotePort";
     private static final String PROXY_REMOTE_HOST_KEY = "proxyRemoteHost";
     static final String USAGE = "" +
-            "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]" + NEW_LINE +
-            "                                                                                       " + NEW_LINE +
-            "     valid options are:                                                                " + NEW_LINE +
-            "        -serverPort <port>           Specifies the HTTP and HTTPS port(s) for the      " + NEW_LINE +
-            "                                     MockServer. Port unification is used to           " + NEW_LINE +
-            "                                     support HTTP and HTTPS on the same port(s).       " + NEW_LINE +
-            "                                                                                       " + NEW_LINE +
-            "        -proxyPort <port>            Specifies the HTTP, HTTPS, SOCKS and HTTP         " + NEW_LINE +
-            "                                     CONNECT port for proxy. Port unification          " + NEW_LINE +
-            "                                     supports for all protocols on the same port.      " + NEW_LINE +
-            "                                                                                       " + NEW_LINE +
-            "        -proxyRemotePort <port>      Specifies the port to forward all proxy           " + NEW_LINE +
-            "                                     requests to (i.e. all requests received on        " + NEW_LINE +
-            "                                     portPort). This setting is used to enable         " + NEW_LINE +
-            "                                     the port forwarding mode therefore this           " + NEW_LINE +
-            "                                     option disables the HTTP, HTTPS, SOCKS and        " + NEW_LINE +
-            "                                     HTTP CONNECT support.                             " + NEW_LINE +
-            "                                                                                       " + NEW_LINE +
-            "        -proxyRemoteHost <hostname>  Specified the host to forward all proxy           " + NEW_LINE +
-            "                                     requests to (i.e. all requests received on        " + NEW_LINE +
-            "                                     portPort). This setting is ignored unless         " + NEW_LINE +
-            "                                     proxyRemotePort has been specified. If no         " + NEW_LINE +
-            "                                     value is provided for proxyRemoteHost when        " + NEW_LINE +
-            "                                     proxyRemotePort has been specified,               " + NEW_LINE +
-            "                                     proxyRemoteHost will default to \"localhost\".    " + NEW_LINE +
-            "                                                                                       " + NEW_LINE +
-            "   i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com" + NEW_LINE +
-            "                                                                                       " + NEW_LINE;
+        "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]" + NEW_LINE +
+        "                                                                                       " + NEW_LINE +
+        "     valid options are:                                                                " + NEW_LINE +
+        "        -serverPort <port>           Specifies the HTTP and HTTPS port(s) for the      " + NEW_LINE +
+        "                                     MockServer. Port unification is used to           " + NEW_LINE +
+        "                                     support HTTP and HTTPS on the same port(s).       " + NEW_LINE +
+        "                                                                                       " + NEW_LINE +
+        "        -proxyPort <port>            Specifies the HTTP, HTTPS, SOCKS and HTTP         " + NEW_LINE +
+        "                                     CONNECT port for proxy. Port unification          " + NEW_LINE +
+        "                                     supports for all protocols on the same port.      " + NEW_LINE +
+        "                                                                                       " + NEW_LINE +
+        "        -proxyRemotePort <port>      Specifies the port to forward all proxy           " + NEW_LINE +
+        "                                     requests to (i.e. all requests received on        " + NEW_LINE +
+        "                                     portPort). This setting is used to enable         " + NEW_LINE +
+        "                                     the port forwarding mode therefore this           " + NEW_LINE +
+        "                                     option disables the HTTP, HTTPS, SOCKS and        " + NEW_LINE +
+        "                                     HTTP CONNECT support.                             " + NEW_LINE +
+        "                                                                                       " + NEW_LINE +
+        "        -proxyRemoteHost <hostname>  Specified the host to forward all proxy           " + NEW_LINE +
+        "                                     requests to (i.e. all requests received on        " + NEW_LINE +
+        "                                     portPort). This setting is ignored unless         " + NEW_LINE +
+        "                                     proxyRemotePort has been specified. If no         " + NEW_LINE +
+        "                                     value is provided for proxyRemoteHost when        " + NEW_LINE +
+        "                                     proxyRemotePort has been specified,               " + NEW_LINE +
+        "                                     proxyRemoteHost will default to \"localhost\".    " + NEW_LINE +
+        "                                                                                       " + NEW_LINE +
+        "   i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com" + NEW_LINE +
+        "                                                                                       " + NEW_LINE;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
     private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
@@ -91,7 +91,7 @@ public class Main {
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(NEW_LINE + NEW_LINE + "Using command line options: " +
-                    Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments) + NEW_LINE);
+                Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments) + NEW_LINE);
         }
 
         if (parsedArguments.size() > 0 && validateArguments(parsedArguments)) {
@@ -124,9 +124,9 @@ public class Main {
         if (!errorMessages.isEmpty()) {
             int maxLengthMessage = 0;
             for (String errorMessage : errorMessages) {
-               if (errorMessage.length() > maxLengthMessage) {
-                   maxLengthMessage = errorMessage.length();
-               }
+                if (errorMessage.length() > maxLengthMessage) {
+                    maxLengthMessage = errorMessage.length();
+                }
             }
             outputPrintStream.println(NEW_LINE + "   " + Strings.padEnd("", maxLengthMessage, '='));
             for (String errorMessage : errorMessages) {
@@ -166,9 +166,9 @@ public class Main {
             if (argumentsIterator.hasNext()) {
                 String argumentValue = argumentsIterator.next();
                 if (!parsePort(parsedArguments, SERVER_PORT_KEY, argumentName, argumentValue)
-                        && !parsePort(parsedArguments, PROXY_PORT_KEY, argumentName, argumentValue)
-                        && !parsePort(parsedArguments, PROXY_REMOTE_PORT_KEY, argumentName, argumentValue)
-                        && !("-" + PROXY_REMOTE_HOST_KEY).equalsIgnoreCase(argumentName)) {
+                    && !parsePort(parsedArguments, PROXY_PORT_KEY, argumentName, argumentValue)
+                    && !parsePort(parsedArguments, PROXY_REMOTE_PORT_KEY, argumentName, argumentValue)
+                    && !("-" + PROXY_REMOTE_HOST_KEY).equalsIgnoreCase(argumentName)) {
                     showUsage();
                     break;
                 }

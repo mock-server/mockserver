@@ -4,7 +4,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.mockserver.callback.WebSocketServerHandler;
 import org.mockserver.server.netty.codec.MockServerServerCodec;
 import org.mockserver.server.unification.PortUnificationHandler;

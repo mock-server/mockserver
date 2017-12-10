@@ -19,9 +19,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 
 /**
@@ -35,9 +33,9 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
 
     public DefaultFullHttpResponse encode(HttpResponse response) {
         DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
-                HttpVersion.HTTP_1_1,
-                HttpResponseStatus.valueOf((response.getStatusCode() != null ? response.getStatusCode() : 200)),
-                getBody(response)
+            HttpVersion.HTTP_1_1,
+            HttpResponseStatus.valueOf((response.getStatusCode() != null ? response.getStatusCode() : 200)),
+            getBody(response)
         );
         setHeaders(response, defaultFullHttpResponse);
         setCookies(response, defaultFullHttpResponse);
@@ -74,7 +72,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         // Content-Type
         if (Strings.isNullOrEmpty(response.getFirstHeader(CONTENT_TYPE.toString()))) {
             if (response.getBody() != null
-                    && response.getBody().getContentType() != null) {
+                && response.getBody().getContentType() != null) {
                 defaultFullHttpResponse.headers().set(CONTENT_TYPE, response.getBody().getContentType());
             }
         }

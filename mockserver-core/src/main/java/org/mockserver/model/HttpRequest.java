@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
 
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 import static org.mockserver.model.NottableString.string;
 
@@ -522,13 +523,13 @@ public class HttpRequest extends Not {
 
     public HttpRequest clone() {
         return not(request(), not)
-                .withMethod(method)
-                .withPath(path)
-                .withQueryStringParameters(getQueryStringParameterList())
-                .withBody(body)
-                .withHeaders(getHeaderList())
-                .withCookies(getCookieList())
-                .withKeepAlive(keepAlive)
-                .withSecure(secure);
+            .withMethod(method)
+            .withPath(path)
+            .withQueryStringParameters(getQueryStringParameterList())
+            .withBody(body)
+            .withHeaders(getHeaderList())
+            .withCookies(getCookieList())
+            .withKeepAlive(keepAlive)
+            .withSecure(secure);
     }
 }

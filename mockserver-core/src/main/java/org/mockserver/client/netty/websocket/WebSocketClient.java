@@ -36,18 +36,18 @@ public class WebSocketClient {
             final WebSocketClientHandler webSocketClientHandler = new WebSocketClientHandler(serverAddress, contextPath, this);
 
             channel = new Bootstrap().group(group)
-                    .channel(NioSocketChannel.class)
-                    .handler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        protected void initChannel(SocketChannel ch) {
-                            ch.pipeline()
-                                    .addLast(
-                                            new HttpClientCodec(),
-                                            new HttpObjectAggregator(Integer.MAX_VALUE),
-                                            webSocketClientHandler
-                                    );
-                        }
-                    }).connect(serverAddress).sync().channel();
+                .channel(NioSocketChannel.class)
+                .handler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel ch) {
+                        ch.pipeline()
+                            .addLast(
+                                new HttpClientCodec(),
+                                new HttpObjectAggregator(Integer.MAX_VALUE),
+                                webSocketClientHandler
+                            );
+                    }
+                }).connect(serverAddress).sync().channel();
 
         } catch (Exception e) {
             throw new WebSocketException("Exception while starting web socket client", e);

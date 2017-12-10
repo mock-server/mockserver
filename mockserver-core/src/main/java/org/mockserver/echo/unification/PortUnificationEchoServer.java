@@ -30,22 +30,22 @@ public class PortUnificationEchoServer {
                 EventLoopGroup bossGroup = new NioEventLoopGroup(1);
                 EventLoopGroup workerGroup = new NioEventLoopGroup();
                 new ServerBootstrap().group(bossGroup, workerGroup)
-                        .channel(NioServerSocketChannel.class)
-                        .option(ChannelOption.SO_BACKLOG, 100)
-                        .handler(new LoggingHandler("EchoServer Handler"))
-                        .childHandler(new EchoServerUnificationHandler())
-                        .bind(port)
-                        .addListener(new ChannelFutureListener() {
-                            @Override
-                            public void operationComplete(ChannelFuture future) throws Exception {
-                                if (future.isSuccess()) {
-                                    hasStarted.set("STARTED");
-                                } else {
-                                    hasStarted.setException(future.cause());
-                                    eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-                                }
+                    .channel(NioServerSocketChannel.class)
+                    .option(ChannelOption.SO_BACKLOG, 100)
+                    .handler(new LoggingHandler("EchoServer Handler"))
+                    .childHandler(new EchoServerUnificationHandler())
+                    .bind(port)
+                    .addListener(new ChannelFutureListener() {
+                        @Override
+                        public void operationComplete(ChannelFuture future) throws Exception {
+                            if (future.isSuccess()) {
+                                hasStarted.set("STARTED");
+                            } else {
+                                hasStarted.setException(future.cause());
+                                eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                             }
-                        });
+                        }
+                    });
             }
         }, "MockServer Port Unification EchoServer Thread").start();
 

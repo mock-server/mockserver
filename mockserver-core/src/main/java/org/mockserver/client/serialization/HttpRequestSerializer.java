@@ -34,12 +34,12 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
         try {
             if (prettyPrint) {
                 return objectMapper
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(new HttpRequestTemplateObject(httpRequest));
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(new HttpRequestTemplateObject(httpRequest));
             } else {
                 return objectMapper
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(new HttpRequestDTO(httpRequest));
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(new HttpRequestDTO(httpRequest));
             }
         } catch (Exception e) {
             logger.error(String.format("Exception while serializing httpRequest to JSON with value %s", httpRequest), e);
@@ -68,16 +68,16 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                         httpRequestTemplateObjects[i] = new HttpRequestTemplateObject(httpRequests[i]);
                     }
                     return objectMapper
-                            .writerWithDefaultPrettyPrinter()
-                            .writeValueAsString(httpRequestTemplateObjects);
+                        .writerWithDefaultPrettyPrinter()
+                        .writeValueAsString(httpRequestTemplateObjects);
                 } else {
                     HttpRequestDTO[] httpRequestDTOs = new HttpRequestDTO[httpRequests.length];
                     for (int i = 0; i < httpRequests.length; i++) {
                         httpRequestDTOs[i] = new HttpRequestDTO(httpRequests[i]);
                     }
                     return objectMapper
-                            .writerWithDefaultPrettyPrinter()
-                            .writeValueAsString(httpRequestDTOs);
+                        .writerWithDefaultPrettyPrinter()
+                        .writeValueAsString(httpRequestDTOs);
                 }
             }
             return "";

@@ -51,20 +51,20 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 
     private void upgradeChannel(final ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
         handshaker = new WebSocketServerHandshakerFactory(
-                "ws://" + httpRequest.headers().get(HOST) + WEB_SOCKET_URI,
-                null,
-                true,
-                Integer.MAX_VALUE
+            "ws://" + httpRequest.headers().get(HOST) + WEB_SOCKET_URI,
+            null,
+            true,
+            Integer.MAX_VALUE
         ).newHandshaker(httpRequest);
         if (handshaker == null) {
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
         } else {
             final String clientId = UUID.randomUUID().toString();
             handshaker.handshake(
-                    ctx.channel(),
-                    httpRequest,
-                    new DefaultHttpHeaders().add("X-CLIENT-REGISTRATION-ID", clientId),
-                    ctx.channel().newPromise()
+                ctx.channel(),
+                httpRequest,
+                new DefaultHttpHeaders().add("X-CLIENT-REGISTRATION-ID", clientId),
+                ctx.channel().newPromise()
             ).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {

@@ -2,7 +2,6 @@ package org.mockserver.verify;
 
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithJsonToString;
-import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 import java.util.ArrayList;
 import java.util.Collections;

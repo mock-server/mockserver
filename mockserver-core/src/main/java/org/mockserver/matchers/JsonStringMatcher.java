@@ -1,6 +1,5 @@
 package org.mockserver.matchers;
 
-import org.mockserver.model.JsonBody;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.JSONCompareResult;
 

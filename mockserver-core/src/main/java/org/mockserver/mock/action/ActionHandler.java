@@ -1,8 +1,6 @@
 package org.mockserver.mock.action;
 
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
 import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
@@ -11,7 +9,6 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
-import org.slf4j.LoggerFactory;
 
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -22,18 +19,24 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 public class ActionHandler {
 
     private HttpStateHandler httpStateHandler;
-    private LoggingFormatter logFormatter = new LoggingFormatter(LoggerFactory.getLogger(this.getClass()));
-    private HttpResponseActionHandler httpResponseActionHandler = new HttpResponseActionHandler();
-    private HttpResponseTemplateActionHandler httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler();
-    private HttpForwardActionHandler httpForwardActionHandler = new HttpForwardActionHandler();
-    private HttpForwardTemplateActionHandler httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler();
-    private HttpClassCallbackActionHandler httpClassCallbackActionHandler = new HttpClassCallbackActionHandler();
+    private LoggingFormatter logFormatter;
+    private HttpResponseActionHandler httpResponseActionHandler;
+    private HttpResponseTemplateActionHandler httpResponseTemplateActionHandler;
+    private HttpForwardActionHandler httpForwardActionHandler;
+    private HttpForwardTemplateActionHandler httpForwardTemplateActionHandler;
+    private HttpClassCallbackActionHandler httpClassCallbackActionHandler;
     private HttpObjectCallbackActionHandler httpObjectCallbackActionHandler;
     private HttpErrorActionHandler httpErrorActionHandler = new HttpErrorActionHandler();
 
     public ActionHandler(HttpStateHandler httpStateHandler) {
         this.httpStateHandler = httpStateHandler;
-        httpObjectCallbackActionHandler = new HttpObjectCallbackActionHandler(httpStateHandler.getWebSocketClientRegistry());
+        this.logFormatter = httpStateHandler.getLogFormatter();
+        this.httpResponseActionHandler = new HttpResponseActionHandler();
+        this.httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(logFormatter);
+        this.httpForwardActionHandler = new HttpForwardActionHandler();
+        this.httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(logFormatter);
+        this.httpClassCallbackActionHandler = new HttpClassCallbackActionHandler();
+        this.httpObjectCallbackActionHandler = new HttpObjectCallbackActionHandler(httpStateHandler);
     }
 
     public void processAction(HttpRequest request, ResponseWriter responseWriter, ChannelHandlerContext ctx) {
@@ -46,13 +49,13 @@ public class ActionHandler {
                     response = httpForwardActionHandler.handle((HttpForward) action, request);
                     responseWriter.writeResponse(request, response);
                     httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                    logFormatter.infoLog("returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
+                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
                     break;
                 case FORWARD_TEMPLATE:
                     response = httpForwardTemplateActionHandler.handle((HttpTemplate) action, request);
                     responseWriter.writeResponse(request, response);
                     httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                    logFormatter.infoLog("returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
+                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
                     break;
                 case OBJECT_CALLBACK:
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
@@ -62,24 +65,24 @@ public class ActionHandler {
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     response = httpClassCallbackActionHandler.handle((HttpClassCallback) action, request);
                     responseWriter.writeResponse(request, response);
-                    logFormatter.infoLog("returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
+                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
                     break;
                 case RESPONSE:
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     response = httpResponseActionHandler.handle((HttpResponse) action);
                     responseWriter.writeResponse(request, response);
-                    logFormatter.infoLog("returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
+                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
                     break;
                 case RESPONSE_TEMPLATE:
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     response = httpResponseTemplateActionHandler.handle((HttpTemplate) action, request);
                     responseWriter.writeResponse(request, response);
-                    logFormatter.infoLog("returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
+                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
                     break;
                 case ERROR:
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     httpErrorActionHandler.handle((HttpError) action, ctx);
-                    logFormatter.infoLog("returning error :{}" + NEW_LINE + " for request:{}", action, request);
+                    logFormatter.infoLog(request, "returning error :{}" + NEW_LINE + " for request:{}", action, request);
                     break;
             }
         } else {

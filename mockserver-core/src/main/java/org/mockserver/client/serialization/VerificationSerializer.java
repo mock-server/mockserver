@@ -21,8 +21,8 @@ public class VerificationSerializer implements Serializer<Verification> {
     public String serialize(Verification verification) {
         try {
             return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(new VerificationDTO(verification));
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(new VerificationDTO(verification));
         } catch (Exception e) {
             logger.error("Exception while serializing verification to JSON with value " + verification, e);
             throw new RuntimeException("Exception while serializing verification to JSON with value " + verification, e);
