@@ -1,6 +1,5 @@
 package org.mockserver.server;
 
-import io.netty.channel.ChannelFutureListener;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -48,8 +47,9 @@ public class ServletResponseWriterTest {
 
         // then
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(
-                response("some_response"),
-                httpServletResponse
+            response("some_response")
+                .withHeader("connection", "close"),
+            httpServletResponse
         );
     }
 
@@ -64,10 +64,10 @@ public class ServletResponseWriterTest {
 
         // then
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(
-                response()
-                        .withHeader("content-type", "text/plain; charset=utf-8; charset=utf-8")
-                        .withBody("some_response", UTF_8),
-                httpServletResponse
+            response()
+                .withHeader("connection", "close")
+                .withBody("some_response", UTF_8),
+            httpServletResponse
         );
     }
 
@@ -82,10 +82,10 @@ public class ServletResponseWriterTest {
 
         // then
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(
-                response()
-                        .withHeader("content-type", "application/json")
-                        .withBody(json("some_response")),
-                httpServletResponse
+            response()
+                .withHeader("connection", "close")
+                .withBody(json("some_response")),
+            httpServletResponse
         );
     }
 
@@ -99,8 +99,9 @@ public class ServletResponseWriterTest {
 
         // then
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(
-                notFoundResponse(),
-                httpServletResponse
+            notFoundResponse()
+                .withHeader("connection", "close"),
+            httpServletResponse
         );
     }
 
@@ -118,14 +119,15 @@ public class ServletResponseWriterTest {
 
             // then
             verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(
-                    response
-                            .withHeader("Access-Control-Allow-Origin", "*")
-                            .withHeader("Access-Control-Allow-Methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE")
-                            .withHeader("Access-Control-Allow-Headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary")
-                            .withHeader("Access-Control-Expose-Headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary")
-                            .withHeader("Access-Control-Max-Age", "300")
-                            .withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"),
-                    httpServletResponse
+                response
+                    .withHeader("Access-Control-Allow-Origin", "*")
+                    .withHeader("Access-Control-Allow-Methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE")
+                    .withHeader("Access-Control-Allow-Headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary")
+                    .withHeader("Access-Control-Expose-Headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary")
+                    .withHeader("Access-Control-Max-Age", "300")
+                    .withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false")
+                    .withHeader("connection", "close"),
+                httpServletResponse
             );
         } finally {
             enableCORSForAllResponses(enableCORSForAllResponses);

@@ -102,10 +102,10 @@ public class MockServerClient extends AbstractClient<MockServerClient> {
     }
 
     /**
-     * Retrieve the already setup expectations match the httpRequest parameter, use null for the parameter to retrieve all expectations
+     * Retrieve the active expectations match the httpRequest parameter, use null for the parameter to retrieve all expectations
      *
      * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
-     * @return an array of all expectations that have been setup
+     * @return an array of all expectations that have been setup and have not expired
      */
     public Expectation[] retrieveActiveExpectations(HttpRequest httpRequest) {
         String activeExpectations = retrieveActiveExpectations(httpRequest, Format.JSON);
@@ -117,10 +117,11 @@ public class MockServerClient extends AbstractClient<MockServerClient> {
     }
 
     /**
-     * Retrieve the already setup expectations match the httpRequest parameter, use null for the parameter to retrieve all expectations
+     * Retrieve the active expectations match the httpRequest parameter, use null for the parameter to retrieve all expectations
      *
      * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
-     * @return an array of all expectations that have been setup
+     * @param format the format to retrieve the expectations, either JAVA or JSON
+     * @return an array of all expectations that have been setup and have not expired
      */
     public String retrieveActiveExpectations(HttpRequest httpRequest, Format format) {
         HttpResponse httpResponse = sendRequest(

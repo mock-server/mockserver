@@ -46,14 +46,12 @@ public class HttpResponseSerializerTest {
                 ),
                 is("{" + NEW_LINE +
                         "  \"statusCode\" : 302," + NEW_LINE +
-                        "  \"headers\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"header_name\"," + NEW_LINE +
-                        "    \"values\" : [ \"header_value\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"cookies\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"cookie_name\"," + NEW_LINE +
-                        "    \"value\" : \"cookie_value\"" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
+                        "  \"headers\" : {" + NEW_LINE +
+                        "    \"header_name\" : [ \"header_value\" ]" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"cookies\" : {" + NEW_LINE +
+                        "    \"cookie_name\" : \"cookie_value\"" + NEW_LINE +
+                        "  }," + NEW_LINE +
                         "  \"body\" : \"some_body\"," + NEW_LINE +
                         "  \"delay\" : {" + NEW_LINE +
                         "    \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
@@ -80,14 +78,12 @@ public class HttpResponseSerializerTest {
                 ),
                 is("{" + NEW_LINE +
                         "  \"statusCode\" : 302," + NEW_LINE +
-                        "  \"headers\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"header_name\"," + NEW_LINE +
-                        "    \"values\" : [ \"header_value\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"cookies\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"cookie_name\"," + NEW_LINE +
-                        "    \"value\" : \"cookie_value\"" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
+                        "  \"headers\" : {" + NEW_LINE +
+                        "    \"header_name\" : [ \"header_value\" ]" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"cookies\" : {" + NEW_LINE +
+                        "    \"cookie_name\" : \"cookie_value\"" + NEW_LINE +
+                        "  }," + NEW_LINE +
                         "  \"body\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"" + NEW_LINE +
                         "}"));
     }
@@ -102,14 +98,12 @@ public class HttpResponseSerializerTest {
                 ),
                 is("{" + NEW_LINE +
                         "  \"statusCode\" : 200," + NEW_LINE +
-                        "  \"headers\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"header_name\"," + NEW_LINE +
-                        "    \"values\" : [ \"header_value\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"cookies\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"cookie_name\"," + NEW_LINE +
-                        "    \"value\" : \"cookie_value\"" + NEW_LINE +
-                        "  } ]" + NEW_LINE +
+                        "  \"headers\" : {" + NEW_LINE +
+                        "    \"header_name\" : [ \"header_value\" ]" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"cookies\" : {" + NEW_LINE +
+                        "    \"cookie_name\" : \"cookie_value\"" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}")
         );
     }

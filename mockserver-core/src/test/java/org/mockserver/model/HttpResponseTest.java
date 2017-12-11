@@ -173,14 +173,12 @@ public class HttpResponseTest {
     public void shouldReturnFormattedRequestInToString() {
         assertEquals("{" + NEW_LINE +
                         "  \"statusCode\" : 666," + NEW_LINE +
-                        "  \"headers\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"some_header\"," + NEW_LINE +
-                        "    \"values\" : [ \"some_header_value\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"cookies\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"some_cookie\"," + NEW_LINE +
-                        "    \"value\" : \"some_cookie_value\"" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
+                        "  \"headers\" : {" + NEW_LINE +
+                        "    \"some_header\" : [ \"some_header_value\" ]" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"cookies\" : {" + NEW_LINE +
+                        "    \"some_cookie\" : \"some_cookie_value\"" + NEW_LINE +
+                        "  }," + NEW_LINE +
                         "  \"body\" : {" + NEW_LINE +
                         "    \"contentType\" : \"text/plain; charset=utf-8\"," + NEW_LINE +
                         "    \"type\" : \"STRING\"," + NEW_LINE +

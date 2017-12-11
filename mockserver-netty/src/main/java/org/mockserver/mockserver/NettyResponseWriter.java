@@ -23,7 +23,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public class NettyResponseWriter implements ResponseWriter {
+public class NettyResponseWriter extends ResponseWriter {
 
     private CORSHeaders addCORSHeaders = new CORSHeaders();
 
@@ -64,24 +64,6 @@ public class NettyResponseWriter implements ResponseWriter {
         addConnectionHeader(request, response);
 
         writeAndCloseSocket(ctx, request, response);
-    }
-
-    private void addConnectionHeader(HttpRequest request, HttpResponse response) {
-        ConnectionOptions connectionOptions = response.getConnectionOptions();
-        if (connectionOptions != null && connectionOptions.getKeepAliveOverride() != null) {
-            if (connectionOptions.getKeepAliveOverride()) {
-                response.replaceHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
-            } else {
-                response.replaceHeader(header(CONNECTION.toString(), CLOSE.toString()));
-            }
-        } else if (connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressConnectionHeader())) {
-            if (request.isKeepAlive() != null && request.isKeepAlive()
-                && (connectionOptions == null || isFalseOrNull(connectionOptions.getCloseSocket()))) {
-                response.replaceHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
-            } else {
-                response.replaceHeader(header(CONNECTION.toString(), CLOSE.toString()));
-            }
-        }
     }
 
     private void writeAndCloseSocket(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {

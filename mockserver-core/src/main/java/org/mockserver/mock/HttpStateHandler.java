@@ -38,6 +38,7 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public class HttpStateHandler {
 
+    public static final String LOG_SEPARATOR = "------------------------------------\n";
     // mockserver
     private LoggingFormatter logFormatter = new LoggingFormatter(LoggerFactory.getLogger(this.getClass()), this);
     private LogFilter logFilter = new LogFilter(logFormatter);
@@ -128,7 +129,7 @@ public class HttpStateHandler {
                     for (int i = 0; i < retrieveMessages.size(); i++) {
                         stringBuffer.append(retrieveMessages.get(i));
                         if (i < retrieveMessages.size() - 1) {
-                            stringBuffer.append("------------------------------------\n");
+                            stringBuffer.append(LOG_SEPARATOR);
                         }
                     }
                     stringBuffer.append("\n");

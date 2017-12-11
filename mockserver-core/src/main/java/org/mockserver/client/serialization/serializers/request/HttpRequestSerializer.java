@@ -30,13 +30,13 @@ public class HttpRequestSerializer extends StdSerializer<HttpRequest> {
             jgen.writeObjectField("path", httpRequest.getPath());
         }
         if (httpRequest.getQueryStringParameterList() != null && !httpRequest.getQueryStringParameterList().isEmpty()) {
-            jgen.writeObjectField("queryStringParameters", httpRequest.getQueryStringParameterList());
+            jgen.writeObjectField("queryStringParameters", httpRequest.getQueryStringParameters());
         }
         if (httpRequest.getHeaderList() != null && !httpRequest.getHeaderList().isEmpty()) {
-            jgen.writeObjectField("headers", httpRequest.getHeaderList());
+            jgen.writeObjectField("headers", httpRequest.getHeaders());
         }
         if (httpRequest.getCookieList() != null && !httpRequest.getCookieList().isEmpty()) {
-            jgen.writeObjectField("cookies", httpRequest.getCookieList());
+            jgen.writeObjectField("cookies", httpRequest.getCookies());
         }
         if (httpRequest.isKeepAlive() != null) {
             jgen.writeBooleanField("keepAlive", httpRequest.isKeepAlive());

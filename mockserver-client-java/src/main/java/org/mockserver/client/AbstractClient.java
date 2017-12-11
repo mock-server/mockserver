@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.mock.HttpStateHandler.LOG_SEPARATOR;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.PortBinding.portBinding;
 import static org.mockserver.verify.Verification.verification;
@@ -295,7 +296,7 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
      * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
      *
      * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
-     * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
+     * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
     public HttpRequest[] retrieveRecordedRequests(HttpRequest httpRequest) {
         String recordedRequests = retrieveRecordedRequests(httpRequest, Format.JSON);
@@ -310,7 +311,8 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
      * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
      *
      * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
-     * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
+     * @param format the format to retrieve the expectations, either JAVA or JSON
+     * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
     public String retrieveRecordedRequests(HttpRequest httpRequest, Format format) {
         HttpResponse httpResponse = sendRequest(
@@ -325,7 +327,7 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
     }
 
     /**
-     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
+     * Retrieve the request-response combinations that have been recorded as a list of expectations, only those that match the httpRequest parameter are returned, use null to retrieve all requests
      *
      * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
      * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
@@ -340,9 +342,10 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
     }
 
     /**
-     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
+     * Retrieve the request-response combinations that have been recorded as a list of expectations, only those that match the httpRequest parameter are returned, use null to retrieve all requests
      *
      * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @param format the format to retrieve the expectations, either JAVA or JSON
      * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
     public String retrieveRecordedExpectations(HttpRequest httpRequest, Format format) {
@@ -355,5 +358,32 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
                         .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
+    }
+
+    /**
+     * Retrieve the logs associated to a specific requests, this shows all logs for expectation matching, verification, clearing, etc
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @return all log messages recorded by the MockServer when creating expectations, matching expectations, performing verification, clearing logs, etc
+     */
+    public String retrieveLogMessages(HttpRequest httpRequest) {
+        HttpResponse httpResponse = sendRequest(
+                request()
+                        .withMethod("PUT")
+                        .withPath(calculatePath("retrieve"))
+                        .withQueryStringParameter("type", RetrieveType.LOGS.name())
+                        .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
+        );
+        return httpResponse.getBodyAsString();
+    }
+
+    /**
+     * Retrieve the logs associated to a specific requests, this shows all logs for expectation matching, verification, clearing, etc
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @return an array of all log messages recorded by the MockServer when creating expectations, matching expectations, performing verification, clearing logs, etc
+     */
+    public String[] retrieveLogMessagesArray(HttpRequest httpRequest) {
+        return retrieveLogMessages(httpRequest).split(LOG_SEPARATOR);
     }
 }

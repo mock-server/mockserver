@@ -38,18 +38,15 @@ public class HttpRequestSerializerTest {
                 is("{" + NEW_LINE +
                         "  \"method\" : \"GET\"," + NEW_LINE +
                         "  \"path\" : \"/some/path\"," + NEW_LINE +
-                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"parameterOneName\"," + NEW_LINE +
-                        "    \"values\" : [ \"parameterOneValue\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"headers\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"name\"," + NEW_LINE +
-                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"cookies\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"name\"," + NEW_LINE +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
+                        "  \"queryStringParameters\" : {" + NEW_LINE +
+                        "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"headers\" : {" + NEW_LINE +
+                        "    \"name\" : [ \"value\" ]" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"cookies\" : {" + NEW_LINE +
+                        "    \"name\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "  }," + NEW_LINE +
                         "  \"keepAlive\" : true," + NEW_LINE +
                         "  \"secure\" : true," + NEW_LINE +
                         "  \"body\" : \"some_body\"" + NEW_LINE +
@@ -68,18 +65,15 @@ public class HttpRequestSerializerTest {
                 is("{" + NEW_LINE +
                         "  \"method\" : \"GET\"," + NEW_LINE +
                         "  \"path\" : \"/some/path\"," + NEW_LINE +
-                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"parameterOneName\"," + NEW_LINE +
-                        "    \"values\" : [ \"parameterOneValue\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"headers\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"name\"," + NEW_LINE +
-                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"cookies\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"name\"," + NEW_LINE +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
+                        "  \"queryStringParameters\" : {" + NEW_LINE +
+                        "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"headers\" : {" + NEW_LINE +
+                        "    \"name\" : [ \"value\" ]" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"cookies\" : {" + NEW_LINE +
+                        "    \"name\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "  }," + NEW_LINE +
                         "  \"body\" : {" + NEW_LINE +
                         "    \"type\" : \"JSON\"," + NEW_LINE +
                         "    \"json\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"" + NEW_LINE +
@@ -99,18 +93,15 @@ public class HttpRequestSerializerTest {
                 is("{" + NEW_LINE +
                         "  \"method\" : \"GET\"," + NEW_LINE +
                         "  \"path\" : \"/some/path\"," + NEW_LINE +
-                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"parameterOneName\"," + NEW_LINE +
-                        "    \"values\" : [ \"parameterOneValue\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"headers\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"name\"," + NEW_LINE +
-                        "    \"values\" : [ \"value\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"cookies\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"name\"," + NEW_LINE +
-                        "    \"value\" : \"[A-Z]{0,10}\"" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
+                        "  \"queryStringParameters\" : {" + NEW_LINE +
+                        "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"headers\" : {" + NEW_LINE +
+                        "    \"name\" : [ \"value\" ]" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"cookies\" : {" + NEW_LINE +
+                        "    \"name\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                        "  }," + NEW_LINE +
                         "  \"body\" : {" + NEW_LINE +
                         "    \"type\" : \"XPATH\"," + NEW_LINE +
                         "    \"xpath\" : \"//some/xml/path\"" + NEW_LINE +

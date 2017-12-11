@@ -49,13 +49,13 @@ public class ActionHandler {
                     response = httpForwardActionHandler.handle((HttpForward) action, request);
                     responseWriter.writeResponse(request, response);
                     httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
+                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for forward action:{}", response, request, action);
                     break;
                 case FORWARD_TEMPLATE:
                     response = httpForwardTemplateActionHandler.handle((HttpTemplate) action, request);
                     responseWriter.writeResponse(request, response);
                     httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
+                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated forward action:{}", response, request, action);
                     break;
                 case OBJECT_CALLBACK:
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
@@ -65,24 +65,24 @@ public class ActionHandler {
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     response = httpClassCallbackActionHandler.handle((HttpClassCallback) action, request);
                     responseWriter.writeResponse(request, response);
-                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
+                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, action);
                     break;
                 case RESPONSE:
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     response = httpResponseActionHandler.handle((HttpResponse) action);
                     responseWriter.writeResponse(request, response);
-                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
+                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for response action:{}", response, request, action);
                     break;
                 case RESPONSE_TEMPLATE:
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     response = httpResponseTemplateActionHandler.handle((HttpTemplate) action, request);
                     responseWriter.writeResponse(request, response);
-                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, action);
+                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated response action:{}", response, request, action);
                     break;
                 case ERROR:
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     httpErrorActionHandler.handle((HttpError) action, ctx);
-                    logFormatter.infoLog(request, "returning error:{}" + NEW_LINE + " for request:{}", action, request);
+                    logFormatter.infoLog(request, "returning error:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for error action:{}", action, request, action);
                     break;
             }
         } else {

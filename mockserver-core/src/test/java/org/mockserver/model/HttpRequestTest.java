@@ -105,18 +105,15 @@ public class HttpRequestTest {
         TestCase.assertEquals("{" + NEW_LINE +
                         "  \"method\" : \"METHOD\"," + NEW_LINE +
                         "  \"path\" : \"some_path\"," + NEW_LINE +
-                        "  \"queryStringParameters\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"some_parameter\"," + NEW_LINE +
-                        "    \"values\" : [ \"some_parameter_value\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"headers\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"some_header\"," + NEW_LINE +
-                        "    \"values\" : [ \"some_header_value\" ]" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
-                        "  \"cookies\" : [ {" + NEW_LINE +
-                        "    \"name\" : \"some_cookie\"," + NEW_LINE +
-                        "    \"value\" : \"some_cookie_value\"" + NEW_LINE +
-                        "  } ]," + NEW_LINE +
+                        "  \"queryStringParameters\" : {" + NEW_LINE +
+                        "    \"some_parameter\" : [ \"some_parameter_value\" ]" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"headers\" : {" + NEW_LINE +
+                        "    \"some_header\" : [ \"some_header_value\" ]" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"cookies\" : {" + NEW_LINE +
+                        "    \"some_cookie\" : \"some_cookie_value\"" + NEW_LINE +
+                        "  }," + NEW_LINE +
                         "  \"keepAlive\" : true," + NEW_LINE +
                         "  \"secure\" : true," + NEW_LINE +
                         "  \"body\" : \"some_body\"" + NEW_LINE +

@@ -12,4 +12,7 @@ public class Headers extends KeysToMultiValues<Header, Headers> {
         return new Header(name, values);
     }
 
+    public Headers clone() {
+        return new Headers().withEntries(getEntries());
+    }
 }

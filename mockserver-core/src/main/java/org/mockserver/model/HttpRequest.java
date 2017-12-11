@@ -525,10 +525,10 @@ public class HttpRequest extends Not {
         return not(request(), not)
             .withMethod(method)
             .withPath(path)
-            .withQueryStringParameters(getQueryStringParameterList())
+            .withQueryStringParameters(getQueryStringParameters().clone())
             .withBody(body)
-            .withHeaders(getHeaderList())
-            .withCookies(getCookieList())
+            .withHeaders(getHeaders().clone())
+            .withCookies(getCookies().clone())
             .withKeepAlive(keepAlive)
             .withSecure(secure);
     }

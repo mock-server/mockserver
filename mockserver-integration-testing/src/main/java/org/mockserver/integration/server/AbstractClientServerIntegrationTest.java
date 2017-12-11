@@ -5352,6 +5352,176 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
+    public void shouldRetrieveRecordedLogMessages() {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request().withPath(calculatePath("some_path_one")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request().withPath(calculatePath("not_found")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request().withPath(calculatePath("some_path_three")),
+                headersToIgnore)
+        );
+
+        // then
+        String[] actualLogMessages = mockServerClient.retrieveLogMessagesArray(request().withPath(calculatePath(".*")));
+
+        Object[] expectedLogMessages = new Object[]{
+            "resetting all expectations and request logs",
+            "creating expectation:" + NEW_LINE +
+                NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"httpRequest\" : {" + NEW_LINE +
+                "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"times\" : {" + NEW_LINE +
+                "\t    \"remainingTimes\" : 4," + NEW_LINE +
+                "\t    \"unlimited\" : false" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"timeToLive\" : {" + NEW_LINE +
+                "\t    \"unlimited\" : true" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"httpResponse\" : {" + NEW_LINE +
+                "\t    \"body\" : \"some_body\"" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"action\" : {" + NEW_LINE +
+                "\t    \"body\" : \"some_body\"" + NEW_LINE +
+                "\t  }" + NEW_LINE +
+                "\t}" + NEW_LINE,
+            new String[]{
+                "request:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"method\" : \"GET\"," + NEW_LINE +
+                    "\t  \"path\" : \"/some_path_one\",",
+                " matched expectation:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"/some_path.*\"" + NEW_LINE +
+                    "\t}"
+            },
+            new String[]{
+                "returning response:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"headers\" : {" + NEW_LINE +
+                    "\t    \"connection\" : [ \"keep-alive\" ]" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"body\" : \"some_body\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    " for request:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"method\" : \"GET\"," + NEW_LINE +
+                    "\t  \"path\" : \"/some_path_one\",",
+                " for response action:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"body\" : \"some_body\"" + NEW_LINE +
+                    "\t}"
+            },
+            new String[]{
+                "request:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"method\" : \"GET\"," + NEW_LINE +
+                    "\t  \"path\" : \"/not_found\",",
+                " did not match expectation:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"/some_path.*\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    " because:" + NEW_LINE +
+                    NEW_LINE +
+                    "\tmethod matches = true" + NEW_LINE +
+                    "\tpath matches = false" + NEW_LINE +
+                    "\tquery string parameters match = true" + NEW_LINE +
+                    "\tbody matches = true" + NEW_LINE +
+                    "\theaders match = true" + NEW_LINE +
+                    "\tcookies match = true" + NEW_LINE +
+                    "\tkeep-alive matches = true" + NEW_LINE +
+                    "\tssl matches = true"
+            },
+            new String[]{
+                "no matching expectation - returning:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"statusCode\" : 404" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    " for request:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"method\" : \"GET\"," + NEW_LINE +
+                    "\t  \"path\" : \"/not_found\","
+            },
+            new String[]{
+                "request:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"method\" : \"GET\"," + NEW_LINE +
+                    "\t  \"path\" : \"/some_path_three\",",
+                " matched expectation:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"/some_path.*\"" + NEW_LINE +
+                    "\t}"
+            },
+            new String[]{
+                "returning response:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"headers\" : {" + NEW_LINE +
+                    "\t    \"connection\" : [ \"keep-alive\" ]" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"body\" : \"some_body\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    " for request:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"method\" : \"GET\"," + NEW_LINE +
+                    "\t  \"path\" : \"/some_path_three\",",
+                " for response action:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"body\" : \"some_body\"" + NEW_LINE +
+                    "\t}"
+            },
+            "retrieving logs that match:" + NEW_LINE +
+                NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"path\" : \"/.*\"" + NEW_LINE +
+                "\t}" + NEW_LINE +
+                NEW_LINE
+        };
+
+        for (int i = 0; i < expectedLogMessages.length; i++) {
+            if (expectedLogMessages[i] instanceof String) {
+                assertThat("matching log message " + i, actualLogMessages[i], is(expectedLogMessages[i]));
+            } else if (expectedLogMessages[i] instanceof String[]) {
+                String[] expectedLogMessage = (String[]) expectedLogMessages[i];
+                for (int j = 0; j < expectedLogMessage.length; j++) {
+                    assertThat("matching log message " + i + "-" + j, actualLogMessages[i], containsString(expectedLogMessage[j]));
+                }
+            }
+        }
+    }
+
+    @Test
     public void shouldClearExpectationsAndLogs() {
         // given - some expectations
         mockServerClient

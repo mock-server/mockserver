@@ -1,5 +1,8 @@
 package org.mockserver.mappers;
 
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
+import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.model.*;
@@ -21,11 +24,15 @@ public class HttpServletRequestToMockServerRequestDecoder {
     public HttpRequest mapHttpServletRequestToMockServerRequest(HttpServletRequest httpServletRequest) {
         HttpRequest httpRequest = new HttpRequest();
         setMethod(httpRequest, httpServletRequest);
+
         setPath(httpRequest, httpServletRequest);
         setQueryString(httpRequest, httpServletRequest);
+
         setBody(httpRequest, httpServletRequest);
         setHeaders(httpRequest, httpServletRequest);
         setCookies(httpRequest, httpServletRequest);
+
+        httpRequest.withKeepAlive(isKeepAlive(httpServletRequest));
         httpRequest.withSecure(httpServletRequest.isSecure());
         return httpRequest;
     }
@@ -79,5 +86,18 @@ public class HttpServletRequestToMockServerRequestDecoder {
             }
         }
         httpRequest.withCookies(mappedCookies);
+    }
+
+    public boolean isKeepAlive(HttpServletRequest httpServletRequest) {
+        CharSequence connection = httpServletRequest.getHeader(HttpHeaderNames.CONNECTION.toString());
+        if (connection != null && HttpHeaderValues.CLOSE.contentEqualsIgnoreCase(connection)) {
+            return false;
+        }
+
+        if (httpServletRequest.getProtocol().equals("HTTP/1.1")) {
+            return !HttpHeaderValues.CLOSE.contentEqualsIgnoreCase(connection);
+        } else {
+            return HttpHeaderValues.KEEP_ALIVE.contentEqualsIgnoreCase(connection);
+        }
     }
 }

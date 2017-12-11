@@ -291,6 +291,7 @@ public class MockServerServletTest {
             eq(
                 request("request_one")
                     .withMethod("GET")
+                    .withKeepAlive(true)
                     .withSecure(false)
             ),
             any(ServletResponseWriter.class),

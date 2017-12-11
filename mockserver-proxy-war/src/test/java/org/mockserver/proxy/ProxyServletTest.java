@@ -226,7 +226,10 @@ public class ProxyServletTest {
         proxyServlet.service(httpServletRequest, response);
 
         // then
-        verify(mockHttpClient).sendRequest(request.withSecure(false));
+        verify(mockHttpClient).sendRequest(request
+            .withKeepAlive(true)
+            .withSecure(false)
+        );
         assertThat(
             httpStateHandler.retrieve(request("/retrieve")
                 .withMethod("PUT")
@@ -240,7 +243,7 @@ public class ProxyServletTest {
         verify(mockLogFormatter).infoLog(
             request,
             "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
-            response("response_one"),
+            response("response_one").withHeader("connection", "keep-alive"),
             request,
             new HttpRequestToCurlSerializer().toCurl(request, null)
         );

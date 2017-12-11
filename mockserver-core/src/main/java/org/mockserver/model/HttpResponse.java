@@ -381,8 +381,8 @@ public class HttpResponse extends Action {
         return response()
             .withStatusCode(getStatusCode())
             .withBody(getBody())
-            .withHeaders(getHeaderList())
-            .withCookies(getCookieList())
+            .withHeaders(getHeaders().clone())
+            .withCookies(getCookies().clone())
             .withDelay(getDelay())
             .withConnectionOptions(getConnectionOptions());
     }

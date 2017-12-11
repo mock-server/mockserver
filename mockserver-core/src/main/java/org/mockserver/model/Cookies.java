@@ -10,4 +10,7 @@ public class Cookies extends KeysAndValues<Cookie, Cookies> {
         return new Cookie(name, value);
     }
 
+    public Cookies clone() {
+        return new Cookies().withEntries(getEntries());
+    }
 }

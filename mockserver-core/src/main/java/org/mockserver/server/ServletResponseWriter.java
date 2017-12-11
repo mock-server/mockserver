@@ -1,19 +1,22 @@
 package org.mockserver.server;
 
-import com.google.common.base.Strings;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
+import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 
 import javax.servlet.http.HttpServletResponse;
-import java.nio.charset.Charset;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
+import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
+import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -21,7 +24,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public class ServletResponseWriter implements ResponseWriter {
+public class ServletResponseWriter extends ResponseWriter {
     private final HttpServletResponse httpServletResponse;
     private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder = new MockServerResponseToHttpServletResponseEncoder();
     private CORSHeaders addCORSHeaders = new CORSHeaders();
@@ -58,20 +61,9 @@ public class ServletResponseWriter implements ResponseWriter {
             addCORSHeaders.addCORSHeaders(response);
         }
 
-        addContentTypeHeader(response);
+        addConnectionHeader(request, response);
 
         mockServerResponseToHttpServletResponseEncoder.mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
     }
 
-    private void addContentTypeHeader(HttpResponse response) {
-        if (response.getBody() != null && Strings.isNullOrEmpty(response.getFirstHeader(CONTENT_TYPE.toString()))) {
-            Charset bodyCharset = response.getBody().getCharset(null);
-            String bodyContentType = response.getBody().getContentType();
-            if (bodyCharset != null) {
-                response.replaceHeader(header(CONTENT_TYPE.toString(), bodyContentType + "; charset=" + bodyCharset.name().toLowerCase()));
-            } else if (bodyContentType != null) {
-                response.replaceHeader(header(CONTENT_TYPE.toString(), bodyContentType));
-            }
-        }
-    }
 }

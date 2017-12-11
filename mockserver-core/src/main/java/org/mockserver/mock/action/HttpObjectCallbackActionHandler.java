@@ -29,7 +29,7 @@ public class HttpObjectCallbackActionHandler {
             @Override
             public void handle(HttpResponse response) {
                 responseWriter.writeResponse(request, response);
-                logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response, request, httpObjectCallback);
+                logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for object callback action:{}", response, request, httpObjectCallback);
             }
         });
         webSocketClientRegistry.sendClientMessage(clientId, request);

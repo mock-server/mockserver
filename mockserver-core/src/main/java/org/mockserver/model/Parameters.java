@@ -12,4 +12,7 @@ public class Parameters extends KeysToMultiValues<Parameter, Parameters> {
         return new Parameter(name, values);
     }
 
+    public Parameters clone() {
+        return new Parameters().withEntries(getEntries());
+    }
 }
