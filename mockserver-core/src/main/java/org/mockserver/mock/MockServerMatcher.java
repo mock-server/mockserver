@@ -25,13 +25,21 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         this.matcherBuilder = new MatcherBuilder(logFormatter);
     }
 
-    public void add(Expectation expectation) {
+    public synchronized void add(Expectation expectation) {
         this.httpRequestMatchers.add(matcherBuilder.transformsToMatcher(expectation));
+    }
+
+    private synchronized List<HttpRequestMatcher> cloneMatchers() {
+        return new ArrayList<>(this.httpRequestMatchers);
+    }
+
+    public synchronized void reset() {
+        this.httpRequestMatchers.clear();
     }
 
     public Expectation firstMatchingExpectation(HttpRequest httpRequest) {
         Expectation matchingExpectation = null;
-        for (HttpRequestMatcher httpRequestMatcher : new ArrayList<>(this.httpRequestMatchers)) {
+        for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
             if (httpRequestMatcher.matches(httpRequest)) {
                 matchingExpectation = httpRequestMatcher.decrementRemainingMatches();
             }
@@ -50,7 +58,7 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
     public void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
             HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-            for (HttpRequestMatcher httpRequestMatcher : new ArrayList<>(this.httpRequestMatchers)) {
+            for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
                 if (clearHttpRequestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest(), false)) {
                     if (this.httpRequestMatchers.contains(httpRequestMatcher)) {
                         this.httpRequestMatchers.remove(httpRequestMatcher);
@@ -62,13 +70,9 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         }
     }
 
-    public void reset() {
-        this.httpRequestMatchers.clear();
-    }
-
     public List<Expectation> retrieveExpectations(HttpRequest httpRequest) {
         List<Expectation> expectations = new ArrayList<Expectation>();
-        for (HttpRequestMatcher httpRequestMatcher : new ArrayList<>(this.httpRequestMatchers)) {
+        for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
             if (httpRequest == null || httpRequestMatcher.matches(httpRequest)) {
                 expectations.add(httpRequestMatcher.getExpectation());
             }

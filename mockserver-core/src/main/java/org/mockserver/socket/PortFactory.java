@@ -14,7 +14,7 @@ public class PortFactory {
             port = server.getLocalPort();
             server.close();
             // allow time for the socket to be released
-            TimeUnit.MILLISECONDS.sleep(50);
+            TimeUnit.MILLISECONDS.sleep(150);
         } catch (Exception e) {
             throw new RuntimeException("Exception while trying to find a free port", e);
         }
