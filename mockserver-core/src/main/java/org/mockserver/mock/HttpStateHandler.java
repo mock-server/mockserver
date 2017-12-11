@@ -3,7 +3,6 @@ package org.mockserver.mock;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.google.common.net.MediaType;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
@@ -25,9 +24,10 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.google.common.net.MediaType.JSON_UTF_8;
+import static com.google.common.net.MediaType.*;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.HttpRequest.request;
@@ -101,6 +101,9 @@ public class HttpStateHandler {
     }
 
     public Expectation firstMatchingExpectation(HttpRequest request) {
+        if (mockServerMatcher.httpRequestMatchers.isEmpty()) {
+            logFormatter.infoLog(request(), "no active expectations when receiving request:{}", request);
+        }
         return mockServerMatcher.firstMatchingExpectation(request);
     }
 
@@ -108,54 +111,70 @@ public class HttpStateHandler {
         logFilter.onRequest(logEntry);
     }
 
-    public String retrieve(HttpRequest request) {
+    public HttpResponse retrieve(HttpRequest request) {
         HttpRequest httpRequest = null;
         if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
             httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
         }
-        StringBuilder responseBody = new StringBuilder();
+        HttpResponse response = response();
         try {
             Format format = Format.valueOf(StringUtils.defaultIfEmpty(request.getFirstQueryStringParameter("format").toUpperCase(), "JSON"));
             RetrieveType retrieveType = RetrieveType.valueOf(StringUtils.defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "REQUESTS"));
             switch (retrieveType) {
+                case LOGS: {
+                    logFormatter.infoLog(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
+                    StringBuilder stringBuffer = new StringBuilder();
+                    List<String> retrieveMessages = logFilter.retrieveMessages(httpRequest);
+                    for (int i = 0; i < retrieveMessages.size(); i++) {
+                        stringBuffer.append(retrieveMessages.get(i));
+                        if (i < retrieveMessages.size() - 1) {
+                            stringBuffer.append("------------------------------------\n");
+                        }
+                    }
+                    stringBuffer.append("\n");
+                    response.withBody(stringBuffer.toString(), PLAIN_TEXT_UTF_8);
+                    break;
+                }
                 case REQUESTS: {
+                    logFormatter.infoLog(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
                     List<HttpRequest> httpRequests = logFilter.retrieveRequests(httpRequest);
                     switch (format) {
                         case JAVA:
-                            responseBody.append(httpRequestToJavaSerializer.serialize(httpRequests));
+                            response.withBody(httpRequestToJavaSerializer.serialize(httpRequests), create("application", "java").withCharset(UTF_8));
                             break;
                         case JSON:
-                            responseBody.append(httpRequestSerializer.serialize(httpRequests));
+                            response.withBody(httpRequestSerializer.serialize(httpRequests), JSON_UTF_8);
                             break;
                     }
                     break;
                 }
                 case RECORDED_EXPECTATIONS: {
+                    logFormatter.infoLog(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
                     List<Expectation> expectations = logFilter.retrieveExpectations(httpRequest);
                     switch (format) {
                         case JAVA:
-                            responseBody.append(expectationToJavaSerializer.serialize(expectations));
+                            response.withBody(expectationToJavaSerializer.serialize(expectations), create("application", "java").withCharset(UTF_8));
                             break;
                         case JSON:
-                            responseBody.append(expectationSerializer.serialize(expectations));
+                            response.withBody(expectationSerializer.serialize(expectations), JSON_UTF_8);
                             break;
                     }
                     break;
                 }
                 case ACTIVE_EXPECTATIONS: {
+                    logFormatter.infoLog(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
                     List<Expectation> expectations = mockServerMatcher.retrieveExpectations(httpRequest);
                     switch (format) {
                         case JAVA:
-                            responseBody.append(expectationToJavaSerializer.serialize(expectations));
+                            response.withBody(expectationToJavaSerializer.serialize(expectations), create("application", "java").withCharset(UTF_8));
                             break;
                         case JSON:
-                            responseBody.append(expectationSerializer.serialize(expectations));
+                            response.withBody(expectationSerializer.serialize(expectations), JSON_UTF_8);
                             break;
                     }
                     break;
                 }
             }
-            logFormatter.infoLog(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", httpRequest);
         } catch (IllegalArgumentException iae) {
             if (iae.getMessage().contains(RetrieveType.class.getSimpleName())) {
                 throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Lists.transform(Arrays.asList(RetrieveType.values()), new Function<RetrieveType, String>() {
@@ -172,7 +191,7 @@ public class HttpStateHandler {
             }
         }
 
-        return responseBody.toString();
+        return response.withStatusCode(200);
     }
 
     public String verify(Verification verification) {
@@ -211,9 +230,7 @@ public class HttpStateHandler {
 
         } else if (request.matches("PUT", "/retrieve")) {
 
-            responseWriter.writeResponse(request, OK, retrieve(request),
-                JSON_UTF_8.toString().replace(request.hasQueryStringParameter("format", "java") ? "json" : "", "java")
-            );
+            responseWriter.writeResponse(request, retrieve(request));
 
         } else if (request.matches("PUT", "/verify")) {
 
@@ -222,7 +239,7 @@ public class HttpStateHandler {
             if (StringUtils.isEmpty(result)) {
                 responseWriter.writeResponse(request, ACCEPTED);
             } else {
-                responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
+                responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
             }
             logFormatter.infoLog(request, "verifying requests that match:{}", verification);
 
@@ -233,7 +250,7 @@ public class HttpStateHandler {
             if (StringUtils.isEmpty(result)) {
                 responseWriter.writeResponse(request, ACCEPTED);
             } else {
-                responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
+                responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
             }
             logFormatter.infoLog(request, "verifying sequence that match:{}", verificationSequence);
 

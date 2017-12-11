@@ -39,8 +39,7 @@ public class StringFormatterTest {
                         "\t{" + NEW_LINE +
                         "\t  \"port\" : 80," + NEW_LINE +
                         "\t  \"scheme\" : \"HTTP\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
-                        NEW_LINE
+                        "\t}" + NEW_LINE
         ));
     }
 
@@ -56,8 +55,7 @@ public class StringFormatterTest {
                         "\t{" + NEW_LINE +
                         "\t  \"statusCode\" : 200," + NEW_LINE +
                         "\t  \"body\" : \"response_body\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
-                        NEW_LINE
+                        "\t}" + NEW_LINE
         ));
     }
 
@@ -73,12 +71,6 @@ public class StringFormatterTest {
                         "\t{" + NEW_LINE +
                         "\t  \"statusCode\" : 200," + NEW_LINE +
                         "\t  \"body\" : \"response_body\"" + NEW_LINE +
-                        "\t}" + NEW_LINE +
-                        NEW_LINE +
-                        NEW_LINE +
-                        NEW_LINE +
-                        "\t{" + NEW_LINE +
-                        "\t  \"path\" : \"request_path\"" + NEW_LINE +
                         "\t}" + NEW_LINE
         ));
     }
@@ -98,7 +90,7 @@ public class StringFormatterTest {
                         "\t}" + NEW_LINE +
                         "" + NEW_LINE +
                         " for request:" + NEW_LINE +
-                        " for action:" + NEW_LINE
+                        " for action:"
         ));
     }
 

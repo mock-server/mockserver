@@ -156,7 +156,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     }
 
     public boolean matches(HttpRequest request) {
-        return matches(request, false);
+        return matches(request, true);
     }
 
     public boolean matches(HttpRequest request, boolean logMatchResults) {
@@ -200,25 +200,25 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     boolean totalResult = methodMatches && pathMatches && queryStringParametersMatches && bodyMatches && headersMatch && cookiesMatch && keepAliveMatches && sslMatches;
                     boolean totalResultAfterNotOperatorApplied = request.isNot() == (this.httpRequest.isNot() == (not != totalResult));
 
-                    if (logMatchResults && logger.isInfoEnabled()) {
+                    if (logMatchResults) {
                         if (!totalResultAfterNotOperatorApplied) {
                             StringBuilder becauseBuilder = new StringBuilder();
-                            becauseBuilder.append("method matches = ").append(methodMatches).append(NEW_LINE);
-                            becauseBuilder.append("path matches = ").append(pathMatches).append(NEW_LINE);
-                            becauseBuilder.append("query string parameters match = ").append(queryStringParametersMatches).append(NEW_LINE);
-                            becauseBuilder.append("body matches = ").append(bodyMatches).append(NEW_LINE);
-                            becauseBuilder.append("headers match = ").append(headersMatch).append(NEW_LINE);
-                            becauseBuilder.append("cookies match = ").append(cookiesMatch).append(NEW_LINE);
-                            becauseBuilder.append("keep-alive matches = ").append(keepAliveMatches).append(NEW_LINE);
-                            becauseBuilder.append("ssl matches = ").append(sslMatches).append(NEW_LINE);
+                            becauseBuilder.append("method matches = ").append(methodMatches);
+                            becauseBuilder.append(NEW_LINE).append("path matches = ").append(pathMatches);
+                            becauseBuilder.append(NEW_LINE).append("query string parameters match = ").append(queryStringParametersMatches);
+                            becauseBuilder.append(NEW_LINE).append("body matches = ").append(bodyMatches);
+                            becauseBuilder.append(NEW_LINE).append("headers match = ").append(headersMatch);
+                            becauseBuilder.append(NEW_LINE).append("cookies match = ").append(cookiesMatch);
+                            becauseBuilder.append(NEW_LINE).append("keep-alive matches = ").append(keepAliveMatches);
+                            becauseBuilder.append(NEW_LINE).append("ssl matches = ").append(sslMatches);
                             if (request.isNot()) {
-                                becauseBuilder.append("request \'not\' operator is enabled").append(NEW_LINE);
+                                becauseBuilder.append(NEW_LINE).append("request \'not\' operator is enabled");
                             }
                             if (this.httpRequest.isNot()) {
-                                becauseBuilder.append("expectation's request \'not\' operator is enabled").append(NEW_LINE);
+                                becauseBuilder.append(NEW_LINE).append("expectation's request \'not\' operator is enabled");
                             }
                             if (not) {
-                                becauseBuilder.append("expectation's request matcher \'not\' operator is enabled").append(NEW_LINE);
+                                becauseBuilder.append(NEW_LINE).append("expectation's request matcher \'not\' operator is enabled");
                             }
                             logFormatter.infoLog(request, "request:{}" + NEW_LINE + " did" + (totalResult ? "" : " not") + " match expectation:{}" + NEW_LINE + " because:{}", request, this, becauseBuilder.toString());
                         } else {

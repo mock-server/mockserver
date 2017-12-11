@@ -20,6 +20,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.Collections;
 
+import static com.google.common.net.MediaType.JSON_UTF_8;
 import static org.apache.commons.codec.Charsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -114,7 +115,7 @@ public class ProxyServletTest {
             .withMethod("PUT")
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
-            )), is(""));
+            )), is(response().withBody("", JSON_UTF_8).withStatusCode(200)));
     }
 
     @Test
@@ -192,6 +193,28 @@ public class ProxyServletTest {
     }
 
     @Test
+    public void shouldRetrieveLogMessages() {
+        // given
+        MockHttpServletRequest retrieveLogRequest = buildHttpServletRequest(
+            "PUT",
+            "/retrieve",
+            httpRequestSerializer.serialize(request("request_one"))
+        );
+        retrieveLogRequest.setQueryString("type=" + RetrieveType.LOGS.name());
+
+        // when
+        proxyServlet.service(retrieveLogRequest, response);
+
+        // then
+        assertResponse(response,200, "retrieving logs that match:" + NEW_LINE +
+            "" + NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"path\" : \"request_one\"" + NEW_LINE +
+            "\t}" + NEW_LINE +
+            NEW_LINE);
+    }
+
+    @Test
     public void shouldProxyRequests() {
         // given
         HttpRequest request = request("request_one").withHeader("Host", "localhost").withMethod("GET");
@@ -210,9 +233,9 @@ public class ProxyServletTest {
                 .withBody(
                     httpRequestSerializer.serialize(request("request_one"))
                 )),
-            is(httpRequestSerializer.serialize(Collections.singletonList(
+            is(response().withBody(httpRequestSerializer.serialize(Collections.singletonList(
                 request
-            )))
+            )), JSON_UTF_8).withStatusCode(200))
         );
         verify(mockLogFormatter).infoLog(
             request,

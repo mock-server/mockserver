@@ -12,6 +12,7 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.PortBindingSerializer;
 import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
+import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mock.Expectation;
@@ -26,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.net.MediaType.JSON_UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -122,7 +124,7 @@ public class HttpProxyHandlerTest {
             .withMethod("PUT")
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
-            )), is(""));
+            )), is(response().withBody("", JSON_UTF_8).withStatusCode(200)));
         verify(mockLogFormatter).infoLog(request("request_one"), "clearing expectations and request logs that match:{}", request("request_one"));
     }
 
@@ -202,6 +204,38 @@ public class HttpProxyHandlerTest {
     }
 
     @Test
+    public void shouldRetrieveLogMessages() {
+        // given
+        HttpRequest retrieveLogRequest = request("/retrieve")
+            .withMethod("PUT")
+            .withQueryStringParameter("type", RetrieveType.LOGS.name())
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            );
+        httpStateHandler.log(new MessageLogEntry(
+            request("request_one"),
+            "retrieving logs that match:" + NEW_LINE +
+                "" + NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                "\t}" + NEW_LINE +
+                "" + NEW_LINE
+        ));
+
+        // when
+        embeddedChannel.writeInbound(retrieveLogRequest);
+
+        // then
+        assertResponse(200, "retrieving logs that match:" + NEW_LINE +
+            "" + NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"path\" : \"request_one\"" + NEW_LINE +
+            "\t}" + NEW_LINE +
+            NEW_LINE +
+            NEW_LINE);
+    }
+
+    @Test
     public void shouldProxyRequests() {
         // given
         HttpRequest request = request("request_one");
@@ -220,9 +254,9 @@ public class HttpProxyHandlerTest {
                 .withBody(
                     httpRequestSerializer.serialize(request("request_one"))
                 )),
-            is(httpRequestSerializer.serialize(Collections.singletonList(
+            is(response().withBody(httpRequestSerializer.serialize(Collections.singletonList(
                 request("request_one")
-            )))
+            )), JSON_UTF_8).withStatusCode(200))
         );
         verify(mockLogFormatter).infoLog(
             request,

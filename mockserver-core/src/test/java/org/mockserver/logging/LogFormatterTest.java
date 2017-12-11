@@ -41,8 +41,7 @@ public class LogFormatterTest {
             "" + NEW_LINE +
             "\tanother" + NEW_LINE +
             "\tmulti-line" + NEW_LINE +
-            "\tobject" + NEW_LINE +
-            "" + NEW_LINE + NEW_LINE;
+            "\tobject" + NEW_LINE;
         verify(mockLogger).info(message);
         verify(mockHttpStateHandler, times(1)).log(new MessageLogEntry(request, message));
     }
@@ -74,8 +73,7 @@ public class LogFormatterTest {
             "" + NEW_LINE +
             "\tanother" + NEW_LINE +
             "\tmulti-line" + NEW_LINE +
-            "\tobject" + NEW_LINE +
-            "" + NEW_LINE + NEW_LINE;
+            "\tobject" + NEW_LINE;
         verify(mockLogger).info(message);
         verify(mockHttpStateHandler, times(2)).log(new MessageLogEntry(request, message));
     }
@@ -107,8 +105,7 @@ public class LogFormatterTest {
             "" + NEW_LINE +
             "\tanother" + NEW_LINE +
             "\tmulti-line" + NEW_LINE +
-            "\tobject" + NEW_LINE +
-            "" + NEW_LINE;
+            "\tobject" + NEW_LINE;
         verify(mockLogger).error(message);
         verify(mockHttpStateHandler, times(1)).log(new MessageLogEntry(request, message));
     }
@@ -142,8 +139,7 @@ public class LogFormatterTest {
             "" + NEW_LINE +
             "\tanother" + NEW_LINE +
             "\tmulti-line" + NEW_LINE +
-            "\tobject" + NEW_LINE +
-            "" + NEW_LINE;
+            "\tobject" + NEW_LINE;
         verify(mockLogger).error(message, exception);
         verify(mockHttpStateHandler, times(1)).log(new MessageLogEntry(request, message));
     }
@@ -177,8 +173,7 @@ public class LogFormatterTest {
             "" + NEW_LINE +
             "\tanother" + NEW_LINE +
             "\tmulti-line" + NEW_LINE +
-            "\tobject" + NEW_LINE +
-            "" + NEW_LINE;
+            "\tobject" + NEW_LINE;
         verify(mockLogger).error(message, exception);
         verify(mockHttpStateHandler, times(2)).log(new MessageLogEntry(request, message));
     }

@@ -1,5 +1,6 @@
 package org.mockserver.mock;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
@@ -267,6 +268,7 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
+    @JsonIgnore
     public boolean isActive() {
         return hasRemainingMatches() && isStillAlive();
     }

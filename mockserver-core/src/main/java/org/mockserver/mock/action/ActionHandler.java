@@ -82,11 +82,12 @@ public class ActionHandler {
                 case ERROR:
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     httpErrorActionHandler.handle((HttpError) action, ctx);
-                    logFormatter.infoLog(request, "returning error :{}" + NEW_LINE + " for request:{}", action, request);
+                    logFormatter.infoLog(request, "returning error:{}" + NEW_LINE + " for request:{}", action, request);
                     break;
             }
         } else {
             httpStateHandler.log(new RequestLogEntry(request));
+            logFormatter.infoLog(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", response, request);
             responseWriter.writeResponse(request, response);
         }
     }

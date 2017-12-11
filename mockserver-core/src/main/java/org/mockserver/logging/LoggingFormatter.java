@@ -25,18 +25,18 @@ public class LoggingFormatter {
 
     public void traceLog(String message, Object... arguments) {
         if (logger.isTraceEnabled()) {
-            logger.trace(formatLogMessage(message + NEW_LINE + NEW_LINE, arguments));
+            logger.trace(formatLogMessage(message, arguments));
         }
     }
 
     public void infoLog(HttpRequest request, String message, Object... arguments) {
-        String logMessage = formatLogMessage(message + NEW_LINE, arguments);
+        String logMessage = formatLogMessage(message, arguments);
         logger.info(logMessage);
         addLogEvents(request, logMessage);
     }
 
     public void infoLog(List<HttpRequest> requests, String message, Object... arguments) {
-        String logMessage = formatLogMessage(message + NEW_LINE, arguments);
+        String logMessage = formatLogMessage(message, arguments);
         logger.info(logMessage);
         addLogEvents(requests, logMessage);
     }

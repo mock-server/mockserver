@@ -201,6 +201,6 @@ public class ActionHandlerTest {
         // then
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
         verify(mockHttpErrorActionHandler).handle(error, mockChannelHandlerContext);
-        verify(logFormatter).infoLog(request, "returning error :{}" + NEW_LINE + " for request:{}", error, request);
+        verify(logFormatter).infoLog(request, "returning error:{}" + NEW_LINE + " for request:{}", error, request);
     }
 }

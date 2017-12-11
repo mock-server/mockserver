@@ -18,6 +18,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.Collections;
 
+import static com.google.common.net.MediaType.JSON_UTF_8;
 import static org.apache.commons.codec.Charsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -26,6 +27,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -73,9 +75,9 @@ public class MockServerServletTest {
     public void shouldRetrieveRequests() {
         // given
         MockHttpServletRequest expectationRetrieveRequestsRequest = buildHttpServletRequest(
-                "PUT",
-                "/retrieve",
-                httpRequestSerializer.serialize(request("request_one"))
+            "PUT",
+            "/retrieve",
+            httpRequestSerializer.serialize(request("request_one"))
         );
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
 
@@ -84,7 +86,7 @@ public class MockServerServletTest {
 
         // then
         assertResponse(response, 200, httpRequestSerializer.serialize(Collections.singletonList(
-                request("request_one")
+            request("request_one")
         )));
     }
 
@@ -94,9 +96,9 @@ public class MockServerServletTest {
         httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
         MockHttpServletRequest clearRequest = buildHttpServletRequest(
-                "PUT",
-                "/clear",
-                httpRequestSerializer.serialize(request("request_one"))
+            "PUT",
+            "/clear",
+            httpRequestSerializer.serialize(request("request_one"))
         );
 
         // when
@@ -106,19 +108,19 @@ public class MockServerServletTest {
         assertResponse(response, 200, "");
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(nullValue()));
         assertThat(httpStateHandler.retrieve(request("/retrieve")
-                .withMethod("PUT")
-                .withBody(
-                        httpRequestSerializer.serialize(request("request_one"))
-                )), is(""));
+            .withMethod("PUT")
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            )), is(response().withBody("", JSON_UTF_8).withStatusCode(200)));
     }
 
     @Test
     public void shouldReturnStatus() {
         // given
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
-                "PUT",
-                "/status",
-                ""
+            "PUT",
+            "/status",
+            ""
         );
 
         // when
@@ -126,7 +128,7 @@ public class MockServerServletTest {
 
         // then
         assertResponse(response, 200, portBindingSerializer.serialize(
-                portBinding(80)
+            portBinding(80)
         ));
     }
 
@@ -134,10 +136,10 @@ public class MockServerServletTest {
     public void shouldBindNewPorts() {
         // given
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
-                "PUT",
-                "/bind", portBindingSerializer.serialize(
-                        portBinding(1080, 1090)
-                ));
+            "PUT",
+            "/bind", portBindingSerializer.serialize(
+                portBinding(1080, 1090)
+            ));
 
         // when
         mockServerServlet.service(statusRequest, response);
@@ -150,9 +152,9 @@ public class MockServerServletTest {
     public void shouldStop() throws InterruptedException {
         // given
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
-                "PUT",
-                "/stop",
-                ""
+            "PUT",
+            "/stop",
+            ""
         );
 
         // when
@@ -167,13 +169,13 @@ public class MockServerServletTest {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         httpStateHandler.log(new ExpectationMatchLogEntry(
-                request("request_one"),
-                expectationOne
+            request("request_one"),
+            expectationOne
         ));
         MockHttpServletRequest expectationRetrieveExpectationsRequest = buildHttpServletRequest(
-                "PUT",
-                "/retrieve",
-                httpRequestSerializer.serialize(request("request_one"))
+            "PUT",
+            "/retrieve",
+            httpRequestSerializer.serialize(request("request_one"))
         );
         expectationRetrieveExpectationsRequest.setQueryString("type=" + RetrieveType.RECORDED_EXPECTATIONS.name());
 
@@ -182,7 +184,7 @@ public class MockServerServletTest {
 
         // then
         assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
-                expectationOne
+            expectationOne
         )));
     }
 
@@ -191,9 +193,9 @@ public class MockServerServletTest {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         MockHttpServletRequest request = buildHttpServletRequest(
-                "PUT",
-                "/expectation",
-                expectationSerializer.serialize(expectationOne)
+            "PUT",
+            "/expectation",
+            expectationSerializer.serialize(expectationOne)
         );
 
         // when
@@ -210,9 +212,9 @@ public class MockServerServletTest {
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         httpStateHandler.add(expectationOne);
         MockHttpServletRequest expectationRetrieveExpectationsRequest = buildHttpServletRequest(
-                "PUT",
-                "/retrieve",
-                httpRequestSerializer.serialize(request("request_one"))
+            "PUT",
+            "/retrieve",
+            httpRequestSerializer.serialize(request("request_one"))
         );
         expectationRetrieveExpectationsRequest.setQueryString("type=" + RetrieveType.ACTIVE_EXPECTATIONS.name());
 
@@ -221,17 +223,64 @@ public class MockServerServletTest {
 
         // then
         assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
-                expectationOne
+            expectationOne
         )));
+    }
+
+    @Test
+    public void shouldRetrieveLogMessages() {
+        // given
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        MockHttpServletRequest retrieveLogRequest = buildHttpServletRequest(
+            "PUT",
+            "/retrieve",
+            httpRequestSerializer.serialize(request("request_one"))
+        );
+        retrieveLogRequest.setQueryString("type=" + RetrieveType.LOGS.name());
+
+        // when
+        mockServerServlet.service(retrieveLogRequest, response);
+
+        // then
+        assertResponse(response, 200, "creating expectation:" + NEW_LINE +
+            "" + NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"httpRequest\" : {" + NEW_LINE +
+            "\t    \"path\" : \"request_one\"" + NEW_LINE +
+            "\t  }," + NEW_LINE +
+            "\t  \"times\" : {" + NEW_LINE +
+            "\t    \"remainingTimes\" : 0," + NEW_LINE +
+            "\t    \"unlimited\" : true" + NEW_LINE +
+            "\t  }," + NEW_LINE +
+            "\t  \"timeToLive\" : {" + NEW_LINE +
+            "\t    \"unlimited\" : true" + NEW_LINE +
+            "\t  }," + NEW_LINE +
+            "\t  \"httpResponse\" : {" + NEW_LINE +
+            "\t    \"statusCode\" : 200," + NEW_LINE +
+            "\t    \"body\" : \"response_one\"" + NEW_LINE +
+            "\t  }," + NEW_LINE +
+            "\t  \"action\" : {" + NEW_LINE +
+            "\t    \"statusCode\" : 200," + NEW_LINE +
+            "\t    \"body\" : \"response_one\"" + NEW_LINE +
+            "\t  }" + NEW_LINE +
+            "\t}" + NEW_LINE +
+            "------------------------------------\n" +
+            "retrieving logs that match:" + NEW_LINE +
+            "" + NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"path\" : \"request_one\"" + NEW_LINE +
+            "\t}" + NEW_LINE +
+            "\n");
     }
 
     @Test
     public void shouldUseActionHandlerToHandleNonAPIRequests() {
         // given
         MockHttpServletRequest request = buildHttpServletRequest(
-                "GET",
-                "request_one",
-                ""
+            "GET",
+            "request_one",
+            ""
         );
 
         // when
@@ -239,13 +288,13 @@ public class MockServerServletTest {
 
         // then
         verify(mockActionHandler).processAction(
-                eq(
-                        request("request_one")
-                                .withMethod("GET")
-                                .withSecure(false)
-                ),
-                any(ServletResponseWriter.class),
-                isNull(ChannelHandlerContext.class)
+            eq(
+                request("request_one")
+                    .withMethod("GET")
+                    .withSecure(false)
+            ),
+            any(ServletResponseWriter.class),
+            isNull(ChannelHandlerContext.class)
         );
     }
 

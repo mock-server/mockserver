@@ -1,6 +1,7 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.net.MediaType;
 
 import java.nio.charset.Charset;
 import java.util.List;
@@ -79,6 +80,20 @@ public class HttpResponse extends Action {
     public HttpResponse withBody(String body, Charset charset) {
         if (body != null) {
             this.body = new StringBody(body, charset);
+        }
+        return this;
+    }
+
+    /**
+     * Set response body to return a string response body with the specified encoding. <b>Note:</b> The character set of the
+     * response will be forced to the specified charset, even if the Content-Type header specifies otherwise.
+     *
+     * @param body        a string
+     * @param contentType media type, if charset is included this will be used for encoding string
+     */
+    public HttpResponse withBody(String body, MediaType contentType) {
+        if (body != null) {
+            this.body = new StringBody(body, contentType);
         }
         return this;
     }

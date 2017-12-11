@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.net.MediaType.JSON_UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -32,6 +33,7 @@ import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -116,7 +118,7 @@ public class MockServerHandlerTest {
                 .withMethod("PUT")
                 .withBody(
                         httpRequestSerializer.serialize(request("request_one"))
-                )), is(""));
+                )), is(response().withBody("", JSON_UTF_8).withStatusCode(200)));
     }
 
     @Test
@@ -191,6 +193,53 @@ public class MockServerHandlerTest {
         assertResponse(200, expectationSerializer.serialize(Collections.singletonList(
                 expectationOne
         )));
+    }
+
+    @Test
+    public void shouldRetrieveLogMessages() {
+        // given
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        HttpRequest retrieveLogRequest = request("/retrieve")
+            .withMethod("PUT")
+            .withQueryStringParameter("type", RetrieveType.LOGS.name())
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            );
+
+        // when
+        embeddedChannel.writeInbound(retrieveLogRequest);
+
+        // then
+        assertResponse(200, "creating expectation:" + NEW_LINE +
+            "" + NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"httpRequest\" : {" + NEW_LINE +
+            "\t    \"path\" : \"request_one\"" + NEW_LINE +
+            "\t  }," + NEW_LINE +
+            "\t  \"times\" : {" + NEW_LINE +
+            "\t    \"remainingTimes\" : 0," + NEW_LINE +
+            "\t    \"unlimited\" : true" + NEW_LINE +
+            "\t  }," + NEW_LINE +
+            "\t  \"timeToLive\" : {" + NEW_LINE +
+            "\t    \"unlimited\" : true" + NEW_LINE +
+            "\t  }," + NEW_LINE +
+            "\t  \"httpResponse\" : {" + NEW_LINE +
+            "\t    \"statusCode\" : 200," + NEW_LINE +
+            "\t    \"body\" : \"response_one\"" + NEW_LINE +
+            "\t  }," + NEW_LINE +
+            "\t  \"action\" : {" + NEW_LINE +
+            "\t    \"statusCode\" : 200," + NEW_LINE +
+            "\t    \"body\" : \"response_one\"" + NEW_LINE +
+            "\t  }" + NEW_LINE +
+            "\t}" + NEW_LINE +
+            "------------------------------------\n" +
+            "retrieving logs that match:" + NEW_LINE +
+            "" + NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"path\" : \"request_one\"" + NEW_LINE +
+            "\t}" + NEW_LINE +
+            "\n");
     }
 
     @Test

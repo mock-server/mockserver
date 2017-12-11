@@ -3,7 +3,6 @@ package org.mockserver.filters;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.EvictingQueue;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.log.model.*;
@@ -18,36 +17,61 @@ import org.mockserver.verify.VerificationSequence;
 import java.util.*;
 
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
  */
 public class LogFilter {
 
-    public final static List<Class<? extends LogEntry>> REQUEST_LOG_TYPES = Arrays.asList(
+    private final static List<Class<? extends LogEntry>> MESSAGE_LOG_TYPES = Collections.<Class<? extends LogEntry>>singletonList(
+        MessageLogEntry.class
+    );
+    private final static List<Class<? extends LogEntry>> REQUEST_LOG_TYPES = Arrays.asList(
         RequestLogEntry.class,
         RequestResponseLogEntry.class,
         ExpectationMatchLogEntry.class
     );
-    public final static List<Class<? extends LogEntry>> EXPECTATION_LOG_TYPES = Arrays.<Class<? extends LogEntry>>asList(
+    private final static List<Class<? extends LogEntry>> EXPECTATION_LOG_TYPES = Arrays.<Class<? extends LogEntry>>asList(
         RequestResponseLogEntry.class,
         ExpectationMatchLogEntry.class
     );
-    private final LoggingFormatter logFormatter;
-    private Queue<LogEntry> requestLog = Queues.synchronizedQueue(EvictingQueue.<LogEntry>create(100));
-    private MatcherBuilder matcherBuilder;
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-
-    private Function<LogEntry, HttpRequest> logEntryToHttpRequestFunction = new Function<LogEntry, HttpRequest>() {
+    static Predicate<LogEntry> messageLogPredicate = new Predicate<LogEntry>() {
+        public boolean apply(LogEntry input) {
+            return MESSAGE_LOG_TYPES.contains(input.getClass());
+        }
+    };
+    private static Function<LogEntry, HttpRequest> logEntryToRequest = new Function<LogEntry, HttpRequest>() {
         public HttpRequest apply(LogEntry logEntry) {
             return logEntry.getHttpRequest();
         }
     };
-
-    private Predicate<LogEntry> notMessageLogEntryPredicate = new Predicate<LogEntry>() {
+    static Predicate<LogEntry> requestLogPredicate = new Predicate<LogEntry>() {
+        public boolean apply(LogEntry input) {
+            return REQUEST_LOG_TYPES.contains(input.getClass());
+        }
+    };
+    private static Function<LogEntry, Expectation> logEntryToExpectation = new Function<LogEntry, Expectation>() {
+        public Expectation apply(LogEntry logEntry) {
+            return ((ExpectationLogEntry) logEntry).getExpectation();
+        }
+    };
+    static Predicate<LogEntry> expectationLogPredicate = new Predicate<LogEntry>() {
+        public boolean apply(LogEntry input) {
+            return EXPECTATION_LOG_TYPES.contains(input.getClass());
+        }
+    };
+    public static Predicate<LogEntry> notMessageLogEntryPredicate = new Predicate<LogEntry>() {
         public boolean apply(LogEntry logEntry) {
             return !(logEntry instanceof MessageLogEntry);
+        }
+    };
+    private final LoggingFormatter logFormatter;
+    private Queue<LogEntry> requestLog = Queues.synchronizedQueue(EvictingQueue.<LogEntry>create(100));
+    private MatcherBuilder matcherBuilder;
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+    private Function<LogEntry, String> logEntryToMessage = new Function<LogEntry, String>() {
+        public String apply(LogEntry logEntry) {
+            return ((MessageLogEntry) logEntry).getMessage();
         }
     };
 
@@ -77,34 +101,24 @@ public class LogFilter {
         }
     }
 
+    public List<String> retrieveMessages(HttpRequest httpRequest) {
+        return retrieveLogEntries(httpRequest, messageLogPredicate, logEntryToMessage);
+    }
+
     public List<HttpRequest> retrieveRequests(HttpRequest httpRequest) {
-        return Lists.transform(
-            retrieveLogEntries(httpRequest, REQUEST_LOG_TYPES),
-            logEntryToHttpRequestFunction
-        );
+        return retrieveLogEntries(httpRequest, requestLogPredicate, logEntryToRequest);
     }
 
     public List<Expectation> retrieveExpectations(HttpRequest httpRequest) {
-        List<Expectation> matchingExpectations = new ArrayList<>();
-        List<LogEntry> logEntries = retrieveLogEntries(httpRequest, EXPECTATION_LOG_TYPES);
-        for (LogEntry logEntry : logEntries) {
-            matchingExpectations.add(((ExpectationLogEntry) logEntry).getExpectation());
-        }
-        return matchingExpectations;
+        return retrieveLogEntries(httpRequest, expectationLogPredicate, logEntryToExpectation);
     }
 
-    public List<LogEntry> retrieveLogEntries(HttpRequest httpRequest) {
-        return retrieveLogEntries(httpRequest, Collections.<Class<? extends LogEntry>>emptyList());
-    }
-
-    public List<LogEntry> retrieveLogEntries(HttpRequest httpRequest, List<Class<? extends LogEntry>> types) {
-        List<LogEntry> requestLog = new LinkedList<>(this.requestLog);
-
-        List<LogEntry> matchingLogEntries = new ArrayList<>();
+    <T> List<T> retrieveLogEntries(HttpRequest httpRequest, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryToTypeFunction) {
+        List<T> matchingLogEntries = new ArrayList<>();
         HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-        for (LogEntry logEntry : requestLog) {
-            if ((types.isEmpty() || types.contains(logEntry.getClass())) && httpRequestMatcher.matches(logEntry.getHttpRequest(), true)) {
-                matchingLogEntries.add(logEntry);
+        for (LogEntry logEntry : new LinkedList<>(this.requestLog)) {
+            if (logEntryPredicate.apply(logEntry) && httpRequestMatcher.matches(logEntry.getHttpRequest(), false)) {
+                matchingLogEntries.add(logEntryToTypeFunction.apply(logEntry));
             }
         }
         return matchingLogEntries;
@@ -155,7 +169,7 @@ public class LogFilter {
                     boolean foundRequest = false;
                     for (; !foundRequest && requestLogCounter < requestLog.size(); requestLogCounter++) {
                         LogEntry logEntry = requestLog.get(requestLogCounter);
-                        if (!(logEntry instanceof MessageLogEntry) && httpRequestMatcher.matches(logEntry.getHttpRequest(), true)) {
+                        if (!(logEntry instanceof MessageLogEntry) && httpRequestMatcher.matches(logEntry.getHttpRequest(), false)) {
                             // move on to next request
                             foundRequest = true;
                         }
