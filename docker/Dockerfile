@@ -14,7 +14,7 @@ MAINTAINER James Bloom "jamesdbloom@gmail.com"
 # obtain MockServer jar and script
 RUN apk add --update openssl ca-certificates bash
 ADD run_mockserver.sh /opt/mockserver/run_mockserver.sh
-RUN wget -O /opt/mockserver/mockserver-netty-jar-with-dependencies.jar https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/5.2.1/mockserver-netty-5.2.1-jar-with-dependencies.jar
+RUN wget -O /opt/mockserver/mockserver-netty-jar-with-dependencies.jar https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/5.2.2/mockserver-netty-5.2.2-jar-with-dependencies.jar
 
 # set working directory
 WORKDIR /opt/mockserver
