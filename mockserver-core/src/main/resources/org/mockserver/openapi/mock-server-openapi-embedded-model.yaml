@@ -4,13 +4,11 @@ servers:
   - url: 'https://localhost:1080/'
 info:
   title: Mock Server API
-  version: '4.0.0'
+  version: "5.2.2"
   description: >-
     MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby and a simple REST API (as shown below).
 
-
     MockServer Proxy is a proxy that introspects all proxied traffic including encrypted SSL traffic and supports Port Forwarding, Web Proxying (i.e. HTTP proxy), HTTPS Tunneling Proxying (using HTTP CONNECT) and SOCKS Proxying (i.e. dynamic port forwarding).
-
 
     Both MockServer and the MockServer Proxy record all received requests so that it is possible to verify exactly what requests have been sent by the system under test.
   license:
@@ -72,29 +70,6 @@ paths:
       responses:
         '200':
           description: expectations and recorded requests cleared
-  /dumpToLog:
-    put:
-      tags:
-        - control
-      summary: write all requests to the request log that match the request matcher
-      parameters:
-        - in: query
-          name: format
-          schema:
-            type: string
-          description: changes response format from json to java if the value is "java"
-      responses:
-        '200':
-          description: recorded requests written to request log
-        '400':
-          description: incorrect request format
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/HttpRequest"
-        description: >-
-          request used to match which recorded requests to write to the request log
   /retrieve:
     put:
       tags:
@@ -105,12 +80,14 @@ paths:
           name: format
           schema:
             type: string
-          description: changes response format from json to java if the value is "java"
+            enum: ["java", "json"]
+          description: changes response format, default if not specificed is "json"
         - in: query
           name: type
           schema:
             type: string
-          description: changes type of object that is retrieve from recorded requests to active expectations if the value is "expectation"
+            enum: ["logs", "requests", "recorded_expectations", "active_expectations"]
+          description: specifies the type of object that is retrieve, default if not specified is "requests"
       responses:
         '200':
           description: recorded requests or active expectations returned
@@ -129,7 +106,11 @@ paths:
             application/java:
               schema:
                 type: string
-                description: 'Java code for the list of either Expectations or HttpResponses'
+                description: Java code for the list of either Expectations or HttpResponses
+            text/plain:
+              schema:
+                type: string
+                description: List of recorded log messages
         '400':
           description: incorrect request format
       requestBody:
@@ -138,7 +119,7 @@ paths:
             schema:
               $ref: "#/components/schemas/HttpRequest"
         description: >-
-          request used to match which recorded requests or active expectations to return
+          request used to match which recorded requests, expectations or log messages to return, an empty body matches all requests, expectations or log messages
   /verify:
     put:
       tags:
@@ -261,6 +242,8 @@ components:
           $ref: "#/components/schemas/HttpTemplate"
         httpForward:
           $ref: "#/components/schemas/HttpForward"
+        httpForwardTemplate:
+          $ref: "#/components/schemas/HttpTemplate"
         httpClassCallback:
           $ref: "#/components/schemas/HttpClassCallback"
         httpObjectCallback:
@@ -398,27 +381,41 @@ components:
         unlimited:
           type: boolean
     KeyToMultiValue:
-      type: array
-      additionalProperties: false
-      items:
-        type: object
-        properties:
-          name:
-            type: string
-          values:
-            type: array
-            items:
+      oneOf:
+      - type: array
+        additionalProperties: false
+        items:
+          type: object
+          properties:
+            name:
               type: string
+            values:
+              type: array
+              items:
+                type: string
+      - type: object
+        # additionalProperties: false
+        # patternProperties:
+        #   "^\\S+$":
+        #     type: array
+        #     items:
+        #       type: string
     KeyToValue:
-      type: array
-      additionalProperties: false
-      items:
-        type: object
-        properties:
-          name:
-            type: string
-          value:
-            type: string
+      oneOf:
+      - type: array
+        additionalProperties: false
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            value:
+              type: string
+      - type: object
+      #   additionalProperties: false
+      #   patternProperties:
+      #     "^\\S+$":
+      #       type: string
     Body:
       title: "request body matcher"
       oneOf:
