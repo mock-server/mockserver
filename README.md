@@ -49,7 +49,7 @@ Vert.X Module Registry contains the following artifacts:
 * [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client for both the MockServer and the proxy 
 * [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://cdn.rawgit.com/jamesdbloom/mockserver-client-node/503f8525a933cbc45cdf0b96f78e1c6b4e48f126/mockServerClient.js) client for both the MockServer and the proxy
 
-# APIs
+# API Versions
 Date       | Version | Java API                                                              | REST API
 :--------- |:------- |:--------------------------------------------------------------------- |:-----------
 12-Dec-17  | 5.2.2	 | [Java API](http://mock-server.com/versions/5.2.2/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
