@@ -83,13 +83,13 @@ paths:
           schema:
             type: string
             enum: ["java", "json"]
-          description: changes response format, default if not specificed is "json"
+          description: changes response format, default if not specificed is "json", supported values are "java", "json"
         - in: query
           name: type
           schema:
             type: string
             enum: ["logs", "requests", "recorded_expectations", "active_expectations"]
-          description: specifies the type of object that is retrieve, default if not specified is "requests"
+          description: specifies the type of object that is retrieve, default if not specified is "requests", supported values are "logs", "requests", "recorded_expectations", "active_expectations"
       responses:
         '200':
           description: recorded requests or active expectations returned
