@@ -22,7 +22,6 @@ public class Main {
     static {
         if (System.getProperty("logback.configurationFile") == null) {
             System.setProperty("logback.configurationFile", "example_logback.xml");
-            System.setProperty("mockserver.logLevel", "WARN");
         }
     }
 
