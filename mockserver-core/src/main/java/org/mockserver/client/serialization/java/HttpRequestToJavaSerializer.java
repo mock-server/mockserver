@@ -94,7 +94,7 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
                     output.append(".withBody(");
                     appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output);
                     output.append("new ParameterBody(");
-                    List<Parameter> bodyParameters = ((ParameterBody) request.getBody()).getValue();
+                    List<Parameter> bodyParameters = ((ParameterBody) request.getBody()).getValue().getEntries();
                     output.append(new ParameterToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 3, bodyParameters));
                     appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output);
                     output.append(")");

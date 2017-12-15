@@ -1,6 +1,7 @@
 package org.mockserver.matchers;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
+import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.model.KeyToMultiValue;
 import org.mockserver.model.Parameter;
 import org.mockserver.model.Parameters;
@@ -16,8 +17,8 @@ import java.util.Map;
 public class ParameterStringMatcher extends BodyMatcher<String> {
     private final MultiValueMapMatcher matcher;
 
-    public ParameterStringMatcher(List<Parameter> parameters) {
-        this.matcher = new MultiValueMapMatcher(new Parameters().withEntries(parameters).toCaseInsensitiveRegexMultiMap());
+    public ParameterStringMatcher(Parameters parameters) {
+        this.matcher = new MultiValueMapMatcher(((parameters != null ? parameters.toCaseInsensitiveRegexMultiMap() : new CaseInsensitiveRegexMultiMap())));
     }
 
     public boolean matches(String matched) {
@@ -35,7 +36,7 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
     }
 
     private List<KeyToMultiValue> parseString(String matched) {
-        Map<String, Parameter> mappedParameters = new HashMap<String, Parameter>();
+        Map<String, Parameter> mappedParameters = new HashMap<>();
         Map<String, List<String>> parameters = new QueryStringDecoder("?" + matched).parameters();
         for (String name : parameters.keySet()) {
             // TODO(jamesdbloom) support nottable parameters

@@ -5394,9 +5394,6 @@ public abstract class AbstractClientServerIntegrationTest {
                 "\t  }," + NEW_LINE +
                 "\t  \"httpResponse\" : {" + NEW_LINE +
                 "\t    \"body\" : \"some_body\"" + NEW_LINE +
-                "\t  }," + NEW_LINE +
-                "\t  \"action\" : {" + NEW_LINE +
-                "\t    \"body\" : \"some_body\"" + NEW_LINE +
                 "\t  }" + NEW_LINE +
                 "\t}" + NEW_LINE,
             new String[]{

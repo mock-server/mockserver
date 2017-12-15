@@ -306,13 +306,10 @@ public class HttpRequestDTOSerializerTest {
                 "  }," + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"PARAMETERS\"," + NEW_LINE +
-                "    \"parameters\" : [ {" + NEW_LINE +
-                "      \"name\" : \"queryStringParameterOneName\"," + NEW_LINE +
-                "      \"values\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]" + NEW_LINE +
-                "    }, {" + NEW_LINE +
-                "      \"name\" : \"queryStringParameterTwoName\"," + NEW_LINE +
-                "      \"values\" : [ \"queryStringParameterTwoValue\" ]" + NEW_LINE +
-                "    } ]" + NEW_LINE +
+                "    \"parameters\" : {" + NEW_LINE +
+                "      \"queryStringParameterOneName\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]," + NEW_LINE +
+                "      \"queryStringParameterTwoName\" : [ \"queryStringParameterTwoValue\" ]" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}")
         );

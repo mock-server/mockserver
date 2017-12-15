@@ -316,13 +316,13 @@ public class HttpRequestMatcherTest {
             new HttpRequest().withBody(params(
                 new Parameter("nameOne", "valueOne"),
                 new Parameter("nameTwo", "valueTwo")
-            ))
-            , loggingFormatter).matches(
-            new HttpRequest().withBody(new ParameterBodyDTO(params(
-                new Parameter("nameOne", "valueOne"),
-                new Parameter("nameTwo", "valueTwo")
-            )).toString())
-        ));
+            )), loggingFormatter)
+            .matches(
+                new HttpRequest().withBody(new ParameterBodyDTO(params(
+                    new Parameter("nameOne", "valueOne"),
+                    new Parameter("nameTwo", "valueTwo")
+                )).toString())
+            ));
     }
 
     @Test

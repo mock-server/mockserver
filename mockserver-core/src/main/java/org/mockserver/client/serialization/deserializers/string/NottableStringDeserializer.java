@@ -19,19 +19,19 @@ import static org.mockserver.model.NottableString.string;
 public class NottableStringDeserializer extends JsonDeserializer<NottableString> {
 
     @Override
-    public NottableString deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-        if (jp.getCurrentToken() == JsonToken.START_OBJECT) {
+    public NottableString deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
             Boolean not = null;
             String string = null;
 
-            while (jp.nextToken() != JsonToken.END_OBJECT) {
-                String fieldName = jp.getCurrentName();
+            while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
+                String fieldName = jsonParser.getCurrentName();
                 if ("not".equals(fieldName)) {
-                    jp.nextToken();
-                    not = jp.getBooleanValue();
+                    jsonParser.nextToken();
+                    not = jsonParser.getBooleanValue();
                 } else if ("value".equals(fieldName)) {
-                    jp.nextToken();
-                    string = jp.readValueAs(String.class);
+                    jsonParser.nextToken();
+                    string = ctxt.readValue(jsonParser, String.class);
                 }
             }
 
@@ -40,8 +40,8 @@ public class NottableStringDeserializer extends JsonDeserializer<NottableString>
             }
 
             return string(string, not);
-        } else if (jp.getCurrentToken() == JsonToken.VALUE_STRING) {
-            return deserializeNottableString(jp.readValueAs(String.class));
+        } else if (jsonParser.getCurrentToken() == JsonToken.VALUE_STRING || jsonParser.getCurrentToken() == JsonToken.FIELD_NAME) {
+            return deserializeNottableString(ctxt.readValue(jsonParser, String.class));
         }
         return null;
     }

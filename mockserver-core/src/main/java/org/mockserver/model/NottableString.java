@@ -60,7 +60,7 @@ public class NottableString extends Not {
     }
 
     public static NottableString string(String value) {
-        return new NottableString(value, null);
+        return new NottableString(value, false);
     }
 
     public static NottableString not(String value) {

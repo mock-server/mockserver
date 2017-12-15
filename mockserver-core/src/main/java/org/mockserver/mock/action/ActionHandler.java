@@ -42,7 +42,7 @@ public class ActionHandler {
     public void processAction(HttpRequest request, ResponseWriter responseWriter, ChannelHandlerContext ctx) {
         HttpResponse response = notFoundResponse();
         Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
-        if (expectation != null) {
+        if (expectation != null && expectation.getAction() != null) {
             Action action = expectation.getAction();
             switch (action.getType()) {
                 case FORWARD:

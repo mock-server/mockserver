@@ -706,13 +706,10 @@ public class HttpRequestSerializerIntegrationTest {
         assertEquals("{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
             "    \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "    \"parameters\" : [ {" + NEW_LINE +
-            "      \"name\" : \"nameOne\"," + NEW_LINE +
-            "      \"values\" : [ \"valueOne\" ]" + NEW_LINE +
-            "    }, {" + NEW_LINE +
-            "      \"name\" : \"nameTwo\"," + NEW_LINE +
-            "      \"values\" : [ \"valueTwo_One\", \"valueTwo_Two\" ]" + NEW_LINE +
-            "    } ]" + NEW_LINE +
+            "    \"parameters\" : {" + NEW_LINE +
+            "      \"nameOne\" : [ \"valueOne\" ]," + NEW_LINE +
+            "      \"nameTwo\" : [ \"valueTwo_One\", \"valueTwo_Two\" ]" + NEW_LINE +
+            "    }" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonHttpRequest);
     }

@@ -63,6 +63,7 @@ public class Expectation extends ObjectWithJsonToString {
         return httpObjectCallback;
     }
 
+    @JsonIgnore
     public Action getAction() {
         if (httpResponse != null) {
             return getHttpResponse();

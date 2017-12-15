@@ -25,6 +25,7 @@ import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.exact;
 
 /**
@@ -298,6 +299,67 @@ public class ExpectationSerializerIntegrationTest {
                     )
             )
             .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithParameterRequestBody() throws IOException {
+        // given
+        String requestBytes = ("{\n" +
+            "  \"httpRequest\" : {\n" +
+            "    \"method\" : \"POST\",\n" +
+            "    \"path\" : \"some_pathRequest\",\n" +
+            "    \"body\" : {\n" +
+            "      \"type\" : \"PARAMETERS\",\n" +
+            "      \"parameters\" : {\n" +
+            "        \"bodyParameterOneName\" : [ \"Parameter One Value One\", \"Parameter One Value Two\" ],\n" +
+            "        \"bodyParameterTwoName\" : [ \"Parameter Two\" ]\n" +
+            "      }\n" +
+            "    }\n" +
+            "  },\n" +
+            "  \"httpResponse\" : {\n" +
+            "    \"statusCode\" : 202,\n" +
+            "    \"headers\" : {\n" +
+            "      \"headerNameResponse\" : [ \"headerValueResponse\" ]\n" +
+            "    },\n" +
+            "    \"cookies\" : {\n" +
+            "      \"cookieNameResponse\" : \"cookieValueResponse\"\n" +
+            "    },\n" +
+            "    \"body\" : \"some_body_response\"\n" +
+            "  },\n" +
+            "  \"times\" : {\n" +
+            "    \"remainingTimes\" : 1,\n" +
+            "    \"unlimited\" : false\n" +
+            "  },\n" +
+            "  \"timeToLive\" : {\n" +
+            "    \"unlimited\" : true\n" +
+            "  }\n" +
+            "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("POST"))
+                    .setPath(string("some_pathRequest"))
+                    .setBody(new ParameterBodyDTO(params(
+                        param("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                        param("bodyParameterTwoName", "Parameter Two")
+                    )))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setStatusCode(202)
+                    .setBody(new StringBodyDTO(exact("some_body_response")))
+                    .setHeaders(new Headers().withEntries(
+                        header("headerNameResponse", "headerValueResponse")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("cookieNameResponse", "cookieValueResponse")
+                    ))
+            ).buildObject(), expectation);
     }
 
     @Test
@@ -1551,13 +1613,10 @@ public class ExpectationSerializerIntegrationTest {
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
             "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "      \"parameters\" : [ {" + NEW_LINE +
-            "        \"name\" : \"parameterOneName\"," + NEW_LINE +
-            "        \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
-            "      }, {" + NEW_LINE +
-            "        \"name\" : \"parameterTwoName\"," + NEW_LINE +
-            "        \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
-            "      } ]" + NEW_LINE +
+            "      \"parameters\" : {" + NEW_LINE +
+            "        \"parameterOneName\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]," + NEW_LINE +
+            "        \"parameterTwoName\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+            "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +

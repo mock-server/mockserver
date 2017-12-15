@@ -259,10 +259,6 @@ public class MockServerServletTest {
             "\t  \"httpResponse\" : {" + NEW_LINE +
             "\t    \"statusCode\" : 200," + NEW_LINE +
             "\t    \"body\" : \"response_one\"" + NEW_LINE +
-            "\t  }," + NEW_LINE +
-            "\t  \"action\" : {" + NEW_LINE +
-            "\t    \"statusCode\" : 200," + NEW_LINE +
-            "\t    \"body\" : \"response_one\"" + NEW_LINE +
             "\t  }" + NEW_LINE +
             "\t}" + NEW_LINE +
             "------------------------------------\n" +
