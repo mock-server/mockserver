@@ -67,6 +67,7 @@ Date       | Version | Java API                                                 
 02-May-17  | 3.10.7	 | [Java API](http://mock-server.com/versions/3.10.7/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
 27-Apr-17  | 3.10.6	 | [Java API](http://mock-server.com/versions/3.10.6/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
 25-Apr-17  | 3.10.5	 | [Java API](http://mock-server.com/versions/3.10.5/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+06-Mar-16  | 3.10.4	 |  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
 
 # Issues
 
