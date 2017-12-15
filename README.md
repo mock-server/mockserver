@@ -47,7 +47,7 @@ Vert.X Module Registry contains the following artifacts:
 
 * [mockserver-client-ruby ![mockserver-client](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - Ruby client for both the MockServer and the proxy 
 * [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client for both the MockServer and the proxy 
-* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy that works in both the [browser](https://cdn.rawgit.com/jamesdbloom/mockserver-client-node/503f8525a933cbc45cdf0b96f78e1c6b4e48f126/mockServerClient.js) and in Node.js
+* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://cdn.rawgit.com/jamesdbloom/mockserver-client-node/503f8525a933cbc45cdf0b96f78e1c6b4e48f126/mockServerClient.js) client for both the MockServer and the proxy
 
 # APIs
 Date       | Version | Java API                                                              | REST API
