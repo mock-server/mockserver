@@ -76,7 +76,7 @@ paths:
     put:
       tags:
         - control
-      summary: retrieve either - recorded requests or - the active expectations
+      summary: retrieve recorded requests, active expectations, recorded expectations or log messages
       parameters:
         - in: query
           name: format
