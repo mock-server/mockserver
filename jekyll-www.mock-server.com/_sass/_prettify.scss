@@ -1,0 +1,147 @@
+/* Pretty printing styles. Used with prettify.js. */
+
+pre .str, code .str { color: #5BA382; } /* string  - green */
+pre .kwd, code .kwd { color: #E28964; } /* keyword - dark pink */
+pre .com, code .com { color: #9c9c9c; font-style: italic; } /* comment - gray */
+pre .typ, code .typ { color: #5B93DA; } /* type - light blue */
+pre .lit, code .lit { color: #3387CC; } /* literal - blue */
+pre .pun, code .pun { color: #fff; } /* punctuation - white */
+pre .pln, code .pln { color: #e2e2e2; } /* plaintext - white */
+pre .tag, code .tag { color: #89bdff; } /* html/xml tag    - light blue */
+pre .atn, code .atn { color: #bdb76b; } /* html/xml attribute name  - khaki */
+pre .atv, code .atv { color: #65B042; } /* html/xml attribute value - green */
+pre .dec, code .dec { color: #3387CC; } /* decimal - blue */
+
+pre.prettyprint, code.prettyprint {
+	background-color: #0f0101;
+	border-radius: 8px;
+}
+
+pre.prettyprint {
+    width: 95%;
+    margin: 1em auto;
+    white-space: pre-wrap;
+    font-family: Menlo, Monaco, "Courier New", monospace;
+}
+
+.code {
+    display: block;
+    white-space: pre;
+    overflow: auto;
+    padding: 1%;
+    background-color: #0f0101;
+    color: #F1F1F1;
+    border-radius: 8px;
+    font-size: 1em;
+}
+
+.inline {
+    display: inline;
+    white-space: pre;
+    word-wrap: normal;
+    overflow: auto;
+    margin: 0;
+    line-height: 3.5em;
+}
+
+.xml {
+    color: #C9C9C9;
+}
+
+ol.linenums { margin-top: 0; margin-bottom: 0; color: #AEAEAE; } /* IE indents via margin-left */
+li.L0,li.L1,li.L2,li.L3,li.L5,li.L6,li.L7,li.L8 { list-style-type: none }
+li.L1,li.L3,li.L5,li.L7,li.L9 { background: none; }
+
+@media print {
+  pre .str, code .str { color: #060; }
+  pre .kwd, code .kwd { color: #006; font-weight: bold; }
+  pre .com, code .com { color: #600; font-style: italic; }
+  pre .typ, code .typ { color: #404; font-weight: bold; }
+  pre .lit, code .lit { color: #044; }
+  pre .pun, code .pun { color: #440; }
+  pre .pln, code .pln { color: #000; }
+  pre .tag, code .tag { color: #006; font-weight: bold; }
+  pre .atn, code .atn { color: #404; }
+  pre .atv, code .atv { color: #060; }
+}
+
+/* OLD */
+span.keyword {
+    color: #5B93DA;
+}
+
+span.annotation {
+    color: #bdb76b;
+}
+
+span.inline_code {
+    color: #2b2b2b;
+    font-size: 1.1em;
+    font-weight: bolder;
+}
+
+span.numeric_literal {
+    color: #008dff;
+}
+
+span.final,
+span.constant {
+    color: #e28964;
+    font-style: italic;
+}
+
+span.ruby_constant {
+    color: #e28964;
+}
+
+span.string_literal,
+span.command_line_argument_switch {
+    color: #5BA382;
+}
+
+span.this_value {
+    color: #a30707;
+}
+
+span.element {
+    color: #89bdff;
+    font-size: 0.9em;
+}
+
+span.attribute_name,
+span.comment {
+    color: #9c9c9c;
+    font-style: italic;
+    font-size: 0.9em;
+}
+
+span.comment a {
+    color: #6391c3;
+    text-decoration: none;
+}
+
+span.comment.bold {
+    color: gray;
+}
+
+span.javadoc_param_name {
+    color: #c5c5c5;
+}
+
+span.javadoc_param_annotation {
+    color: #9c9c9c;
+    text-decoration: underline;
+}
+
+span.element_value {
+    /*font-size: 1.15em;*/
+    /*color: #E2642F;*/
+}
+
+span.attribute_value {
+    color: blue;
+}
+
+span.command_line_argument_placeholder {
+    color: #9c9c9c;
+}

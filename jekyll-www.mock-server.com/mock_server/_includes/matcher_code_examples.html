@@ -1,0 +1,1180 @@
+<p>The following code examples show how to match against different elements of a request using different matchers.</p>
+<p>More complex request matchers can be created by combining the code examples below.</p>
+<button id="button_match_request_by_path" class="accordion">match request by path</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+<pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "path" : "/some/path"
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_path_exactly_twice" class="accordion">match request by path exactly twice</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path"),
+        Times.exactly(2)
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    },
+    "times": {
+        "remainingTimes": 2,
+        "unlimited": false
+    },
+    "timeToLive": {
+        "unlimited": true
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "path" : "/some/path"
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  },
+  "times" : {
+    "remainingTimes" : 2,
+    "unlimited" : false
+  },
+  "timeToLive" : {
+    "unlimited" : true
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_path_exactly_once_in_the_next_60_seconds" class="accordion">match request by path exactly once in the next 60 seconds</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path"),
+        Times.once(),
+        TimeToLive.exactly(TimeUnit.SECONDS, 60L)
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    },
+    "times": {
+        "remainingTimes": 1,
+        "unlimited": false
+    },
+    "timeToLive": {
+        "timeUnit": "SECONDS",
+        "timeToLive": 60,
+        "unlimited": false
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "path" : "/some/path"
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  },
+  "times" : {
+    "remainingTimes" : 1,
+    "unlimited" : false
+  },
+  "timeToLive" : {
+    "timeUnit" : "SECONDS",
+    "timeToLive" : 60,
+    "unlimited" : false
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_regex_path" class="accordion">match request by regex path</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            // matches any requests those path starts with "/some"
+            .withPath("/some.*")
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+// matches any requests those path starts with "/some"
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some.*"
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "path" : "/some.*"
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_not_matching_path" class="accordion">match request by not matching path</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            // matches any requests those path does NOT start with "/some"
+            .withPath(not("/some.*"))
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+// matches any requests those path does NOT start with "/some"
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "!/some.*"
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "path" : "!/some.*"
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_not_matching_method" class="accordion">match request by not matching method</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            // matches any requests that does NOT have a "GET" method
+            .withMethod(not("GET"))
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+// matches any requests that does NOT have a "GET" method
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "method": "!GET"
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "method" : "!GET"
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_headers" class="accordion">match request by headers</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("GET")
+            .withPath("/some/path")
+            .withHeaders(
+                header("Accept", "application/json"),
+                header("Accept-Encoding", "gzip, deflate, br")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "method": "GET",
+        "path": "/some/path",
+        "headers": {
+            "Accept": ["application/json"],
+            "Accept-Encoding": ["gzip, deflate, br"]
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "method" : "GET",
+    "path" : "/some/path",
+    "headers" : {
+      "Accept" : [ "application/json" ],
+      "Accept-Encoding" : [ "gzip, deflate, br" ]
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_not_matching_header_value" class="accordion">match request by not matching header value</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+            .withHeaders(
+                // matches requests that have an Accept header without the value "application/json"
+                header(string("Accept"), not("application/json")),
+                // matches requests that have an Accept-Encoding without the substring "gzip"
+                header(string("Accept-Encoding"), not(".*gzip.*"))
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path",
+        "headers": {
+            // matches requests that have an Accept header without the value "application/json"
+            "Accept": ["!application/json"],
+            // matches requests that have an Accept-Encoding without the substring "gzip"
+            "Accept-Encoding": ["!.*gzip.*"]
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "path" : "/some/path",
+    "headers" : {
+      "Accept" : [ "!application/json" ],
+      "Accept-Encoding" : [ "!.*gzip.*" ]
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_not_matching_headers" class="accordion">match request by not matching headers</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+            .withHeaders(
+                // matches requests that do not have either an Accept or an Accept-Encoding header
+                header(not("Accept")),
+                header(not("Accept-Encoding"))
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path",
+        "headers": {
+            // matches requests that do not have either an Accept or an Accept-Encoding header
+            "!Accept": [".*"],
+            "!Accept-Encoding": [".*"]
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "path" : "/some/path",
+    "headers" : {
+      "!Accept" : [ ".*" ],
+      "!Accept-Encoding" : [ ".*" ]
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_cookies_and_query_parameters" class="accordion">match request by cookies and query parameters</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("GET")
+            .withPath("/view/cart")
+            .withCookies(
+                cookie("session", "4930456C-C718-476F-971F-CB8E047AB349")
+            )
+            .withQueryStringParameters(
+                param("cartId", "055CA455-1DF7-45BB-8535-4F83E7266092")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "method": "GET",
+        "path": "/view/cart",
+        "queryStringParameters": {
+            "cartId": ["055CA455-1DF7-45BB-8535-4F83E7266092"]
+        },
+        "cookies": {
+            "session": "4930456C-C718-476F-971F-CB8E047AB349"
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "method" : "GET",
+    "path" : "/view/cart",
+    "queryStringParameters" : {
+      "cartId" : [ "055CA455-1DF7-45BB-8535-4F83E7266092" ]
+    },
+    "cookies" : {
+      "session" : "4930456C-C718-476F-971F-CB8E047AB349"
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_regex_body" class="accordion">match request by regex body</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody("starts_with_.*")
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "body": "starts_with_.*"
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "body" : "starts_with_.*"
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_body_in_utf16" class="accordion">match request by body in utf16</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody("我说中国话", Charsets.UTF_16)
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "body": {
+            "type": "STRING",
+            "string": "我说中国话",
+            "contentType": "text/plain; charset=utf-16"
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "body" : {
+      "type" : "STRING",
+      "string" : "我说中国话",
+      "contentType" : "text/plain; charset=utf-16"
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_form_submission_body" class="accordion">match request by form submission body</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("POST")
+            .withHeaders(
+                header("Content-Type", "application/x-www-form-urlencoded")
+            )
+            .withBody(
+                params(
+                    param("email", "joe.blogs@gmail.com"),
+                    param("password", "secure_Password123")
+                )
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "method": "POST",
+        "headers": {
+            "Content-Type": ["application/x-www-form-urlencoded"]
+        },
+        "body": {
+            "type": "PARAMETERS",
+            "parameters": {
+                "email": ["joe.blogs@gmail.com"],
+                "password": ["secure_Password123"]
+            }
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "method" : "POST",
+    "headers" : {
+      "Content-Type" : [ "application/x-www-form-urlencoded" ]
+    },
+    "body" : {
+      "type" : "PARAMETERS",
+      "parameters" : {
+        "email" : [ "joe.blogs@gmail.com" ],
+        "password" : [ "secure_Password123" ]
+      }
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_body_with_xpath" class="accordion">match request by body with xpath</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            // matches any request with an XML body containing
+            // an element that matches the XPath expression
+            .withBody(
+                xpath("/bookstore/book[price>30]/price")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );
+
+// matches a request with the following body:
+/*
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;ISO-8859-1&quot;?&gt;
+&lt;bookstore&gt;
+  &lt;book category=&quot;COOKING&quot;&gt;
+    &lt;title lang=&quot;en&quot;&gt;Everyday Italian&lt;/title&gt;
+    &lt;author&gt;Giada De Laurentiis&lt;/author&gt;
+    &lt;year&gt;2005&lt;/year&gt;
+    &lt;price&gt;30.00&lt;/price&gt;
+  &lt;/book&gt;
+  &lt;book category=&quot;CHILDREN&quot;&gt;
+    &lt;title lang=&quot;en&quot;&gt;Harry Potter&lt;/title&gt;
+    &lt;author&gt;J K. Rowling&lt;/author&gt;
+    &lt;year&gt;2005&lt;/year&gt;
+    &lt;price&gt;29.99&lt;/price&gt;
+  &lt;/book&gt;
+  &lt;book category=&quot;WEB&quot;&gt;
+    &lt;title lang=&quot;en&quot;&gt;Learning XML&lt;/title&gt;
+    &lt;author&gt;Erik T. Ray&lt;/author&gt;
+    &lt;year&gt;2003&lt;/year&gt;
+    &lt;price&gt;31.95&lt;/price&gt;
+  &lt;/book&gt;
+&lt;/bookstore&gt;
+ */</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "body": {
+            // matches any request with an XML body containing
+            // an element that matches the XPath expression
+            "type": "XPATH",
+            "xpath": "/bookstore/book[price>30]/price"
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});
+
+// matches a request with the following body:
+/*
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;ISO-8859-1&quot;?&gt;
+&lt;bookstore&gt;
+  &lt;book category=&quot;COOKING&quot;&gt;
+    &lt;title lang=&quot;en&quot;&gt;Everyday Italian&lt;/title&gt;
+    &lt;author&gt;Giada De Laurentiis&lt;/author&gt;
+    &lt;year&gt;2005&lt;/year&gt;
+    &lt;price&gt;30.00&lt;/price&gt;
+  &lt;/book&gt;
+  &lt;book category=&quot;CHILDREN&quot;&gt;
+    &lt;title lang=&quot;en&quot;&gt;Harry Potter&lt;/title&gt;
+    &lt;author&gt;J K. Rowling&lt;/author&gt;
+    &lt;year&gt;2005&lt;/year&gt;
+    &lt;price&gt;29.99&lt;/price&gt;
+  &lt;/book&gt;
+  &lt;book category=&quot;WEB&quot;&gt;
+    &lt;title lang=&quot;en&quot;&gt;Learning XML&lt;/title&gt;
+    &lt;author&gt;Erik T. Ray&lt;/author&gt;
+    &lt;year&gt;2003&lt;/year&gt;
+    &lt;price&gt;31.95&lt;/price&gt;
+  &lt;/book&gt;
+&lt;/bookstore&gt;
+ */</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "body" : {
+      "type" : "XPATH",
+      "xpath" : "/bookstore/book[price>30]/price"
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_not_matching_body_with_xpath" class="accordion">match request by not matching body with xpath</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(
+                // matches any request with an XML body that does NOT
+                // contain an element that matches the XPath expression
+                not(xpath("/bookstore/book[price>30]/price"))
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "body": {
+            // matches any request with an XML body that does NOT
+            // contain an element that matches the XPath expression
+            "not": true,
+            "type": "XPATH",
+            "xpath": "/bookstore/book[price>30]/price"
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "body" : {
+      "not" : true,
+      "type" : "XPATH",
+      "xpath" : "/bookstore/book[price>30]/price"
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_body_with_xml" class="accordion">match request by body with xml</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(
+                xml(&quot;&lt;bookstore&gt;&quot; + System.lineSeparator() +
+                    &quot;   &lt;book nationality=\&quot;ITALIAN\&quot; category=\&quot;COOKING\&quot;&gt;&quot; + System.lineSeparator() +
+                    &quot;       &lt;title lang=\&quot;en\&quot;&gt;Everyday Italian&lt;/title&gt;&quot; + System.lineSeparator() +
+                    &quot;       &lt;author&gt;Giada De Laurentiis&lt;/author&gt;&quot; + System.lineSeparator() +
+                    &quot;       &lt;year&gt;2005&lt;/year&gt;&quot; + System.lineSeparator() +
+                    &quot;       &lt;price&gt;30.00&lt;/price&gt;&quot; + System.lineSeparator() +
+                    &quot;   &lt;/book&gt;&quot; + System.lineSeparator() +
+                    &quot;&lt;/bookstore&gt;&quot;)
+            )
+    )
+    .respond(
+        response()
+            .withBody(&quot;some_response_body&quot;)
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient(&quot;localhost&quot;, 1080).mockAnyResponse({
+    &quot;httpRequest&quot;: {
+        &quot;body&quot;: {
+            &quot;type&quot;: &quot;XML&quot;,
+            &quot;xml&quot;:  &quot;&lt;bookstore&gt;\n&quot; +
+                    &quot;   &lt;book nationality=\&quot;ITALIAN\&quot; category=\&quot;COOKING\&quot;&gt;\n&quot; +
+                    &quot;       &lt;title lang=\&quot;en\&quot;&gt;Everyday Italian&lt;/title&gt;\n&quot; +
+                    &quot;       &lt;author&gt;Giada De Laurentiis&lt;/author&gt;\n&quot; +
+                    &quot;       &lt;year&gt;2005&lt;/year&gt;\n&quot; +
+                    &quot;       &lt;price&gt;30.00&lt;/price&gt;\n&quot; +
+                    &quot;   &lt;/book&gt;\n&quot; +
+                    &quot;&lt;/bookstore&gt;&quot;
+        }
+    },
+    &quot;httpResponse&quot;: {
+        &quot;body&quot;: &quot;some_response_body&quot;
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  &quot;httpRequest&quot; : {
+    &quot;body&quot; : {
+      &quot;type&quot; : &quot;XML&quot;,
+      &quot;xml&quot; : &quot;&lt;bookstore&gt; &lt;book nationality=\&quot;ITALIAN\&quot; category=\&quot;COOKING\&quot;&gt;&lt;title lang=\&quot;en\&quot;&gt;Everyday Italian&lt;/title&gt;&lt;author&gt;Giada De Laurentiis&lt;/author&gt;&lt;year&gt;2005&lt;/year&gt;&lt;price&gt;30.00&lt;/price&gt;&lt;/book&gt; &lt;/bookstore&gt;&quot;
+    }
+  },
+  &quot;httpResponse&quot; : {
+    &quot;body&quot; : &quot;some_response_body&quot;
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_body_with_xml_schema" class="accordion">match request by body with xml schema</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(
+                xmlSchema(&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;&quot; + System.lineSeparator() +
+                    &quot;&lt;xs:schema xmlns:xs=\&quot;http://www.w3.org/2001/XMLSchema\&quot; elementFormDefault=\&quot;qualified\&quot; attributeFormDefault=\&quot;unqualified\&quot;&gt;&quot; + System.lineSeparator() +
+                    &quot;    &lt;!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) --&gt;&quot; + System.lineSeparator() +
+                    &quot;    &lt;!-- with XmlGrid.net Free Online Service http://xmlgrid.net --&gt;&quot; + System.lineSeparator() +
+                    &quot;    &lt;xs:element name=\&quot;notes\&quot;&gt;&quot; + System.lineSeparator() +
+                    &quot;        &lt;xs:complexType&gt;&quot; + System.lineSeparator() +
+                    &quot;            &lt;xs:sequence&gt;&quot; + System.lineSeparator() +
+                    &quot;                &lt;xs:element name=\&quot;note\&quot; maxOccurs=\&quot;unbounded\&quot;&gt;&quot; + System.lineSeparator() +
+                    &quot;                    &lt;xs:complexType&gt;&quot; + System.lineSeparator() +
+                    &quot;                        &lt;xs:sequence&gt;&quot; + System.lineSeparator() +
+                    &quot;                            &lt;xs:element name=\&quot;to\&quot; minOccurs=\&quot;1\&quot; maxOccurs=\&quot;1\&quot; type=\&quot;xs:string\&quot;&gt;&lt;/xs:element&gt;&quot; + System.lineSeparator() +
+                    &quot;                            &lt;xs:element name=\&quot;from\&quot; minOccurs=\&quot;1\&quot; maxOccurs=\&quot;1\&quot; type=\&quot;xs:string\&quot;&gt;&lt;/xs:element&gt;&quot; + System.lineSeparator() +
+                    &quot;                            &lt;xs:element name=\&quot;heading\&quot; minOccurs=\&quot;1\&quot; maxOccurs=\&quot;1\&quot; type=\&quot;xs:string\&quot;&gt;&lt;/xs:element&gt;&quot; + System.lineSeparator() +
+                    &quot;                            &lt;xs:element name=\&quot;body\&quot; minOccurs=\&quot;1\&quot; maxOccurs=\&quot;1\&quot; type=\&quot;xs:string\&quot;&gt;&lt;/xs:element&gt;&quot; + System.lineSeparator() +
+                    &quot;                        &lt;/xs:sequence&gt;&quot; + System.lineSeparator() +
+                    &quot;                    &lt;/xs:complexType&gt;&quot; + System.lineSeparator() +
+                    &quot;                &lt;/xs:element&gt;&quot; + System.lineSeparator() +
+                    &quot;            &lt;/xs:sequence&gt;&quot; + System.lineSeparator() +
+                    &quot;        &lt;/xs:complexType&gt;&quot; + System.lineSeparator() +
+                    &quot;    &lt;/xs:element&gt;&quot; + System.lineSeparator() +
+                    &quot;&lt;/xs:schema&gt;&quot;)
+            )
+    )
+    .respond(
+        response()
+            .withBody(&quot;some_response_body&quot;)
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient(&quot;localhost&quot;, 1080).mockAnyResponse({
+    &quot;httpRequest&quot;: {
+        &quot;body&quot;: {
+            &quot;type&quot;: &quot;XML_SCHEMA&quot;,
+            &quot;xmlSchema&quot;: &quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;\n&lt;xs:schema xmlns:xs=\&quot;http://www.w3.org/2001/XMLSchema\&quot; elementFormDefault=\&quot;qualified\&quot; attributeFormDefault=\&quot;unqualified\&quot;&gt;\n&quot; +
+            &quot;    &lt;!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) --&gt;\n&quot; +
+            &quot;    &lt;!-- with XmlGrid.net Free Online Service http://xmlgrid.net --&gt;\n&quot; +
+            &quot;    &lt;xs:element name=\&quot;notes\&quot;&gt;\n&quot; +
+            &quot;        &lt;xs:complexType&gt;\n&quot; +
+            &quot;            &lt;xs:sequence&gt;\n&quot; +
+            &quot;                &lt;xs:element name=\&quot;note\&quot; maxOccurs=\&quot;unbounded\&quot;&gt;\n&quot; +
+            &quot;                    &lt;xs:complexType&gt;\n&quot; +
+            &quot;                        &lt;xs:sequence&gt;\n&quot; +
+            &quot;                            &lt;xs:element name=\&quot;to\&quot; minOccurs=\&quot;1\&quot; maxOccurs=\&quot;1\&quot; type=\&quot;xs:string\&quot;&gt;&lt;/xs:element&gt;\n&quot; +
+            &quot;                            &lt;xs:element name=\&quot;from\&quot; minOccurs=\&quot;1\&quot; maxOccurs=\&quot;1\&quot; type=\&quot;xs:string\&quot;&gt;&lt;/xs:element&gt;\n&quot; +
+            &quot;                            &lt;xs:element name=\&quot;heading\&quot; minOccurs=\&quot;1\&quot; maxOccurs=\&quot;1\&quot; type=\&quot;xs:string\&quot;&gt;&lt;/xs:element&gt;\n&quot; +
+            &quot;                            &lt;xs:element name=\&quot;body\&quot; minOccurs=\&quot;1\&quot; maxOccurs=\&quot;1\&quot; type=\&quot;xs:string\&quot;&gt;&lt;/xs:element&gt;\n&quot; +
+            &quot;                        &lt;/xs:sequence&gt;\n&quot; +
+            &quot;                    &lt;/xs:complexType&gt;\n&quot; +
+            &quot;                &lt;/xs:element&gt;\n&quot; +
+            &quot;            &lt;/xs:sequence&gt;\n&quot; +
+            &quot;        &lt;/xs:complexType&gt;\n&quot; +
+            &quot;    &lt;/xs:element&gt;\n&lt;/xs:schema&gt;&quot;
+        }
+    },
+    &quot;httpResponse&quot;: {
+        &quot;body&quot;: &quot;some_response_body&quot;
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  &quot;httpRequest&quot; : {
+    &quot;body&quot; : {
+      &quot;type&quot; : &quot;XML_SCHEMA&quot;,
+      &quot;xmlSchema&quot; : &quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt; &lt;xs:schema xmlns:xs=\&quot;http://www.w3.org/2001/XMLSchema\&quot; elementFormDefault=\&quot;qualified\&quot; attributeFormDefault=\&quot;unqualified\&quot;&gt; &lt;xs:element name=\&quot;notes\&quot;&gt; &lt;xs:complexType&gt; &lt;xs:sequence&gt; &lt;xs:element name=\&quot;note\&quot; maxOccurs=\&quot;unbounded\&quot;&gt; &lt;xs:complexType&gt; &lt;xs:sequence&gt; &lt;xs:element name=\&quot;to\&quot; minOccurs=\&quot;1\&quot; maxOccurs=\&quot;1\&quot; type=\&quot;xs:string\&quot;&gt;&lt;/xs:element&gt; &lt;xs:element name=\&quot;from\&quot; minOccurs=\&quot;1\&quot; maxOccurs=\&quot;1\&quot; type=\&quot;xs:string\&quot;&gt;&lt;/xs:element&gt; &lt;xs:element name=\&quot;heading\&quot; minOccurs=\&quot;1\&quot; maxOccurs=\&quot;1\&quot; type=\&quot;xs:string\&quot;&gt;&lt;/xs:element&gt; &lt;xs:element name=\&quot;body\&quot; minOccurs=\&quot;1\&quot; maxOccurs=\&quot;1\&quot; type=\&quot;xs:string\&quot;&gt;&lt;/xs:element&gt; &lt;/xs:sequence&gt; &lt;/xs:complexType&gt; &lt;/xs:element&gt; &lt;/xs:sequence&gt; &lt;/xs:complexType&gt; &lt;/xs:element&gt; &lt;/xs:schema&gt;&quot;
+    }
+  },
+  &quot;httpResponse&quot; : {
+    &quot;body&quot; : &quot;some_response_body&quot;
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_body_with_xml_schema_by_classpath" class="accordion">match request by body with xml schema by classpath</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(
+                xmlSchemaFromResource("org/mockserver/examples/mockserver/testXmlSchema.xsd")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_body_with_json_exactly" class="accordion">match request by body with json exactly</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(
+                json("{" + System.lineSeparator() +
+                        "    \"id\": 1," + System.lineSeparator() +
+                        "    \"name\": \"A green door\"," + System.lineSeparator() +
+                        "    \"price\": 12.50," + System.lineSeparator() +
+                        "    \"tags\": [\"home\", \"green\"]" + System.lineSeparator() +
+                        "}",
+                    MatchType.STRICT
+                )
+            )
+    )
+    .respond(
+        response()
+            .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "body": {
+            "type": "JSON",
+            "json": JSON.stringify({
+                "id": 1,
+                "name": "A green door",
+                "price": 12.50,
+                "tags": ["home", "green"]
+            }),
+            "matchType": "STRICT"
+        }
+    },
+    "httpResponse": {
+        "statusCode": 202,
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "body" : {
+      "type" : "JSON",
+      "json" : "{ \"id\": 1, \"name\": \"A green door\", \"price\": 12.50, \"tags\": [\"home\", \"green\"] }",
+      "matchType" : "STRICT"
+    }
+  },
+  "httpResponse" : {
+    "statusCode" : 202,
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_body_with_json_ignoring_extra_fields" class="accordion">match request by body with json ignoring extra fields</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(
+                json("{" + System.lineSeparator() +
+                        "    \"id\": 1," + System.lineSeparator() +
+                        "    \"name\": \"A green door\"," + System.lineSeparator() +
+                        "    \"price\": 12.50," + System.lineSeparator() +
+                        "    \"tags\": [\"home\", \"green\"]" + System.lineSeparator() +
+                        "}",
+                    MatchType.ONLY_MATCHING_FIELDS
+                )
+            )
+    )
+    .respond(
+        response()
+            .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "body": {
+            "type": "JSON",
+            "json": JSON.stringify({
+                "id": 1,
+                "name": "A green door",
+                "price": 12.50,
+                "tags": ["home", "green"]
+            })
+        }
+    },
+    "httpResponse": {
+        "statusCode": 202,
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "body" : {
+      "type" : "JSON",
+      "json" : "{ \"id\": 1, \"name\": \"A green door\", \"price\": 12.50, \"tags\": [\"home\", \"green\"] }"
+    }
+  },
+  "httpResponse" : {
+    "statusCode" : 202,
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_body_with_json_schema" class="accordion">match request by body with json schema</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(
+                jsonSchema("{" + System.lineSeparator() +
+                    "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.lineSeparator() +
+                    "    \"title\": \"Product\"," + System.lineSeparator() +
+                    "    \"description\": \"A product from Acme's catalog\"," + System.lineSeparator() +
+                    "    \"type\": \"object\"," + System.lineSeparator() +
+                    "    \"properties\": {" + System.lineSeparator() +
+                    "        \"id\": {" + System.lineSeparator() +
+                    "            \"description\": \"The unique identifier for a product\"," + System.lineSeparator() +
+                    "            \"type\": \"integer\"" + System.lineSeparator() +
+                    "        }," + System.lineSeparator() +
+                    "        \"name\": {" + System.lineSeparator() +
+                    "            \"description\": \"Name of the product\"," + System.lineSeparator() +
+                    "            \"type\": \"string\"" + System.lineSeparator() +
+                    "        }," + System.lineSeparator() +
+                    "        \"price\": {" + System.lineSeparator() +
+                    "            \"type\": \"number\"," + System.lineSeparator() +
+                    "            \"minimum\": 0," + System.lineSeparator() +
+                    "            \"exclusiveMinimum\": true" + System.lineSeparator() +
+                    "        }," + System.lineSeparator() +
+                    "        \"tags\": {" + System.lineSeparator() +
+                    "            \"type\": \"array\"," + System.lineSeparator() +
+                    "            \"items\": {" + System.lineSeparator() +
+                    "                \"type\": \"string\"" + System.lineSeparator() +
+                    "            }," + System.lineSeparator() +
+                    "            \"minItems\": 1," + System.lineSeparator() +
+                    "            \"uniqueItems\": true" + System.lineSeparator() +
+                    "        }" + System.lineSeparator() +
+                    "    }," + System.lineSeparator() +
+                    "    \"required\": [\"id\", \"name\", \"price\"]" + System.lineSeparator() +
+                    "}"))
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "body": {
+            "type": "JSON_SCHEMA",
+            "jsonSchema": JSON.stringify({
+                "$schema": "http://json-schema.org/draft-04/schema#",
+                "title": "Product",
+                "description": "A product from Acme's catalog",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "description": "The unique identifier for a product",
+                        "type": "integer"
+                    },
+                    "name": {
+                        "description": "Name of the product",
+                        "type": "string"
+                    },
+                    "price": {
+                        "type": "number",
+                        "minimum": 0,
+                        "exclusiveMinimum": true
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    }
+                },
+                "required": ["id", "name", "price"]
+            })
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "body" : {
+      "type" : "JSON_SCHEMA",
+      "jsonSchema" : "{\"$schema\": \"http://json-schema.org/draft-04/schema#\", \"title\": \"Product\", \"description\": \"A product from Acme's catalog\", \"type\": \"object\", \"properties\": { \"id\": { \"description\": \"The unique identifier for a product\", \"type\": \"integer\" }, \"name\": { \"description\": \"Name of the product\", \"type\": \"string\"}, \"price\": { \"type\": \"number\", \"minimum\": 0, \"exclusiveMinimum\": true }, \"tags\": { \"type\": \"array\", \"items\": { \"type\": \"string\" }, \"minItems\": 1, \"uniqueItems\": true } }, \"required\": [\"id\", \"name\", \"price\"] }"
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>

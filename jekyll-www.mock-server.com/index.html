@@ -23,12 +23,37 @@ layout: default
 
 <p>MockServer can be used for mocking any system you integrate with via HTTP or HTTPS (i.e. services, web sites, etc).</p>
 
-<p>MockServer can:</p>
+<p>When MockServer receives a requests it matches the request against active <strong>expectations</strong> that have been configured.</p>
+
+<p>An <strong>expectations</strong> defines the <strong>action</strong> that is taken, for example, a response could be returned.</p>
+
+<p>MockServer supports the follow <strong>actions</strong>:</p>
 <ul>
-	<li><strong>return a "mock" <a href="/mock_server/creating_expectations.html#mock_response">response</a></strong> when a request matches an <a href="/mock_server/creating_expectations.html">expectation</a></li>
-	<li><strong><a href="/mock_server/creating_expectations.html#mock_forward">forward</a> a request</strong> when the request matches an <a href="/mock_server/creating_expectations.html">expectation</a> (i.e. a dynamic port forwarding proxy)</li>
-	<li><strong>execute a <a href="/mock_server/creating_expectations.html#callback">callback</a></strong> when a request matches an <a href="/mock_server/creating_expectations.html">expectation</a>, allowing the response to be created dynamically</li>
-	<li><strong><a href="/mock_server/verification.html">verify</a> requests</strong> have been sent (i.e. as a test assertion)</li>
+	<li>
+        <strong>return a "mock" <a href="/mock_server/creating_expectations.html#mock_response">response</a></strong> when a request matches an <a href="/mock_server/creating_expectations.html">expectation</a>
+        <p><a href="images/expectation_response_action.png" target="_blank"><img class="action_image" src="images/expectation_response_action.png" alt="Response Action Expectation"></a></p>
+    </li>
+	<li>
+        <strong><a href="/mock_server/creating_expectations.html#mock_forward">forward</a> a request</strong> when the request matches an <a href="/mock_server/creating_expectations.html">expectation</a> (i.e. a dynamic port forwarding proxy)
+        <p><a href="images/expectation_forward_action.png" target="_blank"><img class="action_image" src="images/expectation_forward_action.png" alt="Forward Action Expectation"></a></p>
+    </li>
+	<li>
+        <strong>execute a <a href="/mock_server/creating_expectations.html#callback">callback</a></strong> when a request matches an <a href="/mock_server/creating_expectations.html">expectation</a>, allowing the response to be created dynamically
+        <p><a href="images/expectation_callback_action.png" target="_blank"><img class="action_image" src="images/expectation_callback_action.png" alt="Callback Action Expectation"></a></p>
+    </li>
+
+    <li>
+        <strong>return an <a href="/mock_server/creating_expectations.html#mock_error">invalid response</a></strong> or close the connection when a request matches an <a href="/mock_server/creating_expectations.html">expectation</a>
+        <p><a href="images/expectation_error_action.png" target="_blank"><img class="action_image" src="images/expectation_error_action.png" alt="Error Action Expectation"></a></p>
+    </li>
+	<li>
+        <strong><a href="/mock_server/verification.html">verify</a> requests</strong> have been sent (i.e. as a test assertion)
+        <p><a href="images/verification.png" target="_blank"><img class="action_image" src="images/verification.png" alt="Verification"></a></p>
+    </li>
+    <li>
+        <strong><a href="/mock_server/verification.html">retrieve</a> logs</strong>, <strong>requests</strong> or <strong>expectations</strong> to help debug
+        <p><a href="images/retrieve_logs.png" target="_blank"><img class="action_image" src="images/retrieve_logs.png" alt="Retrieve Logs"></a></p>
+    </li>
 </ul>
 
 <h2>What is MockServer Proxy</h2>

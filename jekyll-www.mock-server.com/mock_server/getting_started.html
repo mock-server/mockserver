@@ -31,260 +31,178 @@ sitemap:
 
 <h2>1. Setup Expectations</h2>
 
-<p>To mock an HTTP / HTTPS interaction an expectation is setup specifying how a request should be matched and what action MockServer should take when the request has been matched.</p>
+<button class="accordion"><strong>Java Code Example</strong></button>
+<div class="panel">
+    <p><em><strong>Please Note:</strong> There are over 100 more detailed <a href="#expectation_code_examples">code examples</a> in Java, JavaScript and the REST API below.</em></p>
 
-<p>When a request is matched there are three actions that can be defined as follows:</p>
+    <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("POST")
+            .withPath("/login")
+            .withBody("{username: 'foo', password: 'bar'}")
+    )
+    .respond(
+        response()
+            .withStatusCode(302)
+            .withCookie(
+                "sessionId", "2By8LOhBmaW5nZXJwcmludCIlMDAzMW"
+            )
+            .withHeader(
+                "Location", "https://www.mock-server.com"
+            )
+    );</code></pre>
+</div>
 
+<button class="accordion"><strong>JavaScript Code Example</strong></button>
+<div class="panel">
+    <p><em><strong>Please Note:</strong> There are over 100 more detailed <a href="#expectation_code_examples">code examples</a> in Java, JavaScript and the REST API below.</em></p>
+
+    <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "method": "POST",
+        "path": "/login",
+        "body": "{username: 'foo', password: 'bar'}"
+    },
+    "httpResponse": {
+        "statusCode": 302,
+        "headers": {
+            "Location" : [ "https://www.mock-server.com" ]
+        },
+        "cookies": {
+            "sessionId" : "2By8LOhBmaW5nZXJwcmludCIlMDAzMW"
+        }
+    }
+});</code></pre>
+</div>
+
+<p>An expectation contains:</p>
 <ul>
-	<li><strong>respond</strong> - return a "mock" response</li>
-	<li><strong>forward</strong> - forward the request</li>
-	<li><strong>callback</strong> - execute a callback</li>
+    <li><strong><a href="#request_matchers">request matcher</a></strong> - used to match which requests this expectation should be applied to</li>
+    <li><strong><a href="#actions">action</a></strong> - what action to take, actions include <strong>response</strong>, <strong>forward</strong>, <strong>callback</strong> and <strong>error</strong></li>
+    <li><strong><a href="#button_match_request_by_path_exactly_twice">times</a></strong> - how many times the action should be taken</li>
+    <li><strong><a href="#button_match_request_by_path_exactly_once_in_the_next_60_seconds">timeToLive</a></strong> - how long the expectation should stay active</li>
 </ul>
 
-<a name="java_example" class="anchor" href="#java_example">&nbsp;</a>
+<a name="request_matchers" class="anchor" href="#request_matchers">&nbsp;</a>
 
-<h3>Java Examples</h3>
+<h3>Request Matchers</h3>
 
-<p>The following <strong>Java</strong> example shows the creation of an simple expectation with a respond action:</p>
+<p>A <strong>request matcher</strong> can contain any of the following matchers:</p>
 
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>)
-        .when(
-                request()
-                        .withMethod(<span class="string_literal">"POST"</span>)
-                        .withPath(<span class="string_literal">"/login"</span>)
-                        .withBody(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>)
-        )
-        .respond(
-                response()
-                        .withStatusCode(<span class="numeric_literal">302</span>)
-                        .withCookie(
-                                <span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>
-                        )
-                        .withHeader(
-                                <span class="string_literal">"Location"</span>, <span class="string_literal">"https://www.mock-server.com"</span>
-                        )
-        );</code></pre>
+<ul>
+    <li><strong>method</strong> - string value as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, regular expression or <a href="#button_match_request_by_not_matching_method">negated matcher</a></li>
+    <li><strong>path</strong> - string value as a <a href="#button_match_request_by_path">plain text</a>, <a href="#button_match_request_by_regex_path">regular expression</a> or <a href="#button_match_request_by_not_matching_path">negated matcher</a></li>
+    <li><strong>query string</strong> - key to multiple values as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, regular expression or negated matcher</li>
+    <li><strong>headers</strong> - key to multiple values as a <a href="#button_match_request_by_headers">plain text</a>, regular expression or <a href="#button_match_request_by_not_matching_header_value">negated matcher</a></li>
+    <li><strong>cookies</strong> - key to value as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, regular expression or negated matcher</li>
+    <li><strong>body</strong>
+        <ul>
+            <li><strong><a href="#button_match_request_by_body_with_xpath">XPath</a></strong></li>
+            <li><strong><a href="#button_match_request_by_body_with_xml">XML</a></strong></li>
+            <li><strong><a href="#button_match_request_by_body_with_xml_schema">XML Schema</a></strong></li>
+            <li><strong><a href="#button_match_request_by_body_with_json_exactly">JSON</a></strong> - supports two match types <strong>STRICT</strong> and <strong>ONLY_MATCHING_FIELDS</strong>.  <strong>STRICT</strong> match type matches all fields and the order of arrays.  In <strong>STRICT</strong> match type extra fields will cause the matcher to fail. <strong>ONLY_MATCHING_FIELDS</strong> match type only matches fields provided in the request matcher.</li>
+            <li><strong><a href="#button_match_request_by_body_with_json_schema">JSON Schema</a></strong></li>
+            <li><strong><a href="#button_match_request_by_regex_body">regular expression</a></strong></li>
+            <li><strong><a href="#button_match_request_by_body_in_utf16">plain text</a></strong> (i.e. exact match)</li>
+            <li><strong><a href="#button_match_request_by_form_submission_body">form fields</a></strong> (i.e. body parameters)</li>
+            <li><strong><a href="#button_match_request_by_not_matching_body_with_xpath">negated matcher</a></strong></li>
+        </ul>
+    <li><strong>secure</strong> - true if the request was made using HTTPS</li>
+</ul>
 
-<p>The following <strong>Java</strong> example shows the creation of a more complex expectation with a respond action:</p>
-
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>)
-        .when(
-                request()
-                        .withMethod(<span class="string_literal">"POST"</span>)
-                        .withPath(<span class="string_literal">"/login"</span>)
-                        .withQueryStringParameters(
-                                <span class="keyword">new</span> Parameter(<span class="string_literal">"returnUrl"</span>, <span class="string_literal">"/account"</span>),
-                                <span class="keyword">new</span> Parameter(<span class="string_literal">"_timestamp"</span>, <span class="string_literal">"1430199066291"</span>)
-                        )
-                        .withCookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
-                        .withBody(json(<span class="string_literal">"{username: 'foo', password: 'bar'}"</span>, MatchType.<span class="constant">STRICT</span>)),
-                Times.exactly(<span class="numeric_literal">1</span>),
-                TimeToLive.exactly(TimeUnit.<span class="constant">MINUTES</span>, <span class="numeric_literal">5l</span>)
-        )
-        .respond(
-                response()
-                        .withStatusCode(<span class="numeric_literal">401</span>)
-                        .withHeaders(
-                                <span class="keyword">new</span> Header(<span class="string_literal">"Content-Type"</span>, <span class="string_literal">"application/json; charset=utf-8"</span>),
-                                <span class="keyword">new</span> Header(<span class="string_literal">"Cache-Control"</span>, <span class="string_literal">"public, max-age=86400"</span>)
-                        )
-                        .withBody(<span class="string_literal">"{ message: 'incorrect username and password combination' }"</span>)
-                        .withDelay(<span class="keyword">new</span> Delay(TimeUnit.<span class="constant">SECONDS</span>, <span class="numeric_literal">1</span>))
-        );</code></pre>
-
-<a name="javascript_example" class="anchor" href="#javascript_example">&nbsp;</a>
-
-<h3>JavaScript Examples</h3>
-
-<p>The following <strong>JavaScript</strong> example shows the creation of an simple expectation with a respond action:</p>
-
-<pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).mockAnyResponse({
-    <span class="string_literal">"httpRequest"</span>: {
-        <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
-        <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
-        <span class="string_literal">"body"</span>: "{username: <span class="string_literal">'foo'</span>, password: <span class="string_literal">'bar'</span>}"
-    },
-    <span class="string_literal">"httpResponse"</span>: {
-        <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">302</span>,
-        <span class="string_literal">"headers"</span>: [
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Location"</span>,
-                <span class="string_literal">"values"</span>: <span class="string_literal">"https://www.mock-server.com"</span>
-            }
-        ],
-        <span class="string_literal">"cookies"</span>: [
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
-                <span class="string_literal">"value"</span>: <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>
-            }
-        ]
-    }
-});
-</code></pre>
-
-<p>The following <strong>JavaScript</strong> example shows the creation of a more complex expectation with a respond action:</p>
-
-<pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).mockAnyResponse({
-    <span class="string_literal">"httpRequest"</span>: {
-        <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
-        <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
-        <span class="string_literal">"queryStringParameters"</span>: [
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"returnUrl"</span>,
-                <span class="string_literal">"values"</span>: [<span class="string_literal">"/account"</span>]
-            },
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"_timestamp"</span>,
-                <span class="string_literal">"values"</span>: [<span class="string_literal">"1430199066291"</span>]
-            }
-        ],
-        <span class="string_literal">"cookies"</span>: [
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
-                <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
-            }
-        ],
-        <span class="string_literal">"body"</span>: {
-            <span class="string_literal">"type"</span>: <span class="string_literal">"JSON"</span>,
-            <span class="string_literal">"value"</span>: JSON.stringify({ username: <span class="string_literal">"foo"</span>, password: <span class="string_literal">"bar"</span> }),
-            <span class="string_literal">"matchType"</span>: <span class="string_literal">"STRICT"</span>
-        }
-    },
-    <span class="string_literal">"httpResponse"</span>: {
-        <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">401</span>,
-        <span class="string_literal">"headers"</span>: [
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
-                <span class="string_literal">"values"</span>: [<span class="string_literal">"application/json; charset=utf-8"</span>]
-            },
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Cache-Control"</span>,
-                <span class="string_literal">"values"</span>: [<span class="string_literal">"public, max-age=86400"</span>]
-            }
-        ],
-        <span class="string_literal">"body"</span>: JSON.stringify({ message: <span class="string_literal">"incorrect username and password combination"</span> }),
-        <span class="string_literal">"delay"</span>: {
-            <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"SECONDS"</span>,
-            <span class="string_literal">"value"</span>: <span class="numeric_literal">1</span>
-        }
-    },
-    <span class="string_literal">"times"</span>: {
-        <span class="string_literal">"remainingTimes"</span>: <span class="numeric_literal">1</span>,
-        <span class="string_literal">"unlimited"</span>: <span class="keyword">false</span>
-    },
-    <span class="string_literal">"timeToLive"</span>: {
-        <span class="string_literal">"timeUnit"</span>: <span class="string_literal">"MINUTES</span>,
-        <span class="string_literal">"timeToLive"</span>: <span class="numeric_literal">5</span>,
-        <span class="string_literal">"unlimited"</span>: <span class="keyword">false</span>
-    }
-});
-</code></pre>
-
-<h3>Ruby Examples</h3>
-
-<p>The following <strong>Ruby</strong> example shows the creation of an simple expectation with a respond action:</p>
-
-<pre><code class="code">client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
-expectation = expectation <span class="keyword">do</span> |expectation|
-     expectation.request <span class="keyword">do</span> |request|
-        request.method = <span class="string_literal">'POST'</span>
-        request.path = <span class="string_literal">'/login'</span>
-        request.body = exact({ username: <span class="string_literal">'foo'</span>, password: <span class="string_literal">'bar'</span> }.to_json)
-     end
-
-    expectation.response <span class="keyword">do</span> |response|
-        response.status_code = <span class="numeric_literal">302</span>
-        response.headers << header(<span class="string_literal">'Location'</span>, <span class="string_literal">'https://www.mock-server.com'</span>)
-    end
-end
-client.register(expectation)</code></pre>
-
-<p>The following <strong>Ruby</strong> example shows the creation of a more complex expectation with a respond action:</p>
-
-<pre><code class="code">client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
-expectation = expectation <span class="keyword">do</span> |expectation|
-     expectation.request <span class="keyword">do</span> |request|
-        request.method = <span class="string_literal">'POST'</span>
-        request.path = <span class="string_literal">'/login'</span>
-        request.query_string_parameters << parameter(<span class="string_literal">'returnUrl'</span>, <span class="string_literal">'/account'</span>)
-        request.query_string_parameters << parameter(<span class="string_literal">'_timestamp'</span>, <span class="string_literal">'1430199066291'</span>)
-        request.cookies = [cookie(<span class="string_literal">'sessionId'</span>, <span class="string_literal">'2By8LOhBmaW5nZXJwcmludCIlMDAzMW'</span>)]
-        request.body = exact({ username: <span class="string_literal">'foo'</span>, password: <span class="string_literal">'bar'</span> }.to_json)
-     end
-
-    expectation.response <span class="keyword">do</span> |response|
-        response.status_code = <span class="numeric_literal">401</span>
-        response.headers << header(<span class="string_literal">'Content-Type'</span>, <span class="string_literal">'application/json; charset=utf-8'</span>)
-        response.headers << header(<span class="string_literal">'Cache-Control'</span>, <span class="string_literal">'public, max-age=86400'</span>)
-        response.body  = body({ message: <span class="string_literal">'incorrect username and password combination'</span> }.to_json)
-        response.delay = delay_by(<span class="ruby_constant">:SECONDS</span>, <span class="numeric_literal">1</span>)
-    end
-
-    expectation.times = exactly(<span class="numeric_literal">1</span>)
-end
-client.register(expectation)</code></pre>
-
-<h3>Requests can be matched on:</h3>
-
-{% include_subpage _includes/request_matchers_summary.html %}
-
-<p>For more details see the section below on <a href="/mock_server/creating_expectations.html#request_matchers">creating expectations</a>.</p>
+<a name="actions" class="anchor" href="#actions">&nbsp;</a>
 
 <h3>Actions</h3>
 
-<p>When a request is matched there are three actions that can occur as follows:</p>
-
+<p>Actions can be one of the following types:</p>
 <ul>
-	<li><strong>respond</strong> - return a "mock" response</li>
-	<li><strong>forward</strong> - forward the request</li>
-	<li><strong>callback</strong> - execute a callback</li>
+    <li><strong>response</strong> - returns a response</li>
+    <li><strong>forward</strong> - forward the request</li>
+    <li><strong>callback</strong> - execute a callback</li>
+    <li><strong>error</strong> - returns an invalid response</li>
 </ul>
 
-<h4><em>Respond Actions</em></h4>
-
-<p>A response action defines a mock response containing:</p>
+<p>A <strong>response action</strong> can be:</p>
 
 <ul>
-	<li><strong>status code</strong></li>
-	<li><strong>body</strong></li>
-	<li><strong>headers</strong></li>
-	<li><strong>cookies</strong></li>
+    <li>
+        <p>either a <a href="#button_response_literal_body_only">response literal</a> containing any of the following:</p>
+        <ul>
+            <li><strong><a href="#button_response_literal_status_code_only">status code</a></strong></li>
+            <li><strong><a href="#button_response_literal_binary_PNG_body">body</a></strong></li>
+            <li><strong>headers</strong></li>
+            <li><strong>cookies</strong></li>
+            <li><strong><a href="#button_response_literal_with_10_second_delay">delay</a></strong></li>
+        </ul>
+    </li>
+    <li>
+        <p>or a templated response using <strong><a href="#button_javascript_templated_response">javascript</a></strong> or <strong><a href="#button_javascript_velocity_templated_response">velocity</a></strong> with a <strong><a href="#button_javascript_templated_response_with_delay">delay</a></strong></p>
+    </li>
 </ul>
 
-<p>Responses can be further controlled using:</p>
+<p>A <strong>forward action</strong> can be:</p>
 
 <ul>
-	<li>a <strong>delay</strong> before the response is sent</li>
-	<li>the <strong>number of times</strong> the response is sent (including unlimited)</li>
+    <li>
+        <p>either an <a href="#button_forward_exact_request">exact forwarder</a>, that forwards requests exactly as it receives them, containing the following:</p>
+        <ul>
+            <li><strong>host</strong></li>
+            <li><strong>port</strong></li>
+            <li><strong><a href="#button_forward_exact_request_in_https">scheme</a></strong></li>
+        </ul>
+    </li>
+    <li>
+        <p>or a templated forwarder using <strong><a href="#button_javascript_templated_forward">javascript</a></strong> or <strong><a href="#button_javascript_velocity_templated_forward">velocity</a></strong>, with a <strong><a href="#button_javascript_templated_forward_with_delay">delay</a></strong>, that allows requests to be modified or completely re-written before they are forwarded</p>
+    </li>
 </ul>
 
-<p>For more details see the section below on <a href="/mock_server/creating_expectations.html#mock_response">creating expectations</a>.</p>
-
-<h4><em>Forward Actions</em></h4>
-
-<p>A forward action defines how a request should be forwarded and contains:</p>
-
-<ul>
-	<li><strong>host</strong></li>
-	<li><strong>port</strong></li>
-	<li><strong>scheme</strong></li>
-</ul>
-
-<p>Only the host is mandatory as the port is defaulted to 80 and the scheme is defaulted to HTTP.</p>
-
-<p>For more details see the section below on <a href="/mock_server/creating_expectations.html#mock_forward">creating expectations</a>.</p>
-
-<h4><em>Callback Actions</em></h4>
+<p>A <strong>callback action</strong> can be:</p>
 
 <p>A callback action defines a class that will be used to dynamically generate the response and contains:</p>
 
 <ul>
-	<li><strong>callbackClass</strong></li>
+    <li><strong>callbackClass</strong></li>
 </ul>
 
 <p>The class must define a default constructor and implement <strong>org.mockserver.mock.action.ExpectationCallback</strong>.</p>
 
-<p>For more details see the section below on <a href="/mock_server/creating_expectations.html#callback">creating expectations</a>.</p>
+<p><strong>callback</strong> - execute either a static class callback or an method / closure callback</p>
+
+static class callback
+method / closure callback
+
+<p>An error action can be:</p>
+
+<p><strong>error</strong> - return an invalid response with an optional delay</p>
+
+error
+error with delay
+
+<a name="expectation_code_examples" class="anchor" href="#expectation_code_examples">&nbsp;</a>
+
+<h3>Code Examples:</h3>
+
+<p><strong>Request Matchers</strong></p>
+
+{% include_subpage _includes/matcher_code_examples.html %}
+
+<p><strong>Response Actions</strong></p>
+
+{% include_subpage _includes/response_action_code_examples.html %}
+
+<p><strong>Forward Actions</strong></p>
+
+{% include_subpage _includes/forward_action_code_examples.html %}
+
+<p><strong>Callback Actions</strong></p>
+
+{% include_subpage _includes/callback_action_code_examples.html %}
+
+<p><strong>Error Actions</strong></p>
+
+{% include_subpage _includes/error_action_code_examples.html %}
 
 <h2>3. Verify Requests</h2>
 

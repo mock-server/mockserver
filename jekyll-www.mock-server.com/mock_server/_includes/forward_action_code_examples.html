@@ -1,0 +1,324 @@
+forward exact request
+javascript templated forward
+javascript templated forward with delay
+velocity template forward
+
+<p>The following code examples show how to create different forward actions.</p>
+<button id="button_forward_exact_request" class="accordion">forward exact request</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        forward()
+            .withHost("mock-server.com")
+            .withPort(80)
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpForward": {
+        "host": "mock-server.com",
+        "port": 80,
+        "scheme": "HTTP"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpForward": {
+        "host": "mock-server.com",
+        "port": 80,
+        "scheme": "HTTP"
+    }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_forward_exact_request_in_https" class="accordion">forward exact request in HTTPS</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        forward()
+            .withHost("mock-server.com")
+            .withPort(443)
+            .withScheme(HttpForward.Scheme.HTTPS)
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpForward": {
+        "host": "mock-server.com",
+        "port": 443,
+        "scheme": "HTTPS"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpForward": {
+        "host": "mock-server.com",
+        "port": 443,
+        "scheme": "HTTPS"
+    }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_javascript_templated_forward" class="accordion">javascript templated forward</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">String template = "return {" + System.getProperty("line.separator") +
+    "    'path' : \"/somePath\"," + System.getProperty("line.separator") +
+    "    'queryStringParameters' : {" + System.getProperty("line.separator") +
+    // request.queryStringParameters['userId'] returns an array of values for the 'userId' query parameter
+    "        'userId' : request.queryStringParameters && request.queryStringParameters['userId']" + System.getProperty("line.separator") +
+    "    }," + System.getProperty("line.separator") +
+    "    'headers' : {" + System.getProperty("line.separator") +
+    "        'Host' : [ \"localhost:1081\" ]" + System.getProperty("line.separator") +
+    "    }," + System.getProperty("line.separator") +
+    "    'body': JSON.stringify({'name': 'value'})" + System.getProperty("line.separator") +
+    "};";
+
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        template(
+            HttpTemplate.TemplateType.JAVASCRIPT,
+            template
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpForwardTemplate": {
+        "template": "return {\n" +
+        "    'path' : \"/somePath\",\n" +
+        "    'queryStringParameters' : {\n" +
+        "        'userId' : request.queryStringParameters && request.queryStringParameters['userId']\n" +
+        "    },\n" +
+        "    'headers' : {\n" +
+        "        'Host' : [ \"localhost:1081\" ]\n" +
+        "    },\n" +
+        "    'body': JSON.stringify({'name': 'value'})\n" +
+        "};",
+        "templateType": "JAVASCRIPT"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpForwardTemplate": {
+        "template": "return {\n" +
+        "    'path' : \"/somePath\",\n" +
+        "    'queryStringParameters' : {\n" +
+        "        'userId' : request.queryStringParameters && request.queryStringParameters['userId']\n" +
+        "    },\n" +
+        "    'headers' : {\n" +
+        "        'Host' : [ \"localhost:1081\" ]\n" +
+        "    },\n" +
+        "    'body': JSON.stringify({'name': 'value'})\n" +
+        "};",
+        "templateType": "JAVASCRIPT"
+    }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_javascript_templated_forward_with_delay" class="accordion">javascript templated forward with delay</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">String template = "return {" + System.getProperty("line.separator") +
+    "    'path' : \"/somePath\"," + System.getProperty("line.separator") +
+    "    'cookies' : {" + System.getProperty("line.separator") +
+    "        'SessionId' : request.cookies && request.cookies['SessionId']" + System.getProperty("line.separator") +
+    "    }," + System.getProperty("line.separator") +
+    "    'headers' : {" + System.getProperty("line.separator") +
+    "        'Host' : [ \"localhost:1081\" ]" + System.getProperty("line.separator") +
+    "    }," + System.getProperty("line.separator") +
+    "    'keepAlive' : true," + System.getProperty("line.separator") +
+    "    'secure' : true," + System.getProperty("line.separator") +
+    "    'body' : \"some_body\"" + System.getProperty("line.separator") +
+    "};";
+
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        template(HttpTemplate.TemplateType.JAVASCRIPT)
+            .withTemplate(template)
+            .withDelay(TimeUnit.SECONDS, 20)
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpForwardTemplate": {
+        "template": "return {\n" +
+        "    'path' : \"/somePath\",\n" +
+        "    'cookies' : {\n" +
+        "        'SessionId' : request.cookies && request.cookies['SessionId']\n" +
+        "    },\n" +
+        "    'headers' : {\n" +
+        "        'Host' : [ \"localhost:1081\" ]\n" +
+        "    },\n" +
+        "    'keepAlive' : true,\n" +
+        "    'secure' : true,\n" +
+        "    'body' : \"some_body\"\n" +
+        "};",
+        "templateType": "JAVASCRIPT",
+        "delay": {"timeUnit": "SECONDS", "value": 20}
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpForwardTemplate": {
+        "template": "return {\n" +
+        "    'path' : \"/somePath\",\n" +
+        "    'cookies' : {\n" +
+        "        'SessionId' : request.cookies && request.cookies['SessionId']\n" +
+        "    },\n" +
+        "    'headers' : {\n" +
+        "        'Host' : [ \"localhost:1081\" ]\n" +
+        "    },\n" +
+        "    'keepAlive' : true,\n" +
+        "    'secure' : true,\n" +
+        "    'body' : \"some_body\"\n" +
+        "};",
+        "templateType": "JAVASCRIPT",
+        "delay": {"timeUnit": "SECONDS", "value": 20}
+    }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_javascript_velocity_templated_forward" class="accordion">velocity templated forward</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">String template = "{" + System.getProperty("line.separator") +
+    "    'path' : \"/somePath\"," + System.getProperty("line.separator") +
+    "    'queryStringParameters' : {" + System.getProperty("line.separator") +
+    // $!request.queryStringParameters['userId'] returns an array of values for the 'userId' query parameter
+    "        'userId' : [ \"$!request.queryStringParameters['userId'][0]\" ]" + System.getProperty("line.separator") +
+    "    }," + System.getProperty("line.separator") +
+    "    'cookies' : {" + System.getProperty("line.separator") +
+    "        'SessionId' : \"$!request.cookies['SessionId']\"" + System.getProperty("line.separator") +
+    "    }," + System.getProperty("line.separator") +
+    "    'headers' : {" + System.getProperty("line.separator") +
+    "        'Host' : [ \"localhost:1081\" ]" + System.getProperty("line.separator") +
+    "    }," + System.getProperty("line.separator") +
+    "    'body': \"{'name': 'value'}\"" + System.getProperty("line.separator") +
+    "}";
+
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        template(
+            HttpTemplate.TemplateType.VELOCITY,
+            template
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpForwardTemplate": {
+        "template": "{\n" +
+        "    'path' : \"/somePath\",\n" +
+        "    'queryStringParameters' : {\n" +
+        "        'userId' : [ \"$!request.queryStringParameters['userId'][0]\" ]\n" +
+        "    },\n" +
+        "    'cookies' : {\n" +
+        "        'SessionId' : \"$!request.cookies['SessionId']\"\n" +
+        "    },\n" +
+        "    'headers' : {\n" +
+        "        'Host' : [ \"localhost:1081\" ]\n" +
+        "    },\n" +
+        "    'body': \"{'name': 'value'}\"\n" +
+        "}",
+        "templateType": "VELOCITY"
+    }
+});</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpForwardTemplate": {
+        "template": "{\n" +
+        "    'path' : \"/somePath\",\n" +
+        "    'queryStringParameters' : {\n" +
+        "        'userId' : [ \"$!request.queryStringParameters['userId'][0]\" ]\n" +
+        "    },\n" +
+        "    'cookies' : {\n" +
+        "        'SessionId' : \"$!request.cookies['SessionId']\"\n" +
+        "    },\n" +
+        "    'headers' : {\n" +
+        "        'Host' : [ \"localhost:1081\" ]\n" +
+        "    },\n" +
+        "    'body': \"{'name': 'value'}\"\n" +
+        "}",
+        "templateType": "VELOCITY"
+    }
+}'</code></pre>
+    </div>
+</div>

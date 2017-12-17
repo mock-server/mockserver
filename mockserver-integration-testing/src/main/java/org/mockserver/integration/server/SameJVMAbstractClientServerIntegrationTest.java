@@ -26,7 +26,7 @@ import static org.mockserver.model.HttpTemplate.template;
 public abstract class SameJVMAbstractClientServerIntegrationTest extends AbstractClientServerIntegrationTest {
 
     @Test
-    public void shouldCallbackToSpecifiedClassWithResponseOnStaticField() {
+    public void shouldCallbackToObject() {
         // given
         StaticTestExpectationCallback.httpRequests.clear();
         StaticTestExpectationCallback.httpResponse = response()
