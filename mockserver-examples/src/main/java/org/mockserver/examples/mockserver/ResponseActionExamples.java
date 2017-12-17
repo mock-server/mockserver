@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_DISPOSITION;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.mockserver.model.BinaryBody.binary;
+import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -22,19 +23,6 @@ import static org.mockserver.model.HttpTemplate.template;
  * @author jamesdbloom
  */
 public class ResponseActionExamples {
-
-    public static void main(String[] args) throws IOException {
-        new MockServerClient("localhost", 1080).reset();
-        ResponseActionExamples responseActionExamples = new ResponseActionExamples();
-        responseActionExamples.responseLiteralWithBodyOnly();
-        responseActionExamples.responseLiteralWithUTF16BodyResponse();
-        responseActionExamples.responseLiteralWithStatusCodeOnly();
-        responseActionExamples.responseLiteralWithBinaryPNGBody();
-        responseActionExamples.responseLiteralWith10SecondDelay();
-        responseActionExamples.javascriptTemplatedResponse();
-        responseActionExamples.javascriptTemplatedResponseWithDelay();
-        responseActionExamples.velocityTemplatedResponse();
-    }
 
     public void responseLiteralWithBodyOnly() {
         new MockServerClient("localhost", 1080)
@@ -107,6 +95,56 @@ public class ResponseActionExamples {
                     .withDelay(TimeUnit.SECONDS, 10)
             );
     }
+
+public void responseLiteralWithConnectionOptionsToSuppressHeaders() {
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+            .withConnectionOptions(
+                connectionOptions()
+                    .withSuppressConnectionHeader(true)
+                    .withSuppressContentLengthHeader(true)
+            )
+    );
+}
+
+public void responseLiteralWithConnectionOptionsToOverrideHeaders() {
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+            .withConnectionOptions(
+                connectionOptions()
+                    .withKeepAliveOverride(false)
+                    .withContentLengthHeaderOverride(10)
+            )
+    );
+}
+
+public void responseLiteralWithConnectionOptionsToCloseSocket() {
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+            .withConnectionOptions(
+                connectionOptions()
+                    .withCloseSocket(true)
+            )
+    );
+}
 
     public void javascriptTemplatedResponse() {
         new MockServerClient("localhost", 1080)

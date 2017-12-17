@@ -27,7 +27,7 @@ import static org.mockserver.model.XmlSchemaBody.xmlSchemaFromResource;
 /**
  * @author jamesdbloom
  */
-public class BasicMatchingExamples {
+public class RequestMatcherExamples {
 
     public void matchRequestByPath() {
         new MockServerClient("localhost", 1080)
