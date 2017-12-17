@@ -149,30 +149,30 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
         // then - return response
         assertEquals(
-                response()
-                        .withStatusCode(ACCEPTED_202.code())
-                        .withBody("an_object_callback_response"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("object_callback")),
-                        headersToIgnore
-                )
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withBody("an_object_callback_response"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("object_callback")),
+                headersToIgnore
+            )
         );
 
         // then - verify request
         mockServerClient
-                .verify(
-                        request()
-                                .withPath(calculatePath("object_callback")),
-                        VerificationTimes.once()
-                );
+            .verify(
+                request()
+                    .withPath(calculatePath("object_callback")),
+                VerificationTimes.once()
+            );
         // then - verify no request
         mockServerClient
-                .verify(
-                        request()
-                                .withPath(calculatePath("some_other_path")),
-                        VerificationTimes.exactly(0)
-                );
+            .verify(
+                request()
+                    .withPath(calculatePath("some_other_path")),
+                VerificationTimes.exactly(0)
+            );
     }
 
     @Test
@@ -184,48 +184,48 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
         // when
         mockServerClient
-                .when(
-                        request()
-                                .withPath(calculatePath("object_callback"))
-                )
-                .callback(
-                        new ExpectationCallback() {
-                            @Override
-                            public HttpResponse handle(HttpRequest httpRequest) {
-                                return response()
-                                        .withBody(veryLargeString);
-                            }
-                        }
-                );
+            .when(
+                request()
+                    .withPath(calculatePath("object_callback"))
+            )
+            .callback(
+                new ExpectationCallback() {
+                    @Override
+                    public HttpResponse handle(HttpRequest httpRequest) {
+                        return response()
+                            .withBody(veryLargeString);
+                    }
+                }
+            );
 
         // then
         // - in http
         assertEquals(
-                response()
-                        .withStatusCode(OK_200.code())
-                        .withBody(veryLargeString),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("object_callback"))
-                                .withMethod("POST")
-                                .withBody(veryLargeString),
-                        headersToIgnore
-                )
+            response()
+                .withStatusCode(OK_200.code())
+                .withBody(veryLargeString),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("object_callback"))
+                    .withMethod("POST")
+                    .withBody(veryLargeString),
+                headersToIgnore
+            )
         );
 
         // - in https
         assertEquals(
-                response()
-                        .withStatusCode(OK_200.code())
-                        .withBody(veryLargeString),
-                makeRequest(
-                        request()
-                                .withSecure(true)
-                                .withPath(calculatePath("object_callback"))
-                                .withMethod("POST")
-                                .withBody(veryLargeString),
-                        headersToIgnore
-                )
+            response()
+                .withStatusCode(OK_200.code())
+                .withBody(veryLargeString),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("object_callback"))
+                    .withMethod("POST")
+                    .withBody(veryLargeString),
+                headersToIgnore
+            )
         );
     }
 
@@ -235,84 +235,84 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         int firstNewPort = PortFactory.findFreePort();
         int secondNewPort = PortFactory.findFreePort();
         assertEquals(
-                response()
-                        .withStatusCode(OK_200.code())
-                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + NEW_LINE +
-                                "  \"ports\" : [ " + getMockServerPort() + " ]" + NEW_LINE +
-                                "}"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("status"))
-                                .withMethod("PUT"),
-                        headersToIgnore)
+            response()
+                .withStatusCode(OK_200.code())
+                .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                .withBody("{" + NEW_LINE +
+                    "  \"ports\" : [ " + getMockServerPort() + " ]" + NEW_LINE +
+                    "}"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("status"))
+                    .withMethod("PUT"),
+                headersToIgnore)
         );
 
         // then
         // - in http
         assertEquals(
-                response()
-                        .withStatusCode(OK_200.code())
-                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + NEW_LINE +
-                                "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
-                                "}"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("bind"))
-                                .withMethod("PUT")
-                                .withBody("{" + NEW_LINE +
-                                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
-                                        "}"),
-                        headersToIgnore)
+            response()
+                .withStatusCode(OK_200.code())
+                .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                .withBody("{" + NEW_LINE +
+                    "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
+                    "}"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("bind"))
+                    .withMethod("PUT")
+                    .withBody("{" + NEW_LINE +
+                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
+                        "}"),
+                headersToIgnore)
         );
         assertEquals(
-                response()
-                        .withStatusCode(OK_200.code())
-                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + NEW_LINE +
-                                "  \"ports\" : [ " + getMockServerPort() + ", " + firstNewPort + " ]" + NEW_LINE +
-                                "}"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("status"))
-                                .withMethod("PUT"),
-                        headersToIgnore)
+            response()
+                .withStatusCode(OK_200.code())
+                .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                .withBody("{" + NEW_LINE +
+                    "  \"ports\" : [ " + getMockServerPort() + ", " + firstNewPort + " ]" + NEW_LINE +
+                    "}"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("status"))
+                    .withMethod("PUT"),
+                headersToIgnore)
         );
         // - in https
         assertEquals(
-                response()
-                        .withStatusCode(OK_200.code())
-                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + NEW_LINE +
-                                "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
-                                "}"),
-                makeRequest(
-                        request()
-                                .withSecure(true)
-                                .withPath(calculatePath("bind"))
-                                .withMethod("PUT")
-                                .withBody("{" + NEW_LINE +
-                                        "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
-                                        "}"),
-                        headersToIgnore)
+            response()
+                .withStatusCode(OK_200.code())
+                .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                .withBody("{" + NEW_LINE +
+                    "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
+                    "}"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("bind"))
+                    .withMethod("PUT")
+                    .withBody("{" + NEW_LINE +
+                        "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
+                        "}"),
+                headersToIgnore)
         );
         assertEquals(
-                response()
-                        .withStatusCode(OK_200.code())
-                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + NEW_LINE +
-                                "  \"ports\" : [ " + getMockServerSecurePort() + ", " + firstNewPort + ", " + secondNewPort + " ]" + NEW_LINE +
-                                "}"),
-                makeRequest(
-                        request()
-                                .withSecure(true)
-                                .withPath(calculatePath("status"))
-                                .withMethod("PUT")
-                                .withBody("{" + NEW_LINE +
-                                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
-                                        "}"),
-                        headersToIgnore)
+            response()
+                .withStatusCode(OK_200.code())
+                .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                .withBody("{" + NEW_LINE +
+                    "  \"ports\" : [ " + getMockServerSecurePort() + ", " + firstNewPort + ", " + secondNewPort + " ]" + NEW_LINE +
+                    "}"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("status"))
+                    .withMethod("PUT")
+                    .withBody("{" + NEW_LINE +
+                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
+                        "}"),
+                headersToIgnore)
         );
     }
 
@@ -328,18 +328,18 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
             // then
             // - in http
             assertEquals(
-                    response()
-                            .withStatusCode(BAD_REQUEST_400.code())
-                            .withHeader(CONTENT_TYPE.toString(), "text/plain; charset=utf-8")
-                            .withBody("Exception while binding MockServer to port " + newPort + " port already in use"),
-                    makeRequest(
-                            request()
-                                    .withPath(calculatePath("bind"))
-                                    .withMethod("PUT")
-                                    .withBody("{" + NEW_LINE +
-                                            "  \"ports\" : [ " + newPort + " ]" + NEW_LINE +
-                                            "}"),
-                            headersToIgnore)
+                response()
+                    .withStatusCode(BAD_REQUEST_400.code())
+                    .withHeader(CONTENT_TYPE.toString(), "text/plain; charset=utf-8")
+                    .withBody("Exception while binding MockServer to port " + newPort + " port already in use"),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("bind"))
+                        .withMethod("PUT")
+                        .withBody("{" + NEW_LINE +
+                            "  \"ports\" : [ " + newPort + " ]" + NEW_LINE +
+                            "}"),
+                    headersToIgnore)
             );
 
         } finally {
@@ -360,44 +360,44 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
         // when
         mockServerClient
-                .when(
-                        request()
-                )
-                .respond(
-                        response()
-                                .withBody("some_long_body")
-                                .withConnectionOptions(
-                                        connectionOptions()
-                                                .withKeepAliveOverride(false)
-                                                .withContentLengthHeaderOverride("some_long_body".length() / 2)
-                                )
-                );
+            .when(
+                request()
+            )
+            .respond(
+                response()
+                    .withBody("some_long_body")
+                    .withConnectionOptions(
+                        connectionOptions()
+                            .withKeepAliveOverride(false)
+                            .withContentLengthHeaderOverride("some_long_body".length() / 2)
+                    )
+            );
 
         // then
         // - in http
         assertEquals(
-                response()
-                        .withHeader(CONNECTION.toString(), "close")
-                        .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
-                        .withStatusCode(OK_200.code())
-                        .withBody("some_lo"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("")),
-                        headersToIgnore)
+            response()
+                .withHeader(CONNECTION.toString(), "close")
+                .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
+                .withStatusCode(OK_200.code())
+                .withBody("some_lo"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("")),
+                headersToIgnore)
         );
         // - in https
         assertEquals(
-                response()
-                        .withHeader(CONNECTION.toString(), "close")
-                        .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
-                        .withStatusCode(OK_200.code())
-                        .withBody("some_lo"),
-                makeRequest(
-                        request()
-                                .withSecure(true)
-                                .withPath(calculatePath("")),
-                        headersToIgnore)
+            response()
+                .withHeader(CONNECTION.toString(), "close")
+                .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
+                .withStatusCode(OK_200.code())
+                .withBody("some_lo"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("")),
+                headersToIgnore)
         );
     }
 
@@ -410,47 +410,47 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
         // when
         mockServerClient
-                .when(
-                        request()
-                )
-                .respond(
-                        response()
-                                .withBody(binary("some_long_body".getBytes(UTF_8)))
-                                .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
-                                .withConnectionOptions(
-                                        connectionOptions()
-                                                .withKeepAliveOverride(true)
-                                                .withContentLengthHeaderOverride("some_long_body".length() / 2)
-                                )
-                );
+            .when(
+                request()
+            )
+            .respond(
+                response()
+                    .withBody(binary("some_long_body".getBytes(UTF_8)))
+                    .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
+                    .withConnectionOptions(
+                        connectionOptions()
+                            .withKeepAliveOverride(true)
+                            .withContentLengthHeaderOverride("some_long_body".length() / 2)
+                    )
+            );
 
         // then
         // - in http
         assertEquals(
-                response()
-                        .withHeader(CONNECTION.toString(), "keep-alive")
-                        .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
-                        .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
-                        .withStatusCode(OK_200.code())
-                        .withBody(binary("some_lo".getBytes(UTF_8))),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("")),
-                        headersToIgnore)
+            response()
+                .withHeader(CONNECTION.toString(), "keep-alive")
+                .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
+                .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
+                .withStatusCode(OK_200.code())
+                .withBody(binary("some_lo".getBytes(UTF_8))),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("")),
+                headersToIgnore)
         );
         // - in https
         assertEquals(
-                response()
-                        .withHeader(CONNECTION.toString(), "keep-alive")
-                        .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
-                        .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
-                        .withStatusCode(OK_200.code())
-                        .withBody(binary("some_lo".getBytes(UTF_8))),
-                makeRequest(
-                        request()
-                                .withSecure(true)
-                                .withPath(calculatePath("")),
-                        headersToIgnore)
+            response()
+                .withHeader(CONNECTION.toString(), "keep-alive")
+                .withHeader(header(CONTENT_LENGTH.toString(), "some_long_body".length() / 2))
+                .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
+                .withStatusCode(OK_200.code())
+                .withBody(binary("some_lo".getBytes(UTF_8))),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("")),
+                headersToIgnore)
         );
     }
 
@@ -458,19 +458,19 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     public void shouldReturnResponseWithConnectionOptionsAndCloseSocketAndSuppressContentLength() throws Exception {
         // when
         mockServerClient
-                .when(
-                        request()
-                )
-                .respond(
-                        response()
-                                .withBody(binary("some_long_body".getBytes(UTF_8)))
-                                .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
-                                .withConnectionOptions(
-                                        connectionOptions()
-                                                .withCloseSocket(true)
-                                                .withSuppressContentLengthHeader(true)
-                                )
-                );
+            .when(
+                request()
+            )
+            .respond(
+                response()
+                    .withBody(binary("some_long_body".getBytes(UTF_8)))
+                    .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
+                    .withConnectionOptions(
+                        connectionOptions()
+                            .withCloseSocket(true)
+                            .withSuppressContentLengthHeader(true)
+                    )
+            );
 
         // then
         // - in http
@@ -482,17 +482,17 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
             // when
             output.write(("" +
-                    "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                    "Content-Length: 0\r" + NEW_LINE +
-                    "\r\n"
+                "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
+                "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // then
             assertThat(IOStreamUtils.readInputStreamToString(socket), is("" +
-                    "HTTP/1.1 200 OK" + NEW_LINE +
-                    "content-type: audio/*" + NEW_LINE +
-                    "connection: close\n"
+                "HTTP/1.1 200 OK" + NEW_LINE +
+                "content-type: audio/*" + NEW_LINE +
+                "connection: close\n"
             ));
 
             TimeUnit.SECONDS.sleep(3);
@@ -527,17 +527,17 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
             // when
             output.write(("" +
-                    "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                    "Content-Length: 0\r" + NEW_LINE +
-                    "\r\n"
+                "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
+                "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
             // then
             assertThat(IOStreamUtils.readInputStreamToString(sslSocket), is("" +
-                    "HTTP/1.1 200 OK" + NEW_LINE +
-                    "content-type: audio/*" + NEW_LINE +
-                    "connection: close\n"
+                "HTTP/1.1 200 OK" + NEW_LINE +
+                "content-type: audio/*" + NEW_LINE +
+                "connection: close\n"
             ));
         } finally {
             if (sslSocket != null) {
@@ -550,14 +550,14 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     public void shouldReturnErrorResponseForExpectationWithHttpError() throws Exception {
         // when
         mockServerClient
-                .when(
-                        request()
-                )
-                .error(
-                        error()
-                                .withDropConnection(true)
-                                .withResponseBytes("some_random_bytes".getBytes(UTF_8))
-                );
+            .when(
+                request()
+            )
+            .error(
+                error()
+                    .withDropConnection(true)
+                    .withResponseBytes("some_random_bytes".getBytes(UTF_8))
+            );
 
         // then
         // - in http
@@ -569,9 +569,9 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
             // when
             output.write(("" +
-                    "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                    "Content-Length: 0\r" + NEW_LINE +
-                    "\r\n"
+                "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
+                "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
@@ -592,9 +592,9 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
             // when
             output.write(("" +
-                    "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                    "Content-Length: 0\r" + NEW_LINE +
-                    "\r\n"
+                "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
+                "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
@@ -611,14 +611,14 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     public void shouldReturnErrorResponseForExpectationWithHttpErrorAndVerifyRequests() throws Exception {
         // when
         mockServerClient
-                .when(
-                        request(calculatePath("http_error"))
-                )
-                .error(
-                        error()
-                                .withDropConnection(true)
-                                .withResponseBytes("some_random_bytes".getBytes(UTF_8))
-                );
+            .when(
+                request(calculatePath("http_error"))
+            )
+            .error(
+                error()
+                    .withDropConnection(true)
+                    .withResponseBytes("some_random_bytes".getBytes(UTF_8))
+            );
 
         // then
         Socket socket = null;
@@ -629,9 +629,9 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
             // when
             output.write(("" +
-                    "GET " + calculatePath("http_error") + " HTTP/1.1" + NEW_LINE +
-                    "Content-Length: 0\r" + NEW_LINE +
-                    "\r\n"
+                "GET " + calculatePath("http_error") + " HTTP/1.1" + NEW_LINE +
+                "Content-Length: 0\r" + NEW_LINE +
+                "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
@@ -645,18 +645,18 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
         // then - verify request
         mockServerClient
-                .verify(
-                        request()
-                                .withPath(calculatePath("http_error")),
-                        VerificationTimes.once()
-                );
+            .verify(
+                request()
+                    .withPath(calculatePath("http_error")),
+                VerificationTimes.once()
+            );
         // then - verify no request
         mockServerClient
-                .verify(
-                        request()
-                                .withPath(calculatePath("some_other_path")),
-                        VerificationTimes.exactly(0)
-                );
+            .verify(
+                request()
+                    .withPath(calculatePath("some_other_path")),
+                VerificationTimes.exactly(0)
+            );
     }
 
     @Test
@@ -665,63 +665,63 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         // given
         TestClasspathTestExpectationCallback.httpRequests.clear();
         TestClasspathTestExpectationCallback.httpResponse = response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withHeaders(
-                        header("x-callback", "test_callback_header")
-                )
-                .withBody("a_callback_response");
+            .withStatusCode(ACCEPTED_202.code())
+            .withHeaders(
+                header("x-callback", "test_callback_header")
+            )
+            .withBody("a_callback_response");
 
         // when
         mockServerClient
-                .when(
-                        request()
-                                .withPath(calculatePath("callback"))
-                )
-                .callback(
-                        callback()
-                                .withCallbackClass("org.mockserver.server.TestClasspathTestExpectationCallback")
-                );
+            .when(
+                request()
+                    .withPath(calculatePath("callback"))
+            )
+            .callback(
+                callback()
+                    .withCallbackClass("org.mockserver.server.TestClasspathTestExpectationCallback")
+            );
 
         // then
         // - in http
         assertEquals(
-                response()
-                        .withStatusCode(ACCEPTED_202.code())
-                        .withHeaders(
-                                header("x-callback", "test_callback_header")
-                        )
-                        .withBody("a_callback_response"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("callback"))
-                                .withMethod("POST")
-                                .withHeaders(
-                                        header("X-Test", "test_headers_and_body")
-                                )
-                                .withBody("an_example_body_http"),
-                        headersToIgnore)
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withHeaders(
+                    header("x-callback", "test_callback_header")
+                )
+                .withBody("a_callback_response"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("callback"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("X-Test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore)
         );
         assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
         assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
 
         // - in https
         assertEquals(
-                response()
-                        .withStatusCode(ACCEPTED_202.code())
-                        .withHeaders(
-                                header("x-callback", "test_callback_header")
-                        )
-                        .withBody("a_callback_response"),
-                makeRequest(
-                        request()
-                                .withSecure(true)
-                                .withPath(calculatePath("callback"))
-                                .withMethod("POST")
-                                .withHeaders(
-                                        header("X-Test", "test_headers_and_body")
-                                )
-                                .withBody("an_example_body_https"),
-                        headersToIgnore)
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withHeaders(
+                    header("x-callback", "test_callback_header")
+                )
+                .withBody("a_callback_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("callback"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("X-Test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
         );
         assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
         assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
