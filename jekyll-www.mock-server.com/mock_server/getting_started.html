@@ -118,11 +118,13 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 
 <p>Actions can be one of the following types:</p>
 <ul>
-    <li><strong>response</strong> - returns a response</li>
-    <li><strong>forward</strong> - forward the request</li>
-    <li><strong>callback</strong> - execute a callback</li>
-    <li><strong>error</strong> - returns an invalid response</li>
+    <li><strong><a href="#response_action">response</a></strong> - returns a response, either as a response literal, or using a response template (in <a href="#button_javascript_templated_response">javascript</a> or <a href="#button_javascript_velocity_templated_response">velocity</a>)</li>
+    <li><strong><a href="#forward_action">forward</a></strong> - forwards requests, either exactly as it receives them, or using a forward template (in <a href="#button_javascript_templated_forward">javascript</a> or <a href="#button_javascript_velocity_templated_forward">velocity</a>)</li>
+    <li><strong><a href="#callback_action">callback</a></strong> - executes a local static class or remote closure callback to allow the dynamic creation of the response</li>
+    <li><strong><a href="#error_action">error</a></strong> - returns an invalid response as a sequence of bytes or closes the connection</li>
 </ul>
+
+<a name="response_action" class="anchor" href="#response_action">&nbsp;</a>
 
 <p>A <strong>response action</strong> can be:</p>
 
@@ -135,12 +137,15 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             <li><strong>headers</strong></li>
             <li><strong>cookies</strong></li>
             <li><strong><a href="#button_response_literal_with_10_second_delay">delay</a></strong></li>
+            <li><strong><a href="#button_response_literal_with_connection_options_to_suppress_headers">connectionOptions</a></strong> that can be used to <a href="#button_response_literal_with_connection_options_to_suppress_headers">suppress headers</a>, <a href="#button_response_literal_with_connection_options_to_override_headers">override headers</a> or <a href="#button_response_literal_with_connection_options_to_close_socket">close the socket connection</a></li>
         </ul>
     </li>
     <li>
         <p>or a templated response using <strong><a href="#button_javascript_templated_response">javascript</a></strong> or <strong><a href="#button_javascript_velocity_templated_response">velocity</a></strong> with a <strong><a href="#button_javascript_templated_response_with_delay">delay</a></strong></p>
     </li>
 </ul>
+
+<a name="forward_action" class="anchor" href="#forward_action">&nbsp;</a>
 
 <p>A <strong>forward action</strong> can be:</p>
 
@@ -158,6 +163,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </li>
 </ul>
 
+<a name="callback_action" class="anchor" href="#callback_action">&nbsp;</a>
+
 <p>A <strong>callback action</strong> can be:</p>
 
 <p>A callback action defines a class that will be used to dynamically generate the response and contains:</p>
@@ -173,7 +180,9 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 static class callback
 method / closure callback
 
-<p>An error action can be:</p>
+<a name="error_action" class="anchor" href="#error_action">&nbsp;</a>
+
+<p>An <strong>error action</strong> can be:</p>
 
 <p><strong>error</strong> - return an invalid response with an optional delay</p>
 

@@ -1,2 +1,98 @@
-error
-error with delay
+<p>The following code examples show how to create different error actions.</p>
+<button id="button_random_bytes_error" class="accordion">random bytes error</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">// generate random bytes
+byte[] randomByteArray = new byte[25];
+new Random().nextBytes(randomByteArray);
+
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .error(
+        error()
+            .withDropConnection(true)
+            .withResponseBytes(randomByteArray)
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpError": {
+        "dropConnection": true,
+        "responseBytes": "eQqmdjEEoaXnCvcK6lOAIZeU+Pn+womxmg=="
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpError": {
+        "dropConnection": true,
+        "responseBytes": "eQqmdjEEoaXnCvcK6lOAIZeU+Pn+womxmg=="
+    }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_drop_connection_error" class="accordion">drop connection error</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .error(
+        error()
+            .withDropConnection(true)
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest" : {
+        "path" : "/some/path"
+    },
+    "httpError" : {
+        "dropConnection" : true
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest" : {
+        "path" : "/some/path"
+    },
+    "httpError" : {
+        "dropConnection" : true
+    }
+}'</code></pre>
+    </div>
+</div>

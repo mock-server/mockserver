@@ -1,2 +1,155 @@
-static class callback
-method / closure callback
+<p>The following code examples show how to create different callback actions.</p>
+<button id="button_static_class_callback" class="accordion">static class callback</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">public class CallbackActionExamples {
+
+    public void classCallback() {
+        new ClientAndServer(1080)
+            .when(
+                request()
+                    .withPath("/some.*")
+            )
+            .callback(
+                callback()
+                    .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationCallback")
+            );
+    }
+
+    public static class TestExpectationCallback implements ExpectationCallback {
+
+        @Override
+        public HttpResponse handle(HttpRequest httpRequest) {
+            if (httpRequest.getPath().getValue().endsWith("/path")) {
+                return response()
+                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                    .withHeaders(
+                        header("x-callback", "test_callback_header"),
+                        header("Content-Length", "a_callback_response".getBytes(UTF_8).length),
+                        header("Connection", "keep-alive")
+                    )
+                    .withBody("a_callback_response");
+            } else {
+                return notFoundResponse();
+            }
+        }
+    }
+
+}</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some.*"
+    },
+    "httpClassCallback": {
+        "callbackClass": "org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationCallback"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest" : {
+        "path" : "/some.*"
+    },
+    "httpClassCallback" : {
+        "callbackClass" : "org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationCallback"
+    }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_method_or_closure_callback" class="accordion">method / closure callback</button>
+<div class="panel">
+    <button class="accordion inner">Java 7</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .callback(
+        new ExpectationCallback() {
+            @Override
+            public HttpResponse handle(HttpRequest request) {
+                if (request.getMethod().getValue().equals("POST")) {
+                    return response()
+                        .withStatusCode(ACCEPTED_202.code())
+                        .withHeaders(
+                            header("x-object-callback", "test_object_callback_header")
+                        )
+                        .withBody("an_object_callback_response");
+                } else {
+                    return notFoundResponse();
+                }
+            }
+        }
+    );</code></pre>
+    </div>
+    <button class="accordion inner">Java 8+</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .callback(
+        request -> {
+            if (request.getMethod().getValue().equals("POST")) {
+                return response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withHeaders(
+                        header("x-object-callback", "test_object_callback_header")
+                    )
+                    .withBody("an_object_callback_response");
+            } else {
+                return notFoundResponse();
+            }
+        }
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+var callback = function (request) {
+    if (request.method === 'POST') {
+        return {
+            'statusCode': 201,
+            'header': {
+                "x-object-callback": ["test_object_callback_header"]
+            },
+            'body': "an_object_callback_response"
+        };
+    } else {
+        return {
+            'statusCode': 404
+        };
+    }
+};
+mockServerClient("localhost", 1080)
+    .mockWithCallback(
+        {
+            'path': '/some/path'
+        },
+        callback
+    )
+    .then(
+        function () {
+            console.log("expectation created");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+    </div>
+</div>

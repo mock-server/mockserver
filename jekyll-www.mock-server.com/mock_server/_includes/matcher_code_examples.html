@@ -1,5 +1,4 @@
 <p>The following code examples show how to match against different elements of a request using different matchers.</p>
-<p>More complex request matchers can be created by combining the code examples below.</p>
 <button id="button_match_request_by_path" class="accordion">match request by path</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
@@ -24,7 +23,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpResponse": {
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -70,7 +76,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "timeToLive": {
         "unlimited": true
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -126,7 +139,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "timeToLive": 60,
         "unlimited": false
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -175,7 +195,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpResponse": {
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -215,7 +242,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpResponse": {
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -255,7 +289,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpResponse": {
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -303,7 +344,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpResponse": {
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -358,7 +406,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpResponse": {
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -410,7 +465,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpResponse": {
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -466,7 +528,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpResponse": {
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -511,7 +580,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpResponse": {
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -553,7 +629,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpResponse": {
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -614,7 +697,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpResponse": {
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -772,7 +862,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpResponse": {
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -833,7 +930,14 @@ mockServerClient(&quot;localhost&quot;, 1080).mockAnyResponse({
     &quot;httpResponse&quot;: {
         &quot;body&quot;: &quot;some_response_body&quot;
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -917,7 +1021,14 @@ mockServerClient(&quot;localhost&quot;, 1080).mockAnyResponse({
     &quot;httpResponse&quot;: {
         &quot;body&quot;: &quot;some_response_body&quot;
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -995,7 +1106,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "statusCode": 202,
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -1057,7 +1175,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "statusCode": 202,
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -1161,7 +1286,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpResponse": {
         "body": "some_response_body"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">

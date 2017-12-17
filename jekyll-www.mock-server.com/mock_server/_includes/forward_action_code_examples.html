@@ -1,8 +1,3 @@
-forward exact request
-javascript templated forward
-javascript templated forward with delay
-velocity template forward
-
 <p>The following code examples show how to create different forward actions.</p>
 <button id="button_forward_exact_request" class="accordion">forward exact request</button>
 <div class="panel">
@@ -31,7 +26,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "port": 80,
         "scheme": "HTTP"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -75,7 +77,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "port": 443,
         "scheme": "HTTPS"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -95,16 +104,16 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">String template = "return {" + System.getProperty("line.separator") +
-    "    'path' : \"/somePath\"," + System.getProperty("line.separator") +
-    "    'queryStringParameters' : {" + System.getProperty("line.separator") +
-    // request.queryStringParameters['userId'] returns an array of values for the 'userId' query parameter
-    "        'userId' : request.queryStringParameters && request.queryStringParameters['userId']" + System.getProperty("line.separator") +
-    "    }," + System.getProperty("line.separator") +
-    "    'headers' : {" + System.getProperty("line.separator") +
-    "        'Host' : [ \"localhost:1081\" ]" + System.getProperty("line.separator") +
-    "    }," + System.getProperty("line.separator") +
-    "    'body': JSON.stringify({'name': 'value'})" + System.getProperty("line.separator") +
+        <pre class="prettyprint lang-java code"><code class="code">// request.queryStringParameters['userId'] returns an array of values because headers and queryStringParameters have multiple values
+String template = "return {\n" +
+    "    'path' : \"/somePath\",\n" +
+    "    'queryStringParameters' : {\n" +
+    "        'userId' : request.queryStringParameters && request.queryStringParameters['userId']\n" +
+    "    },\n" +
+    "    'headers' : {\n" +
+    "        'Host' : [ \"localhost:1081\" ]\n" +
+    "    },\n" +
+    "    'body': JSON.stringify({'name': 'value'})\n" +
     "};";
 
 new MockServerClient("localhost", 1080)
@@ -122,6 +131,7 @@ new MockServerClient("localhost", 1080)
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+// request.queryStringParameters['userId'] returns an array of values because headers and queryStringParameters have multiple values
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
         "path": "/some/path"
@@ -139,7 +149,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "};",
         "templateType": "JAVASCRIPT"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -167,17 +184,18 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">String template = "return {" + System.getProperty("line.separator") +
-    "    'path' : \"/somePath\"," + System.getProperty("line.separator") +
-    "    'cookies' : {" + System.getProperty("line.separator") +
-    "        'SessionId' : request.cookies && request.cookies['SessionId']" + System.getProperty("line.separator") +
-    "    }," + System.getProperty("line.separator") +
-    "    'headers' : {" + System.getProperty("line.separator") +
-    "        'Host' : [ \"localhost:1081\" ]" + System.getProperty("line.separator") +
-    "    }," + System.getProperty("line.separator") +
-    "    'keepAlive' : true," + System.getProperty("line.separator") +
-    "    'secure' : true," + System.getProperty("line.separator") +
-    "    'body' : \"some_body\"" + System.getProperty("line.separator") +
+        <pre class="prettyprint lang-java code"><code class="code">// request.cookies['SessionId'] returns a single value because cookies only contain a single value
+String template = "return {\n" +
+    "    'path' : \"/somePath\",\n" +
+    "    'cookies' : {\n" +
+    "        'SessionId' : request.cookies && request.cookies['SessionId']\n" +
+    "    },\n" +
+    "    'headers' : {\n" +
+    "        'Host' : [ \"localhost:1081\" ]\n" +
+    "    },\n" +
+    "    'keepAlive' : true,\n" +
+    "    'secure' : true,\n" +
+    "    'body' : \"some_body\"\n" +
     "};";
 
 new MockServerClient("localhost", 1080)
@@ -194,6 +212,7 @@ new MockServerClient("localhost", 1080)
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+// request.cookies['SessionId'] returns a single value because cookies only contain a single value
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
         "path": "/some/path"
@@ -214,7 +233,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "templateType": "JAVASCRIPT",
         "delay": {"timeUnit": "SECONDS", "value": 20}
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
@@ -245,19 +271,19 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">String template = "{" + System.getProperty("line.separator") +
-    "    'path' : \"/somePath\"," + System.getProperty("line.separator") +
-    "    'queryStringParameters' : {" + System.getProperty("line.separator") +
-    // $!request.queryStringParameters['userId'] returns an array of values for the 'userId' query parameter
-    "        'userId' : [ \"$!request.queryStringParameters['userId'][0]\" ]" + System.getProperty("line.separator") +
-    "    }," + System.getProperty("line.separator") +
-    "    'cookies' : {" + System.getProperty("line.separator") +
-    "        'SessionId' : \"$!request.cookies['SessionId']\"" + System.getProperty("line.separator") +
-    "    }," + System.getProperty("line.separator") +
-    "    'headers' : {" + System.getProperty("line.separator") +
-    "        'Host' : [ \"localhost:1081\" ]" + System.getProperty("line.separator") +
-    "    }," + System.getProperty("line.separator") +
-    "    'body': \"{'name': 'value'}\"" + System.getProperty("line.separator") +
+        <pre class="prettyprint lang-java code"><code class="code">// $!request.queryStringParameters['userId'] returns an array of values because headers and queryStringParameters have multiple values
+String template = "{\n" +
+    "    'path' : \"/somePath\",\n" +
+    "    'queryStringParameters' : {\n" +
+    "        'userId' : [ \"$!request.queryStringParameters['userId'][0]\" ]\n" +
+    "    },\n" +
+    "    'cookies' : {\n" +
+    "        'SessionId' : \"$!request.cookies['SessionId']\"\n" +
+    "    },\n" +
+    "    'headers' : {\n" +
+    "        'Host' : [ \"localhost:1081\" ]\n" +
+    "    },\n" +
+    "    'body': \"{'name': 'value'}\"\n" +
     "}";
 
 new MockServerClient("localhost", 1080)
@@ -275,6 +301,7 @@ new MockServerClient("localhost", 1080)
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+// $!request.queryStringParameters['userId'] returns an array of values because headers and queryStringParameters have multiple values
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
         "path": "/some/path"
@@ -295,7 +322,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "}",
         "templateType": "VELOCITY"
     }
-});</code></pre>
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
