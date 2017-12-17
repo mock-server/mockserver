@@ -33,7 +33,7 @@ sitemap:
 
 <button class="accordion"><strong>Java Code Example</strong></button>
 <div class="panel">
-    <p><em><strong>Please Note:</strong> There are over 100 more detailed <a href="#expectation_code_examples">code examples</a> in Java, JavaScript and the REST API below.</em></p>
+    <p><em><strong>Please Note:</strong> There are over 100 more detailed code examples in Java, JavaScript and the REST API below.</em></p>
 
     <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .when(
@@ -56,7 +56,7 @@ sitemap:
 
 <button class="accordion"><strong>JavaScript Code Example</strong></button>
 <div class="panel">
-    <p><em><strong>Please Note:</strong> There are over 100 more detailed <a href="#expectation_code_examples">code examples</a> in Java, JavaScript and the REST API below.</em></p>
+    <p><em><strong>Please Note:</strong> There are over 100 more detailed code examples in Java, JavaScript and the REST API below.</em></p>
 
     <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
@@ -85,6 +85,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li><strong><a href="#button_match_request_by_path_exactly_once_in_the_next_60_seconds">timeToLive</a></strong> - how long the expectation should stay active</li>
 </ul>
 
+<p>MockServer will play expectations in the exact order they are added. For example, if an expectation <span class="annotation">A</span> is added with <span class="inline_code">Times.exactly(3)</span> then expectation <span class="annotation">B</span> is added with <span class="inline_code">Times.exactly(2)</span> with the same request matcher they will be applied in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.</p>
+
 <a name="request_matchers" class="anchor" href="#request_matchers">&nbsp;</a>
 
 <h3>Request Matchers</h3>
@@ -112,15 +114,20 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li><strong>secure</strong> - true if the request was made using HTTPS</li>
 </ul>
 
+<button id="button_request" class="accordion title"><strong>Request Matcher Code Examples</strong></button>
+<div class="panel title">
+    {% include_subpage _includes/matcher_code_examples.html %}
+</div>
+
 <a name="actions" class="anchor" href="#actions">&nbsp;</a>
 
 <h3>Actions</h3>
 
 <p>Actions can be one of the following types:</p>
 <ul>
-    <li><strong><a href="#response_action">response</a></strong> - returns a response, either as a response literal, or using a response template (in <a href="#button_javascript_templated_response">javascript</a> or <a href="#button_javascript_velocity_templated_response">velocity</a>)</li>
-    <li><strong><a href="#forward_action">forward</a></strong> - forwards requests, either exactly as it receives them, or using a forward template (in <a href="#button_javascript_templated_forward">javascript</a> or <a href="#button_javascript_velocity_templated_forward">velocity</a>)</li>
-    <li><strong><a href="#callback_action">callback</a></strong> - executes a local static class or remote closure callback to allow the dynamic creation of the response</li>
+    <li><strong><a href="#response_action">response</a></strong> - returns a response, either as a <a href="#button_response_literal_body_only">response literal</a>, or using a response template (in <a href="#button_javascript_templated_response">javascript</a> or <a href="#button_javascript_velocity_templated_response">velocity</a>)</li>
+    <li><strong><a href="#forward_action">forward</a></strong> - forwards requests, either <a href="#button_forward_exactly">exactly</a> as it receives them, or using a forward template (in <a href="#button_javascript_templated_forward">javascript</a> or <a href="#button_javascript_velocity_templated_forward">velocity</a>)</li>
+    <li><strong><a href="#callback_action">callback</a></strong> - dynamically generate a response based on the request by calling a predefined <a href="#button_class_callback">java class</a> or a <a href="#button_method_or_closure_callback">closure</a></li>
     <li><strong><a href="#error_action">error</a></strong> - returns an invalid response as a sequence of bytes or closes the connection</li>
 </ul>
 
@@ -145,17 +152,22 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </li>
 </ul>
 
+<button id="button_response" class="accordion title"><strong>Response Action Code Examples</strong></button>
+<div class="panel title">
+    {% include_subpage _includes/response_action_code_examples.html %}
+</div>
+
 <a name="forward_action" class="anchor" href="#forward_action">&nbsp;</a>
 
 <p>A <strong>forward action</strong> can be:</p>
 
 <ul>
     <li>
-        <p>either an <a href="#button_forward_exact_request">exact forwarder</a>, that forwards requests exactly as it receives them, containing the following:</p>
+        <p>either an <a href="#button_forward_exactly">exact forwarder</a>, that forwards requests exactly as it receives them, containing the following:</p>
         <ul>
             <li><strong>host</strong></li>
             <li><strong>port</strong></li>
-            <li><strong><a href="#button_forward_exact_request_in_https">scheme</a></strong></li>
+            <li><strong><a href="#button_forward_exactly_in_https">scheme</a></strong></li>
         </ul>
     </li>
     <li>
@@ -163,55 +175,39 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </li>
 </ul>
 
+<button id="button_forward" class="accordion title"><strong>Forward Action Code Examples</strong></button>
+<div class="panel title">
+    {% include_subpage _includes/forward_action_code_examples.html %}
+</div>
+
 <a name="callback_action" class="anchor" href="#callback_action">&nbsp;</a>
 
-<p>A <strong>callback action</strong> can be:</p>
-
-<p>A callback action defines a class that will be used to dynamically generate the response and contains:</p>
+<p>A <strong>callback action</strong> can be used to dynamically generate a response based on the request:</p>
 
 <ul>
-    <li><strong>callbackClass</strong></li>
+    <li>
+        <p>call a <a href="#button_class_callback">java class</a> that has a default constructor, implements <strong>org.mockserver.mock.action.ExpectationCallback</strong> and is available on the classpath</p>
+    </li>
+    <li>
+        <p>call a <a href="#button_method_or_closure_callback">closure</a> using the java or javascript clients</p>
+    </li>
 </ul>
 
-<p>The class must define a default constructor and implement <strong>org.mockserver.mock.action.ExpectationCallback</strong>.</p>
 
-<p><strong>callback</strong> - execute either a static class callback or an method / closure callback</p>
 
-static class callback
-method / closure callback
+<button id="button_callback" class="accordion title"><strong>Callback Action Code Examples</strong></button>
+<div class="panel title">
+    {% include_subpage _includes/callback_action_code_examples.html %}
+</div>
 
 <a name="error_action" class="anchor" href="#error_action">&nbsp;</a>
 
-<p>An <strong>error action</strong> can be:</p>
+<p>An <strong>error action</strong> can return an invalid response as a <a href="#button_random_bytes_error">sequence of bytes</a> or <a href="#button_drop_connection_error">drop the connection</a></p>
 
-<p><strong>error</strong> - return an invalid response with an optional delay</p>
-
-error
-error with delay
-
-<a name="expectation_code_examples" class="anchor" href="#expectation_code_examples">&nbsp;</a>
-
-<h3>Code Examples:</h3>
-
-<p><strong>Request Matchers</strong></p>
-
-{% include_subpage _includes/matcher_code_examples.html %}
-
-<p><strong>Response Actions</strong></p>
-
-{% include_subpage _includes/response_action_code_examples.html %}
-
-<p><strong>Forward Actions</strong></p>
-
-{% include_subpage _includes/forward_action_code_examples.html %}
-
-<p><strong>Callback Actions</strong></p>
-
-{% include_subpage _includes/callback_action_code_examples.html %}
-
-<p><strong>Error Actions</strong></p>
-
-{% include_subpage _includes/error_action_code_examples.html %}
+<button id="button_error" class="accordion title"><strong>Error Action Code Examples</strong></button>
+<div class="panel title">
+    {% include_subpage _includes/error_action_code_examples.html %}
+</div>
 
 <h2>3. Verify Requests</h2>
 

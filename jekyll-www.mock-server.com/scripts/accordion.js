@@ -15,6 +15,18 @@ for (var i = 0; i < acc.length; i++) {
     });
 }
 
+function openDiv(accordionButton) {
+    if (accordionButton) {
+        var div = accordionButton.nextElementSibling;
+        console.log("div = " + div);
+        if (div) {
+            accordionButton.classList.add("active");
+            div.style.display = "block";
+            accordionButton.scrollIntoView(true);
+        }
+    }
+}
+
 function locationHashChanged(e) {
     if (location.hash.indexOf("#button") !== -1) {
         var acc = document.getElementsByClassName("accordion");
@@ -27,13 +39,40 @@ function locationHashChanged(e) {
                 acc[i].nextElementSibling.style.display = "none";
             }
         }
-        // then open and scroll into view
-        var accordionButton = document.getElementById(location.hash.slice(1));
-        if (accordionButton) {
-            accordionButton.classList.remove("active");
-            accordionButton.nextElementSibling.style.display = "block";
-            accordionButton.scrollIntoView(true);
+        var elementId = location.hash.slice(1);
+        console.log("elementId = " + elementId);
+
+        if (elementId) {
+            var accordionTitleButton;
+            // open title div
+            if (elementId.indexOf("request") !== -1) {
+                accordionTitleButton = document.getElementById("button_request");
+            } else if (elementId.indexOf("response") !== -1) {
+                accordionTitleButton = document.getElementById("button_response");
+            } else if (elementId.indexOf("forward") !== -1) {
+                accordionTitleButton = document.getElementById("button_forward");
+            } else if (elementId.indexOf("callback") !== -1) {
+                accordionTitleButton = document.getElementById("button_callback");
+            } else if (elementId.indexOf("error") !== -1) {
+                accordionTitleButton = document.getElementById("button_error");
+            } else if (elementId.indexOf("recorded_reqs") !== -1) {
+                accordionTitleButton = document.getElementById("button_recorded_reqs");
+            } else if (elementId.indexOf("active_expectations") !== -1) {
+                accordionTitleButton = document.getElementById("button_active_expectations");
+            } else if (elementId.indexOf("recorded_expectations") !== -1) {
+                accordionTitleButton = document.getElementById("button_recorded_expectations");
+            } else if (elementId.indexOf("recorded_log_events") !== -1) {
+                accordionTitleButton = document.getElementById("button_recorded_log_events");
+            }
+            console.log("accordionTitleButton = " + accordionTitleButton);
+            openDiv(accordionTitleButton);
+
+            // then open and scroll into view
+            var accordionButton = document.getElementById(elementId);
+            console.log("accordionButton = " + accordionButton);
+            openDiv(accordionButton);
         }
+
     }
 }
 

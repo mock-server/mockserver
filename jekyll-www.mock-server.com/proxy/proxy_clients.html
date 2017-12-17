@@ -11,6 +11,8 @@ sitemap:
   lastmod: 2015-04-18T22:40:27+01:00
 ---
 
+<h2 style="color: red;">WARNING: THIS PAGE IS CURRENTLY BEING UPDATED</h2>
+
 <p>MockServer Proxy has the following clients:</p>
 
 <p><strong>Note:</strong> It is not necessary to use the provided clients because the protocol is very simple JSON/HTTP web api.</p>
@@ -24,11 +26,17 @@ sitemap:
 <p>All clients support:</p>
 <ul>
     <li>verifying which requests have been recorded</li>
-    <li>retrieving all recorded requests / responses as JSON or Expectation objects</li>
-    <li>outputting to the log all recorded requests / responses as Expectations in JSON format</li>
-    <li>outputting to the log all recorded requests / responses as Expectations in Java code format that can be pasted into test setup methods</li>
     <li>clearing recorded requests / responses (selectively)</li>
     <li>resetting (clearing all recorded requests / responses)</li>
+    <li>
+        <p>Retrieve the following items:</p>
+        <ul>
+            <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_requests">recorded requests</a></strong></li>
+            <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_requests">active expectations</a></strong></li>
+            <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_requests">recorded expectations</a></strong></li>
+            <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_requests">logs</a></strong></li>
+        </ul>
+    </li>
 </ul>
 
 <a name="java-proxy-client" class="anchor" href="#java-proxy-client">&nbsp;</a>
@@ -246,8 +254,7 @@ sitemap:
         retrieve: retrieve,
         verify: verify,
         reset: reset,
-        clear: clear,
-        dumpToLogs: dumpToLogs
+        clear: clear
     };
 };</code></pre>
 

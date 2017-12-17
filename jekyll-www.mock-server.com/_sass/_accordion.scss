@@ -14,6 +14,17 @@
     vertical-align: middle;
 }
 
+.accordion.title {
+    padding: 6px;
+    color: black;
+    font-size: 1.1em;
+    background-color: #ccc;
+}
+
+.accordion:hover.title:hover {
+    background-color: #eee;
+}
+
 .accordion.inner {
     background-color: #000;
     color: #fff;
@@ -32,6 +43,15 @@
     padding: 0 18px;
     background-color: white;
     display: none;
+}
+
+.panel.title {
+    padding: 0 18px;
+    border-style: solid;
+    border-width: 1px;
+    border-bottom-width: 0px;
+    border-top-width: 0px;
+    border-color: #e8e8e8;
 }
 
 button.accordion.active:after {
