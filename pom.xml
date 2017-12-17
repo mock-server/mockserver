@@ -10,7 +10,7 @@
 
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
-    <version>5.2.3</version>
+    <version>5.2.4-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>MockServer</name>
