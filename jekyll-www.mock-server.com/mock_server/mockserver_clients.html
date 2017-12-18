@@ -11,423 +11,389 @@ sitemap:
   lastmod: 2015-04-18T22:40:27+01:00
 ---
 
-<h2 style="color: red;">WARNING: THIS PAGE IS CURRENTLY BEING UPDATED</h2>
-
-<p>MockServer has the following clients:</p>
+<p>MockServer can be controlled in the following ways:</p>
 
 <ul>
+    <li><a href="#rest-api">REST API</a></li>
 	<li><a href="#java-mockserver-client">Java</a></li>
 	<li><a href="#javascript-mockserver-client">JavaScript</a> (both browser API & Node.js module)</li>
-    <li><a href="#ruby-mockserver-client">Ruby</a></li>
 </ul>
 
-<p>All clients support:</p>
+<p>The following activities are supported:</p>
 <ul>
-    <li>creating expectations with mock responses</li>
-    <li>creating expectations which forward</li>
-    <li>creating expectations which use a callback</li>
-    <li>verifying which requests have been received</li>
-    <li>clearing expectations (selectively)</li>
-    <li>resetting (clearing all expectations)</li>
+    <li><a href="#button_client_create_expectation">creating expectations</a></li>
+    <li><a href="#button_client_verify_reqs">verifying which requests have been received</a></li>
+    <li><a href="#button_client_clear">clearing</a> or <a href="#button_client_reset">resetting</a> recorded request, expectations or logs (selectively)</li>
     <li>
-        <p>Retrieve the following items:</p>
+        <p>Retrieving the following items:</p>
         <ul>
             <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_requests">recorded requests</a></strong></li>
-            <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_requests">active expectations</a></strong></li>
-            <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_requests">recorded expectations</a></strong></li>
-            <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_requests">logs</a></strong></li>
+            <li><strong><a href="/mock_server/debugging_issues.html#retrieving_active_expectations">active expectations</a></strong></li>
+            <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_expectations">recorded expectations</a></strong></li>
+            <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_logs">logs</a></strong></li>
         </ul>
     </li>
 </ul>
 
-<p><strong>Note:</strong> It is not necessary to use the provided clients because the MockServer web api is designed to be very simple JSON/HTTP so it is easy to interact directly with the MockServer with any HTTP client.</p>
+<a name="rest-api" class="anchor" href="#rest-api">&nbsp;</a>
+
+<h2>MockServer REST API</h2>
+
+<p>The REST API is documented using <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x">Open API specification</a></p>
 
 <a name="java-mockserver-client" class="anchor" href="#java-mockserver-client">&nbsp;</a>
 
 <h2>MockServer Java Client</h2>
 
-<p>This section includes an overview with a few basic examples then a detailed description of the Java client API.</p>
-
-<h3>Java Client Examples</h3>
-
-{% include_subpage creating_expectations_java_example_code.html %}
-
-<h3>Java Client API</h3>
-
-<p>The client API consists of two main classes:</p>
+<p>The Java client has the following version:</p>
 <ul>
     <li><strong>org.mockserver.client.server.MockServerClient</strong> - makes HTTP requests to a remote MockServer instance</li>
-    <li><strong>org.mockserver.integration.ClientAndServer</strong> - starts a MockServer instance and makes HTTP requests to it</li>
+    <li><strong>org.mockserver.integration.ClientAndServer</strong> - starts a local MockServer instance and makes HTTP requests to it</li>
 </ul>
-
-<p>Both classes expose the same API as follows:</p>
-
-<pre><code class="code"><span class="keyword">public class</span> MockServerClient {
-
-    <span class="comment">/**
-     * Start the client communicating to a MockServer at the specified host and port
-     * for example:
-     *
-     *   MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>);
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for MockServer to communicate with
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for MockServer to communicate with
-     */</span>
-    <span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port);
-
-    <span class="comment">/**
-     * Start the client communicating to a MockServer at the specified host and port
-     * and contextPath for example:
-     *
-     *   MockServerClient mockServerClient = <span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>);
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">host</span> the host for MockServer to communicate with
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the port for MockServer to communicate with
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">contextPath</span> the context path that MockServer war is deployed to
-     */</span>
-    <span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port, String contextPath);
-
-    <span class="comment">/**
-     * Specify an unlimited expectation that will respond regardless of the number of matching http
-     * for example:
-     *
-     *   <span class="this_value">mockServerClient</span>
-     *           .when(
-     *                   request()
-     *                           .withPath(<span class="string_literal">"/some_path"</span>)
-     *                           .withBody(<span class="string_literal">"some_request_body"</span>)
-     *           )
-     *           .respond(
-     *                   response()
-     *                           .withBody(<span class="string_literal">"some_response_body"</span>)
-     *                           .withHeaders(
-     *                                   <span class="keyword">new</span> Header(<span class="string_literal">"responseName"</span>, <span class="string_literal">"responseValue"</span>)
-     *                           )
-     *           );
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this expectation to respond
-     * <span class="javadoc_param_annotation">@return</span> an Expectation object that can be used to specify the response
-     */</span>
-    <span class="keyword">public</span> ForwardChainExpectation when(HttpRequest httpRequest);
-
-    <span class="comment">/**
-     * Specify an limited expectation that will respond a specified number of times when the http is matched
-     * for example:
-     *
-     *   <span class="this_value">mockServerClient</span>
-     *           .when(
-     *                   <span class="keyword">new</span> HttpRequest()
-     *                           .withPath(<span class="string_literal">"/some_path"</span>)
-     *                           .withBody(<span class="string_literal">"some_request_body"</span>),
-     *                   Times.exactly(<span class="numeric_literal">5</span>)
-     *           )
-     *           .respond(
-     *                   <span class="keyword">new</span> HttpResponse()
-     *                           .withBody(<span class="string_literal">"some_response_body"</span>)
-     *                           .withHeaders(
-     *                                   <span class="keyword">new</span> Header(<span class="string_literal">"responseName"</span>, <span class="string_literal">"responseValue"</span>)
-     *                           )
-     *           );
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this expectation to respond
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">times</span>       the number of times to respond when this http is matched
-     * <span class="javadoc_param_annotation">@return</span> an Expectation object that can be used to specify the response
-     */</span>
-    <span class="keyword">public</span> ForwardChainExpectation when(HttpRequest httpRequest, Times times);
-
-    <span class="comment">/**
-     * Specify an limited expectation that will respond a specified number of times when the http is matched
-     * for example:
-     *
-     *   <span class="this_value">mockServerClient</span>
-     *           .when(
-     *                   <span class="keyword">new</span> HttpRequest()
-     *                           .withPath(<span class="string_literal">"/some_path"</span>)
-     *                           .withBody(<span class="string_literal">"some_request_body"</span>),
-     *                   Times.exactly(<span class="numeric_literal">5</span>)
-     *           )
-     *           .respond(
-     *                   <span class="keyword">new</span> HttpResponse()
-     *                           .withBody(<span class="string_literal">"some_response_body"</span>)
-     *                           .withHeaders(
-     *                                   <span class="keyword">new</span> Header(<span class="string_literal">"responseName"</span>, <span class="string_literal">"responseValue"</span>)
-     *                           )
-     *           );
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this expectation to respond
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">times</span>       the number of times to respond when this http is matched
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">timeToLive </span> the length of time from when the server receives the expectation that the expectation should be active
-     * <span class="javadoc_param_annotation">@return</span> an Expectation object that can be used to specify the response
-     */</span>
-    <span class="keyword">public</span> ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive);
-
-    <span class="comment">/**
-     * Reset MockServer by clearing all expectations
-     */</span>
-    <span class="keyword">public</span> MockServerClient reset();
-
-    <span class="comment">/**
-     * Stop MockServer gracefully (only support for Netty and Vert.X versions, not supported for WAR version)
-     */</span>
-    <span class="keyword">public</span> MockServerClient stop();
-
-    <span class="comment">/**
-     * Clear all expectations that match the http
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
-     */</span>
-    <span class="keyword">public</span> MockServerClient clear(HttpRequest httpRequest);
-
-    <span class="comment">/**
-     * Verify a request has been sent for example:
-     *
-     *   <span class="this_value">mockServerClient</span>
-     *           .verify(
-     *                   request()
-     *                           .withPath(<span class="string_literal">"/some_path"</span>)
-     *                           .withBody(<span class="string_literal">"some_request_body"</span>)
-     *           );
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequests</span> the http requests that must be matched for this verification to pass
-     * <span class="javadoc_param_annotation">@throws</span> <span class="javadoc_param_name">AssertionError</span> if the request has not been found
-     */</span>
-    <span class="keyword">public</span> MockServerClient verify(HttpRequest... httpRequests); <span class="keyword">throws</span> AssertionError
-
-    <span class="comment">/**
-     * Verify a request has been sent for example:
-     *
-     *   <span class="this_value">mockServerClient</span>
-     *           .verify(
-     *                   request()
-     *                           .withPath(<span class="string_literal">"/some_path"</span>)
-     *                           .withBody(<span class="string_literal">"some_request_body"</span>),
-     *                   VerificationTimes.exactly(<span class="numeric_literal">3</span>)
-     *           );
-     *
-     * Times supports multiple static factory methods:
-     *
-     *   once()      - verify the request was only received once
-     *   exactly(<span class="numeric_literal">n</span>)  - verify the request was only received exactly <span class="numeric_literal">n</span> times
-     *   atLeast(<span class="numeric_literal">n</span>)  - verify the request was only received at least <span class="numeric_literal">n</span> times
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that must be matched for this verification to pass
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">times</span>       the number of times this request must be matched
-     * <span class="javadoc_param_annotation">@throws</span> <span class="javadoc_param_name">AssertionError</span> if the request has not been found
-     */</span>
-    <span class="keyword">public</span> MockServerClient verify(HttpRequest httpRequest, org.mockserver.verify.VerificationTimes times); <span class="keyword">throws</span> AssertionError
-
-    <span class="comment">/**
-     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
-     * <span class="javadoc_param_annotation">@return</span> an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
-     */</span>
-    <span class="keyword">public</span> HttpRequest[] retrieveRecordedRequests(HttpRequest httpRequest);
-
-    <span class="comment">/**
-     * Retrieve the already setup expectations match the httpRequest parameter, use null for the parameter to retrieve all expectations
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpRequest</span> the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
-     * <span class="javadoc_param_annotation">@return</span> an array of all expectations that have been setup
-     */</span>
-    <span class="keyword">public</span> Expectation[] retrieveExistingExpectations(HttpRequest httpRequest);
-}</code></pre>
 
 <a name="javascript-mockserver-client" class="anchor" href="#javascript-mockserver-client">&nbsp;</a>
 
 <h2>MockServer JavaScript Client</h2>
 
-<p>This section includes an overview with a few basic examples then a detailed description of the JavaScript client API.</p>
-
-<p>To interact with MockServer from JavaScript it is possible to use either:</p>
+<p>The JavaScript client has the following version:</p>
 
 <ul>
-	<li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver/master/mockserver-client-javascript/src/main/javascript/mockServerClient.js"><strong>mockServerClient.js</strong></a></li>
+	<li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver-client-node/68b0928e06c9f00e6b87439868ac0571a936d1c0/mockServerClient.js"><strong>mockServerClient.js</strong></a></li>
     <li>a Node.js npm module <a href="https://www.npmjs.org/package/mockserver-client"><strong>mockserver-client</strong></a><br/><a href="https://www.npmjs.org/package/mockserver-client"><img src="https://nodei.co/npm/mockserver-client.png?downloads=true&downloadRank=true&stars=true" alt="mockserver-client-node"/></a></li>
 </ul>
 
-<p>To include the browser based in an HTML page use one of the following script tag to load the file from <a href="http://www.maxcdn.com/">MaxCDN</a>:</p>
+<p>To include the browser based client in an HTML page as follows:</p>
 
-<pre><code class="code">&lt;<span class="annotation">script</span> <span class="keyword">type</span>=<span class="string_literal">"text/javascript"</span> <span class="keyword">src</span>=<span class="string_literal">"https://cdn.rawgit.com/jamesdbloom/mockserver/6a2fb42cb7933d0d68e7d595785a9b0536450825/mockserver-client-javascript/src/main/javascript/mockServerClient.js"</span>&gt;&lt;/<span class="annotation">script</span>&gt;</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/68b0928e06c9f00e6b87439868ac0571a936d1c0/mockServerClient.js&quot;&gt;&lt;/script&gt;</code></pre>
 
-<p>To use the Node.js module add the following code to your node project:</p>
+<a name="client-code-examples" class="anchor" href="#client-code-examples">&nbsp;</a>
 
-<pre><code class="code"><span class="keyword">var</span> mockServer = require(<span class="string_literal">'mockserver-client'</span>),
-    mockServerClient = mockServer.mockServerClient;</code></pre>
-
-<h3>JavaScript Client Examples</h3>
-
-{% include_subpage creating_expectations_javascript_example_code.html %}
-
-<h3>JavaScript Client API</h3>
-
-<p>Both versions of <strong>mockServerClient</strong> provide the same API as follows:</p>
-
-<pre><code class="code"><span class="keyword">var</span> mockServerClient = function (mockServerUrl) {
-    <span class="string_literal">"use strict"</span>;
-
-    <span class="comment">/**
-     * The default headers added to to the mocked response when using mockSimpleResponse(...)
-     */</span>
-    <span class="keyword">var</span> defaultResponseHeaders = [
-            {<span class="string_literal">'name'</span>: <span class="string_literal">'Content-Type'</span>, <span class="string_literal">'values'</span>: [<span class="string_literal">'application/json; charset=utf-8'</span>]},
-            {<span class="string_literal">'name'</span>: <span class="string_literal">'Cache-Control'</span>, <span class="string_literal">'values'</span>: [<span class="string_literal">'no-cache, no-store'</span>]}
-    ],
-
-    <span class="comment">/**
-     * Setup an expectation in MockServer by specifying an expectation object
-     * for example:
-     *
-     *   mockServerClient(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>).mockAnyResponse(
-     *       {
-     *           <span class="string_literal">'httpRequest'</span>: {
-     *               <span class="string_literal">'path'</span>: <span class="string_literal">'/somePath'</span>,
-     *               <span class="string_literal">'body'</span>: {
-     *                   <span class="string_literal">'type'</span>: <span class="string_literal">'STRING'</span>,
-     *                   <span class="string_literal">'value'</span>: <span class="string_literal">'someBody'</span>
-     *               }
-     *           },
-     *           <span class="string_literal">'httpResponse'</span>: {
-     *               <span class="string_literal">'statusCode'</span>: <span class="string_literal">200</span>,
-     *               <span class="string_literal">'body'</span>: Base64.encode(JSON.stringify({ name: <span class="string_literal">'first_body'</span> })),
-     *               <span class="string_literal">'delay'</span>: {
-     *                   <span class="string_literal">'timeUnit'</span>: <span class="string_literal">'MILLISECONDS'</span>,
-     *                   <span class="string_literal">'value'</span>: <span class="string_literal">250</span>
-     *               }
-     *           },
-     *           <span class="string_literal">'times'</span>: {
-     *               <span class="string_literal">'remainingTimes'</span>: <span class="string_literal">1</span>,
-     *               <span class="string_literal">'unlimited'</span>: <span class="keyword">false</span>
-     *           }
-     *       }
-     *   );
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">expectation</span> the expectation to setup in MockServer
-     */</span>
-    mockAnyResponse = function (expectation),
-
-    <span class="comment">/**
-     * Setup an expectation in MockServer without having to specify the full expectation object
-     * for example:
-     *
-     *   mockServerClient(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>).mockSimpleResponse(<span class="string_literal">'/somePath'</span>, { <span class="string_literal">'name'</span>: <span class="string_literal">'value'</span> }, <span class="numeric_literal">203</span>);
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">path</span>         the path to match requests against
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">responseBody</span> the response body to return if a request matches
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">statusCode</span>   the response code to return if a request matches
-     */</span>
-    mockSimpleResponse = function (path, responseBody, statusCode),
-
-    <span class="comment">/**
-     * Override the default headers that are used to specify the response headers in mockSimpleResponse(...)
-     * (note: if you use mockAnyResponse(...) the default headers are not used)
-     * for example:
-     *
-     *   mockServerClient(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>).setDefaultHeaders([
-     *       {<span class="string_literal">'name'</span>: <span class="string_literal">'Content-Type'</span>, <span class="string_literal">'values'</span>: [<span class="string_literal">'application/json; charset=utf-8'</span>]},
-     *       {<span class="string_literal">'name'</span>: <span class="string_literal">'Cache-Control'</span>, <span class="string_literal">'values'</span>: [<span class="string_literal">'no-cache, no-store'</span>]}
-     *   ])
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">headers</span> the path to match requests against
-     */</span>
-    setDefaultHeaders = function (headers),
-
-    <span class="comment">/**
-     * Verify a request has been sent for example:
-     *
-     *   client.verify({
-     *       <span class="string_literal">'httpRequest'</span>: {
-     *           <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
-     *           <span class="string_literal">'path'</span>: <span class="string_literal">'/somePath'</span>
-     *       }
-     *   }, 2, true);
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">request</span> the http request that must be matched for this verification to pass
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">count</span>   the number of times this request must be matched
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">exact</span>   true if the count is matched as "equal to" or false if the count is matched as "greater than or equal to"
-     * <span class="javadoc_param_annotation">@throws</span> an error is the verify fails detailing which requests have been sent
-     */</span>
-    verify = function (request, count, exact),
-
-    <span class="comment">/**
-     * Verify a sequence of requests has been sent for example:
-     *
-     *   client.verifySequence(
-     *       {
-     *          <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
-     *          <span class="string_literal">'path'</span>: <span class="string_literal">'/first_request'</span>
-     *       },
-     *       {
-     *          <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
-     *          <span class="string_literal">'path'</span>: <span class="string_literal">'/second_request'</span>
-     *       },
-     *       {
-     *          <span class="string_literal">'method'</span>: <span class="string_literal">'POST'</span>,
-     *          <span class="string_literal">'path'</span>: <span class="string_literal">'/third_request'</span>
-     *       }
-     *   );
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">arguments</span> the list of http requests that must be matched for this verification to pass
-     * <span class="javadoc_param_annotation">@throws</span> an error is the verify fails detailing which requests have been sent
-     */</span>
-    verifySequence = function (),
-
-    <span class="comment">/**
-     * Reset MockServer by clearing all expectations
-     */</span>
-    reset = function (path),
-
-    <span class="comment">/**
-     * Clear all expectations that match the specified path
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">path</span> the path to decide which expectations to cleared
-     */</span>
-    clear = function (path),
-
-    <span class="comment">/**
-     * Retrieve the recorded requests that match the parameter, as follows:
-     * - use a string value to match on path,
-     * - use a request matcher object to match on a full request,
-     * - or use null to retrieve all requests
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">pathOrRequestMatcher</span>  if a string is passed in the value will be treated as the path, however
-     *                              if an object is passed in the value will be treated as a full request
-     *                              matcher object, if null is passed in it will be treated as match all
-     */</span>
-    retrieveRequests = function (pathOrRequestMatcher),
-
-    <span class="comment">/**
-     * Retrieve the setup expectations that match the parameter,
-     * the expectation is retrieved by matching the parameter
-     * on the expectations own request matcher, as follows:
-     * - use a string value to match on path,
-     * - use a request matcher object to match on a full request,
-     * - or use null to retrieve all requests
-     *
-     * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">pathOrRequestMatcher</span>  if a string is passed in the value will be treated as the path, however
-     *                              if an object is passed in the value will be treated as a full request
-     *                              matcher object, if null is passed in it will be treated as match all
-     */</span>
-    retrieveExpectations = function (pathOrRequestMatcher);
-
-    <span class="keyword">return</span> {
-        mockAnyResponse: mockAnyResponse,
-        mockSimpleResponse: mockSimpleResponse,
-        setDefaultHeaders: setDefaultHeaders,
-        verify: verify,
-        reset: reset,
-        clear: clear,
-        retrieveRequests: retrieveRequests,
-        retrieveExpectations: retrieveExpectations
-    };
-};</code></pre>
-
-<a name="ruby-mockserver-client" class="anchor" href="#ruby-mockserver-client">&nbsp;</a>
-
-<h2>MockServer Ruby Client&nbsp;&nbsp;<a href="http://badge.fury.io/rb/mockserver-client"><img src="https://badge.fury.io/rb/mockserver-client.png" alt="Gem Version" width="104" height="18"></a></h2>
-
-<p>This section includes an overview with a few basic examples then a detailed description of the Java client API.</p>
-
-{% include_subpage _includes/ruby_client.html %}
-
-{% include_subpage creating_expectations_ruby_example_code.html %}
+<button id="button_client" class="accordion title"><strong>Client Code Examples</strong></button>
+<div class="panel title">
+    <button id="button_client_create_expectation" class="accordion">create expectation</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("GET")
+            .withPath("/view/cart")
+            .withCookies(
+                cookie("session", "4930456C-C718-476F-971F-CB8E047AB349")
+            )
+            .withQueryStringParameters(
+                param("cartId", "055CA455-1DF7-45BB-8535-4F83E7266092")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+  .mockAnyResponse({
+    "httpRequest": {
+      "method": "GET",
+      "path": "/view/cart",
+      "queryStringParameters": {
+        "cartId": ["055CA455-1DF7-45BB-8535-4F83E7266092"]
+      },
+      "cookies": {
+        "session": "4930456C-C718-476F-971F-CB8E047AB349"
+      }
+    },
+    "httpResponse": {
+      "body": "some_response_body"
+    }
+  })
+  .then(
+    function () {
+      console.log("expectation created");
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "method" : "GET",
+    "path" : "/view/cart",
+    "queryStringParameters" : {
+      "cartId" : [ "055CA455-1DF7-45BB-8535-4F83E7266092" ]
+    },
+    "cookies" : {
+      "session" : "4930456C-C718-476F-971F-CB8E047AB349"
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_client_verify_reqs" class="accordion">verify requests</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .verify(
+        request()
+            .withPath("/some/path"),
+        VerificationTimes.atLeast(2)
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+  .verify(
+    {
+      'path': '/some/path'
+    }, 2, true)
+  .then(
+    function () {
+      console.log("request found exactly 2 times");
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/verify" -d '{
+    "httpRequest": {
+        "path": "/simple"
+    },
+    "times": {
+        "count": 1
+    }
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_client_verify_req_sequence" class="accordion">verify request sequence</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .verify(
+        request()
+            .withPath("/some/path/one"),
+        request()
+            .withPath("/some/path/two"),
+        request()
+            .withPath("/some/path/three")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+  .verifySequence(
+    {
+      'path': '/some/path/one'
+    },
+    {
+      'path': '/some/path/two'
+    },
+    {
+      'path': '/some/path/three'
+    }
+  )
+  .then(
+    function () {
+      console.log("request sequence found in the order specified");
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/verifySequence" -d '[
+    {
+      "path": "/some/path/one"
+    },
+    {
+      "path": "/some/path/two"
+    },
+    {
+      "path": "/some/path/three"
+    }
+]'</code></pre>
+        </div>
+    </div>
+    <button id="button_client_retrieve_reqs" class="accordion">retrieve recorded requests</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequests(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+  .retrieveRecordedRequests({
+    "path": "/some/path",
+    "method": "POST"
+  })
+  .then(
+    function (recordedRequests) {
+      console.log(JSON.stringify(recordedRequests));
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS" -d '{
+    "path": "/some/path",
+    "method": "POST"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_client_retrieve_logs" class="accordion">retrieve recorded log messages</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequests(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+  .retrieveLogMessages({
+    "path": "/some/path",
+    "method": "POST"
+  })
+  .then(
+    function (logMessages) {
+      // logMessages is a String[]
+      console.log(logMessages);
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS" -d '{
+    "path": "/some/path",
+    "method": "POST"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_client_clear" class="accordion">clear everything that matches request</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
+    request()
+        .withPath("/some/path")
+        .withMethod("POST")
+);</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+  .clear({
+    'path': '/some/path'
+  })
+  .then(
+    function () {
+      console.log("cleared state that matches request matcher");
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/clear" -d '{
+    "path": "/some/path"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_client_clear_logs_by_req" class="accordion">clear only logs that matches request</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
+    request()
+        .withPath("/some/path")
+        .withMethod("POST"),
+    ClearType.LOG
+);</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+  .clear({
+    'path': '/some/path'
+  }, 'LOG')
+  .then(
+    function () {
+      console.log("cleared state that matches request matcher");
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/clear?type=LOGS" -d '{
+    "path": "/some/path"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_client_reset" class="accordion">reset everything</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).reset();</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+  .reset()
+  .then(
+    function () {
+      console.log("reset all state");
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/reset</code></pre>
+        </div>
+    </div>
+</div>
