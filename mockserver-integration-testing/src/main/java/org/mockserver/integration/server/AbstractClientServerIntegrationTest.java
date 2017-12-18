@@ -5378,7 +5378,7 @@ public abstract class AbstractClientServerIntegrationTest {
         String[] actualLogMessages = mockServerClient.retrieveLogMessagesArray(request().withPath(calculatePath(".*")));
 
         Object[] expectedLogMessages = new Object[]{
-            "resetting all expectations and request logs",
+            "resetting all expectations and request logs" + NEW_LINE,
             "creating expectation:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +

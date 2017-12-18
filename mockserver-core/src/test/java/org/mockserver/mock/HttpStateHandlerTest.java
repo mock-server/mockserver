@@ -30,6 +30,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -458,7 +459,7 @@ public class HttpStateHandlerTest {
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
         // then - activity logged
         verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).infoLog(request(), "resetting all expectations and request logs");
+        verify(mockLogFormatter).infoLog(request(), "resetting all expectations and request logs" + NEW_LINE);
     }
 
 }

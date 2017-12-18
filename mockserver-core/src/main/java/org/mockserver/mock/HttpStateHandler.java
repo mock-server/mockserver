@@ -28,6 +28,7 @@ import static com.google.common.net.MediaType.*;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.model.HttpRequest.request;
@@ -90,7 +91,7 @@ public class HttpStateHandler {
     public void reset() {
         mockServerMatcher.reset();
         logFilter.reset();
-        logFormatter.infoLog(request(), "resetting all expectations and request logs");
+        logFormatter.infoLog(request(), "resetting all expectations and request logs" + NEW_LINE);
     }
 
     public void add(Expectation... expectations) {
