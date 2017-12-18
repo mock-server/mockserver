@@ -442,6 +442,21 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
         request()
     );</code></pre>
         </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .retrieveLogMessages({})
+    .then(
+        function (logMessages) {
+            // logMessages is a String[]
+            console.log(logMessages);
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS"</code></pre>
@@ -456,6 +471,24 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
         request()
             .withPath("/some/path")
             .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .retrieveLogMessages({
+        "path": "/some/path",
+        "method": "POST"
+    })
+    .then(
+        function (logMessages) {
+            // logMessages is a String[]
+            console.log(logMessages);
+        },
+        function (error) {
+            console.log(error);
+        }
     );</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
@@ -474,6 +507,23 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
     .retrieveLogMessagesArray(
         request()
             .withPath("/some/path")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .retrieveLogMessages({
+        "path": "/some/path"
+    })
+    .then(
+        function (logMessages) {
+            // logMessages is a String[]
+            console.log(logMessages);
+        },
+        function (error) {
+            console.log(error);
+        }
     );</code></pre>
         </div>
     </div>
