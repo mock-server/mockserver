@@ -67,3 +67,12 @@ button.accordion:after {
     font-family: 'Averia Sans Libre', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 1.1em;
 }
+
+@media (max-width: 568px) {
+    .accordion {
+        font-size: 0.85em;
+    }
+    .accordion.title {
+        font-size: 1em;
+    }
+}

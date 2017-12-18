@@ -47,8 +47,8 @@ sitemap:
 
 <p>The Java client has the following version:</p>
 <ul>
-    <li><strong>org.mockserver.client.server.MockServerClient</strong> - makes HTTP requests to a remote MockServer instance</li>
-    <li><strong>org.mockserver.integration.ClientAndServer</strong> - starts a local MockServer instance and makes HTTP requests to it</li>
+    <li><a href="#button_client_create_expectation"><strong>org.mockserver.client.server.MockServerClient</strong></a> - makes HTTP requests to a remote MockServer instance</li>
+    <li><a href="#button_client_create_expectation"><strong>org.mockserver.integration.ClientAndServer</strong></a> - starts a local MockServer instance and makes HTTP requests to it</li>
 </ul>
 
 <a name="javascript-mockserver-client" class="anchor" href="#javascript-mockserver-client">&nbsp;</a>
@@ -72,7 +72,7 @@ sitemap:
 <div class="panel title">
     <button id="button_client_create_expectation" class="accordion">create expectation</button>
     <div class="panel">
-        <button class="accordion inner">Java</button>
+        <button class="accordion inner">Java: MockServerClient</button>
         <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .when(
@@ -91,9 +91,28 @@ sitemap:
             .withBody("some_response_body")
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript</button>
+        <button class="accordion inner">Java: ClientAndServer</button>
         <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+        <pre class="prettyprint lang-java code"><code class="code">new ClientAndServer(1080)
+    .when(
+        request()
+            .withMethod("GET")
+            .withPath("/view/cart")
+            .withCookies(
+                cookie("session", "4930456C-C718-476F-971F-CB8E047AB349")
+            )
+            .withQueryStringParameters(
+                param("cartId", "055CA455-1DF7-45BB-8535-4F83E7266092")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
   .mockAnyResponse({
     "httpRequest": {
@@ -121,7 +140,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
   "httpRequest" : {
     "method" : "GET",
     "path" : "/view/cart",
@@ -140,7 +159,7 @@ mockServerClient("localhost", 1080)
     </div>
     <button id="button_client_verify_reqs" class="accordion">verify requests</button>
     <div class="panel">
-        <button class="accordion inner">Java</button>
+        <button class="accordion inner">Java: MockServerClient</button>
         <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .verify(
@@ -149,14 +168,14 @@ mockServerClient("localhost", 1080)
         VerificationTimes.atLeast(2)
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript</button>
+        <button class="accordion inner">JavaScript: mockserver-client</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
   .verify(
     {
       'path': '/some/path'
-    }, 2, true)
+    }, 2, false)
   .then(
     function () {
       console.log("request found exactly 2 times");
@@ -168,19 +187,20 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/verify" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/verify" -d '{
     "httpRequest": {
         "path": "/simple"
     },
     "times": {
-        "count": 1
+        "count": 2,
+        "exact": false
     }
 }'</code></pre>
         </div>
     </div>
     <button id="button_client_verify_req_sequence" class="accordion">verify request sequence</button>
     <div class="panel">
-        <button class="accordion inner">Java</button>
+        <button class="accordion inner">Java: MockServerClient</button>
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .verify(
@@ -192,9 +212,9 @@ mockServerClient("localhost", 1080)
             .withPath("/some/path/three")
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript</button>
+        <button class="accordion inner">JavaScript: mockserver-client</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
   .verifySequence(
     {
@@ -218,7 +238,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/verifySequence" -d '[
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/verifySequence" -d '[
     {
       "path": "/some/path/one"
     },
@@ -233,7 +253,7 @@ mockServerClient("localhost", 1080)
     </div>
     <button id="button_client_retrieve_reqs" class="accordion">retrieve recorded requests</button>
     <div class="panel">
-        <button class="accordion inner">Java</button>
+        <button class="accordion inner">Java: MockServerClient</button>
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
     .retrieveRecordedRequests(
@@ -242,9 +262,9 @@ mockServerClient("localhost", 1080)
             .withMethod("POST")
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript</button>
+        <button class="accordion inner">JavaScript: mockserver-client</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
   .retrieveRecordedRequests({
     "path": "/some/path",
@@ -261,7 +281,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -269,7 +289,7 @@ mockServerClient("localhost", 1080)
     </div>
     <button id="button_client_retrieve_logs" class="accordion">retrieve recorded log messages</button>
     <div class="panel">
-        <button class="accordion inner">Java</button>
+        <button class="accordion inner">Java: MockServerClient</button>
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
     .retrieveRecordedRequests(
@@ -278,9 +298,9 @@ mockServerClient("localhost", 1080)
             .withMethod("POST")
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript</button>
+        <button class="accordion inner">JavaScript: mockserver-client</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
   .retrieveLogMessages({
     "path": "/some/path",
@@ -298,15 +318,15 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
         </div>
     </div>
-    <button id="button_client_clear" class="accordion">clear everything that matches request</button>
+    <button id="button_client_clear" class="accordion">clear everything that matches request matcher</button>
     <div class="panel">
-        <button class="accordion inner">Java</button>
+        <button class="accordion inner">Java: MockServerClient</button>
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
     request()
@@ -314,9 +334,9 @@ mockServerClient("localhost", 1080)
         .withMethod("POST")
 );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript</button>
+        <button class="accordion inner">JavaScript: mockserver-client</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
   .clear({
     'path': '/some/path'
@@ -332,14 +352,14 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/clear" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/clear" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
     </div>
-    <button id="button_client_clear_logs_by_req" class="accordion">clear only logs that matches request</button>
+    <button id="button_client_clear_logs_by_req" class="accordion">clear recorded requests and logs that matches request matcher</button>
     <div class="panel">
-        <button class="accordion inner">Java</button>
+        <button class="accordion inner">Java: MockServerClient</button>
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
     request()
@@ -348,9 +368,9 @@ mockServerClient("localhost", 1080)
     ClearType.LOG
 );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript</button>
+        <button class="accordion inner">JavaScript: mockserver-client</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
   .clear({
     'path': '/some/path'
@@ -366,20 +386,20 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/clear?type=LOGS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/clear?type=LOGS" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
     </div>
     <button id="button_client_reset" class="accordion">reset everything</button>
     <div class="panel">
-        <button class="accordion inner">Java</button>
+        <button class="accordion inner">Java: MockServerClient</button>
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).reset();</code></pre>
         </div>
-        <button class="accordion inner">JavaScript</button>
+        <button class="accordion inner">JavaScript: mockserver-client</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
   .reset()
   .then(
@@ -393,7 +413,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/reset</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/reset</code></pre>
         </div>
     </div>
 </div>

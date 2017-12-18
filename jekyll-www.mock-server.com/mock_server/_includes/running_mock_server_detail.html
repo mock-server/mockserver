@@ -209,7 +209,7 @@
 
 <span class="keyword">private</span> MockServerClient mockServerClient;</code></pre>
 
-<p>Any test method can now use the <strong>mockServerClient</strong> field to <a href="/mock_server/creating_expectations.html">create expectation</a> or <a href="/mock_server/verification.html">verify</a> requests.</p>
+<p>Any test method can now use the <strong>mockServerClient</strong> field to <a href="/mock_server/getting_started.html#setup_expectations">create expectation</a> or <a href="/mock_server/verification.html">verify</a> requests.</p>
 
 <p>The MockServerRule has the following constructors:</p>
 
@@ -518,12 +518,6 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 {% include_subpage ../mock_server/_includes/running_docker_container.html %}
 
-<a name="vertx-module" class="anchor" href="#vertx-module">&nbsp;</a>
-
-<h2>Vert.X Module</h2>
-
-{% include_subpage ../mock_server/_includes/running_vertx_module.html %}
-
 <a name="build-and-run-from-source" class="anchor" href="#build-and-run-from-source">&nbsp;</a>
 
 <h2>Build & Run From Source</h2>
@@ -544,9 +538,3 @@ cd mockserver</code></pre>
 <pre><code class="code">mockserver-netty/target/mockserver-netty-5.2.3-jar-with-dependencies.jar</code></pre>
 
 <p>Run MockServer then using the executable jar as per the instruction above in <a href="#running_from_command_line">Running From The Command Line</a></p>
-
-<h2>Requirements</h2>
-
-<ul>
-    <li><strong>Java 6+</strong>&nbsp;&nbsp;&nbsp;to use the Netty version, the Maven Plugin and MockServer WAR and MockServer Proxy WAR</li>
-</ul>

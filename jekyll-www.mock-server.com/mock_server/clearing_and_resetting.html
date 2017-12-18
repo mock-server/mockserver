@@ -10,53 +10,147 @@ sitemap:
   lastmod: 2015-04-18T22:40:27+01:00
 ---
 
-<p>To clear <strong>all</strong> expectations and <strong>all</strong> request logs (without restarting) use <strong>reset</strong> as follows:</p>
+<p>MockServer has internal state:</p>
 
-<p><strong>Java</strong></p>
+<ul>
+    <li><strong>recorded requests</strong></li>
+    <li><strong>active expectations</strong></li>
+    <li><strong>recorded expectations</strong></li>
+    <li><strong>logs</strong></li>
+</ul>
 
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).reset()</code></pre>
+<p>State can be <strong>cleared</strong> from MockServer selectively:</p>
+<ul>
+    <li>use <strong>type</strong> to select with type of state to clear</li>
+    <li>use a <strong>request matcher</strong> to clear matching items</li>
+</ul>
 
-<p><strong>JavaScript</strong></p>
-
-<pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).reset();</code></pre>
-
-<p><strong>Ruby</strong></p>
-
-<pre><code class="code">client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
-client.reset()</code></pre>
-
-<p>To clear <strong>only specific</strong> expectations or <strong>only specific</strong> request logs use <strong>clear</strong> as follows:</p>
-
-<p><strong>Java</strong></p>
-
-<p>The following code clears both exceptions and request logs, however as shown below it is also possible to only clear exceptions or request logs.</p>
-
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).clear(
-        request()
-                .withMethod(<span class="string_literal">"GET"</span>)
-                .withPath(<span class="string_literal">"/somePath"</span>)
+<button id="button_client_clear" class="accordion">clear everything that matches request matcher</button>
+<div class="panel">
+    <button class="accordion inner">Java: MockServerClient</button>
+    <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
+    request()
+        .withPath("/some/path")
+        .withMethod("POST")
 );</code></pre>
-
-<p>To specify whether to clear <strong>exceptions</strong>, <strong>request logs</strong> or <strong>both</strong> use the type parameter.  If no type parameter is specified both expectations and request logs are cleared.  The following example shows how to only clear request logs.</p>
-
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).clear(
-        request()
-                .withMethod(<span class="string_literal">"GET"</span>)
-                .withPath(<span class="string_literal">"/somePath"</span>),
-        MockServerClient.TYPE.<span class="constant">LOG</span>
+    </div>
+    <button class="accordion inner">JavaScript: mockserver-client</button>
+    <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+  .clear({
+    'path': '/some/path'
+  })
+  .then(
+    function () {
+      console.log("cleared state that matches request matcher");
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/clear" -d '{
+    "path": "/some/path"
+}'</code></pre>
+    </div>
+</div>
+<button id="button_client_clear_logs_by_req" class="accordion">clear recorded requests and logs that matches request matcher</button>
+<div class="panel">
+    <button class="accordion inner">Java: MockServerClient</button>
+    <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
+    request()
+        .withPath("/some/path")
+        .withMethod("POST"),
+    ClearType.LOG
 );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript: mockserver-client</button>
+    <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+  .clear({
+    'path': '/some/path'
+  }, 'LOG')
+  .then(
+    function () {
+      console.log("cleared recorded requests and logs that matches request matcher");
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/clear?type=LOGS" -d '{
+    "path": "/some/path"
+}'</code></pre>
+    </div>
+</div>
+<button id="button_client_clear_expectations_by_req" class="accordion">clear expectations that matches request matcher</button>
+<div class="panel">
+    <button class="accordion inner">Java: MockServerClient</button>
+    <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
+    request()
+        .withPath("/some/path")
+        .withMethod("POST"),
+    ClearType.EXPECTATIONS
+);</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript: mockserver-client</button>
+    <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+  .clear({
+    'path': '/some/path'
+  }, 'EXPECTATIONS')
+  .then(
+    function () {
+      console.log("cleared expectations that matches request matcher");
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/clear?type=EXPECTATIONS" -d '{
+    "path": "/some/path"
+}'</code></pre>
+    </div>
+</div>
 
-<p><strong>JavaScript</strong></p>
+<p>MockServer can be <strong>reset</strong> completely, as follows:</p>
 
-<p>The following code clears both exceptions and request logs, however as shown below it is also possible to only clear exceptions or request logs.</p>
-
-<pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).clear(<span class="string_literal">'/somePath'</span>);</code></pre>
-
-<p>To specify whether to clear <strong>exceptions</strong>, <strong>request logs</strong> or <strong>both</strong> use the type parameter.  If no type parameter is specified both expectations and request logs are cleared.  The following example shows how to only clear request logs.</p>
-
-<pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).clear(<span class="string_literal">'/somePath'</span>, <span class="string_literal">'log'</span>);</code></pre>
-
-<p><strong>Ruby</strong></p>
-
-<pre><code class="code">client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
-client.clear(request(<span class="ruby_constant">:GET</span>, <span class="string_literal">'/somePath'</span>))</code></pre>
+<button id="button_client_reset" class="accordion">reset everything</button>
+<div class="panel">
+    <button class="accordion inner">Java: MockServerClient</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).reset();</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript: mockserver-client</button>
+    <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+  .reset()
+  .then(
+    function () {
+      console.log("reset all state");
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/reset</code></pre>
+    </div>
+</div>

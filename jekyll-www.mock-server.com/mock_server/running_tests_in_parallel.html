@@ -12,59 +12,62 @@ sitemap:
 
 <p>To ensure all tests can run in parallel with completely isolated independent data it is important to include a value unique to each test for the request matcher. </p>
 
-<p>If each test generates a different value (i.e. a UUID) for the sessionId cookie then each test can receive completely independent response. Instead of a cookie value a query parameter or header (such as the Referer header) can also be used to ensure mock responses are unique to each test.</p>
+<p>If each test generates a unique value (i.e. a UUID) for the sessionId cookie or a correlationId header then each test can receive completely independent response.</p>
+
+
 
 <p><strong>Java</strong></p>
 
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"127.0.0.1"</span>, <span class="numeric_literal">1080</span>)
-        .when(
-                request()
-                        .withMethod(<span class="string_literal">"GET"</span>)
-                        .withPath(<span class="string_literal">"/somePath"</span>)
-                        .withCookies(
-                                <span class="keyword">new</span> Cookie(<span class="string_literal">"sessionId"</span>, <span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>)
-                        )
-        )
-        .respond(
-                response()
-                        .withStatusCode(<span class="numeric_literal">200</span>)
-                        .withBody(<span class="string_literal">"{ name: 'value' }"</span>)
-        );</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">String sessionId = UUID.randomUUID().toString();
+
+new MockServerClient("127.0.0.1", 1080)
+    .when(
+        request()
+            .withMethod("GET")
+            .withPath("/somePath")
+            .withCookies(
+                cookie("sessionId", sessionId)
+            )
+    )
+    .respond(
+        response()
+            .withStatusCode(200)
+            .withBody("{ name: 'value' }")
+    );</code></pre>
 
 <p><strong>JavaScript</strong></p>
 
-<pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).mockAnyResponse(
-    {
-        <span class="string_literal">'httpRequest'</span>: {
-            <span class="string_literal">'method'</span>: <span class="string_literal">'GET'</span>,
-            <span class="string_literal">'path'</span>: <span class="string_literal">'/somePath'</span>,
-            <span class="string_literal">"cookies"</span>: [
-                {
-                    <span class="string_literal">"name"</span>: <span class="string_literal">"sessionId"</span>,
-                    <span class="string_literal">"values"</span>: [<span class="string_literal">"2By8LOhBmaW5nZXJwcmludCIlMDAzMW"</span>]
-                }
-            ]
-        },
-        <span class="string_literal">'httpResponse'</span>: {
-            <span class="string_literal">'statusCode'</span>: <span class="numeric_literal">200</span>,
-            <span class="string_literal">'body'</span>: JSON.stringify({ name: <span class="string_literal">'value'</span> })
-        }
+<pre class="prettyprint lang-javascript code"><code class="code">function guid() {
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
     }
-);</code></pre>
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+        s4() + '-' + s4() + s4() + s4();
+}
 
-<p><strong>Ruby</strong></p>
+var sessionId = guid();
 
-<pre><code class="code">client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
-expectation = expectation <span class="keyword">do</span> |expectation|
-     expectation.request <span class="keyword">do</span> |request|
-        request.method = <span class="string_literal">'GET'</span>
-        request.path = <span class="string_literal">'/somePath'</span>
-        request.cookies = [cookie(<span class="string_literal">'sessionId'</span>, <span class="string_literal">'2By8LOhBmaW5nZXJwcmludCIlMDAzMW'</span>)]
-     end
-
-    expectation.response <span class="keyword">do</span> |response|
-        response.status_code = <span class="numeric_literal">200</span>
-        response.body = body(<span class="string_literal">"{ name: 'value' }"</span>)
-    end
-end
-client.register(expectation)</code></pre>
+mockServerClient("localhost", 1080)
+    .mockAnyResponse({
+        'httpRequest': {
+            'method': 'GET',
+            'path': '/somePath',
+            "cookies": {
+                "sessionId": sessionId
+            }
+        },
+        'httpResponse': {
+            'statusCode': 200,
+            'body': JSON.stringify({name: 'value'})
+        }
+    })
+    .then(
+        function () {
+            console.log("expectation created");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>

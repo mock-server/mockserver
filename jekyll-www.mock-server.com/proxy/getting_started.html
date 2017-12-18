@@ -10,15 +10,17 @@ sitemap:
   lastmod: 2015-04-18T22:40:27+01:00
 ---
 
+<h2 style="color: red;">WARNING: THIS PAGE IS CURRENTLY BEING UPDATED</h2>
+
 <p style="width: 35%; float: right; margin-right: 5%"><a href="../images/more_detail_available_message.png" target="_blank"><img src="../images/more_detail_available_message.png" alt="Note: this page is a high level overview of each topic, more detail is available for each topic on a linked page." style="float: right; max-width: 100%;"></a></p>
 
 <p>To use MockServer Proxy to analysis an existing system:</p>
 
 <ol start="0">
-    <li><a href="/proxy/running_mock_server_proxy.html">Start MockServer Proxy</a></li>
-    <li><a href="/proxy/configuring_clients.html">Configure Clients</a></li>
+    <li><a href="#start_mockserver">Start MockServer Proxy</a></li>
+    <li><a href="#configure_clients">Configure Clients</a></li>
     <li>Run Scenarios</li>
-    <li><a href="#analysing-behaviour">Analyse Behaviour</a></li>
+    <li><a href="#analysing_behaviour">Analyse Behaviour</a></li>
 </ol>
 
 <p style="width: 59%; margin-top: 0; padding-top: 0;"><a href="../images/recording_requests_with_mockserver_proxy.png" target="_blank"><img src="../images/recording_requests_with_mockserver_proxy.png" alt="Mocking service dependencies with MockServer" style="max-width:100%;"></a></p>
@@ -27,19 +29,18 @@ sitemap:
 
 <ol start="0">
     <li><a href="/proxy/running_mock_server_proxy.html">Start MockServer Proxy</a></li>
-    <li><a href="/proxy/configuring_clients.html">Configure Clients</a></li>
+    <li><a href="#configure_clients">Configure Clients</a></li>
     <li>Run Test Scenarios</li>
     <li><a href="/proxy/verification.html">Verify Requests</a></li>
 </ol>
 
 <p style="width: 59%; margin-top: 0; padding-top: 0;"><a href="../images/system_under_test_with_mockserver_proxy_different_numbering.png" target="_blank"><img src="../images/system_under_test_with_mockserver_proxy_different_numbering.png" alt="Mocking service dependencies with MockServer" style="max-width:100%;"></a></p>
 
+<a name="start_mockserver" class="anchor" href="#start_mockserver">&nbsp;</a>
+
 <h2>0. Start MockServer</h2>
 
-<p>MockServer is flexible and support numerous usage patterns.</p>
-
 {% include_subpage ../mock_server/_includes/running_mock_server_summary.html %}
-
 
 <p><strong>Start MockServer Proxy</strong></p>
 
@@ -53,13 +54,13 @@ sitemap:
 
 <pre><code class="code">-DproxySet=true -Dhttp.proxyHost=localhost -Dhttp.proxyPort=1090</code></pre>
 
-<p><strong>Configuring Clients</strong></p>
+<a name="configure_clients" class="anchor" href="#configure_clients">&nbsp;</a>
 
-<p>The system that is being analysed must be <a href="/proxy/configuring_clients.html">configured to use the proxy</a>.</p>
+<h2>2. Configure Clients</h2>
 
-<p><strong>Viewing Recorded Request & Responses</strong></p>
+<p>The page on <a href="/proxy/configuring_clients.html">configuring clients</a> gives full details and example code on how to configure the system being analysed.</p>
 
-<a name="analysing-behaviour" class="anchor" href="#analysing-behaviour">&nbsp;</a>
+<a name="analysing_behaviour" class="anchor" href="#analysing_behaviour">&nbsp;</a>
 
 <h2>3. Analysing Behaviour</h2>
 
@@ -182,4 +183,4 @@ sitemap:
 
 <h2>3. Verify Requests</h2>
 
-{% include_subpage _includes/verification_summary.html %}
+{% include_subpage ../mock_server/_includes/verification_summary.html %}

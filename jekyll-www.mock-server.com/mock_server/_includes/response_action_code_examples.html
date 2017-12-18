@@ -15,7 +15,7 @@
     </div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     // if no request matcher is specified then every request matched
     "httpResponse": {
@@ -32,7 +32,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code"># if no request matcher is specified then every request matched
+        <pre class="prettyprint code"><code class="code"># if no request matcher is specified then every request matched
 curl -v -X PUT "http://localhost:1080/expectation" -d '{
     "httpResponse": {
         "body": "some_response_body"
@@ -60,7 +60,7 @@ curl -v -X PUT "http://localhost:1080/expectation" -d '{
     </div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     // if no request matcher is specified then every request matched
     "httpResponse": {
@@ -83,7 +83,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code"># if no request matcher is specified then every request matched
+        <pre class="prettyprint code"><code class="code"># if no request matcher is specified then every request matched
 curl -v -X PUT "http://localhost:1080/expectation" -d '{
     "httpResponse": {
         "headers": {
@@ -114,7 +114,7 @@ curl -v -X PUT "http://localhost:1080/expectation" -d '{
     </div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
         "method": "POST",
@@ -134,7 +134,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
     "httpRequest": {
         "method": "POST",
         "path": "/some/path"
@@ -167,7 +167,7 @@ new MockServerClient("localhost", 1080)
     </div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
         "path": "/ws/rest/user/[0-9]+/icon/[0-9]+\\.png"
@@ -194,7 +194,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
     "httpRequest": {
         "path": "/ws/rest/user/[0-9]+/icon/[0-9]+\\.png"
     },
@@ -229,7 +229,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
         "path": "/some/path"
@@ -252,7 +252,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
     "httpRequest": {
         "path": "/some/path"
     },
@@ -287,7 +287,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest" : {
         "path" : "/some/path"
@@ -310,7 +310,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
     "httpRequest" : {
         "path" : "/some/path"
     },
@@ -345,7 +345,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest" : {
         "path" : "/some/path"
@@ -368,7 +368,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
     "httpRequest" : {
         "path" : "/some/path"
     },
@@ -402,7 +402,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest" : {
         "path" : "/some/path"
@@ -424,7 +424,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
     "httpRequest" : {
         "path" : "/some/path"
     },
@@ -471,7 +471,7 @@ new MockServerClient("localhost", 1080)
     </div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 // $!request.headers['Session-Id'] returns an array of values because headers and queryStringParameters have multiple values
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
@@ -507,7 +507,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
     "httpRequest": {
         "path": "/some/path"
     },
@@ -563,7 +563,7 @@ new MockServerClient("localhost", 1080)
     </div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {"path": "/some/path"},
     "httpResponseTemplate": {
@@ -592,7 +592,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
     "httpRequest": {"path": "/some/path"},
     "httpResponseTemplate": {
         "template": "if (request.method === 'POST' && request.path === '/somePath') {\n" +
@@ -641,7 +641,7 @@ new MockServerClient("localhost", 1080)
     </div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 // $!request.headers['Session-Id'] and $!request.headers['User-Agent'] both returns an
 // array of values because headers and queryStringParameters have multiple values
 mockServerClient("localhost", 1080).mockAnyResponse({
@@ -670,7 +670,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
     "httpRequest": {"path": "/some/path"},
     "httpResponseTemplate": {
         "template": "{\n" +

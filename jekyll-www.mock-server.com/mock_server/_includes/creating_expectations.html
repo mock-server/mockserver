@@ -1,0 +1,177 @@
+<button class="accordion"><strong>Java Code Example</strong></button>
+<div class="panel">
+    <p><em><strong>Please Note:</strong> There are over 100 more detailed code examples in Java, JavaScript and the REST API below.</em></p>
+
+    <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("POST")
+            .withPath("/login")
+            .withBody("{username: 'foo', password: 'bar'}")
+    )
+    .respond(
+        response()
+            .withStatusCode(302)
+            .withCookie(
+                "sessionId", "2By8LOhBmaW5nZXJwcmludCIlMDAzMW"
+            )
+            .withHeader(
+                "Location", "https://www.mock-server.com"
+            )
+    );</code></pre>
+</div>
+
+<button class="accordion"><strong>JavaScript Code Example</strong></button>
+<div class="panel">
+    <p><em><strong>Please Note:</strong> There are over 100 more detailed code examples in Java, JavaScript and the REST API below.</em></p>
+
+    <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "method": "POST",
+        "path": "/login",
+        "body": "{username: 'foo', password: 'bar'}"
+    },
+    "httpResponse": {
+        "statusCode": 302,
+        "headers": {
+            "Location" : [ "https://www.mock-server.com" ]
+        },
+        "cookies": {
+            "sessionId" : "2By8LOhBmaW5nZXJwcmludCIlMDAzMW"
+        }
+    }
+});</code></pre>
+</div>
+
+<p>An expectation contains:</p>
+<ul>
+    <li><strong><a href="#request_matchers">request matcher</a></strong> - used to match which requests this expectation should be applied to</li>
+    <li><strong><a href="#actions">action</a></strong> - what action to take, actions include <strong>response</strong>, <strong>forward</strong>, <strong>callback</strong> and <strong>error</strong></li>
+    <li><strong><a href="#button_match_request_by_path_exactly_twice">times</a></strong> - how many times the action should be taken</li>
+    <li><strong><a href="#button_match_request_by_path_exactly_once_in_the_next_60_seconds">timeToLive</a></strong> - how long the expectation should stay active</li>
+</ul>
+
+<p>MockServer will play expectations in the exact order they are added. For example, if an expectation <span class="annotation">A</span> is added with <span class="inline_code">Times.exactly(3)</span> then expectation <span class="annotation">B</span> is added with <span class="inline_code">Times.exactly(2)</span> with the same request matcher they will be applied in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.</p>
+
+<a name="request_matchers" class="anchor" href="#request_matchers">&nbsp;</a>
+
+<h3>Request Matchers</h3>
+
+<p>A <strong>request matcher</strong> can contain any of the following matchers:</p>
+
+<ul>
+    <li><strong>method</strong> - string value as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, regular expression or <a href="#button_match_request_by_not_matching_method">negated matcher</a></li>
+    <li><strong>path</strong> - string value as a <a href="#button_match_request_by_path">plain text</a>, <a href="#button_match_request_by_regex_path">regular expression</a> or <a href="#button_match_request_by_not_matching_path">negated matcher</a></li>
+    <li><strong>query string</strong> - key to multiple values as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, regular expression or negated matcher</li>
+    <li><strong>headers</strong> - key to multiple values as a <a href="#button_match_request_by_headers">plain text</a>, regular expression or <a href="#button_match_request_by_not_matching_header_value">negated matcher</a></li>
+    <li><strong>cookies</strong> - key to value as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, regular expression or negated matcher</li>
+    <li><strong>body</strong>
+        <ul>
+            <li><strong><a href="#button_match_request_by_body_with_xpath">XPath</a></strong></li>
+            <li><strong><a href="#button_match_request_by_body_with_xml">XML</a></strong></li>
+            <li><strong><a href="#button_match_request_by_body_with_xml_schema">XML Schema</a></strong></li>
+            <li><strong><a href="#button_match_request_by_body_with_json_exactly">JSON</a></strong> - supports two match types <strong>STRICT</strong> and <strong>ONLY_MATCHING_FIELDS</strong>.  <strong>STRICT</strong> match type matches all fields and the order of arrays.  In <strong>STRICT</strong> match type extra fields will cause the matcher to fail. <strong>ONLY_MATCHING_FIELDS</strong> match type only matches fields provided in the request matcher.</li>
+            <li><strong><a href="#button_match_request_by_body_with_json_schema">JSON Schema</a></strong></li>
+            <li><strong><a href="#button_match_request_by_regex_body">regular expression</a></strong></li>
+            <li><strong><a href="#button_match_request_by_body_in_utf16">plain text</a></strong> (i.e. exact match)</li>
+            <li><strong><a href="#button_match_request_by_form_submission_body">form fields</a></strong> (i.e. body parameters)</li>
+            <li><strong><a href="#button_match_request_by_not_matching_body_with_xpath">negated matcher</a></strong></li>
+        </ul>
+    <li><strong>secure</strong> - true if the request was made using HTTPS</li>
+</ul>
+
+<button id="button_request" class="accordion title"><strong>Request Matcher Code Examples</strong></button>
+<div class="panel title">
+    {% include_subpage _includes/request_matcher_code_examples.html %}
+</div>
+
+<a name="actions" class="anchor" href="#actions">&nbsp;</a>
+
+<h3>Actions</h3>
+
+<p>Actions can be one of the following types:</p>
+<ul>
+    <li><strong><a href="#response_action">response</a></strong> - returns a response, either as a <a href="#button_response_literal_body_only">response literal</a>, or using a response template (in <a href="#button_javascript_templated_response">javascript</a> or <a href="#button_javascript_velocity_templated_response">velocity</a>)</li>
+    <li><strong><a href="#forward_action">forward</a></strong> - forwards requests, either <a href="#button_forward_exactly">exactly</a> as it receives them, or using a forward template (in <a href="#button_javascript_templated_forward">javascript</a> or <a href="#button_javascript_velocity_templated_forward">velocity</a>)</li>
+    <li><strong><a href="#callback_action">callback</a></strong> - dynamically generate a response based on the request by calling a predefined <a href="#button_class_callback">java class</a> or a <a href="#button_method_or_closure_callback">closure</a></li>
+    <li><strong><a href="#error_action">error</a></strong> - returns an invalid response as a sequence of bytes or closes the connection</li>
+</ul>
+
+<a name="response_action" class="anchor" href="#response_action">&nbsp;</a>
+
+<p>A <strong>response action</strong> can be:</p>
+
+<ul>
+    <li>
+        <p>either a <a href="#button_response_literal_body_only">response literal</a> containing any of the following:</p>
+        <ul>
+            <li><strong><a href="#button_response_literal_status_code_only">status code</a></strong></li>
+            <li><strong><a href="#button_response_literal_binary_PNG_body">body</a></strong></li>
+            <li><strong>headers</strong></li>
+            <li><strong>cookies</strong></li>
+            <li><strong><a href="#button_response_literal_with_10_second_delay">delay</a></strong></li>
+            <li><strong><a href="#button_response_literal_with_connection_options_to_suppress_headers">connectionOptions</a></strong> that can be used to <a href="#button_response_literal_with_connection_options_to_suppress_headers">suppress headers</a>, <a href="#button_response_literal_with_connection_options_to_override_headers">override headers</a> or <a href="#button_response_literal_with_connection_options_to_close_socket">close the socket connection</a></li>
+        </ul>
+    </li>
+    <li>
+        <p>or a templated response using <strong><a href="#button_javascript_templated_response">javascript</a></strong> or <strong><a href="#button_javascript_velocity_templated_response">velocity</a></strong> with a <strong><a href="#button_javascript_templated_response_with_delay">delay</a></strong></p>
+    </li>
+</ul>
+
+<button id="button_response" class="accordion title"><strong>Response Action Code Examples</strong></button>
+<div class="panel title">
+    {% include_subpage _includes/response_action_code_examples.html %}
+</div>
+
+<a name="forward_action" class="anchor" href="#forward_action">&nbsp;</a>
+
+<p>A <strong>forward action</strong> can be:</p>
+
+<ul>
+    <li>
+        <p>either an <a href="#button_forward_exactly">exact forwarder</a>, that forwards requests exactly as it receives them, containing the following:</p>
+        <ul>
+            <li><strong>host</strong></li>
+            <li><strong>port</strong></li>
+            <li><strong><a href="#button_forward_exactly_in_https">scheme</a></strong></li>
+        </ul>
+    </li>
+    <li>
+        <p>or a templated forwarder using <strong><a href="#button_javascript_templated_forward">javascript</a></strong> or <strong><a href="#button_javascript_velocity_templated_forward">velocity</a></strong>, with a <strong><a href="#button_javascript_templated_forward_with_delay">delay</a></strong>, that allows requests to be modified or completely re-written before they are forwarded</p>
+    </li>
+</ul>
+
+<button id="button_forward" class="accordion title"><strong>Forward Action Code Examples</strong></button>
+<div class="panel title">
+    {% include_subpage _includes/forward_action_code_examples.html %}
+</div>
+
+<a name="callback_action" class="anchor" href="#callback_action">&nbsp;</a>
+
+<p>A <strong>callback action</strong> can be used to dynamically generate a response based on the request:</p>
+
+<ul>
+    <li>
+        <p>call a <a href="#button_class_callback">java class</a> that has a default constructor, implements <strong>org.mockserver.mock.action.ExpectationCallback</strong> and is available on the classpath</p>
+    </li>
+    <li>
+        <p>call a <a href="#button_method_or_closure_callback">closure</a> using the java or javascript clients</p>
+    </li>
+</ul>
+
+
+
+<button id="button_callback" class="accordion title"><strong>Callback Action Code Examples</strong></button>
+<div class="panel title">
+    {% include_subpage _includes/callback_action_code_examples.html %}
+</div>
+
+<a name="error_action" class="anchor" href="#error_action">&nbsp;</a>
+
+<p>An <strong>error action</strong> can return an invalid response as a <a href="#button_random_bytes_error">sequence of bytes</a> or <a href="#button_drop_connection_error">drop the connection</a></p>
+
+<button id="button_error" class="accordion title"><strong>Error Action Code Examples</strong></button>
+<div class="panel title">
+    {% include_subpage _includes/error_action_code_examples.html %}
+</div>

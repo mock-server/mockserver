@@ -51,7 +51,7 @@ sitemap:
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
     .retrieveRecordedRequests({})
     .then(
@@ -65,7 +65,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_recorded_reqs_using_request_matcher" class="accordion">retrieve recorded requests using request matcher</button>
@@ -81,7 +81,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).retrieveRecordedRequests({
     "path": "/some/path",
     "method": "POST"
@@ -96,7 +96,7 @@ mockServerClient("localhost", 1080).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -116,7 +116,7 @@ mockServerClient("localhost", 1080).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS&format=JAVA" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS&format=JAVA" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -135,7 +135,7 @@ mockServerClient("localhost", 1080).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).retrieveRecordedRequests({
     "path": "/some/path",
     "method": "POST"
@@ -150,7 +150,7 @@ mockServerClient("localhost", 1080).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS&format=JSON" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS&format=JSON" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -178,7 +178,7 @@ mockServerClient("localhost", 1080).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
     .retrieveActiveExpectations({})
     .then(
@@ -192,7 +192,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_active_expectations_using_request_matcher" class="accordion">retrieve active expectations using request matcher</button>
@@ -208,7 +208,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).retrieveActiveExpectations({
     "path": "/some/path",
     "method": "POST"
@@ -223,7 +223,7 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -243,7 +243,7 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS&format=JAVA" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS&format=JAVA" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -262,7 +262,7 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).retrieveActiveExpectations({
     "path": "/some/path",
     "method": "POST"
@@ -277,7 +277,7 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS&format=JSON" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS&format=JSON" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -307,7 +307,7 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
     .retrieveRecordedExpectations({})
     .then(
@@ -321,7 +321,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_recorded_expectations_using_request_matcher" class="accordion">retrieve recorded expectations using request matcher</button>
@@ -337,7 +337,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).retrieveRecordedExpectations({
     "path": "/some/path",
     "method": "POST"
@@ -352,7 +352,7 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -372,7 +372,7 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS&format=JAVA" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS&format=JAVA" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -391,7 +391,7 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).retrieveRecordedExpectations({
     "path": "/some/path",
     "method": "POST"
@@ -406,7 +406,7 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -444,7 +444,7 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
     .retrieveLogMessages({})
     .then(
@@ -459,7 +459,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_recorded_log_messages_using_request_matcher" class="accordion">retrieve recorded log messages using request matcher</button>
@@ -475,7 +475,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
     .retrieveLogMessages({
         "path": "/some/path",
@@ -493,7 +493,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -511,7 +511,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
     .retrieveLogMessages({
         "path": "/some/path"
@@ -556,8 +556,6 @@ mockServerClient("localhost", 1080)
 	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-netty/src/main/resources/example_logback.xml">logback configuration file</a> is available in github.</p>
 
 <p>A custom <a href="http://logback.qos.ch">logback</a> configuration file can be specified using the <span class="inline_code">logback.configurationFile</span> system property with an absolute or relative file path or a classpath, as follows: <code class="code inline">-Dlogback.configurationFile=example_logback.xml</code></p>
-
-<p>A custom <a href="http://logback.qos.ch">logback</a> configuration file will also be automatically picked up if it is called <strong>logback.xml</strong> and is in the root of the classpath, however, the jar-with-dependencies already contains a <strong>logback.xml</strong> file, so to override this, the overriding <strong>logback.xml</strong> file must be higher (i.e. earlier) in the classpath.</p>
 
 <a name="logging_with_command_line" class="anchor" href="#logging_with_command_line">&nbsp;</a>
 
@@ -622,8 +620,8 @@ mockServerClient("localhost", 1080)
 <p>To disable logging the following options can be used:</p>
 
 <ul>
-<li><code class="code inline">-Dmockserver.logLevel=OFF</code> - to disable logging from the MockServer and MockServer Proxy classes</li>
-<li><code class="code inline">-Droot.logLevel=OFF</code> - to disable all logging from all other classes (i.e. all none MockServer and MockServer Proxy classes)</li>
+<li><code class="code inline">-Dmockserver.logLevel=OFF</code> - to disable logging from the MockServer and Proxy classes</li>
+<li><code class="code inline">-Droot.logLevel=OFF</code> - to disable all logging from all other classes</li>
 </ul>
 
 <p>If logging is disabled then no log file will be created.  This is because the log files are only created when the first item is written to the log file.</p>

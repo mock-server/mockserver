@@ -1,9 +1,12 @@
 package org.mockserver.examples.mockserver;
 
 import org.mockserver.client.server.MockServerClient;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.ClearType;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.verify.VerificationTimes;
+
+import java.util.UUID;
 
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.HttpRequest.request;
@@ -12,8 +15,27 @@ import static org.mockserver.model.Parameter.param;
 
 public class ClientExamples {
 
-    public void createExpectation() {
+    public void createExpectationMockServerClient() {
         new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withMethod("GET")
+                    .withPath("/view/cart")
+                    .withCookies(
+                        cookie("session", "4930456C-C718-476F-971F-CB8E047AB349")
+                    )
+                    .withQueryStringParameters(
+                        param("cartId", "055CA455-1DF7-45BB-8535-4F83E7266092")
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void createExpectationClientAndServer() {
+        new ClientAndServer(1080)
             .when(
                 request()
                     .withMethod("GET")
