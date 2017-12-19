@@ -197,6 +197,14 @@ This styles the menu heading.
     margin: 0;
 }
 
+li.active {
+    background-color: #f3f3f3;
+}
+
+#menu li.active a {
+    color: #050505;
+}
+
 /* -- Dynamic Button For Responsive Menu -------------------------------------*/
 
 /*
