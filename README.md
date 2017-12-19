@@ -37,12 +37,6 @@ Docker Index contains the following artifacts:
 
 * [MockServer Docker Container](https://hub.docker.com/r/jamesdbloom/mockserver/) - a Docker container containing the Netty MockServer and proxy
 
-### Vert.X Module Registry
-
-Vert.X Module Registry contains the following artifacts:
-
-* [`org.mock-server~mockserver-vertx~2.9`](http://modulereg.vertx.io/) - a Vert.X module that mocks HTTP and HTTPS requests 
-
 ### MockServer Clients
 
 * [mockserver-client-ruby ![mockserver-client](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - Ruby client for both the MockServer and the proxy 
