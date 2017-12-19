@@ -67,7 +67,7 @@ public class HttpStateHandler {
             switch (retrieveType) {
                 case LOG:
                     logFilter.clear(requestMatcher);
-                    logFormatter.infoLog(requestMatcher, "clearing request logs that match:{}", requestMatcher);
+                    logFormatter.infoLog(requestMatcher, "clearing recorded requests and logs that match:{}", requestMatcher);
                     break;
                 case EXPECTATIONS:
                     mockServerMatcher.clear(requestMatcher);

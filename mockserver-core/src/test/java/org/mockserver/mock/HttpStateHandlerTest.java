@@ -149,7 +149,7 @@ public class HttpStateHandlerTest {
         // then - activity logged
         verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
         verify(mockLogFormatter).infoLog(request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).infoLog(request("request_one"), "clearing request logs that match:{}", request("request_one"));
+        verify(mockLogFormatter).infoLog(request("request_one"), "clearing recorded requests and logs that match:{}", request("request_one"));
     }
 
     @Test
