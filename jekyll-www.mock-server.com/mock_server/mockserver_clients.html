@@ -58,13 +58,13 @@ sitemap:
 <p>The JavaScript client has the following version:</p>
 
 <ul>
-	<li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver-client-node/68b0928e06c9f00e6b87439868ac0571a936d1c0/mockServerClient.js"><strong>mockServerClient.js</strong></a></li>
+	<li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/mockServerClient.js"><strong>mockServerClient.js</strong></a></li>
     <li>a Node.js npm module <a href="https://www.npmjs.org/package/mockserver-client"><strong>mockserver-client</strong></a><br/><a href="https://www.npmjs.org/package/mockserver-client"><img src="https://nodei.co/npm/mockserver-client.png?downloads=true&downloadRank=true&stars=true" alt="mockserver-client-node"/></a></li>
 </ul>
 
 <p>To include the browser based client in an HTML page as follows:</p>
 
-<pre class="prettyprint lang-java code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/68b0928e06c9f00e6b87439868ac0571a936d1c0/mockServerClient.js&quot;&gt;&lt;/script&gt;</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/mockServerClient.js&quot;&gt;&lt;/script&gt;</code></pre>
 
 <a name="client-code-examples" class="anchor" href="#client-code-examples">&nbsp;</a>
 
@@ -110,7 +110,7 @@ sitemap:
             .withBody("some_response_body")
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.js mockserver-client</button>
         <div class="panel">
         <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
@@ -137,6 +137,36 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/mockServerClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  mockServerClient("localhost", 1080)
+    .mockAnyResponse({
+      "httpRequest": {
+        "method": "GET",
+        "path": "/view/cart",
+        "queryStringParameters": {
+          "cartId": ["055CA455-1DF7-45BB-8535-4F83E7266092"]
+        },
+        "cookies": {
+          "session": "4930456C-C718-476F-971F-CB8E047AB349"
+        }
+      },
+      "httpResponse": {
+        "body": "some_response_body"
+      }
+    })
+    .then(
+      function () {
+        console.log("expectation created");
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -168,7 +198,7 @@ mockServerClient("localhost", 1080)
         VerificationTimes.atLeast(2)
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.js mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
@@ -184,6 +214,25 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/mockServerClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  mockServerClient("localhost", 1080)
+    .verify(
+      {
+        'path': '/some/path'
+      }, 2, false)
+    .then(
+      function () {
+        console.log("request found exactly 2 times");
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -212,7 +261,7 @@ mockServerClient("localhost", 1080)
             .withPath("/some/path/three")
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.js mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
@@ -235,6 +284,32 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/mockServerClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  mockServerClient("localhost", 1080)
+    .verifySequence(
+      {
+        'path': '/some/path/one'
+      },
+      {
+        'path': '/some/path/two'
+      },
+      {
+        'path': '/some/path/three'
+      }
+    )
+    .then(
+      function () {
+        console.log("request sequence found in the order specified");
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -262,7 +337,7 @@ mockServerClient("localhost", 1080)
             .withMethod("POST")
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.js mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
@@ -278,6 +353,25 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/mockServerClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  mockServerClient("localhost", 1080)
+    .retrieveRecordedRequests({
+      "path": "/some/path",
+      "method": "POST"
+    })
+    .then(
+      function (recordedRequests) {
+        console.log(JSON.stringify(recordedRequests));
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -298,7 +392,7 @@ mockServerClient("localhost", 1080)
             .withMethod("POST")
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.js mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
@@ -315,6 +409,26 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/mockServerClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  mockServerClient("localhost", 1080)
+    .retrieveLogMessages({
+      "path": "/some/path",
+      "method": "POST"
+    })
+    .then(
+      function (logMessages) {
+        // logMessages is a String[]
+        console.log(logMessages);
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -334,7 +448,7 @@ mockServerClient("localhost", 1080)
         .withMethod("POST")
 );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.js mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
@@ -349,6 +463,24 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/mockServerClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  mockServerClient("localhost", 1080)
+    .clear({
+      'path': '/some/path'
+    })
+    .then(
+      function () {
+        console.log("cleared state that matches request matcher");
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -368,7 +500,7 @@ mockServerClient("localhost", 1080)
     ClearType.LOG
 );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.js mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
@@ -384,6 +516,24 @@ mockServerClient("localhost", 1080)
     }
   );</code></pre>
         </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/mockServerClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  mockServerClient("localhost", 1080)
+    .clear({
+      'path': '/some/path'
+    }, 'LOG')
+    .then(
+      function () {
+        console.log("cleared state that matches request matcher");
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
+        </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
             <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/clear?type=LOGS" -d '{
@@ -397,7 +547,7 @@ mockServerClient("localhost", 1080)
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).reset();</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.js mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080)
@@ -410,6 +560,22 @@ mockServerClient("localhost", 1080)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/mockServerClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  mockServerClient("localhost", 1080)
+    .reset()
+    .then(
+      function () {
+        console.log("reset all state");
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">

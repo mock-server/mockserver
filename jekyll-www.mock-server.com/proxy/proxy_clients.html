@@ -56,13 +56,13 @@ sitemap:
 <p>The JavaScript client has the following version:</p>
 
 <ul>
-    <li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver-client-node/68b0928e06c9f00e6b87439868ac0571a936d1c0/proxyClient.js"><strong>proxyClient.js</strong></a></li>
+    <li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/proxyClient.js"><strong>proxyClient.js</strong></a></li>
     <li>a Node.js npm module <a href="https://www.npmjs.org/package/mockserver-client"><strong>mockserver-client</strong></a><br/><a href="https://www.npmjs.org/package/mockserver-client"><img src="https://nodei.co/npm/mockserver-client.png?downloads=true&downloadRank=true&stars=true" alt="mockserver-client-node"/></a></li>
 </ul>
 
 <p>To include the browser based client in an HTML page as follows:</p>
 
-<pre class="prettyprint lang-java code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/68b0928e06c9f00e6b87439868ac0571a936d1c0/proxyClient.js&quot;&gt;&lt;/script&gt;</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/proxyClient.js&quot;&gt;&lt;/script&gt;</code></pre>
 
 <a name="client-code-examples" class="anchor" href="#client-code-examples">&nbsp;</a>
 
@@ -88,7 +88,7 @@ sitemap:
             .withMethod("POST")
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.JS mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
 proxyClient("localhost", 1090)
@@ -104,6 +104,25 @@ proxyClient("localhost", 1090)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/proxyClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  proxyClient("localhost", 1090)
+    .retrieveRecordedRequests({
+      "path": "/some/path",
+      "method": "POST"
+    })
+    .then(
+      function (recordedRequests) {
+        console.log(JSON.stringify(recordedRequests));
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -133,7 +152,7 @@ proxyClient("localhost", 1090)
             .withMethod("POST")
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.JS mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
 proxyClient("localhost", 1090)
@@ -149,6 +168,25 @@ proxyClient("localhost", 1090)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/proxyClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  proxyClient("localhost", 1090)
+    .retrieveRecordedRequests({
+      "path": "/some/path",
+      "method": "POST"
+    })
+    .then(
+      function (recordedRequests) {
+        console.log(JSON.stringify(recordedRequests));
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -169,7 +207,7 @@ proxyClient("localhost", 1090)
             .withMethod("POST")
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.JS mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
 proxyClient("localhost", 1090)
@@ -186,6 +224,26 @@ proxyClient("localhost", 1090)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/proxyClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  proxyClient("localhost", 1090)
+    .retrieveLogMessages({
+      "path": "/some/path",
+      "method": "POST"
+    })
+    .then(
+      function (logMessages) {
+        // logMessages is a String[]
+        console.log(logMessages);
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -215,7 +273,7 @@ proxyClient("localhost", 1090)
         VerificationTimes.atLeast(2)
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.JS mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
 proxyClient("localhost", 1090)
@@ -231,6 +289,25 @@ proxyClient("localhost", 1090)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/proxyClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  proxyClient("localhost", 1090)
+    .verify(
+      {
+        'path': '/some/path'
+      }, 2, false)
+    .then(
+      function () {
+        console.log("request found exactly 2 times");
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -271,7 +348,7 @@ proxyClient("localhost", 1090)
             .withPath("/some/path/three")
     );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.JS mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
 proxyClient("localhost", 1090)
@@ -294,6 +371,32 @@ proxyClient("localhost", 1090)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/proxyClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  proxyClient("localhost", 1090)
+    .verifySequence(
+      {
+        'path': '/some/path/one'
+      },
+      {
+        'path': '/some/path/two'
+      },
+      {
+        'path': '/some/path/three'
+      }
+    )
+    .then(
+      function () {
+        console.log("request sequence found in the order specified");
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -320,7 +423,7 @@ proxyClient("localhost", 1090)
         .withMethod("POST")
 );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.JS mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
 proxyClient("localhost", 1090)
@@ -335,6 +438,24 @@ proxyClient("localhost", 1090)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/proxyClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  proxyClient("localhost", 1090)
+    .clear({
+      'path': '/some/path'
+    })
+    .then(
+      function () {
+        console.log("cleared state that matches request matcher");
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
@@ -354,7 +475,7 @@ proxyClient("localhost", 1090)
     ClearType.LOG
 );</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.JS mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
 proxyClient("localhost", 1090)
@@ -370,6 +491,24 @@ proxyClient("localhost", 1090)
     }
   );</code></pre>
         </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/proxyClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  proxyClient("localhost", 1090)
+    .clear({
+      'path': '/some/path'
+    }, 'LOG')
+    .then(
+      function () {
+        console.log("cleared state that matches request matcher");
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
+        </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
             <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/clear?type=LOGS" -d '{
@@ -383,7 +522,7 @@ proxyClient("localhost", 1090)
         <div class="panel">
             <pre class="prettyprint lang-java code"><code class="code">new ProxyClient("localhost", 1090).reset();</code></pre>
         </div>
-        <button class="accordion inner">JavaScript: mockserver-client</button>
+        <button class="accordion inner">JavaScript: Node.JS mockserver-client</button>
         <div class="panel">
             <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
 proxyClient("localhost", 1090)
@@ -396,6 +535,22 @@ proxyClient("localhost", 1090)
       console.log(error);
     }
   );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.2.3/proxyClient.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+  proxyClient("localhost", 1090)
+    .reset()
+    .then(
+      function () {
+        console.log("reset all state");
+      },
+      function (error) {
+        console.log(error);
+      }
+    );
+&lt;/script&gt;</code></pre>
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
