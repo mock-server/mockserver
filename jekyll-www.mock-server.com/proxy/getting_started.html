@@ -10,8 +10,6 @@ sitemap:
   lastmod: 2015-04-18T22:40:27+01:00
 ---
 
-<h2 style="color: red;">WARNING: THIS PAGE IS CURRENTLY BEING UPDATED</h2>
-
 <p style="width: 35%; float: right; margin-right: 5%"><a href="../images/more_detail_available_message.png" target="_blank"><img src="../images/more_detail_available_message.png" alt="Note: this page is a high level overview of each topic, more detail is available for each topic on a linked page." style="float: right; max-width: 100%;"></a></p>
 
 <p>To use MockServer Proxy to analysis an existing system:</p>
@@ -64,122 +62,255 @@ sitemap:
 
 <h2>3. Analysing Behaviour</h2>
 
-<p>To analyse the requests that a system makes the proxy can be used to record all requests and write them into the <span class="annotation">mockserver_request.log</span>. This can be particularly helpful when refactoring an existing or legacy system.</p>
+<p>To analyse the requests that a system makes the proxy can be used to record all requests and their corresponding responses.</p>
 
-<p>The requests can be written to the log in JSON or as Java code. The Java code can then be used to setup expectations in MockServer and exactly replay all interactions.</p>
+<h3>Retrieve Recorded Requests</h3>
 
-<p>The request and responses recorded by the MockServer Proxy can be written to the request log as Java code, as follows:</p>
+<p>Recorded requests can be retrieved as a list of <strong>requests</strong> received by the proxy in either JSON or Java code.</p>
 
-<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>)
-        .dumpToLogAsJava(
-                request()
-                        .withMethod(<span class="string_literal">"POST"</span>)
-                        .withPath(<span class="string_literal">"/login"</span>)
-        );</code></pre>
-
-<p>The Java code format that requests are written to the logs is as follows:</p>
-
-<pre><code class="code"><span class="keyword">new</span> MockServerClient()
-        .when(
-                request()
-                        .withMethod(<span class="string_literal">"GET"</span>)
-                        .withPath(<span class="string_literal">"/get_book"</span>)
-                        .withQueryString(<span class="string_literal">"id=1"</span>)
-                        .withHeaders(
-                                <span class="keyword">new</span> Header(<span class="string_literal">"Accept-Encoding"</span>, <span class="string_literal">"gzip"</span>),
-                                <span class="keyword">new</span> Header(<span class="string_literal">"Host"</span>, <span class="string_literal">"localhost:1090"</span>),
-                                <span class="keyword">new</span> Header(<span class="string_literal">"User-Agent"</span>, <span class="string_literal">"Jetty/8.1.13.v20130916"</span>)
-                        ),
-                Times.once()
-        )
-        .respond(
-                response()
-                        .withStatusCode(<span class="numeric_literal">200</span>)
-                        .withHeaders(
-                                <span class="keyword">new</span> Header(<span class="string_literal">"Server"</span>, <span class="string_literal">"Jetty(8.1.13.v20130916)"</span>)
-                        )
-                        .withBody(<span class="string_literal">"{\n        \"id\": \"1\",\n        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\",\n        \"author\": \"James Tatum\",\n        \"isbn\": \"0691067570\",\n        \"publicationDate\": \"1989\"\n    }"</span>)
-        );</code></pre>
-
-<p>The request and responses recorded by the MockServer Proxy can be written to the request log as JSON, as follows:</p>
-
-<pre><code class="code"><span class="keyword">new</span> ProxyClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1090</span>)
-        .dumpToLogAsJSON(
-                request()
-                        .withMethod(<span class="string_literal">"POST"</span>)
-                        .withPath(<span class="string_literal">"/login"</span>)
-        );</code></pre>
-
-<p>This would result in entries in the <strong>mockserver_request.log</strong> file of the following format:</p>
-
-<pre><code class="code">{
-    <span class="string_literal">"httpRequest"</span>: {
-        <span class="string_literal">"method"</span>: <span class="string_literal">"POST"</span>,
-        <span class="string_literal">"path"</span>: <span class="string_literal">"/login"</span>,
-        <span class="string_literal">"body"</span>: {
-            <span class="string_literal">"type"</span>: <span class="string_literal">"STRING"</span>,
-            <span class="string_literal">"value"</span>: <span class="string_literal">"{username: 'foo', password: 'bar'}"</span>,
+<button id="button_recorded_reqs" class="accordion title"><strong>Retrieving Recorded Requests Code Examples</strong></button>
+<div class="panel title">
+    <button id="button_retrieve_all_recorded_reqs" class="accordion">retrieve all recorded requests</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new ProxyClient("localhost", 1090)
+    .retrieveRecordedRequests(
+        request()
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
+proxyClient("localhost", 1090)
+    .retrieveRecordedRequests({})
+    .then(
+        function (recordedRequests) {
+            console.log(JSON.stringify(recordedRequests));
         },
-        <span class="string_literal">"cookies"</span>: [
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"sid"</span>,
-                <span class="string_literal">"values"</span>: [ <span class="string_literal">"05F1A3D2F2143C49727"</span> ]
-            }
-        ],
-        <span class="string_literal">"headers"</span>: [
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Accept-Language"</span>,
-                <span class="string_literal">"values"</span>: [ <span class="string_literal">"en-US,en;q=0.8,fa;q=0.6"</span> ]
-            },
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Cookie"</span>,
-                <span class="string_literal">"values"</span>: [ <span class="string_literal">"sid=05F1A3D2F2143C49727"</span> ]
-            },
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Host"</span>,
-                <span class="string_literal">"values"</span>: [ <span class="string_literal">"localhost:2021"</span> ]
-            },
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Length"</span>,
-                <span class="string_literal">"values"</span>: [ <span class="string_literal">"34"</span> ]
-            },
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Accept-Encoding"</span>,
-                <span class="string_literal">"values"</span>: [ <span class="string_literal">"gzip,deflate,sdch"</span> ]
-            },
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"User-Agent"</span>,
-                <span class="string_literal">"values"</span>: [ <span class="string_literal">"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36"</span> ]
-            },
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Accept"</span>,
-                <span class="string_literal">"values"</span>: [ <span class="string_literal">"*/*"</span> ]
-            },
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
-                <span class="string_literal">"values"</span>: [ <span class="string_literal">"text/plain"</span> ]
-            }
-        ]
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=REQUESTS"</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_reqs_using_request_matcher" class="accordion">retrieve recorded requests using request matcher</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new ProxyClient("localhost", 1090)
+    .retrieveRecordedRequests(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
+proxyClient("localhost", 1090).retrieveRecordedRequests({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (recordedRequests) {
+        console.log(JSON.stringify(recordedRequests));
     },
-    <span class="string_literal">"httpResponse"</span>: {
-        <span class="string_literal">"statusCode"</span>: <span class="numeric_literal">200</span>,
-        <span class="string_literal">"body"</span>: <span class="string_literal">"{ message: 'success' }"</span>,
-        <span class="string_literal">"headers"</span>: [
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Content-Type"</span>,
-                <span class="string_literal">"values"</span>: [ <span class="string_literal">"application/json; charset=utf-8"</span> ]
-            },
-            {
-                <span class="string_literal">"name"</span>: <span class="string_literal">"Cache-Control"</span>,
-                <span class="string_literal">"values"</span>: [ <span class="string_literal">"no-cache, no-store"</span> ]
-            }
-        ]
-    },
-    <span class="string_literal">"times"</span>: {
-        <span class="string_literal">"remainingTimes"</span>: <span class="numeric_literal">1</span>,
-        <span class="string_literal">"unlimited"</span>: <span class="keyword">false</span>
+    function (error) {
+        console.log(error);
     }
-}</code></pre>
+);</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=REQUESTS" -d '{
+    "path": "/some/path",
+    "method": "POST"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_reqs_as_java" class="accordion">retrieve recorded requests as java</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String recordedRequests = new ProxyClient("localhost", 1090)
+    .retrieveRecordedRequests(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JAVA
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=REQUESTS&format=JAVA" -d '{
+    "path": "/some/path"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_reqs_as_json" class="accordion">retrieve recorded requests as json</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String recordedRequests = new ProxyClient("localhost", 1090)
+    .retrieveRecordedRequests(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JSON
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
+proxyClient("localhost", 1090).retrieveRecordedRequests({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (recordedRequests) {
+        console.log(JSON.stringify(recordedRequests));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=REQUESTS&format=JSON" -d '{
+    "path": "/some/path"
+}'</code></pre>
+        </div>
+    </div>
+</div>
+
+<h3>Retrieve Recorded Expectations</h3>
+
+<p>Recorded requests-response pairs can be retrieved as a list of <strong>expectations</strong> containing the request and response that was proxied in either JSON or Java code.</p>
+
+<p>The list of retrieved expectations can be used to <a href="/mock_server/getting_started.html#setup_expectations">setup expectations</a> in MockServer to support mocking.</p>
+
+<button id="button_recorded_expectations" class="accordion title"><strong>Retrieving Recorded Expectations Code Examples</strong></button>
+<div class="panel title">
+    <button id="button_retrieve_all_recorded_expectations" class="accordion">retrieve all recorded expectations</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new ProxyClient("localhost", 1090)
+    .retrieveRecordedExpectations(
+        request()
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
+proxyClient("localhost", 1090)
+    .retrieveRecordedExpectations({})
+    .then(
+        function (recordedExpectations) {
+            console.log(JSON.stringify(recordedExpectations));
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=RECORDED_EXPECTATIONS"</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_expectations_using_request_matcher" class="accordion">retrieve recorded expectations using request matcher</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new ProxyClient("localhost", 1090)
+    .retrieveRecordedExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
+proxyClient("localhost", 1090).retrieveRecordedExpectations({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (recordedExpectations) {
+        console.log(JSON.stringify(recordedExpectations));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=RECORDED_EXPECTATIONS" -d '{
+    "path": "/some/path",
+    "method": "POST"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_expectations_as_java" class="accordion">retrieve recorded expectations as java</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String recordedExpectations = new ProxyClient("localhost", 1090)
+    .retrieveRecordedExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JAVA
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=RECORDED_EXPECTATIONS&format=JAVA" -d '{
+    "path": "/some/path"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_expectations_as_json" class="accordion">retrieve recorded expectations as json</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String recordedExpectations = new ProxyClient("localhost", 1090)
+    .retrieveRecordedExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JSON
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
+proxyClient("localhost", 1090).retrieveRecordedExpectations({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (recordedExpectations) {
+        console.log(JSON.stringify(recordedExpectations));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" -d '{
+    "path": "/some/path"
+}'</code></pre>
+        </div>
+    </div>
+</div>
 
 <h2>3. Verify Requests</h2>
 

@@ -39,9 +39,8 @@ function locationHashChanged(e) {
                 acc[i].nextElementSibling.style.display = "none";
             }
         }
-        var elementId = location.hash.slice(1);
-        console.log("elementId = " + elementId);
 
+        var elementId = location.hash.slice(1);
         if (elementId) {
             var accordionTitleButton;
             // open title div
@@ -65,13 +64,15 @@ function locationHashChanged(e) {
                 accordionTitleButton = document.getElementById("button_recorded_expectations");
             } else if (elementId.indexOf("recorded_log_events") !== -1) {
                 accordionTitleButton = document.getElementById("button_recorded_log_events");
+            } else if (elementId.indexOf("verify_req") !== -1) {
+                accordionTitleButton = document.getElementById("button_verify_req");
+            } else if (elementId.indexOf("verify_sequence") !== -1) {
+                accordionTitleButton = document.getElementById("button_verify_sequence");
             }
-            console.log("accordionTitleButton = " + accordionTitleButton);
             openDiv(accordionTitleButton);
 
             // then open and scroll into view
             var accordionButton = document.getElementById(elementId);
-            console.log("accordionButton = " + accordionButton);
             openDiv(accordionButton);
         }
 

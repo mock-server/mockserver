@@ -8,7 +8,9 @@
 
 <p>Verify that a request has been received by MockServer a specific number of times using a <strong>Verification</strong></p>
 
-<button id="button_verify_at_least_twice" class="accordion">verify requests received at least twice</button>
+<button id="button_verify_req" class="accordion title"><strong>Verify Repeating Requests Code Examples</strong></button>
+<div class="panel title">
+<button id="button_verify_req_at_least_twice" class="accordion">verify requests received at least twice</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -49,7 +51,7 @@ mockServerClient("localhost", 1080)
 }'</code></pre>
     </div>
 </div>
-<button id="button_verify_exact_once" class="accordion">verify requests received exact once</button>
+<button id="button_verify_req_exact_once" class="accordion">verify requests received exact once</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -90,7 +92,7 @@ mockServerClient("localhost", 1080)
 }'</code></pre>
     </div>
 </div>
-<button id="button_verify_never_received" class="accordion">verify requests never received</button>
+<button id="button_verify_req_never_received" class="accordion">verify requests never received</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -131,12 +133,17 @@ mockServerClient("localhost", 1080)
 }'</code></pre>
     </div>
 </div>
+</div>
 
 <h3>Verifying Request Sequences</h3>
 
 <p>Verify that a sequence of requests has been received by MockServer in the specified order using a <strong>VerificationSequence</strong></p>
 
-<button id="button_verify_sequence" class="accordion">verify request sequence received</button>
+<p>The each request in the sequence will be verified to have been received at least once, in the exact order specified.</p>
+
+<button id="button_verify_sequence" class="accordion title"><strong>Verify Request Sequences Code Examples</strong></button>
+<div class="panel title">
+<button id="button_verify_sequence_of_reqs" class="accordion">verify request sequence received</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -189,5 +196,4 @@ mockServerClient("localhost", 1080)
 ]'</code></pre>
     </div>
 </div>
-
-<p>The each request in the sequence will be verified to have been received at least once, in the exact order specified.</p>
+</div>

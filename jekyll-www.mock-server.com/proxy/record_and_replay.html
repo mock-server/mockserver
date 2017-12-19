@@ -1,7 +1,7 @@
 ---
 title: Record & Replay
 layout: page
-pageOrder: 6
+pageOrder: 5
 section: 'Proxy'
 subsection: true
 sitemap:
@@ -10,18 +10,4 @@ sitemap:
   lastmod: 2015-04-18T22:40:27+01:00
 ---
 
-<h2 style="color: red;">WARNING: THIS PAGE IS CURRENTLY BEING UPDATED</h2>
-
 {% include_subpage _includes/analysing_behaviour.html %}
-
-<h4>Replay Recorded Requests</h4>
-
-<p>Once the recorded requests have been dumped to the log as Java or JSON these can be copied directly into a test setup method.</p>
-
-<p>The request recordings are in Java or JSON for the following reasons:</p>
-
-<ul>
-	<li>request recordings are clear and fully transparent</li>
-	<li>request recordings are easily modifiable</li>
-	<li>request recordings are code and so can easily be encapsulated in each test setup method, avoiding the anti-pattern of sharing recordings between tests</li>
-</ul>
