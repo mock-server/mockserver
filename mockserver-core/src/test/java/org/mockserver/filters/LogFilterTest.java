@@ -9,11 +9,15 @@ import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.HttpRequest;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.filters.LogFilter.*;
 import static org.mockserver.model.HttpRequest.request;
@@ -104,21 +108,27 @@ public class LogFilterTest {
             new ExpectationMatchLogEntry(request("request_four"), new Expectation(request("request_four")).thenRespond(response("response_four")))
         ));
         assertThat(logFilter.retrieveMessages(null), contains(
-            "message_two",
-            "message_three",
-            "message_four",
-            "message_five",
-            "message_six",
-            "message_seven"
+            containsString("message_two"),
+            containsString("message_three"),
+            containsString("message_four"),
+            containsString("message_five"),
+            containsString("message_six"),
+            containsString("message_seven")
         ));
-        assertThat(logFilter.retrieveLogEntries(null, messageLogPredicate, logEntryToLogEntry), IsIterableContainingInOrder.<LogEntry>contains(
+        List<LogEntry> logEntries = logFilter.retrieveLogEntries(null, messageLogPredicate, logEntryToLogEntry);
+        List<MessageLogEntry> messageLogEntries = Arrays.asList(
             new MessageLogEntry(request("request_two"), "message_two"),
             new MessageLogEntry(request("request_three"), "message_three"),
             new MessageLogEntry(request("request_four"), "message_four"),
             new MessageLogEntry(request("request_five"), "message_five"),
             new MessageLogEntry(request("request_six"), "message_six"),
             new MessageLogEntry(request("request_seven"), "message_seven")
-        ));
+        );
+        for (int i = 0; i < logEntries.size(); i++) {
+            MessageLogEntry messageLogEntry = (MessageLogEntry) logEntries.get(i);
+            assertThat(messageLogEntry.getHttpRequest(), is(messageLogEntries.get(i).getHttpRequest()));
+            assertThat(messageLogEntry.getMessage(), is(messageLogEntries.get(i).getMessage()));
+        }
     }
 
     @Test
@@ -237,15 +247,16 @@ public class LogFilterTest {
 
         // then
         assertThat(logFilter.retrieveMessages(null), contains(
-            "message_one",
-            "message_two",
-            "message_three",
-            "message_four",
-            "message_five",
-            "message_six",
-            "message_seven"
+            containsString("message_one"),
+            containsString("message_two"),
+            containsString("message_three"),
+            containsString("message_four"),
+            containsString("message_five"),
+            containsString("message_six"),
+            containsString("message_seven")
         ));
-        assertThat(logFilter.retrieveLogEntries(null, messageLogPredicate, logEntryToLogEntry), IsIterableContainingInOrder.<LogEntry>contains(
+        List<LogEntry> logEntries = logFilter.retrieveLogEntries(null, messageLogPredicate, logEntryToLogEntry);
+        List<MessageLogEntry> messageLogEntries = Arrays.asList(
             new MessageLogEntry(request("request_one"), "message_one"),
             new MessageLogEntry(request("request_two"), "message_two"),
             new MessageLogEntry(request("request_three"), "message_three"),
@@ -253,7 +264,12 @@ public class LogFilterTest {
             new MessageLogEntry(request("request_five"), "message_five"),
             new MessageLogEntry(request("request_six"), "message_six"),
             new MessageLogEntry(request("request_seven"), "message_seven")
-        ));
+        );
+        for (int i = 0; i < logEntries.size(); i++) {
+            MessageLogEntry messageLogEntry = (MessageLogEntry) logEntries.get(i);
+            assertThat(messageLogEntry.getHttpRequest(), is(messageLogEntries.get(i).getHttpRequest()));
+            assertThat(messageLogEntry.getMessage(), is(messageLogEntries.get(i).getMessage()));
+        }
     }
 
     @Test

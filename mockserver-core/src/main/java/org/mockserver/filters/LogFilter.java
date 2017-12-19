@@ -71,7 +71,8 @@ public class LogFilter {
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
     private Function<LogEntry, String> logEntryToMessage = new Function<LogEntry, String>() {
         public String apply(LogEntry logEntry) {
-            return ((MessageLogEntry) logEntry).getMessage();
+            MessageLogEntry messageLogEntry = (MessageLogEntry) logEntry;
+            return messageLogEntry.getMessage();
         }
     };
 

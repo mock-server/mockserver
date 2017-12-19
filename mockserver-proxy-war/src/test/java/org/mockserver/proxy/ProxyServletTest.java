@@ -22,6 +22,7 @@ import java.util.Collections;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static org.apache.commons.codec.Charsets.UTF_8;
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -206,12 +207,18 @@ public class ProxyServletTest {
         proxyServlet.service(retrieveLogRequest, response);
 
         // then
-        assertResponse(response,200, "retrieving logs that match:" + NEW_LINE +
-            "" + NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"path\" : \"request_one\"" + NEW_LINE +
-            "\t}" + NEW_LINE +
-            NEW_LINE);
+        assertThat(response.getStatus(), is(200));
+        String[] splitBody = new String(response.getContentAsByteArray(), UTF_8).split("------------------------------------\n");
+        assertThat(splitBody.length, is(1));
+        assertThat(
+            splitBody[0],
+            is(endsWith("retrieving logs that match:" + NEW_LINE +
+                NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                "\t}" + NEW_LINE +
+                NEW_LINE))
+        );
     }
 
     @Test

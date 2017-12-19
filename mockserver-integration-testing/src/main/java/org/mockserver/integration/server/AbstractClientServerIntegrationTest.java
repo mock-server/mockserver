@@ -5508,7 +5508,7 @@ public abstract class AbstractClientServerIntegrationTest {
 
         for (int i = 0; i < expectedLogMessages.length; i++) {
             if (expectedLogMessages[i] instanceof String) {
-                assertThat("matching log message " + i, actualLogMessages[i], is(expectedLogMessages[i]));
+                assertThat("matching log message " + i, actualLogMessages[i], endsWith((String) expectedLogMessages[i]));
             } else if (expectedLogMessages[i] instanceof String[]) {
                 String[] expectedLogMessage = (String[]) expectedLogMessages[i];
                 for (int j = 0; j < expectedLogMessage.length; j++) {

@@ -20,6 +20,7 @@ import org.mockserver.model.HttpResponse;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
@@ -402,9 +403,12 @@ public class HttpStateHandlerTest {
             .withQueryStringParameter("type", "logs")
             .withBody(httpRequestSerializer.serialize(request("request_one")));
         // given - some log messages
-        httpStateHandler.log(new MessageLogEntry(request("request_one"), "message_one"));
-        httpStateHandler.log(new MessageLogEntry(request("request_one"), "message_two"));
-        httpStateHandler.log(new MessageLogEntry(request("request_one"), "message_three"));
+        MessageLogEntry logEntryOne = new MessageLogEntry(request("request_one"), "message_one");
+        httpStateHandler.log(logEntryOne);
+        MessageLogEntry logEntryTwo = new MessageLogEntry(request("request_one"), "message_two");
+        httpStateHandler.log(logEntryTwo);
+        MessageLogEntry logEntryThree = new MessageLogEntry(request("request_one"), "message_three");
+        httpStateHandler.log(logEntryThree);
 
         // when
         HttpResponse response = httpStateHandler.retrieve(request);
@@ -412,9 +416,9 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(
-                "message_one------------------------------------\n" +
-                    "message_two------------------------------------\n" +
-                    "message_three\n",
+                logEntryOne.getMessage() + "------------------------------------\n" +
+                    logEntryTwo.getMessage() + "------------------------------------\n" +
+                    logEntryThree.getMessage() + "\n",
                 PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
         verify(mockLogFormatter).infoLog(request("request_one"), "retrieving logs that match:{}", request("request_one"));
@@ -460,6 +464,14 @@ public class HttpStateHandlerTest {
         // then - activity logged
         verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
         verify(mockLogFormatter).infoLog(request(), "resetting all expectations and request logs" + NEW_LINE);
+    }
+
+    public static class TestMessageLogEntry extends MessageLogEntry {
+
+        public TestMessageLogEntry(HttpRequest httpRequest, String message, Date timeStamp) {
+            super(httpRequest, message);
+            this.timeStamp = timeStamp;
+        }
     }
 
 }

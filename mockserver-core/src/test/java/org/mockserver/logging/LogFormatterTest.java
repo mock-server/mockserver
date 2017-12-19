@@ -1,6 +1,7 @@
 package org.mockserver.logging;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpRequest;
@@ -8,6 +9,9 @@ import org.slf4j.Logger;
 
 import java.util.Arrays;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.mockito.Mockito.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
@@ -107,7 +111,13 @@ public class LogFormatterTest {
             "\tmulti-line" + NEW_LINE +
             "\tobject" + NEW_LINE;
         verify(mockLogger).error(message);
-        verify(mockHttpStateHandler, times(1)).log(new MessageLogEntry(request, message));
+
+        ArgumentCaptor<MessageLogEntry> captor = ArgumentCaptor.forClass(MessageLogEntry.class);
+        verify(mockHttpStateHandler, times(1)).log(captor.capture());
+
+        MessageLogEntry messageLogEntry = captor.getValue();
+        assertThat(messageLogEntry.getHttpRequest(), is(request));
+        assertThat(messageLogEntry.getMessage(), containsString(message));
     }
 
     @Test
@@ -141,7 +151,13 @@ public class LogFormatterTest {
             "\tmulti-line" + NEW_LINE +
             "\tobject" + NEW_LINE;
         verify(mockLogger).error(message, exception);
-        verify(mockHttpStateHandler, times(1)).log(new MessageLogEntry(request, message));
+
+        ArgumentCaptor<MessageLogEntry> captor = ArgumentCaptor.forClass(MessageLogEntry.class);
+        verify(mockHttpStateHandler, times(1)).log(captor.capture());
+
+        MessageLogEntry messageLogEntry = captor.getValue();
+        assertThat(messageLogEntry.getHttpRequest(), is(request));
+        assertThat(messageLogEntry.getMessage(), containsString(message));
     }
 
     @Test
@@ -175,7 +191,14 @@ public class LogFormatterTest {
             "\tmulti-line" + NEW_LINE +
             "\tobject" + NEW_LINE;
         verify(mockLogger).error(message, exception);
-        verify(mockHttpStateHandler, times(2)).log(new MessageLogEntry(request, message));
+
+        ArgumentCaptor<MessageLogEntry> captor = ArgumentCaptor.forClass(MessageLogEntry.class);
+        verify(mockHttpStateHandler, times(2)).log(captor.capture());
+
+        for (MessageLogEntry messageLogEntry : captor.getAllValues()) {
+            assertThat(messageLogEntry.getHttpRequest(), is(request));
+            assertThat(messageLogEntry.getMessage(), containsString(message));
+        }
     }
 
 }

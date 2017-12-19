@@ -28,6 +28,8 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
+import static org.apache.commons.codec.Charsets.UTF_8;
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -226,13 +228,20 @@ public class HttpProxyHandlerTest {
         embeddedChannel.writeInbound(retrieveLogRequest);
 
         // then
-        assertResponse(200, "retrieving logs that match:" + NEW_LINE +
-            "" + NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"path\" : \"request_one\"" + NEW_LINE +
-            "\t}" + NEW_LINE +
-            NEW_LINE +
-            NEW_LINE);
+        HttpResponse response = embeddedChannel.readOutbound();
+        assertThat(response.getStatusCode(), is(200));
+        String[] splitBody = response.getBodyAsString().split("------------------------------------\n");
+        assertThat(splitBody.length, is(1));
+        assertThat(
+            splitBody[0],
+            is(endsWith("retrieving logs that match:" + NEW_LINE +
+                "" + NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                "\t}" + NEW_LINE +
+                NEW_LINE +
+                NEW_LINE))
+        );
     }
 
     @Test

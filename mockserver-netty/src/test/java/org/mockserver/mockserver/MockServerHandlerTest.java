@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -211,31 +212,39 @@ public class MockServerHandlerTest {
         embeddedChannel.writeInbound(retrieveLogRequest);
 
         // then
-        assertResponse(200, "creating expectation:" + NEW_LINE +
-            "" + NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"httpRequest\" : {" + NEW_LINE +
-            "\t    \"path\" : \"request_one\"" + NEW_LINE +
-            "\t  }," + NEW_LINE +
-            "\t  \"times\" : {" + NEW_LINE +
-            "\t    \"remainingTimes\" : 0," + NEW_LINE +
-            "\t    \"unlimited\" : true" + NEW_LINE +
-            "\t  }," + NEW_LINE +
-            "\t  \"timeToLive\" : {" + NEW_LINE +
-            "\t    \"unlimited\" : true" + NEW_LINE +
-            "\t  }," + NEW_LINE +
-            "\t  \"httpResponse\" : {" + NEW_LINE +
-            "\t    \"statusCode\" : 200," + NEW_LINE +
-            "\t    \"body\" : \"response_one\"" + NEW_LINE +
-            "\t  }" + NEW_LINE +
-            "\t}" + NEW_LINE +
-            "------------------------------------\n" +
-            "retrieving logs that match:" + NEW_LINE +
-            "" + NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"path\" : \"request_one\"" + NEW_LINE +
-            "\t}" + NEW_LINE +
-            "\n");
+        HttpResponse response = embeddedChannel.readOutbound();
+        assertThat(response.getStatusCode(), is(200));
+        String[] splitBody = response.getBodyAsString().split("------------------------------------\n");
+        assertThat(splitBody.length, is(2));
+        assertThat(
+            splitBody[0],
+            is(endsWith("creating expectation:" + NEW_LINE +
+                "" + NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"httpRequest\" : {" + NEW_LINE +
+                "\t    \"path\" : \"request_one\"" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"times\" : {" + NEW_LINE +
+                "\t    \"remainingTimes\" : 0," + NEW_LINE +
+                "\t    \"unlimited\" : true" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"timeToLive\" : {" + NEW_LINE +
+                "\t    \"unlimited\" : true" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"httpResponse\" : {" + NEW_LINE +
+                "\t    \"statusCode\" : 200," + NEW_LINE +
+                "\t    \"body\" : \"response_one\"" + NEW_LINE +
+                "\t  }" + NEW_LINE +
+                "\t}" + NEW_LINE))
+        );
+        assertThat(
+            splitBody[1],
+            is(endsWith("retrieving logs that match:" + NEW_LINE +
+                NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                "\t}" + NEW_LINE +
+                NEW_LINE)));
     }
 
     @Test
