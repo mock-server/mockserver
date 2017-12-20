@@ -37,6 +37,22 @@ public class MockServerRunAndWaitMojoTest {
     }
 
     @Test
+    public void shouldRunMockServerAndHandleNullTimeout() throws MojoExecutionException, ExecutionException, InterruptedException {
+        // given
+        mockServerRunAndWaitMojo.serverPort = "1,2";
+        mockServerRunAndWaitMojo.proxyPort = 3;
+        mockServerRunAndWaitMojo.timeout = null;
+        mockServerRunAndWaitMojo.initializationClass = "org.mockserver.maven.ExampleInitializationClass";
+
+        // when
+        mockServerRunAndWaitMojo.execute();
+
+        // then
+        verify(mockEmbeddedJettyHolder).start(eq(new Integer[]{1,2}), eq(3), any(ExampleInitializationClass.class));
+        verify(objectSettableFuture).get();
+    }
+
+    @Test
     public void shouldRunMockServerAndWaitIndefinitely() throws MojoExecutionException, ExecutionException, InterruptedException {
         // given
         mockServerRunAndWaitMojo.serverPort = "1,2";
