@@ -263,6 +263,52 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 }'</code></pre>
     </div>
 </div>
+<button id="button_match_request_by_method_regex" class="accordion">match request by method regex</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            // matches any requests that does NOT have a "GET" method
+            .withMethod(not("P.*{2,3}"))
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "method": "P.*{2,3}"
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "method" : "P.*{2,3}"
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
 <button id="button_match_request_by_not_matching_method" class="accordion">match request by not matching method</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
@@ -307,6 +353,114 @@ mockServerClient("localhost", 1080).mockAnyResponse({
   "httpResponse" : {
     "body" : "some_response_body"
   }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_query_parameter_name_regex" class="accordion">match request by query parameter name regex</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+            .withQueryStringParameters(
+                param("[A-z]{0,10}", "055CA455-1DF7-45BB-8535-4F83E7266092")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path",
+        "queryStringParameters": {
+            "[A-z]{0,10}": ["055CA455-1DF7-45BB-8535-4F83E7266092"]
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path",
+        "queryStringParameters": {
+            "[A-z]{0,10}": ["055CA455-1DF7-45BB-8535-4F83E7266092"]
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_query_parameter_value_regex" class="accordion">match request by query parameter value regex</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+            .withQueryStringParameters(
+                param("cartId", "[A-Z0-9\\-]+")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path",
+        "queryStringParameters": {
+            "cartId": ["[A-Z0-9\\-]+"]
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path",
+        "queryStringParameters": {
+            "cartId": ["[A-Z0-9\\-]+"]
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
 }'</code></pre>
     </div>
 </div>
@@ -367,6 +521,118 @@ mockServerClient("localhost", 1080).mockAnyResponse({
   "httpResponse" : {
     "body" : "some_response_body"
   }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_header_name_regex" class="accordion">match request by header name regex</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+            .withHeader(
+                header("Accept.*")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path",
+        "headers": {
+            // matches requests that have any header starting with the name Accept
+            "Accept.*": [ "" ]
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">// matches requests that have any header starting with the name Accept
+curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path",
+        "headers": {
+            "Accept.*": [ "" ]
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_header_value_regex" class="accordion">match request by header name and value regex</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+            .withHeader(
+                header("Accept.*", ".*gzip.*")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path",
+        "headers": {
+            // matches requests that have a header with a name starting with Accept and a value containing gzip
+            "Accept.*": [".*gzip.*"]
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">// matches requests that have a header with a name starting with Accept and a value containing gzip
+curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path",
+        "headers": {
+            "Accept.*": [".*gzip.*"]
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
 }'</code></pre>
     </div>
 </div>

@@ -1,0 +1,50 @@
+---
+title: CORS Support
+layout: page
+pageOrder: 10
+section: 'Mock Server'
+subsection: true
+sitemap:
+  priority: 0.7
+  changefreq: 'monthly'
+  lastmod: 2015-04-18T22:40:27+01:00
+---
+
+<p>MockServer and the proxy has support for CORS.  By default CORS support is enabled for the REST API and disabled for all other requests (such as when expectations are matched).</p>
+
+<p>When CORS support is enabled the following headers are added:</p>
+
+<pre class="prettyprint code"><code class="code">Access-Control-Allow-Origin: "*"
+Access-Control-Allow-Methods: "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE"
+Access-Control-Allow-Headers: "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"
+Access-Control-Expose-Headers: "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"
+Access-Control-Max-Age: "300"
+X-CORS: "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false"</code></pre>
+
+<p>CORS support can be enabled for all enabled for all requests-responses by enabling the <strong>enableCORSForAllResponses</strong> property.</p>
+
+<button id="button_enabled_cors_for_all_response" class="accordion">enabled CORS for all requests-responses</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.enableCORSForAllResponses(true)</code></pre>
+    </div>
+    <button class="accordion inner">Command Line</button>
+    <div class="panel">
+        <pre class="prettyprint lang-bash code"><code class="code">java -DenableCORSForAllResponses=true -jar "~/Downloads/mockserver-netty-5.2.3-jar-with-dependencies.jar" -serverPort 1080 -proxyPort 1090</code></pre>
+    </div>
+</div>
+
+<p>CORS support is enabled by default for the REST API.  CORS support can be disabled the REST API by disabling the <strong>enableCORSForAPI</strong> property.</p>
+
+<button id="button_disabled_cors_for_rest_api" class="accordion">disabled CORS for REST API</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.enableCORSForAPI(false)</code></pre>
+    </div>
+    <button class="accordion inner">Command Line</button>
+    <div class="panel">
+        <pre class="prettyprint lang-bash code"><code class="code">java -DenableCORSForAPI=false -jar "~/Downloads/mockserver-netty-5.2.3-jar-with-dependencies.jar" -serverPort 1080 -proxyPort 1090</code></pre>
+    </div>
+</div>

@@ -1,8 +1,7 @@
 ---
 title: Proxy Clients
-shortTitle: Proxy Clients
 layout: page
-pageOrder: 3
+pageOrder: 6
 section: 'Proxy'
 subsection: true
 sitemap:
@@ -31,6 +30,7 @@ sitemap:
     </li>
     <li><a href="#button_client_verify_reqs">verifying which requests have been received</a></li>
     <li><a href="#button_client_clear">clearing</a> or <a href="#button_client_reset">resetting</a> recorded request, expectations or logs (selectively)</li>
+    <li><a href="#button_client_bind_to_additional_free_port">bind</a> additional ports for the proxy to listen on</li>
 </ul>
 
 <a name="rest-api" class="anchor" href="#rest-api">&nbsp;</a>
@@ -555,6 +555,42 @@ proxyClient("localhost", 1090)
         <button class="accordion inner">REST API</button>
         <div class="panel">
             <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/reset</code></pre>
+        </div>
+    </div>
+    <button id="button_client_bind_to_additional_free_port" class="accordion">bind to additional free port</button>
+    <div class="panel">
+        <button class="accordion inner">Java: ProxyClient</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">List&gt;nteger&lt; boundPorts = new ProxyClient("localhost", 1080).bind(
+            0
+        );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/bind -d '{
+    "ports": [
+        0,
+        0
+    ]
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_client_bind_to_additional_specified_port" class="accordion">bind to additional specified port</button>
+    <div class="panel">
+        <button class="accordion inner">Java: ProxyClient</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">List&gt;nteger&lt; boundPorts = new ProxyClient("localhost", 1080).bind(
+            1081, 1082
+        );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/bind -d '{
+    "ports": [
+        1081,
+        1082
+    ]
+}'</code></pre>
         </div>
     </div>
 </div>

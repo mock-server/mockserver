@@ -80,34 +80,34 @@ layout: default
 	<li><strong>Port Forwarding</strong>
 		<ul>
 			<li>all requests for a specific local port are forwarded to a different (local or remote) port and hostname for the system being proxied</li>
-			<li>to proxy requests the <strong>HTTP client</strong> should <a href="/proxy/configuring_clients.html">use the hostname and port of the MockServer Proxy</a> instead of the system being proxied</li>
+			<li>to proxy requests the <strong>HTTP client</strong> should <a href="/proxy/configuring_sut.html">use the hostname and port of the MockServer Proxy</a> instead of the system being proxied</li>
 		</ul>
 	</li>
 	<li><strong>Web Proxying</strong> (i.e. HTTP proxy)
 		<ul>
 			<li>each request is forwarded dynamically using its Host header</li>
-			<li>to proxy requests the <strong>HTTP client</strong> should <a href="/proxy/configuring_clients.html">be configured to use an HTTP Proxy</a></li>
+			<li>to proxy requests the <strong>HTTP client</strong> should <a href="/proxy/configuring_sut.html">be configured to use an HTTP Proxy</a></li>
 		</ul>
 	</li>
 	<li><strong>Secure Web Proxying</strong> (i.e. HTTPS tunneling proxying)
 		<ul>
 			<li>requests are forwarded using a CONNECT request that setups an HTTP tunnel</li>
 			<li>an SSL certificate is auto-generated allowing encrypted HTTPS traffic to be recorded transparently</li>
-			<li>to proxy requests the <strong>HTTP client</strong> should <a href="/proxy/configuring_clients.html">be configured to use an HTTP Proxy</a></li>
+			<li>to proxy requests the <strong>HTTP client</strong> should <a href="/proxy/configuring_sut.html">be configured to use an HTTP Proxy</a></li>
 		</ul>
 	</li>
 	<li><strong>SOCKS Proxying</strong> (i.e. dynamic port forwarding)
 		<ul>
 			<li>requests are forwarded using a SOCK CONNECT CMD request that established a socket tunnel</li>
 			<li>if the traffic is encrypted an SSL certificate is auto-generated allowing SSL traffic to be recorded transparently</li>
-			<li>to proxy requests the <strong>operating system (or JVM)</strong> should <a href="/proxy/configuring_clients.html">be configured to use an HTTP Proxy</a></li>
+			<li>to proxy requests the <strong>operating system (or JVM)</strong> should <a href="/proxy/configuring_sut.html">be configured to use an HTTP Proxy</a></li>
 		</ul>
 	</li>
 	<li><strong>SSL & Certificates</strong>
 		<ul>
 			<li>all SSL traffic is handled transparently by auto-generating an appropriate SSL certificate</li>
 			<li>generated certificates use a single <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer root CA certificate</a> enabling the root certificate to be
-				<a href="/proxy/configuring_clients.html">easily imported</a></li>
+				<a href="/proxy/configuring_sut.html">easily imported</a></li>
 		</ul>
 	</li>
 	<li><strong>Port Unification</strong>
@@ -189,7 +189,7 @@ layout: default
 	</li>
 	<li>debug HTTP interactions
 		<ul>
-			<li>log all outbound requests so it is possible to visualise all interactions (for example from a browser) to external services. This is particularly important as network analysis tools in browsers such as Chrome do not accurately show all network interactions, such as, favicon.ico requests.  In addition many proxies do not handle encrypted HTTPS traffic, however, MockServer Proxy auto-generates certificates using a single <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer root CA certificate</a> enabling the root certificate to be <a href="/proxy/configuring_clients.html">easily imported</a></li>
+			<li>log all outbound requests so it is possible to visualise all interactions (for example from a browser) to external services. This is particularly important as network analysis tools in browsers such as Chrome do not accurately show all network interactions, such as, favicon.ico requests.  In addition many proxies do not handle encrypted HTTPS traffic, however, MockServer Proxy auto-generates certificates using a single <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer root CA certificate</a> enabling the root certificate to be <a href="/proxy/configuring_sut.html">easily imported</a></li>
 		</ul>
 	</li>
 	<li>record & replay

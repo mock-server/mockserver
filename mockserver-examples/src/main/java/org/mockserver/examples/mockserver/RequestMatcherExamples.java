@@ -94,6 +94,19 @@ public class RequestMatcherExamples {
             );
     }
 
+    public void matchRequestByMethodRegex() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    // matches any requests that does NOT have a "GET" method
+                    .withMethod(not("P.*{2,3}"))
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
     public void matchRequestByNotMatchingMethod() {
         new MockServerClient("localhost", 1080)
             .when(
@@ -105,6 +118,36 @@ public class RequestMatcherExamples {
                 response()
                     .withBody("some_response_body")
             );
+    }
+
+    public void matchRequestByQueryParameterNameRegex() {
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+            .withQueryStringParameters(
+                param("[A-z]{0,10}", "055CA455-1DF7-45BB-8535-4F83E7266092")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );
+    }
+
+    public void matchRequestByQueryParameterRegexValue() {
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+            .withQueryStringParameters(
+                param("cartId", "[A-Z0-9\\-]+")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );
     }
 
     public void matchRequestByHeaders() {
@@ -122,6 +165,36 @@ public class RequestMatcherExamples {
                 response()
                     .withBody("some_response_body")
             );
+    }
+
+    public void matchRequestByHeaderNameRegex() {
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+            .withHeader(
+                header("Accept.*")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );
+    }
+
+    public void matchRequestByHeaderRegexNameAndValue() {
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+            .withHeader(
+                header("Accept.*", ".*gzip.*")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );
     }
 
     public void matchRequestByNotMatchingHeaderValue() {

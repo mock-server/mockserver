@@ -61,10 +61,10 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 <p>A <strong>request matcher</strong> can contain any of the following matchers:</p>
 
 <ul>
-    <li><strong>method</strong> - string value as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, regular expression or <a href="#button_match_request_by_not_matching_method">negated matcher</a></li>
+    <li><strong>method</strong> - string value as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, <a href="#button_match_request_by_method_regex">regular expression</a> or <a href="#button_match_request_by_not_matching_method">negated matcher</a></li>
     <li><strong>path</strong> - string value as a <a href="#button_match_request_by_path">plain text</a>, <a href="#button_match_request_by_regex_path">regular expression</a> or <a href="#button_match_request_by_not_matching_path">negated matcher</a></li>
-    <li><strong>query string</strong> - key to multiple values as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, regular expression or negated matcher</li>
-    <li><strong>headers</strong> - key to multiple values as a <a href="#button_match_request_by_headers">plain text</a>, regular expression or <a href="#button_match_request_by_not_matching_header_value">negated matcher</a></li>
+    <li><strong>query string</strong> - key to multiple values as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, <a href="#button_match_request_by_query_parameter_name_regex">regular expression</a> or negated matcher</li>
+    <li><strong>headers</strong> - key to multiple values as a <a href="#button_match_request_by_headers">plain text</a>, <a href="#button_match_request_by_header_name_regex">regular expression</a> or <a href="#button_match_request_by_not_matching_header_value">negated matcher</a></li>
     <li><strong>cookies</strong> - key to value as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, regular expression or negated matcher</li>
     <li><strong>body</strong>
         <ul>

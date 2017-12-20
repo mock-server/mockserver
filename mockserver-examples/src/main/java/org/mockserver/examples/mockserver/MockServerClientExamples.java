@@ -6,14 +6,14 @@ import org.mockserver.model.ClearType;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.verify.VerificationTimes;
 
-import java.util.UUID;
+import java.util.List;
 
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.Parameter.param;
 
-public class ClientExamples {
+public class MockServerClientExamples {
 
     public void createExpectationMockServerClient() {
         new MockServerClient("localhost", 1080)
@@ -111,6 +111,18 @@ public class ClientExamples {
 
     public void reset() {
         new MockServerClient("localhost", 1080).reset();
+    }
+
+    public void bindToAdditionFreePort() {
+        List<Integer> boundPorts = new MockServerClient("localhost", 1080).bind(
+            0
+        );
+    }
+
+    public void bindToAdditionalSpecifiedPort() {
+        List<Integer> boundPorts = new MockServerClient("localhost", 1080).bind(
+            1081, 1082
+        );
     }
 
 }
