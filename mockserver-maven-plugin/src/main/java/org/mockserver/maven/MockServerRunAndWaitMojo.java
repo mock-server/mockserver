@@ -31,7 +31,7 @@ public class MockServerRunAndWaitMojo extends MockServerAbstractMojo {
                 );
             }
             try {
-                if (timeout > 0) {
+                if (timeout != null && timeout > 0) {
                     getEmbeddedJettyHolder().start(getServerPorts(), proxyPort, createInitializer());
                     try {
                         settableFuture.get(timeout, TimeUnit.SECONDS);
