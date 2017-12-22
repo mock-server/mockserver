@@ -5,6 +5,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.mockserver.client.proxy.ProxyClient;
+import org.mockserver.client.server.MockServerClient;
 import org.mockserver.integration.ClientAndProxy;
 import org.mockserver.socket.PortFactory;
 
@@ -17,6 +18,7 @@ public class ProxyRule implements TestRule {
     private final Integer port;
     private final boolean perTestSuite;
     private ClientAndProxyFactory clientAndProxyFactory;
+    private ClientAndProxy clientAndProxy;
 
     /**
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
@@ -82,7 +84,6 @@ public class ProxyRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                ClientAndProxy clientAndProxy;
                 if (perTestSuite) {
                     if (perTestSuiteClientAndProxy == null) {
                         perTestSuiteClientAndProxy = clientAndProxyFactory.newClientAndProxy();
@@ -122,6 +123,10 @@ public class ProxyRule implements TestRule {
                 }
             }
         }
+    }
+
+    public ProxyClient getClient() {
+        return clientAndProxy;
     }
 
     @VisibleForTesting

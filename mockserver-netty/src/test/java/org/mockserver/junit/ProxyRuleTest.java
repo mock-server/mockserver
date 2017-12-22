@@ -7,6 +7,7 @@ import org.mockserver.client.proxy.ProxyClient;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -19,8 +20,13 @@ public class ProxyRuleTest {
     private ProxyClient proxyClient;
 
     @Test
-    public void shouldSetTestMockServerField() {
+    public void shouldSetTestProxyField() {
         assertThat(proxyClient, is(not(nullValue())));
+    }
+
+    @Test
+    public void shouldSetTestProxyFieldWithSameValueFromGetter() {
+        assertThat(proxyClient, sameInstance(proxyRule.getClient()));
     }
 
 }

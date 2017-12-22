@@ -7,7 +7,9 @@ import org.mockserver.client.server.MockServerClient;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.same;
 
 /**
  * @author jamesdbloom
@@ -22,6 +24,11 @@ public class MockServerRuleTest {
     @Test
     public void shouldSetTestMockServeField() {
         assertThat(mockServerClient, is(not(nullValue())));
+    }
+
+    @Test
+    public void shouldSetTestMockServerFieldWithSameValueFromGetter() {
+        assertThat(mockServerClient, sameInstance(mockServerRule.getClient()));
     }
 
 }
