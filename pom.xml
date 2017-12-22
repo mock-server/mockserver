@@ -55,8 +55,8 @@
         <spring.version>4.3.12.RELEASE</spring.version>
         <skipTests>false</skipTests>
         <nonReleaseBuild>true</nonReleaseBuild>
-        <release.arguments />
-        <javadoc.additional.parameters />
+        <release.arguments/>
+        <javadoc.additional.parameters/>
     </properties>
 
     <modules>
@@ -566,6 +566,9 @@
                     <excludes>
                         <exclude>**/*IntegrationTest.java</exclude>
                     </excludes>
+                    <systemProperties>
+                        <mockserver.logLevel>OFF</mockserver.logLevel>
+                    </systemProperties>
                 </configuration>
             </plugin>
             <plugin>
@@ -578,6 +581,9 @@
                     <includes>
                         <include>**/*IntegrationTest.java</include>
                     </includes>
+                    <systemProperties>
+                        <mockserver.logLevel>OFF</mockserver.logLevel>
+                    </systemProperties>
                 </configuration>
                 <executions>
                     <execution>
