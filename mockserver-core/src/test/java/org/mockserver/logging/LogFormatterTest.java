@@ -47,7 +47,12 @@ public class LogFormatterTest {
             "\tmulti-line" + NEW_LINE +
             "\tobject" + NEW_LINE;
         verify(mockLogger).info(message);
-        verify(mockHttpStateHandler, times(1)).log(new MessageLogEntry(request, message));
+        ArgumentCaptor<MessageLogEntry> captor = ArgumentCaptor.forClass(MessageLogEntry.class);
+        verify(mockHttpStateHandler, times(1)).log(captor.capture());
+
+        MessageLogEntry messageLogEntry = captor.getValue();
+        assertThat(messageLogEntry.getHttpRequest(), is(request));
+        assertThat(messageLogEntry.getMessage(), containsString(message));
     }
 
     @Test
@@ -79,7 +84,13 @@ public class LogFormatterTest {
             "\tmulti-line" + NEW_LINE +
             "\tobject" + NEW_LINE;
         verify(mockLogger).info(message);
-        verify(mockHttpStateHandler, times(2)).log(new MessageLogEntry(request, message));
+        ArgumentCaptor<MessageLogEntry> captor = ArgumentCaptor.forClass(MessageLogEntry.class);
+        verify(mockHttpStateHandler, times(2)).log(captor.capture());
+
+        for (MessageLogEntry messageLogEntry : captor.getAllValues()) {
+            assertThat(messageLogEntry.getHttpRequest(), is(request));
+            assertThat(messageLogEntry.getMessage(), containsString(message));
+        }
     }
 
     @Test
