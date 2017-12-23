@@ -63,6 +63,7 @@ import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.model.StringBody.subString;
 import static org.mockserver.model.XPathBody.xpath;
 import static org.mockserver.model.XmlBody.xml;
 import static org.mockserver.model.XmlSchemaBody.xmlSchema;
@@ -195,7 +196,7 @@ public abstract class AbstractClientServerIntegrationTest {
             assertEquals(
                 response()
                     .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
+                    .withReasonPhrase(OK_200.reasonPhrase())
                     .withHeaders(
                         header("x-test", "test_headers_and_body")
                     )
@@ -214,7 +215,7 @@ public abstract class AbstractClientServerIntegrationTest {
             assertEquals(
                 response()
                     .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
+                    .withReasonPhrase(OK_200.reasonPhrase())
                     .withHeaders(
                         header("x-test", "test_headers_and_body")
                     )
@@ -267,7 +268,7 @@ public abstract class AbstractClientServerIntegrationTest {
             assertEquals(
                 response()
                     .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
+                    .withReasonPhrase(OK_200.reasonPhrase())
                     .withHeaders(
                         header("x-test", "test_headers_and_body")
                     )
@@ -287,7 +288,7 @@ public abstract class AbstractClientServerIntegrationTest {
             assertEquals(
                 response()
                     .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
+                    .withReasonPhrase(OK_200.reasonPhrase())
                     .withHeaders(
                         header("x-test", "test_headers_and_body_https")
                     )
@@ -588,165 +589,6 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldReturnMatchRequestWithBodyInUTF16() {
-        // when
-        String body = "我说中国话";
-        mockServerClient.when(request().withBody(body, Charsets.UTF_16)).respond(response().withBody(body, Charsets.UTF_8));
-
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody(body),
-            makeRequest(
-                request()
-                    .withPath(calculatePath(""))
-                    .withBody(body, Charsets.UTF_16),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody(body),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath(""))
-                    .withBody(body, Charsets.UTF_16),
-                headersToIgnore)
-        );
-    }
-
-    @Test
-    public void shouldReturnMatchRequestWithBodyInUTF16WithContentTypeHeader() {
-        // when
-        String body = "我说中国话";
-        mockServerClient
-            .when(
-                request()
-                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                    .withBody(body)
-            )
-            .respond(
-                response()
-                    .withBody(body, Charsets.UTF_8)
-            );
-
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody(body),
-            makeRequest(
-                request()
-                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                    .withPath(calculatePath(""))
-                    .withBody(body),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody(body),
-            makeRequest(
-                request()
-                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                    .withSecure(true)
-                    .withPath(calculatePath(""))
-                    .withBody(body),
-                headersToIgnore)
-        );
-    }
-
-    @Test
-    public void shouldReturnResponseWithBodyInUTF8() {
-        // when
-        String body = "我说中国话";
-        mockServerClient.when(request()).respond(response().withBody(body, Charsets.UTF_16));
-
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody(body),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody(body),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("")),
-                headersToIgnore)
-        );
-    }
-
-    @Test
-    public void shouldReturnResponseWithBodyInUTF16WithContentTypeHeader() {
-        // when
-        String body = "我说中国话";
-        mockServerClient
-            .when(
-                request()
-            )
-            .respond(
-                response()
-                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                    .withBody(body)
-            );
-
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody(body),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody(body),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("")),
-                headersToIgnore)
-        );
-    }
-
-    @Test
     public void shouldReturnResponseWithOnlyStatusCode() {
         // when
         mockServerClient
@@ -976,6 +818,257 @@ public abstract class AbstractClientServerIntegrationTest {
     }
 
     @Test
+    public void shouldReturnMatchRequestWithBodyInUTF16() {
+        // when
+        String body = "我说中国话";
+        mockServerClient.when(request().withBody(body, Charsets.UTF_16)).respond(response().withBody(body, Charsets.UTF_8));
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody(body),
+            makeRequest(
+                request()
+                    .withPath(calculatePath(""))
+                    .withBody(body, Charsets.UTF_16),
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody(body),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath(""))
+                    .withBody(body, Charsets.UTF_16),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnMatchRequestWithBodyInUTF16WithContentTypeHeader() {
+        // when
+        String body = "我说中国话";
+        mockServerClient
+            .when(
+                request()
+                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                    .withBody(body)
+            )
+            .respond(
+                response()
+                    .withBody(body, Charsets.UTF_8)
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody(body),
+            makeRequest(
+                request()
+                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                    .withPath(calculatePath(""))
+                    .withBody(body),
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody(body),
+            makeRequest(
+                request()
+                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                    .withSecure(true)
+                    .withPath(calculatePath(""))
+                    .withBody(body),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseWithBodyInUTF8() {
+        // when
+        String body = "我说中国话";
+        mockServerClient.when(request()).respond(response().withBody(body, Charsets.UTF_16));
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody(body),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("")),
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody(body),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseWithBodyInUTF16WithContentTypeHeader() {
+        // when
+        String body = "我说中国话";
+        mockServerClient
+            .when(
+                request()
+            )
+            .respond(
+                response()
+                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                    .withBody(body)
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody(body),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("")),
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody(body),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingStringBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withBody(
+                        exact("some_random_body")
+                    ),
+                exactly(2)
+            )
+            .respond(
+                response()
+                    .withBody("some_string_body_response")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_string_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+                    .withBody("some_random_body"),
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_string_body_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+                    .withBody("some_random_body"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingSubStringBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withBody(
+                        subString("random")
+                    ),
+                exactly(2)
+            )
+            .respond(
+                response()
+                    .withBody("some_sub_string_body_response")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_sub_string_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+                    .withBody("some_random_body"),
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_sub_string_body_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+                    .withBody("some_random_body"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingBodyWithXPath() {
         // when
         mockServerClient.when(request().withBody(xpath("/bookstore/book[price>30]/price")), exactly(2)).respond(response().withBody("some_body"));
@@ -1125,7 +1218,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
             );
 
@@ -1188,7 +1281,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
             );
 
@@ -1251,7 +1344,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
             );
 
@@ -1646,7 +1739,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
+                    .withReasonPhrase(OK_200.reasonPhrase())
                     .withHeaders(
                         header(CONTENT_TYPE.toString(), MediaType.PDF.toString()),
                         header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
@@ -1705,7 +1798,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
+                    .withReasonPhrase(OK_200.reasonPhrase())
                     .withHeaders(
                         header(CONTENT_TYPE.toString(), MediaType.PNG.toString()),
                         header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\"")
@@ -1761,7 +1854,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
+                    .withReasonPhrase(OK_200.reasonPhrase())
                     .withHeaders(
                         header(CONTENT_TYPE.toString(), MediaType.PDF.toString()),
                         header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
@@ -1821,7 +1914,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
+                    .withReasonPhrase(OK_200.reasonPhrase())
                     .withHeaders(
                         header(CONTENT_TYPE.toString(), MediaType.PNG.toString()),
                         header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\"")
@@ -2001,7 +2094,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2056,7 +2149,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2096,7 +2189,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2138,7 +2231,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
             );
@@ -2207,7 +2300,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
             );
@@ -2276,7 +2369,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
             );
@@ -2343,7 +2436,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withCookies(
                         cookie("responseCookieNameOne", "responseCookieValueOne"),
@@ -2472,7 +2565,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
             );
 
@@ -2531,7 +2624,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -2628,7 +2721,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -2722,7 +2815,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -2794,7 +2887,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2887,7 +2980,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2945,7 +3038,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3003,7 +3096,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3058,7 +3151,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3097,7 +3190,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3136,7 +3229,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3191,7 +3284,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3230,7 +3323,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3269,7 +3362,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3324,7 +3417,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3363,7 +3456,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3453,7 +3546,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -3516,7 +3609,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
             );
 
@@ -3894,7 +3987,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -3951,7 +4044,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3989,7 +4082,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -4032,7 +4125,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -4090,7 +4183,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -4146,7 +4239,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -4205,7 +4298,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -4251,7 +4344,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -4294,7 +4387,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -4350,7 +4443,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -4415,7 +4508,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -4477,7 +4570,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -4533,7 +4626,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -4598,7 +4691,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -4660,7 +4753,7 @@ public abstract class AbstractClientServerIntegrationTest {
             .respond(
                 response()
                     .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 

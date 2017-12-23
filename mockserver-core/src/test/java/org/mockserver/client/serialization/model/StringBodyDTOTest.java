@@ -10,6 +10,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.model.StringBody.subString;
 
 /**
  * @author jamesdbloom
@@ -23,6 +24,19 @@ public class StringBodyDTOTest {
 
         // then
         assertThat(stringBody.getString(), is("some_body"));
+        assertThat(stringBody.isSubString(), is(false));
+        assertThat(stringBody.getType(), is(Body.Type.STRING));
+        assertThat(stringBody.getContentType(), nullValue());
+    }
+
+    @Test
+    public void shouldReturnValuesSetInConstructorWithSubString() {
+        // when
+        StringBodyDTO stringBody = new StringBodyDTO(new StringBody("some_body", true));
+
+        // then
+        assertThat(stringBody.getString(), is("some_body"));
+        assertThat(stringBody.isSubString(), is(true));
         assertThat(stringBody.getType(), is(Body.Type.STRING));
         assertThat(stringBody.getContentType(), nullValue());
     }
@@ -52,18 +66,27 @@ public class StringBodyDTOTest {
     @Test
     public void shouldBuildCorrectObject() {
         // when
-        StringBody stringBody = new StringBodyDTO(new StringBody("some_body", Charsets.UTF_8)).buildObject();
+        StringBody stringBody = new StringBodyDTO(new StringBody("some_body", true, Charsets.UTF_8)).buildObject();
 
         // then
         assertThat(stringBody.getValue(), is("some_body"));
+        assertThat(stringBody.isSubString(), is(true));
         assertThat(stringBody.getType(), is(Body.Type.STRING));
         assertThat(stringBody.getContentType(), is(MediaType.PLAIN_TEXT_UTF_8.toString()));
     }
 
     @Test
-    public void shouldReturnCorrectObjectFromStaticBuilder() {
+    public void shouldReturnCorrectObjectFromStaticExactBuilder() {
+        assertThat(exact("some_body"), is(new StringBody("some_body", false)));
         assertThat(exact("some_body"), is(new StringBody("some_body")));
+        assertThat(exact("some_body", Charsets.UTF_16), is(new StringBody("some_body", false, Charsets.UTF_16)));
         assertThat(exact("some_body", Charsets.UTF_16), is(new StringBody("some_body", Charsets.UTF_16)));
+    }
+
+    @Test
+    public void shouldReturnCorrectObjectFromStaticSubStringBuilder() {
+        assertThat(subString("some_body"), is(new StringBody("some_body", true)));
+        assertThat(subString("some_body", Charsets.UTF_16), is(new StringBody("some_body", true, Charsets.UTF_16)));
     }
 
     @Test

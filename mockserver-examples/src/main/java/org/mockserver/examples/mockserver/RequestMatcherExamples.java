@@ -6,6 +6,7 @@ import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.model.StringBody;
 
 import java.util.concurrent.TimeUnit;
 
@@ -19,6 +20,8 @@ import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
+import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.model.StringBody.subString;
 import static org.mockserver.model.XPathBody.xpath;
 import static org.mockserver.model.XmlBody.xml;
 import static org.mockserver.model.XmlSchemaBody.xmlSchema;
@@ -251,6 +254,18 @@ public class RequestMatcherExamples {
             );
     }
 
+    public void matchRequestBySubStringBody() {
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(subString("some_string"))
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );
+    }
+
     public void matchRequestByRegexBody() {
         new MockServerClient("localhost", 1080)
             .when(
@@ -267,7 +282,7 @@ public class RequestMatcherExamples {
         new MockServerClient("localhost", 1080)
             .when(
                 request()
-                    .withBody("我说中国话", Charsets.UTF_16)
+                    .withBody(exact("我说中国话", Charsets.UTF_16))
             )
             .respond(
                 response()

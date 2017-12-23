@@ -90,7 +90,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                 case STRING:
                     StringBody stringBody = (StringBody) body;
                     bodyDTOMatcher = new StringBodyDTO(stringBody);
-                    this.bodyMatcher = new ExactStringMatcher(string(stringBody.getValue(), stringBody.getNot()));
+                    if (stringBody.isSubString()) {
+                        this.bodyMatcher = new SubStringMatcher(string(stringBody.getValue(), stringBody.getNot()));
+                    } else {
+                        this.bodyMatcher = new ExactStringMatcher(string(stringBody.getValue(), stringBody.getNot()));
+                    }
                     break;
                 case REGEX:
                     RegexBody regexBody = (RegexBody) body;
@@ -183,7 +187,10 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                         if (bodyMatcher instanceof BinaryMatcher) {
                             bodyMatches = matches(bodyMatcher, request.getBodyAsRawBytes());
                         } else {
-                            if (bodyMatcher instanceof ExactStringMatcher || bodyMatcher instanceof RegexStringMatcher || bodyMatcher instanceof XmlStringMatcher) {
+                            if (bodyMatcher instanceof ExactStringMatcher ||
+                                bodyMatcher instanceof SubStringMatcher ||
+                                bodyMatcher instanceof RegexStringMatcher ||
+                                bodyMatcher instanceof XmlStringMatcher) {
                                 bodyMatches = matches(bodyMatcher, string(bodyAsString));
                             } else {
                                 bodyMatches = matches(bodyMatcher, bodyAsString);

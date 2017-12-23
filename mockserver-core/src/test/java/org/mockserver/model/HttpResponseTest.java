@@ -186,9 +186,9 @@ public class HttpResponseTest {
                 "    \"some_cookie\" : \"some_cookie_value\"" + NEW_LINE +
                 "  }," + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
-                "    \"contentType\" : \"text/plain; charset=utf-8\"," + NEW_LINE +
                 "    \"type\" : \"STRING\"," + NEW_LINE +
-                "    \"string\" : \"some_body\"" + NEW_LINE +
+                "    \"string\" : \"some_body\"," + NEW_LINE +
+                "    \"contentType\" : \"text/plain; charset=utf-8\"" + NEW_LINE +
                 "  }," + NEW_LINE +
                 "  \"delay\" : {" + NEW_LINE +
                 "    \"timeUnit\" : \"SECONDS\"," + NEW_LINE +

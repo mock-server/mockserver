@@ -59,6 +59,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         String valueJsonValue = "";
         Body.Type type = null;
         boolean not = false;
+        boolean subString = false;
         MediaType contentType = null;
         Charset charset = null;
         MatchType matchType = JsonBody.DEFAULT_MATCH_TYPE;
@@ -94,6 +95,14 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         matchType = MatchType.valueOf(jsonParser.getText());
                     } catch (IllegalArgumentException iae) {
                         logger.warn("Ignoring incorrect JsonBodyMatchType with value \"" + jsonParser.getText() + "\"");
+                    }
+                }
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("subString")) {
+                    jsonParser.nextToken();
+                    try {
+                        subString = jsonParser.getBooleanValue();
+                    } catch (IllegalArgumentException uce) {
+                        logger.warn("Ignoring unsupported boolean with value \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("contentType")) {
@@ -143,11 +152,11 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         return new RegexBodyDTO(new RegexBody(valueJsonValue), not);
                     case STRING:
                         if (contentType != null) {
-                            return new StringBodyDTO(new StringBody(valueJsonValue, contentType), not);
+                            return new StringBodyDTO(new StringBody(valueJsonValue, subString, contentType), not);
                         } else if (charset != null) {
-                            return new StringBodyDTO(new StringBody(valueJsonValue, charset), not);
+                            return new StringBodyDTO(new StringBody(valueJsonValue, subString, charset), not);
                         } else {
-                            return new StringBodyDTO(new StringBody(valueJsonValue), not);
+                            return new StringBodyDTO(new StringBody(valueJsonValue, subString), not);
                         }
                     case XML:
                         if (contentType != null) {

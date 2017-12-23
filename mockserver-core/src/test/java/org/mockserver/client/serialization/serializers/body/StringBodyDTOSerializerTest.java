@@ -18,6 +18,14 @@ public class StringBodyDTOSerializerTest {
     public void shouldSerializeStringBodyDTO() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body"))),
                 is("\"string_body\""));
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body", false))),
+            is("\"string_body\""));
+    }
+
+    @Test
+    public void shouldSerializeStringBodyDTOWithSubString() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body", true))),
+            is("{\"type\":\"STRING\",\"string\":\"string_body\",\"subString\":true}"));
     }
 
     @Test

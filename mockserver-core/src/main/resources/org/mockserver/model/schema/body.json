@@ -113,6 +113,9 @@
         "string": {
           "type": "string"
         },
+        "subString": {
+          "type": "boolean"
+        },
         "contentType": {
           "type": "string"
         }

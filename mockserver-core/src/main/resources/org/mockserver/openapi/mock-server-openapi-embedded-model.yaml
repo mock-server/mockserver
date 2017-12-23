@@ -493,6 +493,8 @@ components:
             type: string
           contentType:
             type: string
+          subString:
+            type: boolean
       - type: object
         additionalProperties: false
         properties:

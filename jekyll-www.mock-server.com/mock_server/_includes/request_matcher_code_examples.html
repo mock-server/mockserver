@@ -828,6 +828,112 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 }'</code></pre>
     </div>
 </div>
+<button id="button_match_request_by_body_sub_string" class="accordion">match request by body sub-string</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(subString("some_string"))
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "body": {
+            "type": "STRING",
+            "string": "some_string",
+            "subString": true
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "body" : {
+      "type": "STRING",
+      "string": "some_string",
+      "subString": true
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_body_in_utf16" class="accordion">match request by body in utf16</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(exact("我说中国话", Charsets.UTF_16))
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "body": {
+            "type": "STRING",
+            "string": "我说中国话",
+            "contentType": "text/plain; charset=utf-16"
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+  "httpRequest" : {
+    "body" : {
+      "type" : "STRING",
+      "string" : "我说中国话",
+      "contentType" : "text/plain; charset=utf-16"
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
 <button id="button_match_request_by_regex_body" class="accordion">match request by regex body</button>
 <div class="panel">
     <p>For details of the full regex syntax supported please see <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">the JDK documentation</a>.</p>
@@ -867,59 +973,6 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
   "httpRequest" : {
     "body" : "starts_with_.*"
-  },
-  "httpResponse" : {
-    "body" : "some_response_body"
-  }
-}'</code></pre>
-    </div>
-</div>
-<button id="button_match_request_by_body_in_utf16" class="accordion">match request by body in utf16</button>
-<div class="panel">
-    <button class="accordion inner">Java</button>
-    <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
-    .when(
-        request()
-            .withBody("我说中国话", Charsets.UTF_16)
-    )
-    .respond(
-        response()
-            .withBody("some_response_body")
-    );</code></pre>
-    </div>
-    <button class="accordion inner">JavaScript</button>
-    <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
-mockServerClient("localhost", 1080).mockAnyResponse({
-    "httpRequest": {
-        "body": {
-            "type": "STRING",
-            "string": "我说中国话",
-            "contentType": "text/plain; charset=utf-16"
-        }
-    },
-    "httpResponse": {
-        "body": "some_response_body"
-    }
-}).then(
-    function () {
-        console.log("expectation created");
-    },
-    function (error) {
-        console.log(error);
-    }
-);</code></pre>
-    </div>
-    <button class="accordion inner">REST API</button>
-    <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
-  "httpRequest" : {
-    "body" : {
-      "type" : "STRING",
-      "string" : "我说中国话",
-      "contentType" : "text/plain; charset=utf-16"
-    }
   },
   "httpResponse" : {
     "body" : "some_response_body"
