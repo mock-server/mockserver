@@ -4,12 +4,8 @@ import org.hamcrest.core.Is;
 import org.junit.Test;
 import org.mockserver.model.*;
 
-import java.util.Arrays;
-import java.util.List;
-
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertTrue;
@@ -29,14 +25,16 @@ public class HttpResponseDTOTest {
         Cookies cookies = new Cookies().withEntries(cookie("name", "value"));
         Headers headers = new Headers().withEntries(header("name", "value"));
         Integer statusCode = 200;
+        String randomPhrase = "randomPhrase";
         ConnectionOptionsDTO connectionOptions = new ConnectionOptionsDTO().setContentLengthHeaderOverride(50);
 
         HttpResponse httpResponse = new HttpResponse()
-                .withBody("body")
-                .withCookies(new Cookie("name", "value"))
-                .withHeaders(new Header("name", "value"))
-                .withStatusCode(statusCode)
-                .withConnectionOptions(new ConnectionOptions().withContentLengthHeaderOverride(50));
+            .withBody("body")
+            .withCookies(new Cookie("name", "value"))
+            .withHeaders(new Header("name", "value"))
+            .withStatusCode(statusCode)
+            .withReasonPhrase(randomPhrase)
+            .withConnectionOptions(new ConnectionOptions().withContentLengthHeaderOverride(50));
 
         // when
         HttpResponseDTO httpResponseDTO = new HttpResponseDTO(httpResponse);
@@ -46,6 +44,7 @@ public class HttpResponseDTOTest {
         assertThat(httpResponseDTO.getCookies(), is(cookies));
         assertThat(httpResponseDTO.getHeaders(), is(headers));
         assertThat(httpResponseDTO.getStatusCode(), is(statusCode));
+        assertThat(httpResponseDTO.getReasonPhrase(), is(randomPhrase));
         assertThat(httpResponseDTO.getConnectionOptions(), is(connectionOptions));
     }
 
@@ -56,14 +55,16 @@ public class HttpResponseDTOTest {
         Cookie cookie = new Cookie("name", "value");
         Header header = new Header("name", "value");
         Integer statusCode = 200;
+        String randomPhrase = "randomPhrase";
         ConnectionOptions connectionOptions = new ConnectionOptions().withContentLengthHeaderOverride(50);
 
         HttpResponse httpResponse = new HttpResponse()
-                .withBody(body)
-                .withCookies(cookie)
-                .withHeaders(header)
-                .withStatusCode(statusCode)
-                .withConnectionOptions(connectionOptions);
+            .withBody(body)
+            .withCookies(cookie)
+            .withHeaders(header)
+            .withStatusCode(statusCode)
+            .withReasonPhrase(randomPhrase)
+            .withConnectionOptions(connectionOptions);
 
         // when
         HttpResponse builtHttpResponse = new HttpResponseDTO(httpResponse).buildObject();
@@ -73,6 +74,7 @@ public class HttpResponseDTOTest {
         assertThat(builtHttpResponse.getCookieList(), containsInAnyOrder(cookie));
         assertThat(builtHttpResponse.getHeaderList(), containsInAnyOrder(header));
         assertThat(builtHttpResponse.getStatusCode(), is(statusCode));
+        assertThat(builtHttpResponse.getReasonPhrase(), is(randomPhrase));
         assertThat(builtHttpResponse.getConnectionOptions(), is(connectionOptions));
     }
 
@@ -83,6 +85,7 @@ public class HttpResponseDTOTest {
         Cookies cookies = new Cookies().withEntries(cookie("name", "value"));
         Headers headers = new Headers().withEntries(header("name", "value"));
         Integer statusCode = 200;
+        String randomPhrase = "randomPhrase";
         ConnectionOptionsDTO connectionOptions = new ConnectionOptionsDTO().setContentLengthHeaderOverride(50);
 
         HttpResponse httpResponse = new HttpResponse();
@@ -93,6 +96,7 @@ public class HttpResponseDTOTest {
         httpResponseDTO.setCookies(cookies);
         httpResponseDTO.setHeaders(headers);
         httpResponseDTO.setStatusCode(statusCode);
+        httpResponseDTO.setReasonPhrase(randomPhrase);
         httpResponseDTO.setConnectionOptions(connectionOptions);
 
         // then
@@ -100,6 +104,7 @@ public class HttpResponseDTOTest {
         assertThat(httpResponseDTO.getCookies(), is(cookies));
         assertThat(httpResponseDTO.getHeaders(), is(headers));
         assertThat(httpResponseDTO.getStatusCode(), is(statusCode));
+        assertThat(httpResponseDTO.getReasonPhrase(), is(randomPhrase));
         assertThat(httpResponseDTO.getConnectionOptions(), is(connectionOptions));
     }
 
@@ -114,6 +119,7 @@ public class HttpResponseDTOTest {
         assertTrue(httpResponseDTO.getCookies().isEmpty());
         assertTrue(httpResponseDTO.getHeaders().isEmpty());
         assertThat(httpResponseDTO.getStatusCode(), is(nullValue()));
+        assertThat(httpResponseDTO.getReasonPhrase(), is(nullValue()));
         assertThat(httpResponseDTO.getConnectionOptions(), is(nullValue()));
     }
 
@@ -127,6 +133,7 @@ public class HttpResponseDTOTest {
         assertTrue(httpResponseDTO.getCookies().isEmpty());
         assertTrue(httpResponseDTO.getHeaders().isEmpty());
         assertThat(httpResponseDTO.getStatusCode(), is(nullValue()));
+        assertThat(httpResponseDTO.getReasonPhrase(), is(nullValue()));
         assertThat(httpResponseDTO.getConnectionOptions(), is(nullValue()));
     }
 }

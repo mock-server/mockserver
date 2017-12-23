@@ -20,6 +20,9 @@
     },
     "statusCode": {
       "type": "integer"
+    },
+    "reasonPhrase": {
+      "type": "string"
     }
   },
   "definitions": {

@@ -1,8 +1,6 @@
 package org.mockserver.examples.mockserver;
 
 import org.mockserver.client.server.MockServerClient;
-import org.mockserver.model.Format;
-import org.mockserver.model.HttpRequest;
 
 import static org.mockserver.model.HttpRequest.request;
 
@@ -11,27 +9,27 @@ import static org.mockserver.model.HttpRequest.request;
  */
 public class RetrieveRecordedLogMessagesExample {
 
-public void retrieveAllLogMessages() {
-String logMessages = new MockServerClient("localhost", 1080)
-    .retrieveLogMessages(
-        request()
-    );
-}
+    public void retrieveAllLogMessages() {
+        String logMessages = new MockServerClient("localhost", 1080)
+            .retrieveLogMessages(
+                request()
+            );
+    }
 
-public void retrieveLogMessagesUsingRequestMatcher() {
-String logMessages = new MockServerClient("localhost", 1080)
-    .retrieveLogMessages(
-        request()
-            .withPath("/some/path")
-            .withMethod("POST")
-    );
-}
+    public void retrieveLogMessagesUsingRequestMatcher() {
+        String logMessages = new MockServerClient("localhost", 1080)
+            .retrieveLogMessages(
+                request()
+                    .withPath("/some/path")
+                    .withMethod("POST")
+            );
+    }
 
-public void retrieveLogMessagesArray() {
-String[] logMessages = new MockServerClient("localhost", 1080)
-    .retrieveLogMessagesArray(
-        request()
-            .withPath("/some/path")
-    );
-}
+    public void retrieveLogMessagesArray() {
+        String[] logMessages = new MockServerClient("localhost", 1080)
+            .retrieveLogMessagesArray(
+                request()
+                    .withPath("/some/path")
+            );
+    }
 }

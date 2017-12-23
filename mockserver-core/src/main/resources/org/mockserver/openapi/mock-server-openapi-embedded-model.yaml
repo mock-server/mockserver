@@ -305,6 +305,8 @@ components:
           $ref: "#/components/schemas/KeyToMultiValue"
         statusCode:
           type: integer
+        reasonPhrase:
+          type: string
     HttpTemplate:
       title: "template to generate response / request"
       type: object

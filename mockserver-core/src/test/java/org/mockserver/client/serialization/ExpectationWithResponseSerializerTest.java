@@ -50,6 +50,7 @@ public class ExpectationWithResponseSerializerTest {
         .thenRespond(
             new HttpResponse()
                 .withStatusCode(304)
+                .withReasonPhrase("randomReason")
                 .withBody("responseBody")
                 .withHeaders(new Header("headerName", "headerValue"))
                 .withCookies(new Cookie("cookieName", "cookieValue"))
@@ -75,6 +76,7 @@ public class ExpectationWithResponseSerializerTest {
             new HttpResponseDTO(
                 new HttpResponse()
                     .withStatusCode(304)
+                    .withReasonPhrase("randomReason")
                     .withBody("responseBody")
                     .withHeaders(new Header("headerName", "headerValue"))
                     .withCookies(new Cookie("cookieName", "cookieValue"))

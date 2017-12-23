@@ -7,11 +7,15 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
+import static org.mockserver.model.HttpStatusCode.OK_200;
+
 /**
  * @author jamesdbloom
  */
 public class HttpResponse extends Action {
     private Integer statusCode;
+    private String reasonPhrase;
     private BodyWithContentType body;
     private Headers headers = new Headers();
     private Cookies cookies = new Cookies();
@@ -31,14 +35,14 @@ public class HttpResponse extends Action {
      * @param body a string
      */
     public static HttpResponse response(String body) {
-        return new HttpResponse().withStatusCode(200).withBody(body);
+        return new HttpResponse().withStatusCode(OK_200.code()).withReasonPhrase(OK_200.reasonPhrase()).withBody(body);
     }
 
     /**
      * Static builder to create a not found response.
      */
     public static HttpResponse notFoundResponse() {
-        return new HttpResponse().withStatusCode(404);
+        return new HttpResponse().withStatusCode(NOT_FOUND_404.code()).withReasonPhrase(NOT_FOUND_404.reasonPhrase());
     }
 
     /**
@@ -55,6 +59,22 @@ public class HttpResponse extends Action {
 
     public Integer getStatusCode() {
         return statusCode;
+    }
+
+    /**
+     * The reason phrase to return, if no reason code is returned this will
+     * be defaulted to the standard reason phrase for the statusCode,
+     * i.e. for a statusCode of 200 the standard reason phrase is "OK"
+     *
+     * @param reasonPhrase an string such as "Not Found" or "OK"
+     */
+    public HttpResponse withReasonPhrase(String reasonPhrase) {
+        this.reasonPhrase = reasonPhrase;
+        return this;
+    }
+
+    public String getReasonPhrase() {
+        return reasonPhrase;
     }
 
     /**
@@ -380,6 +400,7 @@ public class HttpResponse extends Action {
     public HttpResponse clone() {
         return response()
             .withStatusCode(getStatusCode())
+            .withReasonPhrase(getReasonPhrase())
             .withBody(getBody())
             .withHeaders(getHeaders().clone())
             .withCookies(getCookies().clone())

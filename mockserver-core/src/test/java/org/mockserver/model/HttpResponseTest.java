@@ -36,8 +36,13 @@ public class HttpResponseTest {
     }
 
     @Test
-    public void returnsResponseCode() {
+    public void returnsResponseStatusCode() {
         assertEquals(new Integer(200), new HttpResponse().withStatusCode(200).getStatusCode());
+    }
+
+    @Test
+    public void returnsResponseReasonPhrase() {
+        assertEquals("reasonPhrase", new HttpResponse().withReasonPhrase("reasonPhrase").getReasonPhrase());
     }
 
     @Test
@@ -138,14 +143,14 @@ public class HttpResponseTest {
     @Test
     public void setsConnectionOptions() {
         assertEquals(
-                new ConnectionOptions()
-                        .withContentLengthHeaderOverride(10),
-                new HttpResponse()
-                        .withConnectionOptions(
-                                new ConnectionOptions()
-                                        .withContentLengthHeaderOverride(10)
-                        )
-                        .getConnectionOptions()
+            new ConnectionOptions()
+                .withContentLengthHeaderOverride(10),
+            new HttpResponse()
+                .withConnectionOptions(
+                    new ConnectionOptions()
+                        .withContentLengthHeaderOverride(10)
+                )
+                .getConnectionOptions()
         );
     }
 
@@ -172,39 +177,41 @@ public class HttpResponseTest {
     @Test
     public void shouldReturnFormattedRequestInToString() {
         assertEquals("{" + NEW_LINE +
-                        "  \"statusCode\" : 666," + NEW_LINE +
-                        "  \"headers\" : {" + NEW_LINE +
-                        "    \"some_header\" : [ \"some_header_value\" ]" + NEW_LINE +
-                        "  }," + NEW_LINE +
-                        "  \"cookies\" : {" + NEW_LINE +
-                        "    \"some_cookie\" : \"some_cookie_value\"" + NEW_LINE +
-                        "  }," + NEW_LINE +
-                        "  \"body\" : {" + NEW_LINE +
-                        "    \"contentType\" : \"text/plain; charset=utf-8\"," + NEW_LINE +
-                        "    \"type\" : \"STRING\"," + NEW_LINE +
-                        "    \"string\" : \"some_body\"" + NEW_LINE +
-                        "  }," + NEW_LINE +
-                        "  \"delay\" : {" + NEW_LINE +
-                        "    \"timeUnit\" : \"SECONDS\"," + NEW_LINE +
-                        "    \"value\" : 15" + NEW_LINE +
-                        "  }," + NEW_LINE +
-                        "  \"connectionOptions\" : {" + NEW_LINE +
-                        "    \"contentLengthHeaderOverride\" : 10," + NEW_LINE +
-                        "    \"keepAliveOverride\" : true" + NEW_LINE +
-                        "  }" + NEW_LINE +
-                        "}",
-                response()
-                        .withBody("some_body", UTF_8)
-                        .withStatusCode(666)
-                        .withHeaders(new Header("some_header", "some_header_value"))
-                        .withCookies(new Cookie("some_cookie", "some_cookie_value"))
-                        .withConnectionOptions(
-                                connectionOptions()
-                                        .withContentLengthHeaderOverride(10)
-                                        .withKeepAliveOverride(true)
-                        )
-                        .withDelay(SECONDS, 15)
-                        .toString()
+                "  \"statusCode\" : 666," + NEW_LINE +
+                "  \"reasonPhrase\" : \"randomPhrase\"," + NEW_LINE +
+                "  \"headers\" : {" + NEW_LINE +
+                "    \"some_header\" : [ \"some_header_value\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"cookies\" : {" + NEW_LINE +
+                "    \"some_cookie\" : \"some_cookie_value\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"body\" : {" + NEW_LINE +
+                "    \"contentType\" : \"text/plain; charset=utf-8\"," + NEW_LINE +
+                "    \"type\" : \"STRING\"," + NEW_LINE +
+                "    \"string\" : \"some_body\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"delay\" : {" + NEW_LINE +
+                "    \"timeUnit\" : \"SECONDS\"," + NEW_LINE +
+                "    \"value\" : 15" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"connectionOptions\" : {" + NEW_LINE +
+                "    \"contentLengthHeaderOverride\" : 10," + NEW_LINE +
+                "    \"keepAliveOverride\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}",
+            response()
+                .withBody("some_body", UTF_8)
+                .withStatusCode(666)
+                .withReasonPhrase("randomPhrase")
+                .withHeaders(new Header("some_header", "some_header_value"))
+                .withCookies(new Cookie("some_cookie", "some_cookie_value"))
+                .withConnectionOptions(
+                    connectionOptions()
+                        .withContentLengthHeaderOverride(10)
+                        .withKeepAliveOverride(true)
+                )
+                .withDelay(SECONDS, 15)
+                .toString()
         );
     }
 
@@ -212,16 +219,17 @@ public class HttpResponseTest {
     public void shouldClone() {
         // given
         HttpResponse responseOne = response()
-                .withBody("some_body", UTF_8)
-                .withStatusCode(666)
-                .withHeader("some_header", "some_header_value")
-                .withCookie("some_cookie", "some_cookie_value")
-                .withConnectionOptions(
-                        connectionOptions()
-                                .withContentLengthHeaderOverride(10)
-                                .withKeepAliveOverride(true)
-                )
-                .withDelay(SECONDS, 15);
+            .withBody("some_body", UTF_8)
+            .withStatusCode(666)
+            .withReasonPhrase("someReasonPhrase")
+            .withHeader("some_header", "some_header_value")
+            .withCookie("some_cookie", "some_cookie_value")
+            .withConnectionOptions(
+                connectionOptions()
+                    .withContentLengthHeaderOverride(10)
+                    .withKeepAliveOverride(true)
+            )
+            .withDelay(SECONDS, 15);
 
         // when
         HttpResponse responseTwo = responseOne.clone();

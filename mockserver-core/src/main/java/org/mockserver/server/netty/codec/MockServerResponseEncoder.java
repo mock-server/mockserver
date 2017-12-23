@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 
@@ -34,12 +35,21 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
     public DefaultFullHttpResponse encode(HttpResponse response) {
         DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
             HttpVersion.HTTP_1_1,
-            HttpResponseStatus.valueOf((response.getStatusCode() != null ? response.getStatusCode() : 200)),
+            getStatus(response),
             getBody(response)
         );
         setHeaders(response, defaultFullHttpResponse);
         setCookies(response, defaultFullHttpResponse);
         return defaultFullHttpResponse;
+    }
+
+    private HttpResponseStatus getStatus(HttpResponse response) {
+        int statusCode = response.getStatusCode() != null ? response.getStatusCode() : 200;
+        if (!StringUtils.isEmpty(response.getReasonPhrase())) {
+            return new HttpResponseStatus(statusCode, response.getReasonPhrase());
+        } else {
+            return HttpResponseStatus.valueOf(statusCode);
+        }
     }
 
     private ByteBuf getBody(HttpResponse response) {

@@ -97,7 +97,7 @@ curl -v -X PUT "http://localhost:1080/expectation" -d '{
 }'</code></pre>
     </div>
 </div>
-<button id="button_response_literal_status_code_only" class="accordion">response literal with status code only</button>
+<button id="button_response_literal_status_code_and_reason_phrase" class="accordion">response literal with status code and reason phrase</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -109,7 +109,8 @@ curl -v -X PUT "http://localhost:1080/expectation" -d '{
     )
     .respond(
         response()
-            .withStatusCode(200)
+            .withStatusCode(418)
+            .withReasonPhrase("I'm a teapot")
     );</code></pre>
     </div>
     <button class="accordion inner">JavaScript</button>
@@ -121,7 +122,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "path": "/some/path"
     },
     "httpResponse": {
-        "statusCode": 200
+        "statusCode": 418,
+        "reasonPhrase": "I'm a teapot"
     }
 }).then(
     function () {
@@ -140,7 +142,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "path": "/some/path"
     },
     "httpResponse": {
-        "statusCode": 200
+        "statusCode": 418,
+        "reasonPhrase": "I'm a teapot"
     }
 }'</code></pre>
     </div>

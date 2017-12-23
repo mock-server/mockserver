@@ -33,6 +33,7 @@ public class MockServerResponseToHttpServletResponseEncoderBasicMappingTest {
         // - an HttpResponse
         HttpResponse httpResponse = new HttpResponse();
         httpResponse.withStatusCode(HttpStatusCode.OK_200.code());
+        httpResponse.withReasonPhrase("randomReason");
         httpResponse.withBody("somebody");
         httpResponse.withHeaders(new Header("headerName1", "headerValue1"), new Header("headerName2", "headerValue2"));
         httpResponse.withCookies(new Cookie("cookieName1", "cookieValue1"), new Cookie("cookieName2", "cookieValue2"));

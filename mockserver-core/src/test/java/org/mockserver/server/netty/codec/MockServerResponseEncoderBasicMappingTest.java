@@ -125,6 +125,45 @@ public class MockServerResponseEncoderBasicMappingTest {
     }
 
     @Test
+    public void shouldEncodeReasonPhrase() {
+        // given
+        httpResponse.withReasonPhrase("someReasonPhrase");
+
+        // when
+        new MockServerResponseEncoder().encode(null, httpResponse, output);
+
+        // then
+        FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
+        assertThat(fullHttpResponse.status().reasonPhrase(), is("someReasonPhrase"));
+    }
+
+    @Test
+    public void shouldEncodeNoReasonPhrase() {
+        // given
+        httpResponse.withReasonPhrase(null);
+
+        // when
+        new MockServerResponseEncoder().encode(null, httpResponse, output);
+
+        // then
+        FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
+        assertThat(fullHttpResponse.status().reasonPhrase(), is("OK"));
+    }
+
+    @Test
+    public void shouldEncodeNoReasonPhraseAndStatusCode() {
+        // given
+        httpResponse.withStatusCode(404);
+
+        // when
+        new MockServerResponseEncoder().encode(null, httpResponse, output);
+
+        // then
+        FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
+        assertThat(fullHttpResponse.status().reasonPhrase(), is("Not Found"));
+    }
+
+    @Test
     public void shouldEncodeStringBody() {
         // given
         httpResponse.withBody("somebody");

@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_DISPOSITION;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static org.eclipse.jetty.http.HttpStatus.OK_200;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Header.header;
@@ -52,17 +53,18 @@ public class ResponseActionExamples {
             );
     }
 
-    public void responseLiteralWithStatusCodeOnly() {
-        new MockServerClient("localhost", 1080)
-            .when(
-                request()
-                    .withMethod("POST")
-                    .withPath("/some/path")
-            )
-            .respond(
-                response()
-                    .withStatusCode(200)
-            );
+    public void responseLiteralWithStatusCodeAndReasonPhraseOnly() {
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("POST")
+            .withPath("/some/path")
+    )
+    .respond(
+        response()
+            .withStatusCode(418)
+            .withReasonPhrase("I'm a teapot")
+    );
     }
 
     public void responseLiteralWithBinaryPNGBody() throws IOException {
@@ -96,55 +98,55 @@ public class ResponseActionExamples {
             );
     }
 
-public void responseLiteralWithConnectionOptionsToSuppressHeaders() {
-new MockServerClient("localhost", 1080)
-    .when(
-        request()
-            .withPath("/some/path")
-    )
-    .respond(
-        response()
-            .withBody("some_response_body")
-            .withConnectionOptions(
-                connectionOptions()
-                    .withSuppressConnectionHeader(true)
-                    .withSuppressContentLengthHeader(true)
+    public void responseLiteralWithConnectionOptionsToSuppressHeaders() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
             )
-    );
-}
+            .respond(
+                response()
+                    .withBody("some_response_body")
+                    .withConnectionOptions(
+                        connectionOptions()
+                            .withSuppressConnectionHeader(true)
+                            .withSuppressContentLengthHeader(true)
+                    )
+            );
+    }
 
-public void responseLiteralWithConnectionOptionsToOverrideHeaders() {
-new MockServerClient("localhost", 1080)
-    .when(
-        request()
-            .withPath("/some/path")
-    )
-    .respond(
-        response()
-            .withBody("some_response_body")
-            .withConnectionOptions(
-                connectionOptions()
-                    .withKeepAliveOverride(false)
-                    .withContentLengthHeaderOverride(10)
+    public void responseLiteralWithConnectionOptionsToOverrideHeaders() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
             )
-    );
-}
+            .respond(
+                response()
+                    .withBody("some_response_body")
+                    .withConnectionOptions(
+                        connectionOptions()
+                            .withKeepAliveOverride(false)
+                            .withContentLengthHeaderOverride(10)
+                    )
+            );
+    }
 
-public void responseLiteralWithConnectionOptionsToCloseSocket() {
-new MockServerClient("localhost", 1080)
-    .when(
-        request()
-            .withPath("/some/path")
-    )
-    .respond(
-        response()
-            .withBody("some_response_body")
-            .withConnectionOptions(
-                connectionOptions()
-                    .withCloseSocket(true)
+    public void responseLiteralWithConnectionOptionsToCloseSocket() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
             )
-    );
-}
+            .respond(
+                response()
+                    .withBody("some_response_body")
+                    .withConnectionOptions(
+                        connectionOptions()
+                            .withCloseSocket(true)
+                    )
+            );
+    }
 
     public void javascriptTemplatedResponse() {
         new MockServerClient("localhost", 1080)

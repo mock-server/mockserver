@@ -22,6 +22,9 @@ public class HttpResponseSerializer extends StdSerializer<HttpResponse> {
         if (httpResponse.getStatusCode() != null) {
             jgen.writeObjectField("statusCode", httpResponse.getStatusCode());
         }
+        if (httpResponse.getReasonPhrase() != null) {
+            jgen.writeObjectField("reasonPhrase", httpResponse.getReasonPhrase());
+        }
         if (httpResponse.getHeaderList() != null && !httpResponse.getHeaderList().isEmpty()) {
             jgen.writeObjectField("headers", httpResponse.getHeaders());
         }

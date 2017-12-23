@@ -1,8 +1,6 @@
 package org.mockserver.client.netty;
 
-import io.netty.handler.codec.http.HttpHeaders;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -14,8 +12,7 @@ import org.mockserver.socket.PortFactory;
 import java.net.InetSocketAddress;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
-import static io.netty.handler.codec.http.HttpHeaderValues.DEFLATE;
-import static io.netty.handler.codec.http.HttpHeaderValues.GZIP;
+import static io.netty.handler.codec.http.HttpHeaderValues.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -98,12 +95,13 @@ public class NettyHttpClientErrorHandlingTest {
 
             // then
             assertThat(httpResponse, is(
-                    response()
-                            .withStatusCode(200)
-                            .withHeader(header(CONTENT_LENGTH.toString(), "this is an example body".length() / 2))
-                            .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
-                            .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
-                            .withBody(exact("this is an "))
+                response()
+                    .withStatusCode(200)
+                    .withReasonPhrase("OK")
+                    .withHeader(header(CONTENT_LENGTH.toString(), "this is an example body".length() / 2))
+                    .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
+                    .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
+                    .withBody(exact("this is an "))
             ));
         } finally {
             echoServer.stop();

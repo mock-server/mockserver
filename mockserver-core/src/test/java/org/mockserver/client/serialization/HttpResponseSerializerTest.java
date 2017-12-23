@@ -33,6 +33,7 @@ public class HttpResponseSerializerTest {
     private final HttpResponse fullHttpResponse =
         new HttpResponse()
             .withStatusCode(123)
+            .withReasonPhrase("randomPhrase")
             .withBody(exact("somebody"))
             .withHeaders(header("headerName", "headerValue"))
             .withCookies(cookie("cookieName", "cookieValue"))
@@ -40,6 +41,7 @@ public class HttpResponseSerializerTest {
     private final HttpResponseDTO fullHttpResponseDTO =
         new HttpResponseDTO()
             .setStatusCode(123)
+            .setReasonPhrase("randomPhrase")
             .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
             .setHeaders(new Headers().withEntries(
                 header("headerName", "headerValue")

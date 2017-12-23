@@ -31,6 +31,7 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
         StaticTestExpectationCallback.httpRequests.clear();
         StaticTestExpectationCallback.httpResponse = response()
             .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+            .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
             .withHeaders(
                 header("x-callback", "test_callback_header")
             )
@@ -52,6 +53,7 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                 .withHeaders(
                     header("x-callback", "test_callback_header")
                 )
@@ -73,6 +75,7 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
                 .withHeaders(
                     header("x-callback", "test_callback_header")
                 )
@@ -125,6 +128,7 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
             assertEquals(
                 response()
                     .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
                     .withCookie("name", "value")
                     .withHeader("set-cookie", "name=value")
                     .withBody("{\"method\":\"GET\",\"path\":\"/some_path\",\"body\":\"some_request_body\"}"),
@@ -139,6 +143,7 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
             assertEquals(
                 response()
                     .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
                     .withCookie("name", "value")
                     .withHeader("set-cookie", "name=value")
                     .withBody("{\"method\":\"GET\",\"path\":\"/some_path\",\"body\":\"some_request_body\"}"),
@@ -213,6 +218,7 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
                 assertEquals(
                     response()
                         .withStatusCode(OK_200.code())
+                        .withReasonPhrase(OK_200.reasonPhrase())
                         .withHeaders(
                             header("x-test", "test_headers_and_body")
                         )
@@ -231,6 +237,7 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
                 assertEquals(
                     response()
                         .withStatusCode(OK_200.code())
+                        .withReasonPhrase(OK_200.reasonPhrase())
                         .withHeaders(
                             header("x-test", "test_headers_and_body")
                         )

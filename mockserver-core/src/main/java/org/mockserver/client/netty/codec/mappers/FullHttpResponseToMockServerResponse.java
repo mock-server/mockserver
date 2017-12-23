@@ -1,6 +1,7 @@
 package org.mockserver.client.netty.codec.mappers;
 
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.mappers.ContentTypeMapper;
@@ -31,7 +32,9 @@ public class FullHttpResponseToMockServerResponse {
     }
 
     private void setStatusCode(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {
-        httpResponse.withStatusCode(fullHttpResponse.status().code());
+        HttpResponseStatus status = fullHttpResponse.status();
+        httpResponse.withStatusCode(status.code());
+        httpResponse.withReasonPhrase(status.reasonPhrase());
     }
 
     private void setHeaders(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {

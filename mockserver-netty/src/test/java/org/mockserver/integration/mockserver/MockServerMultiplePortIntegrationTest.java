@@ -6,7 +6,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.ClientAndServer;
-import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.PortFactory;
 
 import java.util.List;
@@ -19,6 +18,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpStatusCode.OK_200;
 
 /**
  * @author jamesdbloom
@@ -79,32 +79,34 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
         // then
         // - in http
         assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + NEW_LINE +
-                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + NEW_LINE +
-                                "}"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("status"))
-                                .withMethod("PUT"),
-                        headersToIgnore)
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                .withBody("{" + NEW_LINE +
+                    "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + NEW_LINE +
+                    "}"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("status"))
+                    .withMethod("PUT"),
+                headersToIgnore)
         );
         // - in https
         assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + NEW_LINE +
-                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + NEW_LINE +
-                                "}"),
-                makeRequest(
-                        request()
-                                .withSecure(true)
-                                .withPath(calculatePath("status"))
-                                .withMethod("PUT"),
-                        headersToIgnore)
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                .withBody("{" + NEW_LINE +
+                    "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + NEW_LINE +
+                    "}"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("status"))
+                    .withMethod("PUT"),
+                headersToIgnore)
         );
     }
 
@@ -117,68 +119,72 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
         // then
         // - in http
         assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + NEW_LINE +
-                                "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
-                                "}"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("bind"))
-                                .withMethod("PUT")
-                                .withBody("{" + NEW_LINE +
-                                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
-                                        "}"),
-                        headersToIgnore)
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                .withBody("{" + NEW_LINE +
+                    "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
+                    "}"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("bind"))
+                    .withMethod("PUT")
+                    .withBody("{" + NEW_LINE +
+                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
+                        "}"),
+                headersToIgnore)
         );
         assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + NEW_LINE +
-                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + " ]" + NEW_LINE +
-                                "}"),
-                makeRequest(
-                        request()
-                                .withPath(calculatePath("status"))
-                                .withMethod("PUT"),
-                        headersToIgnore)
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                .withBody("{" + NEW_LINE +
+                    "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + " ]" + NEW_LINE +
+                    "}"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("status"))
+                    .withMethod("PUT"),
+                headersToIgnore)
         );
         // - in https
         assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + NEW_LINE +
-                                "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
-                                "}"),
-                makeRequest(
-                        request()
-                                .withSecure(true)
-                                .withPath(calculatePath("bind"))
-                                .withMethod("PUT")
-                                .withBody("{" + NEW_LINE +
-                                        "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
-                                        "}"),
-                        headersToIgnore)
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                .withBody("{" + NEW_LINE +
+                    "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
+                    "}"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("bind"))
+                    .withMethod("PUT")
+                    .withBody("{" + NEW_LINE +
+                        "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
+                        "}"),
+                headersToIgnore)
         );
         assertEquals(
-                response()
-                        .withStatusCode(HttpStatusCode.OK_200.code())
-                        .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                        .withBody("{" + NEW_LINE +
-                                "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + ", " + secondNewPort + " ]" + NEW_LINE +
-                                "}"),
-                makeRequest(
-                        request()
-                                .withSecure(true)
-                                .withPath(calculatePath("status"))
-                                .withMethod("PUT")
-                                .withBody("{" + NEW_LINE +
-                                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
-                                        "}"),
-                        headersToIgnore)
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                .withBody("{" + NEW_LINE +
+                    "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + ", " + secondNewPort + " ]" + NEW_LINE +
+                    "}"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("status"))
+                    .withMethod("PUT")
+                    .withBody("{" + NEW_LINE +
+                        "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
+                        "}"),
+                headersToIgnore)
         );
     }
 }
