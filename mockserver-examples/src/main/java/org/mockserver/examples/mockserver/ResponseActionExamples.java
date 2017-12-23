@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.mockserver.client.server.MockServerClient;
+import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
 
@@ -12,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_DISPOSITION;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static org.eclipse.jetty.http.HttpStatus.OK_200;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Header.header;
@@ -54,17 +54,45 @@ public class ResponseActionExamples {
     }
 
     public void responseLiteralWithStatusCodeAndReasonPhraseOnly() {
-new MockServerClient("localhost", 1080)
-    .when(
-        request()
-            .withMethod("POST")
-            .withPath("/some/path")
-    )
-    .respond(
-        response()
-            .withStatusCode(418)
-            .withReasonPhrase("I'm a teapot")
-    );
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withPath("/some/path")
+            )
+            .respond(
+                response()
+                    .withStatusCode(418)
+                    .withReasonPhrase("I'm a teapot")
+            );
+    }
+
+    public void respondDifferentlyForTheSameRequest() {
+        MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+
+        // respond once with 200, then respond twice with 204, then
+        // respond with 404 as no remaining active expectations
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path"),
+                Times.exactly(1)
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path"),
+                Times.exactly(2)
+            )
+            .respond(
+                response()
+                    .withStatusCode(204)
+            );
     }
 
     public void responseLiteralWithBinaryPNGBody() throws IOException {

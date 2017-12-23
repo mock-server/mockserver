@@ -269,6 +269,114 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 }'</code></pre>
     </div>
 </div>
+<button id="button_response_differently_for_same_request" class="accordion">response differently for the same request</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+
+// respond once with 200, then respond twice with 204, then
+// respond with 404 as no remaining active expectations
+mockServerClient
+    .when(
+        request()
+            .withPath("/some/path"),
+        Times.exactly(1)
+    )
+    .respond(
+        response()
+            .withStatusCode(200)
+    );
+
+mockServerClient
+    .when(
+        request()
+            .withPath("/some/path"),
+        Times.exactly(2)
+    )
+    .respond(
+        response()
+            .withStatusCode(204)
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var client = require('mockserver-client').mockServerClient("localhost", 1080);
+
+// respond once with 200, then respond twice with 204, then
+// respond with 404 as no remaining active expectations
+client.mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "statusCode": 200
+    },
+    "times": {
+        "remainingTimes": 1,
+        "unlimited": false
+    }
+}).then(
+    function () {
+        console.log("first expectation created");
+
+        client.mockAnyResponse({
+            "httpRequest": {
+                "path": "/some/path"
+            },
+            "httpResponse": {
+                "statusCode": 204
+            },
+            "times": {
+                "remainingTimes": 2,
+                "unlimited": false
+            }
+        }).then(
+            function () {
+                console.log("second expectation created");
+            },
+            function (error) {
+                console.log(error);
+            }
+        );
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code"># respond once with 200, then respond twice with 204, then
+# respond with 404 as no remaining active expectations
+
+curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "statusCode": 200
+    },
+    "times": {
+        "remainingTimes": 1,
+        "unlimited": false
+    }
+}'
+
+curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpResponse": {
+        "statusCode": 204
+    },
+    "times": {
+        "remainingTimes": 2,
+        "unlimited": false
+    }
+}'</code></pre>
+    </div>
+</div>
 <button id="button_response_literal_with_connection_options_to_suppress_headers" class="accordion">response literal with connection options to suppress headers</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
