@@ -6,6 +6,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.*;
+import org.mockserver.client.server.ClientException;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.Format;
 import org.mockserver.model.*;
@@ -385,5 +388,94 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
      */
     public String[] retrieveLogMessagesArray(HttpRequest httpRequest) {
         return retrieveLogMessages(httpRequest).split(LOG_SEPARATOR);
+    }
+
+    /**
+     * Specify an unlimited expectation that will respond regardless of the number of matching http
+     * for example:
+     * <p>
+     * mockServerClient
+     * .when(request().withPath("/some_path").withBody("some_request_body"))
+     * .respond(response().withBody("some_response_body").withHeader("responseName", "responseValue"))
+     *
+     * @param httpRequest the http request that must be matched for this expectation to respond
+     * @return an Expectation object that can be used to specify the response
+     */
+    public ForwardChainExpectation when(HttpRequest httpRequest) {
+        return when(httpRequest, Times.unlimited());
+    }
+
+    /**
+     * Specify an limited expectation that will respond a specified number of times when the http is matched
+     * for example:
+     * <p>
+     * mockServerClient
+     * .when(request().withPath("/some_path").withBody("some_request_body"), Times.exactly(5))
+     * .respond(response().withBody("some_response_body").withHeader("responseName", "responseValue"))
+     *
+     * @param httpRequest the http request that must be matched for this expectation to respond
+     * @param times       the number of times to respond when this http is matched
+     * @return an Expectation object that can be used to specify the response
+     */
+    public ForwardChainExpectation when(HttpRequest httpRequest, Times times) {
+        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, TimeToLive.unlimited()));
+    }
+
+    /**
+     * Specify an limited expectation that will respond a specified number of times when the http is matched
+     * for example:
+     * <p>
+     * mockServerClient
+     * .when(request().withPath("/some_path").withBody("some_request_body"), Times.exactly(5), TimeToLive.exactly(TimeUnit.SECONDS, 120))
+     * .respond(response().withBody("some_response_body").withHeader("responseName", "responseValue"))
+     *
+     * @param httpRequest the http request that must be matched for this expectation to respond
+     * @param times       the number of times to respond when this http is matched
+     * @param timeToLive  the length of time from when the server receives the expectation that the expectation should be active
+     * @return an Expectation object that can be used to specify the response
+     */
+    public ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
+        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, timeToLive));
+    }
+
+    void sendExpectation(Expectation expectation) {
+        HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", Charsets.UTF_8));
+        if (httpResponse != null && httpResponse.getStatusCode() != 201) {
+            throw new ClientException(formatErrorMessage(NEW_LINE + "error:%s" + NEW_LINE + "while submitted expectation:%s", httpResponse.getBody(), expectation));
+        }
+    }
+
+    /**
+     * Retrieve the active expectations match the httpRequest parameter, use null for the parameter to retrieve all expectations
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * @return an array of all expectations that have been setup and have not expired
+     */
+    public Expectation[] retrieveActiveExpectations(HttpRequest httpRequest) {
+        String activeExpectations = retrieveActiveExpectations(httpRequest, Format.JSON);
+        if (!Strings.isNullOrEmpty(activeExpectations)) {
+            return expectationSerializer.deserializeArray(activeExpectations);
+        } else {
+            return new Expectation[0];
+        }
+    }
+
+    /**
+     * Retrieve the active expectations match the httpRequest parameter, use null for the parameter to retrieve all expectations
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
+     * @param format the format to retrieve the expectations, either JAVA or JSON
+     * @return an array of all expectations that have been setup and have not expired
+     */
+    public String retrieveActiveExpectations(HttpRequest httpRequest, Format format) {
+        HttpResponse httpResponse = sendRequest(
+                request()
+                        .withMethod("PUT")
+                        .withPath(calculatePath("retrieve"))
+                        .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+                        .withQueryStringParameter("format", format.name())
+                        .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
+        );
+        return httpResponse.getBodyAsString();
     }
 }

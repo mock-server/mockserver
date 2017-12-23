@@ -1,4 +1,4 @@
-package org.mockserver.client.server;
+package org.mockserver.client;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -21,7 +21,7 @@ import static org.mockserver.model.HttpClassCallback.callback;
 
 public class ForwardChainExpectationTest {
 
-    private MockServerClient mockMockServerClient;
+    private AbstractClient mockAbstractClient;
 
     private Expectation mockExpectation;
 
@@ -33,9 +33,9 @@ public class ForwardChainExpectationTest {
 
     @Before
     public void setupMocks() {
-        mockMockServerClient = mock(MockServerClient.class);
+        mockAbstractClient = mock(AbstractClient.class);
         mockExpectation = mock(Expectation.class);
-        forwardChainExpectation = new ForwardChainExpectation(mockMockServerClient, mockExpectation);
+        forwardChainExpectation = new ForwardChainExpectation(mockAbstractClient, mockExpectation);
         initMocks(this);
     }
 
@@ -49,7 +49,7 @@ public class ForwardChainExpectationTest {
 
         // then
         verify(mockExpectation).thenRespond(same(response));
-        verify(mockMockServerClient).sendExpectation(mockExpectation);
+        verify(mockAbstractClient).sendExpectation(mockExpectation);
     }
 
     @Test
@@ -62,7 +62,7 @@ public class ForwardChainExpectationTest {
 
         // then
         verify(mockExpectation).thenForward(same(forward));
-        verify(mockMockServerClient).sendExpectation(mockExpectation);
+        verify(mockAbstractClient).sendExpectation(mockExpectation);
     }
 
     @Test
@@ -75,7 +75,7 @@ public class ForwardChainExpectationTest {
 
         // then
         verify(mockExpectation).thenError(same(error));
-        verify(mockMockServerClient).sendExpectation(mockExpectation);
+        verify(mockAbstractClient).sendExpectation(mockExpectation);
     }
 
     @Test
@@ -88,7 +88,7 @@ public class ForwardChainExpectationTest {
 
         // then
         verify(mockExpectation).thenCallback(same(callback));
-        verify(mockMockServerClient).sendExpectation(mockExpectation);
+        verify(mockAbstractClient).sendExpectation(mockExpectation);
     }
 
     @Test
@@ -111,7 +111,7 @@ public class ForwardChainExpectationTest {
         // then
         verify(webSocketClient).registerExpectationCallback(same(callback));
         verify(mockExpectation).thenCallback(new HttpObjectCallback().withClientId("some_client_id"));
-        verify(mockMockServerClient).sendExpectation(mockExpectation);
+        verify(mockAbstractClient).sendExpectation(mockExpectation);
     }
 
 }

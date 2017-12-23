@@ -1,4 +1,4 @@
-package org.mockserver.client.server;
+package org.mockserver.client;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.client.netty.websocket.WebSocketClient;
@@ -11,11 +11,11 @@ import org.mockserver.model.*;
  */
 public class ForwardChainExpectation {
 
-    private final MockServerClient mockServerClient;
+    private final AbstractClient mockServerClient;
     private final Expectation expectation;
     private WebSocketClient webSocketClient;
 
-    public ForwardChainExpectation(MockServerClient mockServerClient, Expectation expectation) {
+    public ForwardChainExpectation(AbstractClient mockServerClient, Expectation expectation) {
         this.mockServerClient = mockServerClient;
         this.expectation = expectation;
     }
@@ -55,11 +55,11 @@ public class ForwardChainExpectation {
             webSocketClient = new WebSocketClient(mockServerClient.remoteAddress(), mockServerClient.contextPath());
         }
         expectation.thenCallback(new HttpObjectCallback()
-                .withClientId(
-                        webSocketClient
-                                .registerExpectationCallback(httpObjectCallback)
-                                .clientId()
-                ));
+            .withClientId(
+                webSocketClient
+                    .registerExpectationCallback(httpObjectCallback)
+                    .clientId()
+            ));
         mockServerClient.sendExpectation(expectation);
     }
 
