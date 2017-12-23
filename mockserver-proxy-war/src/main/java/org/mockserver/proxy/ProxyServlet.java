@@ -1,14 +1,12 @@
 package org.mockserver.proxy;
 
 import com.google.common.net.MediaType;
-import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.PortBindingSerializer;
-import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
-import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.RequestResponseLogEntry;
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
@@ -38,14 +36,13 @@ public class ProxyServlet extends HttpServlet {
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
     // mappers
     private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder();
-    // forwarding
-    private NettyHttpClient httpClient = new NettyHttpClient();
-    private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
-    private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+    // mockserver
+    private ActionHandler actionHandler;
 
     public ProxyServlet() {
         this.httpStateHandler = new HttpStateHandler();
         this.logFormatter = httpStateHandler.getLogFormatter();
+        this.actionHandler = new ActionHandler(httpStateHandler, true);
     }
 
     @Override
@@ -72,19 +69,7 @@ public class ProxyServlet extends HttpServlet {
 
                 } else {
 
-                    HttpResponse response = httpClient.sendRequest(hopByHopHeaderFilter.onRequest(request));
-                    if (response == null) {
-                        response = notFoundResponse();
-                    }
-                    responseWriter.writeResponse(request, response);
-                    httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                    logFormatter.infoLog(
-                        request,
-                        "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
-                        response,
-                        request,
-                        httpRequestToCurlSerializer.toCurl(request)
-                    );
+                    actionHandler.processAction(request, responseWriter, null);
 
                 }
             }

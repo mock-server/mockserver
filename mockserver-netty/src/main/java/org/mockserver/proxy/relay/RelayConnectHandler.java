@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.logging.LoggingHandler;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.proxy.unification.PortUnificationHandler;
 import org.slf4j.Logger;
@@ -18,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 
 import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
+import static org.mockserver.proxy.Proxy.HTTP_CONNECT_SOCKET;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 @ChannelHandler.Sharable
@@ -102,10 +105,10 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
     }
 
     private InetSocketAddress getDownstreamSocket(Channel channel) {
-        if (channel.attr(HttpProxy.REMOTE_SOCKET).get() != null) {
-            return channel.attr(HttpProxy.REMOTE_SOCKET).get();
-        } else if (channel.attr(HttpProxy.HTTP_CONNECT_SOCKET).get() != null) {
-            return channel.attr(HttpProxy.HTTP_CONNECT_SOCKET).get();
+        if (channel.attr(REMOTE_SOCKET).get() != null) {
+            return channel.attr(REMOTE_SOCKET).get();
+        } else if (channel.attr(HTTP_CONNECT_SOCKET).get() != null) {
+            return channel.attr(HTTP_CONNECT_SOCKET).get();
         } else {
             throw new IllegalStateException("Trying to connect to remote socket but no remote socket has been set");
         }

@@ -1,4 +1,4 @@
-package org.mockserver.mockserver;
+package org.mockserver.responsewriter;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.responsewriter.NettyResponseWriter;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;

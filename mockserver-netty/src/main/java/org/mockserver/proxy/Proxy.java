@@ -16,7 +16,6 @@ public class Proxy<T extends LifeCycle> extends LifeCycle<T> {
 
     public static final AttributeKey<Proxy> HTTP_PROXY = AttributeKey.valueOf("HTTP_PROXY");
     public static final AttributeKey<HttpStateHandler> STATE_HANDLER = AttributeKey.valueOf("PROXY_STATE_HANDLER");
-    public static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
     public static final AttributeKey<InetSocketAddress> HTTP_CONNECT_SOCKET = AttributeKey.valueOf("HTTP_CONNECT_SOCKET");
 
 }

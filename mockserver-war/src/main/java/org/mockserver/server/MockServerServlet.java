@@ -35,7 +35,7 @@ public class MockServerServlet extends HttpServlet {
     public MockServerServlet() {
         this.httpStateHandler = new HttpStateHandler();
         this.logFormatter = httpStateHandler.getLogFormatter();
-        this.actionHandler = new ActionHandler(httpStateHandler);
+        this.actionHandler = new ActionHandler(httpStateHandler, false);
     }
 
     @Override

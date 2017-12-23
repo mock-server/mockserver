@@ -10,6 +10,7 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.PortBinding;
+import org.mockserver.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +30,7 @@ import static org.mockserver.model.PortBinding.portBinding;
 @ChannelHandler.Sharable
 public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
-    private final LoggingFormatter logFormatter;
+    private LoggingFormatter logFormatter;
     // generic handling
     private HttpStateHandler httpStateHandler;
     // serializers
@@ -44,7 +45,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         this.server = server;
         this.httpStateHandler = httpStateHandler;
         this.logFormatter = httpStateHandler.getLogFormatter();
-        this.actionHandler = new ActionHandler(httpStateHandler);
+        this.actionHandler = new ActionHandler(httpStateHandler, false);
     }
 
     @Override

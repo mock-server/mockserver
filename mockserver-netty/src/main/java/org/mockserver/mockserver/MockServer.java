@@ -15,9 +15,9 @@ import java.util.Arrays;
 public class MockServer extends LifeCycle<MockServer> {
 
     /**
-     * Start the instance using the port provided
+     * Start the instance using the ports provided
      *
-     * @param requestedPortBindings the http port(s) to use
+     * @param requestedPortBindings the local port(s) to use
      */
     public MockServer(final Integer... requestedPortBindings) {
         if (requestedPortBindings == null || requestedPortBindings.length == 0) {

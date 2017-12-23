@@ -11,11 +11,10 @@ import org.mockserver.proxy.Proxy;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 
+import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
+
 /**
- * This class should not be constructed directly instead use HttpProxyBuilder to build and configure this class
- *
  * @author jamesdbloom
- * @see org.mockserver.proxy.ProxyBuilder
  */
 public class DirectProxy extends Proxy<DirectProxy> {
 

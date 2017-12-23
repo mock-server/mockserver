@@ -1,4 +1,4 @@
-package org.mockserver.mockserver;
+package org.mockserver.responsewriter;
 
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -7,15 +7,10 @@ import org.mockserver.cors.CORSHeaders;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.responsewriter.ResponseWriter;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
-import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
-import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -25,9 +20,8 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public class NettyResponseWriter extends ResponseWriter {
 
-    private CORSHeaders addCORSHeaders = new CORSHeaders();
-
     private final ChannelHandlerContext ctx;
+    private CORSHeaders addCORSHeaders = new CORSHeaders();
 
     public NettyResponseWriter(ChannelHandlerContext ctx) {
         this.ctx = ctx;

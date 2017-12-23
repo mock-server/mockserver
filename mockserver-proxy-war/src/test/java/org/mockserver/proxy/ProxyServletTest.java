@@ -1,5 +1,6 @@
 package org.mockserver.proxy;
 
+import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -13,8 +14,10 @@ import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.RetrieveType;
+import org.mockserver.server.ServletResponseWriter;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -44,7 +47,7 @@ public class ProxyServletTest {
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
 
     private HttpStateHandler httpStateHandler;
-    private NettyHttpClient mockHttpClient;
+    private ActionHandler mockActionHandler;
     private LoggingFormatter mockLogFormatter;
 
     @InjectMocks
@@ -54,7 +57,7 @@ public class ProxyServletTest {
 
     @Before
     public void setupFixture() {
-        mockHttpClient = mock(NettyHttpClient.class);
+        mockActionHandler = mock(ActionHandler.class);
         mockLogFormatter = mock(LoggingFormatter.class);
 
         httpStateHandler = spy(new HttpStateHandler());
@@ -227,33 +230,12 @@ public class ProxyServletTest {
         HttpRequest request = request("request_one").withHeader("Host", "localhost").withMethod("GET");
         MockHttpServletRequest httpServletRequest = buildHttpServletRequest("GET", "request_one", "");
         httpServletRequest.addHeader("Host", "localhost");
-        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response("response_one"));
 
         // when
         proxyServlet.service(httpServletRequest, response);
 
         // then
-        verify(mockHttpClient).sendRequest(request
-            .withKeepAlive(true)
-            .withSecure(false)
-        );
-        assertThat(
-            httpStateHandler.retrieve(request("/retrieve")
-                .withMethod("PUT")
-                .withBody(
-                    httpRequestSerializer.serialize(request("request_one"))
-                )),
-            is(response().withBody(httpRequestSerializer.serialize(Collections.singletonList(
-                request
-            )), JSON_UTF_8).withStatusCode(200))
-        );
-        verify(mockLogFormatter).infoLog(
-            request,
-            "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
-            response("response_one").withHeader("connection", "keep-alive"),
-            request,
-            new HttpRequestToCurlSerializer().toCurl(request, null)
-        );
+        verify(mockActionHandler).processAction(eq(request.withSecure(false).withKeepAlive(true)), any(ServletResponseWriter.class), isNull(ChannelHandlerContext.class));
     }
 
 }

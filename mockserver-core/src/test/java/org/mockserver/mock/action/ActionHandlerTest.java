@@ -1,11 +1,14 @@
 package org.mockserver.mock.action;
 
-import com.sun.org.apache.bcel.internal.generic.NEW;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.Attribute;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.client.netty.NettyHttpClient;
+import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
 import org.mockserver.logging.LoggingFormatter;
@@ -16,10 +19,13 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 
+import java.net.InetSocketAddress;
+
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpForward.forward;
@@ -57,7 +63,10 @@ public class ActionHandlerTest {
     private ResponseWriter mockResponseWriter;
 
     @Mock
-    private LoggingFormatter logFormatter;
+    private LoggingFormatter mockLogFormatter;
+
+    @Mock
+    private NettyHttpClient mockNettyHttpClient;
 
     private HttpStateHandler mockHttpStateHandler;
     private HttpRequest request;
@@ -70,7 +79,7 @@ public class ActionHandlerTest {
     @Before
     public void setupMocks() {
         mockHttpStateHandler = mock(HttpStateHandler.class);
-        actionHandler = new ActionHandler(mockHttpStateHandler);
+        actionHandler = new ActionHandler(mockHttpStateHandler, true);
         initMocks(this);
         request = request("some_path");
         response = response("some_body");
@@ -100,7 +109,7 @@ public class ActionHandlerTest {
         verify(mockHttpForwardActionHandler).handle(forward, request);
         verify(mockResponseWriter).writeResponse(request, response);
         verify(mockHttpStateHandler, times(1)).log(new RequestResponseLogEntry(request, response));
-        verify(logFormatter).infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for forward action:{}", response, request, forward);
+        verify(mockLogFormatter).infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for forward action:{}", response, request, forward);
     }
 
     @Test
@@ -117,7 +126,7 @@ public class ActionHandlerTest {
         verify(mockHttpForwardTemplateActionHandler).handle(template, request);
         verify(mockResponseWriter).writeResponse(request, response);
         verify(mockHttpStateHandler, times(1)).log(new RequestResponseLogEntry(request, response));
-        verify(logFormatter).infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated forward action:{}", response, request, template);
+        verify(mockLogFormatter).infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated forward action:{}", response, request, template);
     }
 
     @Test
@@ -134,7 +143,7 @@ public class ActionHandlerTest {
         verify(mockHttpResponseActionHandler).handle(response);
         verify(mockResponseWriter).writeResponse(request, this.response);
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(logFormatter).infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for response action:{}", this.response, request, response);
+        verify(mockLogFormatter).infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for response action:{}", this.response, request, response);
     }
 
     @Test
@@ -151,7 +160,7 @@ public class ActionHandlerTest {
         verify(mockHttpResponseTemplateActionHandler).handle(template, request);
         verify(mockResponseWriter).writeResponse(request, response);
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(logFormatter).infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated response action:{}", response, request, template);
+        verify(mockLogFormatter).infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated response action:{}", response, request, template);
     }
 
     @Test
@@ -168,7 +177,7 @@ public class ActionHandlerTest {
         verify(mockHttpClassCallbackActionHandler).handle(callback, request);
         verify(mockResponseWriter).writeResponse(request, response);
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(logFormatter).infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, callback);
+        verify(mockLogFormatter).infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, callback);
     }
 
     @Test
@@ -202,6 +211,38 @@ public class ActionHandlerTest {
         // then
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
         verify(mockHttpErrorActionHandler).handle(error, mockChannelHandlerContext);
-        verify(logFormatter).infoLog(request, "returning error:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for error action:{}", error, request, error);
+        verify(mockLogFormatter).infoLog(request, "returning error:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for error action:{}", error, request, error);
+    }
+
+    @Test
+    public void shouldProxyRequestsWithRemoteSocketAttribute() {
+        // given
+        HttpRequest request = request("request_one");
+
+        // and - remote socket attribute
+        InetSocketAddress remoteAddress = new InetSocketAddress(1080);
+        ChannelHandlerContext mockChannelHandlerContext = mock(ChannelHandlerContext.class);
+        Channel mockChannel = mock(Channel.class);
+        Attribute<InetSocketAddress> inetSocketAddressAttribute = mock(Attribute.class);
+        when(mockChannelHandlerContext.channel()).thenReturn(mockChannel);
+        when(inetSocketAddressAttribute.get()).thenReturn(remoteAddress);
+        when(mockChannel.attr(REMOTE_SOCKET)).thenReturn(inetSocketAddressAttribute);
+
+        // and - netty http client
+        when(mockNettyHttpClient.sendRequest(request, remoteAddress)).thenReturn(response("response_one"));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext);
+
+        // then
+        verify(mockHttpStateHandler).log(new RequestResponseLogEntry(request, response("response_one")));
+        verify(mockNettyHttpClient).sendRequest(request, remoteAddress);
+        verify(mockLogFormatter).infoLog(
+            request,
+            "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
+            response("response_one"),
+            request,
+            new HttpRequestToCurlSerializer().toCurl(request, remoteAddress)
+        );
     }
 }

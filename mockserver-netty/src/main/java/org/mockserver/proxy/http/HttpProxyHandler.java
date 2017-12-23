@@ -4,37 +4,29 @@ import com.google.common.net.MediaType;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.PortBindingSerializer;
-import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
-import org.mockserver.filters.HopByHopHeaderFilter;
-import org.mockserver.log.model.RequestResponseLogEntry;
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.mockserver.NettyResponseWriter;
+import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 import org.mockserver.model.PortBinding;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.proxy.unification.PortUnificationHandler;
+import org.mockserver.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.socket.KeyAndCertificateFactory;
 import org.slf4j.LoggerFactory;
 
 import java.net.BindException;
-import java.net.InetSocketAddress;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
-import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
-import static org.mockserver.proxy.Proxy.REMOTE_SOCKET;
 
 /**
  * @author jamesdbloom
@@ -49,16 +41,15 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
     // server
     private Proxy server;
-    // forwarding
-    private NettyHttpClient httpClient = new NettyHttpClient();
-    private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
-    private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+    // expectations
+    private ActionHandler actionHandler;
 
     public HttpProxyHandler(Proxy server, HttpStateHandler httpStateHandler) {
         super(false);
         this.server = server;
         this.httpStateHandler = httpStateHandler;
         this.logFormatter = httpStateHandler.getLogFormatter();
+        this.actionHandler = new ActionHandler(httpStateHandler, true);
     }
 
     @Override
@@ -109,20 +100,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
                 } else {
 
-                    InetSocketAddress remoteAddress = ctx.channel().attr(REMOTE_SOCKET).get();
-                    HttpResponse response = httpClient.sendRequest(hopByHopHeaderFilter.onRequest(request), remoteAddress);
-                    if (response == null) {
-                        response = notFoundResponse();
-                    }
-                    responseWriter.writeResponse(request, response);
-                    httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                    logFormatter.infoLog(
-                        request,
-                        "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
-                        response,
-                        request,
-                        httpRequestToCurlSerializer.toCurl(request, remoteAddress)
-                    );
+                    actionHandler.processAction(request, responseWriter, ctx);
 
                 }
             }

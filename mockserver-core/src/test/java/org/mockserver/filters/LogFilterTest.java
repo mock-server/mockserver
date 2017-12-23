@@ -13,6 +13,7 @@ import org.mockserver.mock.Expectation;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -127,7 +128,7 @@ public class LogFilterTest {
         for (int i = 0; i < logEntries.size(); i++) {
             MessageLogEntry messageLogEntry = (MessageLogEntry) logEntries.get(i);
             assertThat(messageLogEntry.getHttpRequest(), is(messageLogEntries.get(i).getHttpRequest()));
-            assertThat(messageLogEntry.getMessage(), is(messageLogEntries.get(i).getMessage()));
+            assertThat(messageLogEntry.getMessage(), endsWith(messageLogEntries.get(i).getMessage()));
         }
     }
 
