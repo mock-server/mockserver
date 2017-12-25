@@ -10,7 +10,7 @@
 
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
-    <version>5.2.4-SNAPSHOT</version>
+    <version>5.3.0</version>
     <packaging>pom</packaging>
 
     <name>MockServer</name>
@@ -55,8 +55,8 @@
         <spring.version>4.3.12.RELEASE</spring.version>
         <skipTests>false</skipTests>
         <nonReleaseBuild>true</nonReleaseBuild>
-        <release.arguments/>
-        <javadoc.additional.parameters/>
+        <release.arguments />
+        <javadoc.additional.parameters />
     </properties>
 
     <modules>
