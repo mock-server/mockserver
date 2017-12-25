@@ -85,7 +85,7 @@ public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
                                     .bind(portToBind)
                                     .addListener(new ChannelFutureListener() {
                                         @Override
-                                        public void operationComplete(ChannelFuture future) throws Exception {
+                                        public void operationComplete(ChannelFuture future) {
                                             if (future.isSuccess()) {
                                                 channelOpened.set(future.channel());
                                             } else {
@@ -95,11 +95,9 @@ public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
                                     })
                                     .channel();
 
-                            int boundPort = ((InetSocketAddress) channelOpened.get().localAddress()).getPort();
-                            started(boundPort);
-                            logger.info("MockServer started on port: {}", boundPort);
-
+                            started(((InetSocketAddress) channelOpened.get().localAddress()).getPort());
                             channel.closeFuture().syncUninterruptibly();
+
                         } catch (Exception e) {
                             throw new RuntimeException("Exception while binding MockServer to port " + portToBind, e.getCause());
                         }
@@ -115,7 +113,7 @@ public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
     }
 
     protected void started(Integer port) {
-
+        logger.info("MockServer started on port: {}", port);
     }
 
     protected void stopped() {

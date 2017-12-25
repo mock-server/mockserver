@@ -1,5 +1,6 @@
 package org.mockserver.server;
 
+import com.google.common.collect.ImmutableSet;
 import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,6 +18,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.Collections;
+import java.util.HashSet;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static org.apache.commons.codec.Charsets.UTF_8;
@@ -281,13 +283,15 @@ public class MockServerServletTest {
     }
 
     @Test
-    public void shouldUseActionHandlerToHandleNonAPIRequests() {
+    public void shouldUseActionHandlerToHandleNonAPIRequestsOnDefaultPort() {
         // given
         MockHttpServletRequest request = buildHttpServletRequest(
             "GET",
             "request_one",
             ""
         );
+        request.setLocalAddr("local_address");
+        request.setLocalPort(80);
 
         // when
         mockServerServlet.service(request, response);
@@ -301,7 +305,114 @@ public class MockServerServletTest {
                     .withSecure(false)
             ),
             any(ServletResponseWriter.class),
-            isNull(ChannelHandlerContext.class)
+            isNull(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address",
+                "localhost",
+                "127.0.0.1"
+            )),
+            eq(false)
+        );
+    }
+
+    @Test
+    public void shouldUseActionHandlerToHandleNonAPIRequestsOnNonDefaultPort() {
+        // given
+        MockHttpServletRequest request = buildHttpServletRequest(
+            "GET",
+            "request_one",
+            ""
+        );
+        request.setLocalAddr("local_address");
+        request.setLocalPort(666);
+
+        // when
+        mockServerServlet.service(request, response);
+
+        // then
+        verify(mockActionHandler).processAction(
+            eq(
+                request("request_one")
+                    .withMethod("GET")
+                    .withKeepAlive(true)
+                    .withSecure(false)
+            ),
+            any(ServletResponseWriter.class),
+            isNull(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address:666",
+                "localhost:666",
+                "127.0.0.1:666"
+            )),
+            eq(false)
+        );
+    }
+
+    @Test
+    public void shouldUseActionHandlerToHandleNonAPISecureRequestsOnDefaultPort() {
+        // given
+        MockHttpServletRequest request = buildHttpServletRequest(
+            "GET",
+            "request_one",
+            ""
+        );
+        request.setSecure(true);
+        request.setLocalAddr("local_address");
+        request.setLocalPort(443);
+
+        // when
+        mockServerServlet.service(request, response);
+
+        // then
+        verify(mockActionHandler).processAction(
+            eq(
+                request("request_one")
+                    .withMethod("GET")
+                    .withKeepAlive(true)
+                    .withSecure(true)
+            ),
+            any(ServletResponseWriter.class),
+            isNull(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address",
+                "localhost",
+                "127.0.0.1"
+            )),
+            eq(false)
+        );
+    }
+
+    @Test
+    public void shouldUseActionHandlerToHandleNonAPISecureRequestsOnNonDefaultPort() {
+        // given
+        MockHttpServletRequest request = buildHttpServletRequest(
+            "GET",
+            "request_one",
+            ""
+        );
+        request.setSecure(true);
+        request.setLocalAddr("local_address");
+        request.setLocalPort(666);
+
+        // when
+        mockServerServlet.service(request, response);
+
+        // then
+        verify(mockActionHandler).processAction(
+            eq(
+                request("request_one")
+                    .withMethod("GET")
+                    .withKeepAlive(true)
+                    .withSecure(true)
+            ),
+            any(ServletResponseWriter.class),
+            isNull(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address:666",
+                "localhost:666",
+                "127.0.0.1:666"
+            )),
+            eq(false)
         );
     }
 

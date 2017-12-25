@@ -10,9 +10,7 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.logging.LoggingHandler;
-import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.proxy.http.HttpProxy;
-import org.mockserver.proxy.unification.PortUnificationHandler;
+import org.mockserver.mock.action.ActionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +19,10 @@ import java.net.InetSocketAddress;
 import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.proxy.Proxy.HTTP_CONNECT_SOCKET;
+import static org.mockserver.proxy.Proxy.PROXYING;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
+import static org.mockserver.unification.PortUnificationHandler.isSslEnabledDownstream;
+import static org.mockserver.unification.PortUnificationHandler.isSslEnabledUpstream;
 
 @ChannelHandler.Sharable
 public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler<T> {
@@ -49,11 +50,12 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                             @Override
                             public void operationComplete(ChannelFuture channelFuture) throws Exception {
                                 removeCodecSupport(serverCtx);
+                                serverCtx.channel().attr(PROXYING).set(Boolean.TRUE);
 
                                 // downstream
                                 ChannelPipeline downstreamPipeline = clientCtx.channel().pipeline();
 
-                                if (PortUnificationHandler.isSslEnabledDownstream(serverCtx.channel())) {
+                                if (isSslEnabledDownstream(serverCtx.channel())) {
                                     downstreamPipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(clientCtx.alloc(), host, port));
                                 }
 
@@ -73,7 +75,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                 // upstream
                                 ChannelPipeline upstreamPipeline = serverCtx.channel().pipeline();
 
-                                if (PortUnificationHandler.isSslEnabledUpstream(serverCtx.channel())) {
+                                if (isSslEnabledUpstream(serverCtx.channel())) {
                                     upstreamPipeline.addLast(nettySslContextFactory().createServerSslContext().newHandler(serverCtx.alloc()));
                                 }
 

@@ -18,7 +18,7 @@ import org.mockserver.proxy.http.HttpProxy;
 import org.mockserver.proxy.http.HttpProxyUnificationHandler;
 import org.mockserver.proxy.relay.RelayConnectHandler;
 import org.mockserver.proxy.socks.SocksProxyHandler;
-import org.mockserver.proxy.unification.PortUnificationHandler;
+import org.mockserver.unification.PortUnificationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +31,8 @@ import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.mock.HttpStateHandler.STATE_HANDLER;
 import static org.mockserver.proxy.Proxy.HTTP_PROXY;
-import static org.mockserver.proxy.Proxy.STATE_HANDLER;
 
 public class DirectProxyUnificationHandlerTest {
 
@@ -139,20 +139,24 @@ public class DirectProxyUnificationHandlerTest {
 
         // then - should add HTTP handlers last
         if (LoggerFactory.getLogger(PortUnificationHandler.class).isTraceEnabled()) {
-            assertThat(embeddedChannel.pipeline().names(), contains(
+            assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "LoggingHandler#0",
                 "HttpServerCodec#0",
                 "HttpContentDecompressor#0",
+                "HttpContentLengthRemover#0",
                 "HttpObjectAggregator#0",
+                "WebSocketServerHandler#0",
                 "MockServerServerCodec#0",
                 "HttpProxyHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
-            assertThat(embeddedChannel.pipeline().names(), contains(
+            assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "HttpServerCodec#0",
                 "HttpContentDecompressor#0",
+                "HttpContentLengthRemover#0",
                 "HttpObjectAggregator#0",
+                "WebSocketServerHandler#0",
                 "MockServerServerCodec#0",
                 "HttpProxyHandler#0",
                 "DefaultChannelPipeline$TailContext#0"

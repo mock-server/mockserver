@@ -1,5 +1,6 @@
 package org.mockserver.mockserver;
 
+import com.google.common.collect.ImmutableSet;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
 import org.junit.Before;
@@ -18,10 +19,13 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.RetrieveType;
+import org.mockserver.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
+import org.mockserver.server.ServletResponseWriter;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
@@ -32,12 +36,15 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.isNull;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
+import static org.mockserver.proxy.Proxy.LOCAL_HOST_HEADERS;
+import static org.mockserver.proxy.Proxy.PROXYING;
 
 /**
  * @author jamesdbloom
@@ -83,17 +90,17 @@ public class MockServerHandlerTest {
         // given
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
         HttpRequest expectationRetrieveRequestsRequest = request("/retrieve")
-                .withMethod("PUT")
-                .withBody(
-                        httpRequestSerializer.serialize(request("request_one"))
-                );
+            .withMethod("PUT")
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            );
 
         // when
         embeddedChannel.writeInbound(expectationRetrieveRequestsRequest);
 
         // then
         assertResponse(200, httpRequestSerializer.serialize(Collections.singletonList(
-                request("request_one")
+            request("request_one")
         )));
     }
 
@@ -104,10 +111,10 @@ public class MockServerHandlerTest {
         httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
         HttpRequest clearRequest = request("/clear")
-                .withMethod("PUT")
-                .withBody(
-                        httpRequestSerializer.serialize(request("request_one"))
-                );
+            .withMethod("PUT")
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            );
 
         // when
         embeddedChannel.writeInbound(clearRequest);
@@ -116,10 +123,10 @@ public class MockServerHandlerTest {
         assertResponse(200, "");
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(nullValue()));
         assertThat(httpStateHandler.retrieve(request("/retrieve")
-                .withMethod("PUT")
-                .withBody(
-                        httpRequestSerializer.serialize(request("request_one"))
-                )), is(response().withBody("", JSON_UTF_8).withStatusCode(200)));
+            .withMethod("PUT")
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            )), is(response().withBody("", JSON_UTF_8).withStatusCode(200)));
     }
 
     @Test
@@ -133,7 +140,7 @@ public class MockServerHandlerTest {
 
         // then
         assertResponse(200, portBindingSerializer.serialize(
-                portBinding(1080, 1090)
+            portBinding(1080, 1090)
         ));
     }
 
@@ -142,10 +149,10 @@ public class MockServerHandlerTest {
         // given
         when(mockMockServer.bindToPorts(anyListOf(Integer.class))).thenReturn(Arrays.asList(1080, 1090));
         HttpRequest statusRequest = request("/bind")
-                .withMethod("PUT")
-                .withBody(portBindingSerializer.serialize(
-                        portBinding(1080, 1090)
-                ));
+            .withMethod("PUT")
+            .withBody(portBindingSerializer.serialize(
+                portBinding(1080, 1090)
+            ));
 
         // when
         embeddedChannel.writeInbound(statusRequest);
@@ -153,7 +160,7 @@ public class MockServerHandlerTest {
         // then
         verify(mockMockServer).bindToPorts(Arrays.asList(1080, 1090));
         assertResponse(200, portBindingSerializer.serialize(
-                portBinding(1080, 1090)
+            portBinding(1080, 1090)
         ));
     }
 
@@ -161,7 +168,7 @@ public class MockServerHandlerTest {
     public void shouldStop() throws InterruptedException {
         // given
         HttpRequest statusRequest = request("/stop")
-                .withMethod("PUT");
+            .withMethod("PUT");
 
         // when
         embeddedChannel.writeInbound(statusRequest);
@@ -177,22 +184,22 @@ public class MockServerHandlerTest {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         httpStateHandler.log(new ExpectationMatchLogEntry(
-                request("request_one"),
-                expectationOne
+            request("request_one"),
+            expectationOne
         ));
         HttpRequest expectationRetrieveExpectationsRequest = request("/retrieve")
-                .withMethod("PUT")
-                .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
-                .withBody(
-                        httpRequestSerializer.serialize(request("request_one"))
-                );
+            .withMethod("PUT")
+            .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            );
 
         // when
         embeddedChannel.writeInbound(expectationRetrieveExpectationsRequest);
 
         // then
         assertResponse(200, expectationSerializer.serialize(Collections.singletonList(
-                expectationOne
+            expectationOne
         )));
     }
 
@@ -253,7 +260,7 @@ public class MockServerHandlerTest {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         HttpRequest request = request("/expectation").withMethod("PUT").withBody(
-                expectationSerializer.serialize(expectationOne)
+            expectationSerializer.serialize(expectationOne)
         );
 
         // when
@@ -270,31 +277,75 @@ public class MockServerHandlerTest {
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         httpStateHandler.add(expectationOne);
         HttpRequest expectationRetrieveExpectationsRequest = request("/retrieve")
-                .withMethod("PUT")
-                .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
-                .withBody(
-                        httpRequestSerializer.serialize(request("request_one"))
-                );
+            .withMethod("PUT")
+            .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            );
 
         // when
         embeddedChannel.writeInbound(expectationRetrieveExpectationsRequest);
 
         // then
         assertResponse(200, expectationSerializer.serialize(Collections.singletonList(
-                expectationOne
+            expectationOne
         )));
     }
 
     @Test
-    public void shouldUseActionHandlerToHandleNonAPIRequests() {
+    public void shouldUseActionHandlerToHandleNonAPIRequestsWhenProxying() {
         // given
         HttpRequest request = request("request_one");
+        embeddedChannel.attr(LOCAL_HOST_HEADERS).set(ImmutableSet.of(
+            "local_address:666",
+            "localhost:666",
+            "127.0.0.1:666"
+        ));
+        embeddedChannel.attr(PROXYING).set(true);
 
         // when
         embeddedChannel.writeInbound(request);
 
         // then
-        verify(mockActionHandler).processAction(eq(request), any(ResponseWriter.class), any(ChannelHandlerContext.class));
+        verify(mockActionHandler).processAction(
+            eq(request),
+            any(NettyResponseWriter.class),
+            any(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address:666",
+                "localhost:666",
+                "127.0.0.1:666"
+            )),
+            eq(true)
+        );
+    }
+
+    @Test
+    public void shouldUseActionHandlerToHandleNonAPIRequestsWhenNotProxying() {
+        // given
+        HttpRequest request = request("request_one");
+        embeddedChannel.attr(LOCAL_HOST_HEADERS).set(ImmutableSet.of(
+            "local_address",
+            "localhost",
+            "127.0.0.1"
+        ));
+        embeddedChannel.attr(PROXYING).set(false);
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then
+        verify(mockActionHandler).processAction(
+            eq(request),
+            any(NettyResponseWriter.class),
+            any(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address",
+                "localhost",
+                "127.0.0.1"
+            )),
+            eq(false)
+        );
     }
 
 }

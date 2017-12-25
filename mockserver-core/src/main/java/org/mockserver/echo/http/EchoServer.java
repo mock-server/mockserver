@@ -26,9 +26,11 @@ public class EchoServer {
 
     static final AttributeKey<LogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     static final AttributeKey<NextResponse> NEXT_RESPONSE = AttributeKey.valueOf("NEXT_RESPONSE");
+    static final AttributeKey<OnlyResponse> ONLY_RESPONSE = AttributeKey.valueOf("ONLY_RESPONSE");
 
     private final LogFilter logFilter = new LogFilter(new LoggingFormatter(LoggerFactory.getLogger(this.getClass()), null));
     private final NextResponse nextResponse = new NextResponse();
+    private final OnlyResponse onlyResponse = new OnlyResponse();
     private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
 
@@ -52,6 +54,7 @@ public class EchoServer {
                     .childHandler(new EchoServerInitializer(secure, error))
                     .childAttr(LOG_FILTER, logFilter)
                     .childAttr(NEXT_RESPONSE, nextResponse)
+                    .childAttr(ONLY_RESPONSE, onlyResponse)
                     .bind(port)
                     .addListener(new ChannelFutureListener() {
                         @Override
@@ -90,6 +93,12 @@ public class EchoServer {
         return this;
     }
 
+    public EchoServer withOnlyResponse(HttpResponse httpResponse) {
+        // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
+        onlyResponse.httpResponse = httpResponse;
+        return this;
+    }
+
     public enum Error {
         CLOSE_CONNECTION,
         LARGER_CONTENT_LENGTH,
@@ -99,5 +108,9 @@ public class EchoServer {
 
     public class NextResponse {
         public final Queue<HttpResponse> httpResponse = new LinkedList<HttpResponse>();
+    }
+
+    public class OnlyResponse {
+        public HttpResponse httpResponse;
     }
 }

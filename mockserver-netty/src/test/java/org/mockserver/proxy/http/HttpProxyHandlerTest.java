@@ -1,5 +1,6 @@
 package org.mockserver.proxy.http;
 
+import com.google.common.collect.ImmutableSet;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
 import org.junit.Before;
@@ -26,6 +27,7 @@ import org.mockserver.responsewriter.NettyResponseWriter;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
@@ -41,6 +43,8 @@ import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
+import static org.mockserver.proxy.Proxy.LOCAL_HOST_HEADERS;
+import static org.mockserver.proxy.Proxy.PROXYING;
 
 /**
  * @author jamesdbloom
@@ -245,17 +249,63 @@ public class HttpProxyHandlerTest {
     }
 
     @Test
-    public void shouldProxyRequests() {
+    public void shouldProxyRequestsWhenProxying() {
         // given
         HttpRequest request = request("request_one");
         InetSocketAddress remoteAddress = new InetSocketAddress(1080);
+        embeddedChannel.attr(LOCAL_HOST_HEADERS).set(ImmutableSet.of(
+            "local_address:666",
+            "localhost:666",
+            "127.0.0.1:666"
+        ));
+        embeddedChannel.attr(PROXYING).set(true);
+        embeddedChannel.attr(REMOTE_SOCKET).set(remoteAddress);
 
         // when
-        embeddedChannel.attr(REMOTE_SOCKET).set(remoteAddress);
         embeddedChannel.writeInbound(request);
 
         // then
-        verify(mockActionHandler).processAction(eq(request), any(NettyResponseWriter.class), any(ChannelHandlerContext.class));
+        verify(mockActionHandler).processAction(
+            eq(request),
+            any(NettyResponseWriter.class),
+            any(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address:666",
+                "localhost:666",
+                "127.0.0.1:666"
+            )),
+            eq(true)
+        );
+    }
+
+    @Test
+    public void shouldProxyRequestsWhenNotProxying() {
+        // given
+        HttpRequest request = request("request_one");
+        InetSocketAddress remoteAddress = new InetSocketAddress(1080);
+        embeddedChannel.attr(LOCAL_HOST_HEADERS).set(ImmutableSet.of(
+            "local_address:666",
+            "localhost:666",
+            "127.0.0.1:666"
+        ));
+        embeddedChannel.attr(PROXYING).set(false);
+        embeddedChannel.attr(REMOTE_SOCKET).set(remoteAddress);
+
+        // when
+        embeddedChannel.writeInbound(request);
+
+        // then
+        verify(mockActionHandler).processAction(
+            eq(request),
+            any(NettyResponseWriter.class),
+            any(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address:666",
+                "localhost:666",
+                "127.0.0.1:666"
+            )),
+            eq(false)
+        );
     }
 
 }

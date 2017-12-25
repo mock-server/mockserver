@@ -27,8 +27,8 @@ import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.mock.HttpStateHandler.STATE_HANDLER;
 import static org.mockserver.proxy.Proxy.HTTP_PROXY;
-import static org.mockserver.proxy.Proxy.STATE_HANDLER;
 
 public class HttpProxyUnificationHandlerTest {
 
@@ -50,7 +50,7 @@ public class HttpProxyUnificationHandlerTest {
         }));
 
         // then - should add SSL handlers first
-        assertThat(embeddedChannel.pipeline().names(), contains(
+        assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "SslHandler#0",
                 "HttpProxyUnificationHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
@@ -88,7 +88,7 @@ public class HttpProxyUnificationHandlerTest {
         })));
 
         // and then - should add SOCKS handlers first
-        assertThat(embeddedChannel.pipeline().names(), contains(
+        assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "SocksCmdRequestDecoder#0",
                 "SocksMessageEncoder#0",
                 "SocksProxyHandler#0",
@@ -114,10 +114,12 @@ public class HttpProxyUnificationHandlerTest {
         embeddedChannel.writeInbound(Unpooled.wrappedBuffer("GET /somePath HTTP/1.1\r\nHost: some.random.host\r\n\r\n".getBytes(UTF_8)));
 
         // then - should add HTTP handlers last
-        assertThat(embeddedChannel.pipeline().names(), contains(
+        assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "HttpServerCodec#0",
                 "HttpContentDecompressor#0",
+                "HttpContentLengthRemover#0",
                 "HttpObjectAggregator#0",
+                "WebSocketServerHandler#0",
                 "MockServerServerCodec#0",
                 "HttpProxyHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
@@ -136,7 +138,7 @@ public class HttpProxyUnificationHandlerTest {
         embeddedChannel.writeInbound(Unpooled.wrappedBuffer("UNKNOWN_PROTOCOL".getBytes(UTF_8)));
 
         // then - should add no handlers
-        assertThat(embeddedChannel.pipeline().names(), contains(
+        assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "DefaultChannelPipeline$TailContext#0"
         ));
 

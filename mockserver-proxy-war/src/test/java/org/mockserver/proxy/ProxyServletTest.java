@@ -1,14 +1,13 @@
 package org.mockserver.proxy;
 
+import com.google.common.collect.ImmutableSet;
 import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
-import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.PortBindingSerializer;
-import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
 import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.logging.LoggingFormatter;
@@ -22,6 +21,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.Collections;
+import java.util.HashSet;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static org.apache.commons.codec.Charsets.UTF_8;
@@ -225,17 +225,125 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldProxyRequests() {
+    public void shouldProxyRequestsOnDefaultPort() {
         // given
         HttpRequest request = request("request_one").withHeader("Host", "localhost").withMethod("GET");
         MockHttpServletRequest httpServletRequest = buildHttpServletRequest("GET", "request_one", "");
         httpServletRequest.addHeader("Host", "localhost");
+        httpServletRequest.setLocalAddr("local_address");
+        httpServletRequest.setLocalPort(80);
 
         // when
         proxyServlet.service(httpServletRequest, response);
 
         // then
-        verify(mockActionHandler).processAction(eq(request.withSecure(false).withKeepAlive(true)), any(ServletResponseWriter.class), isNull(ChannelHandlerContext.class));
+        verify(mockActionHandler).processAction(
+            eq(
+                request
+                    .withSecure(false)
+                    .withKeepAlive(true)
+            ),
+            any(ServletResponseWriter.class),
+            isNull(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address",
+                "localhost",
+                "127.0.0.1"
+            )),
+            eq(true)
+        );
+    }
+
+    @Test
+    public void shouldProxyRequestsOnNonDefaultPort() {
+        // given
+        HttpRequest request = request("request_one").withHeader("Host", "localhost").withMethod("GET");
+        MockHttpServletRequest httpServletRequest = buildHttpServletRequest("GET", "request_one", "");
+        httpServletRequest.addHeader("Host", "localhost");
+        httpServletRequest.setLocalAddr("local_address");
+        httpServletRequest.setLocalPort(666);
+
+        // when
+        proxyServlet.service(httpServletRequest, response);
+
+        // then
+        verify(mockActionHandler).processAction(
+            eq(
+                request
+                    .withSecure(false)
+                    .withKeepAlive(true)
+            ),
+            any(ServletResponseWriter.class),
+            isNull(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address:666",
+                "localhost:666",
+                "127.0.0.1:666"
+            )),
+            eq(true)
+        );
+    }
+
+    @Test
+    public void shouldProxySecureRequestsOnDefaultPort() {
+        // given
+        HttpRequest request = request("request_one").withHeader("Host", "localhost").withMethod("GET");
+        MockHttpServletRequest httpServletRequest = buildHttpServletRequest("GET", "request_one", "");
+        httpServletRequest.addHeader("Host", "localhost");
+        httpServletRequest.setSecure(true);
+        httpServletRequest.setLocalAddr("local_address");
+        httpServletRequest.setLocalPort(443);
+
+        // when
+        proxyServlet.service(httpServletRequest, response);
+
+        // then
+        verify(mockActionHandler).processAction(
+            eq(
+                request
+                    .withSecure(true)
+                    .withKeepAlive(true)
+            ),
+            any(ServletResponseWriter.class),
+            isNull(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address",
+                "localhost",
+                "127.0.0.1"
+            )),
+            eq(true)
+        );
+    }
+
+    @Test
+    public void shouldProxySecureRequestsOnNonDefaultPort() {
+        // given
+        HttpRequest request = request("request_one").withHeader("Host", "localhost").withMethod("GET");
+        MockHttpServletRequest httpServletRequest = buildHttpServletRequest("GET", "request_one", "");
+        httpServletRequest.addHeader("Host", "localhost");
+        httpServletRequest.setSecure(true);
+        httpServletRequest.setLocalAddr("local_address");
+        httpServletRequest.setLocalPort(666);
+
+        // when
+        proxyServlet.service(httpServletRequest, response);
+
+        // then
+        verify(mockActionHandler).processAction(
+            eq(
+                request
+                    .withSecure(true)
+                    .withKeepAlive(true)
+            ),
+            any(ServletResponseWriter.class),
+            isNull(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address:666",
+                "localhost:666",
+                "127.0.0.1:666"
+            )),
+            eq(true)
+        );
     }
 
 }

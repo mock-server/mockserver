@@ -33,7 +33,7 @@ public class PortUnificationEchoServer {
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 100)
                     .handler(new LoggingHandler("EchoServer Handler"))
-                    .childHandler(new EchoServerUnificationHandler())
+                    .childHandler(new EchoServerPortUnificationHandler())
                     .bind(port)
                     .addListener(new ChannelFutureListener() {
                         @Override

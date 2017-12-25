@@ -1,4 +1,4 @@
-package org.mockserver.server.unification;
+package org.mockserver.unification;
 
 import com.google.common.net.HttpHeaders;
 import io.netty.channel.ChannelHandlerContext;
@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class HttpContentLengthRemover extends MessageToMessageEncoder<DefaultHttpMessage> {
     @Override
-    protected void encode(ChannelHandlerContext ctx, DefaultHttpMessage defaultHttpMessage, List out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, DefaultHttpMessage defaultHttpMessage, List out) {
         if (defaultHttpMessage.headers().contains(HttpHeaders.CONTENT_LENGTH, "", true)) {
             defaultHttpMessage.headers().remove(HttpHeaders.CONTENT_LENGTH);
         }

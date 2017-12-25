@@ -4,7 +4,6 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.ssl.SslHandler;
-import org.mockserver.proxy.unification.PortUnificationHandler;
 import org.slf4j.Logger;
 
 import java.nio.channels.ClosedChannelException;
@@ -13,6 +12,7 @@ import java.nio.channels.ClosedSelectorException;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
+import static org.mockserver.unification.PortUnificationHandler.isSslEnabledDownstream;
 
 public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
@@ -35,7 +35,7 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, final FullHttpRequest request) {
-        if (PortUnificationHandler.isSslEnabledDownstream(upstreamChannel) && downstreamChannel.pipeline().get(SslHandler.class) == null) {
+        if (isSslEnabledDownstream(upstreamChannel) && downstreamChannel.pipeline().get(SslHandler.class) == null) {
             downstreamChannel.pipeline().addFirst(nettySslContextFactory().createClientSslContext().newHandler(ctx.alloc()));
         }
         downstreamChannel.writeAndFlush(request).addListener(new ChannelFutureListener() {

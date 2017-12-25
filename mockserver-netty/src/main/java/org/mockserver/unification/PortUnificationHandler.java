@@ -1,4 +1,4 @@
-package org.mockserver.proxy.unification;
+package org.mockserver.unification;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.netty.buffer.ByteBuf;
@@ -13,12 +13,22 @@ import io.netty.handler.codec.socks.SocksProtocolVersion;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import org.mockserver.logging.LoggingHandler;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.proxy.socks.SocksProxyHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.proxy.Proxy.LOCAL_HOST_HEADERS;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 /**
@@ -27,8 +37,8 @@ import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactor
 @ChannelHandler.Sharable
 public abstract class PortUnificationHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
-    public static final AttributeKey<Boolean> SSL_ENABLED_UPSTREAM = AttributeKey.valueOf("PROXY_SSL_ENABLED_UPSTREAM");
-    public static final AttributeKey<Boolean> SSL_ENABLED_DOWNSTREAM = AttributeKey.valueOf("SSL_ENABLED_DOWNSTREAM");
+    private static final AttributeKey<Boolean> SSL_ENABLED_UPSTREAM = AttributeKey.valueOf("PROXY_SSL_ENABLED_UPSTREAM");
+    private static final AttributeKey<Boolean> SSL_ENABLED_DOWNSTREAM = AttributeKey.valueOf("SSL_ENABLED_DOWNSTREAM");
 
     @VisibleForTesting
     public static Logger logger = LoggerFactory.getLogger(PortUnificationHandler.class);
@@ -38,8 +48,8 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     }
 
     public static void enabledSslUpstreamAndDownstream(Channel channel) {
-        channel.attr(PortUnificationHandler.SSL_ENABLED_UPSTREAM).set(Boolean.TRUE);
-        channel.attr(PortUnificationHandler.SSL_ENABLED_DOWNSTREAM).set(Boolean.TRUE);
+        channel.attr(SSL_ENABLED_UPSTREAM).set(Boolean.TRUE);
+        channel.attr(SSL_ENABLED_DOWNSTREAM).set(Boolean.TRUE);
     }
 
     public static boolean isSslEnabledUpstream(Channel channel) {
@@ -51,11 +61,11 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     }
 
     public static void enabledSslDownstream(Channel channel) {
-        channel.attr(PortUnificationHandler.SSL_ENABLED_DOWNSTREAM).set(Boolean.TRUE);
+        channel.attr(SSL_ENABLED_DOWNSTREAM).set(Boolean.TRUE);
     }
 
     public static void disableSslDownstream(Channel channel) {
-        channel.attr(PortUnificationHandler.SSL_ENABLED_DOWNSTREAM).set(Boolean.FALSE);
+        channel.attr(SSL_ENABLED_DOWNSTREAM).set(Boolean.FALSE);
     }
 
     public static boolean isSslEnabledDownstream(Channel channel) {
@@ -142,9 +152,9 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     private void enableSsl(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
         pipeline.addFirst(nettySslContextFactory().createServerSslContext().newHandler(ctx.alloc()));
+        PortUnificationHandler.enabledSslUpstreamAndDownstream(ctx.channel());
 
         // re-unify (with SSL enabled)
-        PortUnificationHandler.enabledSslUpstreamAndDownstream(ctx.channel());
         ctx.pipeline().fireChannelRead(msg);
     }
 
@@ -163,16 +173,41 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
 
         addLastIfNotPresent(pipeline, new HttpServerCodec(8192, 8192, 8192));
         addLastIfNotPresent(pipeline, new HttpContentDecompressor());
+        addLastIfNotPresent(pipeline, new HttpContentLengthRemover());
         addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));
 
+        if (logger.isDebugEnabled()) {
+            addLastIfNotPresent(pipeline, new LoggingHandler(logger));
+        }
         configurePipeline(ctx, pipeline);
         pipeline.remove(this);
 
-        // pass message to next stage in pipeline
+        ctx.channel().attr(LOCAL_HOST_HEADERS).set(getLocalAddresses(ctx));
+
+        // fire message back through pipeline
         ctx.fireChannelRead(msg);
     }
 
-    protected void addLastIfNotPresent(ChannelPipeline pipeline, ChannelHandler channelHandler) {
+    private Set<String> getLocalAddresses(ChannelHandlerContext ctx) {
+        Set<String> localAddresses = new HashSet<>();
+        SocketAddress localAddress = ctx.channel().localAddress();
+        if (localAddress instanceof InetSocketAddress) {
+            InetSocketAddress inetSocketAddress = (InetSocketAddress) localAddress;
+            String portExtension = "";
+            if (!(inetSocketAddress.getPort() == 443 && isSslEnabledUpstream(ctx.channel()) || inetSocketAddress.getPort() == 80)) {
+                portExtension = ":" + inetSocketAddress.getPort();
+            }
+            InetAddress socketAddress = inetSocketAddress.getAddress();
+            localAddresses.add(socketAddress.getHostAddress() + portExtension);
+            localAddresses.add(socketAddress.getCanonicalHostName() + portExtension);
+            localAddresses.add(socketAddress.getHostName() + portExtension);
+            localAddresses.add("localhost" + portExtension);
+            localAddresses.add("127.0.0.1" + portExtension);
+        }
+        return localAddresses;
+    }
+
+    private void addLastIfNotPresent(ChannelPipeline pipeline, ChannelHandler channelHandler) {
         if (pipeline.get(channelHandler.getClass()) == null) {
             pipeline.addLast(channelHandler);
         }

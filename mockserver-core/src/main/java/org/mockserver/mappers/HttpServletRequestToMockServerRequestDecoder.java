@@ -22,19 +22,19 @@ import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SE
  */
 public class HttpServletRequestToMockServerRequestDecoder {
     public HttpRequest mapHttpServletRequestToMockServerRequest(HttpServletRequest httpServletRequest) {
-        HttpRequest httpRequest = new HttpRequest();
-        setMethod(httpRequest, httpServletRequest);
+        HttpRequest request = new HttpRequest();
+        setMethod(request, httpServletRequest);
 
-        setPath(httpRequest, httpServletRequest);
-        setQueryString(httpRequest, httpServletRequest);
+        setPath(request, httpServletRequest);
+        setQueryString(request, httpServletRequest);
 
-        setBody(httpRequest, httpServletRequest);
-        setHeaders(httpRequest, httpServletRequest);
-        setCookies(httpRequest, httpServletRequest);
+        setBody(request, httpServletRequest);
+        setHeaders(request, httpServletRequest);
+        setCookies(request, httpServletRequest);
 
-        httpRequest.withKeepAlive(isKeepAlive(httpServletRequest));
-        httpRequest.withSecure(httpServletRequest.isSecure());
-        return httpRequest;
+        request.withKeepAlive(isKeepAlive(httpServletRequest));
+        request.withSecure(httpServletRequest.isSecure());
+        return request;
     }
 
     private void setMethod(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {

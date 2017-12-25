@@ -15,7 +15,7 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.relay.RelayConnectHandler;
 import org.mockserver.proxy.socks.SocksProxyHandler;
-import org.mockserver.proxy.unification.PortUnificationHandler;
+import org.mockserver.unification.PortUnificationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +31,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockserver.mock.HttpStateHandler.STATE_HANDLER;
 import static org.mockserver.proxy.Proxy.HTTP_PROXY;
-import static org.mockserver.proxy.Proxy.STATE_HANDLER;
 
 public class HttpProxyUnificationHandlerSOCKSErrorTest {
 
@@ -53,57 +53,57 @@ public class HttpProxyUnificationHandlerSOCKSErrorTest {
 
         // when - SOCKS INIT message
         embeddedChannel.writeInbound(Unpooled.wrappedBuffer(new byte[]{
-                (byte) 0x05,                                        // SOCKS5
-                (byte) 0x02,                                        // 1 authentication method
-                (byte) 0x00,                                        // NO_AUTH
-                (byte) 0x02,                                        // AUTH_PASSWORD
+            (byte) 0x05,                                        // SOCKS5
+            (byte) 0x02,                                        // 1 authentication method
+            (byte) 0x00,                                        // NO_AUTH
+            (byte) 0x02,                                        // AUTH_PASSWORD
         }));
 
 
         // then - INIT response
         assertThat(ByteBufUtil.hexDump((ByteBuf) embeddedChannel.readOutbound()), is(Hex.encodeHexString(new byte[]{
-                (byte) 0x05,                                        // SOCKS5
-                (byte) 0x00,                                        // NO_AUTH
+            (byte) 0x05,                                        // SOCKS5
+            (byte) 0x00,                                        // NO_AUTH
         })));
 
         // and then - should add SOCKS handlers first
         if (LoggerFactory.getLogger(PortUnificationHandler.class).isTraceEnabled()) {
-            assertThat(embeddedChannel.pipeline().names(), contains(
-                    "LoggingHandler#0",
-                    "SocksCmdRequestDecoder#0",
-                    "SocksMessageEncoder#0",
-                    "SocksProxyHandler#0",
-                    "HttpProxyUnificationHandler#0",
-                    "DefaultChannelPipeline$TailContext#0"
+            assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
+                "LoggingHandler#0",
+                "SocksCmdRequestDecoder#0",
+                "SocksMessageEncoder#0",
+                "SocksProxyHandler#0",
+                "HttpProxyUnificationHandler#0",
+                "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
-            assertThat(embeddedChannel.pipeline().names(), contains(
-                    "SocksCmdRequestDecoder#0",
-                    "SocksMessageEncoder#0",
-                    "SocksProxyHandler#0",
-                    "HttpProxyUnificationHandler#0",
-                    "DefaultChannelPipeline$TailContext#0"
+            assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
+                "SocksCmdRequestDecoder#0",
+                "SocksMessageEncoder#0",
+                "SocksProxyHandler#0",
+                "HttpProxyUnificationHandler#0",
+                "DefaultChannelPipeline$TailContext#0"
             ));
         }
 
         // and when - SOCKS CONNECT command
         embeddedChannel.writeInbound(Unpooled.wrappedBuffer(new byte[]{
-                (byte) 0x05,                                        // SOCKS5
-                (byte) 0x01,                                        // command type CONNECT
-                (byte) 0x00,                                        // reserved (must be 0x00)
-                (byte) 0x01,                                        // address type IPv4
-                (byte) 0x7f, (byte) 0x00, (byte) 0x00, (byte) 0x01, // ip address
-                (byte) (localPort & 0xFF00), (byte) localPort       // port
+            (byte) 0x05,                                        // SOCKS5
+            (byte) 0x01,                                        // command type CONNECT
+            (byte) 0x00,                                        // reserved (must be 0x00)
+            (byte) 0x01,                                        // address type IPv4
+            (byte) 0x7f, (byte) 0x00, (byte) 0x00, (byte) 0x01, // ip address
+            (byte) (localPort & 0xFF00), (byte) localPort       // port
         }));
 
         // then - CONNECT response
         assertThat(ByteBufUtil.hexDump((ByteBuf) embeddedChannel.readOutbound()), is(Hex.encodeHexString(new byte[]{
-                (byte) 0x05,                                        // SOCKS5
-                (byte) 0x01,                                        // general failure (caused by connection failure)
-                (byte) 0x00,                                        // reserved (must be 0x00)
-                (byte) 0x01,                                        // address type IPv4
-                (byte) 0x7f, (byte) 0x00, (byte) 0x00, (byte) 0x01, // ip address
-                (byte) (localPort & 0xFF00), (byte) localPort       // port
+            (byte) 0x05,                                        // SOCKS5
+            (byte) 0x01,                                        // general failure (caused by connection failure)
+            (byte) 0x00,                                        // reserved (must be 0x00)
+            (byte) 0x01,                                        // address type IPv4
+            (byte) 0x7f, (byte) 0x00, (byte) 0x00, (byte) 0x01, // ip address
+            (byte) (localPort & 0xFF00), (byte) localPort       // port
         })));
 
         // then - channel is closed after error
@@ -129,23 +129,27 @@ public class HttpProxyUnificationHandlerSOCKSErrorTest {
 
         // then - should add HTTP handlers last
         if (LoggerFactory.getLogger(PortUnificationHandler.class).isTraceEnabled()) {
-            assertThat(embeddedChannel.pipeline().names(), contains(
-                    "LoggingHandler#0",
-                    "HttpServerCodec#0",
-                    "HttpContentDecompressor#0",
-                    "HttpObjectAggregator#0",
-                    "MockServerServerCodec#0",
-                    "HttpProxyHandler#0",
-                    "DefaultChannelPipeline$TailContext#0"
+            assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
+                "LoggingHandler#0",
+                "HttpServerCodec#0",
+                "HttpContentDecompressor#0",
+                "HttpContentLengthRemover#0",
+                "HttpObjectAggregator#0",
+                "WebSocketServerHandler#0",
+                "MockServerServerCodec#0",
+                "HttpProxyHandler#0",
+                "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
-            assertThat(embeddedChannel.pipeline().names(), contains(
-                    "HttpServerCodec#0",
-                    "HttpContentDecompressor#0",
-                    "HttpObjectAggregator#0",
-                    "MockServerServerCodec#0",
-                    "HttpProxyHandler#0",
-                    "DefaultChannelPipeline$TailContext#0"
+            assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
+                "HttpServerCodec#0",
+                "HttpContentDecompressor#0",
+                "HttpContentLengthRemover#0",
+                "HttpObjectAggregator#0",
+                "WebSocketServerHandler#0",
+                "MockServerServerCodec#0",
+                "HttpProxyHandler#0",
+                "DefaultChannelPipeline$TailContext#0"
             ));
         }
     }
@@ -163,7 +167,7 @@ public class HttpProxyUnificationHandlerSOCKSErrorTest {
 
         // then - should add no handlers
         assertThat(embeddedChannel.pipeline().names(), contains(
-                "DefaultChannelPipeline$TailContext#0"
+            "DefaultChannelPipeline$TailContext#0"
         ));
 
         // and - close channel

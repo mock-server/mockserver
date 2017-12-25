@@ -10,11 +10,14 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.PortBinding;
+import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
+import org.mockserver.socket.KeyAndCertificateFactory;
 import org.slf4j.LoggerFactory;
 
 import java.net.BindException;
+import java.util.HashSet;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
@@ -23,6 +26,10 @@ import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
+import static org.mockserver.proxy.Proxy.PROXYING;
+import static org.mockserver.proxy.Proxy.getLocalAddresses;
+import static org.mockserver.proxy.Proxy.isProxyingRequest;
+import static org.mockserver.unification.PortUnificationHandler.enabledSslUpstreamAndDownstream;
 
 /**
  * @author jamesdbloom
@@ -45,7 +52,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         this.server = server;
         this.httpStateHandler = httpStateHandler;
         this.logFormatter = httpStateHandler.getLogFormatter();
-        this.actionHandler = new ActionHandler(httpStateHandler, false);
+        this.actionHandler = new ActionHandler(httpStateHandler);
     }
 
     @Override
@@ -84,9 +91,20 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                         }
                     }).start();
 
+                } else if (request.getMethod().getValue().equals("CONNECT")) {
+
+                    ctx.channel().attr(PROXYING).set(Boolean.TRUE);
+                    // assume SSL for CONNECT request
+                    enabledSslUpstreamAndDownstream(ctx.channel());
+                    // add Subject Alternative Name for SSL certificate
+                    KeyAndCertificateFactory.addSubjectAlternativeName(request.getPath().getValue());
+                    ctx.pipeline().addLast(new HttpConnectHandler(request.getPath().getValue(), -1));
+                    ctx.pipeline().remove(this);
+                    ctx.fireChannelRead(request);
+
                 } else {
 
-                    actionHandler.processAction(request, responseWriter, ctx);
+                    actionHandler.processAction(request, responseWriter, ctx, getLocalAddresses(ctx), isProxyingRequest(ctx));
 
                 }
             }
@@ -101,7 +119,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     }
 
     @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+    public void channelReadComplete(ChannelHandlerContext ctx) {
         ctx.flush();
     }
 

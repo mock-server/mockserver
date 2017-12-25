@@ -11,6 +11,7 @@ import org.mockserver.proxy.Proxy;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 
+import static org.mockserver.mock.HttpStateHandler.STATE_HANDLER;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 
 /**
@@ -49,6 +50,7 @@ public class DirectProxy extends Proxy<DirectProxy> {
             .childHandler(new DirectProxyUnificationHandler())
             .childAttr(HTTP_PROXY, DirectProxy.this)
             .childAttr(REMOTE_SOCKET, remoteSocket)
+//            .childAttr(PROXYING, true)
             .childAttr(STATE_HANDLER, new HttpStateHandler());
 
         bindToPorts(Arrays.asList(localPorts));

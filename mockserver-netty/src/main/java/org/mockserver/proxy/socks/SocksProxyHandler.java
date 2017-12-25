@@ -4,12 +4,15 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.*;
-import org.mockserver.proxy.unification.PortUnificationHandler;
-import org.mockserver.socket.KeyAndCertificateFactory;
+import org.mockserver.mock.action.ActionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.proxy.Proxy.PROXYING;
+import static org.mockserver.socket.KeyAndCertificateFactory.addSubjectAlternativeName;
+import static org.mockserver.unification.PortUnificationHandler.disableSslDownstream;
+import static org.mockserver.unification.PortUnificationHandler.enabledSslDownstream;
 
 public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest> {
 
@@ -41,14 +44,15 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
                 if (req.cmdType() == SocksCmdType.CONNECT) {
 
                     Channel channel = ctx.channel();
+                    channel.attr(PROXYING).set(Boolean.TRUE);
                     if (String.valueOf(req.port()).endsWith("80")) {
-                        PortUnificationHandler.disableSslDownstream(channel);
+                        disableSslDownstream(channel);
                     } else if (String.valueOf(req.port()).endsWith("443")) {
-                        PortUnificationHandler.enabledSslDownstream(channel);
+                        enabledSslDownstream(channel);
                     }
 
                     // add Subject Alternative Name for SSL certificate
-                    KeyAndCertificateFactory.addSubjectAlternativeName(req.host());
+                    addSubjectAlternativeName(req.host());
 
                     ctx.pipeline().addAfter(getClass().getSimpleName() + "#0", SocksConnectHandler.class.getSimpleName() + "#0", new SocksConnectHandler(req.host(), req.port()));
                     ctx.pipeline().remove(this);

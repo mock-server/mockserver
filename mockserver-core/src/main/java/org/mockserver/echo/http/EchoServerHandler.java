@@ -28,11 +28,13 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private final EchoServer.Error error;
     private final LogFilter logFilter;
     private final EchoServer.NextResponse nextResponse;
+    private final EchoServer.OnlyResponse onlyResponse;
 
-    public EchoServerHandler(EchoServer.Error error, LogFilter logFilter, EchoServer.NextResponse nextResponse) {
+    EchoServerHandler(EchoServer.Error error, LogFilter logFilter, EchoServer.NextResponse nextResponse, EchoServer.OnlyResponse onlyResponse) {
         this.error = error;
         this.logFilter = logFilter;
         this.nextResponse = nextResponse;
+        this.onlyResponse = onlyResponse;
     }
 
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
@@ -41,7 +43,11 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
         logFilter.onRequest(new RequestLogEntry(request));
 
-        if (!nextResponse.httpResponse.isEmpty()) {
+        if (onlyResponse.httpResponse != null) {
+            // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
+            DefaultFullHttpResponse httpResponse = new MockServerResponseEncoder().encode(onlyResponse.httpResponse);
+            ctx.writeAndFlush(httpResponse);
+        } else if (!nextResponse.httpResponse.isEmpty()) {
             // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
             DefaultFullHttpResponse httpResponse = new MockServerResponseEncoder().encode(nextResponse.httpResponse.remove());
             ctx.writeAndFlush(httpResponse);

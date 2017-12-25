@@ -1,5 +1,6 @@
 package org.mockserver.server;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.net.MediaType;
 import org.mockserver.client.serialization.PortBindingSerializer;
 import org.mockserver.logging.LoggingFormatter;
@@ -12,6 +13,8 @@ import org.mockserver.responsewriter.ResponseWriter;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import java.util.HashSet;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static org.mockserver.model.HttpResponse.response;
@@ -35,7 +38,7 @@ public class MockServerServlet extends HttpServlet {
     public MockServerServlet() {
         this.httpStateHandler = new HttpStateHandler();
         this.logFormatter = httpStateHandler.getLogFormatter();
-        this.actionHandler = new ActionHandler(httpStateHandler, false);
+        this.actionHandler = new ActionHandler(httpStateHandler);
     }
 
     @Override
@@ -62,7 +65,15 @@ public class MockServerServlet extends HttpServlet {
 
                 } else {
 
-                    actionHandler.processAction(request, responseWriter, null);
+                    String portExtension = "";
+                    if (!(httpServletRequest.getLocalPort() == 443 && httpServletRequest.isSecure() || httpServletRequest.getLocalPort() == 80)) {
+                        portExtension = ":" + httpServletRequest.getLocalPort();
+                    }
+                    actionHandler.processAction(request, responseWriter, null, ImmutableSet.of(
+                        httpServletRequest.getLocalAddr() + portExtension,
+                        "localhost" + portExtension,
+                        "127.0.0.1" + portExtension
+                    ), false);
 
                 }
             }

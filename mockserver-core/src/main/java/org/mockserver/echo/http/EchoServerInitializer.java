@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.mockserver.echo.http.EchoServer.LOG_FILTER;
 import static org.mockserver.echo.http.EchoServer.NEXT_RESPONSE;
+import static org.mockserver.echo.http.EchoServer.ONLY_RESPONSE;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
 /**
@@ -56,6 +57,15 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
 
         pipeline.addLast(new MockServerServerCodec(secure));
 
-        pipeline.addLast(new EchoServerHandler(error, channel.attr(LOG_FILTER).get(), channel.attr(NEXT_RESPONSE).get()));
+        if (!secure && error == EchoServer.Error.CLOSE_CONNECTION) {
+            throw new IllegalArgumentException("Error type CLOSE_CONNECTION is not supported in non-secure mode");
+        }
+
+        pipeline.addLast(new EchoServerHandler(
+            error,
+            channel.attr(LOG_FILTER).get(),
+            channel.attr(NEXT_RESPONSE).get(),
+            channel.attr(ONLY_RESPONSE).get()
+        ));
     }
 }

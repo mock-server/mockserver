@@ -1,14 +1,13 @@
 package org.mockserver.proxy;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.net.MediaType;
 import org.mockserver.client.serialization.PortBindingSerializer;
-import org.mockserver.log.model.RequestResponseLogEntry;
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.server.ServletResponseWriter;
 
@@ -16,11 +15,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.rtsp.RtspResponseStatuses.NOT_IMPLEMENTED;
-import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
 
@@ -42,7 +42,7 @@ public class ProxyServlet extends HttpServlet {
     public ProxyServlet() {
         this.httpStateHandler = new HttpStateHandler();
         this.logFormatter = httpStateHandler.getLogFormatter();
-        this.actionHandler = new ActionHandler(httpStateHandler, true);
+        this.actionHandler = new ActionHandler(httpStateHandler);
     }
 
     @Override
@@ -69,7 +69,15 @@ public class ProxyServlet extends HttpServlet {
 
                 } else {
 
-                    actionHandler.processAction(request, responseWriter, null);
+                    String portExtension = "";
+                    if (!(httpServletRequest.getLocalPort() == 443 && httpServletRequest.isSecure() || httpServletRequest.getLocalPort() == 80)) {
+                        portExtension = ":" + httpServletRequest.getLocalPort();
+                    }
+                    actionHandler.processAction(request, responseWriter, null, ImmutableSet.of(
+                        httpServletRequest.getLocalAddr() + portExtension,
+                        "localhost" + portExtension,
+                        "127.0.0.1" + portExtension
+                    ), true);
 
                 }
             }

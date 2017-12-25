@@ -20,6 +20,7 @@ import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 
 import java.net.InetSocketAddress;
+import java.util.HashSet;
 
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -79,7 +80,7 @@ public class ActionHandlerTest {
     @Before
     public void setupMocks() {
         mockHttpStateHandler = mock(HttpStateHandler.class);
-        actionHandler = new ActionHandler(mockHttpStateHandler, true);
+        actionHandler = new ActionHandler(mockHttpStateHandler);
         initMocks(this);
         request = request("some_path");
         response = response("some_body");
@@ -103,7 +104,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false);
 
         // then
         verify(mockHttpForwardActionHandler).handle(forward, request);
@@ -120,7 +121,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false);
 
         // then
         verify(mockHttpForwardTemplateActionHandler).handle(template, request);
@@ -137,7 +138,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false);
 
         // then
         verify(mockHttpResponseActionHandler).handle(response);
@@ -154,7 +155,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false);
 
         // then
         verify(mockHttpResponseTemplateActionHandler).handle(template, request);
@@ -171,7 +172,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false);
 
         // then
         verify(mockHttpClassCallbackActionHandler).handle(callback, request);
@@ -189,7 +190,7 @@ public class ActionHandlerTest {
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false);
 
         // then
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
@@ -206,7 +207,7 @@ public class ActionHandlerTest {
         ChannelHandlerContext mockChannelHandlerContext = mock(ChannelHandlerContext.class);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext);
+        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), false);
 
         // then
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
@@ -220,11 +221,11 @@ public class ActionHandlerTest {
         HttpRequest request = request("request_one");
 
         // and - remote socket attribute
-        InetSocketAddress remoteAddress = new InetSocketAddress(1080);
         ChannelHandlerContext mockChannelHandlerContext = mock(ChannelHandlerContext.class);
         Channel mockChannel = mock(Channel.class);
-        Attribute<InetSocketAddress> inetSocketAddressAttribute = mock(Attribute.class);
         when(mockChannelHandlerContext.channel()).thenReturn(mockChannel);
+        InetSocketAddress remoteAddress = new InetSocketAddress(1080);
+        Attribute<InetSocketAddress> inetSocketAddressAttribute = mock(Attribute.class);
         when(inetSocketAddressAttribute.get()).thenReturn(remoteAddress);
         when(mockChannel.attr(REMOTE_SOCKET)).thenReturn(inetSocketAddressAttribute);
 
@@ -232,7 +233,7 @@ public class ActionHandlerTest {
         when(mockNettyHttpClient.sendRequest(request, remoteAddress)).thenReturn(response("response_one"));
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext);
+        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), true);
 
         // then
         verify(mockHttpStateHandler).log(new RequestResponseLogEntry(request, response("response_one")));

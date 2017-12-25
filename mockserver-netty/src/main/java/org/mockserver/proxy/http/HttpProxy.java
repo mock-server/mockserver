@@ -2,6 +2,7 @@ package org.mockserver.proxy.http;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -9,8 +10,13 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.proxy.Proxy;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+
+import static org.mockserver.mock.HttpStateHandler.STATE_HANDLER;
 
 /**
  * @author jamesdbloom
@@ -59,6 +65,7 @@ public class HttpProxy extends Proxy<HttpProxy> {
     }
 
     protected void started(Integer port) {
+        super.started(port);
         ConfigurationProperties.proxyPort(port);
         System.setProperty("http.proxyHost", "127.0.0.1");
         System.setProperty("http.proxyPort", port.toString());

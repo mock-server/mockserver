@@ -37,8 +37,7 @@ public class NettyHttpClient {
         if (!Strings.isNullOrEmpty(request.getFirstHeader(HOST.toString()))) {
             boolean isSsl = request.isSecure() != null && request.isSecure();
             String[] hostHeaderParts = request.getFirstHeader(HOST.toString()).split(":");
-            return new InetSocketAddress(hostHeaderParts[0], hostHeaderParts.length > 1 ? Integer.parseInt(hostHeaderParts[1]) : isSsl ? 443 : 80
-            );
+            return new InetSocketAddress(hostHeaderParts[0], hostHeaderParts.length > 1 ? Integer.parseInt(hostHeaderParts[1]) : isSsl ? 443 : 80);
         } else {
             throw new IllegalArgumentException("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + NEW_LINE + request);
         }

@@ -3,9 +3,8 @@ package org.mockserver.server;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockserver.client.server.ClientException;
+import org.mockserver.client.ClientException;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
-import org.mockserver.model.HttpStatusCode;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.Matchers.containsString;

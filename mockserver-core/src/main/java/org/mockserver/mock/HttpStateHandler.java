@@ -3,6 +3,7 @@ package org.mockserver.mock;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
@@ -39,6 +40,7 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public class HttpStateHandler {
 
+    public static final AttributeKey<HttpStateHandler> STATE_HANDLER = AttributeKey.valueOf("PROXY_STATE_HANDLER");
     public static final String LOG_SEPARATOR = "------------------------------------\n";
     // mockserver
     private LoggingFormatter logFormatter = new LoggingFormatter(LoggerFactory.getLogger(this.getClass()), this);

@@ -4,11 +4,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockserver.client.ClientException;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.socket.PortFactory;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;

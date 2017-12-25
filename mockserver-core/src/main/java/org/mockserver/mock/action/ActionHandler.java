@@ -15,7 +15,9 @@ import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 
 import java.net.InetSocketAddress;
+import java.util.Set;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 
@@ -25,7 +27,7 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 public class ActionHandler {
 
     public static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
-    private final boolean forwardNonMatching;
+
     private HttpStateHandler httpStateHandler;
     private LoggingFormatter logFormatter;
     private HttpResponseActionHandler httpResponseActionHandler;
@@ -41,10 +43,9 @@ public class ActionHandler {
     private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
-    public ActionHandler(HttpStateHandler httpStateHandler, boolean forwardNonMatching) {
+    public ActionHandler(HttpStateHandler httpStateHandler) {
         this.httpStateHandler = httpStateHandler;
         this.logFormatter = httpStateHandler.getLogFormatter();
-        this.forwardNonMatching = forwardNonMatching;
         this.httpResponseActionHandler = new HttpResponseActionHandler();
         this.httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(logFormatter);
         this.httpForwardActionHandler = new HttpForwardActionHandler();
@@ -53,7 +54,7 @@ public class ActionHandler {
         this.httpObjectCallbackActionHandler = new HttpObjectCallbackActionHandler(httpStateHandler);
     }
 
-    public void processAction(HttpRequest request, ResponseWriter responseWriter, ChannelHandlerContext ctx) {
+    public void processAction(HttpRequest request, ResponseWriter responseWriter, ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyRequest) {
         Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
         if (expectation != null && expectation.getAction() != null) {
             Action action = expectation.getAction();
@@ -105,7 +106,7 @@ public class ActionHandler {
                     break;
                 }
             }
-        } else if (forwardNonMatching) {
+        } else if (proxyRequest || !localAddresses.contains(request.getFirstHeader(HOST.toString()))) {
             InetSocketAddress remoteAddress = ctx != null ? ctx.channel().attr(REMOTE_SOCKET).get() : null;
             HttpResponse response = httpClient.sendRequest(hopByHopHeaderFilter.onRequest(request), remoteAddress);
             if (response == null) {
