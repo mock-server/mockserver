@@ -41,18 +41,17 @@ public class NettyResponseWriter extends ResponseWriter {
         if (body != null && !body.isEmpty()) {
             response.replaceHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
         }
-        if (enableCORSForAPI()) {
-            addCORSHeaders.addCORSHeaders(response);
-        }
-        writeResponse(request, response);
+        writeResponse(request, response, true);
     }
 
     @Override
-    public void writeResponse(HttpRequest request, HttpResponse response) {
+    public void writeResponse(HttpRequest request, HttpResponse response, boolean apiResponse) {
         if (response == null) {
             response = notFoundResponse();
         }
         if (enableCORSForAllResponses()) {
+            addCORSHeaders.addCORSHeaders(response);
+        } else if (apiResponse && enableCORSForAPI()) {
             addCORSHeaders.addCORSHeaders(response);
         }
 

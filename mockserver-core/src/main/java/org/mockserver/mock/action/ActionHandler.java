@@ -61,14 +61,14 @@ public class ActionHandler {
             switch (action.getType()) {
                 case FORWARD: {
                     HttpResponse response = httpForwardActionHandler.handle((HttpForward) action, request);
-                    responseWriter.writeResponse(request, response);
+                    responseWriter.writeResponse(request, response, false);
                     httpStateHandler.log(new RequestResponseLogEntry(request, response));
                     logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for forward action:{}", response, request, action);
                     break;
                 }
                 case FORWARD_TEMPLATE: {
                     HttpResponse response = httpForwardTemplateActionHandler.handle((HttpTemplate) action, request);
-                    responseWriter.writeResponse(request, response);
+                    responseWriter.writeResponse(request, response, false);
                     httpStateHandler.log(new RequestResponseLogEntry(request, response));
                     logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated forward action:{}", response, request, action);
                     break;
@@ -81,21 +81,21 @@ public class ActionHandler {
                 case CLASS_CALLBACK: {
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     HttpResponse response = httpClassCallbackActionHandler.handle((HttpClassCallback) action, request);
-                    responseWriter.writeResponse(request, response);
+                    responseWriter.writeResponse(request, response, false);
                     logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, action);
                     break;
                 }
                 case RESPONSE: {
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     HttpResponse response = httpResponseActionHandler.handle((HttpResponse) action);
-                    responseWriter.writeResponse(request, response);
+                    responseWriter.writeResponse(request, response, false);
                     logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for response action:{}", response, request, action);
                     break;
                 }
                 case RESPONSE_TEMPLATE: {
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     HttpResponse response = httpResponseTemplateActionHandler.handle((HttpTemplate) action, request);
-                    responseWriter.writeResponse(request, response);
+                    responseWriter.writeResponse(request, response, false);
                     logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated response action:{}", response, request, action);
                     break;
                 }
@@ -112,7 +112,7 @@ public class ActionHandler {
             if (response == null) {
                 response = notFoundResponse();
             }
-            responseWriter.writeResponse(request, response);
+            responseWriter.writeResponse(request, response, false);
             httpStateHandler.log(new RequestResponseLogEntry(request, response));
             logFormatter.infoLog(
                 request,
@@ -122,7 +122,7 @@ public class ActionHandler {
                 httpRequestToCurlSerializer.toCurl(request, remoteAddress)
             );
         } else {
-            responseWriter.writeResponse(request, notFoundResponse());
+            responseWriter.writeResponse(request, notFoundResponse(), false);
             httpStateHandler.log(new RequestLogEntry(request));
             logFormatter.infoLog(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
         }

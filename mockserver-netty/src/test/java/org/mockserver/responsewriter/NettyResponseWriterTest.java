@@ -8,7 +8,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.responsewriter.NettyResponseWriter;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
@@ -40,7 +39,7 @@ public class NettyResponseWriterTest {
         HttpResponse response = response("some_response");
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone());
+        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -56,7 +55,7 @@ public class NettyResponseWriterTest {
         HttpRequest request = request("some_request");
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), (HttpResponse) null);
+        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), (HttpResponse) null, false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -76,7 +75,7 @@ public class NettyResponseWriterTest {
             HttpResponse response = response("some_response");
 
             // when
-            new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone());
+            new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
 
             // then
             verify(mockChannelHandlerContext).writeAndFlush(
@@ -103,7 +102,7 @@ public class NettyResponseWriterTest {
         HttpResponse response = response("some_response");
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone());
+        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -124,7 +123,7 @@ public class NettyResponseWriterTest {
                 );
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone());
+        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -149,7 +148,7 @@ public class NettyResponseWriterTest {
                 );
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone());
+        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -173,7 +172,7 @@ public class NettyResponseWriterTest {
                 );
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone());
+        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(

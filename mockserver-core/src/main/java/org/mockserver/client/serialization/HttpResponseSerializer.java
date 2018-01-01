@@ -50,8 +50,9 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                 return objectMapper
                     .writerWithDefaultPrettyPrinter()
                     .writeValueAsString(httpResponseDTOs);
+            } else {
+                return "[]";
             }
-            return "";
         } catch (Exception e) {
             logger.error("Exception while serializing HttpResponse to JSON with value " + Arrays.asList(httpResponses), e);
             throw new RuntimeException("Exception while serializing HttpResponse to JSON with value " + Arrays.asList(httpResponses), e);

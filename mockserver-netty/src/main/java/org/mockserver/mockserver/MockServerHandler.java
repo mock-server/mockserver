@@ -17,7 +17,6 @@ import org.mockserver.socket.KeyAndCertificateFactory;
 import org.slf4j.LoggerFactory;
 
 import java.net.BindException;
-import java.util.HashSet;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
@@ -109,12 +108,12 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 }
             }
         } catch (IllegalArgumentException iae) {
-            logFormatter.errorLog(request, iae, "Exception processing " + request);
+            logFormatter.errorLog(request, "Exception processing " + request + "\n" + iae.getMessage());
             // send request without API CORS headers
             responseWriter.writeResponse(request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
             logFormatter.errorLog(request, e, "Exception processing " + request);
-            responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()));
+            responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()), true);
         }
     }
 

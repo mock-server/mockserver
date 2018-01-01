@@ -9,7 +9,6 @@ import org.mockserver.client.serialization.*;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.Format;
 import org.mockserver.model.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -18,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -41,14 +39,14 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
 
     protected final String host;
     protected final int port;
-    protected final String contextPath;
+    private final String contextPath;
     private final Class<T> clientClass;
-    protected NettyHttpClient nettyHttpClient = new NettyHttpClient();
-    protected HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    protected PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
-    protected ExpectationSerializer expectationSerializer = new ExpectationSerializer();
-    protected VerificationSerializer verificationSerializer = new VerificationSerializer();
-    protected VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
+    private NettyHttpClient nettyHttpClient = new NettyHttpClient();
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+    private VerificationSerializer verificationSerializer = new VerificationSerializer();
+    private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
 
     /**
      * Start the client communicating to the proxy at the specified host and port
@@ -73,31 +71,31 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
         this.contextPath = contextPath;
     }
 
-    protected String calculatePath(String path) {
+    private String calculatePath(String path) {
         String cleanedPath = path;
         if (!Strings.isNullOrEmpty(contextPath)) {
             cleanedPath =
-                    (!contextPath.startsWith("/") ? "/" : "") +
-                            contextPath +
-                            (!contextPath.endsWith("/") ? "/" : "") +
-                            (cleanedPath.startsWith("/") ? cleanedPath.substring(1) : cleanedPath);
+                (!contextPath.startsWith("/") ? "/" : "") +
+                    contextPath +
+                    (!contextPath.endsWith("/") ? "/" : "") +
+                    (cleanedPath.startsWith("/") ? cleanedPath.substring(1) : cleanedPath);
         }
         return (!cleanedPath.startsWith("/") ? "/" : "") + cleanedPath;
     }
 
-    protected HttpResponse sendRequest(HttpRequest request) {
+    private HttpResponse sendRequest(HttpRequest request) {
         HttpResponse response = nettyHttpClient.sendRequest(
-                request.withHeader(HOST.toString(), host + ":" + port)
+            request.withHeader(HOST.toString(), host + ":" + port)
         );
         if (response != null &&
-                response.getStatusCode() != null &&
-                response.getStatusCode() == BAD_REQUEST.code()) {
+            response.getStatusCode() != null &&
+            response.getStatusCode() == BAD_REQUEST.code()) {
             throw new IllegalArgumentException(response.getBodyAsString());
         }
         return response;
     }
 
-    protected String formatErrorMessage(String message, Object... objects) {
+    private String formatErrorMessage(String message, Object... objects) {
         Object[] indentedObjects = new String[objects.length];
         for (int i = 0; i < objects.length; i++) {
             indentedObjects[i] = NEW_LINE + NEW_LINE + String.valueOf(objects[i]).replaceAll("(?m)^", "\t") + NEW_LINE;
@@ -178,7 +176,7 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         stop();
     }
 
@@ -302,28 +300,27 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
      */
     public HttpRequest[] retrieveRecordedRequests(HttpRequest httpRequest) {
         String recordedRequests = retrieveRecordedRequests(httpRequest, Format.JSON);
-        if (StringUtils.isNotEmpty(recordedRequests)) {
-            return httpRequestSerializer.deserializeArray(recordedRequests);
-        } else {
-            return new HttpRequest[0];
+        if (StringUtils.isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
+                return httpRequestSerializer.deserializeArray(recordedRequests);
+            } else {
+                return new HttpRequest[0];
+            }
         }
-    }
-
-    /**
-     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
-     *
-     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
-     * @param format the format to retrieve the expectations, either JAVA or JSON
-     * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
-     */
+        /**
+         * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
+         *
+         * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+         * @param format      the format to retrieve the expectations, either JAVA or JSON
+         * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
+         */
     public String retrieveRecordedRequests(HttpRequest httpRequest, Format format) {
         HttpResponse httpResponse = sendRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath(calculatePath("retrieve"))
-                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
-                        .withQueryStringParameter("format", format.name())
-                        .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
+            request()
+                .withMethod("PUT")
+                .withPath(calculatePath("retrieve"))
+                .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                .withQueryStringParameter("format", format.name())
+                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
     }
@@ -336,7 +333,7 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
      */
     public Expectation[] retrieveRecordedExpectations(HttpRequest httpRequest) {
         String recordedExpectations = retrieveRecordedExpectations(httpRequest, Format.JSON);
-        if (!Strings.isNullOrEmpty(recordedExpectations)) {
+        if (!Strings.isNullOrEmpty(recordedExpectations) && !recordedExpectations.equals("[]")) {
             return expectationSerializer.deserializeArray(recordedExpectations);
         } else {
             return new Expectation[0];
@@ -347,17 +344,17 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
      * Retrieve the request-response combinations that have been recorded as a list of expectations, only those that match the httpRequest parameter are returned, use null to retrieve all requests
      *
      * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
-     * @param format the format to retrieve the expectations, either JAVA or JSON
+     * @param format      the format to retrieve the expectations, either JAVA or JSON
      * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
     public String retrieveRecordedExpectations(HttpRequest httpRequest, Format format) {
         HttpResponse httpResponse = sendRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath(calculatePath("retrieve"))
-                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", format.name())
-                        .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
+            request()
+                .withMethod("PUT")
+                .withPath(calculatePath("retrieve"))
+                .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                .withQueryStringParameter("format", format.name())
+                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
     }
@@ -370,11 +367,11 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
      */
     public String retrieveLogMessages(HttpRequest httpRequest) {
         HttpResponse httpResponse = sendRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath(calculatePath("retrieve"))
-                        .withQueryStringParameter("type", RetrieveType.LOGS.name())
-                        .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
+            request()
+                .withMethod("PUT")
+                .withPath(calculatePath("retrieve"))
+                .withQueryStringParameter("type", RetrieveType.LOGS.name())
+                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
     }
@@ -452,7 +449,7 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
      */
     public Expectation[] retrieveActiveExpectations(HttpRequest httpRequest) {
         String activeExpectations = retrieveActiveExpectations(httpRequest, Format.JSON);
-        if (!Strings.isNullOrEmpty(activeExpectations)) {
+        if (!Strings.isNullOrEmpty(activeExpectations) && !activeExpectations.equals("[]")) {
             return expectationSerializer.deserializeArray(activeExpectations);
         } else {
             return new Expectation[0];
@@ -463,17 +460,17 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
      * Retrieve the active expectations match the httpRequest parameter, use null for the parameter to retrieve all expectations
      *
      * @param httpRequest the http request that is matched against when deciding whether to return each expectation, use null for the parameter to retrieve for all requests
-     * @param format the format to retrieve the expectations, either JAVA or JSON
+     * @param format      the format to retrieve the expectations, either JAVA or JSON
      * @return an array of all expectations that have been setup and have not expired
      */
     public String retrieveActiveExpectations(HttpRequest httpRequest, Format format) {
         HttpResponse httpResponse = sendRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath(calculatePath("retrieve"))
-                        .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", format.name())
-                        .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
+            request()
+                .withMethod("PUT")
+                .withPath(calculatePath("retrieve"))
+                .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+                .withQueryStringParameter("format", format.name())
+                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
     }

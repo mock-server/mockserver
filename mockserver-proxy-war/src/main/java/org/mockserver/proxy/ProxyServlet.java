@@ -15,9 +15,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.util.Arrays;
-import java.util.HashSet;
-
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.rtsp.RtspResponseStatuses.NOT_IMPLEMENTED;
@@ -82,12 +79,12 @@ public class ProxyServlet extends HttpServlet {
                 }
             }
         } catch (IllegalArgumentException iae) {
-            logFormatter.errorLog(request, iae, "Exception processing " + request);
+            logFormatter.errorLog(request, "Exception processing " + request + "\n" + iae.getMessage());
             // send request without API CORS headers
             responseWriter.writeResponse(request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
             logFormatter.errorLog(request, e, "Exception processing " + request);
-            responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()));
+            responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()), true);
         }
     }
 

@@ -71,7 +71,7 @@ public class HttpStateHandlerTest {
         httpStateHandler.clear(request);
 
         // then - correct log entries removed
-        assertThat(httpStateHandler.retrieve(request), is(response().withBody("", JSON_UTF_8).withStatusCode(200)));
+        assertThat(httpStateHandler.retrieve(request), is(response().withBody("[]", JSON_UTF_8).withStatusCode(200)));
         // then - correct expectations removed
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
         // then - activity logged
@@ -98,7 +98,7 @@ public class HttpStateHandlerTest {
         // then - correct log entries removed
         assertThat(
             httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_one")))),
-            is(response().withBody("", JSON_UTF_8).withStatusCode(200))
+            is(response().withBody("[]", JSON_UTF_8).withStatusCode(200))
         );
         assertThat(
             httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_two")))),
@@ -136,7 +136,7 @@ public class HttpStateHandlerTest {
         // then - correct log entries removed
         assertThat(
             httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_one")))),
-            is(response().withBody("", JSON_UTF_8).withStatusCode(200))
+            is(response().withBody("[]", JSON_UTF_8).withStatusCode(200))
         );
         assertThat(
             httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_two")))),
@@ -458,7 +458,7 @@ public class HttpStateHandlerTest {
         httpStateHandler.reset();
 
         // then - correct log entries removed
-        assertThat(httpStateHandler.retrieve(request), is(response().withBody("", JSON_UTF_8).withStatusCode(200)));
+        assertThat(httpStateHandler.retrieve(request), is(response().withBody("[]", JSON_UTF_8).withStatusCode(200)));
         // then - correct expectations removed
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
         // then - activity logged

@@ -38,7 +38,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
     }
 
     @Override
-    public boolean acceptInboundMessage(Object msg) throws Exception {
+    public boolean acceptInboundMessage(Object msg) {
         boolean websocketHandshake = msg instanceof FullHttpRequest && ((FullHttpRequest) msg).uri().equals(WEB_SOCKET_URI);
         boolean websocketFrame = msg instanceof WebSocketFrame;
         return websocketHandshake || websocketFrame;

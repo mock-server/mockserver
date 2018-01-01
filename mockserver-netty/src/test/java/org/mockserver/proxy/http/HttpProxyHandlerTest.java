@@ -130,7 +130,7 @@ public class HttpProxyHandlerTest {
             .withMethod("PUT")
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
-            )), is(response().withBody("", JSON_UTF_8).withStatusCode(200)));
+            )), is(response().withBody("[]", JSON_UTF_8).withStatusCode(200)));
         verify(mockLogFormatter).infoLog(request("request_one"), "clearing expectations and request logs that match:{}", request("request_one"));
     }
 

@@ -20,7 +20,7 @@ public abstract class ResponseWriter {
 
     public abstract void writeResponse(HttpRequest request, HttpResponseStatus responseStatus, String body, String contentType);
 
-    public abstract void writeResponse(HttpRequest request, HttpResponse response);
+    public abstract void writeResponse(HttpRequest request, HttpResponse response, boolean apiResponse);
 
     protected void addConnectionHeader(HttpRequest request, HttpResponse response) {
         ConnectionOptions connectionOptions = response.getConnectionOptions();

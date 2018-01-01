@@ -72,8 +72,8 @@ public class HttpResponseSerializationErrorsTest {
     @Test
     public void shouldHandleNullAndEmptyWhileSerializingArray() throws IOException {
         // when
-        assertEquals("", httpResponseSerializer.serialize(new HttpResponse[]{}));
-        assertEquals("", httpResponseSerializer.serialize((HttpResponse[]) null));
+        assertEquals("[]", httpResponseSerializer.serialize(new HttpResponse[]{}));
+        assertEquals("[]", httpResponseSerializer.serialize((HttpResponse[]) null));
     }
 
     @Test

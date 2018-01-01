@@ -79,8 +79,9 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                         .writerWithDefaultPrettyPrinter()
                         .writeValueAsString(httpRequestDTOs);
                 }
+            } else {
+                return "[]";
             }
-            return "";
         } catch (Exception e) {
             logger.error("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequests), e);
             throw new RuntimeException("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequests), e);

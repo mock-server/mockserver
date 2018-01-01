@@ -126,7 +126,7 @@ public class MockServerHandlerTest {
             .withMethod("PUT")
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
-            )), is(response().withBody("", JSON_UTF_8).withStatusCode(200)));
+            )), is(response().withBody("[]", JSON_UTF_8).withStatusCode(200)));
     }
 
     @Test

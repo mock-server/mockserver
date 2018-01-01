@@ -3,20 +3,15 @@ package org.mockserver.server;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
-import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 
 import javax.servlet.http.HttpServletResponse;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
-import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
-import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -47,18 +42,17 @@ public class ServletResponseWriter extends ResponseWriter {
         if (body != null && !body.isEmpty()) {
             response.replaceHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
         }
-        if (enableCORSForAPI()) {
-            addCORSHeaders.addCORSHeaders(response);
-        }
-        writeResponse(request, response);
+        writeResponse(request, response, true);
     }
 
     @Override
-    public void writeResponse(HttpRequest request, HttpResponse response) {
+    public void writeResponse(HttpRequest request, HttpResponse response, boolean apiResponse) {
         if (response == null) {
             response = notFoundResponse();
         }
         if (enableCORSForAllResponses()) {
+            addCORSHeaders.addCORSHeaders(response);
+        } else if (apiResponse && enableCORSForAPI()) {
             addCORSHeaders.addCORSHeaders(response);
         }
 

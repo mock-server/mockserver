@@ -46,8 +46,8 @@ public class ExpectationSerializationErrorsTest {
     @Test
     public void shouldHandleNullAndEmptyWhileSerializingArray() throws IOException {
         // when
-        assertEquals("", expectationSerializer.serialize(new Expectation[]{}));
-        assertEquals("", expectationSerializer.serialize((Expectation[]) null));
+        assertEquals("[]", expectationSerializer.serialize(new Expectation[]{}));
+        assertEquals("[]", expectationSerializer.serialize((Expectation[]) null));
     }
 
     @Test

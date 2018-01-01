@@ -279,7 +279,7 @@ public class LogFilterRequestLogEntryVerificationTest {
                 ),
                 is("Request not found exactly once, expected:<{" + NEW_LINE +
                         "  \"path\" : \"some_other_path\"" + NEW_LINE +
-                        "}> but was:<>"));
+                        "}> but was:<[]>"));
     }
 
     @Test

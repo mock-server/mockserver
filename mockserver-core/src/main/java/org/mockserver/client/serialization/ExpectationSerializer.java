@@ -49,8 +49,9 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 return objectMapper
                     .writerWithDefaultPrettyPrinter()
                     .writeValueAsString(expectationDTOs);
+            } else {
+                return "[]";
             }
-            return "";
         } catch (Exception e) {
             logger.error("Exception while serializing expectation to JSON with value " + Arrays.asList(expectations), e);
             throw new RuntimeException("Exception while serializing expectation to JSON with value " + Arrays.asList(expectations), e);

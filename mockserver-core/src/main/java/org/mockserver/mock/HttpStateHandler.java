@@ -1,14 +1,12 @@
 package org.mockserver.mock;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationSequenceSerializer;
-import org.mockserver.client.serialization.VerificationSerializer;
+import org.mockserver.client.serialization.*;
 import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.filters.LogFilter;
@@ -234,7 +232,7 @@ public class HttpStateHandler {
 
         } else if (request.matches("PUT", "/retrieve")) {
 
-            responseWriter.writeResponse(request, retrieve(request));
+            responseWriter.writeResponse(request, retrieve(request), true);
 
         } else if (request.matches("PUT", "/verify")) {
 
@@ -269,13 +267,13 @@ public class HttpStateHandler {
         Action action = expectation.getAction();
         String NOT_SUPPORTED_MESSAGE = " is not supported by MockServer deployed as a WAR due to limitations in the JEE specification; use mockserver-netty to enable these features";
         if (action instanceof HttpResponse && ((HttpResponse) action).getConnectionOptions() != null) {
-            responseWriter.writeResponse(request, response("ConnectionOptions" + NOT_SUPPORTED_MESSAGE));
+            responseWriter.writeResponse(request, response("ConnectionOptions" + NOT_SUPPORTED_MESSAGE), true);
             valid = false;
         } else if (action instanceof HttpObjectCallback) {
-            responseWriter.writeResponse(request, response("HttpObjectCallback" + NOT_SUPPORTED_MESSAGE));
+            responseWriter.writeResponse(request, response("HttpObjectCallback" + NOT_SUPPORTED_MESSAGE), true);
             valid = false;
         } else if (action instanceof HttpError) {
-            responseWriter.writeResponse(request, response("HttpError" + NOT_SUPPORTED_MESSAGE));
+            responseWriter.writeResponse(request, response("HttpError" + NOT_SUPPORTED_MESSAGE), true);
             valid = false;
         }
         return valid;
