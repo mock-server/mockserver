@@ -3,10 +3,12 @@ package org.mockserver.mockserver.callback;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.*;
+import io.netty.util.AttributeKey;
+import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,31 +19,38 @@ import static com.google.common.net.HttpHeaders.HOST;
 /**
  * @author jamesdbloom
  */
-public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> {
+public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter {
 
-    public static final String WEB_SOCKET_URI = "/_mockserver_callback_websocket";
+    private static final AttributeKey<Boolean> CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET = AttributeKey.valueOf("CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET");
+    private static final String UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI = "/_mockserver_callback_websocket";
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private WebSocketServerHandshaker handshaker;
     private WebSocketClientRegistry webSocketClientRegistry;
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public WebSocketServerHandler(WebSocketClientRegistry webSocketClientRegistry) {
+    public CallbackWebSocketServerHandler(WebSocketClientRegistry webSocketClientRegistry) {
         this.webSocketClientRegistry = webSocketClientRegistry;
     }
 
     @Override
-    public void channelRead0(ChannelHandlerContext ctx, Object msg) {
-        if (msg instanceof FullHttpRequest && ((FullHttpRequest) msg).uri().equals(WEB_SOCKET_URI)) {
-            upgradeChannel(ctx, (FullHttpRequest) msg);
-        } else if (msg instanceof WebSocketFrame) {
-            handleWebSocketFrame(ctx, (WebSocketFrame) msg);
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        boolean release = true;
+        try {
+            if (msg instanceof FullHttpRequest && ((FullHttpRequest) msg).uri().equals(UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI)) {
+                upgradeChannel(ctx, (FullHttpRequest) msg);
+                ctx.channel().attr(CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET).set(true);
+            } else if (ctx.channel().attr(CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET).get() != null &&
+                ctx.channel().attr(CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET).get() &&
+                msg instanceof WebSocketFrame) {
+                handleWebSocketFrame(ctx, (WebSocketFrame) msg);
+            } else {
+                release = false;
+                ctx.fireChannelRead(msg);
+            }
+        } finally {
+            if (release) {
+                ReferenceCountUtil.release(msg);
+            }
         }
-    }
-
-    @Override
-    public boolean acceptInboundMessage(Object msg) {
-        boolean websocketHandshake = msg instanceof FullHttpRequest && ((FullHttpRequest) msg).uri().equals(WEB_SOCKET_URI);
-        boolean websocketFrame = msg instanceof WebSocketFrame;
-        return websocketHandshake || websocketFrame;
     }
 
     @Override
@@ -51,7 +60,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 
     private void upgradeChannel(final ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
         handshaker = new WebSocketServerHandshakerFactory(
-            "ws://" + httpRequest.headers().get(HOST) + WEB_SOCKET_URI,
+            "ws://" + httpRequest.headers().get(HOST) + UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI,
             null,
             true,
             Integer.MAX_VALUE

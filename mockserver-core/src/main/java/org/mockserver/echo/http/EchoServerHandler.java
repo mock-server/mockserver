@@ -4,7 +4,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import org.mockserver.filters.LogFilter;
+import org.mockserver.filters.MockServerLog;
 import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.model.BodyWithContentType;
 import org.mockserver.model.HttpRequest;
@@ -26,11 +26,11 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final EchoServer.Error error;
-    private final LogFilter logFilter;
+    private final MockServerLog logFilter;
     private final EchoServer.NextResponse nextResponse;
     private final EchoServer.OnlyResponse onlyResponse;
 
-    EchoServerHandler(EchoServer.Error error, LogFilter logFilter, EchoServer.NextResponse nextResponse, EchoServer.OnlyResponse onlyResponse) {
+    EchoServerHandler(EchoServer.Error error, MockServerLog logFilter, EchoServer.NextResponse nextResponse, EchoServer.OnlyResponse onlyResponse) {
         this.error = error;
         this.logFilter = logFilter;
         this.nextResponse = nextResponse;
@@ -41,7 +41,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
         logger.trace("received request:{}", request);
 
-        logFilter.onRequest(new RequestLogEntry(request));
+        logFilter.add(new RequestLogEntry(request));
 
         if (onlyResponse.httpResponse != null) {
             // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!

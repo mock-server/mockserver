@@ -296,7 +296,7 @@ public class ConfigurationProperties {
             overrideLogLevelWithReflection(level, "org.mockserver.proxy");
             overrideLogLevelWithReflection(level, "org.mockserver.proxy.http.HttpProxyHandler");
             overrideLogLevelWithReflection(level, "org.mockserver.matchers.HttpRequestMatcher");
-            overrideLogLevelWithReflection(level, "org.mockserver.filters.LogFilter");
+            overrideLogLevelWithReflection(level, "org.mockserver.filters.MockServerLog");
         }
     }
 

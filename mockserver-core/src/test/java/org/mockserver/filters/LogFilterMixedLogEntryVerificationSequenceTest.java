@@ -23,14 +23,14 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationWithNullRequest() {
         // given
-        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
+        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
 
         // when
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.onRequest(new RequestLogEntry(request("multi")));
-        logFilter.onRequest(new RequestResponseLogEntry(request("three"), response("three")));
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.onRequest(new RequestLogEntry(request("four")));
+        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
+        logFilter.add(new RequestLogEntry(request("multi")));
+        logFilter.add(new RequestResponseLogEntry(request("three"), response("three")));
+        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
+        logFilter.add(new RequestLogEntry(request("four")));
 
         // then
         assertThat(logFilter.verify((VerificationSequence) null), is(""));
@@ -39,14 +39,14 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationSequenceWithNoRequest() {
         // given
-        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
+        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
 
         // when
-        logFilter.onRequest(new RequestLogEntry(request("one")));
-        logFilter.onRequest(new RequestResponseLogEntry(request("multi"), response("multi")));
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.onRequest(new RequestLogEntry(request("multi")));
-        logFilter.onRequest(new RequestResponseLogEntry(request("four"), response("four")));
+        logFilter.add(new RequestLogEntry(request("one")));
+        logFilter.add(new RequestResponseLogEntry(request("multi"), response("multi")));
+        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
+        logFilter.add(new RequestLogEntry(request("multi")));
+        logFilter.add(new RequestResponseLogEntry(request("four"), response("four")));
 
         // then
         assertThat(logFilter.verify(
@@ -61,14 +61,14 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationSequenceWithOneRequest() {
         // given
-        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
+        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
 
         // when
-        logFilter.onRequest(new RequestResponseLogEntry(request("one"), response("one")));
-        logFilter.onRequest(new RequestLogEntry(request("multi")));
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.onRequest(new RequestResponseLogEntry(request("multi"), response("multi")));
-        logFilter.onRequest(new RequestLogEntry(request("four")));
+        logFilter.add(new RequestResponseLogEntry(request("one"), response("one")));
+        logFilter.add(new RequestLogEntry(request("multi")));
+        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
+        logFilter.add(new RequestResponseLogEntry(request("multi"), response("multi")));
+        logFilter.add(new RequestLogEntry(request("four")));
 
         // then
         assertThat(logFilter.verify(
@@ -104,14 +104,14 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationSequenceWithTwoRequests() {
         // given
-        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
+        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
 
         // when
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.onRequest(new RequestLogEntry(request("multi")));
-        logFilter.onRequest(new RequestResponseLogEntry(request("three"), response("three")));
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.onRequest(new RequestLogEntry(request("four")));
+        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
+        logFilter.add(new RequestLogEntry(request("multi")));
+        logFilter.add(new RequestResponseLogEntry(request("three"), response("three")));
+        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
+        logFilter.add(new RequestLogEntry(request("four")));
 
         // then - next to each other
         assertThat(logFilter.verify(
@@ -184,14 +184,14 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithOneRequest() {
         // given
-        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
+        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
 
         // when
-        logFilter.onRequest(new RequestResponseLogEntry(request("one"), response("one")));
-        logFilter.onRequest(new RequestLogEntry(request("multi")));
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.onRequest(new RequestResponseLogEntry(request("multi"), response("multi")));
-        logFilter.onRequest(new RequestLogEntry(request("four")));
+        logFilter.add(new RequestResponseLogEntry(request("one"), response("one")));
+        logFilter.add(new RequestLogEntry(request("multi")));
+        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
+        logFilter.add(new RequestResponseLogEntry(request("multi"), response("multi")));
+        logFilter.add(new RequestLogEntry(request("four")));
 
         // then
         assertThat(logFilter.verify(
@@ -218,14 +218,14 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithTwoRequestsWrongOrder() {
         // given
-        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
+        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
 
         // when
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.onRequest(new RequestLogEntry(request("multi")));
-        logFilter.onRequest(new RequestResponseLogEntry(request("three"), response("three")));
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.onRequest(new RequestLogEntry(request("four")));
+        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
+        logFilter.add(new RequestLogEntry(request("multi")));
+        logFilter.add(new RequestResponseLogEntry(request("three"), response("three")));
+        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
+        logFilter.add(new RequestLogEntry(request("four")));
 
         // then - next to each other
         assertThat(logFilter.verify(
@@ -344,14 +344,14 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithTwoRequestsFirstIncorrect() {
         // given
-        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
+        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
 
         // when
-        logFilter.onRequest(new RequestLogEntry(request("one")));
-        logFilter.onRequest(new RequestResponseLogEntry(request("multi"), response("multi")));
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.onRequest(new RequestLogEntry(request("multi")));
-        logFilter.onRequest(new RequestResponseLogEntry(request("four"), response("four")));
+        logFilter.add(new RequestLogEntry(request("one")));
+        logFilter.add(new RequestResponseLogEntry(request("multi"), response("multi")));
+        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
+        logFilter.add(new RequestLogEntry(request("multi")));
+        logFilter.add(new RequestResponseLogEntry(request("four"), response("four")));
 
         // then - next to each other
         assertThat(logFilter.verify(
@@ -425,14 +425,14 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithTwoRequestsSecondIncorrect() {
         // given
-        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
+        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
 
         // when
-        logFilter.onRequest(new RequestResponseLogEntry(request("one"), response("one")));
-        logFilter.onRequest(new RequestLogEntry(request("multi")));
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.onRequest(new RequestResponseLogEntry(request("multi"), response("multi")));
-        logFilter.onRequest(new RequestLogEntry(request("four")));
+        logFilter.add(new RequestResponseLogEntry(request("one"), response("one")));
+        logFilter.add(new RequestLogEntry(request("multi")));
+        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
+        logFilter.add(new RequestResponseLogEntry(request("multi"), response("multi")));
+        logFilter.add(new RequestLogEntry(request("four")));
 
         // then - next to each other
         assertThat(logFilter.verify(
@@ -506,14 +506,14 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithThreeRequestsWrongOrder() {
         // given
-        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
+        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
 
         // when
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.onRequest(new RequestLogEntry(request("multi")));
-        logFilter.onRequest(new RequestResponseLogEntry(request("three"), response("three")));
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.onRequest(new RequestLogEntry(request("four")));
+        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
+        logFilter.add(new RequestLogEntry(request("multi")));
+        logFilter.add(new RequestResponseLogEntry(request("three"), response("three")));
+        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
+        logFilter.add(new RequestLogEntry(request("four")));
 
         // then - next to each other
         assertThat(logFilter.verify(
@@ -623,14 +623,14 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithThreeRequestsDuplicateMissing() {
         // given
-        LogFilter logFilter = new LogFilter(mock(LoggingFormatter.class));
+        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
 
         // when
-        logFilter.onRequest(new RequestLogEntry(request("one")));
-        logFilter.onRequest(new RequestResponseLogEntry(request("multi"), response("multi")));
-        logFilter.onRequest(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.onRequest(new RequestLogEntry(request("multi")));
-        logFilter.onRequest(new RequestResponseLogEntry(request("four"), response("four")));
+        logFilter.add(new RequestLogEntry(request("one")));
+        logFilter.add(new RequestResponseLogEntry(request("multi"), response("multi")));
+        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
+        logFilter.add(new RequestLogEntry(request("multi")));
+        logFilter.add(new RequestResponseLogEntry(request("four"), response("four")));
 
         // then
         assertThat(logFilter.verify(

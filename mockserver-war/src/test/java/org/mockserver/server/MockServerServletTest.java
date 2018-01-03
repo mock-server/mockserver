@@ -10,6 +10,9 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.PortBindingSerializer;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
 import org.mockserver.log.model.RequestLogEntry;
+import org.mockserver.log.model.RequestResponseLogEntry;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
@@ -170,10 +173,9 @@ public class MockServerServletTest {
     @Test
     public void shouldRetrieveRecordedExpectations() {
         // given
-        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.log(new ExpectationMatchLogEntry(
+        httpStateHandler.log(new RequestResponseLogEntry(
             request("request_one"),
-            expectationOne
+            response("response_one")
         ));
         MockHttpServletRequest expectationRetrieveExpectationsRequest = buildHttpServletRequest(
             "PUT",
@@ -187,7 +189,7 @@ public class MockServerServletTest {
 
         // then
         assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
-            expectationOne
+            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one"))
         )));
     }
 

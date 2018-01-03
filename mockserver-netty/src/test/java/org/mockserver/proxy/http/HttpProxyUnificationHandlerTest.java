@@ -42,18 +42,18 @@ public class HttpProxyUnificationHandlerTest {
 
         // when - first part of a 5-byte handshake message
         embeddedChannel.writeInbound(Unpooled.wrappedBuffer(new byte[]{
-                22, // handshake
-                3,  // major version
-                1,
-                0,
-                5   // package length (5-byte)
+            22, // handshake
+            3,  // major version
+            1,
+            0,
+            5   // package length (5-byte)
         }));
 
         // then - should add SSL handlers first
         assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
-                "SslHandler#0",
-                "HttpProxyUnificationHandler#0",
-                "DefaultChannelPipeline$TailContext#0"
+            "SslHandler#0",
+            "HttpProxyUnificationHandler#0",
+            "DefaultChannelPipeline$TailContext#0"
         ));
     }
 
@@ -74,26 +74,26 @@ public class HttpProxyUnificationHandlerTest {
 
         // when - SOCKS INIT message
         embeddedChannel.writeInbound(Unpooled.wrappedBuffer(new byte[]{
-                (byte) 0x05,                                        // SOCKS5
-                (byte) 0x02,                                        // 1 authentication method
-                (byte) 0x00,                                        // NO_AUTH
-                (byte) 0x02,                                        // AUTH_PASSWORD
+            (byte) 0x05,                                        // SOCKS5
+            (byte) 0x02,                                        // 1 authentication method
+            (byte) 0x00,                                        // NO_AUTH
+            (byte) 0x02,                                        // AUTH_PASSWORD
         }));
 
 
         // then - INIT response
         assertThat(ByteBufUtil.hexDump((ByteBuf) embeddedChannel.readOutbound()), is(Hex.encodeHexString(new byte[]{
-                (byte) 0x05,                                        // SOCKS5
-                (byte) 0x00,                                        // NO_AUTH
+            (byte) 0x05,                                        // SOCKS5
+            (byte) 0x00,                                        // NO_AUTH
         })));
 
         // and then - should add SOCKS handlers first
         assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
-                "SocksCmdRequestDecoder#0",
-                "SocksMessageEncoder#0",
-                "SocksProxyHandler#0",
-                "HttpProxyUnificationHandler#0",
-                "DefaultChannelPipeline$TailContext#0"
+            "SocksCmdRequestDecoder#0",
+            "SocksMessageEncoder#0",
+            "SocksProxyHandler#0",
+            "HttpProxyUnificationHandler#0",
+            "DefaultChannelPipeline$TailContext#0"
         ));
     }
 
@@ -115,14 +115,15 @@ public class HttpProxyUnificationHandlerTest {
 
         // then - should add HTTP handlers last
         assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
-                "HttpServerCodec#0",
-                "HttpContentDecompressor#0",
-                "HttpContentLengthRemover#0",
-                "HttpObjectAggregator#0",
-                "WebSocketServerHandler#0",
-                "MockServerServerCodec#0",
-                "HttpProxyHandler#0",
-                "DefaultChannelPipeline$TailContext#0"
+            "HttpServerCodec#0",
+            "HttpContentDecompressor#0",
+            "HttpContentLengthRemover#0",
+            "HttpObjectAggregator#0",
+            "CallbackWebSocketServerHandler#0",
+            "UIWebSocketServerHandler#0",
+            "MockServerServerCodec#0",
+            "HttpProxyHandler#0",
+            "DefaultChannelPipeline$TailContext#0"
         ));
     }
 
@@ -139,7 +140,7 @@ public class HttpProxyUnificationHandlerTest {
 
         // then - should add no handlers
         assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
-                "DefaultChannelPipeline$TailContext#0"
+            "DefaultChannelPipeline$TailContext#0"
         ));
 
         // and - close channel

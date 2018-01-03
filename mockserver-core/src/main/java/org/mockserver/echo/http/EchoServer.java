@@ -10,7 +10,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.AttributeKey;
-import org.mockserver.filters.LogFilter;
+import org.mockserver.filters.MockServerLog;
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
@@ -24,11 +24,11 @@ import java.util.concurrent.TimeUnit;
 
 public class EchoServer {
 
-    static final AttributeKey<LogFilter> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
+    static final AttributeKey<MockServerLog> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     static final AttributeKey<NextResponse> NEXT_RESPONSE = AttributeKey.valueOf("NEXT_RESPONSE");
     static final AttributeKey<OnlyResponse> ONLY_RESPONSE = AttributeKey.valueOf("ONLY_RESPONSE");
 
-    private final LogFilter logFilter = new LogFilter(new LoggingFormatter(LoggerFactory.getLogger(this.getClass()), null));
+    private final MockServerLog logFilter = new MockServerLog(new LoggingFormatter(LoggerFactory.getLogger(this.getClass()), null));
     private final NextResponse nextResponse = new NextResponse();
     private final OnlyResponse onlyResponse = new OnlyResponse();
     private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
@@ -83,7 +83,7 @@ public class EchoServer {
         eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
     }
 
-    public LogFilter requestLogFilter() {
+    public MockServerLog requestLogFilter() {
         return logFilter;
     }
 

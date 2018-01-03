@@ -145,7 +145,8 @@ public class DirectProxyUnificationHandlerTest {
                 "HttpContentDecompressor#0",
                 "HttpContentLengthRemover#0",
                 "HttpObjectAggregator#0",
-                "WebSocketServerHandler#0",
+                "CallbackWebSocketServerHandler#0",
+                "UIWebSocketServerHandler#0",
                 "MockServerServerCodec#0",
                 "HttpProxyHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
@@ -156,7 +157,8 @@ public class DirectProxyUnificationHandlerTest {
                 "HttpContentDecompressor#0",
                 "HttpContentLengthRemover#0",
                 "HttpObjectAggregator#0",
-                "WebSocketServerHandler#0",
+                "CallbackWebSocketServerHandler#0",
+                "UIWebSocketServerHandler#0",
                 "MockServerServerCodec#0",
                 "HttpProxyHandler#0",
                 "DefaultChannelPipeline$TailContext#0"

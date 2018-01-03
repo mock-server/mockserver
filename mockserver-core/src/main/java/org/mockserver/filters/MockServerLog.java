@@ -10,6 +10,7 @@ import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mockserver.ui.MockServerLogNotifier;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -21,7 +22,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 /**
  * @author jamesdbloom
  */
-public class LogFilter {
+public class MockServerLog extends MockServerLogNotifier {
 
     private final static List<Class<? extends LogEntry>> MESSAGE_LOG_TYPES = Collections.<Class<? extends LogEntry>>singletonList(
         MessageLogEntry.class
@@ -32,17 +33,16 @@ public class LogFilter {
         ExpectationMatchLogEntry.class
     );
     private final static List<Class<? extends LogEntry>> EXPECTATION_LOG_TYPES = Arrays.<Class<? extends LogEntry>>asList(
-        RequestResponseLogEntry.class,
-        ExpectationMatchLogEntry.class
+        RequestResponseLogEntry.class
     );
+    public static Predicate<LogEntry> notMessageLogEntryPredicate = new Predicate<LogEntry>() {
+        public boolean apply(LogEntry logEntry) {
+            return !(logEntry instanceof MessageLogEntry);
+        }
+    };
     static Predicate<LogEntry> messageLogPredicate = new Predicate<LogEntry>() {
         public boolean apply(LogEntry input) {
             return MESSAGE_LOG_TYPES.contains(input.getClass());
-        }
-    };
-    private static Function<LogEntry, HttpRequest> logEntryToRequest = new Function<LogEntry, HttpRequest>() {
-        public HttpRequest apply(LogEntry logEntry) {
-            return logEntry.getHttpRequest();
         }
     };
     static Predicate<LogEntry> requestLogPredicate = new Predicate<LogEntry>() {
@@ -50,22 +50,23 @@ public class LogFilter {
             return REQUEST_LOG_TYPES.contains(input.getClass());
         }
     };
-    private static Function<LogEntry, Expectation> logEntryToExpectation = new Function<LogEntry, Expectation>() {
-        public Expectation apply(LogEntry logEntry) {
-            return ((ExpectationLogEntry) logEntry).getExpectation();
-        }
-    };
     static Predicate<LogEntry> expectationLogPredicate = new Predicate<LogEntry>() {
         public boolean apply(LogEntry input) {
             return EXPECTATION_LOG_TYPES.contains(input.getClass());
         }
     };
-    public static Predicate<LogEntry> notMessageLogEntryPredicate = new Predicate<LogEntry>() {
-        public boolean apply(LogEntry logEntry) {
-            return !(logEntry instanceof MessageLogEntry);
+    private static Function<LogEntry, HttpRequest> logEntryToRequest = new Function<LogEntry, HttpRequest>() {
+        public HttpRequest apply(LogEntry logEntry) {
+            return logEntry.getHttpRequest();
+        }
+    };
+    private static Function<LogEntry, Expectation> logEntryToExpectation = new Function<LogEntry, Expectation>() {
+        public Expectation apply(LogEntry logEntry) {
+            return ((ExpectationLogEntry) logEntry).getExpectation();
         }
     };
     private final LoggingFormatter logFormatter;
+
     private Queue<LogEntry> requestLog = Queues.synchronizedQueue(EvictingQueue.<LogEntry>create(100));
     private MatcherBuilder matcherBuilder;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
@@ -76,13 +77,14 @@ public class LogFilter {
         }
     };
 
-    public LogFilter(LoggingFormatter logFormatter) {
+    public MockServerLog(LoggingFormatter logFormatter) {
         this.logFormatter = logFormatter;
         this.matcherBuilder = new MatcherBuilder(logFormatter);
     }
 
-    public void onRequest(LogEntry logEntry) {
+    public void add(LogEntry logEntry) {
         requestLog.add(logEntry);
+        notifyListeners(this);
     }
 
     public void reset() {
@@ -100,6 +102,15 @@ public class LogFilter {
         } else {
             reset();
         }
+        notifyListeners(this);
+    }
+
+    public List<MessageLogEntry> retrieveMessageLogEntries(HttpRequest httpRequest) {
+        return retrieveLogEntries(httpRequest, messageLogPredicate, new Function<LogEntry, MessageLogEntry>() {
+            public MessageLogEntry apply(LogEntry input) {
+                return (MessageLogEntry) input;
+            }
+        });
     }
 
     public List<String> retrieveMessages(HttpRequest httpRequest) {
@@ -189,4 +200,5 @@ public class LogFilter {
 
         return failureMessage;
     }
+
 }

@@ -7,7 +7,7 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.filters.LogFilter;
+import org.mockserver.filters.MockServerLog;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -15,7 +15,6 @@ import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
 
 import java.util.Arrays;
-import java.util.List;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -40,7 +39,7 @@ public class MockServerClientIntegrationTest {
 
     private static MockServerClient mockServerClient;
     private static EchoServer echoServer;
-    private static LogFilter logFilter;
+    private static MockServerLog logFilter;
     private static int freePort;
 
     @Rule

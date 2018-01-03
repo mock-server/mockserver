@@ -14,7 +14,10 @@ import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
 import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.log.model.RequestLogEntry;
+import org.mockserver.log.model.RequestResponseLogEntry;
 import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
@@ -270,16 +273,10 @@ public class HttpStateHandlerTest {
         HttpRequest request = request()
             .withQueryStringParameter("type", "recorded_expectations")
             .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some existing expectations
-        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
-        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
-        httpStateHandler.add(expectationTwo);
-        Expectation expectationThree = new Expectation(request("request_three")).thenRespond(response("request_three"));
         // given - some log entries
-        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_one"), expectationOne));
-        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_two"), expectationTwo));
-        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_one"), expectationThree));
+        httpStateHandler.log(new RequestResponseLogEntry(request("request_one"), response("response_one")));
+        httpStateHandler.log(new RequestResponseLogEntry(request("request_two"), response("response_two")));
+        httpStateHandler.log(new RequestResponseLogEntry(request("request_one"), response("request_three")));
 
         // when
         HttpResponse response = httpStateHandler.retrieve(request);
@@ -287,12 +284,10 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(httpExpectationSerializer.serialize(Arrays.asList(
-                expectationOne,
-                expectationThree
+                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one")),
+                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("request_three"))
             )), JSON_UTF_8).withStatusCode(200))
         );
-        verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).infoLog(request("request_two"), "creating expectation:{}", expectationTwo);
         verify(mockLogFormatter).infoLog(request("request_one"), "retrieving recorded_expectations in json that match:{}", request("request_one"));
     }
 
@@ -303,16 +298,10 @@ public class HttpStateHandlerTest {
             .withQueryStringParameter("type", "recorded_expectations")
             .withQueryStringParameter("format", "java")
             .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some existing expectations
-        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
-        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
-        httpStateHandler.add(expectationTwo);
-        Expectation expectationThree = new Expectation(request("request_three")).thenRespond(response("request_three"));
         // given - some log entries
-        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_one"), expectationOne));
-        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_two"), expectationTwo));
-        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_one"), expectationThree));
+        httpStateHandler.log(new RequestResponseLogEntry(request("request_one"), response("response_one")));
+        httpStateHandler.log(new RequestResponseLogEntry(request("request_two"), response("response_two")));
+        httpStateHandler.log(new RequestResponseLogEntry(request("request_one"), response("request_three")));
 
         // when
         HttpResponse response = httpStateHandler.retrieve(request);
@@ -320,12 +309,10 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(httpExpectationToJavaSerializer.serialize(Arrays.asList(
-                expectationOne,
-                expectationThree
+                new Expectation(request("request_one")).thenRespond(response("response_one")),
+                new Expectation(request("request_one")).thenRespond(response("request_three"))
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
         );
-        verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).infoLog(request("request_two"), "creating expectation:{}", expectationTwo);
         verify(mockLogFormatter).infoLog(request("request_one"), "retrieving recorded_expectations in java that match:{}", request("request_one"));
     }
 

@@ -10,6 +10,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
+
 /**
  * @author jamesdbloom
  */
@@ -47,5 +49,10 @@ public abstract class ObjectWithReflectiveEqualsHashCodeToString {
     @Override
     public int hashCode() {
         return HashCodeBuilder.reflectionHashCode(this, fieldsExcludedFromEqualsAndHashCode());
+    }
+
+    @JsonIgnore
+    public String key() {
+        return UUID.randomUUID().toString();
     }
 }
