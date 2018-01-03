@@ -12,7 +12,7 @@ public class ExpectationMatchLogEntry extends LogEntry implements ExpectationLog
 
     public ExpectationMatchLogEntry(HttpRequest httpRequest, Expectation expectation) {
         super(httpRequest);
-        this.expectation = expectation;
+        this.expectation = expectation.clone();
     }
 
     public Expectation getExpectation() {

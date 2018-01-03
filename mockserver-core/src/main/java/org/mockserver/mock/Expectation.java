@@ -298,4 +298,15 @@ public class Expectation extends ObjectWithJsonToString {
     public boolean contains(HttpRequest httpRequest) {
         return httpRequest != null && this.httpRequest.equals(httpRequest);
     }
+
+    public Expectation clone() {
+        return new Expectation(httpRequest, times.clone(), timeToLive)
+            .thenRespond(httpResponse)
+            .thenRespond(httpResponseTemplate)
+            .thenForward(httpForward)
+            .thenForward(httpForwardTemplate)
+            .thenError(httpError)
+            .thenCallback(httpClassCallback)
+            .thenCallback(httpObjectCallback);
+    }
 }

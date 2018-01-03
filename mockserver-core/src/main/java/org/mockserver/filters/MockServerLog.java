@@ -105,6 +105,14 @@ public class MockServerLog extends MockServerLogNotifier {
         notifyListeners(this);
     }
 
+    public List<LogEntry> retrieveRequestLogEntries(HttpRequest httpRequest) {
+        return retrieveLogEntries(httpRequest, requestLogPredicate, new Function<LogEntry, LogEntry>() {
+            public LogEntry apply(LogEntry input) {
+                return input;
+            }
+        });
+    }
+
     public List<MessageLogEntry> retrieveMessageLogEntries(HttpRequest httpRequest) {
         return retrieveLogEntries(httpRequest, messageLogPredicate, new Function<LogEntry, MessageLogEntry>() {
             public MessageLogEntry apply(LogEntry input) {

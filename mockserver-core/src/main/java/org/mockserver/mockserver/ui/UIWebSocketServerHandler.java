@@ -161,7 +161,7 @@ public class UIWebSocketServerHandler extends ChannelInboundHandlerAdapter imple
             sendMessage(channelHandlerContext, ImmutableMap.<String, Object>of(
                 "activeExpectations", Lists.transform(mockServerMatcher.retrieveExpectations(httpRequest), wrapValueWithKey),
                 "recordedExpectations", Lists.transform(mockServerLog.retrieveExpectations(httpRequest), wrapValueWithKey),
-                "recordedRequests", Lists.transform(mockServerLog.retrieveRequests(httpRequest), wrapValueWithKey),
+                "recordedRequests", Lists.transform(mockServerLog.retrieveRequestLogEntries(httpRequest), wrapValueWithKey),
                 "logMessages", Lists.transform(mockServerLog.retrieveMessageLogEntries(httpRequest), new Function<MessageLogEntry, Object>() {
                     public ValueWithKey apply(MessageLogEntry input) {
                         return new ValueWithKey(input.getMessage(), input.key());

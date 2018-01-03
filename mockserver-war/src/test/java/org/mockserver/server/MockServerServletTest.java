@@ -260,7 +260,6 @@ public class MockServerServletTest {
                 "\t    \"path\" : \"request_one\"" + NEW_LINE +
                 "\t  }," + NEW_LINE +
                 "\t  \"times\" : {" + NEW_LINE +
-                "\t    \"remainingTimes\" : 0," + NEW_LINE +
                 "\t    \"unlimited\" : true" + NEW_LINE +
                 "\t  }," + NEW_LINE +
                 "\t  \"timeToLive\" : {" + NEW_LINE +

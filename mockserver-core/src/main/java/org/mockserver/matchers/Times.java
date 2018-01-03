@@ -58,4 +58,12 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
         }
         return this;
     }
+
+    public Times clone() {
+        if (unlimited) {
+            return Times.unlimited();
+        } else {
+            return Times.exactly(remainingTimes);
+        }
+    }
 }

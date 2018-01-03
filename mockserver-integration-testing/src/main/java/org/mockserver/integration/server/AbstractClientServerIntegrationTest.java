@@ -5704,8 +5704,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
                 "\t  }," + NEW_LINE +
                 "\t  \"times\" : {" + NEW_LINE +
-                "\t    \"remainingTimes\" : 4," + NEW_LINE +
-                "\t    \"unlimited\" : false" + NEW_LINE +
+                "\t    \"remainingTimes\" : 4" + NEW_LINE +
                 "\t  }," + NEW_LINE +
                 "\t  \"timeToLive\" : {" + NEW_LINE +
                 "\t    \"unlimited\" : true" + NEW_LINE +
@@ -6668,8 +6667,7 @@ public abstract class AbstractClientServerIntegrationTest {
                     "    \"body\" : \"some_body_one\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"remainingTimes\" : 1," + NEW_LINE +
-                    "    \"unlimited\" : false" + NEW_LINE +
+                    "    \"remainingTimes\" : 1" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
