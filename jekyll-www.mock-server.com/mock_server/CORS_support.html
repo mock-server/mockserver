@@ -47,4 +47,15 @@ X-CORS: "MockServer CORS support enabled by default, to disable ConfigurationPro
     <div class="panel">
         <pre class="prettyprint lang-bash code"><code class="code">java -DenableCORSForAPI=false -jar "~/Downloads/mockserver-netty-5.3.0-jar-with-dependencies.jar" -serverPort 1080 -proxyPort 1090</code></pre>
     </div>
+    <button class="accordion inner">JavaScript: mockserver-node</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockserver = require('mockserver-node');
+mockserver.start_mockserver({
+    serverPort: 1080,
+    proxyPort: 1090,
+    verbose: true,
+    systemProperties: "-Dmockserver.enableCORSForAPI=false"
+});
+}</code></pre>
+    </div>
 </div>
