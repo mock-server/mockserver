@@ -22,7 +22,7 @@ import java.util.List;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
-import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
 import static org.mockserver.proxy.Proxy.PROXYING;
@@ -124,7 +124,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (!shouldIgnoreException(cause)) {
+        if (shouldNotIgnoreException(cause)) {
             LoggerFactory.getLogger(this.getClass()).warn("Exception caught by " + server.getClass() + " handler -> closing pipeline " + ctx.channel(), cause);
         }
         closeOnFlush(ctx.channel());

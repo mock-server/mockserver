@@ -10,13 +10,12 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.logging.LoggingHandler;
-import org.mockserver.mock.action.ActionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
-import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.proxy.Proxy.HTTP_CONNECT_SOCKET;
 import static org.mockserver.proxy.Proxy.PROXYING;
@@ -122,7 +121,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
     }
 
     private void failure(String message, Throwable cause, ChannelHandlerContext ctx, Object response) {
-        if (!shouldIgnoreException(cause)) {
+        if (shouldNotIgnoreException(cause)) {
             logger.warn(message, cause);
         }
         Channel channel = ctx.channel();

@@ -33,7 +33,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
 
     private static final Logger logger = LoggerFactory.getLogger(BodyDTODeserializer.class);
 
-    private static Map<String, Body.Type> fieldNameToType = new HashMap<String, Body.Type>();
+    private static Map<String, Body.Type> fieldNameToType = new HashMap<>();
 
     static {
         fieldNameToType.put("base64Bytes".toLowerCase(), Body.Type.BINARY);

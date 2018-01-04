@@ -7,6 +7,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.stop.StopEventQueue;
 import org.mockserver.stop.Stoppable;
 import org.slf4j.Logger;
@@ -24,10 +25,10 @@ import java.util.concurrent.TimeUnit;
 public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-    protected final List<Future<Channel>> channelOpenedFutures = new ArrayList<Future<Channel>>();
-    protected final EventLoopGroup bossGroup = new NioEventLoopGroup();
-    protected final EventLoopGroup workerGroup = new NioEventLoopGroup();
-    private final SettableFuture<String> stopping = SettableFuture.<String>create();
+    protected final List<Future<Channel>> channelOpenedFutures = new ArrayList<>();
+    protected final EventLoopGroup bossGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
+    protected final EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
+    private final SettableFuture<String> stopping = SettableFuture.create();
     protected StopEventQueue stopEventQueue = new StopEventQueue();
     protected ServerBootstrap serverBootstrap;
 

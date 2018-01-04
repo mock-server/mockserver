@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.UUID;
 
 import static com.google.common.net.HttpHeaders.HOST;
+import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 
 /**
  * @author jamesdbloom
@@ -96,7 +97,9 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("web socket server caught exception", cause);
+        if (shouldNotIgnoreException(cause)) {
+            logger.error("web socket server caught exception", cause);
+        }
         ctx.close();
     }
 

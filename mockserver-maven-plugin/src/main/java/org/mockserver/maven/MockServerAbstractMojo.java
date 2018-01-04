@@ -51,7 +51,7 @@ public abstract class MockServerAbstractMojo extends AbstractMojo {
     /**
      * Logging level
      */
-    @Parameter(property = "mockserver.logLevel", defaultValue = "INFO")
+    @Parameter(property = "mockserver.logLevel", defaultValue = "WARN")
     protected String logLevel;
     /**
      * Skip the plugin execution completely

@@ -233,11 +233,6 @@
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcmail-jdk15on</artifactId>
-                <version>${boucycastle.verion}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.bouncycastle</groupId>
                 <artifactId>bcpkix-jdk15on</artifactId>
                 <version>${boucycastle.verion}</version>
             </dependency>
@@ -559,7 +554,9 @@
                 <version>2.20.1</version>
                 <configuration>
                     <!-- allow debugging tests -->
-                    <forkCount>0</forkCount>
+                    <forkCount>2C</forkCount>
+                    <parallel>classes</parallel>
+                    <useUnlimitedThreads>true</useUnlimitedThreads>
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
@@ -567,7 +564,8 @@
                         <exclude>**/*IntegrationTest.java</exclude>
                     </excludes>
                     <systemProperties>
-                        <mockserver.logLevel>OFF</mockserver.logLevel>
+                        <mockserver.logLevel>WARN</mockserver.logLevel>
+                        <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
                     </systemProperties>
                 </configuration>
             </plugin>
@@ -582,7 +580,8 @@
                         <include>**/*IntegrationTest.java</include>
                     </includes>
                     <systemProperties>
-                        <mockserver.logLevel>OFF</mockserver.logLevel>
+                        <mockserver.logLevel>WARN</mockserver.logLevel>
+                        <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
                     </systemProperties>
                 </configuration>
                 <executions>

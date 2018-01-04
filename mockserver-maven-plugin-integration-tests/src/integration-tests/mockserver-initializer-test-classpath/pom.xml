@@ -31,10 +31,10 @@
                 <artifactId>mockserver-maven-plugin</artifactId>
                 <version>@mockserver.version@</version>
                 <configuration>
-                    <logLevel>OFF</logLevel>
+                    <logLevel>WARN</logLevel>
                     <serverPort>1082</serverPort>
                     <initializationClass>org.mockserver.TestClasspathInitializationClass</initializationClass>
-                    <pipeLogToConsole>true</pipeLogToConsole>
+                    <pipeLogToConsole>false</pipeLogToConsole>
                 </configuration>
                 <executions>
                     <execution>
@@ -74,6 +74,10 @@
                     <excludes>
                         <exclude>**/*StopTest.java</exclude>
                     </excludes>
+                    <systemProperties>
+                        <mockserver.logLevel>WARN</mockserver.logLevel>
+                        <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
+                    </systemProperties>
                 </configuration>
             </plugin>
             <!-- tests run after mock server stopped (to check it has been stopped) -->
@@ -87,6 +91,10 @@
                     <includes>
                         <include>**/*StopTest.java</include>
                     </includes>
+                    <systemProperties>
+                        <mockserver.logLevel>WARN</mockserver.logLevel>
+                        <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
+                    </systemProperties>
                 </configuration>
                 <executions>
                     <execution>

@@ -6,14 +6,8 @@ import org.mockserver.client.netty.websocket.WebSocketException;
 import org.mockserver.client.serialization.WebSocketMessageSerializer;
 import org.mockserver.client.serialization.model.WebSocketClientIdDTO;
 import org.mockserver.collections.CircularHashMap;
-import org.mockserver.filters.MockServerLog;
-import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author jamesdbloom

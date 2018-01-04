@@ -4,11 +4,10 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.*;
-import org.mockserver.mock.action.ActionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.proxy.Proxy.PROXYING;
 import static org.mockserver.socket.KeyAndCertificateFactory.addSubjectAlternativeName;
 import static org.mockserver.unification.PortUnificationHandler.disableSslDownstream;
@@ -80,7 +79,7 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (!shouldIgnoreException(cause)) {
+        if (shouldNotIgnoreException(cause)) {
             logger.warn("Exception caught by SOCKS proxy handler -> closing pipeline " + ctx.channel(), cause);
         }
         ctx.close();

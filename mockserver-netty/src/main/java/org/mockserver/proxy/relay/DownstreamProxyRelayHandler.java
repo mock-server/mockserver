@@ -9,7 +9,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
 
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
-import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 
 public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpResponse> {
 
@@ -56,7 +56,7 @@ public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<Ful
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (!shouldIgnoreException(cause)) {
+        if (shouldNotIgnoreException(cause)) {
             logger.warn("Exception caught by downstream relay handler -> closing pipeline " + ctx.channel(), cause);
         }
         closeOnFlush(ctx.channel());

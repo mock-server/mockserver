@@ -403,9 +403,9 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(
-                logEntryOne.getMessage() + "------------------------------------\n" +
-                    logEntryTwo.getMessage() + "------------------------------------\n" +
-                    logEntryThree.getMessage() + "\n",
+                logEntryOne.getTimeStamp() + " - " + logEntryOne.getMessage() + "------------------------------------\n" +
+                    logEntryTwo.getTimeStamp() + " - " + logEntryTwo.getMessage() + "------------------------------------\n" +
+                    logEntryThree.getTimeStamp() + " - " + logEntryThree.getMessage() + "\n",
                 PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
         verify(mockLogFormatter).infoLog(request("request_one"), "retrieving logs that match:{}", request("request_one"));
@@ -451,14 +451,6 @@ public class HttpStateHandlerTest {
         // then - activity logged
         verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
         verify(mockLogFormatter).infoLog(request(), "resetting all expectations and request logs" + NEW_LINE);
-    }
-
-    public static class TestMessageLogEntry extends MessageLogEntry {
-
-        public TestMessageLogEntry(HttpRequest httpRequest, String message, Date timeStamp) {
-            super(httpRequest, message);
-            this.timeStamp = timeStamp;
-        }
     }
 
 }

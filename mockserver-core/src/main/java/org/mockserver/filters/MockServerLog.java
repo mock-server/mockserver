@@ -73,7 +73,7 @@ public class MockServerLog extends MockServerLogNotifier {
     private Function<LogEntry, String> logEntryToMessage = new Function<LogEntry, String>() {
         public String apply(LogEntry logEntry) {
             MessageLogEntry messageLogEntry = (MessageLogEntry) logEntry;
-            return messageLogEntry.getMessage();
+            return messageLogEntry.getTimeStamp() + " - " + messageLogEntry.getMessage();
         }
     };
 

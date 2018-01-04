@@ -6648,7 +6648,7 @@ public abstract class AbstractClientServerIntegrationTest {
         Long fastRequestElapsedMillis = fastFuture.get();
 
         assertThat("Slow request takes less than expected", slowRequestElapsedMillis, is(greaterThan(5 * 1000L)));
-        assertThat("Fast request takes longer than expected", fastRequestElapsedMillis, is(lessThan(3 * 1000L)));
+        assertThat("Fast request takes longer than expected", fastRequestElapsedMillis, is(lessThan(5 * 1000L)));
     }
 
     @Test

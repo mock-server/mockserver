@@ -26,6 +26,7 @@ public class ConfigurationProperties {
 
     static final long DEFAULT_MAX_TIMEOUT = 120;
     static final int DEFAULT_MAX_EXPECTATIONS = 1000;
+    static final int NIO_EVENT_LOOP_THREAD_COUNT = 0;
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationProperties.class);
     private static final Properties PROPERTIES = readPropertyFile();
 
@@ -70,6 +71,15 @@ public class ConfigurationProperties {
 
     public static void maxExpectations(int count) {
         System.setProperty("mockserver.maxExpectations", "" + count);
+    }
+
+    // thread count
+    public static int nioEventLoopThreadCount() {
+        return readIntegerProperty("mockserver.nioEventLoopThreadCount", NIO_EVENT_LOOP_THREAD_COUNT);
+    }
+
+    public static void nioEventLoopThreadCount(int count) {
+        System.setProperty("mockserver.nioEventLoopThreadCount", "" + count);
     }
 
     // socket config

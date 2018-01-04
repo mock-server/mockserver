@@ -21,6 +21,10 @@ public class MessageLogEntry extends LogEntry {
     }
 
     public String getMessage() {
-        return dateFormat.format(timeStamp) + " - " + message;
+        return message;
+    }
+
+    public String getTimeStamp() {
+        return dateFormat.format(timeStamp);
     }
 }

@@ -3,6 +3,7 @@ package org.mockserver.unification;
 import com.google.common.annotations.VisibleForTesting;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
+import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
@@ -10,24 +11,23 @@ import io.netty.handler.codec.socks.SocksAuthScheme;
 import io.netty.handler.codec.socks.SocksInitRequestDecoder;
 import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.codec.socks.SocksProtocolVersion;
+import io.netty.handler.ssl.NotSslRecordException;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import org.mockserver.logging.LoggingHandler;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.proxy.socks.SocksProxyHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
-import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.proxy.Proxy.LOCAL_HOST_HEADERS;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
@@ -217,7 +217,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (!shouldIgnoreException(cause)) {
+        if (shouldNotIgnoreException(cause)) {
             logger.warn("Exception caught by port unification handler -> closing pipeline " + ctx.channel(), cause);
         }
         closeOnFlush(ctx.channel());

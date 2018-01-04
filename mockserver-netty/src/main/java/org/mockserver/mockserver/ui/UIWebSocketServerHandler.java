@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 import static com.google.common.net.HttpHeaders.HOST;
+import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -138,7 +139,9 @@ public class UIWebSocketServerHandler extends ChannelInboundHandlerAdapter imple
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("web socket server caught exception", cause);
+        if (shouldNotIgnoreException(cause)) {
+            logger.error("web socket server caught exception", cause);
+        }
         ctx.close();
     }
 
@@ -164,7 +167,7 @@ public class UIWebSocketServerHandler extends ChannelInboundHandlerAdapter imple
                 "recordedRequests", Lists.transform(mockServerLog.retrieveRequestLogEntries(httpRequest), wrapValueWithKey),
                 "logMessages", Lists.transform(mockServerLog.retrieveMessageLogEntries(httpRequest), new Function<MessageLogEntry, Object>() {
                     public ValueWithKey apply(MessageLogEntry input) {
-                        return new ValueWithKey(input.getMessage(), input.key());
+                        return new ValueWithKey(input.getTimeStamp() + " - " + input.getMessage(), input.key());
                     }
                 })
             ));

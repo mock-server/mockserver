@@ -54,12 +54,6 @@
             <artifactId>netty-transport</artifactId>
         </dependency>
 
-        <!-- SSL X509 -->
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-        </dependency>
-
         <!-- commons & guava -->
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -134,7 +128,7 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <phase>package</phase>
+                        <phase>verify</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>

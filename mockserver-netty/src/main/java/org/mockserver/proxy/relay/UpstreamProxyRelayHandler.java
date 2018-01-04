@@ -10,7 +10,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
 
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
-import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledDownstream;
 
@@ -64,7 +64,7 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (!shouldIgnoreException(cause)) {
+        if (shouldNotIgnoreException(cause)) {
             logger.warn("Exception caught by upstream relay handler -> closing pipeline " + ctx.channel(), cause);
         }
         closeOnFlush(ctx.channel());

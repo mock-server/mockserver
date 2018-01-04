@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-export MAVEN_OPTS="$MAVEN_OPTS -XX:MaxPermSize=1024m -Xmx2048m"
-export JAVA_OPTS="$JAVA_OPTS -XX:MaxPermSize=1024m -Xmx2048m"
-# -agentpath:/Applications/jprofiler8/bin/macos/libjprofilerti.jnilib=port=25000
+export MAVEN_OPTS="$MAVEN_OPTS -Dmockserver.logLevel=WARN -Dmockserver.nioEventLoopThreadCount=2 -XX:MaxPermSize=1024m -Xms3072m -Xmx3072m"
+export JAVA_OPTS="$JAVA_OPTS -Dmockserver.logLevel=WARN -Dmockserver.nioEventLoopThreadCount=2 -XX:MaxPermSize=1024m -Xms3072m -Xmx3072m"
 export JAVA_HOME=`/usr/libexec/java_home -v 1.7`
 echo
 java -version

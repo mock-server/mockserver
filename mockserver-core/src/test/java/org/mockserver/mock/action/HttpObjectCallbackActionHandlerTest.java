@@ -1,7 +1,6 @@
 package org.mockserver.mock.action;
 
 import org.junit.Test;
-import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mockserver.callback.ExpectationCallbackResponse;
 import org.mockserver.mockserver.callback.WebSocketClientRegistry;

@@ -6,7 +6,7 @@ import io.netty.handler.codec.http.HttpMessage;
 import org.slf4j.Logger;
 
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
-import static org.mockserver.exception.ExceptionHandler.shouldIgnoreException;
+import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 
 public class ProxyRelayHandler<T extends HttpMessage> extends SimpleChannelInboundHandler<T> {
 
@@ -47,7 +47,7 @@ public class ProxyRelayHandler<T extends HttpMessage> extends SimpleChannelInbou
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (!shouldIgnoreException(cause)) {
+        if (shouldNotIgnoreException(cause)) {
             logger.warn("Exception caught by proxy relay handler -> closing pipeline " + ctx.channel(), cause);
         }
         closeOnFlush(ctx.channel());

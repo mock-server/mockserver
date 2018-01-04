@@ -118,6 +118,10 @@
                             <value>${project.version}</value>
                         </property>
                     </properties>
+                    <environmentVariables>
+                        <mockserver.logLevel>WARN</mockserver.logLevel>
+                        <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
+                    </environmentVariables>
                     <filterProperties>
                         <mockserver.version>${project.version}</mockserver.version>
                     </filterProperties>

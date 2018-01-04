@@ -3,8 +3,11 @@ package org.mockserver.exception;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.handler.codec.DecoderException;
+import io.netty.handler.ssl.NotSslRecordException;
 import io.netty.util.internal.PlatformDependent;
 
+import javax.net.ssl.SSLException;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
 import java.util.regex.Pattern;
@@ -28,13 +31,18 @@ public class ExceptionHandler {
     /**
      * returns true is the exception was caused by the connection being closed
      */
-    public static boolean shouldIgnoreException(Throwable cause) {
+    public static boolean shouldNotIgnoreException(Throwable cause) {
         String message = String.valueOf(cause.getMessage()).toLowerCase();
+
+        // is ssl exception
+        if (cause.getCause() instanceof SSLException || cause instanceof DecoderException | cause instanceof NotSslRecordException) {
+            return false;
+        }
 
         // first try to match connection reset / broke peer based on the regex.
         // This is the fastest way but may fail on different jdk impls or OS's
         if (IGNORABLE_ERROR_MESSAGE.matcher(message).matches()) {
-            return true;
+            return false;
         }
 
         // Inspect the StackTraceElements to see if it was a connection reset / broken pipe or not
@@ -56,7 +64,7 @@ public class ExceptionHandler {
             // This will also match against SocketInputStream which is used by openjdk 7 and maybe
             // also others
             if (IGNORABLE_CLASS_IN_STACK.matcher(classname).matches()) {
-                return true;
+                return false;
             }
 
             try {
@@ -67,18 +75,18 @@ public class ExceptionHandler {
 
                 if (SocketChannel.class.isAssignableFrom(clazz)
                     || DatagramChannel.class.isAssignableFrom(clazz)) {
-                    return true;
+                    return false;
                 }
 
                 // also match against SctpChannel via String matching as it may not present.
                 if (PlatformDependent.javaVersion() >= 7
                     && "com.sun.nio.sctp.SctpChannel".equals(clazz.getSuperclass().getName())) {
-                    return true;
+                    return false;
                 }
             } catch (ClassNotFoundException e) {
                 // This should not happen just ignore
             }
         }
-        return false;
+        return true;
     }
 }

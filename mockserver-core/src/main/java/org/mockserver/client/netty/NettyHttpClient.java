@@ -50,7 +50,7 @@ public class NettyHttpClient {
 
         logger.debug("Sending to: {} request: {}", remoteAddress, httpRequest);
 
-        EventLoopGroup group = new NioEventLoopGroup();
+        EventLoopGroup group = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
 
         try {
             final HttpClientInitializer channelInitializer = new HttpClientInitializer(httpRequest.isSecure() != null && httpRequest.isSecure(), remoteAddress);
