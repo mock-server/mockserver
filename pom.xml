@@ -67,8 +67,6 @@
         <module>mockserver-netty</module>
         <module>mockserver-war</module>
         <module>mockserver-proxy-war</module>
-        <module>mockserver-maven-plugin</module>
-        <!--<module>mockserver-maven-plugin-integration-tests</module>-->
         <module>mockserver-examples</module>
     </modules>
 
