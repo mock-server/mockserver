@@ -26,3 +26,4 @@ RUN apt-get install -y curl git htop man unzip vim wget pkg-config
 RUN add-apt-repository -y ppa:openjdk-r/ppa
 RUN apt-get update
 RUN apt-get install -y openjdk-7-jdk maven
+COPY settings.xml /etc/maven/settings.xml
