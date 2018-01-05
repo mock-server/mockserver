@@ -25,14 +25,12 @@ import static org.mockserver.model.StringBody.exact;
 public class NettyHttpClientTest {
 
     private static EchoServer echoServer;
-    private static int freePort;
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
     @BeforeClass
     public static void startEchoServer() {
-        freePort = PortFactory.findFreePort();
-        echoServer = new EchoServer(freePort, false);
+        echoServer = new EchoServer(false);
     }
 
     @AfterClass
@@ -46,14 +44,14 @@ public class NettyHttpClientTest {
         NettyHttpClient nettyHttpClient = new NettyHttpClient();
 
         // when
-        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "0.0.0.0:" + freePort));
+        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "0.0.0.0:" + echoServer.getPort()));
 
         // then
         assertThat(httpResponse, is(
             response()
                 .withStatusCode(200)
                 .withReasonPhrase("OK")
-                .withHeader(header(HOST.toString(), "0.0.0.0:" + freePort))
+                .withHeader(header(HOST.toString(), "0.0.0.0:" + echoServer.getPort()))
                 .withHeader(header(CONTENT_LENGTH.toString(), 0))
                 .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
                 .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
@@ -66,7 +64,7 @@ public class NettyHttpClientTest {
         NettyHttpClient nettyHttpClient = new NettyHttpClient();
 
         // when
-        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "www.google.com"), new InetSocketAddress("0.0.0.0", freePort));
+        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "www.google.com"), new InetSocketAddress("0.0.0.0", echoServer.getPort()));
 
         // then
         assertThat(httpResponse, is(
@@ -86,7 +84,7 @@ public class NettyHttpClientTest {
         NettyHttpClient nettyHttpClient = new NettyHttpClient();
 
         // when
-        HttpResponse httpResponse = nettyHttpClient.sendRequest(request(), new InetSocketAddress("0.0.0.0", freePort));
+        HttpResponse httpResponse = nettyHttpClient.sendRequest(request(), new InetSocketAddress("0.0.0.0", echoServer.getPort()));
 
         // then
         assertThat(httpResponse, is(
@@ -107,7 +105,7 @@ public class NettyHttpClientTest {
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(
             request()
-                .withHeader("Host", "0.0.0.0:" + freePort)
+                .withHeader("Host", "0.0.0.0:" + echoServer.getPort())
                 .withHeader(header("some_header_name", "some_header_value"))
                 .withHeader(header("another_header_name", "first_header_value", "second_header_value"))
                 .withCookie(cookie("some_cookie_name", "some_cookie_value"))
@@ -120,7 +118,7 @@ public class NettyHttpClientTest {
             response()
                 .withStatusCode(200)
                 .withReasonPhrase("OK")
-                .withHeader(header(HOST.toString(), "0.0.0.0:" + freePort))
+                .withHeader(header(HOST.toString(), "0.0.0.0:" + echoServer.getPort()))
                 .withHeader(header(CONTENT_LENGTH.toString(), "this is an example body".length()))
                 .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
                 .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))

@@ -3,10 +3,13 @@ package org.mockserver.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
 
+import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -519,6 +522,16 @@ public class HttpRequest extends Not {
 
     public List<Cookie> getCookieList() {
         return this.cookies.getEntries();
+    }
+
+    public InetSocketAddress socketAddressFromHostHeader() {
+        if (!Strings.isNullOrEmpty(getFirstHeader(HOST.toString()))) {
+            boolean isSsl = isSecure() != null && isSecure();
+            String[] hostHeaderParts = getFirstHeader(HOST.toString()).split(":");
+            return new InetSocketAddress(hostHeaderParts[0], hostHeaderParts.length > 1 ? Integer.parseInt(hostHeaderParts[1]) : isSsl ? 443 : 80);
+        } else {
+            throw new IllegalArgumentException("Host header must be provided to determine remote socket address, the request does not include the \"Host\" header:" + NEW_LINE + this);
+        }
     }
 
     public HttpRequest clone() {

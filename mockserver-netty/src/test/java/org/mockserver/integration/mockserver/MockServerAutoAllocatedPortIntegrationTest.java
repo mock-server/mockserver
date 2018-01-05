@@ -15,7 +15,6 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
  */
 public class MockServerAutoAllocatedPortIntegrationTest extends AbstractRestartableMockServerNettyIntegrationTest {
 
-    private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static int severHttpPort;
     private static EchoServer echoServer;
 
@@ -26,7 +25,7 @@ public class MockServerAutoAllocatedPortIntegrationTest extends AbstractRestarta
         severHttpPort = ((ClientAndServer) mockServerClient).getPort();
 
         // start echo servers
-        echoServer = new EchoServer(TEST_SERVER_HTTP_PORT, false);
+        echoServer = new EchoServer(false);
     }
 
     @AfterClass
@@ -57,6 +56,6 @@ public class MockServerAutoAllocatedPortIntegrationTest extends AbstractRestarta
 
     @Override
     public int getTestServerPort() {
-        return TEST_SERVER_HTTP_PORT;
+        return echoServer.getPort();
     }
 }

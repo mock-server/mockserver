@@ -26,9 +26,8 @@ public class MockServerClientServerVallidationErrorsTest {
 
     @Before
     public void setupTestFixture() throws Exception {
-        int echoServerPort = PortFactory.findFreePort();
-        echoServer = new EchoServer(echoServerPort, false);
-        mockServerClient = new MockServerClient("localhost", echoServerPort);
+        echoServer = new EchoServer(false);
+        mockServerClient = new MockServerClient("localhost", echoServer.getPort());
     }
 
     @Test

@@ -25,7 +25,6 @@ import static org.mockserver.model.HttpStatusCode.OK_200;
  */
 public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMockServerNettyIntegrationTest {
 
-    private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static Integer[] severHttpPort;
     private static EchoServer echoServer;
     private final Random random = new Random();
@@ -38,7 +37,7 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
         severHttpPort = boundPorts.toArray(new Integer[boundPorts.size()]);
 
         // start echo servers
-        echoServer = new EchoServer(TEST_SERVER_HTTP_PORT, false);
+        echoServer = new EchoServer( false);
     }
 
     @AfterClass
@@ -71,7 +70,7 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
 
     @Override
     public int getTestServerPort() {
-        return TEST_SERVER_HTTP_PORT;
+        return echoServer.getPort();
     }
 
     @Test

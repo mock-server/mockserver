@@ -22,7 +22,6 @@ import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
-import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,8 +174,7 @@ public abstract class AbstractClientServerIntegrationTest {
 
     @Test
     public void shouldForwardRequestInHTTPS() {
-        int testServerHttpsPort = PortFactory.findFreePort();
-        EchoServer secureEchoServer = new EchoServer(testServerHttpsPort, true);
+        EchoServer secureEchoServer = new EchoServer(true);
         try {
             // when
             mockServerClient
@@ -187,7 +185,7 @@ public abstract class AbstractClientServerIntegrationTest {
                 .forward(
                     forward()
                         .withHost("127.0.0.1")
-                        .withPort(testServerHttpsPort)
+                        .withPort(secureEchoServer.getPort())
                         .withScheme(HttpForward.Scheme.HTTPS)
                 );
 
@@ -238,8 +236,7 @@ public abstract class AbstractClientServerIntegrationTest {
 
     @Test
     public void shouldForwardTemplateInVelocity() {
-        int testServerHttpsPort = PortFactory.findFreePort();
-        EchoServer secureEchoServer = new EchoServer(testServerHttpsPort, false);
+        EchoServer secureEchoServer = new EchoServer(false);
         try {
             // when
             mockServerClient
@@ -253,7 +250,7 @@ public abstract class AbstractClientServerIntegrationTest {
                             "    'path' : \"/somePath\"," + NEW_LINE +
                             "    'headers' : [ {" + NEW_LINE +
                             "        'name' : \"Host\"," + NEW_LINE +
-                            "        'values' : [ \"127.0.0.1:" + testServerHttpsPort + "\" ]" + NEW_LINE +
+                            "        'values' : [ \"127.0.0.1:" + secureEchoServer.getPort() + "\" ]" + NEW_LINE +
                             "    }, {" + NEW_LINE +
                             "        'name' : \"x-test\"," + NEW_LINE +
                             "        'values' : [ \"$!request.headers['x-test'][0]\" ]" + NEW_LINE +
@@ -5532,13 +5529,12 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void shouldRetrieveRecordedExpectations() {
         // when
-        int testServerHttpPort = PortFactory.findFreePort();
-        EchoServer secureEchoServer = new EchoServer(testServerHttpPort, false);
+        EchoServer secureEchoServer = new EchoServer(false);
         try {
             mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(testServerHttpPort)
+                    .withPort(secureEchoServer.getPort())
             );
             assertEquals(
                 response("some_body_one"),
@@ -5599,13 +5595,12 @@ public abstract class AbstractClientServerIntegrationTest {
     @Test
     public void shouldRetrieveRecordedExpectationsAsJson() {
         // when
-        int testServerHttpPort = PortFactory.findFreePort();
-        EchoServer secureEchoServer = new EchoServer(testServerHttpPort, false);
+        EchoServer secureEchoServer = new EchoServer(false);
         try {
             mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(testServerHttpPort)
+                    .withPort(secureEchoServer.getPort())
             );
             assertEquals(
                 response("some_body_one"),

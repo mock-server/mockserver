@@ -1,6 +1,6 @@
 package org.mockserver.client.netty;
 
-import com.google.common.util.concurrent.SettableFuture;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -9,34 +9,30 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import org.mockserver.client.netty.codec.MockServerClientCodec;
 import org.mockserver.logging.LoggingHandler;
-import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLException;
 import java.net.InetSocketAddress;
 
+import static org.mockserver.client.netty.NettyHttpClient.REMOTE_SOCKET;
+import static org.mockserver.client.netty.NettyHttpClient.SECURE;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 
+@ChannelHandler.Sharable
 public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final boolean secure;
-    private final InetSocketAddress remoteAddress;
-    private HttpClientHandler httpClientHandler = new HttpClientHandler();
-
-    public HttpClientInitializer(boolean secure, InetSocketAddress remoteAddress) {
-        this.secure = secure;
-        this.remoteAddress = remoteAddress;
-    }
+    private final HttpClientConnectionHandler httpClientConnectionHandler = new HttpClientConnectionHandler();
+    private final HttpClientHandler httpClientHandler = new HttpClientHandler();
 
     @Override
-    public void initChannel(SocketChannel channel) throws SSLException {
+    public void initChannel(SocketChannel channel) {
         ChannelPipeline pipeline = channel.pipeline();
 
-        pipeline.addLast(new HttpClientConnectionHandler(httpClientHandler.getResponseFuture()));
+        pipeline.addLast(httpClientConnectionHandler);
 
-        if (secure) {
+        if (channel.attr(SECURE) != null && channel.attr(SECURE).get() != null && channel.attr(SECURE).get()) {
+            InetSocketAddress remoteAddress = channel.attr(REMOTE_SOCKET).get();
             pipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
         }
 
@@ -54,9 +50,5 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast(new MockServerClientCodec());
 
         pipeline.addLast(httpClientHandler);
-    }
-
-    public SettableFuture<HttpResponse> getResponseFuture() {
-        return httpClientHandler.getResponseFuture();
     }
 }

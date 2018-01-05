@@ -15,7 +15,6 @@ public class MockServerRuleIntegrationTest extends AbstractMockServerNettyIntegr
 
     // used fixed port for rule for all tests to ensure MockServer has been shutdown fully between each test
     private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
     @Rule
     public MockServerRule mockServerRule = new MockServerRule(this, SERVER_HTTP_PORT);
@@ -23,7 +22,7 @@ public class MockServerRuleIntegrationTest extends AbstractMockServerNettyIntegr
     @BeforeClass
     public static void startServer() {
         // start echo servers
-        echoServer = new EchoServer(TEST_SERVER_HTTP_PORT, false);
+        echoServer = new EchoServer(false);
     }
 
     @AfterClass
@@ -50,6 +49,6 @@ public class MockServerRuleIntegrationTest extends AbstractMockServerNettyIntegr
 
     @Override
     public int getTestServerPort() {
-        return TEST_SERVER_HTTP_PORT;
+        return echoServer.getPort();
     }
 }

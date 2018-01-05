@@ -50,7 +50,6 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyHttpProxySOCKSIntegrationTest.class);
 
-    private final static Integer SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static Integer SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
     private static EchoServer insecureEchoServer;
@@ -59,13 +58,10 @@ public class NettyHttpProxySOCKSIntegrationTest {
     private static ProxyClient proxyClient;
 
     @BeforeClass
-    public static void setupFixture() throws Exception {
-        logger.debug("SERVER_HTTPS_PORT = " + SERVER_HTTPS_PORT);
-        logger.debug("PROXY_HTTP_PORT = " + PROXY_HTTP_PORT);
-
+    public static void setupFixture() {
         // start server
-        insecureEchoServer = new EchoServer(SERVER_HTTP_PORT, false);
-        secureEchoServer = new EchoServer(SERVER_HTTPS_PORT, true);
+        insecureEchoServer = new EchoServer( false);
+        secureEchoServer = new EchoServer(true);
 
         // start proxy
         httpProxy = new ProxyBuilder()
@@ -123,11 +119,11 @@ public class NettyHttpProxySOCKSIntegrationTest {
             HttpClient httpClient = HttpClientBuilder.create().setSslcontext(KeyStoreFactory.keyStoreFactory().sslContext()).build();
 
             // when
-            HttpResponse response = httpClient.execute(new HttpHost("127.0.0.1", SERVER_HTTP_PORT, "http"), new HttpGet("/"));
+            HttpResponse response = httpClient.execute(new HttpHost("127.0.0.1", insecureEchoServer.getPort(), "http"), new HttpGet("/"));
 
             // then
             assertThat(response.getStatusLine().getStatusCode(), is(200));
-            proxyClient.verify(request().withHeader("Host", "127.0.0.1" + ":" + SERVER_HTTP_PORT));
+            proxyClient.verify(request().withHeader("Host", "127.0.0.1" + ":" + insecureEchoServer.getPort()));
         } finally {
             ProxySelector.setDefault(defaultProxySelector);
         }
@@ -163,11 +159,11 @@ public class NettyHttpProxySOCKSIntegrationTest {
             HttpClient httpClient = HttpClientBuilder.create().setSslcontext(KeyStoreFactory.keyStoreFactory().sslContext()).build();
 
             // when
-            HttpResponse response = httpClient.execute(new HttpHost("127.0.0.1", SERVER_HTTPS_PORT, "https"), new HttpGet("/"));
+            HttpResponse response = httpClient.execute(new HttpHost("127.0.0.1", secureEchoServer.getPort(), "https"), new HttpGet("/"));
 
             // then
             assertThat(response.getStatusLine().getStatusCode(), is(200));
-            proxyClient.verify(request().withHeader("Host", "127.0.0.1" + ":" + SERVER_HTTPS_PORT));
+            proxyClient.verify(request().withHeader("Host", "127.0.0.1" + ":" + secureEchoServer.getPort()));
         } finally {
             ProxySelector.setDefault(defaultProxySelector);
         }
@@ -225,7 +221,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 new URIBuilder()
                         .setScheme("http")
                         .setHost("localhost")
-                        .setPort(SERVER_HTTP_PORT)
+                        .setPort(insecureEchoServer.getPort())
                         .setPath("/test_headers_and_body")
                         .build()
         );
@@ -292,7 +288,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 new URIBuilder()
                         .setScheme("https")
                         .setHost("localhost")
-                        .setPort(SERVER_HTTPS_PORT)
+                        .setPort(secureEchoServer.getPort())
                         .setPath("/test_headers_and_body")
                         .build()
         );
@@ -342,10 +338,10 @@ public class NettyHttpProxySOCKSIntegrationTest {
             });
 
             if (useTLS) {
-                Socket localhost = new Socket("localhost", SERVER_HTTPS_PORT);
+                Socket localhost = new Socket("localhost", secureEchoServer.getPort());
                 socket = sslSocketFactory().wrapSocket(localhost);
             } else {
-                socket = new Socket("localhost", SERVER_HTTP_PORT);
+                socket = new Socket("localhost", insecureEchoServer.getPort());
             }
 
             // given
@@ -354,7 +350,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             // - send GET request for headers and body
             output.write(("" +
                     "GET /test_headers_and_body HTTP/1.1\r\n" +
-                    "Host: localhost:" + (useTLS ? SERVER_HTTPS_PORT : SERVER_HTTP_PORT) + "\r\n" +
+                    "Host: localhost:" + (useTLS ? secureEchoServer.getPort() : insecureEchoServer.getPort()) + "\r\n" +
                     "X-Test: test_headers_and_body\r\n" +
                     "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
                     "\r\n" +

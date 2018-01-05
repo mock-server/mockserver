@@ -186,8 +186,7 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
 
     @Test // same JVM due to issues detecting Nashorn is enabled via Maven plugin
     public void shouldForwardTemplateInJavaScript() {
-        int testServerHttpsPort = PortFactory.findFreePort();
-        EchoServer secureEchoServer = new EchoServer(testServerHttpsPort, false);
+        EchoServer secureEchoServer = new EchoServer(false);
         try {
             // when
             mockServerClient
@@ -201,7 +200,7 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
                             "    'path' : \"/somePath\"," + NEW_LINE +
                             "    'headers' : [ {" + NEW_LINE +
                             "        'name' : \"Host\"," + NEW_LINE +
-                            "        'values' : [ \"127.0.0.1:" + testServerHttpsPort + "\" ]" + NEW_LINE +
+                            "        'values' : [ \"127.0.0.1:" + secureEchoServer.getPort() + "\" ]" + NEW_LINE +
                             "    }, {" + NEW_LINE +
                             "        'name' : \"x-test\"," + NEW_LINE +
                             "        'values' : [ request.headers['x-test'][0] ]" + NEW_LINE +

@@ -1,6 +1,5 @@
 package org.mockserver.client.netty;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -27,17 +26,10 @@ public class NettyHttpClientErrorHandlingTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    private int freePort;
-
-    @Before
-    public void createFixture() {
-        freePort = PortFactory.findFreePort();
-    }
-
-
     @Test
     public void shouldThrowSocketCommunicationExceptionForConnectException() {
         // then
+        int freePort = PortFactory.findFreePort();
         exception.expect(SocketConnectionException.class);
         exception.expectMessage(containsString("Unable to connect to socket /127.0.0.1:" + freePort));
 
@@ -48,7 +40,7 @@ public class NettyHttpClientErrorHandlingTest {
     @Test
     public void shouldHandleConnectionClosure() {
         // given
-        EchoServer echoServer = new EchoServer(freePort, true, EchoServer.Error.CLOSE_CONNECTION);
+        EchoServer echoServer = new EchoServer(true, EchoServer.Error.CLOSE_CONNECTION);
 
         try {
             // then
@@ -56,7 +48,7 @@ public class NettyHttpClientErrorHandlingTest {
             exception.expectMessage(containsString("before valid response has been received"));
 
             // when
-            new NettyHttpClient().sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + freePort));
+            new NettyHttpClient().sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + echoServer.getPort()));
         } finally {
             echoServer.stop();
         }
@@ -65,7 +57,7 @@ public class NettyHttpClientErrorHandlingTest {
     @Test
     public void shouldHandleLargerContentLengthHeader() {
         // given
-        EchoServer echoServer = new EchoServer(freePort, true, EchoServer.Error.LARGER_CONTENT_LENGTH);
+        EchoServer echoServer = new EchoServer(true, EchoServer.Error.LARGER_CONTENT_LENGTH);
         long originalMaxSocketTimeout = ConfigurationProperties.maxSocketTimeout();
 
         try {
@@ -76,7 +68,7 @@ public class NettyHttpClientErrorHandlingTest {
             exception.expectMessage(containsString("Response was not received after 5 milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)"));
 
             // when
-            new NettyHttpClient().sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort).withBody(exact("this is an example body")).withSecure(true));
+            new NettyHttpClient().sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + echoServer.getPort()).withBody(exact("this is an example body")).withSecure(true));
         } finally {
             echoServer.stop();
             ConfigurationProperties.maxSocketTimeout(originalMaxSocketTimeout);
@@ -86,11 +78,11 @@ public class NettyHttpClientErrorHandlingTest {
     @Test
     public void shouldHandleSmallerContentLengthHeader() {
         // given
-        EchoServer echoServer = new EchoServer(freePort, true, EchoServer.Error.SMALLER_CONTENT_LENGTH);
+        EchoServer echoServer = new EchoServer(true, EchoServer.Error.SMALLER_CONTENT_LENGTH);
 
         try {
             // when
-            InetSocketAddress socket = new InetSocketAddress("127.0.0.1", freePort);
+            InetSocketAddress socket = new InetSocketAddress("127.0.0.1", echoServer.getPort());
             HttpResponse httpResponse = new NettyHttpClient().sendRequest(request().withBody(exact("this is an example body")).withSecure(true), socket);
 
             // then

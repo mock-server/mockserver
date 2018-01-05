@@ -19,7 +19,6 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 public class ClientAndProxyMockingIntegrationTest extends AbstractRestartableMockServerNettyIntegrationTest {
 
     private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
 
     @BeforeClass
@@ -29,7 +28,7 @@ public class ClientAndProxyMockingIntegrationTest extends AbstractRestartableMoc
         mockServerClient = new MockServerClient("localhost", SERVER_HTTP_PORT);
 
         // start echo servers
-        echoServer = new EchoServer(TEST_SERVER_HTTP_PORT, false);
+        echoServer = new EchoServer(false);
     }
 
     @AfterClass
@@ -60,6 +59,6 @@ public class ClientAndProxyMockingIntegrationTest extends AbstractRestartableMoc
 
     @Override
     public int getTestServerPort() {
-        return TEST_SERVER_HTTP_PORT;
+        return echoServer.getPort();
     }
 }

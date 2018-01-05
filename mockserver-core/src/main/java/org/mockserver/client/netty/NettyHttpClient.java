@@ -1,12 +1,13 @@
 package org.mockserver.client.netty;
 
-import com.google.common.base.Strings;
+import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.NotSslRecordException;
+import io.netty.util.AttributeKey;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -22,66 +23,54 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static org.mockserver.character.Character.NEW_LINE;
-
 public class NettyHttpClient {
 
+    static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");
+    static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
+    static final AttributeKey<SettableFuture<HttpResponse>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static EventLoopGroup group = new NioEventLoopGroup();
+    private static Bootstrap bootstrap = new Bootstrap()
+        .group(group)
+        .channel(NioSocketChannel.class)
+        .option(ChannelOption.AUTO_READ, true)
+        .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+        .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
+        .handler(new HttpClientInitializer());
 
     public HttpResponse sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {
-        return sendRequest(httpRequest, socketAddressFromHostHeader(httpRequest));
-    }
-
-    private InetSocketAddress socketAddressFromHostHeader(HttpRequest request) {
-        if (!Strings.isNullOrEmpty(request.getFirstHeader(HOST.toString()))) {
-            boolean isSsl = request.isSecure() != null && request.isSecure();
-            String[] hostHeaderParts = request.getFirstHeader(HOST.toString()).split(":");
-            return new InetSocketAddress(hostHeaderParts[0], hostHeaderParts.length > 1 ? Integer.parseInt(hostHeaderParts[1]) : isSsl ? 443 : 80);
-        } else {
-            throw new IllegalArgumentException("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + NEW_LINE + request);
-        }
+        return sendRequest(httpRequest, httpRequest.socketAddressFromHostHeader());
     }
 
     public HttpResponse sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) throws SocketConnectionException {
         if (remoteAddress == null) {
-            remoteAddress = socketAddressFromHostHeader(httpRequest);
+            remoteAddress = httpRequest.socketAddressFromHostHeader();
         }
 
         logger.debug("Sending to: {} request: {}", remoteAddress, httpRequest);
 
-        EventLoopGroup group = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
-
         try {
-            final HttpClientInitializer channelInitializer = new HttpClientInitializer(httpRequest.isSecure() != null && httpRequest.isSecure(), remoteAddress);
-
-            // make the connection attempt
-            new Bootstrap()
-                .group(group)
-                .channel(NioSocketChannel.class)
-                .option(ChannelOption.AUTO_READ, true)
-                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-                .handler(channelInitializer)
+            final SettableFuture<HttpResponse> httpResponseSettableFuture = SettableFuture.create();
+            bootstrap
+                .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
+                .attr(REMOTE_SOCKET, remoteAddress)
+                .attr(RESPONSE_FUTURE, httpResponseSettableFuture)
                 .connect(remoteAddress)
                 .addListener(new ChannelFutureListener() {
                     @Override
-                    public void operationComplete(ChannelFuture future) throws Exception {
+                    public void operationComplete(ChannelFuture future) {
                         if (future.isSuccess()) {
                             // send the HTTP request
                             future.channel().writeAndFlush(httpRequest);
                         } else {
-                            channelInitializer.getResponseFuture().setException(future.cause());
+                            httpResponseSettableFuture.setException(future.cause());
                         }
                     }
                 });
 
             // wait for response
-            HttpResponse httpResponse = channelInitializer.getResponseFuture().get(ConfigurationProperties.maxSocketTimeout(), TimeUnit.MILLISECONDS);
+            HttpResponse httpResponse = httpResponseSettableFuture.get(ConfigurationProperties.maxSocketTimeout(), TimeUnit.MILLISECONDS);
             logger.trace("Received response: {}", httpResponse);
-
-            // shutdown client
-            group.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
 
             return httpResponse;
 
@@ -102,9 +91,6 @@ public class NettyHttpClient {
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("Exception while sending request", e);
-        } finally {
-            // shut down executor threads to exit
-            group.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
         }
 
     }

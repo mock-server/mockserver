@@ -16,6 +16,7 @@ import org.mockserver.model.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -28,20 +29,19 @@ public class EchoServer {
     static final AttributeKey<NextResponse> NEXT_RESPONSE = AttributeKey.valueOf("NEXT_RESPONSE");
     static final AttributeKey<OnlyResponse> ONLY_RESPONSE = AttributeKey.valueOf("ONLY_RESPONSE");
 
-    private final MockServerLog logFilter = new MockServerLog(new LoggingFormatter(LoggerFactory.getLogger(this.getClass()), null));
+    private final Logger logger = LoggerFactory.getLogger(EchoServer.class);
+    private final MockServerLog logFilter = new MockServerLog(new LoggingFormatter(logger, null));
     private final NextResponse nextResponse = new NextResponse();
     private final OnlyResponse onlyResponse = new OnlyResponse();
     private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+    private final SettableFuture<Integer> boundPort = SettableFuture.create();
 
 
-    public EchoServer(final int port, final boolean secure) {
-        this(port, secure, null);
+    public EchoServer(final boolean secure) {
+        this(secure, null);
     }
 
-    public EchoServer(final int port, final boolean secure, final Error error) {
-        Logger logger = LoggerFactory.getLogger(EchoServer.class);
-        final SettableFuture<String> hasStarted = SettableFuture.create();
-
+    public EchoServer(final boolean secure, final Error error) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -55,14 +55,14 @@ public class EchoServer {
                     .childAttr(LOG_FILTER, logFilter)
                     .childAttr(NEXT_RESPONSE, nextResponse)
                     .childAttr(ONLY_RESPONSE, onlyResponse)
-                    .bind(port)
+                    .bind(0)
                     .addListener(new ChannelFutureListener() {
                         @Override
                         public void operationComplete(ChannelFuture future) throws Exception {
                             if (future.isSuccess()) {
-                                hasStarted.set("STARTED");
+                                boundPort.set(((InetSocketAddress) future.channel().localAddress()).getPort());
                             } else {
-                                hasStarted.setException(future.cause());
+                                boundPort.setException(future.cause());
                                 eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                             }
                         }
@@ -72,7 +72,7 @@ public class EchoServer {
 
         try {
             // wait for proxy to start all channels
-            hasStarted.get();
+            boundPort.get();
             TimeUnit.MILLISECONDS.sleep(5);
         } catch (Exception e) {
             logger.error("Exception while waiting for proxy to complete starting up", e);
@@ -81,6 +81,14 @@ public class EchoServer {
 
     public void stop() {
         eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+    }
+
+    public Integer getPort() {
+        try {
+            return boundPort.get();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public MockServerLog requestLogFilter() {

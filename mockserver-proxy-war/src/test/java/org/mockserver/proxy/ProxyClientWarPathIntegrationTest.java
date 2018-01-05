@@ -19,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegrationTest {
 
     private final static int PROXY_PORT = PortFactory.findFreePort();
-    private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
     private static Tomcat tomcat;
     private static ProxyClient proxyClient;
@@ -29,7 +28,7 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
         servletContext = "";
 
         // start server
-        echoServer = new EchoServer(SERVER_HTTP_PORT, false);
+        echoServer = new EchoServer( false);
 
         // wait for server to start up
         TimeUnit.MILLISECONDS.sleep(500);
@@ -83,6 +82,6 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
 
     @Override
     public int getServerPort() {
-        return SERVER_HTTP_PORT;
+        return echoServer.getPort();
     }
 }

@@ -29,24 +29,20 @@ public class NettyDirectSecureProxyIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyDirectSecureProxyIntegrationTest.class);
 
-    private final static Integer SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_DIRECT_SECURE_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
     private static Proxy httpProxy;
     private static ProxyClient proxyClient;
 
     @BeforeClass
-    public static void setupFixture() throws Exception {
-        logger.debug("SERVER_HTTPS_PORT = " + SERVER_HTTPS_PORT);
-        logger.debug("PROXY_DIRECT_SECURE_PORT = " + PROXY_DIRECT_SECURE_PORT);
-
+    public static void setupFixture() {
         // start server
-        echoServer = new EchoServer(SERVER_HTTPS_PORT, true);
+        echoServer = new EchoServer( true);
 
         // start proxy
         httpProxy = new ProxyBuilder()
                 .withLocalPort(PROXY_DIRECT_SECURE_PORT)
-                .withDirect("127.0.0.1", SERVER_HTTPS_PORT)
+                .withDirect("127.0.0.1", echoServer.getPort())
                 .build();
 
         // start client
@@ -75,7 +71,7 @@ public class NettyDirectSecureProxyIntegrationTest {
             // - send GET request for headers only
             output.write(("" +
                     "GET /test_headers_only HTTP/1.1\r\n" +
-                    "Host: localhost:" + SERVER_HTTPS_PORT + "\r\n" +
+                    "Host: localhost:" + echoServer.getPort() + "\r\n" +
                     "X-Test: test_headers_only\r\n" +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
@@ -111,7 +107,7 @@ public class NettyDirectSecureProxyIntegrationTest {
             // - send GET request for headers and body
             output.write(("" +
                     "GET /test_headers_and_body HTTP/1.1\r\n" +
-                    "Host: localhost:" + SERVER_HTTPS_PORT + "\r\n" +
+                    "Host: localhost:" + echoServer.getPort() + "\r\n" +
                     "X-Test: test_headers_and_body\r\n" +
                     "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
                     "\r\n" +
@@ -152,7 +148,7 @@ public class NettyDirectSecureProxyIntegrationTest {
             // - send GET request for headers and body
             output.write(("" +
                     "GET /not_found HTTP/1.1\r\n" +
-                    "Host: localhost:" + SERVER_HTTPS_PORT + "\r\n" +
+                    "Host: localhost:" + echoServer.getPort() + "\r\n" +
                     "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();

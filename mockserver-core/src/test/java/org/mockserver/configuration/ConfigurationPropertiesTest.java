@@ -71,6 +71,28 @@ public class ConfigurationPropertiesTest {
         assertEquals(false, ConfigurationProperties.enableCORSForAllResponses());
         assertEquals("false", System.getProperty("mockserver.enableCORSForAllResponses"));
     }
+
+    @Test
+    public void shouldSetAndReadNIOEventLoopThreadCount() {
+        // given
+        System.clearProperty("mockserver.nioEventLoopThreadCount");
+
+        // when
+        assertEquals(ConfigurationProperties.DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT, ConfigurationProperties.nioEventLoopThreadCount());
+        ConfigurationProperties.nioEventLoopThreadCount(2);
+
+        // then
+        assertEquals(2, ConfigurationProperties.nioEventLoopThreadCount());
+    }
+
+    @Test
+    public void shouldHandleInvalidNIOEventLoopThreadCount() {
+        // given
+        System.setProperty("mockserver.nioEventLoopThreadCount", "invalid");
+
+        // then
+        assertEquals(ConfigurationProperties.DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT, ConfigurationProperties.nioEventLoopThreadCount());
+    }
     
     @Test
     public void shouldSetAndReadMaxExpectations() {
