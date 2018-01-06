@@ -20,6 +20,7 @@ import java.util.Set;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
+import static org.mockserver.scheduler.Scheduler.schedule;
 
 /**
  * @author jamesdbloom
@@ -54,7 +55,7 @@ public class ActionHandler {
         this.httpObjectCallbackActionHandler = new HttpObjectCallbackActionHandler(httpStateHandler);
     }
 
-    public void processAction(HttpRequest request, ResponseWriter responseWriter, ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyRequest) {
+    public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyRequest, boolean synchronous) {
         Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
         if (expectation != null && expectation.getAction() != null) {
             Action action = expectation.getAction();
@@ -67,10 +68,15 @@ public class ActionHandler {
                     break;
                 }
                 case FORWARD_TEMPLATE: {
-                    HttpResponse response = httpForwardTemplateActionHandler.handle((HttpTemplate) action, request);
-                    responseWriter.writeResponse(request, response, false);
-                    httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated forward action:{}", response, request, action);
+                    final HttpTemplate httpTemplate = (HttpTemplate) action;
+                    schedule(new Runnable() {
+                        public void run() {
+                            HttpResponse response = httpForwardTemplateActionHandler.handle(httpTemplate, request);
+                            responseWriter.writeResponse(request, response, false);
+                            httpStateHandler.log(new RequestResponseLogEntry(request, response));
+                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated forward action:{}", response, request, httpTemplate);
+                        }
+                    }, httpTemplate.getDelay(), synchronous);
                     break;
                 }
                 case OBJECT_CALLBACK: {
@@ -86,23 +92,38 @@ public class ActionHandler {
                     break;
                 }
                 case RESPONSE: {
+                    final HttpResponse httpResponse = (HttpResponse) action;
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
-                    HttpResponse response = httpResponseActionHandler.handle((HttpResponse) action);
-                    responseWriter.writeResponse(request, response, false);
-                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for response action:{}", response, request, action);
+                    schedule(new Runnable() {
+                        public void run() {
+                            HttpResponse response = httpResponseActionHandler.handle(httpResponse);
+                            responseWriter.writeResponse(request, response, false);
+                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for response action:{}", response, request, httpResponse);
+                        }
+                    }, httpResponse.getDelay(), synchronous);
                     break;
                 }
                 case RESPONSE_TEMPLATE: {
+                    final HttpTemplate httpTemplate = (HttpTemplate) action;
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
-                    HttpResponse response = httpResponseTemplateActionHandler.handle((HttpTemplate) action, request);
-                    responseWriter.writeResponse(request, response, false);
-                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated response action:{}", response, request, action);
+                    schedule(new Runnable() {
+                        public void run() {
+                            HttpResponse response = httpResponseTemplateActionHandler.handle(httpTemplate, request);
+                            responseWriter.writeResponse(request, response, false);
+                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated response action:{}", response, request, httpTemplate);
+                        }
+                    }, httpTemplate.getDelay(), synchronous);
                     break;
                 }
                 case ERROR: {
+                    final HttpError httpError = (HttpError) action;
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
-                    httpErrorActionHandler.handle((HttpError) action, ctx);
-                    logFormatter.infoLog(request, "returning error:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for error action:{}", action, request, action);
+                    schedule(new Runnable() {
+                        public void run() {
+                            httpErrorActionHandler.handle(httpError, ctx);
+                            logFormatter.infoLog(request, "returning error:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for error action:{}", httpError, request, httpError);
+                        }
+                    }, httpError.getDelay(), synchronous);
                     break;
                 }
             }

@@ -74,7 +74,7 @@ public class ProxyServlet extends HttpServlet {
                         httpServletRequest.getLocalAddr() + portExtension,
                         "localhost" + portExtension,
                         "127.0.0.1" + portExtension
-                    ), true);
+                    ), true, true);
 
                 }
             }

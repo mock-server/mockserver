@@ -10,8 +10,7 @@ import org.mockserver.model.HttpError;
  */
 public class HttpErrorActionHandler {
 
-    public void handle(HttpError action, ChannelHandlerContext ctx) {
-        HttpError httpError = action.applyDelay();
+    public void handle(HttpError httpError, ChannelHandlerContext ctx) {
         if (httpError.getResponseBytes() != null) {
             // write byte directly by skipping over HTTP codec
             ChannelHandlerContext httpCodecContext = ctx.pipeline().context(HttpServerCodec.class);

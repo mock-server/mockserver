@@ -103,7 +103,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 } else {
 
-                    actionHandler.processAction(request, responseWriter, ctx, getLocalAddresses(ctx), isProxyingRequest(ctx));
+                    actionHandler.processAction(request, responseWriter, ctx, getLocalAddresses(ctx), isProxyingRequest(ctx), false);
 
                 }
             }

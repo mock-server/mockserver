@@ -53,7 +53,6 @@ public class HttpForwardTemplateActionHandler {
             }
         }
 
-        httpTemplate.applyDelay();
         return httpResponse;
     }
 

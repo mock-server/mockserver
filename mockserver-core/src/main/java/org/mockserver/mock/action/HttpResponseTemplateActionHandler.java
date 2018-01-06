@@ -45,7 +45,6 @@ public class HttpResponseTemplateActionHandler {
             }
         }
 
-        httpTemplate.applyDelay();
         return httpResponse;
     }
 

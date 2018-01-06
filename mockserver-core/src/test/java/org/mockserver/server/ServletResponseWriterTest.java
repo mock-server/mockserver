@@ -43,7 +43,7 @@ public class ServletResponseWriterTest {
         HttpResponse response = response("some_response");
 
         // when
-        servletResponseWriter.writeResponse(request.clone(), response.clone(), false);
+        servletResponseWriter.writeResponse(request, response, false);
 
         // then
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(
@@ -60,7 +60,7 @@ public class ServletResponseWriterTest {
         HttpResponse response = response().withBody("some_response", UTF_8);
 
         // when
-        servletResponseWriter.writeResponse(request.clone(), response.clone(), false);
+        servletResponseWriter.writeResponse(request, response, false);
 
         // then
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(
@@ -78,7 +78,7 @@ public class ServletResponseWriterTest {
         HttpResponse response = response().withBody(json("some_response"));
 
         // when
-        servletResponseWriter.writeResponse(request.clone(), response.clone(), false);
+        servletResponseWriter.writeResponse(request, response, false);
 
         // then
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(
@@ -95,7 +95,7 @@ public class ServletResponseWriterTest {
         HttpRequest request = request("some_request");
 
         // when
-        servletResponseWriter.writeResponse(request.clone(), (HttpResponse) null, false);
+        servletResponseWriter.writeResponse(request, null, false);
 
         // then
         verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(
@@ -115,7 +115,7 @@ public class ServletResponseWriterTest {
             HttpResponse response = response("some_response");
 
             // when
-            servletResponseWriter.writeResponse(request.clone(), response.clone(), false);
+            servletResponseWriter.writeResponse(request, response, false);
 
             // then
             verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(

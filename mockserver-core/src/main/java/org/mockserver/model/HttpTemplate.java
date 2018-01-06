@@ -71,14 +71,6 @@ public class HttpTemplate extends Action {
         return delay;
     }
 
-    @JsonIgnore
-    public HttpTemplate applyDelay() {
-        if (delay != null) {
-            delay.applyDelay();
-        }
-        return this;
-    }
-
     public void setActionType(Type actionType) {
         this.actionType = actionType;
     }

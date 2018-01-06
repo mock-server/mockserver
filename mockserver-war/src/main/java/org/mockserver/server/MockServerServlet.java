@@ -71,7 +71,7 @@ public class MockServerServlet extends HttpServlet {
                         httpServletRequest.getLocalAddr() + portExtension,
                         "localhost" + portExtension,
                         "127.0.0.1" + portExtension
-                    ), false);
+                    ), false, true);
 
                 }
             }

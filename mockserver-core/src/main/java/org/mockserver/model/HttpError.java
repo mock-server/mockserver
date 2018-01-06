@@ -69,14 +69,6 @@ public class HttpError extends Action {
         return delay;
     }
 
-    @JsonIgnore
-    public HttpError applyDelay() {
-        if (delay != null) {
-            delay.applyDelay();
-        }
-        return this;
-    }
-
     @Override
     @JsonIgnore
     public Type getType() {

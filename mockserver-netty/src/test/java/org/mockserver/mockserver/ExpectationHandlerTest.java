@@ -3,11 +3,9 @@ package org.mockserver.mockserver;
 import com.google.common.collect.ImmutableSet;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.InjectMocks;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.PortBindingSerializer;
@@ -38,7 +36,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.HttpRequest.request;
@@ -301,8 +298,8 @@ public abstract class ExpectationHandlerTest {
                 "localhost:666",
                 "127.0.0.1:666"
             )),
-            eq(true)
-        );
+            eq(true),
+            eq(false));
     }
 
     @Test
@@ -331,8 +328,8 @@ public abstract class ExpectationHandlerTest {
                 "localhost:666",
                 "127.0.0.1:666"
             )),
-            eq(false)
-        );
+            eq(false),
+            eq(false));
     }
 
 }

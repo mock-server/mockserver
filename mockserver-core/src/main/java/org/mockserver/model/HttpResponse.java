@@ -383,14 +383,6 @@ public class HttpResponse extends Action {
         return connectionOptions;
     }
 
-    @JsonIgnore
-    public HttpResponse applyDelay() {
-        if (delay != null) {
-            delay.applyDelay();
-        }
-        return this;
-    }
-
     @Override
     @JsonIgnore
     public Type getType() {

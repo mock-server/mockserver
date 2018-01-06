@@ -6,14 +6,13 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
-import static org.mockito.Matchers.same;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.NottableString.string;
@@ -103,31 +102,31 @@ public class HttpRequestTest {
     @Test
     public void shouldReturnFormattedRequestInToString() {
         TestCase.assertEquals("{" + NEW_LINE +
-                        "  \"method\" : \"METHOD\"," + NEW_LINE +
-                        "  \"path\" : \"some_path\"," + NEW_LINE +
-                        "  \"queryStringParameters\" : {" + NEW_LINE +
-                        "    \"some_parameter\" : [ \"some_parameter_value\" ]" + NEW_LINE +
-                        "  }," + NEW_LINE +
-                        "  \"headers\" : {" + NEW_LINE +
-                        "    \"some_header\" : [ \"some_header_value\" ]" + NEW_LINE +
-                        "  }," + NEW_LINE +
-                        "  \"cookies\" : {" + NEW_LINE +
-                        "    \"some_cookie\" : \"some_cookie_value\"" + NEW_LINE +
-                        "  }," + NEW_LINE +
-                        "  \"keepAlive\" : true," + NEW_LINE +
-                        "  \"secure\" : true," + NEW_LINE +
-                        "  \"body\" : \"some_body\"" + NEW_LINE +
-                        "}",
-                request()
-                        .withPath("some_path")
-                        .withBody("some_body")
-                        .withMethod("METHOD")
-                        .withHeaders(new Header("some_header", "some_header_value"))
-                        .withCookies(new Cookie("some_cookie", "some_cookie_value"))
-                        .withSecure(true)
-                        .withQueryStringParameters(new Parameter("some_parameter", "some_parameter_value"))
-                        .withKeepAlive(true)
-                        .toString()
+                "  \"method\" : \"METHOD\"," + NEW_LINE +
+                "  \"path\" : \"some_path\"," + NEW_LINE +
+                "  \"queryStringParameters\" : {" + NEW_LINE +
+                "    \"some_parameter\" : [ \"some_parameter_value\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"headers\" : {" + NEW_LINE +
+                "    \"some_header\" : [ \"some_header_value\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"cookies\" : {" + NEW_LINE +
+                "    \"some_cookie\" : \"some_cookie_value\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"keepAlive\" : true," + NEW_LINE +
+                "  \"secure\" : true," + NEW_LINE +
+                "  \"body\" : \"some_body\"" + NEW_LINE +
+                "}",
+            request()
+                .withPath("some_path")
+                .withBody("some_body")
+                .withMethod("METHOD")
+                .withHeaders(new Header("some_header", "some_header_value"))
+                .withCookies(new Cookie("some_cookie", "some_cookie_value"))
+                .withSecure(true)
+                .withQueryStringParameters(new Parameter("some_parameter", "some_parameter_value"))
+                .withKeepAlive(true)
+                .toString()
         );
     }
 
@@ -135,20 +134,20 @@ public class HttpRequestTest {
     public void shouldClone() {
         // given
         HttpRequest requestOne = request()
-                .withPath("some_path")
-                .withBody("some_body")
-                .withMethod("METHOD")
-                .withHeader("some_header", "some_header_value")
-                .withSecure(true)
-                .withCookie("some_cookie", "some_cookie_value")
-                .withQueryStringParameter("some_parameter", "some_parameter_value")
-                .withKeepAlive(true);
+            .withPath("some_path")
+            .withBody("some_body")
+            .withMethod("METHOD")
+            .withHeader("some_header", "some_header_value")
+            .withSecure(true)
+            .withCookie("some_cookie", "some_cookie_value")
+            .withQueryStringParameter("some_parameter", "some_parameter_value")
+            .withKeepAlive(true);
 
         // when
         HttpRequest requestTwo = requestOne.clone();
 
         // then
-        assertThat(requestOne, not(same(requestTwo)));
+        assertThat(requestOne, not(sameInstance(requestTwo)));
         assertThat(requestOne, is(requestTwo));
     }
 

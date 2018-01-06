@@ -14,10 +14,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.number.OrderingComparison.greaterThan;
+import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
-import static org.mockito.Mockito.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpResponse.response;
@@ -155,26 +154,6 @@ public class HttpResponseTest {
     }
 
     @Test
-    public void appliesDelay() throws InterruptedException {
-        // when
-        long before = System.currentTimeMillis();
-        new HttpResponse().withDelay(new Delay(SECONDS, 3)).applyDelay();
-
-        // then
-        assertThat(System.currentTimeMillis() - before, greaterThan(SECONDS.toMillis(2)));
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void applyDelayHandlesException() throws InterruptedException {
-        // given
-        TimeUnit timeUnit = mock(TimeUnit.class);
-        doThrow(new InterruptedException("TEST EXCEPTION")).when(timeUnit).sleep(10);
-
-        // when
-        new HttpResponse().withDelay(new Delay(timeUnit, 10)).applyDelay();
-    }
-
-    @Test
     public void shouldReturnFormattedRequestInToString() {
         assertEquals("{" + NEW_LINE +
                 "  \"statusCode\" : 666," + NEW_LINE +
@@ -235,7 +214,7 @@ public class HttpResponseTest {
         HttpResponse responseTwo = responseOne.clone();
 
         // then
-        assertThat(responseOne, not(same(responseTwo)));
+        assertThat(responseOne, not(sameInstance(responseTwo)));
         assertThat(responseOne, is(responseTwo));
     }
 }

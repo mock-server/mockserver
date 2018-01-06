@@ -104,7 +104,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, false);
 
         // then
         verify(mockHttpForwardActionHandler).handle(forward, request);
@@ -121,7 +121,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, false);
 
         // then
         verify(mockHttpForwardTemplateActionHandler).handle(template, request);
@@ -138,7 +138,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, false);
 
         // then
         verify(mockHttpResponseActionHandler).handle(response);
@@ -155,7 +155,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, false);
 
         // then
         verify(mockHttpResponseTemplateActionHandler).handle(template, request);
@@ -172,7 +172,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, false);
 
         // then
         verify(mockHttpClassCallbackActionHandler).handle(callback, request);
@@ -190,7 +190,7 @@ public class ActionHandlerTest {
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, false);
 
         // then
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
@@ -207,7 +207,7 @@ public class ActionHandlerTest {
         ChannelHandlerContext mockChannelHandlerContext = mock(ChannelHandlerContext.class);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), false);
+        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), false, false);
 
         // then
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
@@ -233,7 +233,7 @@ public class ActionHandlerTest {
         when(mockNettyHttpClient.sendRequest(request, remoteAddress)).thenReturn(response("response_one"));
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), true);
+        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), true, false);
 
         // then
         verify(mockHttpStateHandler).log(new RequestResponseLogEntry(request, response("response_one")));

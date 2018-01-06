@@ -44,7 +44,6 @@ public class Delay extends ObjectWithReflectiveEqualsHashCodeToString {
             try {
                 timeUnit.sleep(value);
             } catch (InterruptedException ie) {
-                logger.error("InterruptedException while apply delay to response", ie);
                 throw new RuntimeException("InterruptedException while apply delay to response", ie);
             }
         }

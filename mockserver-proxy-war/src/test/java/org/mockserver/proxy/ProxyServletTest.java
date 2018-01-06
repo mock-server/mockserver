@@ -8,7 +8,6 @@ import org.mockito.InjectMocks;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.PortBindingSerializer;
-import org.mockserver.log.model.ExpectationMatchLogEntry;
 import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
 import org.mockserver.logging.LoggingFormatter;
@@ -24,7 +23,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.Collections;
-import java.util.HashSet;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static org.apache.commons.codec.Charsets.UTF_8;
@@ -252,8 +250,8 @@ public class ProxyServletTest {
                 "localhost",
                 "127.0.0.1"
             )),
-            eq(true)
-        );
+            eq(true),
+            eq(true));
     }
 
     @Test
@@ -282,8 +280,8 @@ public class ProxyServletTest {
                 "localhost:666",
                 "127.0.0.1:666"
             )),
-            eq(true)
-        );
+            eq(true),
+            eq(true));
     }
 
     @Test
@@ -313,8 +311,8 @@ public class ProxyServletTest {
                 "localhost",
                 "127.0.0.1"
             )),
-            eq(true)
-        );
+            eq(true),
+            eq(true));
     }
 
     @Test
@@ -344,8 +342,8 @@ public class ProxyServletTest {
                 "localhost:666",
                 "127.0.0.1:666"
             )),
-            eq(true)
-        );
+            eq(true),
+            eq(true));
     }
 
 }
