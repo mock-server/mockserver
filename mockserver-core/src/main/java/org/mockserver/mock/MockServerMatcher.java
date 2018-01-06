@@ -4,7 +4,7 @@ import org.mockserver.collections.CircularLinkedList;
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
-import org.mockserver.mockserver.ui.MockServerMatcherNotifier;
+import org.mockserver.ui.MockServerMatcherNotifier;
 import org.mockserver.model.HttpRequest;
 
 import java.util.ArrayList;

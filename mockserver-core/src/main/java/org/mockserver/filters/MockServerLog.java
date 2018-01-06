@@ -10,7 +10,7 @@ import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mockserver.ui.MockServerLogNotifier;
+import org.mockserver.ui.MockServerLogNotifier;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;

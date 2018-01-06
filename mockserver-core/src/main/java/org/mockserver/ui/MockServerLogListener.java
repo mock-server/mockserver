@@ -1,4 +1,4 @@
-package org.mockserver.mockserver.ui;
+package org.mockserver.ui;
 
 import org.mockserver.filters.MockServerLog;
 

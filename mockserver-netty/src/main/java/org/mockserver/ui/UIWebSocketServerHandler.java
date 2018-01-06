@@ -1,4 +1,4 @@
-package org.mockserver.mockserver.ui;
+package org.mockserver.ui;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +21,7 @@ import org.mockserver.filters.MockServerLog;
 import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.MockServerMatcher;
-import org.mockserver.mockserver.ui.model.ValueWithKey;
+import org.mockserver.ui.model.ValueWithKey;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.slf4j.Logger;

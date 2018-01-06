@@ -1,4 +1,4 @@
-package org.mockserver.mockserver.callback;
+package org.mockserver.callback;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;

@@ -1,6 +1,6 @@
-package org.mockserver.mockserver.ui;
+package org.mockserver.ui;
 
-import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.filters.MockServerLog;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 import java.util.ArrayList;
@@ -12,16 +12,16 @@ import java.util.concurrent.Executors;
 /**
  * @author jamesdbloom
  */
-public class MockServerMatcherNotifier extends ObjectWithReflectiveEqualsHashCodeToString {
+public class MockServerLogNotifier extends ObjectWithReflectiveEqualsHashCodeToString {
 
-    private List<MockServerMatcherListener> listeners = Collections.synchronizedList(new ArrayList<MockServerMatcherListener>());
+    private List<MockServerLogListener> listeners = Collections.synchronizedList(new ArrayList<MockServerLogListener>());
     private ExecutorService listenerNotifyExecutor = Executors.newFixedThreadPool(3);
 
-    protected void notifyListeners(final MockServerMatcher notifier) {
+    protected void notifyListeners(final MockServerLog notifier) {
         listenerNotifyExecutor.submit(
             new Runnable() {
                 public void run() {
-                    for (MockServerMatcherListener listener : new ArrayList<>(listeners)) {
+                    for (MockServerLogListener listener : new ArrayList<>(listeners)) {
                         listener.updated(notifier);
                     }
                 }
@@ -30,7 +30,7 @@ public class MockServerMatcherNotifier extends ObjectWithReflectiveEqualsHashCod
 
     }
 
-    public void registerListener(MockServerMatcherListener listener) {
+    public void registerListener(MockServerLogListener listener) {
         listeners.add(listener);
     }
 }

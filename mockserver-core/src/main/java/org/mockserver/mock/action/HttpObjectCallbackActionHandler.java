@@ -2,8 +2,8 @@ package org.mockserver.mock.action;
 
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.mockserver.callback.ExpectationCallbackResponse;
-import org.mockserver.mockserver.callback.WebSocketClientRegistry;
+import org.mockserver.callback.ExpectationCallbackResponse;
+import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;

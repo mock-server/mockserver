@@ -3,8 +3,8 @@ package org.mockserver.mockserver;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
-import org.mockserver.mockserver.callback.CallbackWebSocketServerHandler;
-import org.mockserver.mockserver.ui.UIWebSocketServerHandler;
+import org.mockserver.callback.CallbackWebSocketServerHandler;
+import org.mockserver.ui.UIWebSocketServerHandler;
 import org.mockserver.server.netty.codec.MockServerServerCodec;
 import org.mockserver.unification.PortUnificationHandler;
 

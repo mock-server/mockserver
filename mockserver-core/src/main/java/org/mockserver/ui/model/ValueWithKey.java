@@ -1,6 +1,5 @@
-package org.mockserver.mockserver.ui.model;
+package org.mockserver.ui.model;
 
-import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 /**

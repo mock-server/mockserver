@@ -1,4 +1,4 @@
-package org.mockserver.mockserver.callback;
+package org.mockserver.callback;
 
 import org.mockserver.model.HttpResponse;
 
