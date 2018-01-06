@@ -9,6 +9,7 @@ import org.junit.BeforeClass;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.integration.server.AbstractBasicClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.KeyStoreFactory;
 
@@ -17,7 +18,7 @@ import java.io.File;
 /**
  * @author jamesdbloom
  */
-public class ClientServerWarWithContextPathIntegrationTest extends DeployableWARAbstractClientServerIntegrationTest {
+public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasicClientServerIntegrationTest {
 
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();

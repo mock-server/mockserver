@@ -564,6 +564,7 @@
                     <systemProperties>
                         <mockserver.logLevel>WARN</mockserver.logLevel>
                         <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
+                        <!--<mockserver.maxSocketTimeout>25000</mockserver.maxSocketTimeout>-->
                     </systemProperties>
                 </configuration>
             </plugin>
@@ -580,6 +581,7 @@
                     <systemProperties>
                         <mockserver.logLevel>WARN</mockserver.logLevel>
                         <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
+                        <!--<mockserver.maxSocketTimeout>25000</mockserver.maxSocketTimeout>-->
                     </systemProperties>
                 </configuration>
                 <executions>

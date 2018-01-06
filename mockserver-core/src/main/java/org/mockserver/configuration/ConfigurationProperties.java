@@ -24,7 +24,7 @@ import static org.mockserver.character.Character.NEW_LINE;
  */
 public class ConfigurationProperties {
 
-    static final long DEFAULT_MAX_TIMEOUT = 60;
+    static final long DEFAULT_MAX_TIMEOUT = 120;
     static final int DEFAULT_MAX_EXPECTATIONS = 1000;
     static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = 0;
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationProperties.class);

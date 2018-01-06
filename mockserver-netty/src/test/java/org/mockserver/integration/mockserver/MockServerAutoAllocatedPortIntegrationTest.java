@@ -2,8 +2,10 @@ package org.mockserver.integration.mockserver;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.integration.server.AbstractBasicClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
 import java.util.concurrent.ExecutionException;
@@ -13,13 +15,13 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 /**
  * @author jamesdbloom
  */
-public class MockServerAutoAllocatedPortIntegrationTest extends AbstractRestartableMockServerNettyIntegrationTest {
+public class MockServerAutoAllocatedPortIntegrationTest extends AbstractBasicClientServerIntegrationTest {
 
     private static int severHttpPort;
     private static EchoServer echoServer;
 
     @BeforeClass
-    public static void startServer() throws InterruptedException, ExecutionException {
+    public static void startServer() {
         // start mock server and client
         mockServerClient = startClientAndServer(0);
         severHttpPort = ((ClientAndServer) mockServerClient).getPort();
@@ -37,11 +39,6 @@ public class MockServerAutoAllocatedPortIntegrationTest extends AbstractRestarta
 
         // stop echo server
         echoServer.stop();
-    }
-
-    @Override
-    public void startServerAgain() {
-        startClientAndServer(severHttpPort);
     }
 
     @Override

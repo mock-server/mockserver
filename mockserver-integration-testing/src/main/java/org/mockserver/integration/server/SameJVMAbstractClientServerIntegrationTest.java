@@ -5,7 +5,6 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.callback.StaticTestExpectationCallback;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
-import org.mockserver.socket.PortFactory;
 
 import javax.script.ScriptEngineManager;
 
@@ -23,7 +22,7 @@ import static org.mockserver.model.HttpTemplate.template;
 /**
  * @author jamesdbloom
  */
-public abstract class SameJVMAbstractClientServerIntegrationTest extends AbstractClientServerIntegrationTest {
+public abstract class SameJVMAbstractClientServerIntegrationTest extends AbstractExtendedClientServerIntegrationTest {
 
     @Test // same JVM due to dynamic calls to static class
     public void shouldCallbackToSpecifiedClassWithDynamicResponse() {

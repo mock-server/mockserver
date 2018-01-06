@@ -1,6 +1,7 @@
 package org.mockserver.integration.mockserver;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
@@ -237,7 +238,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     }
 
     @Test
-    public void shouldBindToNewSocket() {
+    public void shouldBindToNewSocketAndReturnStatus() {
         // given
         int firstNewPort = PortFactory.findFreePort();
         int secondNewPort = PortFactory.findFreePort();
@@ -718,7 +719,6 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     }
 
     @Test
-    @SuppressWarnings("Duplicates")
     public void shouldCallbackToSpecifiedClassInTestClasspath() {
         // given
         TestClasspathTestExpectationCallback.httpRequests.clear();
@@ -787,5 +787,4 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
         assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
         assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
     }
-
 }

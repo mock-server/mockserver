@@ -6,6 +6,7 @@ import org.junit.Ignore;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.integration.server.AbstractBasicClientServerIntegrationTest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.socket.PortFactory;
@@ -16,7 +17,7 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 /**
  * @author jamesdbloom
  */
-public class ClientAndProxyMockingIntegrationTest extends AbstractRestartableMockServerNettyIntegrationTest {
+public class ClientAndProxyMockingIntegrationTest extends AbstractBasicClientServerIntegrationTest {
 
     private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
@@ -40,11 +41,6 @@ public class ClientAndProxyMockingIntegrationTest extends AbstractRestartableMoc
 
         // stop echo server
         echoServer.stop();
-    }
-
-    @Override
-    public void startServerAgain() {
-        startClientAndServer(SERVER_HTTP_PORT);
     }
 
     @Override

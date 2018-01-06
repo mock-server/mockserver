@@ -67,12 +67,12 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
     }
 
     @Test
-    @SuppressWarnings("Duplicates")
     public void shouldCallbackToSpecifiedClassInTestClasspath() {
         // given
         TestClasspathTestExpectationCallback.httpRequests.clear();
         TestClasspathTestExpectationCallback.httpResponse = response()
             .withStatusCode(ACCEPTED_202.code())
+            .withReasonPhrase(ACCEPTED_202.reasonPhrase())
             .withHeaders(
                 header("x-callback", "test_callback_header")
             )

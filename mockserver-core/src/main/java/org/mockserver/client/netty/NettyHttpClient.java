@@ -78,12 +78,12 @@ public class NettyHttpClient {
             throw new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
-            if (cause instanceof ConnectException) {
+            if (cause instanceof NotSslRecordException) {
+                return sendRequest(httpRequest.withSecure(false));
+            } else if (cause instanceof ConnectException) {
                 throw new SocketConnectionException("Unable to connect to socket " + remoteAddress, cause);
             } else if (cause instanceof UnknownHostException) {
                 throw new SocketConnectionException("Unable to resolve host " + remoteAddress, cause);
-            } else if (cause instanceof NotSslRecordException) {
-                return sendRequest(httpRequest.withSecure(false));
             } else if (cause instanceof IOException) {
                 throw new SocketConnectionException(cause.getMessage(), cause);
             } else {

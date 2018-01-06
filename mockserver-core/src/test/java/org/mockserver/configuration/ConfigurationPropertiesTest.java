@@ -119,7 +119,7 @@ public class ConfigurationPropertiesTest {
     @Test
     public void shouldSetAndReadMaxSocketTimeout() {
         // given
-        System.clearProperty("mockserver.maxTimeout");
+        System.clearProperty("mockserver.maxSocketTimeout");
 
         // when
         assertEquals(TimeUnit.SECONDS.toMillis(ConfigurationProperties.DEFAULT_MAX_TIMEOUT), ConfigurationProperties.maxSocketTimeout());
@@ -132,7 +132,7 @@ public class ConfigurationPropertiesTest {
     @Test
     public void shouldHandleInvalidMaxSocketTimeout() {
         // given
-        System.setProperty("mockserver.maxTimeout", "invalid");
+        System.setProperty("mockserver.maxSocketTimeout", "invalid");
 
         // then
         assertEquals(TimeUnit.SECONDS.toMillis(ConfigurationProperties.DEFAULT_MAX_TIMEOUT), ConfigurationProperties.maxSocketTimeout());

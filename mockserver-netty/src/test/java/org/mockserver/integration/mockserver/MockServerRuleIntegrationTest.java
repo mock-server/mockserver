@@ -5,13 +5,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.integration.server.AbstractBasicClientServerIntegrationTest;
 import org.mockserver.junit.MockServerRule;
 import org.mockserver.socket.PortFactory;
 
 /**
  * @author jamesdbloom
  */
-public class MockServerRuleIntegrationTest extends AbstractMockServerNettyIntegrationTest {
+public class MockServerRuleIntegrationTest extends AbstractBasicClientServerIntegrationTest {
 
     // used fixed port for rule for all tests to ensure MockServer has been shutdown fully between each test
     private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();

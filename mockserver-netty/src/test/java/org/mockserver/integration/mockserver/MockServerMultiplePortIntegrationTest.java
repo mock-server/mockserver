@@ -3,9 +3,11 @@ package org.mockserver.integration.mockserver;
 import com.google.common.base.Joiner;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.integration.server.AbstractBasicClientServerIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
 import java.util.List;
@@ -23,7 +25,7 @@ import static org.mockserver.model.HttpStatusCode.OK_200;
 /**
  * @author jamesdbloom
  */
-public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMockServerNettyIntegrationTest {
+public class MockServerMultiplePortIntegrationTest extends AbstractBasicClientServerIntegrationTest {
 
     private static Integer[] severHttpPort;
     private static EchoServer echoServer;
@@ -51,11 +53,6 @@ public class MockServerMultiplePortIntegrationTest extends AbstractRestartableMo
         if (echoServer != null) {
             echoServer.stop();
         }
-    }
-
-    @Override
-    public void startServerAgain() {
-        startClientAndServer(severHttpPort);
     }
 
     @Override
