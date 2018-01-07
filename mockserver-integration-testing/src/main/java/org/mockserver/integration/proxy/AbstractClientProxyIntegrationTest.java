@@ -31,6 +31,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -836,7 +837,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     }
 
     @Test
-    public void shouldReturnErrorForInvalidRequestToClear() {
+    public void shouldReturnErrorForInvalidRequestToClear() throws Exception {
         // when
         org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
             request()
@@ -848,7 +849,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "    \"method\" : true," + NEW_LINE +
                     "    \"keepAlive\" : \"false\"" + NEW_LINE +
                     "  }")
-        );
+        ).get(10, TimeUnit.SECONDS);
 
         // then
         assertThat(httpResponse.getStatusCode(), Is.is(400));
@@ -859,7 +860,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     }
 
     @Test
-    public void shouldReturnErrorForInvalidRequestToVerify() {
+    public void shouldReturnErrorForInvalidRequestToVerify() throws Exception {
         // when
         org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
             request()
@@ -872,7 +873,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "    }, " + NEW_LINE +
                     "    \"times\": 1" + NEW_LINE +
                     "}")
-        );
+        ).get(10, TimeUnit.SECONDS);
 
         // then
         assertThat(httpResponse.getStatusCode(), Is.is(400));
@@ -881,7 +882,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     }
 
     @Test
-    public void shouldReturnErrorForInvalidRequestToVerifySequence() {
+    public void shouldReturnErrorForInvalidRequestToVerifySequence() throws Exception {
         // when
         org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
             request()
@@ -896,7 +897,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                     "        \"path\": 10" + NEW_LINE +
                     "    }" + NEW_LINE +
                     "}")
-        );
+        ).get(10, TimeUnit.SECONDS);
 
         // then
         assertThat(httpResponse.getStatusCode(), Is.is(400));

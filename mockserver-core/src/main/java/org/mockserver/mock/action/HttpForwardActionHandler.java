@@ -1,5 +1,6 @@
 package org.mockserver.mock.action;
 
+import com.google.common.util.concurrent.SettableFuture;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.model.HttpForward;
@@ -15,7 +16,7 @@ public class HttpForwardActionHandler {
     private NettyHttpClient httpClient = new NettyHttpClient();
     private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
 
-    public HttpResponse handle(HttpForward httpForward, HttpRequest httpRequest) {
+    public SettableFuture<HttpResponse> handle(HttpForward httpForward, HttpRequest httpRequest) {
         if (httpForward.getScheme().equals(HttpForward.Scheme.HTTPS)) {
             httpRequest.withSecure(true);
         } else {

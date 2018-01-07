@@ -1,11 +1,15 @@
 package org.mockserver.scheduler;
 
+import com.google.common.util.concurrent.SettableFuture;
+import org.mockserver.client.netty.SocketCommunicationException;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.model.Delay;
+import org.mockserver.model.HttpResponse;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 
 /**
  * @author jamesdbloom
@@ -42,6 +46,21 @@ public class Scheduler {
             command.run();
         } else {
             scheduler.schedule(command, 0, TimeUnit.NANOSECONDS);
+        }
+    }
+
+    public static void submit(SettableFuture<HttpResponse> future, Runnable command, boolean synchronous) {
+        if (synchronous) {
+            try {
+                future.get(ConfigurationProperties.maxSocketTimeout(), TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                future.setException(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
+            } catch (InterruptedException | ExecutionException ex) {
+                future.setException(ex);
+            }
+            command.run();
+        } else {
+            future.addListener(command, scheduler);
         }
     }
 }

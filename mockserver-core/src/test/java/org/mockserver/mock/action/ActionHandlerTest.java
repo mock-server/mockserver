@@ -1,5 +1,6 @@
 package org.mockserver.mock.action;
 
+import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.Attribute;
@@ -21,6 +22,7 @@ import org.mockserver.responsewriter.ResponseWriter;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -73,6 +75,7 @@ public class ActionHandlerTest {
     private HttpRequest request;
     private HttpResponse response;
     private Expectation expectation;
+    private SettableFuture<HttpResponse> responseFuture;
 
     @InjectMocks
     private ActionHandler actionHandler;
@@ -84,18 +87,20 @@ public class ActionHandlerTest {
         initMocks(this);
         request = request("some_path");
         response = response("some_body");
+        responseFuture = SettableFuture.create();
+        responseFuture.set(response);
         expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(response);
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
-        when(mockHttpForwardActionHandler.handle(any(HttpForward.class), any(HttpRequest.class))).thenReturn(response);
-        when(mockHttpForwardTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenReturn(response);
+        when(mockHttpForwardActionHandler.handle(any(HttpForward.class), any(HttpRequest.class))).thenReturn(responseFuture);
+        when(mockHttpForwardTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenReturn(responseFuture);
         when(mockHttpResponseActionHandler.handle(any(HttpResponse.class))).thenReturn(response);
         when(mockHttpResponseTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenReturn(response);
         when(mockHttpClassCallbackActionHandler.handle(any(HttpClassCallback.class), any(HttpRequest.class))).thenReturn(response);
     }
 
     @Test
-    public void shouldProcessForwardAction() {
+    public void shouldProcessForwardAction() throws Exception {
         // given
         HttpForward forward = forward()
             .withHost("localhost")
@@ -104,7 +109,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, false);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
 
         // then
         verify(mockHttpForwardActionHandler).handle(forward, request);
@@ -121,7 +126,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, false);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
 
         // then
         verify(mockHttpForwardTemplateActionHandler).handle(template, request);
@@ -138,7 +143,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, false);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
 
         // then
         verify(mockHttpResponseActionHandler).handle(response);
@@ -155,7 +160,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, false);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
 
         // then
         verify(mockHttpResponseTemplateActionHandler).handle(template, request);
@@ -172,7 +177,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, false);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
 
         // then
         verify(mockHttpClassCallbackActionHandler).handle(callback, request);
@@ -190,7 +195,7 @@ public class ActionHandlerTest {
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, false);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
 
         // then
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
@@ -207,7 +212,7 @@ public class ActionHandlerTest {
         ChannelHandlerContext mockChannelHandlerContext = mock(ChannelHandlerContext.class);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), false, false);
+        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), false, true);
 
         // then
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
@@ -230,18 +235,18 @@ public class ActionHandlerTest {
         when(mockChannel.attr(REMOTE_SOCKET)).thenReturn(inetSocketAddressAttribute);
 
         // and - netty http client
-        when(mockNettyHttpClient.sendRequest(request, remoteAddress)).thenReturn(response("response_one"));
+        when(mockNettyHttpClient.sendRequest(request, remoteAddress)).thenReturn(responseFuture);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), true, false);
+        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), true, true);
 
         // then
-        verify(mockHttpStateHandler).log(new RequestResponseLogEntry(request, response("response_one")));
+        verify(mockHttpStateHandler).log(new RequestResponseLogEntry(request, response("some_body")));
         verify(mockNettyHttpClient).sendRequest(request, remoteAddress);
         verify(mockLogFormatter).infoLog(
             request,
             "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
-            response("response_one"),
+            response("some_body"),
             request,
             new HttpRequestToCurlSerializer().toCurl(request, remoteAddress)
         );

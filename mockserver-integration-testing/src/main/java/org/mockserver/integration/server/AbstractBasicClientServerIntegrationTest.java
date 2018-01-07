@@ -6,7 +6,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
@@ -29,9 +28,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.arrayContaining;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertEquals;
@@ -123,42 +120,33 @@ public abstract class AbstractBasicClientServerIntegrationTest {
     }
 
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {
-        int attemptsRemaining = 10;
-        while (attemptsRemaining > 0) {
-            try {
-                boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
-                int port = (isSsl ? getMockServerSecurePort() : getMockServerPort());
-                httpRequest.withPath(addContextToPath(httpRequest.getPath().getValue()));
-                httpRequest.withHeader(HOST.toString(), "localhost:" + port);
-                HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port));
-                List<Header> headers = new ArrayList<Header>();
-                for (Header header : httpResponse.getHeaderList()) {
-                    if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
-                        if (header.getName().getValue().equalsIgnoreCase(CONTENT_TYPE.toString())) {
-                            // this fixes Tomcat which removes the space between
-                            // media type and charset in the Content-Type header
-                            for (NottableString value : new ArrayList<NottableString>(header.getValues())) {
-                                header.getValues().clear();
-                                header.addValues(value.getValue().replace(";charset", "; charset"));
-                            }
-                            header = header(header.getName().lowercase(), header.getValues());
+        try {
+            boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
+            int port = (isSsl ? getMockServerSecurePort() : getMockServerPort());
+            httpRequest.withPath(addContextToPath(httpRequest.getPath().getValue()));
+            httpRequest.withHeader(HOST.toString(), "localhost:" + port);
+            HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port))
+                .get(10, TimeUnit.SECONDS);
+            List<Header> headers = new ArrayList<Header>();
+            for (Header header : httpResponse.getHeaderList()) {
+                if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
+                    if (header.getName().getValue().equalsIgnoreCase(CONTENT_TYPE.toString())) {
+                        // this fixes Tomcat which removes the space between
+                        // media type and charset in the Content-Type header
+                        for (NottableString value : new ArrayList<NottableString>(header.getValues())) {
+                            header.getValues().clear();
+                            header.addValues(value.getValue().replace(";charset", "; charset"));
                         }
-                        headers.add(header);
+                        header = header(header.getName().lowercase(), header.getValues());
                     }
-                }
-                httpResponse.withHeaders(headers);
-                return httpResponse;
-            } catch (SocketConnectionException caught) {
-                attemptsRemaining--;
-                logger.info("Retrying connection to mock server, attempts remaining: " + attemptsRemaining);
-                try {
-                    MILLISECONDS.sleep(50);
-                } catch (InterruptedException e) {
-                    // do nothing
+                    headers.add(header);
                 }
             }
+            httpResponse.withHeaders(headers);
+            return httpResponse;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
-        throw new RuntimeException("Failed to send request:" + NEW_LINE + httpRequest);
     }
 
     @Test
@@ -478,7 +466,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldSupportBatchedExpectations() {
+    public void shouldSupportBatchedExpectations() throws Exception {
         // when
         new NettyHttpClient().sendRequest(
             request()
@@ -504,7 +492,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
                         ) +
                     "]"
                 )
-        );
+        ).get(10, TimeUnit.SECONDS);
 
         // then
         assertEquals(
@@ -1568,7 +1556,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldReturnErrorForInvalidExpectation() {
+    public void shouldReturnErrorForInvalidExpectation() throws Exception {
         // when
         HttpResponse httpResponse = new NettyHttpClient().sendRequest(
             request()
@@ -1589,7 +1577,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
                     "}")
-        );
+        ).get(10, TimeUnit.SECONDS);
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
@@ -1599,7 +1587,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldReturnErrorForInvalidRequest() {
+    public void shouldReturnErrorForInvalidRequest() throws Exception {
         // when
         HttpResponse httpResponse = new NettyHttpClient().sendRequest(
             request()
@@ -1611,7 +1599,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
                     "    \"method\" : true," + NEW_LINE +
                     "    \"keepAlive\" : \"false\"" + NEW_LINE +
                     "  }")
-        );
+        ).get(10, TimeUnit.SECONDS);
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));

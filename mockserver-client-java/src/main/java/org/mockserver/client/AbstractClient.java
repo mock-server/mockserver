@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.*;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -85,7 +86,9 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
 
     private HttpResponse sendRequest(HttpRequest request) {
         HttpResponse response = nettyHttpClient.sendRequest(
-            request.withHeader(HOST.toString(), host + ":" + port)
+            request.withHeader(HOST.toString(), host + ":" + port),
+            ConfigurationProperties.maxSocketTimeout(),
+            TimeUnit.MILLISECONDS
         );
         if (response != null &&
             response.getStatusCode() != null &&
@@ -301,18 +304,19 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
     public HttpRequest[] retrieveRecordedRequests(HttpRequest httpRequest) {
         String recordedRequests = retrieveRecordedRequests(httpRequest, Format.JSON);
         if (StringUtils.isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
-                return httpRequestSerializer.deserializeArray(recordedRequests);
-            } else {
-                return new HttpRequest[0];
-            }
+            return httpRequestSerializer.deserializeArray(recordedRequests);
+        } else {
+            return new HttpRequest[0];
         }
-        /**
-         * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
-         *
-         * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
-         * @param format      the format to retrieve the expectations, either JAVA or JSON
-         * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
-         */
+    }
+
+    /**
+     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @param format      the format to retrieve the expectations, either JAVA or JSON
+     * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
+     */
     public String retrieveRecordedRequests(HttpRequest httpRequest, Format format) {
         HttpResponse httpResponse = sendRequest(
             request()

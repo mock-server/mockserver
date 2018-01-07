@@ -1,5 +1,6 @@
 package org.mockserver.mock.action;
 
+import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 import org.mockserver.client.netty.NettyHttpClient;
@@ -21,6 +22,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.scheduler.Scheduler.schedule;
+import static org.mockserver.scheduler.Scheduler.submit;
 
 /**
  * @author jamesdbloom
@@ -55,26 +57,45 @@ public class ActionHandler {
         this.httpObjectCallbackActionHandler = new HttpObjectCallbackActionHandler(httpStateHandler);
     }
 
-    public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyRequest, boolean synchronous) {
+    public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyRequest, final boolean synchronous) {
         Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
         if (expectation != null && expectation.getAction() != null) {
             Action action = expectation.getAction();
             switch (action.getType()) {
                 case FORWARD: {
-                    HttpResponse response = httpForwardActionHandler.handle((HttpForward) action, request);
-                    responseWriter.writeResponse(request, response, false);
-                    httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for forward action:{}", response, request, action);
+                    final HttpForward httpForward = (HttpForward) action;
+                    final SettableFuture<HttpResponse> responseFuture = httpForwardActionHandler.handle(httpForward, request);
+                    submit(responseFuture, new Runnable() {
+                        public void run() {
+                            try {
+                                HttpResponse response = responseFuture.get();
+                                responseWriter.writeResponse(request, response, false);
+                                httpStateHandler.log(new RequestResponseLogEntry(request, response));
+                                logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for forward action:{}", response, request, httpForward);
+                            } catch (Exception ex) {
+                                logFormatter.errorLog(request, ex, ex.getMessage());
+                            }
+                        }
+                    }, synchronous);
                     break;
                 }
                 case FORWARD_TEMPLATE: {
                     final HttpTemplate httpTemplate = (HttpTemplate) action;
                     schedule(new Runnable() {
                         public void run() {
-                            HttpResponse response = httpForwardTemplateActionHandler.handle(httpTemplate, request);
-                            responseWriter.writeResponse(request, response, false);
-                            httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated forward action:{}", response, request, httpTemplate);
+                            final SettableFuture<HttpResponse> responseFuture = httpForwardTemplateActionHandler.handle(httpTemplate, request);
+                            submit(responseFuture, new Runnable() {
+                                public void run() {
+                                    try {
+                                        HttpResponse response = responseFuture.get();
+                                        responseWriter.writeResponse(request, response, false);
+                                        httpStateHandler.log(new RequestResponseLogEntry(request, response));
+                                        logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated forward action:{}", response, request, httpTemplate);
+                                    } catch (Exception ex) {
+                                        logFormatter.errorLog(request, ex, ex.getMessage());
+                                    }
+                                }
+                            }, synchronous);
                         }
                     }, httpTemplate.getDelay(), synchronous);
                     break;
@@ -128,20 +149,30 @@ public class ActionHandler {
                 }
             }
         } else if (proxyRequest || !localAddresses.contains(request.getFirstHeader(HOST.toString()))) {
-            InetSocketAddress remoteAddress = ctx != null ? ctx.channel().attr(REMOTE_SOCKET).get() : null;
-            HttpResponse response = httpClient.sendRequest(hopByHopHeaderFilter.onRequest(request), remoteAddress);
-            if (response == null) {
-                response = notFoundResponse();
-            }
-            responseWriter.writeResponse(request, response, false);
-            httpStateHandler.log(new RequestResponseLogEntry(request, response));
-            logFormatter.infoLog(
-                request,
-                "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
-                response,
-                request,
-                httpRequestToCurlSerializer.toCurl(request, remoteAddress)
-            );
+            final InetSocketAddress remoteAddress = ctx != null ? ctx.channel().attr(REMOTE_SOCKET).get() : null;
+            final SettableFuture<HttpResponse> responseFuture = httpClient.sendRequest(hopByHopHeaderFilter.onRequest(request), remoteAddress);
+            submit(responseFuture, new Runnable() {
+                public void run() {
+                    try {
+                        HttpResponse response = responseFuture.get();
+                        if (response == null) {
+                            response = notFoundResponse();
+                        }
+                        responseWriter.writeResponse(request, response, false);
+                        httpStateHandler.log(new RequestResponseLogEntry(request, response));
+                        logFormatter.infoLog(
+                            request,
+                            "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
+                            response,
+                            request,
+                            httpRequestToCurlSerializer.toCurl(request, remoteAddress)
+                        );
+                    } catch (Exception ex) {
+                        logFormatter.errorLog(request, ex, ex.getMessage());
+                    }
+                }
+            }, synchronous);
+
         } else {
             responseWriter.writeResponse(request, notFoundResponse(), false);
             httpStateHandler.log(new RequestLogEntry(request));

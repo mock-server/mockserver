@@ -10,6 +10,9 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.socket.PortFactory;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.*;
@@ -39,12 +42,13 @@ public class NettyHttpClientTest {
     }
 
     @Test
-    public void shouldSendBasicRequest() {
+    public void shouldSendBasicRequest() throws Exception {
         // given
         NettyHttpClient nettyHttpClient = new NettyHttpClient();
 
         // when
-        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "0.0.0.0:" + echoServer.getPort()));
+        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "0.0.0.0:" + echoServer.getPort()))
+            .get(10, TimeUnit.SECONDS);
 
         // then
         assertThat(httpResponse, is(
@@ -59,12 +63,13 @@ public class NettyHttpClientTest {
     }
 
     @Test
-    public void shouldSendBasicRequestToAnotherIpAndPort() {
+    public void shouldSendBasicRequestToAnotherIpAndPort() throws Exception {
         // given
         NettyHttpClient nettyHttpClient = new NettyHttpClient();
 
         // when
-        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "www.google.com"), new InetSocketAddress("0.0.0.0", echoServer.getPort()));
+        HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "www.google.com"), new InetSocketAddress("0.0.0.0", echoServer.getPort()))
+            .get(10, TimeUnit.SECONDS);
 
         // then
         assertThat(httpResponse, is(
@@ -79,12 +84,13 @@ public class NettyHttpClientTest {
     }
 
     @Test
-    public void shouldSendBasicRequestToAnotherIpAndPortWithNoHostHeader() {
+    public void shouldSendBasicRequestToAnotherIpAndPortWithNoHostHeader() throws Exception {
         // given
         NettyHttpClient nettyHttpClient = new NettyHttpClient();
 
         // when
-        HttpResponse httpResponse = nettyHttpClient.sendRequest(request(), new InetSocketAddress("0.0.0.0", echoServer.getPort()));
+        HttpResponse httpResponse = nettyHttpClient.sendRequest(request(), new InetSocketAddress("0.0.0.0", echoServer.getPort()))
+            .get(10, TimeUnit.SECONDS);
 
         // then
         assertThat(httpResponse, is(
@@ -98,7 +104,7 @@ public class NettyHttpClientTest {
     }
 
     @Test
-    public void shouldSendComplexRequest() {
+    public void shouldSendComplexRequest() throws Exception {
         // given
         NettyHttpClient nettyHttpClient = new NettyHttpClient();
 
@@ -111,7 +117,7 @@ public class NettyHttpClientTest {
                 .withCookie(cookie("some_cookie_name", "some_cookie_value"))
                 .withCookie(cookie("another_cookie_name", "another_cookie_value"))
                 .withBody(exact("this is an example body"))
-        );
+        ).get(10, TimeUnit.SECONDS);;
 
         // then
         assertThat(httpResponse, is(

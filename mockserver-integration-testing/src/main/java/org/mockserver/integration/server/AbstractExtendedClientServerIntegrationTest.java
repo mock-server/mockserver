@@ -9,6 +9,7 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
@@ -5112,7 +5113,7 @@ public abstract class AbstractExtendedClientServerIntegrationTest extends Abstra
                 return httpClient.sendRequest(
                     request(addContextToPath(calculatePath("delayed")))
                         .withHeader(HOST.toString(), "localhost:" + getMockServerPort())
-                );
+                ).get(10, TimeUnit.SECONDS);
             }
         });
 

@@ -1,5 +1,6 @@
 package org.mockserver.mock.action;
 
+import com.google.common.util.concurrent.SettableFuture;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -12,8 +13,10 @@ import org.mockserver.model.HttpTemplate;
 
 import javax.script.ScriptEngineManager;
 
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsSame.sameInstance;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,15 +47,15 @@ public class HttpForwardTemplateActionHandlerTest {
     }
 
     @Test
-    public void shouldHandleHttpRequestsWithJavaScriptTemplateFirstExample() {
+    public void shouldHandleHttpRequestsWithJavaScriptTemplateFirstExample() throws Exception {
         // given
         HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "return { 'path': \"somePath\", 'body': JSON.stringify({name: 'value'}) };");
         HttpRequest httpRequest = request("somePath").withBody("{\"name\":\"value\"}");
-        HttpResponse httpResponse = response("some_body");
+        SettableFuture<HttpResponse> httpResponse = SettableFuture.create();
         when(mockHttpClient.sendRequest(httpRequest)).thenReturn(httpResponse);
 
         // when
-        HttpResponse actualHttpResponse = httpForwardTemplateActionHandler.handle(template, request()
+        SettableFuture<HttpResponse> actualHttpResponse = httpForwardTemplateActionHandler.handle(template, request()
                 .withPath("/somePath")
                 .withMethod("POST")
                 .withBody("some_body")
@@ -61,9 +64,9 @@ public class HttpForwardTemplateActionHandlerTest {
         // then
         if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
             verify(mockHttpClient).sendRequest(httpRequest);
-            assertThat(actualHttpResponse, is(httpResponse));
+            assertThat(actualHttpResponse, is(sameInstance(httpResponse)));
         } else {
-            assertThat(actualHttpResponse, is(notFoundResponse()));
+            assertThat(actualHttpResponse.get(), is(notFoundResponse()));
         }
     }
 
@@ -76,15 +79,15 @@ public class HttpForwardTemplateActionHandlerTest {
                 "    'body': \"$!request.body\"" + NEW_LINE +
                 "}");
         HttpRequest httpRequest = request("/somePath").withMethod("POST").withBody("some_body");
-        HttpResponse httpResponse = response("some_body");
+        SettableFuture<HttpResponse> httpResponse = SettableFuture.create();
         when(mockHttpClient.sendRequest(httpRequest)).thenReturn(httpResponse);
 
         // when
-        HttpResponse actualHttpResponse = httpForwardTemplateActionHandler.handle(template, httpRequest);
+        SettableFuture<HttpResponse> actualHttpResponse = httpForwardTemplateActionHandler.handle(template, httpRequest);
 
         // then
         verify(mockHttpClient).sendRequest(httpRequest);
-        assertThat(actualHttpResponse, is(httpResponse));
+        assertThat(actualHttpResponse, is(sameInstance(httpResponse)));
     }
 
 }

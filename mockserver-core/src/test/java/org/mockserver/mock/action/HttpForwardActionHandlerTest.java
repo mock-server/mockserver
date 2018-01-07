@@ -1,5 +1,6 @@
 package org.mockserver.mock.action;
 
+import com.google.common.util.concurrent.SettableFuture;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -14,6 +15,7 @@ import java.net.InetSocketAddress;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsSame.sameInstance;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.HttpResponse.response;
@@ -44,15 +46,15 @@ public class HttpForwardActionHandlerTest {
     @Test
     public void shouldHandleHttpRequests() {
         // given
-        HttpResponse httpResponse = response("some_body");
+        SettableFuture<HttpResponse> httpResponse = SettableFuture.create();
         when(httpForward.getScheme()).thenReturn(HttpForward.Scheme.HTTP);
         when(mockHttpClient.sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()))).thenReturn(httpResponse);
 
         // when
-        HttpResponse actualHttpResponse = httpForwardActionHandler.handle(httpForward, httpRequest);
+        SettableFuture<HttpResponse> actualHttpResponse = httpForwardActionHandler.handle(httpForward, httpRequest);
 
         // then
-        assertThat(actualHttpResponse, is(httpResponse));
+        assertThat(actualHttpResponse, is(sameInstance(httpResponse)));
         verify(httpRequest).withSecure(false);
         verify(mockHttpClient).sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()));
     }
@@ -60,15 +62,15 @@ public class HttpForwardActionHandlerTest {
     @Test
     public void shouldHandleSecureHttpRequests() {
         // given
-        HttpResponse httpResponse = response("some_body");
+        SettableFuture<HttpResponse> httpResponse = SettableFuture.create();
         when(httpForward.getScheme()).thenReturn(HttpForward.Scheme.HTTPS);
         when(mockHttpClient.sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()))).thenReturn(httpResponse);
 
         // when
-        HttpResponse actualHttpResponse = httpForwardActionHandler.handle(httpForward, httpRequest);
+        SettableFuture<HttpResponse> actualHttpResponse = httpForwardActionHandler.handle(httpForward, httpRequest);
 
         // then
-        assertThat(actualHttpResponse, is(httpResponse));
+        assertThat(actualHttpResponse, is(sameInstance(httpResponse)));
         verify(httpRequest).withSecure(true);
         verify(mockHttpClient).sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()));
     }
