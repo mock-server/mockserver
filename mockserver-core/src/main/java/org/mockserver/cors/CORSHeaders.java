@@ -26,7 +26,7 @@ public class CORSHeaders {
             response.withHeader("Access-Control-Max-Age", "300");
         }
         if (response.getFirstHeader("X-CORS").isEmpty()) {
-            response.withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false");
+            response.withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.enableCORSForAPI=false");
         }
     }
 }
