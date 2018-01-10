@@ -81,12 +81,12 @@ public class NettyResponseWriterTest {
             verify(mockChannelHandlerContext).writeAndFlush(
                     response
                             .withHeader("connection", "close")
-                            .withHeader("Access-Control-Allow-Origin", "*")
-                            .withHeader("Access-Control-Allow-Methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE")
-                            .withHeader("Access-Control-Allow-Headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary")
-                            .withHeader("Access-Control-Expose-Headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary")
-                            .withHeader("Access-Control-Max-Age", "300")
-                            .withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.enableCORSForAPI=false")
+                            .withHeader("access-control-allow-origin", "*")
+                            .withHeader("access-control-allow-methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE")
+                            .withHeader("access-control-allow-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary")
+                            .withHeader("access-control-expose-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary")
+                            .withHeader("access-control-max-age", "300")
+                            .withHeader("x-cors", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.enableCORSForAPI=false")
             );
             verify(mockChannelFuture).addListener(ChannelFutureListener.CLOSE);
         } finally {

@@ -5,6 +5,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
@@ -14,12 +15,11 @@ import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.filters.MockServerLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingFormatter;
-import org.mockserver.callback.WebSocketClientRegistry;
-import org.mockserver.ui.MockServerLogListener;
-import org.mockserver.ui.MockServerMatcherListener;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.socket.KeyAndCertificateFactory;
+import org.mockserver.ui.MockServerLogListener;
+import org.mockserver.ui.MockServerMatcherListener;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.LoggerFactory;
@@ -34,6 +34,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
+import static org.mockserver.cors.CORSHeaders.isPreflightRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -56,14 +57,6 @@ public class HttpStateHandler {
     private ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer();
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
-
-    public void registerMockServerLogListener(MockServerLogListener listener) {
-        mockServerLog.registerListener(listener);
-    }
-
-    public void registerMockServerMatcherListener(MockServerMatcherListener listener) {
-        mockServerMatcher.registerListener(listener);
-    }
 
     public LoggingFormatter getLogFormatter() {
         return logFormatter;
@@ -219,7 +212,7 @@ public class HttpStateHandler {
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
         logFormatter.traceLog("received request:{}", request);
 
-        if ((enableCORSForAPI() || enableCORSForAllResponses()) && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
+        if ((enableCORSForAPI() || enableCORSForAllResponses()) && isPreflightRequest(request)) {
 
             responseWriter.writeResponse(request, OK);
 

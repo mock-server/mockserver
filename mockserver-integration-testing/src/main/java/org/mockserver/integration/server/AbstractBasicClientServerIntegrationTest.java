@@ -2,6 +2,7 @@ package org.mockserver.integration.server;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -57,20 +58,22 @@ public abstract class AbstractBasicClientServerIntegrationTest {
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
     protected static List<String> headersToIgnore = ImmutableList.of(
-        "server",
-        "expires",
-        "date",
-        "host",
-        "connection",
-        "user-agent",
-        "content-length",
-        "accept-encoding",
-        "transfer-encoding",
-        "access-control-allow-origin",
-        "access-control-allow-methods",
-        "access-control-allow-headers",
-        "access-control-expose-headers",
-        "access-control-max-age",
+        HttpHeaderNames.SERVER.toString(),
+        HttpHeaderNames.EXPIRES.toString(),
+        HttpHeaderNames.DATE.toString(),
+        HttpHeaderNames.HOST.toString(),
+        HttpHeaderNames.CONNECTION.toString(),
+        HttpHeaderNames.USER_AGENT.toString(),
+        HttpHeaderNames.CONTENT_LENGTH.toString(),
+        HttpHeaderNames.ACCEPT_ENCODING.toString(),
+        HttpHeaderNames.TRANSFER_ENCODING.toString(),
+        HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(),
+        HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString(),
+        HttpHeaderNames.VARY.toString(),
+        HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS.toString(),
+        HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS.toString(),
+        HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS.toString(),
+        HttpHeaderNames.ACCESS_CONTROL_MAX_AGE.toString(),
         "x-cors"
     );
     protected static NettyHttpClient httpClient = new NettyHttpClient();

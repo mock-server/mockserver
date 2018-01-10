@@ -50,9 +50,9 @@ public class NettyResponseWriter extends ResponseWriter {
             response = notFoundResponse();
         }
         if (enableCORSForAllResponses()) {
-            addCORSHeaders.addCORSHeaders(response);
+            addCORSHeaders.addCORSHeaders(request, response);
         } else if (apiResponse && enableCORSForAPI()) {
-            addCORSHeaders.addCORSHeaders(response);
+            addCORSHeaders.addCORSHeaders(request, response);
         }
 
         addConnectionHeader(request, response);

@@ -51,6 +51,13 @@ public class ConfigurationProperties {
         return Boolean.parseBoolean(readPropertyHierarchically("mockserver.enableCORSForAPI", "" + true));
     }
 
+    public static boolean enableCORSForAPIHasBeenSetExplicitly() {
+        return (
+            System.getProperty("mockserver.enableCORSForAPI") != null ||
+                PROPERTIES.getProperty("mockserver.enableCORSForAPI") != null
+        );
+    }
+
     public static void enableCORSForAPI(boolean enableCORSForAPI) {
         System.setProperty("mockserver.enableCORSForAPI", "" + enableCORSForAPI);
     }
