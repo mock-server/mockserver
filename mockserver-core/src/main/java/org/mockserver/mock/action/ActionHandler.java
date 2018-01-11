@@ -102,14 +102,24 @@ public class ActionHandler {
                 }
                 case OBJECT_CALLBACK: {
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
-                    httpObjectCallbackActionHandler.handle((HttpObjectCallback) action, request, responseWriter);
+                    final HttpObjectCallback objectCallback = (HttpObjectCallback) action;
+                    submit(new Runnable() {
+                        public void run() {
+                            httpObjectCallbackActionHandler.handle(objectCallback, request, responseWriter);
+                        }
+                    }, synchronous);
                     break;
                 }
                 case CLASS_CALLBACK: {
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
-                    HttpResponse response = httpClassCallbackActionHandler.handle((HttpClassCallback) action, request);
-                    responseWriter.writeResponse(request, response, false);
-                    logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, action);
+                    final HttpClassCallback classCallback = (HttpClassCallback) action;
+                    submit(new Runnable() {
+                        public void run() {
+                            HttpResponse response = httpClassCallbackActionHandler.handle(classCallback, request);
+                            responseWriter.writeResponse(request, response, false);
+                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, classCallback);
+                        }
+                    }, synchronous);
                     break;
                 }
                 case RESPONSE: {
