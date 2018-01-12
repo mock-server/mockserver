@@ -35,10 +35,12 @@ public class ActionHandler {
     private LoggingFormatter logFormatter;
     private HttpResponseActionHandler httpResponseActionHandler;
     private HttpResponseTemplateActionHandler httpResponseTemplateActionHandler;
+    private HttpResponseClassCallbackActionHandler httpResponseClassCallbackActionHandler;
+    private HttpResponseObjectCallbackActionHandler httpResponseObjectCallbackActionHandler;
     private HttpForwardActionHandler httpForwardActionHandler;
     private HttpForwardTemplateActionHandler httpForwardTemplateActionHandler;
-    private HttpClassCallbackActionHandler httpClassCallbackActionHandler;
-    private HttpObjectCallbackActionHandler httpObjectCallbackActionHandler;
+    private HttpForwardClassCallbackActionHandler httpForwardClassCallbackActionHandler;
+    private HttpForwardObjectCallbackActionHandler httpForwardObjectCallbackActionHandler;
     private HttpErrorActionHandler httpErrorActionHandler = new HttpErrorActionHandler();
 
     // forwarding
@@ -51,10 +53,12 @@ public class ActionHandler {
         this.logFormatter = httpStateHandler.getLogFormatter();
         this.httpResponseActionHandler = new HttpResponseActionHandler();
         this.httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(logFormatter);
-        this.httpForwardActionHandler = new HttpForwardActionHandler();
+        this.httpResponseClassCallbackActionHandler = new HttpResponseClassCallbackActionHandler();
+        this.httpResponseObjectCallbackActionHandler = new HttpResponseObjectCallbackActionHandler(httpStateHandler);
+        this.httpForwardActionHandler = new HttpForwardActionHandler(logFormatter);
         this.httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(logFormatter);
-        this.httpClassCallbackActionHandler = new HttpClassCallbackActionHandler();
-        this.httpObjectCallbackActionHandler = new HttpObjectCallbackActionHandler(httpStateHandler);
+        this.httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(logFormatter);
+        this.httpForwardObjectCallbackActionHandler = new HttpForwardObjectCallbackActionHandler(logFormatter, httpStateHandler);
     }
 
     public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyRequest, final boolean synchronous) {
@@ -100,24 +104,33 @@ public class ActionHandler {
                     }, httpTemplate.getDelay(), synchronous);
                     break;
                 }
-                case OBJECT_CALLBACK: {
-                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
-                    final HttpObjectCallback objectCallback = (HttpObjectCallback) action;
-                    submit(new Runnable() {
-                        public void run() {
-                            httpObjectCallbackActionHandler.handle(objectCallback, request, responseWriter);
-                        }
-                    }, synchronous);
-                    break;
-                }
-                case CLASS_CALLBACK: {
+                case FORWARD_CLASS_CALLBACK: {
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     final HttpClassCallback classCallback = (HttpClassCallback) action;
                     submit(new Runnable() {
                         public void run() {
-                            HttpResponse response = httpClassCallbackActionHandler.handle(classCallback, request);
-                            responseWriter.writeResponse(request, response, false);
-                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, classCallback);
+                            final SettableFuture<HttpResponse> responseFuture = httpForwardClassCallbackActionHandler.handle(classCallback, request);
+                            submit(responseFuture, new Runnable() {
+                                public void run() {
+                                    try {
+                                        HttpResponse response = responseFuture.get();
+                                        responseWriter.writeResponse(request, response, false);
+                                        logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, classCallback);
+                                    } catch (Exception ex) {
+                                        logFormatter.errorLog(request, ex, ex.getMessage());
+                                    }
+                                }
+                            }, synchronous);
+                        }
+                    }, synchronous);
+                    break;
+                }
+                case FORWARD_OBJECT_CALLBACK: {
+                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
+                    final HttpObjectCallback objectCallback = (HttpObjectCallback) action;
+                    submit(new Runnable() {
+                        public void run() {
+                            httpForwardObjectCallbackActionHandler.handle(objectCallback, request, responseWriter, synchronous);
                         }
                     }, synchronous);
                     break;
@@ -144,6 +157,28 @@ public class ActionHandler {
                             logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated response action:{}", response, request, httpTemplate);
                         }
                     }, httpTemplate.getDelay(), synchronous);
+                    break;
+                }
+                case RESPONSE_CLASS_CALLBACK: {
+                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
+                    final HttpClassCallback classCallback = (HttpClassCallback) action;
+                    submit(new Runnable() {
+                        public void run() {
+                            HttpResponse response = httpResponseClassCallbackActionHandler.handle(classCallback, request);
+                            responseWriter.writeResponse(request, response, false);
+                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, classCallback);
+                        }
+                    }, synchronous);
+                    break;
+                }
+                case RESPONSE_OBJECT_CALLBACK: {
+                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
+                    final HttpObjectCallback objectCallback = (HttpObjectCallback) action;
+                    submit(new Runnable() {
+                        public void run() {
+                            httpResponseObjectCallbackActionHandler.handle(objectCallback, request, responseWriter);
+                        }
+                    }, synchronous);
                     break;
                 }
                 case ERROR: {

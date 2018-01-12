@@ -22,13 +22,13 @@ public class HttpClassCallbackActionHandlerTest {
         HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.HttpClassCallbackActionHandlerTest$TestCallback");
 
         // when
-        HttpResponse actualHttpResponse = new HttpClassCallbackActionHandler().handle(httpClassCallback, request().withBody("some_body"));
+        HttpResponse actualHttpResponse = new HttpResponseClassCallbackActionHandler().handle(httpClassCallback, request().withBody("some_body"));
 
         // then
         assertThat(actualHttpResponse, is(response("some_body")));
     }
 
-    public static class TestCallback implements ExpectationCallback {
+    public static class TestCallback implements ExpectationResponseCallback {
 
         @Override
         public HttpResponse handle(HttpRequest httpRequest) {

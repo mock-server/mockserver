@@ -19,16 +19,13 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 /**
  * @author jamesdbloom
  */
-public class HttpForwardTemplateActionHandler {
+public class HttpForwardTemplateActionHandler extends HttpForwardAction {
 
-    private final LoggingFormatter logFormatter;
     private JavaScriptTemplateEngine javaScriptTemplateEngine;
     private VelocityTemplateEngine velocityTemplateEngine;
-    private NettyHttpClient httpClient = new NettyHttpClient();
-    private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
 
     public HttpForwardTemplateActionHandler(LoggingFormatter logFormatter) {
-        this.logFormatter = logFormatter;
+        super(logFormatter);
         javaScriptTemplateEngine = new JavaScriptTemplateEngine(logFormatter);
         velocityTemplateEngine = new VelocityTemplateEngine(logFormatter);
     }
@@ -48,28 +45,10 @@ public class HttpForwardTemplateActionHandler {
         if (templateEngine != null) {
             HttpRequest templatedRequest = templateEngine.executeTemplate(httpTemplate.getTemplate(), originalRequest, HttpRequestDTO.class);
             if (templatedRequest != null) {
-                return sendRequest(originalRequest, templatedRequest);
+                return sendRequest(templatedRequest, null);
             }
         }
 
         return notFoundFuture();
-    }
-
-    private SettableFuture<HttpResponse> sendRequest(HttpRequest originalRequest, HttpRequest templatedRequest) {
-        templatedRequest = hopByHopHeaderFilter.onRequest(templatedRequest);
-        if (templatedRequest != null) {
-            try {
-                return httpClient.sendRequest(templatedRequest);
-            } catch (Exception e) {
-                logFormatter.errorLog(Arrays.asList(originalRequest, templatedRequest), e, "Exception forwarding request " + templatedRequest);
-            }
-        }
-        return notFoundFuture();
-    }
-
-    private SettableFuture<HttpResponse> notFoundFuture() {
-        SettableFuture<HttpResponse> notFoundFuture = SettableFuture.create();
-        notFoundFuture.set(notFoundResponse());
-        return notFoundFuture;
     }
 }

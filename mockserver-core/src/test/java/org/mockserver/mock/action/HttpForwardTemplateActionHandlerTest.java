@@ -52,7 +52,7 @@ public class HttpForwardTemplateActionHandlerTest {
         HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "return { 'path': \"somePath\", 'body': JSON.stringify({name: 'value'}) };");
         HttpRequest httpRequest = request("somePath").withBody("{\"name\":\"value\"}");
         SettableFuture<HttpResponse> httpResponse = SettableFuture.create();
-        when(mockHttpClient.sendRequest(httpRequest)).thenReturn(httpResponse);
+        when(mockHttpClient.sendRequest(httpRequest, null)).thenReturn(httpResponse);
 
         // when
         SettableFuture<HttpResponse> actualHttpResponse = httpForwardTemplateActionHandler.handle(template, request()
@@ -63,7 +63,7 @@ public class HttpForwardTemplateActionHandlerTest {
 
         // then
         if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
-            verify(mockHttpClient).sendRequest(httpRequest);
+            verify(mockHttpClient).sendRequest(httpRequest, null);
             assertThat(actualHttpResponse, is(sameInstance(httpResponse)));
         } else {
             assertThat(actualHttpResponse.get(), is(notFoundResponse()));
@@ -80,13 +80,13 @@ public class HttpForwardTemplateActionHandlerTest {
                 "}");
         HttpRequest httpRequest = request("/somePath").withMethod("POST").withBody("some_body");
         SettableFuture<HttpResponse> httpResponse = SettableFuture.create();
-        when(mockHttpClient.sendRequest(httpRequest)).thenReturn(httpResponse);
+        when(mockHttpClient.sendRequest(httpRequest, null)).thenReturn(httpResponse);
 
         // when
         SettableFuture<HttpResponse> actualHttpResponse = httpForwardTemplateActionHandler.handle(template, httpRequest);
 
         // then
-        verify(mockHttpClient).sendRequest(httpRequest);
+        verify(mockHttpClient).sendRequest(httpRequest, null);
         assertThat(actualHttpResponse, is(sameInstance(httpResponse)));
     }
 

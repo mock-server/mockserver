@@ -13,7 +13,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.mockserver.client.serialization.WebSocketMessageSerializer;
 import org.mockserver.client.serialization.model.WebSocketClientIdDTO;
-import org.mockserver.mock.action.ExpectationCallback;
+import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 
 import java.net.InetSocketAddress;
@@ -28,7 +28,7 @@ public class WebSocketClient {
     private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer();
     private SettableFuture<String> registrationFuture = SettableFuture.create();
 
-    private ExpectationCallback expectationCallback;
+    private ExpectationResponseCallback expectationCallback;
 
 
     public WebSocketClient(InetSocketAddress serverAddress, String contextPath) {
@@ -82,7 +82,7 @@ public class WebSocketClient {
         group.shutdownGracefully();
     }
 
-    public WebSocketClient registerExpectationCallback(ExpectationCallback expectationCallback) {
+    public WebSocketClient registerExpectationCallback(ExpectationResponseCallback expectationCallback) {
         this.expectationCallback = expectationCallback;
         return this;
     }

@@ -1,33 +1,33 @@
 {
-  "title": "request matcher",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "body": {
-      "$ref": "#/definitions/body"
+    "title": "request matcher",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "body": {
+            "$ref": "#/definitions/body"
+        },
+        "headers": {
+            "$ref": "#/definitions/keyToMultiValue"
+        },
+        "cookies": {
+            "$ref": "#/definitions/keyToValue"
+        },
+        "queryStringParameters": {
+            "$ref": "#/definitions/keyToMultiValue"
+        },
+        "path": {
+            "type": "string"
+        },
+        "method": {
+            "type": "string"
+        },
+        "secure": {
+            "type": "boolean"
+        },
+        "keepAlive": {
+            "type": "boolean"
+        }
     },
-    "headers": {
-      "$ref": "#/definitions/keyToMultiValue"
-    },
-    "cookies": {
-      "$ref": "#/definitions/keyToValue"
-    },
-    "queryStringParameters": {
-      "$ref": "#/definitions/keyToMultiValue"
-    },
-    "path": {
-      "type": "string"
-    },
-    "method": {
-      "type": "string"
-    },
-    "secure": {
-      "type": "boolean"
-    },
-    "keepAlive": {
-      "type": "boolean"
+    "definitions": {
     }
-  },
-  "definitions": {
-  }
 }

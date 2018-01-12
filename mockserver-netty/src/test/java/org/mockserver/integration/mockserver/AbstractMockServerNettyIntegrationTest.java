@@ -1,14 +1,13 @@
 package org.mockserver.integration.mockserver;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.matchers.MatcherBuilder;
-import org.mockserver.mock.action.ExpectationCallback;
+import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.server.TestClasspathTestExpectationCallback;
@@ -53,15 +52,15 @@ import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
 public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbstractClientServerIntegrationTest {
 
     @Test
-    public void shouldCallbackToSpecifiedObject() {
+    public void shouldRequestCallbackToSpecifiedObject() {
         // when
         mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("object_callback"))
             )
-            .callback(
-                new ExpectationCallback() {
+            .response(
+                new ExpectationResponseCallback() {
                     @Override
                     public HttpResponse handle(HttpRequest httpRequest) {
                         HttpRequest expectation = request()
@@ -132,7 +131,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     }
 
     @Test
-    public void shouldCallbackToSpecifiedObjectAndVerifyRequests() {
+    public void shouldRequestCallbackToSpecifiedObjectAndVerifyRequests() {
         // when
         mockServerClient
             .when(
@@ -140,8 +139,8 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                     .withPath(calculatePath("object_callback")),
                 exactly(1)
             )
-            .callback(
-                new ExpectationCallback() {
+            .response(
+                new ExpectationResponseCallback() {
                     @Override
                     public HttpResponse handle(HttpRequest httpRequest) {
                         return response()
@@ -182,7 +181,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     }
 
     @Test
-    public void shouldCallbackToSpecifiedObjectForVeryLargeRequestAndResponses() {
+    public void shouldRequestCallbackToSpecifiedObjectForVeryLargeRequestAndResponses() {
         int bytes = 65536 * 10;
         char[] chars = new char[bytes];
         Arrays.fill(chars, 'a');
@@ -194,8 +193,8 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 request()
                     .withPath(calculatePath("object_callback"))
             )
-            .callback(
-                new ExpectationCallback() {
+            .response(
+                new ExpectationResponseCallback() {
                     @Override
                     public HttpResponse handle(HttpRequest httpRequest) {
                         return response()
@@ -736,7 +735,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 request()
                     .withPath(calculatePath("callback"))
             )
-            .callback(
+            .response(
                 callback()
                     .withCallbackClass("org.mockserver.server.TestClasspathTestExpectationCallback")
             );

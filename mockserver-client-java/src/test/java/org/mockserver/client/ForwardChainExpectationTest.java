@@ -6,7 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.netty.websocket.WebSocketClient;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.action.ExpectationCallback;
+import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.*;
 
 import static org.mockito.Matchers.same;
@@ -18,6 +18,7 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpClassCallback.callback;
+import static org.mockserver.model.HttpTemplate.template;
 
 public class ForwardChainExpectationTest {
 
@@ -53,6 +54,55 @@ public class ForwardChainExpectationTest {
     }
 
     @Test
+    public void shouldSetResponseTemplate() {
+        // given
+        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "some_template");
+
+        // when
+        forwardChainExpectation.respond(template);
+
+        // then
+        verify(mockExpectation).thenRespond(same(template));
+        verify(mockAbstractClient).sendExpectation(mockExpectation);
+    }
+
+    @Test
+    public void shouldSetResponseClassCallback() {
+        // given
+        HttpClassCallback callback = callback();
+
+        // when
+        forwardChainExpectation.response(callback);
+
+        // then
+        verify(mockExpectation).thenRespond(same(callback));
+        verify(mockAbstractClient).sendExpectation(mockExpectation);
+    }
+
+    @Test
+    public void shouldSetResponseObjectCallback() {
+        // given
+        ExpectationResponseCallback callback = new ExpectationResponseCallback() {
+            @Override
+            public HttpResponse handle(HttpRequest httpRequest) {
+                return response();
+            }
+        };
+
+        // and
+        when(webSocketClient.registerExpectationCallback(callback)).thenReturn(webSocketClient);
+        when(webSocketClient.clientId()).thenReturn("some_client_id");
+
+        // when
+        forwardChainExpectation.response(callback);
+
+        // then
+        verify(webSocketClient).registerExpectationCallback(same(callback));
+        verify(mockExpectation).thenRespond(new HttpObjectCallback().withClientId("some_client_id"));
+        verify(mockAbstractClient).sendExpectation(mockExpectation);
+    }
+
+    @Test
     public void shouldSetForward() {
         // given
         HttpForward forward = forward();
@@ -66,35 +116,35 @@ public class ForwardChainExpectationTest {
     }
 
     @Test
-    public void shouldSetError() {
+    public void shouldSetForwardTemplate() {
         // given
-        HttpError error = error();
+        HttpTemplate template = template(HttpTemplate.TemplateType.VELOCITY, "some_template");
 
         // when
-        forwardChainExpectation.error(error);
+        forwardChainExpectation.forward(template);
 
         // then
-        verify(mockExpectation).thenError(same(error));
+        verify(mockExpectation).thenForward(same(template));
         verify(mockAbstractClient).sendExpectation(mockExpectation);
     }
 
     @Test
-    public void shouldSetClassCallback() {
+    public void shouldSetForwardClassCallback() {
         // given
         HttpClassCallback callback = callback();
 
         // when
-        forwardChainExpectation.callback(callback);
+        forwardChainExpectation.forward(callback);
 
         // then
-        verify(mockExpectation).thenCallback(same(callback));
+        verify(mockExpectation).thenForward(same(callback));
         verify(mockAbstractClient).sendExpectation(mockExpectation);
     }
 
     @Test
-    public void shouldSetObjectCallback() {
+    public void shouldSetForwardObjectCallback() {
         // given
-        ExpectationCallback callback = new ExpectationCallback() {
+        ExpectationResponseCallback callback = new ExpectationResponseCallback() {
             @Override
             public HttpResponse handle(HttpRequest httpRequest) {
                 return response();
@@ -106,11 +156,24 @@ public class ForwardChainExpectationTest {
         when(webSocketClient.clientId()).thenReturn("some_client_id");
 
         // when
-        forwardChainExpectation.callback(callback);
+        forwardChainExpectation.forward(callback);
 
         // then
         verify(webSocketClient).registerExpectationCallback(same(callback));
-        verify(mockExpectation).thenCallback(new HttpObjectCallback().withClientId("some_client_id"));
+        verify(mockExpectation).thenForward(new HttpObjectCallback().withClientId("some_client_id"));
+        verify(mockAbstractClient).sendExpectation(mockExpectation);
+    }
+
+    @Test
+    public void shouldSetError() {
+        // given
+        HttpError error = error();
+
+        // when
+        forwardChainExpectation.error(error);
+
+        // then
+        verify(mockExpectation).thenError(same(error));
         verify(mockAbstractClient).sendExpectation(mockExpectation);
     }
 

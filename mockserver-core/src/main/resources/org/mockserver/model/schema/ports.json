@@ -1,13 +1,13 @@
 {
-  "title": "list of ports",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "ports": {
-      "items": {
-        "type": "number"
-      },
-      "type": "array"
+    "title": "list of ports",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "ports": {
+            "items": {
+                "type": "number"
+            },
+            "type": "array"
+        }
     }
-  }
 }

@@ -1,16 +1,16 @@
 {
-  "title": "error behaviour",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "delay": {
-      "$ref": "#/definitions/delay"
-    },
-    "dropConnection": {
-      "type": "boolean"
-    },
-    "responseBytes": {
-      "type": "string"
+    "title": "error behaviour",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "delay": {
+            "$ref": "#/definitions/delay"
+        },
+        "dropConnection": {
+            "type": "boolean"
+        },
+        "responseBytes": {
+            "type": "string"
+        }
     }
-  }
 }

@@ -1,5 +1,6 @@
 package org.mockserver.server;
 
+import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -7,19 +8,20 @@ import org.mockserver.model.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
  */
-public class TestClasspathTestExpectationCallback implements ExpectationResponseCallback {
+public class TestClasspathTestExpectationForwardCallback implements ExpectationForwardCallback {
 
     public static List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
-    public static HttpResponse httpResponse = response();
+    public static HttpRequest httpRequestToReturn = request();
 
     @Override
-    public HttpResponse handle(HttpRequest httpRequest) {
+    public HttpRequest handle(HttpRequest httpRequest) {
         httpRequests.add(httpRequest);
-        return httpResponse;
+        return httpRequestToReturn;
     }
 }

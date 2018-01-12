@@ -1,76 +1,92 @@
 {
-  "title": "expectation",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "httpRequest": {
-      "$ref": "#/definitions/httpRequest"
+    "title": "expectation",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "httpRequest": {
+            "$ref": "#/definitions/httpRequest"
+        },
+        "httpResponse": {
+            "$ref": "#/definitions/httpResponse"
+        },
+        "httpResponseTemplate": {
+            "$ref": "#/definitions/httpTemplate"
+        },
+        "httpResponseClassCallback": {
+            "$ref": "#/definitions/httpClassCallback"
+        },
+        "httpResponseObjectCallback": {
+            "$ref": "#/definitions/httpObjectCallback"
+        },
+        "httpForward": {
+            "$ref": "#/definitions/httpForward"
+        },
+        "httpForwardTemplate": {
+            "$ref": "#/definitions/httpTemplate"
+        },
+        "httpForwardClassCallback": {
+            "$ref": "#/definitions/httpClassCallback"
+        },
+        "httpForwardObjectCallback": {
+            "$ref": "#/definitions/httpObjectCallback"
+        },
+        "httpError": {
+            "$ref": "#/definitions/httpError"
+        },
+        "times": {
+            "$ref": "#/definitions/times"
+        },
+        "timeToLive": {
+            "$ref": "#/definitions/timeToLive"
+        }
     },
-    "httpResponse": {
-      "$ref": "#/definitions/httpResponse"
-    },
-    "httpResponseTemplate": {
-      "$ref": "#/definitions/httpTemplate"
-    },
-    "httpForward": {
-      "$ref": "#/definitions/httpForward"
-    },
-    "httpForwardTemplate": {
-      "$ref": "#/definitions/httpTemplate"
-    },
-    "httpClassCallback": {
-      "$ref": "#/definitions/httpClassCallback"
-    },
-    "httpObjectCallback": {
-      "$ref": "#/definitions/httpObjectCallback"
-    },
-    "httpError": {
-      "$ref": "#/definitions/httpError"
-    },
-    "times": {
-      "$ref": "#/definitions/times"
-    },
-    "timeToLive": {
-      "$ref": "#/definitions/timeToLive"
+    "oneOf": [
+        {
+            "required": [
+                "httpResponse"
+            ]
+        },
+        {
+            "required": [
+                "httpResponseTemplate"
+            ]
+        },
+        {
+            "required": [
+                "httpResponseObjectCallback"
+            ]
+        },
+        {
+            "required": [
+                "httpResponseClassCallback"
+            ]
+        },
+        {
+            "required": [
+                "httpForward"
+            ]
+        },
+        {
+            "required": [
+                "httpForwardTemplate"
+            ]
+        },
+        {
+            "required": [
+                "httpForwardObjectCallback"
+            ]
+        },
+        {
+            "required": [
+                "httpForwardClassCallback"
+            ]
+        },
+        {
+            "required": [
+                "httpError"
+            ]
+        }
+    ],
+    "definitions": {
     }
-  },
-  "oneOf": [
-    {
-      "required": [
-        "httpResponse"
-      ]
-    },
-    {
-      "required": [
-        "httpResponseTemplate"
-      ]
-    },
-    {
-      "required": [
-        "httpForward"
-      ]
-    },
-    {
-      "required": [
-        "httpForwardTemplate"
-      ]
-    },
-    {
-      "required": [
-        "httpClassCallback"
-      ]
-    },
-    {
-      "required": [
-        "httpError"
-      ]
-    },
-    {
-      "required": [
-        "httpObjectCallback"
-      ]
-    }
-  ],
-  "definitions": {
-  }
 }

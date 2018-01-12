@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.netty.NettyHttpClient;
+import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
@@ -26,16 +27,19 @@ import static org.mockserver.model.HttpResponse.response;
 public class HttpForwardActionHandlerTest {
 
     @InjectMocks
-    private HttpForwardActionHandler httpForwardActionHandler = new HttpForwardActionHandler();
+    private HttpForwardActionHandler httpForwardActionHandler;
     @Mock
     private HttpRequest httpRequest;
     @Mock
     private HttpForward httpForward;
     @Mock
     private NettyHttpClient mockHttpClient;
+    private LoggingFormatter logFormatter;
 
     @Before
     public void setupMocks() {
+        logFormatter = mock(LoggingFormatter.class);
+        httpForwardActionHandler = new HttpForwardActionHandler(logFormatter);
         initMocks(this);
         when(httpForward.getHost()).thenReturn("some_host");
         when(httpForward.getPort()).thenReturn(1080);

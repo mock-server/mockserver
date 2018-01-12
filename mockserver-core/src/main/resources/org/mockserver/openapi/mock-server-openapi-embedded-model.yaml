@@ -242,13 +242,17 @@ components:
           $ref: "#/components/schemas/HttpResponse"
         httpResponseTemplate:
           $ref: "#/components/schemas/HttpTemplate"
+        httpResponseClassCallback:
+          $ref: "#/components/schemas/HttpClassCallback"
+        httpResponseObjectCallback:
+          $ref: "#/components/schemas/HttpObjectCallback"
         httpForward:
           $ref: "#/components/schemas/HttpForward"
         httpForwardTemplate:
           $ref: "#/components/schemas/HttpTemplate"
-        httpClassCallback:
+        httpForwardClassCallback:
           $ref: "#/components/schemas/HttpClassCallback"
-        httpObjectCallback:
+        httpForwardObjectCallback:
           $ref: "#/components/schemas/HttpObjectCallback"
         httpError:
           $ref: "#/components/schemas/HttpError"

@@ -128,8 +128,9 @@ public abstract class AbstractBasicClientServerIntegrationTest {
             int port = (isSsl ? getMockServerSecurePort() : getMockServerPort());
             httpRequest.withPath(addContextToPath(httpRequest.getPath().getValue()));
             httpRequest.withHeader(HOST.toString(), "localhost:" + port);
+            boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
             HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port))
-                .get(10, TimeUnit.SECONDS);
+                .get(10, (isDebug ? TimeUnit.MINUTES : TimeUnit.SECONDS));
             List<Header> headers = new ArrayList<Header>();
             for (Header header : httpResponse.getHeaderList()) {
                 if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
@@ -418,7 +419,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
                 request()
                     .withPath(calculatePath("callback"))
             )
-            .callback(
+            .response(
                 callback()
                     .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationCallback")
             );
@@ -1234,6 +1235,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
     @Test
     public void shouldRetrieveRecordedLogMessages() {
         // when
+        mockServerClient.reset();
         mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
         assertEquals(
             response("some_body"),
@@ -1586,7 +1588,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
         assertThat(httpResponse.getStatusCode(), is(400));
         assertThat(httpResponse.getBodyAsString(), is("2 errors:" + NEW_LINE +
             " - object instance has properties which are not allowed by the schema: [\"incorrectField\"]" + NEW_LINE +
-            " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpForward\" \"httpForwardTemplate\" \"httpClassCallback\" \"httpError\" \"httpObjectCallback\" "));
+            " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpResponseObjectCallback\" \"httpResponseClassCallback\" \"httpForward\" \"httpForwardTemplate\" \"httpForwardObjectCallback\" \"httpForwardClassCallback\" \"httpError\" "));
     }
 
     @Test

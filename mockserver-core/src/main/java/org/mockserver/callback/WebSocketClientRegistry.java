@@ -17,15 +17,16 @@ public class WebSocketClientRegistry {
     private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer();
     private CircularHashMap<String, ChannelHandlerContext> clientRegistry = new CircularHashMap<>(100);
     private CircularHashMap<String, ExpectationCallbackResponse> callbackResponseRegistry = new CircularHashMap<>(100);
+    private CircularHashMap<String, ExpectationCallbackForward> callbackForwardRegistry = new CircularHashMap<>(100);
 
     void receivedTextWebSocketFrame(ChannelHandlerContext ctx, TextWebSocketFrame textWebSocketFrame) {
         try {
             Object deserializedMessage = webSocketMessageSerializer.deserialize(textWebSocketFrame.text());
-            if (deserializedMessage instanceof HttpResponse) {
-                String key = clientRegistry.findKey(ctx);
-                if (key != null) {
-                    callbackResponseRegistry.get(key).handle((HttpResponse) deserializedMessage);
-                }
+            String key = clientRegistry.findKey(ctx);
+            if (deserializedMessage instanceof HttpResponse && callbackResponseRegistry.containsKey(key)) {
+                callbackResponseRegistry.get(key).handle((HttpResponse) deserializedMessage);
+            } else if (deserializedMessage instanceof HttpRequest && callbackForwardRegistry.containsKey(key)) {
+                callbackForwardRegistry.get(key).handle((HttpRequest) deserializedMessage);
             } else {
                 throw new WebSocketException("Unsupported web socket message " + deserializedMessage);
             }
@@ -45,6 +46,10 @@ public class WebSocketClientRegistry {
 
     public void registerCallbackResponseHandler(String clientId, ExpectationCallbackResponse expectationCallbackResponse) {
         callbackResponseRegistry.put(clientId, expectationCallbackResponse);
+    }
+
+    public void registerCallbackResponseHandler(String clientId, ExpectationCallbackForward expectationCallbackForward) {
+        callbackForwardRegistry.put(clientId, expectationCallbackForward);
     }
 
     public void sendClientMessage(String clientId, HttpRequest httpRequest) {

@@ -11,7 +11,6 @@ import org.mockserver.filters.MockServerLog;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
-import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
 
 import java.util.Arrays;
@@ -29,6 +28,7 @@ import static org.mockserver.model.HttpForward.Scheme.HTTPS;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationSequence.verificationSequence;
 
@@ -120,6 +120,169 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
+    public void shouldSetupExpectationWithResponseTemplate() {
+        // given
+        echoServer.withNextResponse(response().withStatusCode(201));
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .respond(
+                template(HttpTemplate.TemplateType.VELOCITY)
+                    .withTemplate("some_response_template")
+            );
+
+        // then
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
+            request()
+                .withMethod("PUT")
+                .withPath("/expectation")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpResponseTemplate\" : {" + NEW_LINE +
+                    "    \"template\" : \"some_response_template\"," + NEW_LINE +
+                    "    \"templateType\" : \"VELOCITY\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"remainingTimes\" : 0," + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"timeToLive\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"))
+        ));
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
+        }
+    }
+
+    @Test
+    public void shouldSetupExpectationWithResponseClassCallback() {
+        // given
+        echoServer.withNextResponse(response().withStatusCode(201));
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .response(
+                callback()
+                    .withCallbackClass("some_class")
+            );
+
+        // then
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
+            request()
+                .withMethod("PUT")
+                .withPath("/expectation")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpResponseClassCallback\" : {" + NEW_LINE +
+                    "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"remainingTimes\" : 0," + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"timeToLive\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"))
+        ));
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
+        }
+    }
+
+    @Test
+    public void shouldSetupExpectationWithResponseObjectCallback() {
+        // given
+        echoServer.withNextResponse(response().withStatusCode(201));
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .response(
+                callback()
+                    .withCallbackClass("some_class")
+            );
+
+        // then
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
+            request()
+                .withMethod("PUT")
+                .withPath("/expectation")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpResponseClassCallback\" : {" + NEW_LINE +
+                    "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"remainingTimes\" : 0," + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"timeToLive\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"))
+        ));
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
+        }
+    }
+
+    @Test
     public void shouldSetupExpectationWithForward() {
         // given
         echoServer.withNextResponse(response().withStatusCode(201));
@@ -171,6 +334,169 @@ public class MockServerClientIntegrationTest {
                                 "    \"unlimited\" : true" + NEW_LINE +
                                 "  }" + NEW_LINE +
                                 "}"))
+        ));
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
+        }
+    }
+
+    @Test
+    public void shouldSetupExpectationWithForwardTemplate() {
+        // given
+        echoServer.withNextResponse(response().withStatusCode(201));
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .forward(
+                template(HttpTemplate.TemplateType.VELOCITY)
+                    .withTemplate("some_response_template")
+            );
+
+        // then
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
+            request()
+                .withMethod("PUT")
+                .withPath("/expectation")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpForwardTemplate\" : {" + NEW_LINE +
+                    "    \"template\" : \"some_response_template\"," + NEW_LINE +
+                    "    \"templateType\" : \"VELOCITY\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"remainingTimes\" : 0," + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"timeToLive\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"))
+        ));
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
+        }
+    }
+
+    @Test
+    public void shouldSetupExpectationWithForwardClassCallback() {
+        // given
+        echoServer.withNextResponse(response().withStatusCode(201));
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .forward(
+                callback()
+                    .withCallbackClass("some_class")
+            );
+
+        // then
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
+            request()
+                .withMethod("PUT")
+                .withPath("/expectation")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpForwardClassCallback\" : {" + NEW_LINE +
+                    "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"remainingTimes\" : 0," + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"timeToLive\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"))
+        ));
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
+        }
+    }
+
+    @Test
+    public void shouldSetupExpectationWithForwardObjectCallback() {
+        // given
+        echoServer.withNextResponse(response().withStatusCode(201));
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .forward(
+                callback()
+                    .withCallbackClass("some_class")
+            );
+
+        // then
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
+            request()
+                .withMethod("PUT")
+                .withPath("/expectation")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpForwardClassCallback\" : {" + NEW_LINE +
+                    "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"remainingTimes\" : 0," + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"timeToLive\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -234,61 +560,7 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
-    public void shouldSetupExpectationWithClassCallback() {
-        // given
-        echoServer.withNextResponse(response().withStatusCode(201));
-
-        // when
-        mockServerClient
-                .when(
-                        request()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))
-                )
-                .callback(
-                        callback()
-                                .withCallbackClass("some_class")
-                );
-
-        // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/expectation")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("" +
-                                "{" + NEW_LINE +
-                                "  \"httpRequest\" : {" + NEW_LINE +
-                                "    \"path\" : \"/some_path\"," + NEW_LINE +
-                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"httpClassCallback\" : {" + NEW_LINE +
-                                "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"times\" : {" + NEW_LINE +
-                                "    \"remainingTimes\" : 0," + NEW_LINE +
-                                "    \"unlimited\" : true" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"timeToLive\" : {" + NEW_LINE +
-                                "    \"unlimited\" : true" + NEW_LINE +
-                                "  }" + NEW_LINE +
-                                "}"))
-        ));
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
-        }
-    }
-
-    @Test
-    public void shouldSendExpectationRequestWithExactTimes() throws Exception {
+    public void shouldSendExpectationRequestWithExactTimes() {
         // given
         echoServer.withNextResponse(response().withStatusCode(201));
 
@@ -347,7 +619,7 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
-    public void shouldSendStopRequest() throws Exception {
+    public void shouldSendStopRequest() {
         // given
         echoServer.withNextResponse(response().withStatusCode(201));
 
@@ -385,7 +657,7 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
-    public void shouldQueryRunningStatus() throws Exception {
+    public void shouldQueryRunningStatus() {
         // given
         echoServer.withNextResponse(response().withStatusCode(200));
 
@@ -414,7 +686,7 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
-    public void shouldQueryRunningStatusWhenNotRunning() throws Exception {
+    public void shouldQueryRunningStatusWhenNotRunning() {
         // given
         int numberOfRetries = 11;
         HttpResponse[] httpResponses = new HttpResponse[numberOfRetries];
@@ -446,7 +718,7 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
-    public void shouldSendResetRequest() throws Exception {
+    public void shouldSendResetRequest() {
         // given
         echoServer.withNextResponse(response().withStatusCode(201));
 
@@ -474,7 +746,7 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
-    public void shouldSendClearRequest() throws Exception {
+    public void shouldSendClearRequest() {
         // given
         echoServer.withNextResponse(response().withStatusCode(201));
 
@@ -512,7 +784,7 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
-    public void shouldSendClearRequestWithType() throws Exception {
+    public void shouldSendClearRequestWithType() {
         // given
         echoServer.withNextResponse(response().withStatusCode(201));
 
@@ -551,7 +823,7 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
-    public void shouldSendClearRequestForNullRequest() throws Exception {
+    public void shouldSendClearRequestForNullRequest() {
         // given
         echoServer.withNextResponse(response().withStatusCode(201));
 

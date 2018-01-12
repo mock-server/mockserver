@@ -534,7 +534,7 @@ public class ExpectationToJavaSerializerTest {
                     once(),
                     unlimited()
                 )
-                    .thenCallback(
+                    .thenRespond(
                         callback()
                             .withCallbackClass("some_class")
                     )
@@ -587,7 +587,7 @@ public class ExpectationToJavaSerializerTest {
                     once(),
                     unlimited()
                 )
-                    .thenCallback(
+                    .thenRespond(
                         new HttpObjectCallback()
                             .withClientId("some_client_id")
                     )

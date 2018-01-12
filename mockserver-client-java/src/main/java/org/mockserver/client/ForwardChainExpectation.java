@@ -3,7 +3,7 @@ package org.mockserver.client;
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.client.netty.websocket.WebSocketClient;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.action.ExpectationCallback;
+import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.*;
 
 /**
@@ -30,6 +30,24 @@ public class ForwardChainExpectation {
         mockServerClient.sendExpectation(expectation);
     }
 
+    public void response(HttpClassCallback httpClassCallback) {
+        expectation.thenRespond(httpClassCallback);
+        mockServerClient.sendExpectation(expectation);
+    }
+
+    public void response(ExpectationResponseCallback httpObjectCallback) {
+        if (webSocketClient == null) {
+            webSocketClient = new WebSocketClient(mockServerClient.remoteAddress(), mockServerClient.contextPath());
+        }
+        expectation.thenRespond(new HttpObjectCallback()
+            .withClientId(
+                webSocketClient
+                    .registerExpectationCallback(httpObjectCallback)
+                    .clientId()
+            ));
+        mockServerClient.sendExpectation(expectation);
+    }
+
     public void forward(HttpForward httpForward) {
         expectation.thenForward(httpForward);
         mockServerClient.sendExpectation(expectation);
@@ -40,26 +58,26 @@ public class ForwardChainExpectation {
         mockServerClient.sendExpectation(expectation);
     }
 
-    public void error(HttpError httpError) {
-        expectation.thenError(httpError);
+    public void forward(HttpClassCallback httpClassCallback) {
+        expectation.thenForward(httpClassCallback);
         mockServerClient.sendExpectation(expectation);
     }
 
-    public void callback(HttpClassCallback httpClassCallback) {
-        expectation.thenCallback(httpClassCallback);
-        mockServerClient.sendExpectation(expectation);
-    }
-
-    public void callback(ExpectationCallback httpObjectCallback) {
+    public void forward(ExpectationResponseCallback httpObjectCallback) {
         if (webSocketClient == null) {
             webSocketClient = new WebSocketClient(mockServerClient.remoteAddress(), mockServerClient.contextPath());
         }
-        expectation.thenCallback(new HttpObjectCallback()
+        expectation.thenForward(new HttpObjectCallback()
             .withClientId(
                 webSocketClient
                     .registerExpectationCallback(httpObjectCallback)
                     .clientId()
             ));
+        mockServerClient.sendExpectation(expectation);
+    }
+
+    public void error(HttpError httpError) {
+        expectation.thenError(httpError);
         mockServerClient.sendExpectation(expectation);
     }
 

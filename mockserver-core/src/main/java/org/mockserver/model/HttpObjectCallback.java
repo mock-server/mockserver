@@ -8,12 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class HttpObjectCallback extends Action {
 
     private String clientId;
-
-    @Override
-    @JsonIgnore
-    public Type getType() {
-        return Type.OBJECT_CALLBACK;
-    }
+    private Type actionType;
 
     public String getClientId() {
         return clientId;
@@ -30,5 +25,16 @@ public class HttpObjectCallback extends Action {
     public HttpObjectCallback withClientId(String clientId) {
         this.clientId = clientId;
         return this;
+    }
+
+    public HttpObjectCallback withActionType(Type actionType) {
+        this.actionType = actionType;
+        return this;
+    }
+
+    @Override
+    @JsonIgnore
+    public Type getType() {
+        return actionType;
     }
 }

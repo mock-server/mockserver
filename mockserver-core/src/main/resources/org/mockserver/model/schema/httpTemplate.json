@@ -1,21 +1,21 @@
 {
-  "title": "template to generate response / request",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "templateType": {
-      "enum": [
-        "JAVASCRIPT",
-        "VELOCITY"
-      ]
+    "title": "template to generate response / request",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "templateType": {
+            "enum": [
+                "JAVASCRIPT",
+                "VELOCITY"
+            ]
+        },
+        "template": {
+            "type": "string"
+        },
+        "delay": {
+            "$ref": "#/definitions/delay"
+        }
     },
-    "template": {
-      "type": "string"
-    },
-    "delay": {
-      "$ref": "#/definitions/delay"
+    "definitions": {
     }
-  },
-  "definitions": {
-  }
 }

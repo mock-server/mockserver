@@ -13,11 +13,13 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     private HttpRequestDTO httpRequest;
     private HttpResponseDTO httpResponse;
     private HttpTemplateDTO httpResponseTemplate;
+    private HttpClassCallbackDTO httpResponseClassCallback;
+    private HttpObjectCallbackDTO httpResponseObjectCallback;
     private HttpForwardDTO httpForward;
     private HttpTemplateDTO httpForwardTemplate;
+    private HttpClassCallbackDTO httpForwardClassCallback;
+    private HttpObjectCallbackDTO httpForwardObjectCallback;
     private HttpErrorDTO httpError;
-    private HttpClassCallbackDTO httpClassCallback;
-    private HttpObjectCallbackDTO httpObjectCallback;
     private TimesDTO times;
     private TimeToLiveDTO timeToLive;
 
@@ -35,6 +37,14 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             if (httpResponseTemplate != null) {
                 this.httpResponseTemplate = new HttpTemplateDTO(httpResponseTemplate);
             }
+            HttpClassCallback httpResponseClassCallback = expectation.getHttpResponseClassCallback();
+            if (httpResponseClassCallback != null) {
+                this.httpResponseClassCallback = new HttpClassCallbackDTO(httpResponseClassCallback);
+            }
+            HttpObjectCallback httpResponseObjectCallback = expectation.getHttpResponseObjectCallback();
+            if (httpResponseObjectCallback != null) {
+                this.httpResponseObjectCallback = new HttpObjectCallbackDTO(httpResponseObjectCallback);
+            }
             HttpForward httpForward = expectation.getHttpForward();
             if (httpForward != null) {
                 this.httpForward = new HttpForwardDTO(httpForward);
@@ -43,17 +53,17 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             if (httpForwardTemplate != null) {
                 this.httpForwardTemplate = new HttpTemplateDTO(httpForwardTemplate);
             }
+            HttpClassCallback httpForwardClassCallback = expectation.getHttpForwardClassCallback();
+            if (httpForwardClassCallback != null) {
+                this.httpForwardClassCallback = new HttpClassCallbackDTO(httpForwardClassCallback);
+            }
+            HttpObjectCallback httpForwardObjectCallback = expectation.getHttpForwardObjectCallback();
+            if (httpForwardObjectCallback != null) {
+                this.httpForwardObjectCallback = new HttpObjectCallbackDTO(httpForwardObjectCallback);
+            }
             HttpError httpError = expectation.getHttpError();
             if (httpError != null) {
                 this.httpError = new HttpErrorDTO(httpError);
-            }
-            HttpClassCallback httpClassCallback = expectation.getHttpClassCallback();
-            if (httpClassCallback != null) {
-                this.httpClassCallback = new HttpClassCallbackDTO(httpClassCallback);
-            }
-            HttpObjectCallback httpObjectCallback = expectation.getHttpObjectCallback();
-            if (httpObjectCallback != null) {
-                this.httpObjectCallback = new HttpObjectCallbackDTO(httpObjectCallback);
             }
             Times times = expectation.getTimes();
             if (times != null) {
@@ -73,11 +83,13 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         HttpRequest httpRequest = null;
         HttpResponse httpResponse = null;
         HttpTemplate httpResponseTemplate = null;
+        HttpClassCallback httpResponseClassCallback = null;
+        HttpObjectCallback httpResponseObjectCallback = null;
         HttpForward httpForward = null;
         HttpTemplate httpForwardTemplate = null;
+        HttpClassCallback httpForwardClassCallback = null;
+        HttpObjectCallback httpForwardObjectCallback = null;
         HttpError httpError = null;
-        HttpClassCallback httpClassCallback = null;
-        HttpObjectCallback httpObjectCallback = null;
         Times times;
         TimeToLive timeToLive;
         if (this.httpRequest != null) {
@@ -89,20 +101,26 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         if (this.httpResponseTemplate != null) {
             httpResponseTemplate = this.httpResponseTemplate.buildObject();
         }
+        if (this.httpResponseClassCallback != null) {
+            httpResponseClassCallback = this.httpResponseClassCallback.buildObject();
+        }
+        if (this.httpResponseObjectCallback != null) {
+            httpResponseObjectCallback = this.httpResponseObjectCallback.buildObject();
+        }
         if (this.httpForward != null) {
             httpForward = this.httpForward.buildObject();
         }
         if (this.httpForwardTemplate != null) {
             httpForwardTemplate = this.httpForwardTemplate.buildObject();
         }
+        if (this.httpForwardClassCallback != null) {
+            httpForwardClassCallback = this.httpForwardClassCallback.buildObject();
+        }
+        if (this.httpForwardObjectCallback != null) {
+            httpForwardObjectCallback = this.httpForwardObjectCallback.buildObject();
+        }
         if (this.httpError != null) {
             httpError = this.httpError.buildObject();
-        }
-        if (this.httpClassCallback != null) {
-            httpClassCallback = this.httpClassCallback.buildObject();
-        }
-        if (this.httpObjectCallback != null) {
-            httpObjectCallback = this.httpObjectCallback.buildObject();
         }
         if (this.times != null) {
             times = this.times.buildObject();
@@ -117,11 +135,13 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         return new Expectation(httpRequest, times, timeToLive)
             .thenRespond(httpResponse)
             .thenRespond(httpResponseTemplate)
+            .thenRespond(httpResponseClassCallback)
+            .thenRespond(httpResponseObjectCallback)
             .thenForward(httpForward)
             .thenForward(httpForwardTemplate)
-            .thenError(httpError)
-            .thenCallback(httpClassCallback)
-            .thenCallback(httpObjectCallback);
+            .thenForward(httpForwardClassCallback)
+            .thenForward(httpForwardObjectCallback)
+            .thenError(httpError);
     }
 
     public HttpRequestDTO getHttpRequest() {
@@ -151,6 +171,24 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         return this;
     }
 
+    public HttpClassCallbackDTO getHttpResponseClassCallback() {
+        return httpResponseClassCallback;
+    }
+
+    public ExpectationDTO setHttpResponseClassCallback(HttpClassCallbackDTO httpObjectCallback) {
+        this.httpResponseClassCallback = httpObjectCallback;
+        return this;
+    }
+
+    public HttpObjectCallbackDTO getHttpResponseObjectCallback() {
+        return httpResponseObjectCallback;
+    }
+
+    public ExpectationDTO setHttpResponseObjectCallback(HttpObjectCallbackDTO httpObjectCallback) {
+        this.httpResponseObjectCallback = httpObjectCallback;
+        return this;
+    }
+
     public HttpForwardDTO getHttpForward() {
         return httpForward;
     }
@@ -169,30 +207,30 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         return this;
     }
 
+    public HttpClassCallbackDTO getHttpForwardClassCallback() {
+        return httpForwardClassCallback;
+    }
+
+    public ExpectationDTO setHttpForwardClassCallback(HttpClassCallbackDTO httpClassCallback) {
+        this.httpForwardClassCallback = httpClassCallback;
+        return this;
+    }
+
+    public HttpObjectCallbackDTO getHttpForwardObjectCallback() {
+        return httpForwardObjectCallback;
+    }
+
+    public ExpectationDTO setHttpForwardObjectCallback(HttpObjectCallbackDTO httpObjectCallback) {
+        this.httpForwardObjectCallback = httpObjectCallback;
+        return this;
+    }
+
     public HttpErrorDTO getHttpError() {
         return httpError;
     }
 
     public ExpectationDTO setHttpError(HttpErrorDTO httpError) {
         this.httpError = httpError;
-        return this;
-    }
-
-    public HttpClassCallbackDTO getHttpClassCallback() {
-        return httpClassCallback;
-    }
-
-    public ExpectationDTO setHttpClassCallback(HttpClassCallbackDTO httpClassCallback) {
-        this.httpClassCallback = httpClassCallback;
-        return this;
-    }
-
-    public HttpObjectCallbackDTO getHttpObjectCallback() {
-        return httpObjectCallback;
-    }
-
-    public ExpectationDTO setHttpObjectCallback(HttpObjectCallbackDTO httpObjectCallback) {
-        this.httpObjectCallback = httpObjectCallback;
         return this;
     }
 

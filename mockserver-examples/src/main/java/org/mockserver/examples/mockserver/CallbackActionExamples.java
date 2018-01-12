@@ -2,7 +2,7 @@ package org.mockserver.examples.mockserver;
 
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
-import org.mockserver.mock.action.ExpectationCallback;
+import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
@@ -26,7 +26,7 @@ public class CallbackActionExamples {
                 request()
                     .withPath("/some.*")
             )
-            .callback(
+            .response(
                 callback()
                     .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationCallback")
             );
@@ -38,8 +38,8 @@ public class CallbackActionExamples {
                 request()
                     .withPath("/some/path")
             )
-            .callback(
-                new ExpectationCallback() {
+            .response(
+                new ExpectationResponseCallback() {
                     @Override
                     public HttpResponse handle(HttpRequest request) {
                         if (request.getMethod().getValue().equals("POST")) {
@@ -58,7 +58,7 @@ public class CallbackActionExamples {
 
     }
 
-    public static class TestExpectationCallback implements ExpectationCallback {
+    public static class TestExpectationCallback implements ExpectationResponseCallback {
 
         @Override
         public HttpResponse handle(HttpRequest httpRequest) {

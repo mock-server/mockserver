@@ -208,7 +208,7 @@ public class CompileGeneratedJavaCodeTest {
                         Times.once(),
                         TimeToLive.unlimited()
                 )
-                        .thenCallback(
+                        .thenRespond(
                                 callback()
                                         .withCallbackClass("some_random_class")
                         )
@@ -255,7 +255,7 @@ public class CompileGeneratedJavaCodeTest {
                         Times.once(),
                         TimeToLive.unlimited()
                 )
-                        .thenCallback(
+                        .thenRespond(
                                 new HttpObjectCallback()
                                         .withClientId("some_random_clientId")
                         )

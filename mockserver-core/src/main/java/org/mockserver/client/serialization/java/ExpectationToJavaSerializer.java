@@ -58,12 +58,12 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
                 output.append(new HttpErrorToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpError()));
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
             }
-            if (expectation.getHttpClassCallback() != null) {
+            if (expectation.getHttpResponseClassCallback() != null) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".callback(");
-                output.append(new HttpCallbackToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpClassCallback()));
+                output.append(new HttpCallbackToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpResponseClassCallback()));
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
             }
-            if (expectation.getHttpObjectCallback() != null) {
+            if (expectation.getHttpResponseObjectCallback() != null) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("/*NOT POSSIBLE TO GENERATE CODE FOR OBJECT CALLBACK*/");
             }
             output.append(";");

@@ -14,11 +14,11 @@ import static org.mockserver.character.Character.NEW_LINE;
 /**
  * @author jamesdbloom
  */
-public class HttpObjectCallbackActionHandler {
+public class HttpResponseObjectCallbackActionHandler {
     private final LoggingFormatter logFormatter;
     private WebSocketClientRegistry webSocketClientRegistry;
 
-    public HttpObjectCallbackActionHandler(HttpStateHandler httpStateHandler) {
+    public HttpResponseObjectCallbackActionHandler(HttpStateHandler httpStateHandler) {
         this.webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();
         this.logFormatter = httpStateHandler.getLogFormatter();
     }

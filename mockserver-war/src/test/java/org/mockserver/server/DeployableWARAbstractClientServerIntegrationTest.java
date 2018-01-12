@@ -4,6 +4,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.ClientException;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
@@ -67,10 +68,10 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
     }
 
     @Test
-    public void shouldCallbackToSpecifiedClassInTestClasspath() {
+    public void shouldCallbackForResponseToSpecifiedClassInTestClasspath() {
         // given
-        TestClasspathTestExpectationCallback.httpRequests.clear();
-        TestClasspathTestExpectationCallback.httpResponse = response()
+        TestClasspathTestExpectationResponseCallback.httpRequests.clear();
+        TestClasspathTestExpectationResponseCallback.httpResponse = response()
             .withStatusCode(ACCEPTED_202.code())
             .withReasonPhrase(ACCEPTED_202.reasonPhrase())
             .withHeaders(
@@ -84,9 +85,9 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
                 request()
                     .withPath(calculatePath("callback"))
             )
-            .callback(
+            .response(
                 callback()
-                    .withCallbackClass("org.mockserver.server.TestClasspathTestExpectationCallback")
+                    .withCallbackClass("org.mockserver.server.TestClasspathTestExpectationResponseCallback")
             );
 
         // then
@@ -109,8 +110,8 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
                     .withBody("an_example_body_http"),
                 headersToIgnore)
         );
-        assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
-        assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
 
         // - in https
         assertEquals(
@@ -132,8 +133,79 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
                     .withBody("an_example_body_https"),
                 headersToIgnore)
         );
-        assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
-        assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
+    }
+
+    @Test
+    public void shouldCallbackForForwardCallbackToSpecifiedClassInTestClasspath() {
+        // given
+        EchoServer secureEchoServer = new EchoServer(false);
+        System.out.println("secureEchoServer.getPort() = " + secureEchoServer.getPort());
+        TestClasspathTestExpectationForwardCallback.httpRequests.clear();
+        TestClasspathTestExpectationForwardCallback.httpRequestToReturn = request()
+            .withHeaders(
+                header("x-callback", "test_callback_header"),
+                header("Host", "localhost:" + secureEchoServer.getPort())
+            )
+            .withBody("a_callback_forward");
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("callback"))
+            )
+            .forward(
+                callback()
+                    .withCallbackClass("org.mockserver.server.TestClasspathTestExpectationForwardCallback")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-callback", "test_callback_header")
+                )
+                .withBody("a_callback_forward"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("callback"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("X-Test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore)
+        );
+        assertEquals(TestClasspathTestExpectationForwardCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
+        assertEquals(TestClasspathTestExpectationForwardCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
+
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-callback", "test_callback_header")
+                )
+                .withBody("a_callback_forward"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("callback"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("X-Test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
+        assertEquals(TestClasspathTestExpectationForwardCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
+        assertEquals(TestClasspathTestExpectationForwardCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
     }
 
     @Test

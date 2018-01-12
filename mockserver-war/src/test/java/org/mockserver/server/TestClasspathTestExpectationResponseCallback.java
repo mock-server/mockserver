@@ -1,6 +1,6 @@
 package org.mockserver.server;
 
-import org.mockserver.mock.action.ExpectationCallback;
+import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
@@ -12,7 +12,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public class TestClasspathTestExpectationCallback implements ExpectationCallback {
+public class TestClasspathTestExpectationResponseCallback implements ExpectationResponseCallback {
 
     public static List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
     public static HttpResponse httpResponse = response();

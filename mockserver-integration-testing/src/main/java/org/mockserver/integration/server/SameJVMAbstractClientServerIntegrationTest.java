@@ -42,7 +42,7 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
                 request()
                     .withPath(calculatePath("callback"))
             )
-            .callback(
+            .response(
                 callback()
                     .withCallbackClass("org.mockserver.integration.callback.StaticTestExpectationCallback")
             );

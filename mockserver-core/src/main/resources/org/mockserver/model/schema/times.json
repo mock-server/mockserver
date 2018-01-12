@@ -1,13 +1,13 @@
 {
-  "title": "number of responses",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "remainingTimes": {
-      "type": "integer"
-    },
-    "unlimited": {
-      "type": "boolean"
+    "title": "number of responses",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "remainingTimes": {
+            "type": "integer"
+        },
+        "unlimited": {
+            "type": "boolean"
+        }
     }
-  }
 }

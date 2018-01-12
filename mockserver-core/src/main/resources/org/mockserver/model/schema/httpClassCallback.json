@@ -1,10 +1,10 @@
 {
-  "title": "class callback",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "callbackClass": {
-      "type": "string"
+    "title": "class callback",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "callbackClass": {
+            "type": "string"
+        }
     }
-  }
 }

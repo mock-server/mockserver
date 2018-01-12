@@ -1,19 +1,19 @@
 {
-  "title": "host and port to forward to",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "host": {
-      "type": "string"
-    },
-    "port": {
-      "type": "integer"
-    },
-    "scheme": {
-      "enum": [
-        "HTTP",
-        "HTTPS"
-      ]
+    "title": "host and port to forward to",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "host": {
+            "type": "string"
+        },
+        "port": {
+            "type": "integer"
+        },
+        "scheme": {
+            "enum": [
+                "HTTP",
+                "HTTPS"
+            ]
+        }
     }
-  }
 }

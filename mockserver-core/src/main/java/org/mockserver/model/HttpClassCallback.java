@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class HttpClassCallback extends Action {
 
     private String callbackClass;
+    private Type actionType;
 
     /**
      * Static builder to create a callback.
@@ -30,12 +31,6 @@ public class HttpClassCallback extends Action {
         return new HttpClassCallback().withCallbackClass(callbackClass);
     }
 
-    @Override
-    @JsonIgnore
-    public Type getType() {
-        return Type.CLASS_CALLBACK;
-    }
-
     public String getCallbackClass() {
         return callbackClass;
     }
@@ -53,5 +48,16 @@ public class HttpClassCallback extends Action {
     public HttpClassCallback withCallbackClass(String callbackClass) {
         this.callbackClass = callbackClass;
         return this;
+    }
+
+    public HttpClassCallback withActionType(Type actionType) {
+        this.actionType = actionType;
+        return this;
+    }
+
+    @Override
+    @JsonIgnore
+    public Type getType() {
+        return actionType;
     }
 }

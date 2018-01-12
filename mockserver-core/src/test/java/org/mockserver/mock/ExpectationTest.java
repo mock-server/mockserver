@@ -38,8 +38,8 @@ public class ExpectationTest {
         assertEquals(httpResponse, expectationThatResponds.getAction());
         assertNull(expectationThatResponds.getHttpForward());
         assertNull(expectationThatResponds.getHttpError());
-        assertNull(expectationThatResponds.getHttpClassCallback());
-        assertNull(expectationThatResponds.getHttpObjectCallback());
+        assertNull(expectationThatResponds.getHttpResponseClassCallback());
+        assertNull(expectationThatResponds.getHttpResponseObjectCallback());
         assertEquals(times, expectationThatResponds.getTimes());
         assertEquals(timeToLive, expectationThatResponds.getTimeToLive());
 
@@ -52,8 +52,8 @@ public class ExpectationTest {
         assertEquals(httpForward, expectationThatForwards.getHttpForward());
         assertEquals(httpForward, expectationThatForwards.getAction());
         assertNull(expectationThatForwards.getHttpError());
-        assertNull(expectationThatForwards.getHttpClassCallback());
-        assertNull(expectationThatForwards.getHttpObjectCallback());
+        assertNull(expectationThatForwards.getHttpResponseClassCallback());
+        assertNull(expectationThatForwards.getHttpResponseObjectCallback());
         assertEquals(times, expectationThatForwards.getTimes());
         assertEquals(timeToLive, expectationThatForwards.getTimeToLive());
 
@@ -66,35 +66,35 @@ public class ExpectationTest {
         assertNull(expectationThatErrors.getHttpForward());
         assertEquals(httpError, expectationThatErrors.getHttpError());
         assertEquals(httpError, expectationThatErrors.getAction());
-        assertNull(expectationThatErrors.getHttpClassCallback());
-        assertNull(expectationThatErrors.getHttpObjectCallback());
+        assertNull(expectationThatErrors.getHttpResponseClassCallback());
+        assertNull(expectationThatErrors.getHttpResponseObjectCallback());
         assertEquals(times, expectationThatErrors.getTimes());
         assertEquals(timeToLive, expectationThatErrors.getTimeToLive());
 
         // when
-        Expectation expectationThatCallsbacksClass = new Expectation(httpRequest, times, timeToLive).thenCallback(httpClassCallback);
+        Expectation expectationThatCallsbacksClass = new Expectation(httpRequest, times, timeToLive).thenRespond(httpClassCallback);
 
         // then
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
         assertNull(expectationThatCallsbacksClass.getHttpResponse());
         assertNull(expectationThatCallsbacksClass.getHttpForward());
         assertNull(expectationThatCallsbacksClass.getHttpError());
-        assertEquals(httpClassCallback, expectationThatCallsbacksClass.getHttpClassCallback());
+        assertEquals(httpClassCallback, expectationThatCallsbacksClass.getHttpResponseClassCallback());
         assertEquals(httpClassCallback, expectationThatCallsbacksClass.getAction());
-        assertNull(expectationThatCallsbacksClass.getHttpObjectCallback());
+        assertNull(expectationThatCallsbacksClass.getHttpResponseObjectCallback());
         assertEquals(times, expectationThatCallsbacksClass.getTimes());
         assertEquals(timeToLive, expectationThatCallsbacksClass.getTimeToLive());
 
         // when
-        Expectation expectationThatCallsbackObject = new Expectation(httpRequest, times, timeToLive).thenCallback(httpObjectCallback);
+        Expectation expectationThatCallsbackObject = new Expectation(httpRequest, times, timeToLive).thenRespond(httpObjectCallback);
 
         // then
         assertEquals(httpRequest, expectationThatForwards.getHttpRequest());
         assertNull(expectationThatCallsbackObject.getHttpResponse());
         assertNull(expectationThatCallsbackObject.getHttpForward());
         assertNull(expectationThatCallsbackObject.getHttpError());
-        assertNull(expectationThatCallsbackObject.getHttpClassCallback());
-        assertEquals(httpObjectCallback, expectationThatCallsbackObject.getHttpObjectCallback());
+        assertNull(expectationThatCallsbackObject.getHttpResponseClassCallback());
+        assertEquals(httpObjectCallback, expectationThatCallsbackObject.getHttpResponseObjectCallback());
         assertEquals(httpObjectCallback, expectationThatCallsbackObject.getAction());
         assertEquals(times, expectationThatCallsbackObject.getTimes());
         assertEquals(timeToLive, expectationThatCallsbackObject.getTimeToLive());
@@ -103,7 +103,7 @@ public class ExpectationTest {
     @Test
     public void shouldAllowForNulls() {
         // when
-        Expectation expectation = new Expectation(null, null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).thenCallback((HttpClassCallback)null).thenCallback((HttpObjectCallback)null);
+        Expectation expectation = new Expectation(null, null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).thenRespond((HttpClassCallback)null).thenRespond((HttpObjectCallback)null);
 
         // then
         expectation.setNotUnlimitedResponses();
@@ -112,8 +112,8 @@ public class ExpectationTest {
         assertNull(expectation.getHttpRequest());
         assertNull(expectation.getHttpResponse());
         assertNull(expectation.getHttpForward());
-        assertNull(expectation.getHttpClassCallback());
-        assertNull(expectation.getHttpObjectCallback());
+        assertNull(expectation.getHttpResponseClassCallback());
+        assertNull(expectation.getHttpResponseObjectCallback());
         assertNull(expectation.getTimes());
     }
 
@@ -203,7 +203,7 @@ public class ExpectationTest {
         HttpResponse httpResponse = new HttpResponse();
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenCallback(httpClassCallback).thenRespond(httpResponse);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpClassCallback).thenRespond(httpResponse);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -214,7 +214,7 @@ public class ExpectationTest {
         HttpResponse httpResponse = new HttpResponse();
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenCallback(httpObjectCallback).thenRespond(httpResponse);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpObjectCallback).thenRespond(httpResponse);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -247,7 +247,7 @@ public class ExpectationTest {
         HttpForward httpForward = new HttpForward();
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenCallback(httpClassCallback).thenForward(httpForward);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpClassCallback).thenForward(httpForward);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -258,7 +258,7 @@ public class ExpectationTest {
         HttpForward httpForward = new HttpForward();
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenCallback(httpObjectCallback).thenForward(httpForward);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpObjectCallback).thenForward(httpForward);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -269,7 +269,7 @@ public class ExpectationTest {
         HttpClassCallback httpClassCallback = new HttpClassCallback();
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenForward(httpForward).thenCallback(httpClassCallback);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenForward(httpForward).thenRespond(httpClassCallback);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -280,7 +280,7 @@ public class ExpectationTest {
         HttpClassCallback httpClassCallback = new HttpClassCallback();
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenError(httpError).thenCallback(httpClassCallback);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenError(httpError).thenRespond(httpClassCallback);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -291,7 +291,7 @@ public class ExpectationTest {
         HttpClassCallback httpClassCallback = new HttpClassCallback();
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponse).thenCallback(httpClassCallback);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponse).thenRespond(httpClassCallback);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -302,7 +302,7 @@ public class ExpectationTest {
         HttpObjectCallback httpObjectCallback = new HttpObjectCallback();
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenForward(httpForward).thenCallback(httpObjectCallback);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenForward(httpForward).thenRespond(httpObjectCallback);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -313,7 +313,7 @@ public class ExpectationTest {
         HttpObjectCallback httpObjectCallback = new HttpObjectCallback();
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenError(httpError).thenCallback(httpObjectCallback);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenError(httpError).thenRespond(httpObjectCallback);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -324,6 +324,6 @@ public class ExpectationTest {
         HttpObjectCallback httpObjectCallback = new HttpObjectCallback();
 
         // then
-        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponse).thenCallback(httpObjectCallback);
+        new Expectation(httpRequest, Times.once(), TimeToLive.unlimited()).thenRespond(httpResponse).thenRespond(httpObjectCallback);
     }
 }

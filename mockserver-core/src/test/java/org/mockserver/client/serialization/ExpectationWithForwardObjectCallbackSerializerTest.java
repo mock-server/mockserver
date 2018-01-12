@@ -35,7 +35,7 @@ import static org.mockserver.model.StringBody.exact;
 /**
  * @author jamesdbloom
  */
-public class ExpectationWithObjectCallbackSerializerTest {
+public class ExpectationWithForwardObjectCallbackSerializerTest {
 
     private final Expectation fullExpectation = new Expectation(
         new HttpRequest()
@@ -47,7 +47,7 @@ public class ExpectationWithObjectCallbackSerializerTest {
             .withCookies(new Cookie("cookieName", "cookieValue")),
         Times.once(),
         TimeToLive.exactly(TimeUnit.HOURS, 2l))
-        .thenCallback(
+        .thenForward(
             new HttpObjectCallback().withClientId("some_random_client_id")
         );
     private final ExpectationDTO fullExpectationDTO = new ExpectationDTO()
@@ -66,7 +66,7 @@ public class ExpectationWithObjectCallbackSerializerTest {
                     cookie("cookieName", "cookieValue")
                 ))
         )
-        .setHttpObjectCallback(
+        .setHttpForwardObjectCallback(
             new HttpObjectCallbackDTO(
                 new HttpObjectCallback()
                     .withClientId("some_random_client_id")

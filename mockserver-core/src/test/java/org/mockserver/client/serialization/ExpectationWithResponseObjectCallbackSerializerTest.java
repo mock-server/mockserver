@@ -17,7 +17,6 @@ import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.core.Is.is;
@@ -29,7 +28,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
-import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.StringBody.exact;
@@ -37,20 +35,20 @@ import static org.mockserver.model.StringBody.exact;
 /**
  * @author jamesdbloom
  */
-public class ExpectationWithClassCallbackSerializerTest {
+public class ExpectationWithResponseObjectCallbackSerializerTest {
 
     private final Expectation fullExpectation = new Expectation(
         new HttpRequest()
             .withMethod("GET")
             .withPath("somePath")
-            .withQueryStringParameters(new Parameter("queryParameterName", Collections.singletonList("queryParameterValue")))
+            .withQueryStringParameters(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))
             .withBody(new StringBody("someBody"))
             .withHeaders(new Header("headerName", "headerValue"))
             .withCookies(new Cookie("cookieName", "cookieValue")),
         Times.once(),
         TimeToLive.exactly(TimeUnit.HOURS, 2l))
-        .thenCallback(
-            callback("some_random_class")
+        .thenRespond(
+            new HttpObjectCallback().withClientId("some_random_client_id")
         );
     private final ExpectationDTO fullExpectationDTO = new ExpectationDTO()
         .setHttpRequest(
@@ -68,10 +66,10 @@ public class ExpectationWithClassCallbackSerializerTest {
                     cookie("cookieName", "cookieValue")
                 ))
         )
-        .setHttpClassCallback(
-            new HttpClassCallbackDTO(
-                new HttpClassCallback()
-                    .withCallbackClass("some_random_class")
+        .setHttpResponseObjectCallback(
+            new HttpObjectCallbackDTO(
+                new HttpObjectCallback()
+                    .withClientId("some_random_client_id")
             )
         )
         .setTimes(new TimesDTO(Times.once()))
