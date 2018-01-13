@@ -16,5 +16,5 @@ public interface ExpectationForwardCallback {
      * @param httpRequest the request that satisfied the expectation condition
      * @return the request that will be proxied
      */
-    public HttpRequest handle(HttpRequest httpRequest);
+    HttpRequest handle(HttpRequest httpRequest);
 }

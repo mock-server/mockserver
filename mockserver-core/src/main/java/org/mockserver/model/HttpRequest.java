@@ -545,4 +545,32 @@ public class HttpRequest extends Not {
             .withKeepAlive(keepAlive)
             .withSecure(secure);
     }
+
+    public HttpRequest update(HttpRequest replaceRequest) {
+        if (!Strings.isNullOrEmpty(replaceRequest.getMethod().getValue())) {
+            withMethod(replaceRequest.getMethod());
+        }
+        if (!Strings.isNullOrEmpty(replaceRequest.getPath().getValue())) {
+            withPath(replaceRequest.getPath());
+        }
+        for (Header header : replaceRequest.getHeaderList()) {
+            getHeaders().replaceEntry(header);
+        }
+        for (Cookie cookie : replaceRequest.getCookieList()) {
+            withCookie(cookie);
+        }
+        for (Parameter parameter : replaceRequest.getQueryStringParameterList()) {
+            getQueryStringParameters().replaceEntry(parameter);
+        }
+        if (replaceRequest.getBody() != null) {
+            withBody(replaceRequest.getBody());
+        }
+        if (replaceRequest.isSecure() != null) {
+            withSecure(replaceRequest.isSecure());
+        }
+        if (replaceRequest.isKeepAlive() != null) {
+            withKeepAlive(replaceRequest.isKeepAlive());
+        }
+        return this;
+    }
 }

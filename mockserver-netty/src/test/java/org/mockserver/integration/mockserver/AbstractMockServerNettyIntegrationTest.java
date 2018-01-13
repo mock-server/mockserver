@@ -4,13 +4,15 @@ import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.matchers.MatcherBuilder;
+import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.server.TestClasspathTestExpectationCallback;
+import org.mockserver.server.TestClasspathTestExpectationResponseCallback;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.streams.IOStreamUtils;
 import org.mockserver.verify.VerificationTimes;
@@ -52,14 +54,14 @@ import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
 public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbstractClientServerIntegrationTest {
 
     @Test
-    public void shouldRequestCallbackToSpecifiedObject() {
+    public void shouldRespondByObjectCallback() {
         // when
         mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("object_callback"))
             )
-            .response(
+            .respond(
                 new ExpectationResponseCallback() {
                     @Override
                     public HttpResponse handle(HttpRequest httpRequest) {
@@ -131,7 +133,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     }
 
     @Test
-    public void shouldRequestCallbackToSpecifiedObjectAndVerifyRequests() {
+    public void shouldRespondByObjectCallbackAndVerifyRequests() {
         // when
         mockServerClient
             .when(
@@ -139,7 +141,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                     .withPath(calculatePath("object_callback")),
                 exactly(1)
             )
-            .response(
+            .respond(
                 new ExpectationResponseCallback() {
                     @Override
                     public HttpResponse handle(HttpRequest httpRequest) {
@@ -181,7 +183,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     }
 
     @Test
-    public void shouldRequestCallbackToSpecifiedObjectForVeryLargeRequestAndResponses() {
+    public void shouldRespondByObjectCallbackForVeryLargeRequestAndResponses() {
         int bytes = 65536 * 10;
         char[] chars = new char[bytes];
         Arrays.fill(chars, 'a');
@@ -193,7 +195,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 request()
                     .withPath(calculatePath("object_callback"))
             )
-            .response(
+            .respond(
                 new ExpectationResponseCallback() {
                     @Override
                     public HttpResponse handle(HttpRequest httpRequest) {
@@ -234,6 +236,78 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 headersToIgnore
             )
         );
+    }
+
+    @Test
+    public void shouldForwardByObjectCallback() {
+        // given
+        final EchoServer echoServer = new EchoServer(false);
+        final EchoServer secureEchoServer = new EchoServer(true);
+
+        try {
+            // when
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("echo"))
+                )
+                .forward(
+                    new ExpectationForwardCallback() {
+                        @Override
+                        public HttpRequest handle(HttpRequest httpRequest) {
+                            return request()
+                                .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : echoServer.getPort()))
+                                .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                                .withBody("some_overridden_body")
+                                .withSecure(httpRequest.isSecure());
+                        }
+                    }
+                );
+
+            // then
+            // - in http
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("some_overridden_body"),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("echo"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body")
+                        )
+                        .withBody("an_example_body_http"),
+                    headersToIgnore
+                )
+            );
+            // - in https
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body_https")
+                    )
+                    .withBody("some_overridden_body"),
+                makeRequest(
+                    request()
+                        .withSecure(true)
+                        .withPath(calculatePath("echo"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body_https")
+                        )
+                        .withBody("an_example_body_https"),
+                    headersToIgnore)
+            );
+        } finally {
+            echoServer.stop();
+        }
     }
 
     @Test
@@ -720,8 +794,8 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
     @Test
     public void shouldCallbackToSpecifiedClassInTestClasspath() {
         // given
-        TestClasspathTestExpectationCallback.httpRequests.clear();
-        TestClasspathTestExpectationCallback.httpResponse = response()
+        TestClasspathTestExpectationResponseCallback.httpRequests.clear();
+        TestClasspathTestExpectationResponseCallback.httpResponse = response()
             .withStatusCode(ACCEPTED_202.code())
             .withReasonPhrase(ACCEPTED_202.reasonPhrase())
             .withHeaders(
@@ -735,9 +809,9 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                 request()
                     .withPath(calculatePath("callback"))
             )
-            .response(
+            .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.server.TestClasspathTestExpectationCallback")
+                    .withCallbackClass("org.mockserver.server.TestClasspathTestExpectationResponseCallback")
             );
 
         // then
@@ -760,8 +834,8 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                     .withBody("an_example_body_http"),
                 headersToIgnore)
         );
-        assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
-        assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
 
         // - in https
         assertEquals(
@@ -783,7 +857,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                     .withBody("an_example_body_https"),
                 headersToIgnore)
         );
-        assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
-        assertEquals(TestClasspathTestExpectationCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
+        assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
     }
 }

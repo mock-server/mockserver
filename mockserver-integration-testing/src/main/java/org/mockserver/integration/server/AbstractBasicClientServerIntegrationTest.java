@@ -14,6 +14,7 @@ import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.model.*;
 import org.mockserver.verify.VerificationTimes;
 import org.slf4j.Logger;
@@ -41,6 +42,7 @@ import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpForward.forward;
+import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -130,7 +132,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
             httpRequest.withHeader(HOST.toString(), "localhost:" + port);
             boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
             HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port))
-                .get(10, (isDebug ? TimeUnit.MINUTES : TimeUnit.SECONDS));
+                .get(30, (isDebug ? TimeUnit.MINUTES : TimeUnit.SECONDS));
             List<Header> headers = new ArrayList<Header>();
             for (Header header : httpResponse.getHeaderList()) {
                 if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
@@ -269,6 +271,151 @@ public abstract class AbstractBasicClientServerIntegrationTest {
         } finally {
             secureEchoServer.stop();
         }
+    }
+
+    @Test
+    public void shouldForwardOverriddenRequest() {
+        // given
+        EchoServer echoServer = new EchoServer(false);
+        EchoServer secureEchoServer = new EchoServer(true);
+
+        try {
+            // when
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("echo"))
+                        .withSecure(false)
+                )
+                .forward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "localhost:" + echoServer.getPort())
+                            .withBody("some_overridden_body")
+                    ).withDelay(MILLISECONDS, 10)
+                );
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("echo"))
+                        .withSecure(true)
+                )
+                .forward(
+                    forwardOverriddenRequest(
+                        request()
+                            .withHeader("Host", "localhost:" + secureEchoServer.getPort())
+                            .withBody("some_overridden_body")
+                    ).withDelay(MILLISECONDS, 10)
+                );
+
+            // then
+            // - in http
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("some_overridden_body"),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("echo"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body")
+                        )
+                        .withBody("an_example_body_http"),
+                    headersToIgnore
+                )
+            );
+            // - in https
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body_https")
+                    )
+                    .withBody("some_overridden_body"),
+                makeRequest(
+                    request()
+                        .withSecure(true)
+                        .withPath(calculatePath("echo"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body_https")
+                        )
+                        .withBody("an_example_body_https"),
+                    headersToIgnore)
+            );
+        } finally {
+            echoServer.stop();
+        }
+    }
+
+    @Test
+    public void shouldCallbackForForwardToSpecifiedClassWithPrecannedResponse() {
+        // given
+        EchoServer echoServer = new EchoServer(false);
+        EchoServer secureEchoServer = new EchoServer(true);
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                callback()
+                    .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationForwardCallback")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body"),
+                        header("x-echo-server-port", echoServer.getPort())
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
+        );
+
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body"),
+                        header("x-echo-server-port", secureEchoServer.getPort())
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore
+            )
+        );
     }
 
     @Test
@@ -412,16 +559,16 @@ public abstract class AbstractBasicClientServerIntegrationTest {
     }
 
     @Test
-    public void shouldCallbackToSpecifiedClassWithPrecannedResponse() {
+    public void shouldCallbackForResponseToSpecifiedClassWithPrecannedResponse() {
         // when
         mockServerClient
             .when(
                 request()
                     .withPath(calculatePath("callback"))
             )
-            .response(
+            .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationCallback")
+                    .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationResponseCallback")
             );
 
         // then
@@ -1588,7 +1735,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
         assertThat(httpResponse.getStatusCode(), is(400));
         assertThat(httpResponse.getBodyAsString(), is("2 errors:" + NEW_LINE +
             " - object instance has properties which are not allowed by the schema: [\"incorrectField\"]" + NEW_LINE +
-            " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpResponseObjectCallback\" \"httpResponseClassCallback\" \"httpForward\" \"httpForwardTemplate\" \"httpForwardObjectCallback\" \"httpForwardClassCallback\" \"httpError\" "));
+            " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpResponseObjectCallback\" \"httpResponseClassCallback\" \"httpForward\" \"httpForwardTemplate\" \"httpForwardObjectCallback\" \"httpForwardClassCallback\" \"httpOverrideForwardedRequest\" \"httpError\" "));
     }
 
     @Test

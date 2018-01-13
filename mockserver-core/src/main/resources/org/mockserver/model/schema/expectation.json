@@ -30,6 +30,9 @@
         "httpForwardObjectCallback": {
             "$ref": "#/definitions/httpObjectCallback"
         },
+        "httpOverrideForwardedRequest": {
+            "$ref": "#/definitions/httpOverrideForwardedRequest"
+        },
         "httpError": {
             "$ref": "#/definitions/httpError"
         },
@@ -79,6 +82,11 @@
         {
             "required": [
                 "httpForwardClassCallback"
+            ]
+        },
+        {
+            "required": [
+                "httpOverrideForwardedRequest"
             ]
         },
         {

@@ -21,6 +21,7 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpTemplate httpForwardTemplate;
     private HttpClassCallback httpForwardClassCallback;
     private HttpObjectCallback httpForwardObjectCallback;
+    private HttpOverrideForwardedRequest httpOverrideForwardedRequest;
     private HttpError httpError;
 
     public Expectation(HttpRequest httpRequest) {
@@ -69,6 +70,10 @@ public class Expectation extends ObjectWithJsonToString {
         return httpForwardObjectCallback;
     }
 
+    public HttpOverrideForwardedRequest getHttpOverrideForwardedRequest() {
+        return httpOverrideForwardedRequest;
+    }
+
     public HttpError getHttpError() {
         return httpError;
     }
@@ -91,6 +96,8 @@ public class Expectation extends ObjectWithJsonToString {
             return getHttpForwardClassCallback();
         } else if (httpForwardObjectCallback != null) {
             return getHttpForwardObjectCallback();
+        } else if (httpOverrideForwardedRequest != null) {
+            return getHttpOverrideForwardedRequest();
         } else if (httpError != null) {
             return getHttpError();
         } else {
@@ -176,6 +183,14 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
+    public Expectation thenForward(HttpOverrideForwardedRequest httpOverrideForwardedRequest) {
+        if (httpOverrideForwardedRequest != null) {
+            validationErrors("a forward replace", httpOverrideForwardedRequest.getType());
+            this.httpOverrideForwardedRequest = httpOverrideForwardedRequest;
+        }
+        return this;
+    }
+
     public Expectation thenError(HttpError httpError) {
         if (httpError != null) {
             validationErrors("an error", httpError.getType());
@@ -208,6 +223,9 @@ public class Expectation extends ObjectWithJsonToString {
         }
         if (actionType != Action.Type.FORWARD_OBJECT_CALLBACK && httpForwardObjectCallback != null) {
             throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once an object callback has been set");
+        }
+        if (actionType != Action.Type.FORWARD_REPLACE && httpOverrideForwardedRequest != null) {
+            throw new IllegalArgumentException("It is not possible to set " + actionDescription + " once a forward replace has been set");
         }
         if (actionType != Action.Type.ERROR && httpError != null) {
             throw new IllegalArgumentException("It is not possible to set " + actionDescription + " callback once an error has been set");
@@ -254,6 +272,7 @@ public class Expectation extends ObjectWithJsonToString {
             .thenForward(httpForwardTemplate)
             .thenForward(httpForwardClassCallback)
             .thenForward(httpForwardObjectCallback)
+            .thenForward(httpOverrideForwardedRequest)
             .thenError(httpError);
     }
 }

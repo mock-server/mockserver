@@ -16,5 +16,5 @@ public interface ExpectationResponseCallback {
      * @param httpRequest the request that satisfied the expectation condition
      * @return the response that will be returned to the client
      */
-    public HttpResponse handle(HttpRequest httpRequest);
+    HttpResponse handle(HttpRequest httpRequest);
 }

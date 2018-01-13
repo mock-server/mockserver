@@ -23,26 +23,28 @@ public class HttpResponseClassCallbackActionHandler {
 
     private ExpectationResponseCallback instantiateCallback(HttpClassCallback httpClassCallback) {
         try {
-            Class expectationCallbackClass = Class.forName(httpClassCallback.getCallbackClass());
-            if (ExpectationResponseCallback.class.isAssignableFrom(expectationCallbackClass)) {
-                Constructor<? extends ExpectationResponseCallback> constructor = expectationCallbackClass.getConstructor();
+            Class expectationResponseCallbackClass = Class.forName(httpClassCallback.getCallbackClass());
+            if (ExpectationResponseCallback.class.isAssignableFrom(expectationResponseCallbackClass)) {
+                Constructor<? extends ExpectationResponseCallback> constructor = expectationResponseCallbackClass.getConstructor();
                 return constructor.newInstance();
+            } else {
+                logger.error(httpClassCallback.getCallbackClass() + " does not implement " + ExpectationForwardCallback.class.getCanonicalName() + " which required for forwarded requests generated from a class callback");
             }
         } catch (ClassNotFoundException e) {
-            logger.error("ClassNotFoundException - while trying to instantiate ExpectationCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
+            logger.error("ClassNotFoundException - while trying to instantiate ExpectationResponseCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
         } catch (NoSuchMethodException e) {
-            logger.error("NoSuchMethodException - while trying to create default constructor on ExpectationCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
+            logger.error("NoSuchMethodException - while trying to create default constructor on ExpectationResponseCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-            logger.error("InvocationTargetException - while trying to execute default constructor on ExpectationCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
+            logger.error("InvocationTargetException - while trying to execute default constructor on ExpectationResponseCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);
         }
         return null;
     }
 
     private HttpResponse invokeCallbackMethod(HttpClassCallback httpClassCallback, HttpRequest httpRequest) {
         if (httpRequest != null) {
-            ExpectationResponseCallback expectationCallback = instantiateCallback(httpClassCallback);
-            if (expectationCallback != null) {
-                return expectationCallback.handle(httpRequest);
+            ExpectationResponseCallback expectationResponseCallback = instantiateCallback(httpClassCallback);
+            if (expectationResponseCallback != null) {
+                return expectationResponseCallback.handle(httpRequest);
             } else {
                 return notFoundResponse();
             }

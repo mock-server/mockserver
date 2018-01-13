@@ -6,6 +6,10 @@ import org.junit.rules.ExpectedException;
 import org.mockserver.client.ClientException;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
+import org.mockserver.mock.action.ExpectationForwardCallback;
+import org.mockserver.mock.action.ExpectationResponseCallback;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.Matchers.containsString;
@@ -68,6 +72,58 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
     }
 
     @Test
+    public void shouldReturnErrorResponseForRespondByObjectCallback() {
+        // given
+        exception.expect(ClientException.class);
+        exception.expectMessage(containsString("ExpectationResponseCallback and ExpectationForwardCallback is not supported by MockServer deployed as a WAR"));
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("object_callback"))
+            )
+            .respond(
+                new ExpectationResponseCallback() {
+                    @Override
+                    public HttpResponse handle(HttpRequest httpRequest) {
+                        return response()
+                            .withStatusCode(ACCEPTED_202.code())
+                            .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                            .withHeaders(
+                                header("x-object-callback", "test_object_callback_header")
+                            )
+                            .withBody("an_object_callback_response");
+                    }
+                }
+            );
+    }
+
+    @Test
+    public void shouldReturnErrorResponseForForwardByObjectCallback() {
+        // given
+        exception.expect(ClientException.class);
+        exception.expectMessage(containsString("ExpectationResponseCallback and ExpectationForwardCallback is not supported by MockServer deployed as a WAR"));
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                new ExpectationForwardCallback() {
+                    @Override
+                    public HttpRequest handle(HttpRequest httpRequest) {
+                        return request()
+                            .withBody("some_overridden_body")
+                            .withSecure(httpRequest.isSecure());
+                    }
+                }
+            );
+    }
+
+    @Test
     public void shouldCallbackForResponseToSpecifiedClassInTestClasspath() {
         // given
         TestClasspathTestExpectationResponseCallback.httpRequests.clear();
@@ -85,7 +141,7 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
                 request()
                     .withPath(calculatePath("callback"))
             )
-            .response(
+            .respond(
                 callback()
                     .withCallbackClass("org.mockserver.server.TestClasspathTestExpectationResponseCallback")
             );

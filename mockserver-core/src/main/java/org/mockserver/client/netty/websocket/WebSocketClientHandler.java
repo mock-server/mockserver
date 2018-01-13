@@ -67,20 +67,21 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                 handshaker.finishHandshake(ch, httpResponse);
                 webSocketClient.registrationFuture().set(httpResponse.headers().get("X-CLIENT-REGISTRATION-ID"));
                 logger.debug("web socket client " + webSocketClient.registrationFuture().get() + " connected!");
-                return;
-            } else if (httpResponse.status().equals(HttpResponseStatus.NOT_ACCEPTABLE)) {
-                throw new WebSocketException(readRequestBody(httpResponse));
+            } else if (httpResponse.status().equals(HttpResponseStatus.NOT_IMPLEMENTED)) {
+                String message = readRequestBody(httpResponse);
+                webSocketClient.registrationFuture().setException(new WebSocketException(message));
+                logger.warn(message);
             } else {
                 throw new WebSocketException("Unsupported web socket message " + new FullHttpResponseToMockServerResponse().mapMockServerResponseToFullHttpResponse(httpResponse));
             }
-        }
-
-        WebSocketFrame frame = (WebSocketFrame) msg;
-        if (frame instanceof TextWebSocketFrame) {
-            webSocketClient.receivedTextWebSocketFrame((TextWebSocketFrame) frame);
-        } else if (frame instanceof CloseWebSocketFrame) {
-            logger.debug("web socket client received request to close");
-            ch.close();
+        } else if (msg instanceof WebSocketFrame) {
+            WebSocketFrame frame = (WebSocketFrame) msg;
+            if (frame instanceof TextWebSocketFrame) {
+                webSocketClient.receivedTextWebSocketFrame((TextWebSocketFrame) frame);
+            } else if (frame instanceof CloseWebSocketFrame) {
+                logger.debug("web socket client received request to close");
+                ch.close();
+            }
         }
     }
 

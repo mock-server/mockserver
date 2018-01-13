@@ -65,6 +65,9 @@ public class ActionHandlerTest {
     private HttpForwardObjectCallbackActionHandler mockHttpForwardObjectCallbackActionHandler;
 
     @Mock
+    private HttpOverrideForwardedRequestActionHandler mockHttpOverrideForwardedRequestActionHandler;
+
+    @Mock
     private HttpErrorActionHandler mockHttpErrorActionHandler;
 
     @Mock
@@ -103,6 +106,7 @@ public class ActionHandlerTest {
         when(mockHttpForwardActionHandler.handle(any(HttpForward.class), any(HttpRequest.class))).thenReturn(responseFuture);
         when(mockHttpForwardTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenReturn(responseFuture);
         when(mockHttpForwardClassCallbackActionHandler.handle(any(HttpClassCallback.class), any(HttpRequest.class))).thenReturn(responseFuture);
+        when(mockHttpOverrideForwardedRequestActionHandler.handle(any(HttpOverrideForwardedRequest.class), any(HttpRequest.class))).thenReturn(responseFuture);
     }
 
     @Test
@@ -239,6 +243,22 @@ public class ActionHandlerTest {
         // then
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
         verify(mockHttpForwardObjectCallbackActionHandler).handle(callback, request, mockResponseWriter, true);
+    }
+
+    @Test
+    public void shouldProcessOverrideForwardedRequest() {
+        // given
+        HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest().withHttpRequest(request("some_overridden_path"));
+        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenForward(httpOverrideForwardedRequest);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
+
+        // then
+        verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
+        verify(mockHttpOverrideForwardedRequestActionHandler).handle(httpOverrideForwardedRequest, request);
     }
 
     @Test

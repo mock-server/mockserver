@@ -26,6 +26,7 @@ import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpForward.Scheme.HTTPS;
 import static org.mockserver.model.HttpForward.forward;
+import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpTemplate.template;
@@ -68,51 +69,51 @@ public class MockServerClientIntegrationTest {
 
         // when
         mockServerClient
-                .when(
-                        request()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))
-                )
-                .respond(
-                        response()
-                                .withBody("some_response_body")
-                                .withHeaders(new Header("responseName", "responseValue"))
-                );
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+                    .withHeaders(new Header("responseName", "responseValue"))
+            );
 
         // then
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/expectation")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("" +
-                                "{" + NEW_LINE +
-                                "  \"httpRequest\" : {" + NEW_LINE +
-                                "    \"path\" : \"/some_path\"," + NEW_LINE +
-                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"httpResponse\" : {" + NEW_LINE +
-                                "    \"headers\" : {" + NEW_LINE +
-                                "      \"responseName\" : [ \"responseValue\" ]" + NEW_LINE +
-                                "    }," + NEW_LINE +
-                                "    \"body\" : \"some_response_body\"" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"times\" : {" + NEW_LINE +
-                                "    \"remainingTimes\" : 0," + NEW_LINE +
-                                "    \"unlimited\" : true" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"timeToLive\" : {" + NEW_LINE +
-                                "    \"unlimited\" : true" + NEW_LINE +
-                                "  }" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/expectation")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpResponse\" : {" + NEW_LINE +
+                    "    \"headers\" : {" + NEW_LINE +
+                    "      \"responseName\" : [ \"responseValue\" ]" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"body\" : \"some_response_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"remainingTimes\" : 0," + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"timeToLive\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -186,7 +187,7 @@ public class MockServerClientIntegrationTest {
                     .withPath("/some_path")
                     .withBody(new StringBody("some_request_body"))
             )
-            .response(
+            .respond(
                 callback()
                     .withCallbackClass("some_class")
             );
@@ -240,7 +241,7 @@ public class MockServerClientIntegrationTest {
                     .withPath("/some_path")
                     .withBody(new StringBody("some_request_body"))
             )
-            .response(
+            .respond(
                 callback()
                     .withCallbackClass("some_class")
             );
@@ -289,51 +290,51 @@ public class MockServerClientIntegrationTest {
 
         // when
         mockServerClient
-                .when(
-                        request()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))
-                )
-                .forward(
-                        forward()
-                                .withHost("some_host")
-                                .withPort(9090)
-                                .withScheme(HTTPS)
-                );
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .forward(
+                forward()
+                    .withHost("some_host")
+                    .withPort(9090)
+                    .withScheme(HTTPS)
+            );
 
         // then
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/expectation")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("" +
-                                "{" + NEW_LINE +
-                                "  \"httpRequest\" : {" + NEW_LINE +
-                                "    \"path\" : \"/some_path\"," + NEW_LINE +
-                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"httpForward\" : {" + NEW_LINE +
-                                "    \"host\" : \"some_host\"," + NEW_LINE +
-                                "    \"port\" : 9090," + NEW_LINE +
-                                "    \"scheme\" : \"HTTPS\"" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"times\" : {" + NEW_LINE +
-                                "    \"remainingTimes\" : 0," + NEW_LINE +
-                                "    \"unlimited\" : true" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"timeToLive\" : {" + NEW_LINE +
-                                "    \"unlimited\" : true" + NEW_LINE +
-                                "  }" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/expectation")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpForward\" : {" + NEW_LINE +
+                    "    \"host\" : \"some_host\"," + NEW_LINE +
+                    "    \"port\" : 9090," + NEW_LINE +
+                    "    \"scheme\" : \"HTTPS\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"remainingTimes\" : 0," + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"timeToLive\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -504,55 +505,117 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
+    public void shouldSetupExpectationWithOverrideForwardedRequest() {
+        // given
+        echoServer.withNextResponse(response().withStatusCode(201));
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("host", "localhost:" + echoServer.getPort())
+                        .withBody("some_override_body")
+                )
+            );
+
+        // then
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
+            request()
+                .withMethod("PUT")
+                .withPath("/expectation")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpOverrideForwardedRequest\" : {" + NEW_LINE +
+                    "    \"httpRequest\" : {" + NEW_LINE +
+                    "      \"headers\" : {" + NEW_LINE +
+                    "        \"host\" : [ \"localhost:" + echoServer.getPort() + "\" ]" + NEW_LINE +
+                    "      }," + NEW_LINE +
+                    "      \"body\" : \"some_override_body\"" + NEW_LINE +
+                    "    }" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"remainingTimes\" : 0," + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"timeToLive\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"))
+        ));
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
+        }
+    }
+
+    @Test
     public void shouldSetupExpectationWithError() {
         // given
         echoServer.withNextResponse(response().withStatusCode(201));
 
         // when
         mockServerClient
-                .when(
-                        request()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))
-                )
-                .error(
-                        error()
-                                .withDropConnection(true)
-                                .withResponseBytes("silly_bytes".getBytes(UTF_8))
-                );
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .error(
+                error()
+                    .withDropConnection(true)
+                    .withResponseBytes("silly_bytes".getBytes(UTF_8))
+            );
 
         // then
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/expectation")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("" +
-                                "{" + NEW_LINE +
-                                "  \"httpRequest\" : {" + NEW_LINE +
-                                "    \"path\" : \"/some_path\"," + NEW_LINE +
-                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"httpError\" : {" + NEW_LINE +
-                                "    \"dropConnection\" : true," + NEW_LINE +
-                                "    \"responseBytes\" : \"c2lsbHlfYnl0ZXM=\"" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"times\" : {" + NEW_LINE +
-                                "    \"remainingTimes\" : 0," + NEW_LINE +
-                                "    \"unlimited\" : true" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"timeToLive\" : {" + NEW_LINE +
-                                "    \"unlimited\" : true" + NEW_LINE +
-                                "  }" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/expectation")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpError\" : {" + NEW_LINE +
+                    "    \"dropConnection\" : true," + NEW_LINE +
+                    "    \"responseBytes\" : \"c2lsbHlfYnl0ZXM=\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"remainingTimes\" : 0," + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"timeToLive\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -566,52 +629,52 @@ public class MockServerClientIntegrationTest {
 
         // when
         mockServerClient
-                .when(
-                        request()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body")),
-                        exactly(3)
-                )
-                .respond(
-                        response()
-                                .withBody("some_response_body")
-                                .withHeaders(new Header("responseName", "responseValue"))
-                );
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body")),
+                exactly(3)
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+                    .withHeaders(new Header("responseName", "responseValue"))
+            );
 
         // then
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/expectation")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("" +
-                                "{" + NEW_LINE +
-                                "  \"httpRequest\" : {" + NEW_LINE +
-                                "    \"path\" : \"/some_path\"," + NEW_LINE +
-                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"httpResponse\" : {" + NEW_LINE +
-                                "    \"headers\" : {" + NEW_LINE +
-                                "      \"responseName\" : [ \"responseValue\" ]" + NEW_LINE +
-                                "    }," + NEW_LINE +
-                                "    \"body\" : \"some_response_body\"" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"times\" : {" + NEW_LINE +
-                                "    \"remainingTimes\" : 3," + NEW_LINE +
-                                "    \"unlimited\" : false" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"timeToLive\" : {" + NEW_LINE +
-                                "    \"unlimited\" : true" + NEW_LINE +
-                                "  }" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/expectation")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpResponse\" : {" + NEW_LINE +
+                    "    \"headers\" : {" + NEW_LINE +
+                    "      \"responseName\" : [ \"responseValue\" ]" + NEW_LINE +
+                    "    }," + NEW_LINE +
+                    "    \"body\" : \"some_response_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"remainingTimes\" : 3," + NEW_LINE +
+                    "    \"unlimited\" : false" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"timeToLive\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -628,28 +691,28 @@ public class MockServerClientIntegrationTest {
 
         // then
         String result = logFilter.verify(verificationSequence().withRequests(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/stop")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("content-length", "0"),
-                                new Header("connection", "keep-alive")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true),
-                request()
-                        .withMethod("PUT")
-                        .withPath("/status")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("content-length", "0"),
-                                new Header("connection", "keep-alive")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
+            request()
+                .withMethod("PUT")
+                .withPath("/stop")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("content-length", "0"),
+                    new Header("connection", "keep-alive")
+                )
+                .withSecure(false)
+                .withKeepAlive(true),
+            request()
+                .withMethod("PUT")
+                .withPath("/status")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("content-length", "0"),
+                    new Header("connection", "keep-alive")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -668,17 +731,17 @@ public class MockServerClientIntegrationTest {
         assertThat(isRunning, is(true));
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/status")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("content-length", "0"),
-                                new Header("connection", "keep-alive")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
+            request()
+                .withMethod("PUT")
+                .withPath("/status")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("content-length", "0"),
+                    new Header("connection", "keep-alive")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -700,17 +763,17 @@ public class MockServerClientIntegrationTest {
         assertThat(isRunning, is(false));
         assertThat(logFilter.retrieveRequests(request()).size(), is(numberOfRetries));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/status")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("content-length", "0"),
-                                new Header("connection", "keep-alive")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
+            request()
+                .withMethod("PUT")
+                .withPath("/status")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("content-length", "0"),
+                    new Header("connection", "keep-alive")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -728,17 +791,17 @@ public class MockServerClientIntegrationTest {
         // then
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/reset")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("content-length", "0"),
-                                new Header("connection", "keep-alive")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
+            request()
+                .withMethod("PUT")
+                .withPath("/reset")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("content-length", "0"),
+                    new Header("connection", "keep-alive")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -752,31 +815,31 @@ public class MockServerClientIntegrationTest {
 
         // when
         mockServerClient
-                .clear(
-                        request()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))
-                );
+            .clear(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            );
 
         // then
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/clear")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("" +
-                                "{" + NEW_LINE +
-                                "  \"path\" : \"/some_path\"," + NEW_LINE +
-                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/clear")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"path\" : \"/some_path\"," + NEW_LINE +
+                    "  \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -790,32 +853,32 @@ public class MockServerClientIntegrationTest {
 
         // when
         mockServerClient
-                .clear(
-                        request()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body")),
-                        ClearType.LOG
-                );
+            .clear(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body")),
+                ClearType.LOG
+            );
 
         // then
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/clear")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("" +
-                                "{" + NEW_LINE +
-                                "  \"path\" : \"/some_path\"," + NEW_LINE +
-                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/clear")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"path\" : \"/some_path\"," + NEW_LINE +
+                    "  \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -833,18 +896,18 @@ public class MockServerClientIntegrationTest {
         // then
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/clear")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("content-length", "0"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
+            request()
+                .withMethod("PUT")
+                .withPath("/clear")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("content-length", "0"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -855,45 +918,45 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveRequests() {
         // given
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
-                        .withBody(new StringBody(new HttpRequestSerializer().serialize(Arrays.asList(
-                                request("/some_request_one"),
-                                request("/some_request_two")
-                        ))))
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(new HttpRequestSerializer().serialize(Arrays.asList(
+                    request("/some_request_one"),
+                    request("/some_request_two")
+                ))))
         );
 
         // when
         HttpRequest[] actualResponse = mockServerClient.retrieveRecordedRequests(
-                request()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body"))
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"))
         );
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
-                request("/some_request_one"),
-                request("/some_request_two")
+            request("/some_request_one"),
+            request("/some_request_two")
         ));
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("{" + NEW_LINE +
-                                "  \"path\" : \"/some_path\"," + NEW_LINE +
-                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("{" + NEW_LINE +
+                    "  \"path\" : \"/some_path\"," + NEW_LINE +
+                    "  \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -904,12 +967,12 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveRequestsWithNullRequest() {
         // given
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
-                        .withBody(new StringBody(new HttpRequestSerializer().serialize(Arrays.asList(
-                                request("/some_request_one"),
-                                request("/some_request_two")
-                        ))))
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(new HttpRequestSerializer().serialize(Arrays.asList(
+                    request("/some_request_one"),
+                    request("/some_request_two")
+                ))))
         );
 
         // when
@@ -917,25 +980,25 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
-                request("/some_request_one"),
-                request("/some_request_two")
+            request("/some_request_one"),
+            request("/some_request_two")
         ));
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("content-length", "0"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
+            request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("content-length", "0"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -946,44 +1009,44 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveRequestsAsJson() {
         // given
         String serializedRequests = new HttpRequestSerializer().serialize(Arrays.asList(
-                request("/some_request_one"),
-                request("/some_request_two")
+            request("/some_request_one"),
+            request("/some_request_two")
         ));
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
-                        .withBody(new StringBody(serializedRequests))
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(serializedRequests))
         );
 
         // when
         String recordedResponse = mockServerClient.retrieveRecordedRequests(
-                request()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body")),
-                Format.JSON
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")),
+            Format.JSON
         );
 
         // then
         assertThat(recordedResponse, is(serializedRequests));
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("{" + NEW_LINE +
-                                "  \"path\" : \"/some_path\"," + NEW_LINE +
-                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("{" + NEW_LINE +
+                    "  \"path\" : \"/some_path\"," + NEW_LINE +
+                    "  \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -994,44 +1057,44 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveRequestsAsJava() {
         // given
         String serializedRequest = new HttpRequestToJavaSerializer().serialize(Arrays.asList(
-                request("/some_request_one"),
-                request("/some_request_two")
+            request("/some_request_one"),
+            request("/some_request_two")
         ));
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
-                        .withBody(new StringBody(serializedRequest))
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(serializedRequest))
         );
 
         // when
         String actualResponse = mockServerClient.retrieveRecordedRequests(
-                request()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body")),
-                Format.JAVA
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")),
+            Format.JAVA
         );
 
         // then
         assertThat(actualResponse, is(serializedRequest));
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
-                        .withQueryStringParameter("format", Format.JAVA.name())
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("{" + NEW_LINE +
-                                "  \"path\" : \"/some_path\"," + NEW_LINE +
-                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                .withQueryStringParameter("format", Format.JAVA.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("{" + NEW_LINE +
+                    "  \"path\" : \"/some_path\"," + NEW_LINE +
+                    "  \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -1042,45 +1105,45 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveActiveExpectations() {
         // given
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
-                        .withBody(new StringBody(new ExpectationSerializer().serialize(
-                                new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                                new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
-                        )))
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(new ExpectationSerializer().serialize(
+                    new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
+                    new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+                )))
         );
 
         // when
         Expectation[] actualResponse = mockServerClient.retrieveActiveExpectations(
-                request()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body"))
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"))
         );
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
-                new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
+            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("{" + NEW_LINE +
-                                "  \"path\" : \"/some_path\"," + NEW_LINE +
-                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("{" + NEW_LINE +
+                    "  \"path\" : \"/some_path\"," + NEW_LINE +
+                    "  \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -1091,12 +1154,12 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveActiveExpectationsWithNullRequest() {
         // given
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
-                        .withBody(new StringBody(new ExpectationSerializer().serialize(
-                                new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                                new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
-                        )))
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(new ExpectationSerializer().serialize(
+                    new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
+                    new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+                )))
         );
 
         // when
@@ -1104,25 +1167,25 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
-                new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
+            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("content-length", "0"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
+            request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("content-length", "0"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -1133,44 +1196,44 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveActiveExpectationsAsJson() {
         // given
         String serializeExpectations = new ExpectationSerializer().serialize(
-                new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
+            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         );
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
-                        .withBody(new StringBody(serializeExpectations))
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(serializeExpectations))
         );
 
         // when
         String actualResponse = mockServerClient.retrieveActiveExpectations(
-                request()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body")),
-                Format.JSON
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")),
+            Format.JSON
         );
 
         // then
         assertThat(actualResponse, is(serializeExpectations));
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("{" + NEW_LINE +
-                                "  \"path\" : \"/some_path\"," + NEW_LINE +
-                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("{" + NEW_LINE +
+                    "  \"path\" : \"/some_path\"," + NEW_LINE +
+                    "  \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -1181,44 +1244,44 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveActiveExpectationsAsJava() {
         // given
         String serializedExpectations = new ExpectationToJavaSerializer().serialize(Arrays.asList(
-                new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
+            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
-                        .withBody(new StringBody(serializedExpectations))
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(serializedExpectations))
         );
 
         // when
         String actualResponse = mockServerClient.retrieveActiveExpectations(
-                request()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body")),
-                Format.JAVA
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")),
+            Format.JAVA
         );
 
         // then
         assertThat(actualResponse, is(serializedExpectations));
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", Format.JAVA.name())
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("{" + NEW_LINE +
-                                "  \"path\" : \"/some_path\"," + NEW_LINE +
-                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JAVA.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("{" + NEW_LINE +
+                    "  \"path\" : \"/some_path\"," + NEW_LINE +
+                    "  \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -1229,45 +1292,45 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveRecordedExpectations() {
         // given
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
-                        .withBody(new StringBody(new ExpectationSerializer().serialize(
-                                new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                                new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
-                        )))
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(new ExpectationSerializer().serialize(
+                    new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
+                    new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+                )))
         );
 
         // when
         Expectation[] actualResponse = mockServerClient.retrieveRecordedExpectations(
-                request()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body"))
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"))
         );
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
-                new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
+            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("{" + NEW_LINE +
-                                "  \"path\" : \"/some_path\"," + NEW_LINE +
-                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("{" + NEW_LINE +
+                    "  \"path\" : \"/some_path\"," + NEW_LINE +
+                    "  \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -1278,12 +1341,12 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveRecordedExpectationsWithNullRequest() {
         // given
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
-                        .withBody(new StringBody(new ExpectationSerializer().serialize(
-                                new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                                new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
-                        )))
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(new ExpectationSerializer().serialize(
+                    new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
+                    new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+                )))
         );
 
         // when
@@ -1291,25 +1354,25 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
-                new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
+            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("content-length", "0"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
+            request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("content-length", "0"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -1320,44 +1383,44 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveRecordedExpectationsAsJson() {
         // given
         String serializeExpectations = new ExpectationSerializer().serialize(
-                new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
+            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         );
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
-                        .withBody(new StringBody(serializeExpectations))
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(serializeExpectations))
         );
 
         // when
         String actualResponse = mockServerClient.retrieveRecordedExpectations(
-                request()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body")),
-                Format.JSON
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")),
+            Format.JSON
         );
 
         // then
         assertThat(actualResponse, is(serializeExpectations));
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("{" + NEW_LINE +
-                                "  \"path\" : \"/some_path\"," + NEW_LINE +
-                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("{" + NEW_LINE +
+                    "  \"path\" : \"/some_path\"," + NEW_LINE +
+                    "  \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -1368,44 +1431,44 @@ public class MockServerClientIntegrationTest {
     public void shouldRetrieveRecordedExpectationsAsJava() {
         // given
         String serializedExpectations = new ExpectationToJavaSerializer().serialize(Arrays.asList(
-                new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
-                new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
+            new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
+            new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
-                        .withBody(new StringBody(serializedExpectations))
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(serializedExpectations))
         );
 
         // when
         String actualResponse = mockServerClient.retrieveRecordedExpectations(
-                request()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body")),
-                Format.JAVA
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")),
+            Format.JAVA
         );
 
         // then
         assertThat(actualResponse, is(serializedExpectations));
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", Format.JAVA.name())
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("{" + NEW_LINE +
-                                "  \"path\" : \"/some_path\"," + NEW_LINE +
-                                "  \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JAVA.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("{" + NEW_LINE +
+                    "  \"path\" : \"/some_path\"," + NEW_LINE +
+                    "  \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -1416,38 +1479,38 @@ public class MockServerClientIntegrationTest {
     public void shouldVerifySingleRequestNoVerificationTimes() {
         // given
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
+            response()
+                .withStatusCode(201)
         );
 
         // when
         mockServerClient.verify(
-                request()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body"))
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"))
         );
 
         // then
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/verifySequence")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("" +
-                                "{" + NEW_LINE +
-                                "  \"httpRequests\" : [ {" + NEW_LINE +
-                                "    \"path\" : \"/some_path\"," + NEW_LINE +
-                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "  } ]" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/verifySequence")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequests\" : [ {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  } ]" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -1458,44 +1521,44 @@ public class MockServerClientIntegrationTest {
     public void shouldVerifyMultipleRequestsNoVerificationTimes() {
         // given
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
+            response()
+                .withStatusCode(201)
         );
 
         // when
         mockServerClient.verify(
-                request()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body")),
-                request()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body"))
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")),
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"))
         );
 
         // then
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/verifySequence")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("" +
-                                "{" + NEW_LINE +
-                                "  \"httpRequests\" : [ {" + NEW_LINE +
-                                "    \"path\" : \"/some_path\"," + NEW_LINE +
-                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "  }, {" + NEW_LINE +
-                                "    \"path\" : \"/some_path\"," + NEW_LINE +
-                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "  } ]" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/verifySequence")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequests\" : [ {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  }, {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  } ]" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -1506,43 +1569,43 @@ public class MockServerClientIntegrationTest {
     public void shouldVerifySingleRequestOnce() {
         // given
         echoServer.withNextResponse(
-                response()
-                        .withStatusCode(201)
+            response()
+                .withStatusCode(201)
         );
 
         // when
         mockServerClient.verify(
-                request()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body")),
-                VerificationTimes.once()
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")),
+            VerificationTimes.once()
         );
 
         // then
         assertThat(logFilter.retrieveRequests(request()).size(), is(1));
         String result = logFilter.verify(verification().withRequest(
-                request()
-                        .withMethod("PUT")
-                        .withPath("/verify")
-                        .withHeaders(
-                                new Header("host", "localhost:" + echoServer.getPort()),
-                                new Header("accept-encoding", "gzip,deflate"),
-                                new Header("connection", "keep-alive"),
-                                new Header("content-type", "text/plain; charset=utf-8")
-                        )
-                        .withSecure(false)
-                        .withKeepAlive(true)
-                        .withBody(new StringBody("" +
-                                "{" + NEW_LINE +
-                                "  \"httpRequest\" : {" + NEW_LINE +
-                                "    \"path\" : \"/some_path\"," + NEW_LINE +
-                                "    \"body\" : \"some_request_body\"" + NEW_LINE +
-                                "  }," + NEW_LINE +
-                                "  \"times\" : {" + NEW_LINE +
-                                "    \"count\" : 1," + NEW_LINE +
-                                "    \"exact\" : true" + NEW_LINE +
-                                "  }" + NEW_LINE +
-                                "}"))
+            request()
+                .withMethod("PUT")
+                .withPath("/verify")
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("" +
+                    "{" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"/some_path\"," + NEW_LINE +
+                    "    \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"count\" : 1," + NEW_LINE +
+                    "    \"exact\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "}"))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);

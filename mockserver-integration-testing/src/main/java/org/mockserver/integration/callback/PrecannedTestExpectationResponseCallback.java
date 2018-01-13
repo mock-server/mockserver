@@ -13,7 +13,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public class PrecannedTestExpectationCallback implements ExpectationResponseCallback {
+public class PrecannedTestExpectationResponseCallback implements ExpectationResponseCallback {
 
     public static HttpResponse httpResponse = response()
             .withStatusCode(HttpStatusCode.ACCEPTED_202.code())

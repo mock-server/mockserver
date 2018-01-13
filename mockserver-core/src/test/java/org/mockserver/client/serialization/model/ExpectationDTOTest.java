@@ -11,6 +11,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNull;
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
@@ -29,6 +30,7 @@ public class ExpectationDTOTest {
         HttpTemplate httpForwardTemplate = new HttpTemplate(HttpTemplate.TemplateType.VELOCITY).withTemplate("some_forward_template");
         HttpClassCallback httpForwardClassCallback = new HttpClassCallback().withCallbackClass("some_forward_class");
         HttpObjectCallback httpForwardObjectCallback = new HttpObjectCallback().withClientId("some_forward_client_id");
+        HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest().withHttpRequest(httpRequest);
         HttpError httpError = new HttpError().withResponseBytes("some_bytes".getBytes(UTF_8));
 
         // when
@@ -45,6 +47,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponse.getHttpForwardTemplate());
         assertNull(expectationWithResponse.getHttpForwardClassCallback());
         assertNull(expectationWithResponse.getHttpForwardObjectCallback());
+        assertNull(expectationWithResponse.getHttpOverrideForwardedRequest());
         assertNull(expectationWithResponse.getHttpError());
 
         // when
@@ -61,6 +64,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponseTemplate.getHttpForwardTemplate());
         assertNull(expectationWithResponseTemplate.getHttpForwardClassCallback());
         assertNull(expectationWithResponseTemplate.getHttpForwardObjectCallback());
+        assertNull(expectationWithResponseTemplate.getHttpOverrideForwardedRequest());
         assertNull(expectationWithResponseTemplate.getHttpError());
 
 
@@ -78,6 +82,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponseClassCallback.getHttpForwardTemplate());
         assertNull(expectationWithResponseClassCallback.getHttpForwardClassCallback());
         assertNull(expectationWithResponseClassCallback.getHttpForwardObjectCallback());
+        assertNull(expectationWithResponseClassCallback.getHttpOverrideForwardedRequest());
         assertNull(expectationWithResponseClassCallback.getHttpError());
 
         // when
@@ -94,6 +99,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponseObjectCallback.getHttpForwardTemplate());
         assertNull(expectationWithResponseObjectCallback.getHttpForwardClassCallback());
         assertNull(expectationWithResponseObjectCallback.getHttpForwardObjectCallback());
+        assertNull(expectationWithResponseObjectCallback.getHttpOverrideForwardedRequest());
         assertNull(expectationWithResponseObjectCallback.getHttpError());
 
         // when
@@ -110,6 +116,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForward.getHttpForwardTemplate());
         assertNull(expectationWithForward.getHttpForwardClassCallback());
         assertNull(expectationWithForward.getHttpForwardObjectCallback());
+        assertNull(expectationWithForward.getHttpOverrideForwardedRequest());
         assertNull(expectationWithForward.getHttpError());
 
         // when
@@ -126,6 +133,7 @@ public class ExpectationDTOTest {
         assertThat(expectationWithForwardTemplate.getHttpForwardTemplate(), is(httpForwardTemplate));
         assertNull(expectationWithForwardTemplate.getHttpForwardClassCallback());
         assertNull(expectationWithForwardTemplate.getHttpForwardObjectCallback());
+        assertNull(expectationWithForwardTemplate.getHttpOverrideForwardedRequest());
         assertNull(expectationWithForwardTemplate.getHttpError());
 
 
@@ -143,6 +151,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForwardClassCallback.getHttpForwardTemplate());
         assertThat(expectationWithForwardClassCallback.getHttpForwardClassCallback(), is(new HttpClassCallbackDTO(httpForwardClassCallback)));
         assertNull(expectationWithForwardClassCallback.getHttpForwardObjectCallback());
+        assertNull(expectationWithForwardClassCallback.getHttpOverrideForwardedRequest());
         assertNull(expectationWithForwardClassCallback.getHttpError());
 
         // when
@@ -159,8 +168,25 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForwardObjectCallback.getHttpForwardTemplate());
         assertNull(expectationWithForwardObjectCallback.getHttpForwardClassCallback());
         assertThat(expectationWithForwardObjectCallback.getHttpForwardObjectCallback(), is(new HttpObjectCallbackDTO(httpForwardObjectCallback)));
+        assertNull(expectationWithForwardObjectCallback.getHttpOverrideForwardedRequest());
         assertNull(expectationWithForwardObjectCallback.getHttpError());
 
+        // when
+        ExpectationDTO expectationWithOverrideForwardedRequest = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpOverrideForwardedRequest));
+
+        // then
+        assertThat(expectationWithOverrideForwardedRequest.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
+        assertThat(expectationWithOverrideForwardedRequest.getTimes(), is(new TimesDTO(Times.exactly(3))));
+        assertNull(expectationWithOverrideForwardedRequest.getHttpResponse());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpResponseTemplate());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpResponseClassCallback());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpResponseObjectCallback());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpForward());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpForwardTemplate());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpForwardClassCallback());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpForwardObjectCallback());
+        assertThat(expectationWithOverrideForwardedRequest.getHttpOverrideForwardedRequest(), is(new HttpOverrideForwardedRequestDTO(httpOverrideForwardedRequest)));
+        assertNull(expectationWithOverrideForwardedRequest.getHttpError());
 
         // when
         ExpectationDTO expectationWithError = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenError(httpError));
@@ -176,6 +202,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithError.getHttpForwardTemplate());
         assertNull(expectationWithError.getHttpForwardClassCallback());
         assertNull(expectationWithError.getHttpForwardObjectCallback());
+        assertNull(expectationWithError.getHttpOverrideForwardedRequest());
         assertThat(expectationWithError.getHttpError(), is(new HttpErrorDTO(httpError)));
     }
 
@@ -190,6 +217,7 @@ public class ExpectationDTOTest {
         HttpError httpError = new HttpError().withResponseBytes("some_bytes".getBytes(UTF_8));
         HttpClassCallback httpClassCallback = new HttpClassCallback().withCallbackClass("some_class");
         HttpObjectCallback httpObjectCallback = new HttpObjectCallback().withClientId("some_client_id");
+        HttpOverrideForwardedRequest httpOverrideForwardedRequest = new HttpOverrideForwardedRequest().withHttpRequest(httpRequest);
 
         // when
         Expectation expectationWithResponse = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenRespond(httpResponse)).buildObject();
@@ -205,6 +233,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponse.getHttpForwardTemplate());
         assertNull(expectationWithResponse.getHttpForwardClassCallback());
         assertNull(expectationWithResponse.getHttpForwardObjectCallback());
+        assertNull(expectationWithResponse.getHttpOverrideForwardedRequest());
         assertNull(expectationWithResponse.getHttpError());
 
         // when
@@ -221,6 +250,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponseTemplate.getHttpForwardTemplate());
         assertNull(expectationWithResponseTemplate.getHttpForwardClassCallback());
         assertNull(expectationWithResponseTemplate.getHttpForwardObjectCallback());
+        assertNull(expectationWithResponseTemplate.getHttpOverrideForwardedRequest());
         assertNull(expectationWithResponseTemplate.getHttpError());
 
         // when
@@ -237,6 +267,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponseClassCallback.getHttpForwardTemplate());
         assertNull(expectationWithResponseClassCallback.getHttpForwardClassCallback());
         assertNull(expectationWithResponseClassCallback.getHttpForwardObjectCallback());
+        assertNull(expectationWithResponseClassCallback.getHttpOverrideForwardedRequest());
         assertNull(expectationWithResponseClassCallback.getHttpError());
 
         // when
@@ -253,6 +284,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithResponseObjectCallback.getHttpForwardTemplate());
         assertNull(expectationWithResponseObjectCallback.getHttpForwardClassCallback());
         assertNull(expectationWithResponseObjectCallback.getHttpForwardObjectCallback());
+        assertNull(expectationWithResponseObjectCallback.getHttpOverrideForwardedRequest());
         assertNull(expectationWithResponseObjectCallback.getHttpError());
 
         // when
@@ -269,6 +301,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForward.getHttpForwardTemplate());
         assertNull(expectationWithForward.getHttpForwardClassCallback());
         assertNull(expectationWithForward.getHttpForwardObjectCallback());
+        assertNull(expectationWithForward.getHttpOverrideForwardedRequest());
         assertNull(expectationWithForward.getHttpError());
 
         // when
@@ -285,6 +318,7 @@ public class ExpectationDTOTest {
         assertThat(expectationWithForwardTemplate.getHttpForwardTemplate(), is(httpForwardTemplate));
         assertNull(expectationWithForwardTemplate.getHttpForwardClassCallback());
         assertNull(expectationWithForwardTemplate.getHttpForwardObjectCallback());
+        assertNull(expectationWithForwardTemplate.getHttpOverrideForwardedRequest());
         assertNull(expectationWithForwardTemplate.getHttpError());
 
         // when
@@ -301,6 +335,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForwardClassCallback.getHttpForwardTemplate());
         assertThat(expectationWithForwardClassCallback.getHttpForwardClassCallback(), is(httpClassCallback));
         assertNull(expectationWithForwardClassCallback.getHttpForwardObjectCallback());
+        assertNull(expectationWithForwardClassCallback.getHttpOverrideForwardedRequest());
         assertNull(expectationWithForwardClassCallback.getHttpError());
 
         // when
@@ -317,7 +352,25 @@ public class ExpectationDTOTest {
         assertNull(expectationWithForwardObjectCallback.getHttpForwardTemplate());
         assertNull(expectationWithForwardObjectCallback.getHttpForwardClassCallback());
         assertThat(expectationWithForwardObjectCallback.getHttpForwardObjectCallback(), is(httpObjectCallback));
+        assertNull(expectationWithForwardObjectCallback.getHttpOverrideForwardedRequest());
         assertNull(expectationWithForwardObjectCallback.getHttpError());
+
+        // when
+        Expectation expectationWithOverrideForwardedRequest = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenForward(httpOverrideForwardedRequest)).buildObject();
+
+        // then
+        assertThat(expectationWithOverrideForwardedRequest.getHttpRequest(), is(httpRequest));
+        assertThat(expectationWithOverrideForwardedRequest.getTimes(), is(Times.exactly(3)));
+        assertNull(expectationWithOverrideForwardedRequest.getHttpResponse());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpResponseTemplate());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpResponseClassCallback());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpResponseObjectCallback());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpForward());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpForwardTemplate());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpForwardClassCallback());
+        assertNull(expectationWithOverrideForwardedRequest.getHttpForwardObjectCallback());
+        assertThat(expectationWithOverrideForwardedRequest.getHttpOverrideForwardedRequest(), is(httpOverrideForwardedRequest));
+        assertNull(expectationWithOverrideForwardedRequest.getHttpError());
 
         // when
         Expectation expectationWithError = new ExpectationDTO(new Expectation(httpRequest, Times.exactly(3), TimeToLive.unlimited()).thenError(httpError)).buildObject();
@@ -333,6 +386,7 @@ public class ExpectationDTOTest {
         assertNull(expectationWithError.getHttpForwardTemplate());
         assertNull(expectationWithError.getHttpForwardClassCallback());
         assertNull(expectationWithError.getHttpForwardObjectCallback());
+        assertNull(expectationWithError.getHttpOverrideForwardedRequest());
         assertThat(expectationWithError.getHttpError(), is(httpError));
     }
 
@@ -352,6 +406,7 @@ public class ExpectationDTOTest {
         assertThat(expectation.getHttpForwardTemplate(), is(nullValue()));
         assertThat(expectation.getHttpForwardClassCallback(), is(nullValue()));
         assertThat(expectation.getHttpForwardObjectCallback(), is(nullValue()));
+        assertThat(expectation.getHttpOverrideForwardedRequest(), is(nullValue()));
         assertThat(expectation.getHttpError(), is(nullValue()));
     }
 
@@ -368,6 +423,7 @@ public class ExpectationDTOTest {
         HttpTemplateDTO httpForwardTemplate = new HttpTemplateDTO(new HttpTemplate(HttpTemplate.TemplateType.VELOCITY).withTemplate("some_forward_template"));
         HttpClassCallbackDTO httpForwardClassCallback = new HttpClassCallbackDTO(new HttpClassCallback().withCallbackClass("some_forward_class"));
         HttpObjectCallbackDTO httpForwardObjectCallback = new HttpObjectCallbackDTO(new HttpObjectCallback().withClientId("some_forward_client_id"));
+        HttpOverrideForwardedRequestDTO httpOverrideForwardedRequest = new HttpOverrideForwardedRequestDTO(new HttpOverrideForwardedRequest().withHttpRequest(request("some_path")));
         HttpErrorDTO httpError = new HttpErrorDTO(new HttpError().withResponseBytes("some_bytes".getBytes(UTF_8)));
 
         // when
@@ -382,6 +438,7 @@ public class ExpectationDTOTest {
         expectation.setHttpForwardTemplate(httpForwardTemplate);
         expectation.setHttpForwardClassCallback(httpForwardClassCallback);
         expectation.setHttpForwardObjectCallback(httpForwardObjectCallback);
+        expectation.setHttpOverrideForwardedRequest(httpOverrideForwardedRequest);
         expectation.setHttpError(httpError);
 
         // then
@@ -395,6 +452,7 @@ public class ExpectationDTOTest {
         assertThat(expectation.getHttpForwardTemplate(), is(httpForwardTemplate));
         assertThat(expectation.getHttpForwardClassCallback(), is(httpForwardClassCallback));
         assertThat(expectation.getHttpForwardObjectCallback(), is(httpForwardObjectCallback));
+        assertThat(expectation.getHttpOverrideForwardedRequest(), is(httpOverrideForwardedRequest));
         assertThat(expectation.getHttpError(), is(httpError));
     }
 
@@ -414,6 +472,7 @@ public class ExpectationDTOTest {
         assertThat(expectationDTO.getHttpForwardTemplate(), is(nullValue()));
         assertThat(expectationDTO.getHttpForwardClassCallback(), is(nullValue()));
         assertThat(expectationDTO.getHttpForwardObjectCallback(), is(nullValue()));
+        assertThat(expectationDTO.getHttpOverrideForwardedRequest(), is(nullValue()));
         assertThat(expectationDTO.getHttpError(), is(nullValue()));
     }
 
@@ -433,6 +492,7 @@ public class ExpectationDTOTest {
         assertThat(expectationDTO.getHttpForwardTemplate(), is(nullValue()));
         assertThat(expectationDTO.getHttpForwardClassCallback(), is(nullValue()));
         assertThat(expectationDTO.getHttpForwardObjectCallback(), is(nullValue()));
+        assertThat(expectationDTO.getHttpOverrideForwardedRequest(), is(nullValue()));
         assertThat(expectationDTO.getHttpError(), is(nullValue()));
     }
 }

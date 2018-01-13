@@ -5,7 +5,7 @@ import org.mockserver.model.HttpRequest;
 /**
  * @author jamesdbloom
  */
-public interface ExpectationCallbackForward {
+public interface WebSocketRequestCallback {
 
     void handle(HttpRequest httpRequest);
 }

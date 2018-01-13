@@ -254,6 +254,8 @@ components:
           $ref: "#/components/schemas/HttpClassCallback"
         httpForwardObjectCallback:
           $ref: "#/components/schemas/HttpObjectCallback"
+        httpOverrideForwardedRequest:
+          $ref: "#/components/schemas/HttpOverrideForwardedRequest"
         httpError:
           $ref: "#/components/schemas/HttpError"
         times:
@@ -337,6 +339,8 @@ components:
           enum:
           - HTTP
           - HTTPS
+        delay:
+          $ref: "#/components/schemas/Delay"
     HttpClassCallback:
       title: class callback
       type: object
@@ -351,6 +355,15 @@ components:
       properties:
         clientId:
           type: string
+    HttpOverrideForwardedRequest:
+      title: override forwarded request
+      type: object
+      additionalProperties: false
+      properties:
+        httpRequest:
+          $ref: "#/components/schemas/HttpRequest"
+        delay:
+          $ref: "#/components/schemas/Delay"
     HttpError:
       title: error behaviour
       type: object

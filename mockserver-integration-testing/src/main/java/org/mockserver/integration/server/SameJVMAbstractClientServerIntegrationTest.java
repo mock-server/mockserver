@@ -2,7 +2,7 @@ package org.mockserver.integration.server;
 
 import org.junit.Test;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.integration.callback.StaticTestExpectationCallback;
+import org.mockserver.integration.callback.StaticTestExpectationResponseCallback;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
 
@@ -27,8 +27,8 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
     @Test // same JVM due to dynamic calls to static class
     public void shouldCallbackToSpecifiedClassWithDynamicResponse() {
         // given
-        StaticTestExpectationCallback.httpRequests.clear();
-        StaticTestExpectationCallback.httpResponse = response()
+        StaticTestExpectationResponseCallback.httpRequests.clear();
+        StaticTestExpectationResponseCallback.httpResponse = response()
             .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
             .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
             .withHeaders(
@@ -42,9 +42,9 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
                 request()
                     .withPath(calculatePath("callback"))
             )
-            .response(
+            .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.integration.callback.StaticTestExpectationCallback")
+                    .withCallbackClass("org.mockserver.integration.callback.StaticTestExpectationResponseCallback")
             );
 
         // then
@@ -67,8 +67,8 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
                     .withBody("an_example_body_http"),
                 headersToIgnore)
         );
-        assertEquals(StaticTestExpectationCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
-        assertEquals(StaticTestExpectationCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
+        assertEquals(StaticTestExpectationResponseCallback.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
+        assertEquals(StaticTestExpectationResponseCallback.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
 
         // - in https
         assertEquals(
@@ -91,8 +91,8 @@ public abstract class SameJVMAbstractClientServerIntegrationTest extends Abstrac
                 headersToIgnore
             )
         );
-        assertEquals(StaticTestExpectationCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
-        assertEquals(StaticTestExpectationCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
+        assertEquals(StaticTestExpectationResponseCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
+        assertEquals(StaticTestExpectationResponseCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
     }
 
     @Test // same JVM due to issues detecting Nashorn is enabled via Maven plugin

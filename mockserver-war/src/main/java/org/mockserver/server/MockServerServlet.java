@@ -7,13 +7,17 @@ import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpStatusCode;
 import org.mockserver.responsewriter.ResponseWriter;
+import org.mockserver.streams.IOStreamUtils;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -49,7 +53,11 @@ public class MockServerServlet extends HttpServlet {
             request = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
             if (!httpStateHandler.handle(request, responseWriter, true)) {
 
-                if (request.matches("PUT", "/status")) {
+                if (request.getPath().getValue().equals("/_mockserver_callback_websocket")) {
+
+                    responseWriter.writeResponse(request, NOT_IMPLEMENTED, "ExpectationResponseCallback and ExpectationForwardCallback is not supported by MockServer deployed as a WAR", "text/plain");
+
+                } else if (request.matches("PUT", "/status")) {
 
                     responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())), "application/json");
 

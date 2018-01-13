@@ -2,7 +2,7 @@ package org.mockserver.mock.action;
 
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.callback.ExpectationCallbackResponse;
+import org.mockserver.callback.WebSocketResponseCallback;
 import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
@@ -25,7 +25,7 @@ public class HttpResponseObjectCallbackActionHandler {
 
     public void handle(final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter) {
         String clientId = httpObjectCallback.getClientId();
-        webSocketClientRegistry.registerCallbackResponseHandler(clientId, new ExpectationCallbackResponse() {
+        webSocketClientRegistry.registerCallbackHandler(clientId, new WebSocketResponseCallback() {
             @Override
             public void handle(HttpResponse response) {
                 responseWriter.writeResponse(request, response, false);

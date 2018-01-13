@@ -18,6 +18,7 @@ import org.mockserver.client.serialization.model.*;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.*;
 import org.mockserver.verify.Verification;
@@ -35,6 +36,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.verify.Verification.verification;
@@ -93,13 +95,13 @@ public class MockServerClientTest {
     public void shouldSetupExpectationWithResponse() {
         // given
         HttpRequest httpRequest =
-                new HttpRequest()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body"));
+            new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
         HttpResponse httpResponse =
-                new HttpResponse()
-                        .withBody("some_response_body")
-                        .withHeaders(new Header("responseName", "responseValue"));
+            new HttpResponse()
+                .withBody("some_response_body")
+                .withHeaders(new Header("responseName", "responseValue"));
 
         // when
         ForwardChainExpectation forwardChainExpectation = mockServerClient.when(httpRequest);
@@ -147,7 +149,7 @@ public class MockServerClientTest {
 
         // when
         ForwardChainExpectation forwardChainExpectation = mockServerClient.when(httpRequest);
-        forwardChainExpectation.response(httpClassCallback);
+        forwardChainExpectation.respond(httpClassCallback);
 
         // then
         Expectation expectation = forwardChainExpectation.getExpectation();
@@ -163,7 +165,7 @@ public class MockServerClientTest {
             new HttpRequest()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body"));
-        ExpectationResponseCallback expectationCallback = new ExpectationResponseCallback() {
+        ExpectationResponseCallback expectationResponseCallback = new ExpectationResponseCallback() {
             @Override
             public HttpResponse handle(HttpRequest httpRequest) {
                 return response();
@@ -172,7 +174,7 @@ public class MockServerClientTest {
 
         // and
         WebSocketClient webSocketClient = mock(WebSocketClient.class);
-        when(webSocketClient.registerExpectationCallback(expectationCallback)).thenReturn(webSocketClient);
+        when(webSocketClient.registerExpectationCallback(expectationResponseCallback)).thenReturn(webSocketClient);
         when(webSocketClient.clientId()).thenReturn("some_client_id");
 
         // when
@@ -182,7 +184,7 @@ public class MockServerClientTest {
         forwardChainExpectation.setWebSocketClient(webSocketClient);
 
         // and when
-        forwardChainExpectation.response(expectationCallback);
+        forwardChainExpectation.respond(expectationResponseCallback);
 
         // then
         Expectation expectation = forwardChainExpectation.getExpectation();
@@ -270,16 +272,16 @@ public class MockServerClientTest {
             new HttpRequest()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body"));
-        ExpectationResponseCallback expectationCallback = new ExpectationResponseCallback() {
+        ExpectationForwardCallback expectationResponseCallback = new ExpectationForwardCallback() {
             @Override
-            public HttpResponse handle(HttpRequest httpRequest) {
-                return response();
+            public HttpRequest handle(HttpRequest httpRequest) {
+                return request();
             }
         };
 
         // and
         WebSocketClient webSocketClient = mock(WebSocketClient.class);
-        when(webSocketClient.registerExpectationCallback(expectationCallback)).thenReturn(webSocketClient);
+        when(webSocketClient.registerExpectationCallback(expectationResponseCallback)).thenReturn(webSocketClient);
         when(webSocketClient.clientId()).thenReturn("some_client_id");
 
         // when
@@ -289,7 +291,7 @@ public class MockServerClientTest {
         forwardChainExpectation.setWebSocketClient(webSocketClient);
 
         // and when
-        forwardChainExpectation.forward(expectationCallback);
+        forwardChainExpectation.forward(expectationResponseCallback);
 
         // then
         Expectation expectation = forwardChainExpectation.getExpectation();
@@ -303,16 +305,38 @@ public class MockServerClientTest {
     }
 
     @Test
+    public void shouldSetupExpectationWithOverrideForwardedRequest() {
+        // given
+        HttpRequest httpRequest =
+            new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
+
+        // when
+        ForwardChainExpectation forwardChainExpectation = mockServerClient.when(httpRequest);
+        forwardChainExpectation.forward(forwardOverriddenRequest(request().withBody("some_overridden_body")));
+
+        // then
+        Expectation expectation = forwardChainExpectation.getExpectation();
+        assertTrue(expectation.isActive());
+        assertThat(expectation.getHttpForwardTemplate(), nullValue());
+        assertThat(expectation.getHttpOverrideForwardedRequest(), is(new HttpOverrideForwardedRequest()
+            .withHttpRequest(request().withBody("some_overridden_body"))
+        ));
+        assertEquals(Times.unlimited(), expectation.getTimes());
+    }
+
+    @Test
     public void shouldSetupExpectationWithError() {
         // given
         HttpRequest httpRequest =
-                new HttpRequest()
-                        .withPath("/some_path")
-                        .withBody(new StringBody("some_request_body"));
+            new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
         HttpError httpError =
-                new HttpError()
-                        .withDropConnection(true)
-                        .withResponseBytes("silly_bytes".getBytes(UTF_8));
+            new HttpError()
+                .withDropConnection(true)
+                .withResponseBytes("silly_bytes".getBytes(UTF_8));
 
         // when
         ForwardChainExpectation forwardChainExpectation = mockServerClient.when(httpRequest);
@@ -329,29 +353,29 @@ public class MockServerClientTest {
     public void shouldSendExpectationWithRequest() {
         // when
         mockServerClient
-                .when(
-                        new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body")),
-                        Times.exactly(3)
-                )
-                .respond(
-                        new HttpResponse()
-                                .withBody("some_response_body")
-                                .withHeaders(new Header("responseName", "responseValue"))
-                );
+            .when(
+                new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body")),
+                Times.exactly(3)
+            )
+            .respond(
+                new HttpResponse()
+                    .withBody("some_response_body")
+                    .withHeaders(new Header("responseName", "responseValue"))
+            );
 
         // then
         verify(mockExpectationSerializer).serialize(
-                new ExpectationDTO()
-                        .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))))
-                        .setHttpResponse(new HttpResponseDTO(new HttpResponse()
-                                .withBody("some_response_body")
-                                .withHeaders(new Header("responseName", "responseValue"))))
-                        .setTimes(new TimesDTO(Times.exactly(3)))
-                        .buildObject()
+            new ExpectationDTO()
+                .setHttpRequest(new HttpRequestDTO(new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))))
+                .setHttpResponse(new HttpResponseDTO(new HttpResponse()
+                    .withBody("some_response_body")
+                    .withHeaders(new Header("responseName", "responseValue"))))
+                .setTimes(new TimesDTO(Times.exactly(3)))
+                .buildObject()
         );
     }
 
@@ -359,29 +383,29 @@ public class MockServerClientTest {
     public void shouldSendExpectationWithRequestTemplate() {
         // when
         mockServerClient
-                .when(
-                        new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body")),
-                        Times.exactly(3)
-                )
-                .respond(
-                        new HttpResponse()
-                                .withBody("some_response_body")
-                                .withHeaders(new Header("responseName", "responseValue"))
-                );
+            .when(
+                new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body")),
+                Times.exactly(3)
+            )
+            .respond(
+                new HttpResponse()
+                    .withBody("some_response_body")
+                    .withHeaders(new Header("responseName", "responseValue"))
+            );
 
         // then
         verify(mockExpectationSerializer).serialize(
-                new ExpectationDTO()
-                        .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))))
-                        .setHttpResponse(new HttpResponseDTO(new HttpResponse()
-                                .withBody("some_response_body")
-                                .withHeaders(new Header("responseName", "responseValue"))))
-                        .setTimes(new TimesDTO(Times.exactly(3)))
-                        .buildObject()
+            new ExpectationDTO()
+                .setHttpRequest(new HttpRequestDTO(new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))))
+                .setHttpResponse(new HttpResponseDTO(new HttpResponse()
+                    .withBody("some_response_body")
+                    .withHeaders(new Header("responseName", "responseValue"))))
+                .setTimes(new TimesDTO(Times.exactly(3)))
+                .buildObject()
         );
     }
 
@@ -395,7 +419,7 @@ public class MockServerClientTest {
                     .withBody(new StringBody("some_request_body")),
                 Times.exactly(3)
             )
-            .response(
+            .respond(
                 new HttpClassCallback()
                     .withCallbackClass("some_class")
             );
@@ -420,7 +444,7 @@ public class MockServerClientTest {
     @Test
     public void shouldSendExpectationWithRequestObjectCallback() {
         // given
-        ExpectationResponseCallback expectationCallback = new ExpectationResponseCallback() {
+        ExpectationResponseCallback expectationResponseCallback = new ExpectationResponseCallback() {
             @Override
             public HttpResponse handle(HttpRequest httpRequest) {
                 return response();
@@ -429,7 +453,7 @@ public class MockServerClientTest {
 
         // and
         WebSocketClient webSocketClient = mock(WebSocketClient.class);
-        when(webSocketClient.registerExpectationCallback(expectationCallback)).thenReturn(webSocketClient);
+        when(webSocketClient.registerExpectationCallback(expectationResponseCallback)).thenReturn(webSocketClient);
         when(webSocketClient.clientId()).thenReturn("some_client_id");
 
         // when
@@ -445,7 +469,7 @@ public class MockServerClientTest {
         forwardChainExpectation.setWebSocketClient(webSocketClient);
 
         // and when
-        forwardChainExpectation.response(expectationCallback);
+        forwardChainExpectation.respond(expectationResponseCallback);
 
         // then
         verify(mockExpectationSerializer).serialize(
@@ -468,35 +492,35 @@ public class MockServerClientTest {
     public void shouldSendExpectationWithForward() {
         // when
         mockServerClient
-                .when(
-                        new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body")),
-                        Times.exactly(3)
-                )
-                .forward(
-                        new HttpForward()
-                                .withHost("some_host")
-                                .withPort(9090)
-                                .withScheme(HttpForward.Scheme.HTTPS)
-                );
+            .when(
+                new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body")),
+                Times.exactly(3)
+            )
+            .forward(
+                new HttpForward()
+                    .withHost("some_host")
+                    .withPort(9090)
+                    .withScheme(HttpForward.Scheme.HTTPS)
+            );
 
         // then
         verify(mockExpectationSerializer).serialize(
-                new ExpectationDTO()
-                        .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))))
-                        .setHttpForward(
-                                new HttpForwardDTO(
-                                        new HttpForward()
-                                                .withHost("some_host")
-                                                .withPort(9090)
-                                                .withScheme(HttpForward.Scheme.HTTPS)
-                                )
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(3)))
-                        .buildObject()
+            new ExpectationDTO()
+                .setHttpRequest(new HttpRequestDTO(new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))))
+                .setHttpForward(
+                    new HttpForwardDTO(
+                        new HttpForward()
+                            .withHost("some_host")
+                            .withPort(9090)
+                            .withScheme(HttpForward.Scheme.HTTPS)
+                    )
+                )
+                .setTimes(new TimesDTO(Times.exactly(3)))
+                .buildObject()
         );
     }
 
@@ -504,35 +528,35 @@ public class MockServerClientTest {
     public void shouldSendExpectationWithForwardTemplate() {
         // when
         mockServerClient
-                .when(
-                        new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body")),
-                        Times.exactly(3)
-                )
-                .forward(
-                        new HttpForward()
-                                .withHost("some_host")
-                                .withPort(9090)
-                                .withScheme(HttpForward.Scheme.HTTPS)
-                );
+            .when(
+                new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body")),
+                Times.exactly(3)
+            )
+            .forward(
+                new HttpForward()
+                    .withHost("some_host")
+                    .withPort(9090)
+                    .withScheme(HttpForward.Scheme.HTTPS)
+            );
 
         // then
         verify(mockExpectationSerializer).serialize(
-                new ExpectationDTO()
-                        .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))))
-                        .setHttpForward(
-                                new HttpForwardDTO(
-                                        new HttpForward()
-                                                .withHost("some_host")
-                                                .withPort(9090)
-                                                .withScheme(HttpForward.Scheme.HTTPS)
-                                )
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(3)))
-                        .buildObject()
+            new ExpectationDTO()
+                .setHttpRequest(new HttpRequestDTO(new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))))
+                .setHttpForward(
+                    new HttpForwardDTO(
+                        new HttpForward()
+                            .withHost("some_host")
+                            .withPort(9090)
+                            .withScheme(HttpForward.Scheme.HTTPS)
+                    )
+                )
+                .setTimes(new TimesDTO(Times.exactly(3)))
+                .buildObject()
         );
     }
 
@@ -571,16 +595,16 @@ public class MockServerClientTest {
     @Test
     public void shouldSendExpectationWithForwardObjectCallback() {
         // given
-        ExpectationResponseCallback expectationCallback = new ExpectationResponseCallback() {
+        ExpectationForwardCallback expectationResponseCallback = new ExpectationForwardCallback() {
             @Override
-            public HttpResponse handle(HttpRequest httpRequest) {
-                return response();
+            public HttpRequest handle(HttpRequest httpRequest) {
+                return request();
             }
         };
 
         // and
         WebSocketClient webSocketClient = mock(WebSocketClient.class);
-        when(webSocketClient.registerExpectationCallback(expectationCallback)).thenReturn(webSocketClient);
+        when(webSocketClient.registerExpectationCallback(expectationResponseCallback)).thenReturn(webSocketClient);
         when(webSocketClient.clientId()).thenReturn("some_client_id");
 
         // when
@@ -596,7 +620,7 @@ public class MockServerClientTest {
         forwardChainExpectation.setWebSocketClient(webSocketClient);
 
         // and when
-        forwardChainExpectation.forward(expectationCallback);
+        forwardChainExpectation.forward(expectationResponseCallback);
 
         // then
         verify(mockExpectationSerializer).serialize(
@@ -616,36 +640,68 @@ public class MockServerClientTest {
     }
 
     @Test
-    public void shouldSendExpectationWithError() {
+    public void shouldSendExpectationWithOverrideForwardedRequest() {
         // when
-        mockServerClient
-                .when(
-                        new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body")),
-                        Times.exactly(3)
-                )
-                .error(
-                        new HttpError()
-                                .withDelay(TimeUnit.MILLISECONDS, 100)
-                                .withResponseBytes("random_bytes".getBytes(UTF_8))
-                );
+        ForwardChainExpectation forwardChainExpectation = mockServerClient
+            .when(
+                new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body")),
+                Times.exactly(3)
+            );
+        forwardChainExpectation.forward(forwardOverriddenRequest(request().withBody("some_replaced_body")));
 
         // then
         verify(mockExpectationSerializer).serialize(
-                new ExpectationDTO()
-                        .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))))
-                        .setHttpError(
-                                new HttpErrorDTO(
-                                        new HttpError()
-                                                .withDelay(TimeUnit.MILLISECONDS, 100)
-                                                .withResponseBytes("random_bytes".getBytes(UTF_8))
-                                )
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(3)))
-                        .buildObject()
+            new ExpectationDTO()
+                .setHttpRequest(new HttpRequestDTO(new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))))
+                .setHttpOverrideForwardedRequest(
+                    new HttpOverrideForwardedRequestDTO(
+                        new HttpOverrideForwardedRequest()
+                            .withHttpRequest(
+                                request()
+                                    .withBody("some_replaced_body")
+                            )
+                    )
+                )
+                .setTimes(new TimesDTO(Times.exactly(3)))
+                .buildObject()
+        );
+    }
+
+    @Test
+    public void shouldSendExpectationWithError() {
+        // when
+        mockServerClient
+            .when(
+                new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body")),
+                Times.exactly(3)
+            )
+            .error(
+                new HttpError()
+                    .withDelay(TimeUnit.MILLISECONDS, 100)
+                    .withResponseBytes("random_bytes".getBytes(UTF_8))
+            );
+
+        // then
+        verify(mockExpectationSerializer).serialize(
+            new ExpectationDTO()
+                .setHttpRequest(new HttpRequestDTO(new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))))
+                .setHttpError(
+                    new HttpErrorDTO(
+                        new HttpError()
+                            .withDelay(TimeUnit.MILLISECONDS, 100)
+                            .withResponseBytes("random_bytes".getBytes(UTF_8))
+                    )
+                )
+                .setTimes(new TimesDTO(Times.exactly(3)))
+                .buildObject()
         );
     }
 
@@ -653,28 +709,28 @@ public class MockServerClientTest {
     public void shouldSendExpectationRequestWithDefaultTimes() {
         // when
         mockServerClient
-                .when(
-                        new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))
-                )
-                .respond(
-                        new HttpResponse()
-                                .withBody("some_response_body")
-                                .withHeaders(new Header("responseName", "responseValue"))
-                );
+            .when(
+                new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .respond(
+                new HttpResponse()
+                    .withBody("some_response_body")
+                    .withHeaders(new Header("responseName", "responseValue"))
+            );
 
         // then
         verify(mockExpectationSerializer).serialize(
-                new ExpectationDTO()
-                        .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))))
-                        .setHttpResponse(new HttpResponseDTO(new HttpResponse()
-                                .withBody("some_response_body")
-                                .withHeaders(new Header("responseName", "responseValue"))))
-                        .setTimes(new TimesDTO(Times.unlimited()))
-                        .buildObject()
+            new ExpectationDTO()
+                .setHttpRequest(new HttpRequestDTO(new HttpRequest()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))))
+                .setHttpResponse(new HttpResponseDTO(new HttpResponse()
+                    .withBody("some_response_body")
+                    .withHeaders(new Header("responseName", "responseValue"))))
+                .setTimes(new TimesDTO(Times.unlimited()))
+                .buildObject()
         );
     }
 
@@ -685,10 +741,10 @@ public class MockServerClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/stop"),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/stop"),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -701,10 +757,10 @@ public class MockServerClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/stop"),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/stop"),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -721,10 +777,10 @@ public class MockServerClientTest {
         // then
         assertTrue(running);
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/status"),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/status"),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -742,10 +798,10 @@ public class MockServerClientTest {
         // then
         assertFalse(running);
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/status"),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/status"),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -758,10 +814,10 @@ public class MockServerClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/reset"),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/reset"),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -771,8 +827,8 @@ public class MockServerClientTest {
     public void shouldSendClearRequest() {
         // given
         HttpRequest someRequestMatcher = new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body"));
+            .withPath("/some_path")
+            .withBody(new StringBody("some_request_body"));
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // when
@@ -780,11 +836,11 @@ public class MockServerClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/clear")
-                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/clear")
+                .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -794,8 +850,8 @@ public class MockServerClientTest {
     public void shouldSendClearRequestWithType() {
         // given
         HttpRequest someRequestMatcher = new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body"));
+            .withPath("/some_path")
+            .withBody(new StringBody("some_request_body"));
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // when
@@ -803,12 +859,12 @@ public class MockServerClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/clear")
-                        .withQueryStringParameter("type", "log")
-                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/clear")
+                .withQueryStringParameter("type", "log")
+                .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -818,15 +874,15 @@ public class MockServerClientTest {
     public void shouldSendClearRequestForNullRequest() throws Exception {
         // when
         mockServerClient
-                .clear(null);
+            .clear(null);
 
         // then
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/clear")
-                        .withBody("", Charsets.UTF_8),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/clear")
+                .withBody("", Charsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -836,8 +892,8 @@ public class MockServerClientTest {
     public void shouldRetrieveRequests() {
         // given - a request
         HttpRequest someRequestMatcher = new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body"));
+            .withPath("/some_path")
+            .withBody(new StringBody("some_request_body"));
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // and - a client
@@ -852,13 +908,13 @@ public class MockServerClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS);
         verify(mockHttpRequestSerializer).deserializeArray("body");
@@ -876,13 +932,13 @@ public class MockServerClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withBody("", Charsets.UTF_8),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withBody("", Charsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -893,8 +949,8 @@ public class MockServerClientTest {
     public void shouldRetrieveActiveExpectations() {
         // given - a request
         HttpRequest someRequestMatcher = new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body"));
+            .withPath("/some_path")
+            .withBody(new StringBody("some_request_body"));
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // and - a client
@@ -909,13 +965,13 @@ public class MockServerClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -934,13 +990,13 @@ public class MockServerClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withBody("", Charsets.UTF_8),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withBody("", Charsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -951,8 +1007,8 @@ public class MockServerClientTest {
     public void shouldRetrieveRecordedExpectations() {
         // given - a request
         HttpRequest someRequestMatcher = new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body"));
+            .withPath("/some_path")
+            .withBody(new StringBody("some_request_body"));
         when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
 
         // and - a client
@@ -967,13 +1023,13 @@ public class MockServerClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -992,13 +1048,13 @@ public class MockServerClientTest {
 
         // then
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/retrieve")
-                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
-                        .withQueryStringParameter("format", Format.JSON.name())
-                        .withBody("", Charsets.UTF_8),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/retrieve")
+                .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withBody("", Charsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -1011,8 +1067,8 @@ public class MockServerClientTest {
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body"));
+            .withPath("/some_path")
+            .withBody(new StringBody("some_request_body"));
 
         try {
             mockServerClient.verify(httpRequest);
@@ -1022,11 +1078,11 @@ public class MockServerClientTest {
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
             verify(mockHttpClient).sendRequest(
-                    request()
-                            .withHeader(HOST.toString(), "localhost:" + 1080)
-                            .withMethod("PUT")
-                            .withPath("/verifySequence")
-                            .withBody("verification_json", Charsets.UTF_8),
+                request()
+                    .withHeader(HOST.toString(), "localhost:" + 1080)
+                    .withMethod("PUT")
+                    .withPath("/verifySequence")
+                    .withBody("verification_json", Charsets.UTF_8),
                 20000,
                 TimeUnit.MILLISECONDS
             );
@@ -1040,8 +1096,8 @@ public class MockServerClientTest {
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body"));
+            .withPath("/some_path")
+            .withBody(new StringBody("some_request_body"));
 
         try {
             mockServerClient.verify(httpRequest, httpRequest);
@@ -1051,11 +1107,11 @@ public class MockServerClientTest {
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest, httpRequest));
             verify(mockHttpClient).sendRequest(
-                    request()
-                            .withHeader(HOST.toString(), "localhost:" + 1080)
-                            .withMethod("PUT")
-                            .withPath("/verifySequence")
-                            .withBody("verification_json", Charsets.UTF_8),
+                request()
+                    .withHeader(HOST.toString(), "localhost:" + 1080)
+                    .withMethod("PUT")
+                    .withPath("/verifySequence")
+                    .withBody("verification_json", Charsets.UTF_8),
                 20000,
                 TimeUnit.MILLISECONDS
             );
@@ -1069,8 +1125,8 @@ public class MockServerClientTest {
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody(""));
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body"));
+            .withPath("/some_path")
+            .withBody(new StringBody("some_request_body"));
 
         try {
             mockServerClient.verify(httpRequest);
@@ -1083,11 +1139,11 @@ public class MockServerClientTest {
         // then
         verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/verifySequence")
-                        .withBody("verification_json", Charsets.UTF_8),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/verifySequence")
+                .withBody("verification_json", Charsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -1099,8 +1155,8 @@ public class MockServerClientTest {
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody(""));
         when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body"));
+            .withPath("/some_path")
+            .withBody(new StringBody("some_request_body"));
 
         try {
             mockServerClient.verify(httpRequest, once());
@@ -1113,11 +1169,11 @@ public class MockServerClientTest {
         // then
         verify(mockVerificationSerializer).serialize(verification().withRequest(httpRequest).withTimes(once()));
         verify(mockHttpClient).sendRequest(
-                request()
-                        .withHeader(HOST.toString(), "localhost:" + 1080)
-                        .withMethod("PUT")
-                        .withPath("/verify")
-                        .withBody("verification_json", Charsets.UTF_8),
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/verify")
+                .withBody("verification_json", Charsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -1129,8 +1185,8 @@ public class MockServerClientTest {
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
         when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body"));
+            .withPath("/some_path")
+            .withBody(new StringBody("some_request_body"));
 
         try {
             mockServerClient.verify(httpRequest, atLeast(1));
@@ -1140,11 +1196,11 @@ public class MockServerClientTest {
         } catch (AssertionError ae) {
             verify(mockVerificationSerializer).serialize(verification().withRequest(httpRequest).withTimes(atLeast(1)));
             verify(mockHttpClient).sendRequest(
-                    request()
-                            .withHeader(HOST.toString(), "localhost:" + 1080)
-                            .withMethod("PUT")
-                            .withPath("/verify")
-                            .withBody("verification_json", Charsets.UTF_8),
+                request()
+                    .withHeader(HOST.toString(), "localhost:" + 1080)
+                    .withMethod("PUT")
+                    .withPath("/verify")
+                    .withBody("verification_json", Charsets.UTF_8),
                 20000,
                 TimeUnit.MILLISECONDS
             );

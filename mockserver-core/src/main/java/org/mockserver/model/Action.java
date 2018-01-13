@@ -15,6 +15,7 @@ public abstract class Action extends ObjectWithJsonToString {
         FORWARD_TEMPLATE,
         FORWARD_CLASS_CALLBACK,
         FORWARD_OBJECT_CALLBACK,
+        FORWARD_REPLACE,
         RESPONSE,
         RESPONSE_TEMPLATE,
         RESPONSE_CLASS_CALLBACK,

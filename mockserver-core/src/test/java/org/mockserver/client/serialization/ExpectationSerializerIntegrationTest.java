@@ -1,6 +1,5 @@
 package org.mockserver.client.serialization;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Rule;
 import org.junit.Test;
@@ -11,9 +10,6 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Charsets.UTF_8;
@@ -304,35 +300,35 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldDeserializeCompleteObjectWithParameterRequestBody() {
         // given
-        String requestBytes = ("{\n" +
-            "  \"httpRequest\" : {\n" +
-            "    \"method\" : \"POST\",\n" +
-            "    \"path\" : \"some_pathRequest\",\n" +
-            "    \"body\" : {\n" +
-            "      \"type\" : \"PARAMETERS\",\n" +
-            "      \"parameters\" : {\n" +
-            "        \"bodyParameterOneName\" : [ \"Parameter One Value One\", \"Parameter One Value Two\" ],\n" +
-            "        \"bodyParameterTwoName\" : [ \"Parameter Two\" ]\n" +
-            "      }\n" +
-            "    }\n" +
-            "  },\n" +
-            "  \"httpResponse\" : {\n" +
-            "    \"statusCode\" : 202,\n" +
-            "    \"headers\" : {\n" +
-            "      \"headerNameResponse\" : [ \"headerValueResponse\" ]\n" +
-            "    },\n" +
-            "    \"cookies\" : {\n" +
-            "      \"cookieNameResponse\" : \"cookieValueResponse\"\n" +
-            "    },\n" +
-            "    \"body\" : \"some_body_response\"\n" +
-            "  },\n" +
-            "  \"times\" : {\n" +
-            "    \"remainingTimes\" : 1,\n" +
-            "    \"unlimited\" : false\n" +
-            "  },\n" +
-            "  \"timeToLive\" : {\n" +
-            "    \"unlimited\" : true\n" +
-            "  }\n" +
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"POST\"," + NEW_LINE +
+            "    \"path\" : \"some_pathRequest\"," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
+            "      \"parameters\" : {" + NEW_LINE +
+            "        \"bodyParameterOneName\" : [ \"Parameter One Value One\", \"Parameter One Value Two\" ]," + NEW_LINE +
+            "        \"bodyParameterTwoName\" : [ \"Parameter Two\" ]" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"statusCode\" : 202," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"headerNameResponse\" : [ \"headerValueResponse\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"cookieNameResponse\" : \"cookieValueResponse\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"some_body_response\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 1," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}");
 
         // when
@@ -833,6 +829,83 @@ public class ExpectationSerializerIntegrationTest {
             .setHttpForwardObjectCallback(
                 new HttpObjectCallbackDTO()
                     .setClientId("someClientId")
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
+        );
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithOverrideForwardedRequest() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpOverrideForwardedRequest\" : {" + NEW_LINE +
+            "    \"httpRequest\" : {" + NEW_LINE +
+            "      \"method\" : \"some_overridden_method\"," + NEW_LINE +
+            "      \"path\" : \"some_overridden_path\"," + NEW_LINE +
+            "      \"body\" : \"some_overridden_body\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpOverrideForwardedRequest(
+                new HttpOverrideForwardedRequestDTO()
+                    .setHttpRequest(
+                        new HttpRequestDTO()
+                            .setMethod(string("some_overridden_method"))
+                            .setPath(string("some_overridden_path"))
+                            .setBody(new StringBodyDTO(exact("some_overridden_body")))
+                    )
+                    .setDelay(new DelayDTO()
+                        .setTimeUnit(MICROSECONDS)
+                        .setValue(1)
+                    )
             )
             .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
         );
@@ -1549,6 +1622,80 @@ public class ExpectationSerializerIntegrationTest {
             "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
             "    \"timeToLive\" : 2," + NEW_LINE +
             "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithOverrideForwardedRequest() {
+        // when
+        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpOverrideForwardedRequest(
+                new HttpOverrideForwardedRequestDTO()
+                    .setHttpRequest(
+                        new HttpRequestDTO()
+                            .setMethod(string("some_overridden_method"))
+                            .setPath(string("some_overridden_path"))
+                            .setBody(new StringBodyDTO(exact("some_overridden_body")))
+                    )
+                    .setDelay(new DelayDTO()
+                        .setTimeUnit(MICROSECONDS)
+                        .setValue(1)
+                    )
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpOverrideForwardedRequest\" : {" + NEW_LINE +
+            "    \"httpRequest\" : {" + NEW_LINE +
+            "      \"method\" : \"some_overridden_method\"," + NEW_LINE +
+            "      \"path\" : \"some_overridden_path\"," + NEW_LINE +
+            "      \"body\" : \"some_overridden_body\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonExpectation);
     }

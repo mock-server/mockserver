@@ -41,7 +41,8 @@ public class ActionHandler {
     private HttpForwardTemplateActionHandler httpForwardTemplateActionHandler;
     private HttpForwardClassCallbackActionHandler httpForwardClassCallbackActionHandler;
     private HttpForwardObjectCallbackActionHandler httpForwardObjectCallbackActionHandler;
-    private HttpErrorActionHandler httpErrorActionHandler = new HttpErrorActionHandler();
+    private HttpOverrideForwardedRequestActionHandler httpOverrideForwardedRequestCallbackActionHandler;
+    private HttpErrorActionHandler httpErrorActionHandler;
 
     // forwarding
     private NettyHttpClient httpClient = new NettyHttpClient();
@@ -58,7 +59,9 @@ public class ActionHandler {
         this.httpForwardActionHandler = new HttpForwardActionHandler(logFormatter);
         this.httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(logFormatter);
         this.httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(logFormatter);
-        this.httpForwardObjectCallbackActionHandler = new HttpForwardObjectCallbackActionHandler(logFormatter, httpStateHandler);
+        this.httpForwardObjectCallbackActionHandler = new HttpForwardObjectCallbackActionHandler(httpStateHandler);
+        this.httpOverrideForwardedRequestCallbackActionHandler = new HttpOverrideForwardedRequestActionHandler(logFormatter);
+        this.httpErrorActionHandler = new HttpErrorActionHandler();
     }
 
     public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyRequest, final boolean synchronous) {
@@ -66,21 +69,71 @@ public class ActionHandler {
         if (expectation != null && expectation.getAction() != null) {
             Action action = expectation.getAction();
             switch (action.getType()) {
-                case FORWARD: {
-                    final HttpForward httpForward = (HttpForward) action;
-                    final SettableFuture<HttpResponse> responseFuture = httpForwardActionHandler.handle(httpForward, request);
-                    submit(responseFuture, new Runnable() {
+                case RESPONSE: {
+                    final HttpResponse httpResponse = (HttpResponse) action;
+                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
+                    schedule(new Runnable() {
                         public void run() {
-                            try {
-                                HttpResponse response = responseFuture.get();
-                                responseWriter.writeResponse(request, response, false);
-                                httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                                logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for forward action:{}", response, request, httpForward);
-                            } catch (Exception ex) {
-                                logFormatter.errorLog(request, ex, ex.getMessage());
-                            }
+                            HttpResponse response = httpResponseActionHandler.handle(httpResponse);
+                            responseWriter.writeResponse(request, response, false);
+                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for response action:{}", response, request, httpResponse);
+                        }
+                    }, httpResponse.getDelay(), synchronous);
+                    break;
+                }
+                case RESPONSE_TEMPLATE: {
+                    final HttpTemplate httpTemplate = (HttpTemplate) action;
+                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
+                    schedule(new Runnable() {
+                        public void run() {
+                            HttpResponse response = httpResponseTemplateActionHandler.handle(httpTemplate, request);
+                            responseWriter.writeResponse(request, response, false);
+                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated response action:{}", response, request, httpTemplate);
+                        }
+                    }, httpTemplate.getDelay(), synchronous);
+                    break;
+                }
+                case RESPONSE_CLASS_CALLBACK: {
+                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
+                    final HttpClassCallback classCallback = (HttpClassCallback) action;
+                    submit(new Runnable() {
+                        public void run() {
+                            HttpResponse response = httpResponseClassCallbackActionHandler.handle(classCallback, request);
+                            responseWriter.writeResponse(request, response, false);
+                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, classCallback);
                         }
                     }, synchronous);
+                    break;
+                }
+                case RESPONSE_OBJECT_CALLBACK: {
+                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
+                    final HttpObjectCallback objectCallback = (HttpObjectCallback) action;
+                    submit(new Runnable() {
+                        public void run() {
+                            httpResponseObjectCallbackActionHandler.handle(objectCallback, request, responseWriter);
+                        }
+                    }, synchronous);
+                    break;
+                }
+                case FORWARD: {
+                    final HttpForward httpForward = (HttpForward) action;
+                    schedule(new Runnable() {
+                        public void run() {
+                            final SettableFuture<HttpResponse> responseFuture = httpForwardActionHandler.handle(httpForward, request);
+                            submit(responseFuture, new Runnable() {
+                                public void run() {
+                                    try {
+                                        HttpResponse response = responseFuture.get();
+                                        responseWriter.writeResponse(request, response, false);
+                                        httpStateHandler.log(new RequestResponseLogEntry(request, response));
+                                        logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for forward action:{}", response, request, httpForward);
+                                    } catch (Exception ex) {
+                                        logFormatter.errorLog(request, ex, ex.getMessage());
+                                    }
+                                }
+                            }, synchronous);
+                        }
+                    }, httpForward.getDelay(), synchronous);
                     break;
                 }
                 case FORWARD_TEMPLATE: {
@@ -135,50 +188,25 @@ public class ActionHandler {
                     }, synchronous);
                     break;
                 }
-                case RESPONSE: {
-                    final HttpResponse httpResponse = (HttpResponse) action;
+                case FORWARD_REPLACE: {
                     httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
+                    final HttpOverrideForwardedRequest httpOverrideForwardedRequest = (HttpOverrideForwardedRequest) action;
                     schedule(new Runnable() {
                         public void run() {
-                            HttpResponse response = httpResponseActionHandler.handle(httpResponse);
-                            responseWriter.writeResponse(request, response, false);
-                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for response action:{}", response, request, httpResponse);
+                            final SettableFuture<HttpResponse> responseFuture = httpOverrideForwardedRequestCallbackActionHandler.handle(httpOverrideForwardedRequest, request);
+                            submit(responseFuture, new Runnable() {
+                                public void run() {
+                                    try {
+                                        HttpResponse response = responseFuture.get();
+                                        responseWriter.writeResponse(request, response, false);
+                                        logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, httpOverrideForwardedRequest);
+                                    } catch (Exception ex) {
+                                        logFormatter.errorLog(request, ex, ex.getMessage());
+                                    }
+                                }
+                            }, synchronous);
                         }
-                    }, httpResponse.getDelay(), synchronous);
-                    break;
-                }
-                case RESPONSE_TEMPLATE: {
-                    final HttpTemplate httpTemplate = (HttpTemplate) action;
-                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
-                    schedule(new Runnable() {
-                        public void run() {
-                            HttpResponse response = httpResponseTemplateActionHandler.handle(httpTemplate, request);
-                            responseWriter.writeResponse(request, response, false);
-                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated response action:{}", response, request, httpTemplate);
-                        }
-                    }, httpTemplate.getDelay(), synchronous);
-                    break;
-                }
-                case RESPONSE_CLASS_CALLBACK: {
-                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
-                    final HttpClassCallback classCallback = (HttpClassCallback) action;
-                    submit(new Runnable() {
-                        public void run() {
-                            HttpResponse response = httpResponseClassCallbackActionHandler.handle(classCallback, request);
-                            responseWriter.writeResponse(request, response, false);
-                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, classCallback);
-                        }
-                    }, synchronous);
-                    break;
-                }
-                case RESPONSE_OBJECT_CALLBACK: {
-                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
-                    final HttpObjectCallback objectCallback = (HttpObjectCallback) action;
-                    submit(new Runnable() {
-                        public void run() {
-                            httpResponseObjectCallbackActionHandler.handle(objectCallback, request, responseWriter);
-                        }
-                    }, synchronous);
+                    }, httpOverrideForwardedRequest.getDelay(), synchronous);
                     break;
                 }
                 case ERROR: {

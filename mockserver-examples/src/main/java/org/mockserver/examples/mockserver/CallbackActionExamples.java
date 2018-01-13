@@ -26,9 +26,9 @@ public class CallbackActionExamples {
                 request()
                     .withPath("/some.*")
             )
-            .response(
+            .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationCallback")
+                    .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationResponseCallback")
             );
     }
 
@@ -38,7 +38,7 @@ public class CallbackActionExamples {
                 request()
                     .withPath("/some/path")
             )
-            .response(
+            .respond(
                 new ExpectationResponseCallback() {
                     @Override
                     public HttpResponse handle(HttpRequest request) {
@@ -58,7 +58,7 @@ public class CallbackActionExamples {
 
     }
 
-    public static class TestExpectationCallback implements ExpectationResponseCallback {
+    public static class TestExpectationResponseCallback implements ExpectationResponseCallback {
 
         @Override
         public HttpResponse handle(HttpRequest httpRequest) {

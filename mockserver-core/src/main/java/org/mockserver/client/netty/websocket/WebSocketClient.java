@@ -13,6 +13,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.mockserver.client.serialization.WebSocketMessageSerializer;
 import org.mockserver.client.serialization.model.WebSocketClientIdDTO;
+import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 
@@ -28,7 +29,8 @@ public class WebSocketClient {
     private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer();
     private SettableFuture<String> registrationFuture = SettableFuture.create();
 
-    private ExpectationResponseCallback expectationCallback;
+    private ExpectationResponseCallback expectationResponseCallback;
+    private ExpectationForwardCallback expectationForwardCallback;
 
 
     public WebSocketClient(InetSocketAddress serverAddress, String contextPath) {
@@ -62,7 +64,12 @@ public class WebSocketClient {
         try {
             Object deserializedMessage = webSocketMessageSerializer.deserialize(textWebSocketFrame.text());
             if (deserializedMessage instanceof HttpRequest) {
-                channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(expectationCallback.handle((HttpRequest) deserializedMessage))));
+                if (expectationResponseCallback != null) {
+                    channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(expectationResponseCallback.handle((HttpRequest) deserializedMessage))));
+                }
+                if (expectationForwardCallback != null) {
+                    channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(expectationForwardCallback.handle((HttpRequest) deserializedMessage))));
+                }
             } else if (!(deserializedMessage instanceof WebSocketClientIdDTO)) {
                 throw new WebSocketException("Unsupported web socket message " + deserializedMessage);
             }
@@ -82,8 +89,21 @@ public class WebSocketClient {
         group.shutdownGracefully();
     }
 
-    public WebSocketClient registerExpectationCallback(ExpectationResponseCallback expectationCallback) {
-        this.expectationCallback = expectationCallback;
+    public WebSocketClient registerExpectationCallback(ExpectationResponseCallback expectationResponseCallback) {
+        if (expectationForwardCallback == null) {
+            this.expectationResponseCallback = expectationResponseCallback;
+        } else {
+            throw new IllegalArgumentException("It is not possible to set response callback once a forward callback has been set");
+        }
+        return this;
+    }
+
+    public WebSocketClient registerExpectationCallback(ExpectationForwardCallback expectationForwardCallback) {
+        if (expectationResponseCallback == null) {
+            this.expectationForwardCallback = expectationForwardCallback;
+        } else {
+            throw new IllegalArgumentException("It is not possible to set forward callback once a response callback has been set");
+        }
         return this;
     }
 
@@ -91,8 +111,8 @@ public class WebSocketClient {
         try {
             return registrationFuture.get();
         } catch (Exception e) {
-            if (e.getCause() instanceof WebSocketException && e.getCause().getMessage().startsWith("ExpectationCallback is not supported")) {
-                throw new WebSocketException(e.getCause().getMessage(), e.getCause());
+            if (e.getCause() instanceof WebSocketException && e.getCause().getMessage().contains("ExpectationResponseCallback and ExpectationForwardCallback is not supported")) {
+                throw new WebSocketException(e.getCause().getMessage());
             } else {
                 throw new WebSocketException("Unable to retrieve client registration id", e);
             }

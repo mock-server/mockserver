@@ -16,8 +16,8 @@ public class WebSocketClientRegistry {
 
     private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer();
     private CircularHashMap<String, ChannelHandlerContext> clientRegistry = new CircularHashMap<>(100);
-    private CircularHashMap<String, ExpectationCallbackResponse> callbackResponseRegistry = new CircularHashMap<>(100);
-    private CircularHashMap<String, ExpectationCallbackForward> callbackForwardRegistry = new CircularHashMap<>(100);
+    private CircularHashMap<String, WebSocketResponseCallback> callbackResponseRegistry = new CircularHashMap<>(100);
+    private CircularHashMap<String, WebSocketRequestCallback> callbackForwardRegistry = new CircularHashMap<>(100);
 
     void receivedTextWebSocketFrame(ChannelHandlerContext ctx, TextWebSocketFrame textWebSocketFrame) {
         try {
@@ -44,12 +44,12 @@ public class WebSocketClientRegistry {
         clientRegistry.put(clientId, ctx);
     }
 
-    public void registerCallbackResponseHandler(String clientId, ExpectationCallbackResponse expectationCallbackResponse) {
-        callbackResponseRegistry.put(clientId, expectationCallbackResponse);
+    public void registerCallbackHandler(String clientId, WebSocketResponseCallback expectationResponseCallback) {
+        callbackResponseRegistry.put(clientId, expectationResponseCallback);
     }
 
-    public void registerCallbackResponseHandler(String clientId, ExpectationCallbackForward expectationCallbackForward) {
-        callbackForwardRegistry.put(clientId, expectationCallbackForward);
+    public void registerCallbackHandler(String clientId, WebSocketRequestCallback expectationForwardCallback) {
+        callbackForwardRegistry.put(clientId, expectationForwardCallback);
     }
 
     public void sendClientMessage(String clientId, HttpRequest httpRequest) {

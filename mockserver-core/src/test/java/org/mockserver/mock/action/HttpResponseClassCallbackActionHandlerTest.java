@@ -9,17 +9,30 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
  */
-public class HttpClassCallbackActionHandlerTest {
+public class HttpResponseClassCallbackActionHandlerTest {
 
     @Test
-    public void shouldHandleHttpRequests() {
+    public void shouldHandleInvalidClass() {
         // given
-        HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.HttpClassCallbackActionHandlerTest$TestCallback");
+        HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.FooBar");
+
+        // when
+        HttpResponse actualHttpResponse = new HttpResponseClassCallbackActionHandler().handle(httpClassCallback, request().withBody("some_body"));
+
+        // then
+        assertThat(actualHttpResponse, is(notFoundResponse()));
+    }
+
+    @Test
+    public void shouldHandleValidLocalClass() {
+        // given
+        HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.HttpResponseClassCallbackActionHandlerTest$TestCallback");
 
         // when
         HttpResponse actualHttpResponse = new HttpResponseClassCallbackActionHandler().handle(httpClassCallback, request().withBody("some_body"));

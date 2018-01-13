@@ -343,6 +343,54 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
     }
 
     @Test
+    public void shouldValidateValidCompleteExpectationWithHttpOverrideForwardedRequest() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"STRING\"," + NEW_LINE +
+            "      \"string\" : \"someBody\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someCookieName\"," + NEW_LINE +
+            "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpOverrideForwardedRequest\" : {" + NEW_LINE +
+            "    \"httpRequest\" : {" + NEW_LINE +
+            "      \"method\" : \"some_overridden_method\"," + NEW_LINE +
+            "      \"path\" : \"some_overridden_path\"," + NEW_LINE +
+            "      \"body\" : {" + NEW_LINE +
+            "        \"type\" : \"STRING\"," + NEW_LINE +
+            "        \"string\" : \"some_overridden_body\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}"), is(""));
+    }
+
+    @Test
     public void shouldValidateValidCompleteExpectationWithHttpError() {
         // when
         assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
@@ -448,7 +496,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "}"),
             is(
                 "1 error:" + NEW_LINE +
-                    " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpResponseObjectCallback\" \"httpResponseClassCallback\" \"httpForward\" \"httpForwardTemplate\" \"httpForwardObjectCallback\" \"httpForwardClassCallback\" \"httpError\" "
+                    " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpResponseObjectCallback\" \"httpResponseClassCallback\" \"httpForward\" \"httpForwardTemplate\" \"httpForwardObjectCallback\" \"httpForwardClassCallback\" \"httpOverrideForwardedRequest\" \"httpError\" "
             ));
     }
 
@@ -461,7 +509,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             is(
                 "2 errors:" + NEW_LINE +
                     " - object instance has properties which are not allowed by the schema: [\"invalidField\"]" + NEW_LINE +
-                    " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpResponseObjectCallback\" \"httpResponseClassCallback\" \"httpForward\" \"httpForwardTemplate\" \"httpForwardObjectCallback\" \"httpForwardClassCallback\" \"httpError\" "
+                    " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpResponseObjectCallback\" \"httpResponseClassCallback\" \"httpForward\" \"httpForwardTemplate\" \"httpForwardObjectCallback\" \"httpForwardClassCallback\" \"httpOverrideForwardedRequest\" \"httpError\" "
             ));
     }
 

@@ -10,6 +10,7 @@ public class HttpForward extends Action {
     private String host;
     private Integer port = 80;
     private Scheme scheme = Scheme.HTTP;
+    private Delay delay;
 
     /**
      * Static builder to create a callback.
@@ -64,6 +65,10 @@ public class HttpForward extends Action {
     public HttpForward withScheme(Scheme scheme) {
         this.scheme = scheme;
         return this;
+    }
+
+    public Delay getDelay() {
+        return delay;
     }
 
     public enum Scheme {

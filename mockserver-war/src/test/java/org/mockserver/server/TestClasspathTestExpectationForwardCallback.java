@@ -1,9 +1,7 @@
 package org.mockserver.server;
 
 import org.mockserver.mock.action.ExpectationForwardCallback;
-import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 
 import java.util.ArrayList;
 import java.util.List;

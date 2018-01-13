@@ -13,11 +13,11 @@
             )
             .callback(
                 callback()
-                    .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationCallback")
+                    .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationResponseCallback")
             );
     }
 
-    public static class TestExpectationCallback implements ExpectationCallback {
+    public static class TestExpectationResponseCallback implements ExpectationResponseCallback {
 
         @Override
         public HttpResponse handle(HttpRequest httpRequest) {
@@ -46,7 +46,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "path": "/some.*"
     },
     "httpClassCallback": {
-        "callbackClass": "org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationCallback"
+        "callbackClass": "org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationResponseCallback"
     }
 }).then(
     function () {
@@ -64,7 +64,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "path" : "/some.*"
     },
     "httpClassCallback" : {
-        "callbackClass" : "org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationCallback"
+        "callbackClass" : "org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationResponseCallback"
     }
 }'</code></pre>
     </div>
@@ -125,7 +125,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             .withPath("/some/path")
     )
     .callback(
-        new ExpectationCallback() {
+        new ExpectationResponseCallback() {
             @Override
             public HttpResponse handle(HttpRequest request) {
                 if (request.getMethod().getValue().equals("POST")) {

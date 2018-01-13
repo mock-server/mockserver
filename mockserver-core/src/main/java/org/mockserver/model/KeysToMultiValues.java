@@ -5,10 +5,7 @@ import com.google.common.collect.ListMultimap;
 import org.apache.commons.lang3.ArrayUtils;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.mockserver.model.NottableString.*;
 
@@ -98,13 +95,23 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     public K replaceEntry(T entry) {
         if (entry != null) {
-            this.listMultimap.replaceValues(entry.getName(), entry.getValues());
+            for (NottableString key : new HashSet<>(this.listMultimap.keySet())) {
+                if (key.equalsIgnoreCase(entry.getName())) {
+                    this.listMultimap.removeAll(key);
+                }
+            }
+            this.listMultimap.putAll(entry.getName(), entry.getValues());
         }
         return (K) this;
     }
 
     public K replaceEntry(String name, String... values) {
         if (ArrayUtils.isNotEmpty(values)) {
+            for (NottableString key : new HashSet<>(this.listMultimap.keySet())) {
+                if (key.equalsIgnoreCase(name)) {
+                    this.listMultimap.removeAll(key);
+                }
+            }
             this.listMultimap.replaceValues(string(name), deserializeNottableStrings(values));
         }
         return (K) this;

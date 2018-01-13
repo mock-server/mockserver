@@ -1,10 +1,8 @@
 package org.mockserver.mock.action;
 
 import com.google.common.util.concurrent.SettableFuture;
-import org.mockserver.callback.ExpectationCallbackForward;
-import org.mockserver.callback.ExpectationCallbackResponse;
+import org.mockserver.callback.WebSocketRequestCallback;
 import org.mockserver.callback.WebSocketClientRegistry;
-import org.mockserver.log.model.RequestResponseLogEntry;
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpObjectCallback;
@@ -22,15 +20,15 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
     private final LoggingFormatter logFormatter;
     private WebSocketClientRegistry webSocketClientRegistry;
 
-    public HttpForwardObjectCallbackActionHandler(LoggingFormatter logFormatter, HttpStateHandler httpStateHandler) {
-        super(logFormatter);
+    public HttpForwardObjectCallbackActionHandler(HttpStateHandler httpStateHandler) {
+        super(httpStateHandler.getLogFormatter());
         this.webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();
         this.logFormatter = httpStateHandler.getLogFormatter();
     }
 
     public void handle(final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous) {
         String clientId = httpObjectCallback.getClientId();
-        webSocketClientRegistry.registerCallbackResponseHandler(clientId, new ExpectationCallbackForward() {
+        webSocketClientRegistry.registerCallbackHandler(clientId, new WebSocketRequestCallback() {
             @Override
             public void handle(final HttpRequest request) {
                 final SettableFuture<HttpResponse> responseFuture = sendRequest(request, null);

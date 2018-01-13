@@ -5,7 +5,7 @@ import org.mockserver.model.HttpResponse;
 /**
  * @author jamesdbloom
  */
-public interface ExpectationCallbackResponse {
+public interface WebSocketResponseCallback {
 
     void handle(HttpResponse httpResponse);
 }
