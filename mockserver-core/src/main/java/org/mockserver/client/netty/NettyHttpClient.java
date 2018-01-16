@@ -21,6 +21,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.mockserver.character.Character.NEW_LINE;
+
 public class NettyHttpClient {
 
     static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");
@@ -45,7 +47,7 @@ public class NettyHttpClient {
             remoteAddress = httpRequest.socketAddressFromHostHeader();
         }
 
-        mockServerLogger.debug("Sending to: {} request: {}", remoteAddress, httpRequest);
+        mockServerLogger.debug("Sending to: {}" + NEW_LINE + "request: {}", remoteAddress, httpRequest);
 
         final SettableFuture<HttpResponse> httpResponseSettableFuture = SettableFuture.create();
         bootstrap

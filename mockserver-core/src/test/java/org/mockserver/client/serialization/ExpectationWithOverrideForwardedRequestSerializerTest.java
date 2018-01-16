@@ -18,6 +18,7 @@ import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.core.Is.is;
@@ -43,7 +44,7 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
         new HttpRequest()
             .withMethod("GET")
             .withPath("somePath")
-            .withQueryStringParameters(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))
+            .withQueryStringParameters(new Parameter("queryParameterName", Collections.singletonList("queryParameterValue")))
             .withBody(new StringBody("someBody"))
             .withHeaders(new Header("headerName", "headerValue"))
             .withCookies(new Cookie("cookieName", "cookieValue")),

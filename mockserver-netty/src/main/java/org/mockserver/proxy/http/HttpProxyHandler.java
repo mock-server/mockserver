@@ -35,13 +35,9 @@ import static org.mockserver.unification.PortUnificationHandler.enabledSslUpstre
 public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
     private MockServerLogger mockServerLogger;
-    // generic handling
     private HttpStateHandler httpStateHandler;
-    // serializers
     private PortBindingSerializer portBindingSerializer;
-    // server
     private Proxy server;
-    // expectations
     private ActionHandler actionHandler;
 
     public HttpProxyHandler(Proxy server, HttpStateHandler httpStateHandler) {
@@ -49,7 +45,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
         this.server = server;
         this.httpStateHandler = httpStateHandler;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
-        portBindingSerializer = new PortBindingSerializer(mockServerLogger);
+        this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
         this.actionHandler = new ActionHandler(httpStateHandler);
     }
 
