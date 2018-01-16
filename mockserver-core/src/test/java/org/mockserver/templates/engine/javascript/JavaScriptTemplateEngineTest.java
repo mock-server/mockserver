@@ -7,7 +7,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.client.serialization.model.HttpResponseDTO;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
@@ -19,7 +19,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.Is.isA;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -35,7 +34,7 @@ public class JavaScriptTemplateEngineTest {
     public ExpectedException exception = ExpectedException.none();
 
     @Mock
-    private LoggingFormatter logFormatter;
+    private MockServerLogger logFormatter;
 
     @Before
     public void setupTestFixture() {

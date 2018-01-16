@@ -3,8 +3,6 @@ package org.mockserver.stop;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.EventLoopGroup;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +15,6 @@ public class StopEventQueue {
 
     @VisibleForTesting
     protected final List<Stoppable> stoppables = new ArrayList<Stoppable>();
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public void register(Stoppable stoppable) {
         synchronized (stoppables) {

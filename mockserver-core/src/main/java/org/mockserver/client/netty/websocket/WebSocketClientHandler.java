@@ -9,9 +9,8 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.websocketx.*;
 import org.mockserver.client.netty.codec.mappers.FullHttpResponseToMockServerResponse;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.ContentTypeMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -26,7 +25,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     private final WebSocketClient webSocketClient;
     private final WebSocketClientHandshaker handshaker;
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
 
     public WebSocketClientHandler(InetSocketAddress serverAddress, String contextPath, WebSocketClient webSocketClient) throws URISyntaxException {
         this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(
@@ -55,7 +54,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        logger.debug("web socket client disconnected");
+        mockServerLogger.debug("web socket client disconnected");
     }
 
     @Override
@@ -66,11 +65,11 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             if (httpResponse.headers().contains(UPGRADE, WEBSOCKET, true) && !handshaker.isHandshakeComplete()) {
                 handshaker.finishHandshake(ch, httpResponse);
                 webSocketClient.registrationFuture().set(httpResponse.headers().get("X-CLIENT-REGISTRATION-ID"));
-                logger.debug("web socket client " + webSocketClient.registrationFuture().get() + " connected!");
+                mockServerLogger.debug("web socket client " + webSocketClient.registrationFuture().get() + " connected!");
             } else if (httpResponse.status().equals(HttpResponseStatus.NOT_IMPLEMENTED)) {
                 String message = readRequestBody(httpResponse);
                 webSocketClient.registrationFuture().setException(new WebSocketException(message));
-                logger.warn(message);
+                mockServerLogger.warn(message);
             } else {
                 throw new WebSocketException("Unsupported web socket message " + new FullHttpResponseToMockServerResponse().mapMockServerResponseToFullHttpResponse(httpResponse));
             }
@@ -79,7 +78,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             if (frame instanceof TextWebSocketFrame) {
                 webSocketClient.receivedTextWebSocketFrame((TextWebSocketFrame) frame);
             } else if (frame instanceof CloseWebSocketFrame) {
-                logger.debug("web socket client received request to close");
+                mockServerLogger.debug("web socket client received request to close");
                 ch.close();
             }
         }
@@ -97,7 +96,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("web socket client caught exception", cause);
+        mockServerLogger.error("web socket client caught exception", cause);
         if (!webSocketClient.registrationFuture().isDone()) {
             webSocketClient.registrationFuture().setException(cause);
         }

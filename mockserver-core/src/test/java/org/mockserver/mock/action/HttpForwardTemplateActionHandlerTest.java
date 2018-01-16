@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
@@ -37,11 +37,11 @@ public class HttpForwardTemplateActionHandlerTest {
     @InjectMocks
     private HttpForwardTemplateActionHandler httpForwardTemplateActionHandler;
 
-    private LoggingFormatter mockLogFormatter;
+    private MockServerLogger mockLogFormatter;
 
     @Before
     public void setupMocks() {
-        mockLogFormatter = mock(LoggingFormatter.class);
+        mockLogFormatter = mock(MockServerLogger.class);
         httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(mockLogFormatter);
         initMocks(this);
     }

@@ -1,11 +1,11 @@
 package org.mockserver.proxy.socks;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.proxy.Proxy.PROXYING;
@@ -13,12 +13,14 @@ import static org.mockserver.socket.KeyAndCertificateFactory.addSubjectAlternati
 import static org.mockserver.unification.PortUnificationHandler.disableSslDownstream;
 import static org.mockserver.unification.PortUnificationHandler.enabledSslDownstream;
 
+@ChannelHandler.Sharable
 public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest> {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerLogger mockServerLogger;
 
-    public SocksProxyHandler() {
+    public SocksProxyHandler(MockServerLogger mockServerLogger) {
         super(false);
+        this.mockServerLogger = mockServerLogger;
     }
 
     @Override
@@ -53,7 +55,7 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
                     // add Subject Alternative Name for SSL certificate
                     addSubjectAlternativeName(req.host());
 
-                    ctx.pipeline().addAfter(getClass().getSimpleName() + "#0", SocksConnectHandler.class.getSimpleName() + "#0", new SocksConnectHandler(req.host(), req.port()));
+                    ctx.pipeline().addAfter(getClass().getSimpleName() + "#0", SocksConnectHandler.class.getSimpleName() + "#0", new SocksConnectHandler(mockServerLogger, req.host(), req.port()));
                     ctx.pipeline().remove(this);
                     ctx.fireChannelRead(socksRequest);
 
@@ -80,7 +82,7 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            logger.warn("Exception caught by SOCKS proxy handler -> closing pipeline " + ctx.channel(), cause);
+            mockServerLogger.error("Exception caught by SOCKS proxy handler -> closing pipeline " + ctx.channel(), cause);
         }
         ctx.close();
     }

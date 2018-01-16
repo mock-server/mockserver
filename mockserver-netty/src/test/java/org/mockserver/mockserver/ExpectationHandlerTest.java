@@ -12,6 +12,7 @@ import org.mockserver.client.serialization.PortBindingSerializer;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -51,9 +52,9 @@ public abstract class ExpectationHandlerTest {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
-    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
 
     protected HttpStateHandler httpStateHandler;
     protected LifeCycle server;

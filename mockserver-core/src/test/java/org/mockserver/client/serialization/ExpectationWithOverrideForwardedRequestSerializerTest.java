@@ -9,6 +9,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -95,7 +96,7 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
     private JsonSchemaExpectationValidator expectationValidator;
 
     @InjectMocks
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
 
 
     @Before

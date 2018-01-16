@@ -2,7 +2,7 @@ package org.mockserver.mock;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.TimeToLive;
@@ -28,11 +28,11 @@ import static org.mockito.Mockito.mock;
 public class MockServerMatcherClearAndResetTest {
 
     private MockServerMatcher mockServerMatcher;
-    private LoggingFormatter logFormatter;
+    private MockServerLogger logFormatter;
 
     @Before
     public void prepareTestFixture() {
-        logFormatter = mock(LoggingFormatter.class);
+        logFormatter = mock(MockServerLogger.class);
         mockServerMatcher = new MockServerMatcher(logFormatter);
     }
 

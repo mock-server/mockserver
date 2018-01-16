@@ -1,6 +1,6 @@
 package org.mockserver.ui;
 
-import org.mockserver.filters.MockServerLog;
+import org.mockserver.filters.MockServerEventLog;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 import java.util.ArrayList;
@@ -12,11 +12,11 @@ import static org.mockserver.scheduler.Scheduler.submit;
 /**
  * @author jamesdbloom
  */
-public class MockServerLogNotifier extends ObjectWithReflectiveEqualsHashCodeToString {
+public class MockServerEventLogNotifier extends ObjectWithReflectiveEqualsHashCodeToString {
 
     private List<MockServerLogListener> listeners = Collections.synchronizedList(new ArrayList<MockServerLogListener>());
 
-    protected void notifyListeners(final MockServerLog notifier) {
+    protected void notifyListeners(final MockServerEventLog notifier) {
         submit(
             new Runnable() {
                 public void run() {

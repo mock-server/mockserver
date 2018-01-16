@@ -3,10 +3,9 @@ package org.mockserver.client.serialization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import org.mockserver.client.serialization.model.VerificationDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.validator.jsonschema.JsonSchemaVerificationValidator;
 import org.mockserver.verify.Verification;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.mockserver.character.Character.NEW_LINE;
 
@@ -14,9 +13,14 @@ import static org.mockserver.character.Character.NEW_LINE;
  * @author jamesdbloom
  */
 public class VerificationSerializer implements Serializer<Verification> {
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerLogger mockServerLogger;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
-    private JsonSchemaVerificationValidator verificationValidator = new JsonSchemaVerificationValidator();
+    private JsonSchemaVerificationValidator verificationValidator;
+
+    public VerificationSerializer(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        verificationValidator = new JsonSchemaVerificationValidator(mockServerLogger);
+    }
 
     public String serialize(Verification verification) {
         try {
@@ -24,7 +28,7 @@ public class VerificationSerializer implements Serializer<Verification> {
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(new VerificationDTO(verification));
         } catch (Exception e) {
-            logger.error("Exception while serializing verification to JSON with value " + verification, e);
+            mockServerLogger.error("Exception while serializing verification to JSON with value " + verification, e);
             throw new RuntimeException("Exception while serializing verification to JSON with value " + verification, e);
         }
     }
@@ -42,12 +46,12 @@ public class VerificationSerializer implements Serializer<Verification> {
                         verification = verificationDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    logger.info("Exception while parsing [" + jsonVerification + "] for Verification", e);
+                    mockServerLogger.error("Exception while parsing [" + jsonVerification + "] for Verification", e);
                     throw new RuntimeException("Exception while parsing [" + jsonVerification + "] for Verification", e);
                 }
                 return verification;
             } else {
-                logger.info("Validation failed:" + NEW_LINE + validationErrors + NEW_LINE + "-- Expectation:" + NEW_LINE + jsonVerification + NEW_LINE + "-- Schema:" + NEW_LINE + verificationValidator.getSchema());
+                mockServerLogger.info("Validation failed:{}" + NEW_LINE + " Verification:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonVerification, verificationValidator.getSchema());
                 throw new IllegalArgumentException(validationErrors);
             }
         }

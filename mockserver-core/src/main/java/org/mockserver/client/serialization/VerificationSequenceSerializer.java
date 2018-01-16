@@ -3,10 +3,9 @@ package org.mockserver.client.serialization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import org.mockserver.client.serialization.model.VerificationSequenceDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.validator.jsonschema.JsonSchemaVerificationSequenceValidator;
 import org.mockserver.verify.VerificationSequence;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.mockserver.character.Character.NEW_LINE;
 
@@ -14,9 +13,14 @@ import static org.mockserver.character.Character.NEW_LINE;
  * @author jamesdbloom
  */
 public class VerificationSequenceSerializer implements Serializer<VerificationSequence> {
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerLogger mockServerLogger;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
-    private JsonSchemaVerificationSequenceValidator verificationSequenceValidator = new JsonSchemaVerificationSequenceValidator();
+    private JsonSchemaVerificationSequenceValidator verificationSequenceValidator;
+
+    public VerificationSequenceSerializer(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        verificationSequenceValidator = new JsonSchemaVerificationSequenceValidator(mockServerLogger);
+    }
 
     public String serialize(VerificationSequence verificationSequence) {
         try {
@@ -24,7 +28,7 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(new VerificationSequenceDTO(verificationSequence));
         } catch (Exception e) {
-            logger.error("Exception while serializing verificationSequence to JSON with value " + verificationSequence, e);
+            mockServerLogger.error("Exception while serializing verificationSequence to JSON with value " + verificationSequence, e);
             throw new RuntimeException("Exception while serializing verificationSequence to JSON with value " + verificationSequence, e);
         }
     }
@@ -42,12 +46,12 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                         verificationSequence = verificationDTO.buildObject();
                     }
                 } catch (Exception ioe) {
-                    logger.info("Exception while parsing [" + jsonVerificationSequence + "] for VerificationSequence", ioe);
+                    mockServerLogger.error("Exception while parsing [" + jsonVerificationSequence + "] for VerificationSequence", ioe);
                     throw new RuntimeException("Exception while parsing [" + jsonVerificationSequence + "] for VerificationSequence", ioe);
                 }
                 return verificationSequence;
             } else {
-                logger.info("Validation failed:" + NEW_LINE + validationErrors + NEW_LINE + "-- Expectation:" + NEW_LINE + jsonVerificationSequence + NEW_LINE + "-- Schema:" + NEW_LINE + verificationSequenceValidator.getSchema());
+                mockServerLogger.info("Validation failed:{}" + NEW_LINE + " VerificationSequence:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonVerificationSequence, verificationSequenceValidator.getSchema());
                 throw new IllegalArgumentException(validationErrors);
             }
         }

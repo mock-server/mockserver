@@ -2,7 +2,7 @@ package org.mockserver.mock;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 
 import static org.junit.Assert.assertEquals;
@@ -17,13 +17,13 @@ public class MockServerMatcherBasicResponsesTest {
     private MockServerMatcher mockServerMatcher;
     private HttpRequest httpRequest;
     private HttpResponse httpResponse;
-    private LoggingFormatter mockLogFormatter;
+    private MockServerLogger mockLogFormatter;
 
     @Before
     public void prepareTestFixture() {
         httpRequest = new HttpRequest();
         httpResponse = new HttpResponse();
-        mockLogFormatter = mock(LoggingFormatter.class);
+        mockLogFormatter = mock(MockServerLogger.class);
         mockServerMatcher = new MockServerMatcher(mockLogFormatter);
     }
 

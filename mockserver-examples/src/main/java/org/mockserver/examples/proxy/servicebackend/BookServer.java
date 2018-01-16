@@ -59,7 +59,6 @@ public class BookServer {
                                     pipeline.addLast(nettySslContextFactory().createServerSslContext().newHandler(ch.alloc()));
                                 }
 
-                                // pipeline.addLast("logger", new LoggingHandler("BOOK_HANDLER"));
                                 pipeline.addLast(new HttpServerCodec());
                                 pipeline.addLast(new HttpContentDecompressor());
                                 pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));

@@ -5,10 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import org.mockserver.client.serialization.model.HttpResponseDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,10 +19,15 @@ import static org.mockserver.character.Character.NEW_LINE;
  * @author jamesdbloom
  */
 public class HttpResponseSerializer implements Serializer<HttpResponse> {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerLogger mockServerLogger;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
-    private JsonSchemaHttpResponseValidator httpResponseValidator = new JsonSchemaHttpResponseValidator();
+    private JsonSchemaHttpResponseValidator httpResponseValidator;
+
+    public HttpResponseSerializer(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        httpResponseValidator = new JsonSchemaHttpResponseValidator(mockServerLogger);
+    }
 
     public String serialize(HttpResponse httpResponse) {
         try {
@@ -31,7 +35,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(new HttpResponseDTO(httpResponse));
         } catch (Exception e) {
-            logger.error(String.format("Exception while serializing httpResponse to JSON with value %s", httpResponse), e);
+            mockServerLogger.error(String.format("Exception while serializing httpResponse to JSON with value %s", httpResponse), e);
             throw new RuntimeException(String.format("Exception while serializing httpResponse to JSON with value %s", httpResponse), e);
         }
     }
@@ -54,7 +58,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                 return "[]";
             }
         } catch (Exception e) {
-            logger.error("Exception while serializing HttpResponse to JSON with value " + Arrays.asList(httpResponses), e);
+            mockServerLogger.error("Exception while serializing HttpResponse to JSON with value " + Arrays.asList(httpResponses), e);
             throw new RuntimeException("Exception while serializing HttpResponse to JSON with value " + Arrays.asList(httpResponses), e);
         }
     }
@@ -70,7 +74,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                         jsonHttpResponse = jsonNode.get("httpResponse").toString();
                     }
                 } catch (Exception e) {
-                    logger.error("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
+                    mockServerLogger.error("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
                     throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
                 }
             }
@@ -83,12 +87,13 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                         httpResponse = httpResponseDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    logger.error("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
+                    mockServerLogger.error("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
                     throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
                 }
                 return httpResponse;
             } else {
-                logger.info("Validation failed:" + NEW_LINE + jsonHttpResponse + NEW_LINE + "-- HttpResponse:" + NEW_LINE + jsonHttpResponse + NEW_LINE + "-- Schema:" + NEW_LINE + httpResponseValidator.getSchema());
+
+                mockServerLogger.info("Validation failed:{}" + NEW_LINE + " HttpResponse:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonHttpResponse, httpResponseValidator.getSchema());
                 throw new IllegalArgumentException(validationErrors);
             }
         }

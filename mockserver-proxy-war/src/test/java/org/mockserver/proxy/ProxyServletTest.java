@@ -10,7 +10,7 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.PortBindingSerializer;
 import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -43,13 +43,13 @@ import static org.mockserver.model.PortBinding.portBinding;
  */
 public class ProxyServletTest {
 
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
-    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
 
     private HttpStateHandler httpStateHandler;
     private ActionHandler mockActionHandler;
-    private LoggingFormatter mockLogFormatter;
+    private MockServerLogger mockLogFormatter;
 
     @InjectMocks
     private ProxyServlet proxyServlet;
@@ -59,7 +59,7 @@ public class ProxyServletTest {
     @Before
     public void setupFixture() {
         mockActionHandler = mock(ActionHandler.class);
-        mockLogFormatter = mock(LoggingFormatter.class);
+        mockLogFormatter = mock(MockServerLogger.class);
 
         httpStateHandler = spy(new HttpStateHandler());
         response = new MockHttpServletResponse();

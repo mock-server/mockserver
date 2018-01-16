@@ -2,7 +2,7 @@ package org.mockserver.matchers;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 
 import static org.junit.Assert.assertTrue;
@@ -20,11 +20,11 @@ public class MatcherBuilderTest {
             .withBody(new StringBody("some_body"))
             .withHeaders(new Header("name", "value"))
             .withCookies(new Cookie("name", "value"));
-    private LoggingFormatter mockLogFormatter;
+    private MockServerLogger mockLogFormatter;
 
     @Before
     public void setupTestFixture() {
-        mockLogFormatter = mock(LoggingFormatter.class);
+        mockLogFormatter = mock(MockServerLogger.class);
     }
 
     @Test
@@ -33,7 +33,7 @@ public class MatcherBuilderTest {
         HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockLogFormatter).transformsToMatcher(httpRequest);
 
         // then
-        assertTrue(httpRequestMapper.matches(httpRequest));
+        assertTrue(httpRequestMapper.matches(null, httpRequest));
     }
 
     @Test
@@ -50,7 +50,7 @@ public class MatcherBuilderTest {
         );
 
         // then
-        assertTrue(httpRequestMapper.matches(httpRequest));
+        assertTrue(httpRequestMapper.matches(null, httpRequest));
     }
 
     @Test
@@ -67,7 +67,7 @@ public class MatcherBuilderTest {
         );
 
         // then
-        assertTrue(httpRequestMapper.matches(httpRequest));
+        assertTrue(httpRequestMapper.matches(null, httpRequest));
     }
 
     @Test
@@ -84,7 +84,7 @@ public class MatcherBuilderTest {
         );
 
         // then
-        assertTrue(httpRequestMapper.matches(httpRequest));
+        assertTrue(httpRequestMapper.matches(null, httpRequest));
     }
 
     @Test
@@ -101,7 +101,7 @@ public class MatcherBuilderTest {
         );
 
         // then
-        assertTrue(httpRequestMapper.matches(httpRequest));
+        assertTrue(httpRequestMapper.matches(null, httpRequest));
     }
 
     @Test
@@ -118,7 +118,7 @@ public class MatcherBuilderTest {
         );
 
         // then
-        assertTrue(httpRequestMapper.matches(httpRequest));
+        assertTrue(httpRequestMapper.matches(null, httpRequest));
     }
 
     @Test
@@ -135,7 +135,7 @@ public class MatcherBuilderTest {
         );
 
         // then
-        assertTrue(httpRequestMapper.matches(httpRequest));
+        assertTrue(httpRequestMapper.matches(null, httpRequest));
     }
 
     @Test
@@ -152,6 +152,6 @@ public class MatcherBuilderTest {
         );
 
         // then
-        assertTrue(httpRequestMapper.matches(httpRequest));
+        assertTrue(httpRequestMapper.matches(null, httpRequest));
     }
 }

@@ -2,7 +2,7 @@ package org.mockserver.templates.engine.velocity;
 
 import org.apache.velocity.script.VelocityScriptEngineFactory;
 import org.mockserver.client.serialization.model.DTO;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
@@ -24,7 +24,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
 
     private static final ScriptEngineManager manager = new ScriptEngineManager();
     private static final ScriptEngine engine;
-    private final LoggingFormatter logFormatter;
+    private final MockServerLogger logFormatter;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
 
     static {
@@ -32,7 +32,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
         engine = manager.getEngineByName("velocity");
     }
 
-    public VelocityTemplateEngine(LoggingFormatter logFormatter) {
+    public VelocityTemplateEngine(MockServerLogger logFormatter) {
         this.logFormatter = logFormatter;
         this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(logFormatter);
     }
@@ -46,7 +46,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
             context.setWriter(writer);
             context.setAttribute("request", new HttpRequestTemplateObject(request), ScriptContext.ENGINE_SCOPE);
             engine.eval(template);
-            logFormatter.infoLog(request, "Generated output:{}" + NEW_LINE + " from template:{}" + NEW_LINE + " for request:{}", writer.toString(), template, request);
+            logFormatter.info(request, "Generated output:{}" + NEW_LINE + " from template:{}" + NEW_LINE + " for request:{}", writer.toString(), template, request);
             result = httpTemplateOutputDeserializer.deserializer(request, writer.toString(), dtoClass);
         } catch (Exception e) {
             throw new RuntimeException(formatLogMessage("Exception transforming template:{}" + NEW_LINE + " for request:{}", template, request), e);

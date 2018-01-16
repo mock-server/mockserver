@@ -2,7 +2,7 @@ package org.mockserver.filters;
 
 import org.junit.Test;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.verify.VerificationSequence;
 
@@ -21,7 +21,7 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationWithNullRequest() {
         // given
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
@@ -37,7 +37,7 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationSequenceWithNoRequest() {
         // given
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
@@ -59,7 +59,7 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationSequenceWithOneRequest() {
         // given
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
@@ -102,7 +102,7 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationSequenceWithTwoRequests() {
         // given
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
@@ -182,7 +182,7 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithOneRequest() {
         // given
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
@@ -216,7 +216,7 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithTwoRequestsWrongOrder() {
         // given
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
@@ -342,7 +342,7 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithTwoRequestsFirstIncorrect() {
         // given
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
@@ -423,7 +423,7 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithTwoRequestsSecondIncorrect() {
         // given
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
@@ -504,7 +504,7 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithThreeRequestsWrongOrder() {
         // given
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
@@ -621,7 +621,7 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithThreeRequestsDuplicateMissing() {
         // given
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));

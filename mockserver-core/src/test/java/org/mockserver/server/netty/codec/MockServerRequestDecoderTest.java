@@ -8,6 +8,7 @@ import io.netty.util.CharsetUtil;
 import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 import org.mockserver.model.Cookie;
@@ -39,7 +40,7 @@ public class MockServerRequestDecoderTest {
 
     @Before
     public void setupFixture() {
-        mockServerRequestDecoder = new MockServerRequestDecoder(false);
+        mockServerRequestDecoder = new MockServerRequestDecoder(new MockServerLogger(), false);
         output = new ArrayList<Object>();
     }
 

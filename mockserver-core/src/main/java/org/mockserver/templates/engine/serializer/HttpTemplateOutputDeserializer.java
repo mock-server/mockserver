@@ -6,7 +6,7 @@ import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.DTO;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.client.serialization.model.HttpResponseDTO;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
@@ -17,12 +17,14 @@ import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
 public class HttpTemplateOutputDeserializer {
 
     private static ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
-    private final LoggingFormatter logFormatter;
-    private JsonSchemaHttpRequestValidator httpRequestValidator = new JsonSchemaHttpRequestValidator();
-    private JsonSchemaHttpResponseValidator httpResponseValidator = new JsonSchemaHttpResponseValidator();
+    private final MockServerLogger mockServerLogger;
+    private JsonSchemaHttpRequestValidator httpRequestValidator;
+    private JsonSchemaHttpResponseValidator httpResponseValidator;
 
-    public HttpTemplateOutputDeserializer(LoggingFormatter logFormatter) {
-        this.logFormatter = logFormatter;
+    public HttpTemplateOutputDeserializer(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        httpRequestValidator = new JsonSchemaHttpRequestValidator(mockServerLogger);
+        httpResponseValidator = new JsonSchemaHttpResponseValidator(mockServerLogger);
     }
 
     public <T> T deserializer(HttpRequest request, String json, Class<? extends DTO<T>> dtoClass) {
@@ -39,10 +41,10 @@ public class HttpTemplateOutputDeserializer {
             if (StringUtils.isEmpty(validationErrors)) {
                 result = objectMapper.readValue(json, dtoClass).buildObject();
             } else {
-                logFormatter.errorLog(request, "Validation failed:{}for:{}against schema:{}", validationErrors, json, schema);
+                mockServerLogger.error(request, "Validation failed:{}for:{}against schema:{}", validationErrors, json, schema);
             }
         } catch (Exception e) {
-            logFormatter.errorLog(request, e, "Exception transforming json:{}", json);
+            mockServerLogger.error(request, e, "Exception transforming json:{}", json);
         }
         return result;
     }

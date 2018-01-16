@@ -10,18 +10,16 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.model.*;
 import org.mockserver.verify.VerificationTimes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -56,7 +54,7 @@ import static org.mockserver.model.StringBody.exact;
  */
 public abstract class AbstractBasicClientServerIntegrationTest {
 
-    protected static final Logger logger = LoggerFactory.getLogger(AbstractBasicClientServerIntegrationTest.class);
+    protected static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(AbstractBasicClientServerIntegrationTest.class);
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
     protected static List<String> headersToIgnore = ImmutableList.of(
@@ -117,7 +115,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
             throw new AssertionError("Number of request matchers does not match number of requests, expected:<" + httpRequestMatchers.length + "> but was:<" + httpRequests.length + ">");
         } else {
             for (int i = 0; i < httpRequestMatchers.length; i++) {
-                if (!new HttpRequestMatcher(httpRequestMatchers[i], new LoggingFormatter(LoggerFactory.getLogger(this.getClass()), null)).matches(httpRequests[i])) {
+                if (!new HttpRequestMatcher(httpRequestMatchers[i], new MockServerLogger(this.getClass())).matches(null, httpRequests[i])) {
                     throw new AssertionError("Request does not match request matcher, expected:<" + httpRequestMatchers[i] + "> but was:<" + httpRequests[i] + ">");
                 }
             }
@@ -626,17 +624,17 @@ public abstract class AbstractBasicClientServerIntegrationTest {
                 .withPath(addContextToPath("/expectation"))
                 .withBody("" +
                     "[" +
-                    new ExpectationSerializer()
+                    new ExpectationSerializer(new MockServerLogger())
                         .serialize(
                             new Expectation(request("/path_one"), once(), TimeToLive.unlimited())
                                 .thenRespond(response().withBody("some_body_one"))
                         ) + "," +
-                    new ExpectationSerializer()
+                    new ExpectationSerializer(new MockServerLogger())
                         .serialize(
                             new Expectation(request("/path_two"), once(), TimeToLive.unlimited())
                                 .thenRespond(response().withBody("some_body_two"))
                         ) + "," +
-                    new ExpectationSerializer()
+                    new ExpectationSerializer(new MockServerLogger())
                         .serialize(
                             new Expectation(request("/path_three"), once(), TimeToLive.unlimited())
                                 .thenRespond(response().withBody("some_body_three"))
@@ -1298,8 +1296,9 @@ public abstract class AbstractBasicClientServerIntegrationTest {
             )
         );
 
+        Expectation[] expectations = mockServerClient.retrieveActiveExpectations(request());
         assertThat(
-            mockServerClient.retrieveActiveExpectations(request()),
+            expectations,
             arrayContaining(
                 new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
                     .thenRespond(response().withBody("some_body")),

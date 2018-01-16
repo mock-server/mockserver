@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockserver.client.serialization.model.BodyWithContentTypeDTO;
 import org.mockserver.client.serialization.model.DelayDTO;
 import org.mockserver.client.serialization.model.HttpResponseDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
 
@@ -64,7 +65,7 @@ public class HttpResponseSerializerTest {
 
     @Before
     public void setupTestFixture() {
-        httpResponseSerializer = spy(new HttpResponseSerializer());
+        httpResponseSerializer = spy(new HttpResponseSerializer(new MockServerLogger()));
 
         initMocks(this);
     }

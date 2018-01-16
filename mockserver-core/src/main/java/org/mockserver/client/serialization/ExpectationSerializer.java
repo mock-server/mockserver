@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import org.mockserver.client.serialization.model.ExpectationDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,10 +18,15 @@ import static org.mockserver.character.Character.NEW_LINE;
  * @author jamesdbloom
  */
 public class ExpectationSerializer implements Serializer<Expectation> {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerLogger mockServerLogger;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
-    private JsonSchemaExpectationValidator expectationValidator = new JsonSchemaExpectationValidator();
+    private JsonSchemaExpectationValidator expectationValidator;
+
+    public ExpectationSerializer(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        expectationValidator = new JsonSchemaExpectationValidator(mockServerLogger);
+    }
 
     public String serialize(Expectation expectation) {
         try {
@@ -30,7 +34,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(new ExpectationDTO(expectation));
         } catch (Exception e) {
-            logger.error(String.format("Exception while serializing expectation to JSON with value %s", expectation), e);
+            mockServerLogger.error(String.format("Exception while serializing expectation to JSON with value %s", expectation), e);
             throw new RuntimeException(String.format("Exception while serializing expectation to JSON with value %s", expectation), e);
         }
     }
@@ -53,7 +57,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 return "[]";
             }
         } catch (Exception e) {
-            logger.error("Exception while serializing expectation to JSON with value " + Arrays.asList(expectations), e);
+            mockServerLogger.error("Exception while serializing expectation to JSON with value " + Arrays.asList(expectations), e);
             throw new RuntimeException("Exception while serializing expectation to JSON with value " + Arrays.asList(expectations), e);
         }
     }
@@ -71,12 +75,12 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                         expectation = expectationDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    logger.error("Exception while parsing [" + jsonExpectation + "] for Expectation", e);
+                    mockServerLogger.error("Exception while parsing [" + jsonExpectation + "] for Expectation", e);
                     throw new RuntimeException("Exception while parsing [" + jsonExpectation + "] for Expectation", e);
                 }
                 return expectation;
             } else {
-                logger.info("Validation failed:" + NEW_LINE + validationErrors + NEW_LINE + "-- Expectation:" + NEW_LINE + jsonExpectation + NEW_LINE + "-- Schema:" + NEW_LINE + expectationValidator.getSchema());
+                mockServerLogger.info("Validation failed:{}" + NEW_LINE + " Expectation:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonExpectation, expectationValidator.getSchema());
                 throw new IllegalArgumentException(validationErrors);
             }
         }

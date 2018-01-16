@@ -2,7 +2,7 @@ package org.mockserver.filters;
 
 import org.junit.Test;
 import org.mockserver.log.model.RequestResponseLogEntry;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.verify.Verification;
 
@@ -26,7 +26,7 @@ public class LogFilterRequestResponseLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new RequestResponseLogEntry(httpRequest, response("some_response")));
@@ -42,7 +42,7 @@ public class LogFilterRequestResponseLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new RequestResponseLogEntry(httpRequest, response("some_response")));
@@ -73,7 +73,7 @@ public class LogFilterRequestResponseLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new RequestResponseLogEntry(httpRequest, response("some_response")));
@@ -96,7 +96,7 @@ public class LogFilterRequestResponseLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new RequestResponseLogEntry(httpRequest, response("some_response")));
@@ -119,7 +119,7 @@ public class LogFilterRequestResponseLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new RequestResponseLogEntry(httpRequest, response("some_response")));
@@ -143,7 +143,7 @@ public class LogFilterRequestResponseLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new RequestResponseLogEntry(httpRequest, response("some_response")));
@@ -165,7 +165,7 @@ public class LogFilterRequestResponseLogEntryVerificationTest {
     @Test
     public void shouldFailVerificationWithNullRequest() {
         // given
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // then
         assertThat(logFilter.verify((Verification) null), is(""));
@@ -176,7 +176,7 @@ public class LogFilterRequestResponseLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new RequestResponseLogEntry(httpRequest, response("some_response")));
@@ -206,7 +206,7 @@ public class LogFilterRequestResponseLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new RequestResponseLogEntry(httpRequest, response("some_response")));
@@ -237,7 +237,7 @@ public class LogFilterRequestResponseLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new RequestResponseLogEntry(httpRequest, response("some_response")));
@@ -267,7 +267,7 @@ public class LogFilterRequestResponseLogEntryVerificationTest {
     @Test
     public void shouldFailVerificationWithExactOneTime() {
         // given
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // then
         assertThat(logFilter.verify(
@@ -288,7 +288,7 @@ public class LogFilterRequestResponseLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new RequestResponseLogEntry(httpRequest, response("some_response")));
@@ -319,7 +319,7 @@ public class LogFilterRequestResponseLogEntryVerificationTest {
     public void shouldFailVerificationWithNoInteractions() {
         // given
         HttpRequest httpRequest = new HttpRequest();
-        MockServerLog logFilter = new MockServerLog(mock(LoggingFormatter.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
 
         // when
         logFilter.add(new RequestResponseLogEntry(httpRequest, response("some_response")));

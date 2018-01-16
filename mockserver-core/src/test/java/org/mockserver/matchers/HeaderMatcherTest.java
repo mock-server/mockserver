@@ -1,6 +1,7 @@
 package org.mockserver.matchers;
 
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Header;
 import org.mockserver.model.KeyToMultiValue;
 import org.mockserver.model.KeysToMultiValues;
@@ -19,7 +20,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchMatchingHeader() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         )).matches(
@@ -27,7 +28,7 @@ public class HeaderMatcherTest {
             new Header("headerTwoName", "headerTwoValue")
         ));
 
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("header.*", "header.*")
         )).matches(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -38,7 +39,7 @@ public class HeaderMatcherTest {
     @Test
     public void shouldNotMatchMatchingHeaderWhenNotApplied() {
         // given
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         )).matches(
@@ -47,7 +48,7 @@ public class HeaderMatcherTest {
         ));
 
         // then - not matcher
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         ))).matches(
@@ -56,7 +57,7 @@ public class HeaderMatcherTest {
         ));
 
         // and - not header
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header(not("headerTwoName"), not("headerTwoValue"))
         )).matches(
@@ -65,7 +66,7 @@ public class HeaderMatcherTest {
         ));
 
         // and - not matcher and not header
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header(not("headerTwoName"), not("headerTwoValue"))
         ))).matches(
@@ -77,7 +78,7 @@ public class HeaderMatcherTest {
     @Test
     public void shouldMatchMatchingHeaderWithNotHeaderAndNormalHeader() {
         // not matching header
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header(not("headerTwoName"), not("headerTwoValue"))
         )).matches(
@@ -86,7 +87,7 @@ public class HeaderMatcherTest {
         ));
 
         // not extra header
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue"),
             new Header(not("headerThree"), not("headerThreeValueOne"))
@@ -96,7 +97,7 @@ public class HeaderMatcherTest {
         ));
 
         // not only header
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header(not("headerThree"), not("headerThreeValueOne"))
         )).matches(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -104,7 +105,7 @@ public class HeaderMatcherTest {
         ));
 
         // not all headers (but matching)
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header(not("header.*"), not(".*"))
         )).matches(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -112,7 +113,7 @@ public class HeaderMatcherTest {
         ));
 
         // not all headers (but not matching name)
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header(not("header.*"), not("header.*"))
         )).matches(
             new Header("notHeaderOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -120,7 +121,7 @@ public class HeaderMatcherTest {
         ));
 
         // not all headers (but not matching value)
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header(not("header.*"), not("header.*"))
         )).matches(
             new Header("headerOneName", "notHeaderOneValueOne", "notHeaderOneValueTwo"),
@@ -130,26 +131,26 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchMatchingHeaderWithOnlyHeader() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header(not("headerThree"), not("headerThreeValueOne"))
         )).matches(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         ));
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerThree", "headerThreeValueOne")
         )).matches(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         ));
 
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header(not("headerOneName"), not("headerOneValueOne"), not("headerOneValueTwo"))
         )).matches(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         ));
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo")
         )).matches(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -159,24 +160,24 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchMatchingHeaderWithOnlyHeaderForEmptyList() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new ArrayList<KeyToMultiValue>()
         )).matches(
             new Header("headerThree", "headerThreeValueOne")
         ));
 
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerThree", "headerThreeValueOne")
-        )).matches(new ArrayList<KeyToMultiValue>()));
+        )).matches(null, new ArrayList<KeyToMultiValue>()));
 
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header(not("headerThree"), not("headerThreeValueOne"))
-        )).matches(new ArrayList<KeyToMultiValue>()));
+        )).matches(null, new ArrayList<KeyToMultiValue>()));
     }
 
     @Test
     public void shouldNotMatchMatchingHeaderWithNotHeaderAndNormalHeader() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header(not("headerTwoName"), not("headerTwoValue"))
         )).matches(
@@ -187,7 +188,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldNotMatchMatchingHeaderWithOnlyNotHeader() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header(not("headerTwoName"), not("headerTwoValue"))
         )).matches(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -197,7 +198,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldNotMatchMatchingHeaderWithOnlyNotHeaderForBodyWithSingleHeader() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header(not("headerTwoName"), not("headerTwoValue"))
         )).matches(
             new Header("headerTwoName", "headerTwoValue")
@@ -206,7 +207,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchNullExpectation() {
-        assertTrue(new MultiValueMapMatcher(null).matches(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), null).matches(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         ));
@@ -214,7 +215,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldNotMatchNullExpectationWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(null))
+        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), null))
             .matches(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
                 new Header("headerTwoName", "headerTwoValue")
@@ -223,7 +224,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchEmptyExpectation() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>())).matches(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>())).matches(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         ));
@@ -232,7 +233,7 @@ public class HeaderMatcherTest {
     @Test
 
     public void shouldNotMatchEmptyExpectationWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>())))
+        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>())))
             .matches(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
                 new Header("headerTwoName", "headerTwoValue")
@@ -241,7 +242,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldNotMatchIncorrectHeaderName() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         )).matches(
@@ -252,7 +253,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchIncorrectHeaderNameWhenNotApplied() {
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         ))).matches(
@@ -263,7 +264,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldNotMatchIncorrectHeaderValue() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         )).matches(
@@ -274,7 +275,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchIncorrectHeaderValueWhenNotApplied() {
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         ))).matches(
@@ -285,7 +286,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldNotMatchIncorrectHeaderNameAndValue() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         )).matches(
@@ -296,7 +297,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchIncorrectHeaderNameAndValueWhenNotApplied() {
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         ))).matches(
@@ -307,7 +308,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchNullHeaderValue() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         )).matches(
@@ -318,7 +319,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldNotMatchNullHeaderValueWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         ))).matches(
@@ -329,7 +330,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchNullHeaderValueInExpectation() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "")
         )).matches(
@@ -340,7 +341,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldNotMatchMissingHeader() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         )).matches(
@@ -350,7 +351,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchMissingHeaderWhenNotApplied() {
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
         ))).matches(
@@ -360,21 +361,21 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchNullTest() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap((List<KeyToMultiValue>) null)).matches((List<KeyToMultiValue>) null));
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap((List<KeyToMultiValue>) null)).matches(null, (List<KeyToMultiValue>) null));
     }
 
     @Test
     public void shouldNotMatchNullTestWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>()))).matches((List<KeyToMultiValue>) null));
+        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>()))).matches(null, (List<KeyToMultiValue>) null));
     }
 
     @Test
     public void shouldMatchEmptyTest() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap((List<KeyToMultiValue>) null)).matches(new ArrayList<KeyToMultiValue>()));
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap((List<KeyToMultiValue>) null)).matches(null, new ArrayList<KeyToMultiValue>()));
     }
 
     @Test
     public void shouldNotMatchEmptyTestWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>()))).matches(new ArrayList<KeyToMultiValue>()));
+        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(), KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>()))).matches(null, new ArrayList<KeyToMultiValue>()));
     }
 }

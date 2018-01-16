@@ -3,7 +3,7 @@ package org.mockserver.proxy.relay;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.FullHttpResponse;
-import org.slf4j.Logger;
+import org.mockserver.logging.MockServerLogger;
 
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
@@ -13,13 +13,13 @@ import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException
 
 public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpResponse> {
 
-    private final Logger logger;
+    private final MockServerLogger mockServerLogger;
     private volatile Channel upstreamChannel;
 
-    public DownstreamProxyRelayHandler(Channel upstreamChannel, Logger logger) {
+    public DownstreamProxyRelayHandler(MockServerLogger mockServerLogger, Channel upstreamChannel) {
         super(false);
         this.upstreamChannel = upstreamChannel;
-        this.logger = logger;
+        this.mockServerLogger = mockServerLogger;
     }
 
     @Override
@@ -37,7 +37,7 @@ public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<Ful
                     ctx.channel().read();
                 } else {
                     if (isNotSocketClosedException(future.cause())) {
-                        logger.error("Exception while returning writing " + response, future.cause());
+                        mockServerLogger.error("Exception while returning writing " + response, future.cause());
                     }
                     future.channel().close();
                 }
@@ -57,7 +57,7 @@ public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<Ful
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            logger.warn("Exception caught by downstream relay handler -> closing pipeline " + ctx.channel(), cause);
+            mockServerLogger.error("Exception caught by downstream relay handler -> closing pipeline " + ctx.channel(), cause);
         }
         closeOnFlush(ctx.channel());
     }

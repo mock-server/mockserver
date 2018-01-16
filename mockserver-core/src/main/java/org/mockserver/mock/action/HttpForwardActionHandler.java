@@ -1,7 +1,7 @@
 package org.mockserver.mock.action;
 
 import com.google.common.util.concurrent.SettableFuture;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -13,7 +13,7 @@ import java.net.InetSocketAddress;
  */
 public class HttpForwardActionHandler extends HttpForwardAction {
 
-    public HttpForwardActionHandler(LoggingFormatter logFormatter) {
+    public HttpForwardActionHandler(MockServerLogger logFormatter) {
         super(logFormatter);
     }
 

@@ -3,8 +3,7 @@ package org.mockserver.proxy;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 import org.mockserver.lifecycle.LifeCycle;
-import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.model.HttpRequest;
+import org.mockserver.logging.MockServerLogger;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
@@ -18,7 +17,6 @@ import java.util.Set;
  */
 public class Proxy<T extends LifeCycle> extends LifeCycle<T> {
 
-    public static final AttributeKey<Proxy> HTTP_PROXY = AttributeKey.valueOf("HTTP_PROXY");
     public static final AttributeKey<InetSocketAddress> HTTP_CONNECT_SOCKET = AttributeKey.valueOf("HTTP_CONNECT_SOCKET");
     public static final AttributeKey<Set> LOCAL_HOST_HEADERS = AttributeKey.valueOf("LOCAL_HOST_HEADERS");
     public static final AttributeKey<Boolean> PROXYING = AttributeKey.valueOf("PROXYING");

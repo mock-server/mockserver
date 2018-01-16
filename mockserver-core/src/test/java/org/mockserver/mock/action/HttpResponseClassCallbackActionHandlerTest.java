@@ -1,6 +1,7 @@
 package org.mockserver.mock.action;
 
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpClassCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -23,7 +24,7 @@ public class HttpResponseClassCallbackActionHandlerTest {
         HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.FooBar");
 
         // when
-        HttpResponse actualHttpResponse = new HttpResponseClassCallbackActionHandler().handle(httpClassCallback, request().withBody("some_body"));
+        HttpResponse actualHttpResponse = new HttpResponseClassCallbackActionHandler(new MockServerLogger()).handle(httpClassCallback, request().withBody("some_body"));
 
         // then
         assertThat(actualHttpResponse, is(notFoundResponse()));
@@ -35,7 +36,7 @@ public class HttpResponseClassCallbackActionHandlerTest {
         HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.HttpResponseClassCallbackActionHandlerTest$TestCallback");
 
         // when
-        HttpResponse actualHttpResponse = new HttpResponseClassCallbackActionHandler().handle(httpClassCallback, request().withBody("some_body"));
+        HttpResponse actualHttpResponse = new HttpResponseClassCallbackActionHandler(new MockServerLogger()).handle(httpClassCallback, request().withBody("some_body"));
 
         // then
         assertThat(actualHttpResponse, is(response("some_body")));

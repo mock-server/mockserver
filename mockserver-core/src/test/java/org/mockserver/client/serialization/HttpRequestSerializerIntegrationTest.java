@@ -8,6 +8,7 @@ import org.mockserver.client.serialization.model.BodyDTO;
 import org.mockserver.client.serialization.model.BodyWithContentTypeDTO;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.client.serialization.model.StringBodyDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 
 import java.io.IOException;
@@ -70,7 +71,7 @@ public class HttpRequestSerializerIntegrationTest {
             "    ]");
 
         // when
-        new HttpRequestSerializer().deserialize(requestBytes);
+        new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
     }
 
     @Test
@@ -106,7 +107,7 @@ public class HttpRequestSerializerIntegrationTest {
             "    ]");
 
         // when
-        new HttpRequestSerializer().deserialize(requestBytes);
+        new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
     }
 
     @Test
@@ -142,7 +143,7 @@ public class HttpRequestSerializerIntegrationTest {
             "    ]");
 
         // when
-        new HttpRequestSerializer().deserialize(requestBytes);
+        new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
     }
 
     @Test
@@ -178,7 +179,7 @@ public class HttpRequestSerializerIntegrationTest {
             "    ]");
 
         // when
-        new HttpRequestSerializer().deserialize(requestBytes);
+        new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
     }
 
     @Test
@@ -214,7 +215,7 @@ public class HttpRequestSerializerIntegrationTest {
             "    ]");
 
         // when
-        new HttpRequestSerializer().deserialize(requestBytes);
+        new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
     }
 
     @Test
@@ -231,7 +232,7 @@ public class HttpRequestSerializerIntegrationTest {
             " - object instance has properties which are not allowed by the schema: [\"extra_field\"]");
 
         // when
-        new HttpRequestSerializer().deserialize(requestBytes);
+        new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
     }
 
     @Test
@@ -261,7 +262,7 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // when
-        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
@@ -290,7 +291,7 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // when
-        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
@@ -309,7 +310,7 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // when
-        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
@@ -328,7 +329,7 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // when
-        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         HttpRequest expected = new HttpRequestDTO()
@@ -348,7 +349,7 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // when
-        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
@@ -367,7 +368,7 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // when
-        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
@@ -386,7 +387,7 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // when
-        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
@@ -411,7 +412,7 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // when
-        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
@@ -433,7 +434,7 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // when
-        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
@@ -449,7 +450,7 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // when
-        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
@@ -471,7 +472,7 @@ public class HttpRequestSerializerIntegrationTest {
             "}";
 
         // when
-        HttpRequest httpRequest = new HttpRequestSerializer().deserialize(requestBytes);
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
@@ -485,7 +486,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObject() throws IOException {
         // when
-        String jsonHttpRequest = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
                 .setMethod(string("someMethod"))
                 .setPath(string("somePath"))
@@ -522,7 +523,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldSerializeArray() throws IOException {
         // when
-        String jsonHttpRequest = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequest[]{
                 new HttpRequestDTO()
                     .setMethod(string("some_method_one"))
@@ -564,7 +565,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldSerializeList() throws IOException {
         // when
-        String jsonHttpRequest = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             Arrays.asList(
                 new HttpRequestDTO()
                     .setMethod(string("some_method_one"))
@@ -606,7 +607,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldSerializeStringBody() throws IOException {
         // when
-        String jsonHttpRequest = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(exact("somebody")))
                 .buildObject()
@@ -621,7 +622,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldSerializeJsonBody() throws IOException {
         // when
-        String jsonHttpRequest = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
                 .buildObject()
@@ -639,7 +640,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldSerializeRegexBody() throws IOException {
         // when
-        String jsonHttpRequest = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(regex("some[a-z]{3}")))
                 .buildObject()
@@ -657,7 +658,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldSerializeXpathBody() throws IOException {
         // when
-        String jsonHttpRequest = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(xpath("/element[key = 'some_key' and value = 'some_value']")))
                 .buildObject()
@@ -675,7 +676,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldSerializeXmlBody() throws IOException {
         // when
-        String jsonHttpRequest = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(xml("<some><xml></xml></some>")))
                 .buildObject()
@@ -693,7 +694,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldSerializeParameterBody() throws IOException {
         // when
-        String jsonHttpRequest = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
                 .setBody(BodyDTO.createDTO(params(
                     new Parameter("nameOne", "valueOne"),
@@ -717,7 +718,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldSerializeBinaryBody() throws IOException {
         // when
-        String jsonHttpRequest = new HttpRequestSerializer().serialize(
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
                 .setBody(BodyWithContentTypeDTO.createDTO(binary(IOUtils.toByteArray(openStreamToFileFromClassPathOrPath("org/mockserver/client/serialization/forkme_right_red.png")))))
                 .buildObject()
@@ -735,7 +736,7 @@ public class HttpRequestSerializerIntegrationTest {
     @Test
     public void shouldSerializePartialHttpRequest() throws IOException {
         // when
-        String jsonHttpRequest = new HttpRequestSerializer().serialize(new HttpRequestDTO()
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(new HttpRequestDTO()
             .setPath(string("somePath"))
             .buildObject()
         );

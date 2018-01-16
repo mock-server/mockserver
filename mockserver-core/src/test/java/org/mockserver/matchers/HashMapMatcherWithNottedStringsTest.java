@@ -1,6 +1,7 @@
 package org.mockserver.matchers;
 
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.KeyAndValue;
 import org.mockserver.model.NottableString;
 
@@ -17,12 +18,12 @@ public class HashMapMatcherWithNottedStringsTest {
     @Test
     public void shouldMatchSingleKeyAndValueForSingleItemMatcherForNottedKey() {
         // given
-        HashMapMatcher hashMapMatcher = new HashMapMatcher(hashMap(
+        HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(),hashMap(
                 new NottableString[]{not("keyOne"), string("keyOneValue")}
         ));
 
         // then
-        assertThat(hashMapMatcher.matches(Arrays.asList(
+        assertThat(hashMapMatcher.matches(null, Arrays.asList(
                 new KeyAndValue("notKeyOne", "keyOneValue")
         )), is(true));
     }
@@ -30,12 +31,12 @@ public class HashMapMatcherWithNottedStringsTest {
     @Test
     public void shouldMatchSingleKeyAndValueForSingleItemMatcherForNottedValue() {
         // given
-        HashMapMatcher hashMapMatcher = new HashMapMatcher(hashMap(
+        HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(),hashMap(
                 new NottableString[]{string("keyOne"), not("keyOneValue")}
         ));
 
         // then
-        assertThat(hashMapMatcher.matches(Arrays.asList(
+        assertThat(hashMapMatcher.matches(null, Arrays.asList(
                 new KeyAndValue("keyOne", "notKeyOneValue")
         )), is(true));
     }
@@ -43,12 +44,12 @@ public class HashMapMatcherWithNottedStringsTest {
     @Test
     public void shouldMatchSingleKeyAndValueForSingleItemMatcherForNottedKeyAndValue() {
         // given
-        HashMapMatcher hashMapMatcher = new HashMapMatcher(hashMap(
+        HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(),hashMap(
                 new NottableString[]{not("keyOne"), not("keyOneValue")}
         ));
 
         // then
-        assertThat(hashMapMatcher.matches(Arrays.asList(
+        assertThat(hashMapMatcher.matches(null, Arrays.asList(
                 new KeyAndValue("notKeyOne", "notKeyOneValue")
         )), is(true));
     }
@@ -56,12 +57,12 @@ public class HashMapMatcherWithNottedStringsTest {
     @Test
     public void shouldMatchMultipleKeyAndValueForSingleItemMatcherForNottedKey() {
         // given
-        HashMapMatcher hashMapMatcher = new HashMapMatcher(hashMap(
+        HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(),hashMap(
                 new NottableString[]{not("keyOne"), string("keyOneValue")}
         ));
 
         // then
-        assertThat(hashMapMatcher.matches(Arrays.asList(
+        assertThat(hashMapMatcher.matches(null, Arrays.asList(
                 new KeyAndValue("notKeyOne", "keyOneValue"),
                 new KeyAndValue("keyTwo", "keyTwoValue"),
                 new KeyAndValue("keyThree", "keyThreeValue")
@@ -71,12 +72,12 @@ public class HashMapMatcherWithNottedStringsTest {
     @Test
     public void shouldMatchMultipleKeyAndValueForSingleItemMatcherForNottedValue() {
         // given
-        HashMapMatcher hashMapMatcher = new HashMapMatcher(hashMap(
+        HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(),hashMap(
                 new NottableString[]{string("keyOne"), not("keyOneValue")}
         ));
 
         // then
-        assertThat(hashMapMatcher.matches(Arrays.asList(
+        assertThat(hashMapMatcher.matches(null, Arrays.asList(
                 new KeyAndValue("keyOne", "notKeyOneValue"),
                 new KeyAndValue("keyTwo", "keyTwoValue"),
                 new KeyAndValue("keyThree", "keyThreeValue")
@@ -86,12 +87,12 @@ public class HashMapMatcherWithNottedStringsTest {
     @Test
     public void shouldMatchMultipleKeyAndValueForSingleItemMatcherForNottedKeyAndValue() {
         // given
-        HashMapMatcher hashMapMatcher = new HashMapMatcher(hashMap(
+        HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(),hashMap(
                 new NottableString[]{not("keyOne"), not("keyOneValue")}
         ));
 
         // then
-        assertThat(hashMapMatcher.matches(Arrays.asList(
+        assertThat(hashMapMatcher.matches(null, Arrays.asList(
                 new KeyAndValue("notKeyOne", "notKeyOneValue"),
                 new KeyAndValue("keyTwo", "keyTwoValue"),
                 new KeyAndValue("keyThree", "keyThreeValue")
@@ -101,13 +102,13 @@ public class HashMapMatcherWithNottedStringsTest {
     @Test
     public void shouldMatchMultipleKeyAndValueForMultipleItemMatcherForNottedKey() {
         // given
-        HashMapMatcher hashMapMatcher = new HashMapMatcher(hashMap(
+        HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(),hashMap(
                 new NottableString[]{not("keyOne"), string("keyOneValue")},
                 new NottableString[]{not("keyTwo"), string("keyTwoValue")}
         ));
 
         // then
-        assertThat(hashMapMatcher.matches(Arrays.asList(
+        assertThat(hashMapMatcher.matches(null, Arrays.asList(
                 new KeyAndValue("notKeyOne", "keyOneValue"),
                 new KeyAndValue("notKeyTwo", "keyTwoValue"),
                 new KeyAndValue("keyThree", "keyThreeValue")
@@ -117,13 +118,13 @@ public class HashMapMatcherWithNottedStringsTest {
     @Test
     public void shouldMatchMultipleKeyAndValueForMultipleItemMatcherForNottedValue() {
         // given
-        HashMapMatcher hashMapMatcher = new HashMapMatcher(hashMap(
+        HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(),hashMap(
                 new NottableString[]{string("keyOne"), not("keyOneValue")},
                 new NottableString[]{string("keyTwo"), not("keyTwoValue")}
         ));
 
         // then
-        assertThat(hashMapMatcher.matches(Arrays.asList(
+        assertThat(hashMapMatcher.matches(null, Arrays.asList(
                 new KeyAndValue("keyOne", "notKeyOneValue"),
                 new KeyAndValue("keyTwo", "notKeyTwoValue"),
                 new KeyAndValue("keyThree", "keyThreeValue")
@@ -133,13 +134,13 @@ public class HashMapMatcherWithNottedStringsTest {
     @Test
     public void shouldMatchMultipleKeyAndValueForMultipleItemMatcherForNottedKeyAndValue() {
         // given
-        HashMapMatcher hashMapMatcher = new HashMapMatcher(hashMap(
+        HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(),hashMap(
                 new NottableString[]{not("keyOne"), not("keyOneValue")},
                 new NottableString[]{not("keyTwo"), not("keyTwoValue")}
         ));
 
         // then
-        assertThat(hashMapMatcher.matches(Arrays.asList(
+        assertThat(hashMapMatcher.matches(null, Arrays.asList(
                 new KeyAndValue("notKeyOne", "notKeyOneValue"),
                 new KeyAndValue("notKeyTwo", "notKeyTwoValue"),
                 new KeyAndValue("keyThree", "keyThreeValue")

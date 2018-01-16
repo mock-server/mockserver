@@ -55,10 +55,10 @@ public class NettyHttpClientTest {
             response()
                 .withStatusCode(200)
                 .withReasonPhrase("OK")
-                .withHeader(header(HOST.toString(), "0.0.0.0:" + echoServer.getPort()))
                 .withHeader(header(CONTENT_LENGTH.toString(), 0))
-                .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
+                .withHeader(header(HOST.toString(), "0.0.0.0:" + echoServer.getPort()))
                 .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
+                .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
         ));
     }
 

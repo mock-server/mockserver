@@ -3,13 +3,12 @@ package org.mockserver.mock.action;
 import com.google.common.util.concurrent.SettableFuture;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.filters.HopByHopHeaderFilter;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
-import java.util.Arrays;
 
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 
@@ -18,19 +17,19 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
  */
 public abstract class HttpForwardAction {
 
-    private final LoggingFormatter logFormatter;
+    protected final MockServerLogger mockServerLogger;
     private NettyHttpClient httpClient = new NettyHttpClient();
     private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
 
-    HttpForwardAction(LoggingFormatter logFormatter) {
-        this.logFormatter = logFormatter;
+    HttpForwardAction(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
     }
 
     protected SettableFuture<HttpResponse> sendRequest(HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) {
         try {
             return httpClient.sendRequest(hopByHopHeaderFilter.onRequest(httpRequest), remoteAddress);
         } catch (Exception e) {
-            logFormatter.errorLog(httpRequest, e, "Exception forwarding request " + httpRequest);
+            mockServerLogger.error(httpRequest, e, "Exception forwarding request " + httpRequest);
         }
         return notFoundFuture();
     }

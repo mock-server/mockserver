@@ -9,8 +9,6 @@ import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.streams.IOStreamUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.OutputStream;
 import java.net.Socket;
@@ -22,8 +20,6 @@ import static org.mockserver.test.Assert.assertContains;
  */
 public class NettyDirectProxyIntegrationTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(NettyDirectProxyIntegrationTest.class);
-
     private final static Integer PROXY_DIRECT_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
     private static Proxy httpProxy;
@@ -31,13 +27,13 @@ public class NettyDirectProxyIntegrationTest {
     @BeforeClass
     public static void setupFixture() {
         // start echo server
-        echoServer = new EchoServer( false);
+        echoServer = new EchoServer(false);
 
         // start proxy
         httpProxy = new ProxyBuilder()
-                .withLocalPort(PROXY_DIRECT_PORT)
-                .withDirect("127.0.0.1", echoServer.getPort())
-                .build();
+            .withLocalPort(PROXY_DIRECT_PORT)
+            .withDirect("127.0.0.1", echoServer.getPort())
+            .build();
     }
 
     @AfterClass
@@ -61,10 +57,10 @@ public class NettyDirectProxyIntegrationTest {
             // when
             // - send GET request for headers only
             output.write(("" +
-                    "GET /test_headers_only HTTP/1.1\r\n" +
-                    "Host: localhost:" + echoServer.getPort() + "\r\n" +
-                    "X-Test: test_headers_only\r\n" +
-                    "\r\n"
+                "GET /test_headers_only HTTP/1.1\r\n" +
+                "Host: localhost:" + echoServer.getPort() + "\r\n" +
+                "X-Test: test_headers_only\r\n" +
+                "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
@@ -89,12 +85,12 @@ public class NettyDirectProxyIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                    "GET /test_headers_and_body HTTP/1.1\r\n" +
-                    "Host: localhost:" + echoServer.getPort() + "\r\n" +
-                    "X-Test: test_headers_and_body\r\n" +
-                    "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
-                    "\r\n" +
-                    "an_example_body" + "\r\n"
+                "GET /test_headers_and_body HTTP/1.1\r\n" +
+                "Host: localhost:" + echoServer.getPort() + "\r\n" +
+                "X-Test: test_headers_and_body\r\n" +
+                "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
+                "\r\n" +
+                "an_example_body" + "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
@@ -121,9 +117,9 @@ public class NettyDirectProxyIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                    "GET /not_found HTTP/1.1\r\n" +
-                    "Host: localhost:" + echoServer.getPort() + "\r\n" +
-                    "\r\n"
+                "GET /not_found HTTP/1.1\r\n" +
+                "Host: localhost:" + echoServer.getPort() + "\r\n" +
+                "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 

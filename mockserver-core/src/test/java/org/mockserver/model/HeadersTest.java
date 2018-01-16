@@ -196,6 +196,46 @@ public class HeadersTest {
     }
 
     @Test
+    public void shouldReplaceEntryWithHeaderIgnoringCase() throws Exception {
+        // given
+        Headers headers = new Headers();
+        headers.withEntry(header("name_one", "value_one_one", "value_one_two"));
+        headers.withEntry(header("name_two", "value_two_one", "value_two_two"));
+        headers.withEntry(header("name_three", "value_three_one", "value_three_two"));
+
+        // when
+        headers.replaceEntry(header("Name_Two", "new_value_two_one", "new_value_two_two"));
+
+        // then
+        assertThat(headers.getEntries().size(), is(3));
+        assertThat(headers.getEntries(), hasItems(
+            header("name_one", "value_one_one", "value_one_two"),
+            header("Name_Two", "new_value_two_one", "new_value_two_two"),
+            header("name_three", "value_three_one", "value_three_two")
+        ));
+    }
+
+    @Test
+    public void shouldReplaceEntryWithStringsIgnoringCase() throws Exception {
+        // given
+        Headers headers = new Headers();
+        headers.withEntry(header("name_one", "value_one_one", "value_one_two"));
+        headers.withEntry(header("name_two", "value_two_one", "value_two_two"));
+        headers.withEntry(header("name_three", "value_three_one", "value_three_two"));
+
+        // when
+        headers.replaceEntry("Name_Two", "new_value_two_one", "new_value_two_two");
+
+        // then
+        assertThat(headers.getEntries().size(), is(3));
+        assertThat(headers.getEntries(), hasItems(
+            header("name_one", "value_one_one", "value_one_two"),
+            header("Name_Two", "new_value_two_one", "new_value_two_two"),
+            header("name_three", "value_three_one", "value_three_two")
+        ));
+    }
+
+    @Test
     public void shouldRetrieveEntryValues() throws Exception {
         // given
         Headers headers = new Headers();

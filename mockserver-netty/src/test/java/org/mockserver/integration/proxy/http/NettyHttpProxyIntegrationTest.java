@@ -9,15 +9,11 @@ import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.socket.PortFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author jamesdbloom
  */
 public class NettyHttpProxyIntegrationTest extends AbstractClientProxyIntegrationTest {
-
-    private static final Logger logger = LoggerFactory.getLogger(NettyHttpProxyIntegrationTest.class);
 
     private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
@@ -29,12 +25,12 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientProxyIntegratio
         servletContext = "";
 
         // start server
-        echoServer = new EchoServer( false);
+        echoServer = new EchoServer(false);
 
         // start proxy
         httpProxy = new ProxyBuilder()
-                .withLocalPort(PROXY_HTTP_PORT)
-                .build();
+            .withLocalPort(PROXY_HTTP_PORT)
+            .build();
 
         // start client
         proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);

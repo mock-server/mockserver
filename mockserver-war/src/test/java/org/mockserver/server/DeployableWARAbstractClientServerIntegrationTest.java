@@ -197,7 +197,6 @@ public abstract class DeployableWARAbstractClientServerIntegrationTest extends S
     public void shouldCallbackForForwardCallbackToSpecifiedClassInTestClasspath() {
         // given
         EchoServer secureEchoServer = new EchoServer(false);
-        System.out.println("secureEchoServer.getPort() = " + secureEchoServer.getPort());
         TestClasspathTestExpectationForwardCallback.httpRequests.clear();
         TestClasspathTestExpectationForwardCallback.httpRequestToReturn = request()
             .withHeaders(

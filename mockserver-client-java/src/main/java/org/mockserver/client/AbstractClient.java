@@ -7,6 +7,7 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.*;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -14,8 +15,6 @@ import org.mockserver.model.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
@@ -36,18 +35,18 @@ import static org.mockserver.verify.VerificationTimes.exactly;
  */
 public abstract class AbstractClient<T extends AbstractClient> implements Closeable {
 
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    protected final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
 
     protected final String host;
     protected final int port;
     private final String contextPath;
     private final Class<T> clientClass;
     private NettyHttpClient nettyHttpClient = new NettyHttpClient();
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
-    private VerificationSerializer verificationSerializer = new VerificationSerializer();
-    private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
+    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(mockServerLogger);
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(mockServerLogger);
+    private VerificationSerializer verificationSerializer = new VerificationSerializer(mockServerLogger);
+    private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
 
     /**
      * Start the client communicating to the proxy at the specified host and port
@@ -172,7 +171,7 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
             }
         } catch (Exception e) {
             if (!ignoreFailure) {
-                logger.warn("Failed to send stop request to MockServer " + e.getMessage());
+                mockServerLogger.warn("Failed to send stop request to MockServer " + e.getMessage());
             }
         }
         return clientClass.cast(this);

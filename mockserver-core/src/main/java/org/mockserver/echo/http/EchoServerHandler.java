@@ -4,14 +4,13 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import org.mockserver.filters.MockServerLog;
+import org.mockserver.filters.MockServerEventLog;
 import org.mockserver.log.model.RequestLogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BodyWithContentType;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.server.netty.codec.MockServerResponseEncoder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
@@ -24,13 +23,14 @@ import static org.mockserver.model.HttpResponse.response;
 @ChannelHandler.Sharable
 public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerLogger mockServerLogger;
     private final EchoServer.Error error;
-    private final MockServerLog logFilter;
+    private final MockServerEventLog logFilter;
     private final EchoServer.NextResponse nextResponse;
     private final EchoServer.OnlyResponse onlyResponse;
 
-    EchoServerHandler(EchoServer.Error error, MockServerLog logFilter, EchoServer.NextResponse nextResponse, EchoServer.OnlyResponse onlyResponse) {
+    EchoServerHandler(MockServerLogger mockServerLogger, EchoServer.Error error, MockServerEventLog logFilter, EchoServer.NextResponse nextResponse, EchoServer.OnlyResponse onlyResponse) {
+        this.mockServerLogger = mockServerLogger;
         this.error = error;
         this.logFilter = logFilter;
         this.nextResponse = nextResponse;
@@ -39,7 +39,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
 
-        logger.trace("received request:{}", request);
+        mockServerLogger.trace("received request:{}", request);
 
         logFilter.add(new RequestLogEntry(request));
 

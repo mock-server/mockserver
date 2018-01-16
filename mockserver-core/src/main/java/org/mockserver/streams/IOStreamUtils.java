@@ -2,8 +2,7 @@ package org.mockserver.streams;
 
 import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -21,7 +20,7 @@ import static org.mockserver.character.Character.NEW_LINE;
  * @author jamesdbloom
  */
 public class IOStreamUtils {
-    private static final Logger logger = LoggerFactory.getLogger(IOStreamUtils.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(IOStreamUtils.class);
 
     public static String readInputStreamToString(Socket socket) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -51,7 +50,7 @@ public class IOStreamUtils {
         try {
             return IOUtils.toString(request.getInputStream(), Charsets.UTF_8.name());
         } catch (IOException ioe) {
-            logger.error("IOException while reading HttpServletRequest input stream", ioe);
+            MOCK_SERVER_LOGGER.error("IOException while reading HttpServletRequest input stream", ioe);
             throw new RuntimeException("IOException while reading HttpServletRequest input stream", ioe);
         }
     }
@@ -60,7 +59,7 @@ public class IOStreamUtils {
         try {
             return IOUtils.toByteArray(request.getInputStream());
         } catch (IOException ioe) {
-            logger.error("IOException while reading HttpServletRequest input stream", ioe);
+            MOCK_SERVER_LOGGER.error("IOException while reading HttpServletRequest input stream", ioe);
             throw new RuntimeException("IOException while reading HttpServletRequest input stream", ioe);
         }
     }
@@ -71,7 +70,7 @@ public class IOStreamUtils {
             output.write(data);
             output.close();
         } catch (IOException ioe) {
-            logger.error(String.format("IOException while writing [%s] to HttpServletResponse output stream", new String(data)), ioe);
+            MOCK_SERVER_LOGGER.error(String.format("IOException while writing [%s] to HttpServletResponse output stream", new String(data)), ioe);
             throw new RuntimeException(String.format("IOException while writing [%s] to HttpServletResponse output stream", new String(data)), ioe);
         }
     }

@@ -30,7 +30,7 @@ public class StringToXmlDocumentParser extends ObjectWithReflectiveEqualsHashCod
         return prettyPrintXmlDocument(buildDocument(matched, errorLogger));
     }
 
-    static String prettyPrintXmlDocument(Document document) {
+    private static String prettyPrintXmlDocument(Document document) {
         // Pretty-prints a DOM document to XML using DOM Load and Save's LSSerializer.
         // Note that the "format-pretty-print" DOM configuration parameter can only be set in JDK 1.6+.
         DOMImplementation domImplementation = document.getImplementation();
@@ -76,7 +76,7 @@ public class StringToXmlDocumentParser extends ObjectWithReflectiveEqualsHashCod
         return documentBuilder.parse(new InputSource(new StringReader(matched)));
     }
 
-    public static interface ErrorLogger {
-        public void logError(final String matched, final Exception exception);
+    public interface ErrorLogger {
+        void logError(final String matched, final Exception exception);
     }
 }

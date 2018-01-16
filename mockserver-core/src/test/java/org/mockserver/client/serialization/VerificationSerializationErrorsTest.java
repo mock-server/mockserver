@@ -9,6 +9,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.VerificationDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.verify.Verification;
 
 import java.io.IOException;
@@ -38,7 +39,7 @@ public class VerificationSerializationErrorsTest {
 
     @Before
     public void setupTestFixture() {
-        verificationSerializer = spy(new VerificationSerializer());
+        verificationSerializer = spy(new VerificationSerializer(new MockServerLogger()));
 
         initMocks(this);
     }

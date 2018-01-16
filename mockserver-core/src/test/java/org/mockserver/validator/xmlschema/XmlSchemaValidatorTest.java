@@ -5,6 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
+import org.mockserver.logging.MockServerLogger;
 import org.slf4j.Logger;
 
 import java.text.MessageFormat;
@@ -53,7 +54,7 @@ public class XmlSchemaValidatorTest {
 
     @Test
     public void shouldMatchXml() {
-        assertThat(new XmlSchemaValidator(XML_SCHEMA).isValid("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+        assertThat(new XmlSchemaValidator(new MockServerLogger(), XML_SCHEMA).isValid("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
                 "<notes>" + NEW_LINE +
                 "    <note>" + NEW_LINE +
                 "        <to>Bob</to>" + NEW_LINE +
@@ -74,7 +75,7 @@ public class XmlSchemaValidatorTest {
     public void shouldHandleXmlMissingRequiredFields() {
         // then
         assertThat(
-                new XmlSchemaValidator(XML_SCHEMA).isValid("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                new XmlSchemaValidator(new MockServerLogger(), XML_SCHEMA).isValid("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
                         "<notes>" + NEW_LINE +
                         "    <note>" + NEW_LINE +
                         "        <to>Bob</to>" + NEW_LINE +
@@ -95,7 +96,7 @@ public class XmlSchemaValidatorTest {
     @Test
     public void shouldHandleXmlExtraField() {
         assertThat(
-                new XmlSchemaValidator(XML_SCHEMA).isValid("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
+                new XmlSchemaValidator(new MockServerLogger(), XML_SCHEMA).isValid("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
                         "<notes>" + NEW_LINE +
                         "    <note>" + NEW_LINE +
                         "        <to>Bob</to>" + NEW_LINE +
@@ -122,7 +123,7 @@ public class XmlSchemaValidatorTest {
         exception.expectMessage("Schema must either be a path reference to a *.xsd file or an xml string");
 
         // when
-        new XmlSchemaValidator("illegal_xml");
+        new XmlSchemaValidator(new MockServerLogger(), "illegal_xml");
     }
 
     @Test
@@ -131,7 +132,7 @@ public class XmlSchemaValidatorTest {
         exception.expect(NullPointerException.class);
 
         // when
-        new XmlSchemaValidator(null);
+        new XmlSchemaValidator(new MockServerLogger(), null);
     }
 
     @Test
@@ -141,18 +142,18 @@ public class XmlSchemaValidatorTest {
         exception.expectMessage("Schema is not valid");
 
         // when
-        new XmlSchemaValidator("");
+        new XmlSchemaValidator(new MockServerLogger(), "");
     }
 
     @Test
     public void shouldHandleNullTest() {
         // given
-        assertThat(new XmlSchemaValidator(XML_SCHEMA).isValid(null), is("NullPointerException - null"));
+        assertThat(new XmlSchemaValidator(new MockServerLogger(), XML_SCHEMA).isValid(null), is("NullPointerException - null"));
     }
 
     @Test
     public void shouldHandleEmptyTest() {
         // given
-        assertThat(new XmlSchemaValidator(XML_SCHEMA).isValid(""), is("Premature end of file."));
+        assertThat(new XmlSchemaValidator(new MockServerLogger(), XML_SCHEMA).isValid(""), is("Premature end of file."));
     }
 }

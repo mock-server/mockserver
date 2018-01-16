@@ -3,7 +3,7 @@ package org.mockserver.proxy;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.net.MediaType;
 import org.mockserver.client.serialization.PortBindingSerializer;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
@@ -26,11 +26,11 @@ import static org.mockserver.model.PortBinding.portBinding;
  */
 public class ProxyServlet extends HttpServlet {
 
-    private LoggingFormatter logFormatter;
+    private MockServerLogger mockServerLogger;
     // generic handling
     private HttpStateHandler httpStateHandler;
     // serializers
-    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
+    private PortBindingSerializer portBindingSerializer;
     // mappers
     private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder();
     // mockserver
@@ -38,7 +38,8 @@ public class ProxyServlet extends HttpServlet {
 
     public ProxyServlet() {
         this.httpStateHandler = new HttpStateHandler();
-        this.logFormatter = httpStateHandler.getLogFormatter();
+        this.mockServerLogger = httpStateHandler.getMockServerLogger();
+        portBindingSerializer = new PortBindingSerializer(mockServerLogger);
         this.actionHandler = new ActionHandler(httpStateHandler);
     }
 
@@ -79,11 +80,11 @@ public class ProxyServlet extends HttpServlet {
                 }
             }
         } catch (IllegalArgumentException iae) {
-            logFormatter.errorLog(request, "Exception processing " + request + "\n" + iae.getMessage());
+            mockServerLogger.error(request, "Exception processing " + request + "\n" + iae.getMessage());
             // send request without API CORS headers
             responseWriter.writeResponse(request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
-            logFormatter.errorLog(request, e, "Exception processing " + request);
+            mockServerLogger.error(request, e, "Exception processing " + request);
             responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()), true);
         }
     }

@@ -8,10 +8,10 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.stop.StopEventQueue;
 import org.mockserver.stop.Stoppable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -24,13 +24,19 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
 
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-    protected final List<Future<Channel>> channelOpenedFutures = new ArrayList<>();
-    protected final EventLoopGroup bossGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
-    protected final EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
-    private final SettableFuture<String> stopping = SettableFuture.create();
-    protected StopEventQueue stopEventQueue = new StopEventQueue();
+    protected final MockServerLogger mockServerLogger;
+    protected EventLoopGroup bossGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
+    protected EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
     protected ServerBootstrap serverBootstrap;
+    protected HttpStateHandler httpStateHandler;
+    private List<Future<Channel>> channelOpenedFutures = new ArrayList<>();
+    private SettableFuture<String> stopping = SettableFuture.create();
+    private StopEventQueue stopEventQueue = new StopEventQueue();
+
+    protected LifeCycle() {
+        this.httpStateHandler = new HttpStateHandler();
+        this.mockServerLogger = httpStateHandler.getMockServerLogger();
+    }
 
     public Future<?> stop() {
         stopped();
@@ -53,7 +59,7 @@ public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
             try {
                 ports.add(((InetSocketAddress) channelOpened.get(2, TimeUnit.SECONDS).localAddress()).getPort());
             } catch (Exception e) {
-                logger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
+                mockServerLogger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
             }
         }
         return ports;
@@ -64,7 +70,7 @@ public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
             try {
                 return ((InetSocketAddress) channelOpened.get(2, TimeUnit.SECONDS).localAddress()).getPort();
             } catch (Exception e) {
-                logger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
+                mockServerLogger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
             }
         }
         return -1;
@@ -114,7 +120,7 @@ public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
     }
 
     protected void started(Integer port) {
-        logger.info("MockServer started on port: {}", port);
+        mockServerLogger.info("MockServer started on port: {}", port);
     }
 
     protected void stopped() {

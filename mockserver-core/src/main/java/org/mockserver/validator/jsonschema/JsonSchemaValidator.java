@@ -11,10 +11,9 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.file.FileReader;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.validator.Validator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,13 +25,13 @@ import static org.mockserver.character.Character.NEW_LINE;
  */
 public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
-    private static Logger logger = LoggerFactory.getLogger(JsonSchemaValidator.class);
     private final String schema;
     private final JsonValidator validator = JsonSchemaFactory.byDefault().getValidator();
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private final MockServerLogger mockServerLogger;
 
-
-    public JsonSchemaValidator(String schema) {
+    public JsonSchemaValidator(MockServerLogger mockServerLogger, String schema) {
+        this.mockServerLogger = mockServerLogger;
         if (schema.trim().endsWith(".json")) {
             this.schema = FileReader.readFileFromClassPathOrPath(schema);
         } else if (schema.trim().endsWith("}")) {
@@ -42,7 +41,16 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
         }
     }
 
-    protected static String addReferencesIntoSchema(String routePath, String mainSchemeFile, String... referenceFiles) {
+    public JsonSchemaValidator(MockServerLogger mockServerLogger, String routePath, String mainSchemeFile, String... referenceFiles) {
+        this.mockServerLogger = mockServerLogger;
+        this.schema = addReferencesIntoSchema(routePath, mainSchemeFile, referenceFiles);
+    }
+
+    public String getSchema() {
+        return schema;
+    }
+
+    private String addReferencesIntoSchema(String routePath, String mainSchemeFile, String... referenceFiles) {
         String combinedSchema = "";
         try {
             ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
@@ -61,7 +69,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(jsonSchema);
         } catch (Exception e) {
-            logger.error("Exception loading JSON Schema for Exceptions", e);
+            mockServerLogger.error("Exception loading JSON Schema for Exceptions", e);
         }
         return combinedSchema;
     }
@@ -83,7 +91,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     validationResult = formatProcessingReport(processingReport);
                 }
             } catch (Exception e) {
-                logger.info("Exception validating JSON", e);
+                mockServerLogger.info("Exception validating JSON", e);
                 return e.getClass().getSimpleName() + " - " + e.getMessage();
             }
         }

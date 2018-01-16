@@ -9,19 +9,19 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import org.mockserver.client.netty.codec.MockServerClientCodec;
 import org.mockserver.logging.LoggingHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
 import java.net.InetSocketAddress;
 
 import static org.mockserver.client.netty.NettyHttpClient.REMOTE_SOCKET;
 import static org.mockserver.client.netty.NettyHttpClient.SECURE;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
+import static org.slf4j.event.Level.TRACE;
 
 @ChannelHandler.Sharable
 public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
     private final HttpClientConnectionHandler httpClientConnectionHandler = new HttpClientConnectionHandler();
     private final HttpClientHandler httpClientHandler = new HttpClientHandler();
 
@@ -37,7 +37,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         }
 
         // add logging
-        if (logger.isTraceEnabled()) {
+        if (mockServerLogger.isEnabled(TRACE)) {
             pipeline.addLast(new LoggingHandler("NettyHttpClient -->"));
         }
 

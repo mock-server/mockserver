@@ -1,9 +1,9 @@
 package org.mockserver.matchers;
 
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.mockserver.model.NottableString.string;
 
@@ -11,14 +11,16 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 public class SubStringMatcher extends BodyMatcher<NottableString> {
-    private static Logger logger = LoggerFactory.getLogger(SubStringMatcher.class);
+    private final MockServerLogger mockServerLogger;
     private final NottableString matcher;
 
-    public SubStringMatcher(String matcher) {
+    public SubStringMatcher(MockServerLogger mockServerLogger, String matcher) {
+        this.mockServerLogger = mockServerLogger;
         this.matcher = string(matcher);
     }
 
-    public SubStringMatcher(NottableString matcher) {
+    public SubStringMatcher(MockServerLogger mockServerLogger, NottableString matcher) {
+        this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
     }
 
@@ -43,10 +45,10 @@ public class SubStringMatcher extends BodyMatcher<NottableString> {
     }
 
     public boolean matches(String matched) {
-        return matches(string(matched));
+        return matches(null, string(matched));
     }
 
-    public boolean matches(NottableString matched) {
+    public boolean matches(HttpRequest context, NottableString matched) {
         boolean result = false;
 
         if (matches(matcher.getValue(), matched.getValue(), false)) {
@@ -54,7 +56,7 @@ public class SubStringMatcher extends BodyMatcher<NottableString> {
         }
 
         if (!result) {
-            logger.trace("Failed to match [{}] with [{}]", matched, this.matcher);
+            mockServerLogger.trace(context, "Failed to match [{}] with [{}]", matched, this.matcher);
         }
 
         return matcher.isNot() != reverseResultIfNot(result);

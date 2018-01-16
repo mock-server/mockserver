@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.client.serialization.model.StringBodyDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 
@@ -73,7 +74,7 @@ public class HttpRequestSerializerTest {
 
     @Before
     public void setupTestFixture() {
-        httpRequestSerializer = spy(new HttpRequestSerializer());
+        httpRequestSerializer = spy(new HttpRequestSerializer(new MockServerLogger()));
 
         initMocks(this);
     }

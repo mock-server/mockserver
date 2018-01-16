@@ -1,7 +1,7 @@
 package org.mockserver.mock;
 
 import org.mockserver.collections.CircularLinkedList;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.ui.MockServerMatcherNotifier;
@@ -21,7 +21,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     protected final List<HttpRequestMatcher> httpRequestMatchers = Collections.synchronizedList(new CircularLinkedList<HttpRequestMatcher>(maxExpectations()));
     private MatcherBuilder matcherBuilder;
 
-    MockServerMatcher(LoggingFormatter logFormatter) {
+    MockServerMatcher(MockServerLogger logFormatter) {
         this.matcherBuilder = new MatcherBuilder(logFormatter);
     }
 
@@ -42,7 +42,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     public Expectation firstMatchingExpectation(HttpRequest httpRequest) {
         Expectation matchingExpectation = null;
         for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
-            if (httpRequestMatcher.matches(httpRequest)) {
+            if (httpRequestMatcher.matches(null, httpRequest)) {
                 matchingExpectation = httpRequestMatcher.decrementRemainingMatches();
             }
             if (!httpRequestMatcher.isActive()) {

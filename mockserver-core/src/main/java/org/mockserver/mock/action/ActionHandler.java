@@ -9,7 +9,7 @@ import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
 import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
@@ -32,7 +32,7 @@ public class ActionHandler {
     public static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
 
     private HttpStateHandler httpStateHandler;
-    private LoggingFormatter logFormatter;
+    private MockServerLogger mockServerLogger;
     private HttpResponseActionHandler httpResponseActionHandler;
     private HttpResponseTemplateActionHandler httpResponseTemplateActionHandler;
     private HttpResponseClassCallbackActionHandler httpResponseClassCallbackActionHandler;
@@ -51,16 +51,16 @@ public class ActionHandler {
 
     public ActionHandler(HttpStateHandler httpStateHandler) {
         this.httpStateHandler = httpStateHandler;
-        this.logFormatter = httpStateHandler.getLogFormatter();
+        this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.httpResponseActionHandler = new HttpResponseActionHandler();
-        this.httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(logFormatter);
-        this.httpResponseClassCallbackActionHandler = new HttpResponseClassCallbackActionHandler();
+        this.httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(mockServerLogger);
+        this.httpResponseClassCallbackActionHandler = new HttpResponseClassCallbackActionHandler(mockServerLogger);
         this.httpResponseObjectCallbackActionHandler = new HttpResponseObjectCallbackActionHandler(httpStateHandler);
-        this.httpForwardActionHandler = new HttpForwardActionHandler(logFormatter);
-        this.httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(logFormatter);
-        this.httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(logFormatter);
+        this.httpForwardActionHandler = new HttpForwardActionHandler(mockServerLogger);
+        this.httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(mockServerLogger);
+        this.httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(mockServerLogger);
         this.httpForwardObjectCallbackActionHandler = new HttpForwardObjectCallbackActionHandler(httpStateHandler);
-        this.httpOverrideForwardedRequestCallbackActionHandler = new HttpOverrideForwardedRequestActionHandler(logFormatter);
+        this.httpOverrideForwardedRequestCallbackActionHandler = new HttpOverrideForwardedRequestActionHandler(mockServerLogger);
         this.httpErrorActionHandler = new HttpErrorActionHandler();
     }
 
@@ -76,7 +76,7 @@ public class ActionHandler {
                         public void run() {
                             HttpResponse response = httpResponseActionHandler.handle(httpResponse);
                             responseWriter.writeResponse(request, response, false);
-                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for response action:{}", response, request, httpResponse);
+                            mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for response action:{}", response, request, httpResponse);
                         }
                     }, httpResponse.getDelay(), synchronous);
                     break;
@@ -88,7 +88,7 @@ public class ActionHandler {
                         public void run() {
                             HttpResponse response = httpResponseTemplateActionHandler.handle(httpTemplate, request);
                             responseWriter.writeResponse(request, response, false);
-                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated response action:{}", response, request, httpTemplate);
+                            mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated response action:{}", response, request, httpTemplate);
                         }
                     }, httpTemplate.getDelay(), synchronous);
                     break;
@@ -100,7 +100,7 @@ public class ActionHandler {
                         public void run() {
                             HttpResponse response = httpResponseClassCallbackActionHandler.handle(classCallback, request);
                             responseWriter.writeResponse(request, response, false);
-                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, classCallback);
+                            mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, classCallback);
                         }
                     }, synchronous);
                     break;
@@ -126,9 +126,9 @@ public class ActionHandler {
                                         HttpResponse response = responseFuture.get();
                                         responseWriter.writeResponse(request, response, false);
                                         httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                                        logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for forward action:{}", response, request, httpForward);
+                                        mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for forward action:{}", response, request, httpForward);
                                     } catch (Exception ex) {
-                                        logFormatter.errorLog(request, ex, ex.getMessage());
+                                        mockServerLogger.error(request, ex, ex.getMessage());
                                     }
                                 }
                             }, synchronous);
@@ -147,9 +147,9 @@ public class ActionHandler {
                                         HttpResponse response = responseFuture.get();
                                         responseWriter.writeResponse(request, response, false);
                                         httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                                        logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated forward action:{}", response, request, httpTemplate);
+                                        mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated forward action:{}", response, request, httpTemplate);
                                     } catch (Exception ex) {
-                                        logFormatter.errorLog(request, ex, ex.getMessage());
+                                        mockServerLogger.error(request, ex, ex.getMessage());
                                     }
                                 }
                             }, synchronous);
@@ -168,9 +168,9 @@ public class ActionHandler {
                                     try {
                                         HttpResponse response = responseFuture.get();
                                         responseWriter.writeResponse(request, response, false);
-                                        logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, classCallback);
+                                        mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, classCallback);
                                     } catch (Exception ex) {
-                                        logFormatter.errorLog(request, ex, ex.getMessage());
+                                        mockServerLogger.error(request, ex, ex.getMessage());
                                     }
                                 }
                             }, synchronous);
@@ -199,9 +199,9 @@ public class ActionHandler {
                                     try {
                                         HttpResponse response = responseFuture.get();
                                         responseWriter.writeResponse(request, response, false);
-                                        logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, httpOverrideForwardedRequest);
+                                        mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, httpOverrideForwardedRequest);
                                     } catch (Exception ex) {
-                                        logFormatter.errorLog(request, ex, ex.getMessage());
+                                        mockServerLogger.error(request, ex, ex.getMessage());
                                     }
                                 }
                             }, synchronous);
@@ -215,7 +215,7 @@ public class ActionHandler {
                     schedule(new Runnable() {
                         public void run() {
                             httpErrorActionHandler.handle(httpError, ctx);
-                            logFormatter.infoLog(request, "returning error:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for error action:{}", httpError, request, httpError);
+                            mockServerLogger.info(request, "returning error:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for error action:{}", httpError, request, httpError);
                         }
                     }, httpError.getDelay(), synchronous);
                     break;
@@ -233,7 +233,7 @@ public class ActionHandler {
                         }
                         responseWriter.writeResponse(request, response, false);
                         httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                        logFormatter.infoLog(
+                        mockServerLogger.info(
                             request,
                             "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
                             response,
@@ -241,7 +241,7 @@ public class ActionHandler {
                             httpRequestToCurlSerializer.toCurl(request, remoteAddress)
                         );
                     } catch (Exception ex) {
-                        logFormatter.errorLog(request, ex, ex.getMessage());
+                        mockServerLogger.error(request, ex, ex.getMessage());
                     }
                 }
             }, synchronous);
@@ -249,7 +249,7 @@ public class ActionHandler {
         } else {
             responseWriter.writeResponse(request, notFoundResponse(), false);
             httpStateHandler.log(new RequestLogEntry(request));
-            logFormatter.infoLog(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
+            mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
         }
     }
 }

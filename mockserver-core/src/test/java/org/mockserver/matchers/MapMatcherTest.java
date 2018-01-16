@@ -3,6 +3,7 @@ package org.mockserver.matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.KeyToMultiValue;
 
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class MapMatcherTest {
     @Before
     public void setupTestFixture() {
         multimap = new CaseInsensitiveRegexMultiMap();
-        mapMatcher = new MultiValueMapMatcher(multimap);
+        mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), multimap);
         keyToMultiValues = new ArrayList<KeyToMultiValue>();
     }
 
@@ -36,7 +37,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
 
         // then
-        assertTrue(mapMatcher.matches(keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -48,7 +49,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo", "bar", "bob"));
 
         // then
-        assertTrue(mapMatcher.matches(keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -60,7 +61,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo", "bar", "bob"));
 
         // then
-        assertTrue(mapMatcher.matches(keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -72,7 +73,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
 
         // then
-        assertTrue(mapMatcher.matches(keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -84,7 +85,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
 
         // then
-        assertTrue(mapMatcher.matches(keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -98,7 +99,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
 
         // then
-        assertTrue(mapMatcher.matches(keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -113,7 +114,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
 
         // then
-        assertTrue(mapMatcher.matches(keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -128,7 +129,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
 
         // then
-        assertTrue(mapMatcher.matches(keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -143,7 +144,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
 
         // then
-        assertTrue(mapMatcher.matches(keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -158,7 +159,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
 
         // then
-        assertTrue(mapMatcher.matches(keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -172,12 +173,12 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("FOO2", "bar2"));
 
         // then
-        assertTrue(mapMatcher.matches(keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
     public void matchesEmptyExpectation() {
-        assertTrue(mapMatcher.matches(keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -189,7 +190,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo2", "bar"));
 
         // then
-        assertFalse(mapMatcher.matches(keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -201,7 +202,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo", "bar2"));
 
         // then
-        assertFalse(mapMatcher.matches(keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -213,7 +214,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo", ""));
 
         // then
-        assertFalse(mapMatcher.matches(keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -227,7 +228,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
 
         // then
-        assertFalse(mapMatcher.matches(keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -241,7 +242,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
 
         // then
-        assertFalse(mapMatcher.matches(keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -255,7 +256,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
 
         // then
-        assertFalse(mapMatcher.matches(keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -267,7 +268,7 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo", "/{}/"));
 
         // then
-        assertFalse(mapMatcher.matches(keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, keyToMultiValues));
     }
 
     @Test
@@ -279,6 +280,6 @@ public class MapMatcherTest {
         keyToMultiValues.add(new KeyToMultiValue("foo", "/{}/"));
 
         // then
-        assertFalse(mapMatcher.matches(keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, keyToMultiValues));
     }
 }

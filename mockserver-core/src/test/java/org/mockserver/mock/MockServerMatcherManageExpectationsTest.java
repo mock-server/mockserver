@@ -2,18 +2,15 @@ package org.mockserver.mock;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.logging.LoggingFormatter;
-import org.mockserver.matchers.HttpRequestMatcher;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
@@ -33,7 +30,7 @@ public class MockServerMatcherManageExpectationsTest {
     public void prepareTestFixture() {
         httpRequest = new HttpRequest();
         httpResponse = new HttpResponse();
-        mockServerMatcher = new MockServerMatcher(new LoggingFormatter(LoggerFactory.getLogger(this.getClass()), null));
+        mockServerMatcher = new MockServerMatcher(new MockServerLogger(this.getClass()));
     }
 
     @Test

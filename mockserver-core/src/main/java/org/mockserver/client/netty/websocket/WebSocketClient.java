@@ -13,6 +13,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.mockserver.client.serialization.WebSocketMessageSerializer;
 import org.mockserver.client.serialization.model.WebSocketClientIdDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
@@ -26,12 +27,11 @@ public class WebSocketClient {
 
     private Channel channel;
     private EventLoopGroup group = new NioEventLoopGroup();
-    private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer();
+    private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer(new MockServerLogger());
     private SettableFuture<String> registrationFuture = SettableFuture.create();
 
     private ExpectationResponseCallback expectationResponseCallback;
     private ExpectationForwardCallback expectationForwardCallback;
-
 
     public WebSocketClient(InetSocketAddress serverAddress, String contextPath) {
         try {

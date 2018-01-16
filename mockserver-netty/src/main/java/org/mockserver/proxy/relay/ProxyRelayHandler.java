@@ -3,20 +3,20 @@ package org.mockserver.proxy.relay;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpMessage;
-import org.slf4j.Logger;
+import org.mockserver.logging.MockServerLogger;
 
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 
 public class ProxyRelayHandler<T extends HttpMessage> extends SimpleChannelInboundHandler<T> {
 
-    private final Logger logger;
+    private final MockServerLogger mockServerLogger;
     private volatile Channel channel;
 
-    public ProxyRelayHandler(Channel channel, Logger logger) {
+    public ProxyRelayHandler(Channel channel, MockServerLogger mockServerLogger) {
         super(false);
         this.channel = channel;
-        this.logger = logger;
+        this.mockServerLogger = mockServerLogger;
     }
 
     @Override
@@ -33,7 +33,7 @@ public class ProxyRelayHandler<T extends HttpMessage> extends SimpleChannelInbou
                 if (future.isSuccess()) {
                     ctx.channel().read();
                 } else {
-                    logger.error("Exception while returning writing", future.cause());
+                    mockServerLogger.error("Exception while returning writing", future.cause());
                     future.channel().close();
                 }
             }
@@ -48,7 +48,7 @@ public class ProxyRelayHandler<T extends HttpMessage> extends SimpleChannelInbou
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            logger.warn("Exception caught by proxy relay handler -> closing pipeline " + ctx.channel(), cause);
+            mockServerLogger.error("Exception caught by proxy relay handler -> closing pipeline " + ctx.channel(), cause);
         }
         closeOnFlush(ctx.channel());
     }

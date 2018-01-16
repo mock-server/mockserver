@@ -6,7 +6,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.SameJVMAbstractClientServerIntegrationTest;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
@@ -72,7 +72,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
                                 header("x-test", "test_headers_and_body")
                             )
                             .withBody("an_example_body_http");
-                        if (new MatcherBuilder(mock(LoggingFormatter.class)).transformsToMatcher(expectation).matches(httpRequest)) {
+                        if (new MatcherBuilder(mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
                             return response()
                                 .withStatusCode(ACCEPTED_202.code())
                                 .withReasonPhrase(ACCEPTED_202.reasonPhrase())

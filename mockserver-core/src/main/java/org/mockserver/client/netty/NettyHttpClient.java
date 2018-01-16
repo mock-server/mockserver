@@ -8,10 +8,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -35,7 +34,7 @@ public class NettyHttpClient {
         .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
         .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
         .handler(new HttpClientInitializer());
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
 
     public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {
         return sendRequest(httpRequest, httpRequest.socketAddressFromHostHeader());
@@ -46,7 +45,7 @@ public class NettyHttpClient {
             remoteAddress = httpRequest.socketAddressFromHostHeader();
         }
 
-        logger.debug("Sending to: {} request: {}", remoteAddress, httpRequest);
+        mockServerLogger.debug("Sending to: {} request: {}", remoteAddress, httpRequest);
 
         final SettableFuture<HttpResponse> httpResponseSettableFuture = SettableFuture.create();
         bootstrap

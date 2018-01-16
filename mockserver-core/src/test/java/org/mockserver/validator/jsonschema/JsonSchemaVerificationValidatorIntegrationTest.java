@@ -1,6 +1,7 @@
 package org.mockserver.validator.jsonschema;
 
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -11,7 +12,7 @@ import static org.mockserver.character.Character.NEW_LINE;
  */
 public class JsonSchemaVerificationValidatorIntegrationTest {
 
-    private JsonSchemaValidator jsonSchemaValidator = new JsonSchemaHttpRequestValidator();
+    private JsonSchemaValidator jsonSchemaValidator = new JsonSchemaHttpRequestValidator(new MockServerLogger());
 
     @Test
     public void shouldValidateValidCompleteRequestWithStringBody() {

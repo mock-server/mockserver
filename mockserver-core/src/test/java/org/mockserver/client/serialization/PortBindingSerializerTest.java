@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.PortBinding;
 
 import java.io.IOException;
@@ -38,7 +39,7 @@ public class PortBindingSerializerTest {
 
     @Before
     public void setupTestFixture() {
-        portBindingSerializer = spy(new PortBindingSerializer());
+        portBindingSerializer = spy(new PortBindingSerializer(new MockServerLogger()));
 
         initMocks(this);
     }

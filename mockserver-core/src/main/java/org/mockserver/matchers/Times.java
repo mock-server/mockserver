@@ -39,7 +39,6 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
         if (unlimited || remainingTimes > 0) {
             return true;
         } else {
-            logger.trace("Remaining count is 0");
             return false;
         }
     }

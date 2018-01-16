@@ -17,8 +17,7 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.IPAddress;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FileReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
@@ -44,7 +43,7 @@ import java.util.Random;
  */
 public class KeyAndCertificateFactory {
 
-    private static final Logger logger = LoggerFactory.getLogger(KeyAndCertificateFactory.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(KeyAndCertificateFactory.class);
 
     private static final String PROVIDER_NAME = BouncyCastleProvider.PROVIDER_NAME;
     private static final String SIGNATURE_ALGORITHM = "SHA256WithRSAEncryption";
@@ -260,7 +259,7 @@ public class KeyAndCertificateFactory {
             saveCertificateAsPEMFile(mockServerPublicKey, "MockServerPublicKey.pem", true);
             saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey.pem", true);
         } catch (Exception e) {
-            logger.error("Error while refreshing certificates", e);
+            MOCK_SERVER_LOGGER.error("Error while refreshing certificates", e);
         }
         return this;
     }

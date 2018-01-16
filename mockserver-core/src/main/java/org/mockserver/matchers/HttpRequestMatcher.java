@@ -5,7 +5,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.*;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
@@ -20,7 +20,7 @@ import static org.mockserver.model.NottableString.string;
  */
 public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
-    private LoggingFormatter logFormatter;
+    private MockServerLogger mockServerLogger;
     private Expectation expectation;
     private HttpRequest httpRequest;
     private RegexStringMatcher methodMatcher = null;
@@ -34,9 +34,9 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private BooleanMatcher sslMatcher = null;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
-    public HttpRequestMatcher(HttpRequest httpRequest, LoggingFormatter logFormatter) {
+    public HttpRequestMatcher(HttpRequest httpRequest, MockServerLogger mockServerLogger) {
         this.httpRequest = httpRequest;
-        this.logFormatter = logFormatter;
+        this.mockServerLogger = mockServerLogger;
         if (httpRequest != null) {
             withMethod(httpRequest.getMethod());
             withPath(httpRequest.getPath());
@@ -47,14 +47,14 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             withKeepAlive(httpRequest.isKeepAlive());
             withSsl(httpRequest.isSecure());
         }
-        addFieldsExcludedFromEqualsAndHashCode("logFormatter", "objectMapper");
+        addFieldsExcludedFromEqualsAndHashCode("mockServerLogger", "objectMapper");
     }
 
 
-    public HttpRequestMatcher(Expectation expectation, LoggingFormatter logFormatter) {
+    public HttpRequestMatcher(Expectation expectation, MockServerLogger mockServerLogger) {
         this.expectation = expectation;
         this.httpRequest = expectation.getHttpRequest();
-        this.logFormatter = logFormatter;
+        this.mockServerLogger = mockServerLogger;
         if (httpRequest != null) {
             withMethod(httpRequest.getMethod());
             withPath(httpRequest.getPath());
@@ -65,7 +65,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             withKeepAlive(httpRequest.isKeepAlive());
             withSsl(httpRequest.isSecure());
         }
-        addFieldsExcludedFromEqualsAndHashCode("logFormatter", "objectMapper");
+        addFieldsExcludedFromEqualsAndHashCode("mockServerLogger", "objectMapper");
     }
 
     public Expectation getExpectation() {
@@ -73,15 +73,15 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     }
 
     private void withMethod(NottableString method) {
-        this.methodMatcher = new RegexStringMatcher(method);
+        this.methodMatcher = new RegexStringMatcher(mockServerLogger, method);
     }
 
     private void withPath(NottableString path) {
-        this.pathMatcher = new RegexStringMatcher(path);
+        this.pathMatcher = new RegexStringMatcher(mockServerLogger, path);
     }
 
     private void withQueryStringParameters(Parameters parameters) {
-        this.queryStringParameterMatcher = new MultiValueMapMatcher(parameters.toCaseInsensitiveRegexMultiMap());
+        this.queryStringParameterMatcher = new MultiValueMapMatcher(mockServerLogger, parameters.toCaseInsensitiveRegexMultiMap());
     }
 
     private void withBody(Body body) {
@@ -91,50 +91,50 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     StringBody stringBody = (StringBody) body;
                     bodyDTOMatcher = new StringBodyDTO(stringBody);
                     if (stringBody.isSubString()) {
-                        this.bodyMatcher = new SubStringMatcher(string(stringBody.getValue(), stringBody.getNot()));
+                        this.bodyMatcher = new SubStringMatcher(mockServerLogger, string(stringBody.getValue(), stringBody.getNot()));
                     } else {
-                        this.bodyMatcher = new ExactStringMatcher(string(stringBody.getValue(), stringBody.getNot()));
+                        this.bodyMatcher = new ExactStringMatcher(mockServerLogger, string(stringBody.getValue(), stringBody.getNot()));
                     }
                     break;
                 case REGEX:
                     RegexBody regexBody = (RegexBody) body;
                     bodyDTOMatcher = new RegexBodyDTO(regexBody);
-                    this.bodyMatcher = new RegexStringMatcher(string(regexBody.getValue(), regexBody.getNot()));
+                    this.bodyMatcher = new RegexStringMatcher(mockServerLogger, string(regexBody.getValue(), regexBody.getNot()));
                     break;
                 case PARAMETERS:
                     ParameterBody parameterBody = (ParameterBody) body;
                     bodyDTOMatcher = new ParameterBodyDTO(parameterBody);
-                    this.bodyMatcher = new ParameterStringMatcher(parameterBody.getValue());
+                    this.bodyMatcher = new ParameterStringMatcher(mockServerLogger, parameterBody.getValue());
                     break;
                 case XPATH:
                     XPathBody xPathBody = (XPathBody) body;
                     bodyDTOMatcher = new XPathBodyDTO(xPathBody);
-                    this.bodyMatcher = new XPathStringMatcher(xPathBody.getValue());
+                    this.bodyMatcher = new XPathStringMatcher(mockServerLogger, xPathBody.getValue());
                     break;
                 case XML:
                     XmlBody xmlBody = (XmlBody) body;
                     bodyDTOMatcher = new XmlBodyDTO(xmlBody);
-                    this.bodyMatcher = new XmlStringMatcher(xmlBody.getValue());
+                    this.bodyMatcher = new XmlStringMatcher(mockServerLogger, xmlBody.getValue());
                     break;
                 case JSON:
                     JsonBody jsonBody = (JsonBody) body;
                     bodyDTOMatcher = new JsonBodyDTO(jsonBody);
-                    this.bodyMatcher = new JsonStringMatcher(jsonBody.getValue(), jsonBody.getMatchType());
+                    this.bodyMatcher = new JsonStringMatcher(mockServerLogger, jsonBody.getValue(), jsonBody.getMatchType());
                     break;
                 case JSON_SCHEMA:
                     JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) body;
                     bodyDTOMatcher = new JsonSchemaBodyDTO(jsonSchemaBody);
-                    this.bodyMatcher = new JsonSchemaMatcher(jsonSchemaBody.getValue());
+                    this.bodyMatcher = new JsonSchemaMatcher(mockServerLogger, jsonSchemaBody.getValue());
                     break;
                 case XML_SCHEMA:
                     XmlSchemaBody xmlSchemaBody = (XmlSchemaBody) body;
                     bodyDTOMatcher = new XmlSchemaBodyDTO(xmlSchemaBody);
-                    this.bodyMatcher = new XmlSchemaMatcher(xmlSchemaBody.getValue());
+                    this.bodyMatcher = new XmlSchemaMatcher(mockServerLogger, xmlSchemaBody.getValue());
                     break;
                 case BINARY:
                     BinaryBody binaryBody = (BinaryBody) body;
                     bodyDTOMatcher = new BinaryBodyDTO(binaryBody);
-                    this.bodyMatcher = new BinaryMatcher(binaryBody.getValue());
+                    this.bodyMatcher = new BinaryMatcher(mockServerLogger, binaryBody.getValue());
                     break;
             }
             if (body.isNot()) {
@@ -144,22 +144,22 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     }
 
     private void withHeaders(Headers headers) {
-        this.headerMatcher = new MultiValueMapMatcher(headers.toCaseInsensitiveRegexMultiMap());
+        this.headerMatcher = new MultiValueMapMatcher(mockServerLogger, headers.toCaseInsensitiveRegexMultiMap());
     }
 
     private void withCookies(Cookies cookies) {
-        this.cookieMatcher = new HashMapMatcher(cookies.toCaseInsensitiveRegexMultiMap());
+        this.cookieMatcher = new HashMapMatcher(mockServerLogger, cookies.toCaseInsensitiveRegexMultiMap());
     }
 
     private void withKeepAlive(Boolean keepAlive) {
-        this.keepAliveMatcher = new BooleanMatcher(keepAlive);
+        this.keepAliveMatcher = new BooleanMatcher(mockServerLogger, keepAlive);
     }
 
     private void withSsl(Boolean isSsl) {
-        this.sslMatcher = new BooleanMatcher(isSsl);
+        this.sslMatcher = new BooleanMatcher(mockServerLogger, isSsl);
     }
 
-    public boolean matches(HttpRequest request) {
+    public boolean matches(HttpRequest context, HttpRequest request) {
         return matches(request, true);
     }
 
@@ -175,30 +175,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     boolean methodMatches = Strings.isNullOrEmpty(request.getMethod().getValue()) || matches(methodMatcher, request.getMethod());
                     boolean pathMatches = Strings.isNullOrEmpty(request.getPath().getValue()) || matches(pathMatcher, request.getPath());
                     boolean queryStringParametersMatches = matches(queryStringParameterMatcher, (request.getQueryStringParameterList() != null ? new ArrayList<KeyToMultiValue>(request.getQueryStringParameterList()) : null));
-                    boolean bodyMatches;
-                    String bodyAsString = request.getBody() != null ? new String(request.getBody().getRawBytes(), request.getBody().getCharset(Charsets.UTF_8)) : "";
-                    BodyDTO bodyDTO = null;
-                    try {
-                        bodyDTO = objectMapper.readValue(bodyAsString, BodyDTO.class);
-                    } catch (IOException e) {
-                        // ignore this exception as this exception will always get thrown for "normal" HTTP requests (i.e. not clear or retrieve)
-                    }
-                    if (bodyDTO == null || bodyDTOMatcher == null || bodyDTO.getType() == Body.Type.STRING) {
-                        if (bodyMatcher instanceof BinaryMatcher) {
-                            bodyMatches = matches(bodyMatcher, request.getBodyAsRawBytes());
-                        } else {
-                            if (bodyMatcher instanceof ExactStringMatcher ||
-                                bodyMatcher instanceof SubStringMatcher ||
-                                bodyMatcher instanceof RegexStringMatcher ||
-                                bodyMatcher instanceof XmlStringMatcher) {
-                                bodyMatches = matches(bodyMatcher, string(bodyAsString));
-                            } else {
-                                bodyMatches = matches(bodyMatcher, bodyAsString);
-                            }
-                        }
-                    } else {
-                        bodyMatches = bodyDTOMatcher.equals(bodyDTO);
-                    }
+                    boolean bodyMatches = bodyMatches(request, request.getMethod());
                     boolean headersMatch = matches(headerMatcher, (request.getHeaderList() != null ? new ArrayList<KeyToMultiValue>(request.getHeaderList()) : null));
                     boolean cookiesMatch = matches(cookieMatcher, (request.getCookieList() != null ? new ArrayList<KeyAndValue>(request.getCookieList()) : null));
                     boolean keepAliveMatches = matches(keepAliveMatcher, request.isKeepAlive());
@@ -227,9 +204,9 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                             if (not) {
                                 becauseBuilder.append(NEW_LINE).append("expectation's request matcher \'not\' operator is enabled");
                             }
-                            logFormatter.infoLog(request, "request:{}" + NEW_LINE + " did" + (totalResult ? "" : " not") + " match expectation:{}" + NEW_LINE + " because:{}", request, this, becauseBuilder.toString());
+                            mockServerLogger.info(request, "request:{}" + NEW_LINE + " did" + (totalResult ? "" : " not") + " match expectation:{}" + NEW_LINE + " because:{}", request, this, becauseBuilder.toString());
                         } else {
-                            logFormatter.infoLog(request, "request:{}" + NEW_LINE + " matched expectation:{}", request, this);
+                            mockServerLogger.info(request, "request:{}" + NEW_LINE + " matched expectation:{}", request, this);
                         }
                     }
                     matches = totalResultAfterNotOperatorApplied;
@@ -239,12 +216,39 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         return matches;
     }
 
+    private boolean bodyMatches(HttpRequest request, NottableString method) {
+        boolean bodyMatches = true;
+        String bodyAsString = request.getBody() != null ? new String(request.getBody().getRawBytes(), request.getBody().getCharset(Charsets.UTF_8)) : "";
+        if (!bodyAsString.isEmpty()) {
+            if (bodyMatcher instanceof BinaryMatcher) {
+                bodyMatches = matches(bodyMatcher, request.getBodyAsRawBytes());
+            } else {
+                if (bodyMatcher instanceof ExactStringMatcher ||
+                    bodyMatcher instanceof SubStringMatcher ||
+                    bodyMatcher instanceof RegexStringMatcher ||
+                    bodyMatcher instanceof XmlStringMatcher) {
+                    bodyMatches = matches(bodyMatcher, string(bodyAsString));
+                } else {
+                    bodyMatches = matches(bodyMatcher, bodyAsString);
+                }
+            }
+            if (!bodyMatches) {
+                try {
+                    bodyMatches = bodyDTOMatcher.equals(objectMapper.readValue(bodyAsString, BodyDTO.class));
+                } catch (IOException e) {
+                    // ignore this exception as this exception will always get thrown for "normal" HTTP requests (i.e. not clear or retrieve)
+                }
+            }
+        }
+        return bodyMatches;
+    }
+
     private <T> boolean matches(Matcher<T> matcher, T t) {
         boolean result = false;
 
         if (matcher == null) {
             result = true;
-        } else if (matcher.matches(t)) {
+        } else if (matcher.matches(null, t)) {
             result = true;
         }
 

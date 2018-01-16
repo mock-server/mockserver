@@ -4,7 +4,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.ssl.SslHandler;
-import org.slf4j.Logger;
+import org.mockserver.logging.MockServerLogger;
 
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
@@ -16,15 +16,15 @@ import static org.mockserver.unification.PortUnificationHandler.isSslEnabledDown
 
 public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
-    private final Logger logger;
+    private final MockServerLogger mockServerLogger;
     private volatile Channel upstreamChannel;
     private volatile Channel downstreamChannel;
 
-    public UpstreamProxyRelayHandler(Channel upstreamChannel, Channel downstreamChannel, Logger logger) {
+    public UpstreamProxyRelayHandler(MockServerLogger mockServerLogger, Channel upstreamChannel, Channel downstreamChannel) {
         super(false);
         this.upstreamChannel = upstreamChannel;
         this.downstreamChannel = downstreamChannel;
-        this.logger = logger;
+        this.mockServerLogger = mockServerLogger;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
                     ctx.channel().read();
                 } else {
                     if (isNotSocketClosedException(future.cause())) {
-                        logger.error("Exception while returning response for request \"" + request.method() + " " + request.uri() + "\"", future.cause());
+                        mockServerLogger.error("Exception while returning response for request \"" + request.method() + " " + request.uri() + "\"", future.cause());
                     }
                     future.channel().close();
                 }
@@ -65,7 +65,7 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            logger.warn("Exception caught by upstream relay handler -> closing pipeline " + ctx.channel(), cause);
+            mockServerLogger.error("Exception caught by upstream relay handler -> closing pipeline " + ctx.channel(), cause);
         }
         closeOnFlush(ctx.channel());
     }

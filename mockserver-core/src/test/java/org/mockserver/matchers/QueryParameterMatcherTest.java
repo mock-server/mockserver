@@ -1,6 +1,7 @@
 package org.mockserver.matchers;
 
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Parameter;
 import org.mockserver.model.KeyToMultiValue;
 import org.mockserver.model.KeysToMultiValues;
@@ -19,7 +20,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchMatchingParameter() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         )).matches(
@@ -27,7 +28,7 @@ public class QueryParameterMatcherTest {
             new Parameter("parameterTwoName", "parameterTwoValue")
         ));
 
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameter.*", "parameter.*")
         )).matches(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
@@ -38,7 +39,7 @@ public class QueryParameterMatcherTest {
     @Test
     public void shouldNotMatchMatchingParameterWhenNotApplied() {
         // given
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         )).matches(
@@ -47,7 +48,7 @@ public class QueryParameterMatcherTest {
         ));
 
         // then - not matcher
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ))).matches(
@@ -56,7 +57,7 @@ public class QueryParameterMatcherTest {
         ));
 
         // and - not parameter
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
         )).matches(
@@ -65,7 +66,7 @@ public class QueryParameterMatcherTest {
         ));
 
         // and - not matcher and not parameter
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
         ))).matches(
@@ -77,7 +78,7 @@ public class QueryParameterMatcherTest {
     @Test
     public void shouldMatchMatchingParameterWithNotParameterAndNormalParameter() {
         // not matching parameter
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
         )).matches(
@@ -86,7 +87,7 @@ public class QueryParameterMatcherTest {
         ));
 
         // not extra parameter
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue"),
             new Parameter(not("parameterThree"), not("parameterThreeValueOne"))
@@ -96,7 +97,7 @@ public class QueryParameterMatcherTest {
         ));
 
         // not only parameter
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter(not("parameterThree"), not("parameterThreeValueOne"))
         )).matches(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
@@ -104,7 +105,7 @@ public class QueryParameterMatcherTest {
         ));
 
         // not all parameters (but matching)
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter(not("parameter.*"), not(".*"))
         )).matches(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
@@ -112,7 +113,7 @@ public class QueryParameterMatcherTest {
         ));
 
         // not all parameters (but not matching name)
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter(not("parameter.*"), not("parameter.*"))
         )).matches(
             new Parameter("notParameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
@@ -120,7 +121,7 @@ public class QueryParameterMatcherTest {
         ));
 
         // not all parameters (but not matching value)
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter(not("parameter.*"), not("parameter.*"))
         )).matches(
             new Parameter("parameterOneName", "notParameterOneValueOne", "notParameterOneValueTwo"),
@@ -130,26 +131,26 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchMatchingParameterWithOnlyParameter() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter(not("parameterThree"), not("parameterThreeValueOne"))
         )).matches(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ));
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterThree", "parameterThreeValueOne")
         )).matches(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ));
 
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter(not("parameterOneName"), not("parameterOneValueOne"), not("parameterOneValueTwo"))
         )).matches(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ));
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo")
         )).matches(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
@@ -159,24 +160,24 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchMatchingParameterWithOnlyParameterForEmptyList() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new ArrayList<KeyToMultiValue>()
         )).matches(
             new Parameter("parameterThree", "parameterThreeValueOne")
         ));
 
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterThree", "parameterThreeValueOne")
-        )).matches(new ArrayList<KeyToMultiValue>()));
+        )).matches(null, new ArrayList<KeyToMultiValue>()));
 
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter(not("parameterThree"), not("parameterThreeValueOne"))
-        )).matches(new ArrayList<KeyToMultiValue>()));
+        )).matches(null, new ArrayList<KeyToMultiValue>()));
     }
 
     @Test
     public void shouldNotMatchMatchingParameterWithNotParameterAndNormalParameter() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
         )).matches(
@@ -187,7 +188,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldNotMatchMatchingParameterWithOnlyNotParameter() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
         )).matches(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
@@ -197,7 +198,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldNotMatchMatchingParameterWithOnlyNotParameterForBodyWithSingleParameter() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
         )).matches(
             new Parameter("parameterTwoName", "parameterTwoValue")
@@ -206,7 +207,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchNullExpectation() {
-        assertTrue(new MultiValueMapMatcher(null).matches(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),null).matches(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ));
@@ -214,7 +215,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldNotMatchNullExpectationWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(null))
+        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(),null))
             .matches(
                 new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
                 new Parameter("parameterTwoName", "parameterTwoValue")
@@ -223,7 +224,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchEmptyExpectation() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>())).matches(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>())).matches(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ));
@@ -232,7 +233,7 @@ public class QueryParameterMatcherTest {
     @Test
 
     public void shouldNotMatchEmptyExpectationWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>())))
+        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>())))
             .matches(
                 new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
                 new Parameter("parameterTwoName", "parameterTwoValue")
@@ -241,7 +242,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldNotMatchIncorrectParameterName() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         )).matches(
@@ -252,7 +253,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchIncorrectParameterNameWhenNotApplied() {
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ))).matches(
@@ -263,7 +264,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldNotMatchIncorrectParameterValue() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         )).matches(
@@ -274,7 +275,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchIncorrectParameterValueWhenNotApplied() {
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ))).matches(
@@ -285,7 +286,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldNotMatchIncorrectParameterNameAndValue() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         )).matches(
@@ -296,7 +297,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchIncorrectParameterNameAndValueWhenNotApplied() {
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ))).matches(
@@ -307,7 +308,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchNullParameterValue() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         )).matches(
@@ -318,7 +319,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldNotMatchNullParameterValueWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ))).matches(
@@ -329,7 +330,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchNullParameterValueInExpectation() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "")
         )).matches(
@@ -340,7 +341,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldNotMatchMissingParameter() {
-        assertFalse(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertFalse(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         )).matches(
@@ -350,7 +351,7 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchMissingParameterWhenNotApplied() {
-        assertTrue(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
+        assertTrue(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
         ))).matches(
@@ -360,21 +361,21 @@ public class QueryParameterMatcherTest {
 
     @Test
     public void shouldMatchNullTest() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap((List<KeyToMultiValue>) null)).matches((List<KeyToMultiValue>) null));
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap((List<KeyToMultiValue>) null)).matches(null, (List<KeyToMultiValue>) null));
     }
 
     @Test
     public void shouldNotMatchNullTestWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>()))).matches((List<KeyToMultiValue>) null));
+        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>()))).matches(null, (List<KeyToMultiValue>) null));
     }
 
     @Test
     public void shouldMatchEmptyTest() {
-        assertTrue(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap((List<KeyToMultiValue>) null)).matches(new ArrayList<KeyToMultiValue>()));
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap((List<KeyToMultiValue>) null)).matches(null, new ArrayList<KeyToMultiValue>()));
     }
 
     @Test
     public void shouldNotMatchEmptyTestWhenNotApplied() {
-        assertFalse(NotMatcher.not(new MultiValueMapMatcher(KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>()))).matches(new ArrayList<KeyToMultiValue>()));
+        assertFalse(NotMatcher.not(new MultiValueMapMatcher(new MockServerLogger(),KeysToMultiValues.toCaseInsensitiveRegexMultiMap(new ArrayList<KeyToMultiValue>()))).matches(null, new ArrayList<KeyToMultiValue>()));
     }
 }

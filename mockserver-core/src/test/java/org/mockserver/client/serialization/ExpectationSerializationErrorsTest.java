@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
@@ -38,7 +39,7 @@ public class ExpectationSerializationErrorsTest {
 
     @Before
     public void setupTestFixture() {
-        expectationSerializer = spy(new ExpectationSerializer());
+        expectationSerializer = spy(new ExpectationSerializer(new MockServerLogger()));
 
         initMocks(this);
     }

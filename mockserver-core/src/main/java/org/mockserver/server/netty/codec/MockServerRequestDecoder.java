@@ -6,11 +6,10 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 import org.mockserver.url.URLParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
 import java.util.List;
@@ -26,10 +25,11 @@ import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SE
  */
 public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRequest> {
 
-    private static final Logger logger = LoggerFactory.getLogger(MockServerRequestDecoder.class);
+    private final MockServerLogger mockServerLogger;
     private final boolean isSecure;
 
-    public MockServerRequestDecoder(boolean isSecure) {
+    public MockServerRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure) {
+        this.mockServerLogger = mockServerLogger;
         this.isSecure = isSecure;
     }
 
@@ -68,7 +68,7 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         try {
             httpRequest.withQueryStringParameters(queryStringDecoder.parameters());
         } catch (IllegalArgumentException iae) {
-            logger.debug("Exception while parsing query string", iae);
+            mockServerLogger.debug(httpRequest, "Exception while parsing query string", iae);
         }
     }
 

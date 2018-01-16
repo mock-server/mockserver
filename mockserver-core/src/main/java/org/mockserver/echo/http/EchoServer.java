@@ -10,11 +10,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.AttributeKey;
-import org.mockserver.filters.MockServerLog;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.filters.MockServerEventLog;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -25,12 +23,12 @@ import java.util.concurrent.TimeUnit;
 
 public class EchoServer {
 
-    static final AttributeKey<MockServerLog> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
+    static final AttributeKey<MockServerEventLog> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     static final AttributeKey<NextResponse> NEXT_RESPONSE = AttributeKey.valueOf("NEXT_RESPONSE");
     static final AttributeKey<OnlyResponse> ONLY_RESPONSE = AttributeKey.valueOf("ONLY_RESPONSE");
 
-    private final Logger logger = LoggerFactory.getLogger(EchoServer.class);
-    private final MockServerLog logFilter = new MockServerLog(new LoggingFormatter(logger, null));
+    private final MockServerLogger mockServerLogger = new MockServerLogger(EchoServer.class);
+    private final MockServerEventLog logFilter = new MockServerEventLog(mockServerLogger);
     private final NextResponse nextResponse = new NextResponse();
     private final OnlyResponse onlyResponse = new OnlyResponse();
     private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
@@ -51,7 +49,7 @@ public class EchoServer {
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 100)
                     .handler(new LoggingHandler("EchoServer Handler"))
-                    .childHandler(new EchoServerInitializer(secure, error))
+                    .childHandler(new EchoServerInitializer(mockServerLogger, secure, error))
                     .childAttr(LOG_FILTER, logFilter)
                     .childAttr(NEXT_RESPONSE, nextResponse)
                     .childAttr(ONLY_RESPONSE, onlyResponse)
@@ -75,7 +73,7 @@ public class EchoServer {
             boundPort.get();
             TimeUnit.MILLISECONDS.sleep(5);
         } catch (Exception e) {
-            logger.error("Exception while waiting for proxy to complete starting up", e);
+            mockServerLogger.error("Exception while waiting for proxy to complete starting up", e);
         }
     }
 
@@ -91,7 +89,7 @@ public class EchoServer {
         }
     }
 
-    public MockServerLog requestLogFilter() {
+    public MockServerEventLog requestLogFilter() {
         return logFilter;
     }
 

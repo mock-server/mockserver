@@ -9,6 +9,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 
 import java.io.IOException;
@@ -38,7 +39,7 @@ public class HttpRequestSerializationErrorsTest {
 
     @Before
     public void setupTestFixture() {
-        httpRequestSerializer = spy(new HttpRequestSerializer());
+        httpRequestSerializer = spy(new HttpRequestSerializer(new MockServerLogger()));
 
         initMocks(this);
     }

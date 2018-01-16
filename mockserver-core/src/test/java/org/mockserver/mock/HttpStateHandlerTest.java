@@ -15,7 +15,7 @@ import org.mockserver.log.model.ExpectationMatchLogEntry;
 import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
@@ -23,7 +23,6 @@ import org.mockserver.model.HttpResponse;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
@@ -45,12 +44,12 @@ public class HttpStateHandlerTest {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
     private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
-    private ExpectationSerializer httpExpectationSerializer = new ExpectationSerializer();
+    private ExpectationSerializer httpExpectationSerializer = new ExpectationSerializer(new MockServerLogger());
     private ExpectationToJavaSerializer httpExpectationToJavaSerializer = new ExpectationToJavaSerializer();
     @Mock
-    private LoggingFormatter mockLogFormatter;
+    private MockServerLogger mockLogFormatter;
     @InjectMocks
     private HttpStateHandler httpStateHandler;
 
@@ -78,8 +77,8 @@ public class HttpStateHandlerTest {
         // then - correct expectations removed
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
         // then - activity logged
-        verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).infoLog((HttpRequest) null, "clearing expectations and request logs that match:{}", (Object) null);
+        verify(mockLogFormatter).info(request("request_one"), "creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).info((HttpRequest) null, "clearing expectations and request logs that match:{}", (Object) null);
     }
 
     @Test
@@ -113,9 +112,9 @@ public class HttpStateHandlerTest {
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_two")), is(expectationTwo));
         // then - activity logged
-        verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).infoLog(request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).infoLog(request("request_one"), "clearing expectations and request logs that match:{}", request("request_one"));
+        verify(mockLogFormatter).info(request("request_one"), "creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).info(request("request_two"), "creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).info(request("request_one"), "clearing expectations and request logs that match:{}", request("request_one"));
     }
 
     @Test
@@ -151,9 +150,9 @@ public class HttpStateHandlerTest {
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(expectationOne));
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_two")), is(expectationTwo));
         // then - activity logged
-        verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).infoLog(request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).infoLog(request("request_one"), "clearing recorded requests and logs that match:{}", request("request_one"));
+        verify(mockLogFormatter).info(request("request_one"), "creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).info(request("request_two"), "creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).info(request("request_one"), "clearing recorded requests and logs that match:{}", request("request_one"));
     }
 
     @Test
@@ -191,9 +190,9 @@ public class HttpStateHandlerTest {
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_two")), is(expectationTwo));
         // then - activity logged
-        verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).infoLog(request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).infoLog(request("request_one"), "clearing expectations that match:{}", request("request_one"));
+        verify(mockLogFormatter).info(request("request_one"), "creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).info(request("request_two"), "creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).info(request("request_one"), "clearing expectations that match:{}", request("request_one"));
     }
 
     @Test
@@ -231,9 +230,9 @@ public class HttpStateHandlerTest {
                 request("request_one")
             )), JSON_UTF_8).withStatusCode(200))
         );
-        verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).infoLog(request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).infoLog(request("request_one"), "retrieving requests in json that match:{}", request("request_one"));
+        verify(mockLogFormatter).info(request("request_one"), "creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).info(request("request_two"), "creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).info(request("request_one"), "retrieving requests in json that match:{}", request("request_one"));
     }
 
     @Test
@@ -262,9 +261,9 @@ public class HttpStateHandlerTest {
                 request("request_one")
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
         );
-        verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).infoLog(request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).infoLog(request("request_one"), "retrieving requests in java that match:{}", request("request_one"));
+        verify(mockLogFormatter).info(request("request_one"), "creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).info(request("request_two"), "creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).info(request("request_one"), "retrieving requests in java that match:{}", request("request_one"));
     }
 
     @Test
@@ -288,7 +287,7 @@ public class HttpStateHandlerTest {
                 new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("request_three"))
             )), JSON_UTF_8).withStatusCode(200))
         );
-        verify(mockLogFormatter).infoLog(request("request_one"), "retrieving recorded_expectations in json that match:{}", request("request_one"));
+        verify(mockLogFormatter).info(request("request_one"), "retrieving recorded_expectations in json that match:{}", request("request_one"));
     }
 
     @Test
@@ -313,7 +312,7 @@ public class HttpStateHandlerTest {
                 new Expectation(request("request_one")).thenRespond(response("request_three"))
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
         );
-        verify(mockLogFormatter).infoLog(request("request_one"), "retrieving recorded_expectations in java that match:{}", request("request_one"));
+        verify(mockLogFormatter).info(request("request_one"), "retrieving recorded_expectations in java that match:{}", request("request_one"));
     }
 
     @Test
@@ -343,10 +342,10 @@ public class HttpStateHandlerTest {
                 expectationThree
             )), JSON_UTF_8).withStatusCode(200))
         );
-        verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).infoLog(request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationThree);
-        verify(mockLogFormatter).infoLog(request("request_one"), "retrieving active_expectations in json that match:{}", request("request_one"));
+        verify(mockLogFormatter).info(request("request_one"), "creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).info(request("request_two"), "creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).info(request("request_one"), "creating expectation:{}", expectationThree);
+        verify(mockLogFormatter).info(request("request_one"), "retrieving active_expectations in json that match:{}", request("request_one"));
     }
 
     @Test
@@ -377,10 +376,10 @@ public class HttpStateHandlerTest {
                 expectationThree
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
         );
-        verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).infoLog(request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationThree);
-        verify(mockLogFormatter).infoLog(request("request_one"), "retrieving active_expectations in java that match:{}", request("request_one"));
+        verify(mockLogFormatter).info(request("request_one"), "creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).info(request("request_two"), "creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).info(request("request_one"), "creating expectation:{}", expectationThree);
+        verify(mockLogFormatter).info(request("request_one"), "retrieving active_expectations in java that match:{}", request("request_one"));
     }
 
     @Test
@@ -408,7 +407,7 @@ public class HttpStateHandlerTest {
                     logEntryThree.getTimeStamp() + " - " + logEntryThree.getMessage() + "\n",
                 PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
-        verify(mockLogFormatter).infoLog(request("request_one"), "retrieving logs that match:{}", request("request_one"));
+        verify(mockLogFormatter).info(request("request_one"), "retrieving logs that match:{}", request("request_one"));
     }
 
     @Test
@@ -449,8 +448,8 @@ public class HttpStateHandlerTest {
         // then - correct expectations removed
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
         // then - activity logged
-        verify(mockLogFormatter).infoLog(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).infoLog(request(), "resetting all expectations and request logs" + NEW_LINE);
+        verify(mockLogFormatter).info(request("request_one"), "creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).info(request(), "resetting all expectations and request logs" + NEW_LINE);
     }
 
 }

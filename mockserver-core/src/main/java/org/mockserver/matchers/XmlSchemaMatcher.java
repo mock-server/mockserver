@@ -1,6 +1,10 @@
 package org.mockserver.matchers;
 
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.xmlschema.XmlSchemaValidator;
+
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * See http://xml-schema.org/
@@ -8,19 +12,21 @@ import org.mockserver.validator.xmlschema.XmlSchemaValidator;
  * @author jamesdbloom
  */
 public class XmlSchemaMatcher extends BodyMatcher<String> {
+    private final MockServerLogger mockServerLogger;
     private String schema;
     private XmlSchemaValidator xmlSchemaValidator;
 
-    public XmlSchemaMatcher(String schema) {
+    public XmlSchemaMatcher(MockServerLogger mockServerLogger, String schema) {
+        this.mockServerLogger = mockServerLogger;
         this.schema = schema;
-        xmlSchemaValidator = new XmlSchemaValidator(schema);
+        xmlSchemaValidator = new XmlSchemaValidator(mockServerLogger, schema);
     }
 
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
         return new String[]{"logger", "xmlSchemaValidator"};
     }
 
-    public boolean matches(String matched) {
+    public boolean matches(HttpRequest context, String matched) {
         boolean result = false;
 
         try {
@@ -29,10 +35,10 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
             result = validation.isEmpty();
 
             if (!result) {
-                logger.trace("Failed to perform XML match \"{}\" with schema \"{}\" because {}", matched, this.schema, validation);
+                mockServerLogger.trace(context, "Failed to match XML: {}" + NEW_LINE + "with schema: {}" + NEW_LINE + "because: {}", matched, this.schema, validation);
             }
         } catch (Exception e) {
-            logger.trace("Failed to perform XML match \"{}\" with schema \"{}\" because {}", matched, this.schema, e.getMessage());
+            mockServerLogger.trace(context, "Failed to match XML: {}" + NEW_LINE + "with schema: {}" + NEW_LINE + "because: {}", matched, this.schema, e.getMessage());
         }
 
         return reverseResultIfNot(result);

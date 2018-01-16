@@ -1,6 +1,5 @@
 package org.mockserver.unification;
 
-import com.google.common.annotations.VisibleForTesting;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpContentDecompressor;
@@ -13,8 +12,8 @@ import io.netty.handler.codec.socks.SocksProtocolVersion;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import org.mockserver.logging.LoggingHandler;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.proxy.socks.SocksProxyHandler;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
@@ -27,6 +26,7 @@ import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.proxy.Proxy.LOCAL_HOST_HEADERS;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -37,11 +37,16 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     private static final AttributeKey<Boolean> SSL_ENABLED_UPSTREAM = AttributeKey.valueOf("PROXY_SSL_ENABLED_UPSTREAM");
     private static final AttributeKey<Boolean> SSL_ENABLED_DOWNSTREAM = AttributeKey.valueOf("SSL_ENABLED_DOWNSTREAM");
 
-    @VisibleForTesting
-    public static Logger logger = LoggerFactory.getLogger(PortUnificationHandler.class);
+    protected final MockServerLogger mockServerLogger;
+    private final LoggingHandler loggingHandler = new LoggingHandler(LoggerFactory.getLogger(PortUnificationHandler.class));
+    private final SocksProxyHandler socksProxyHandler;
+    private final SocksMessageEncoder socksMessageEncoder = new SocksMessageEncoder();
+    private final HttpContentLengthRemover httpContentLengthRemover = new HttpContentLengthRemover();
 
-    public PortUnificationHandler() {
+    public PortUnificationHandler(MockServerLogger mockServerLogger) {
         super(false);
+        this.mockServerLogger = mockServerLogger;
+        this.socksProxyHandler = new SocksProxyHandler(mockServerLogger);
     }
 
     public static void enabledSslUpstreamAndDownstream(Channel channel) {
@@ -92,14 +97,14 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
             ctx.close();
         }
 
-        if (logger.isTraceEnabled()) {
+        if (mockServerLogger.isEnabled(TRACE)) {
             if (ctx.pipeline().get(LoggingHandler.class) != null) {
                 ctx.pipeline().remove(LoggingHandler.class);
             }
             if (ctx.pipeline().get(SslHandler.class) != null) {
-                ctx.pipeline().addAfter("SslHandler#0", "LoggingHandler#0", new LoggingHandler(logger));
+                ctx.pipeline().addAfter("SslHandler#0", "LoggingHandler#0", loggingHandler);
             } else {
-                ctx.pipeline().addFirst(new LoggingHandler(logger));
+                ctx.pipeline().addFirst(loggingHandler);
             }
         }
     }
@@ -157,8 +162,8 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
 
     private void enableSocks(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
-        pipeline.addFirst(new SocksProxyHandler());
-        pipeline.addFirst(new SocksMessageEncoder());
+        pipeline.addFirst(socksProxyHandler);
+        pipeline.addFirst(socksMessageEncoder);
         pipeline.addFirst(new SocksInitRequestDecoder());
 
         // re-unify (with SOCKS enabled)
@@ -170,11 +175,11 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
 
         addLastIfNotPresent(pipeline, new HttpServerCodec(8192, 8192, 8192));
         addLastIfNotPresent(pipeline, new HttpContentDecompressor());
-        addLastIfNotPresent(pipeline, new HttpContentLengthRemover());
+        addLastIfNotPresent(pipeline, httpContentLengthRemover);
         addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));
 
-        if (logger.isDebugEnabled()) {
-            addLastIfNotPresent(pipeline, new LoggingHandler(logger));
+        if (mockServerLogger.isEnabled(TRACE)) {
+            addLastIfNotPresent(pipeline, loggingHandler);
         }
         configurePipeline(ctx, pipeline);
         pipeline.remove(this);
@@ -215,7 +220,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            logger.warn("Exception caught by port unification handler -> closing pipeline " + ctx.channel(), cause);
+            mockServerLogger.error("Exception caught by port unification handler -> closing pipeline " + ctx.channel(), cause);
         }
         closeOnFlush(ctx.channel());
     }

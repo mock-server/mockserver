@@ -1,6 +1,6 @@
 package org.mockserver.matchers;
 
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 
@@ -9,9 +9,9 @@ import org.mockserver.model.HttpRequest;
  */
 public class MatcherBuilder {
 
-    private final LoggingFormatter logFormatter;
+    private final MockServerLogger logFormatter;
 
-    public MatcherBuilder(LoggingFormatter logFormatter) {
+    public MatcherBuilder(MockServerLogger logFormatter) {
         this.logFormatter = logFormatter;
     }
 

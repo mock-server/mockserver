@@ -2,10 +2,9 @@ package org.mockserver.validator.xmlschema;
 
 import com.google.common.base.Strings;
 import org.mockserver.file.FileReader;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.validator.Validator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -24,10 +23,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
     private final static SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+    private final MockServerLogger mockServerLogger;
     private final Schema schema;
-    public Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public XmlSchemaValidator(String schema) {
+    public XmlSchemaValidator(MockServerLogger mockServerLogger, String schema) {
+        this.mockServerLogger = mockServerLogger;
         try {
             if (schema.trim().endsWith(">") || Strings.isNullOrEmpty(schema)) {
                 this.schema = schemaFactory.newSchema(new StreamSource(new StringReader(schema)));
@@ -53,7 +53,7 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
                 errorMessage = e.getMessage();
             }
         } catch (Exception e) {
-            logger.info("Exception validating JSON", e);
+            mockServerLogger.info("Exception validating JSON", e);
             return e.getClass().getSimpleName() + " - " + e.getMessage();
         }
         return errorMessage;

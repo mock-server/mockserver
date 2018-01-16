@@ -9,6 +9,7 @@ import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
@@ -4331,20 +4332,20 @@ public abstract class AbstractExtendedClientServerIntegrationTest extends Abstra
 
         // then
         verifyRequestsMatches(
-            new HttpRequestSerializer().deserializeArray(mockServerClient.retrieveRecordedRequests(request().withPath(calculatePath("some_path.*")), Format.JSON)),
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request().withPath(calculatePath("some_path.*")), Format.JSON)),
             request(calculatePath("some_path_one")),
             request(calculatePath("some_path_three"))
         );
 
         verifyRequestsMatches(
-            new HttpRequestSerializer().deserializeArray(mockServerClient.retrieveRecordedRequests(request(), Format.JSON)),
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(request(), Format.JSON)),
             request(calculatePath("some_path_one")),
             request(calculatePath("not_found")),
             request(calculatePath("some_path_three"))
         );
 
         verifyRequestsMatches(
-            new HttpRequestSerializer().deserializeArray(mockServerClient.retrieveRecordedRequests(null, Format.JSON)),
+            new HttpRequestSerializer(new MockServerLogger()).deserializeArray(mockServerClient.retrieveRecordedRequests(null, Format.JSON)),
             request(calculatePath("some_path_one")),
             request(calculatePath("not_found")),
             request(calculatePath("some_path_three"))
@@ -4366,7 +4367,7 @@ public abstract class AbstractExtendedClientServerIntegrationTest extends Abstra
         // then
         assertThat(
             mockServerClient.retrieveActiveExpectations(request().withPath(calculatePath("some_path.*")), Format.JSON),
-            is(new ExpectationSerializer().serialize(Arrays.asList(
+            is(new ExpectationSerializer(new MockServerLogger()).serialize(Arrays.asList(
                 new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
@@ -4376,7 +4377,7 @@ public abstract class AbstractExtendedClientServerIntegrationTest extends Abstra
 
         assertThat(
             mockServerClient.retrieveActiveExpectations(null, Format.JSON),
-            is(new ExpectationSerializer().serialize(Arrays.asList(
+            is(new ExpectationSerializer(new MockServerLogger()).serialize(Arrays.asList(
                 new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
@@ -4390,7 +4391,7 @@ public abstract class AbstractExtendedClientServerIntegrationTest extends Abstra
 
         assertThat(
             mockServerClient.retrieveActiveExpectations(request(), Format.JSON),
-            is(new ExpectationSerializer().serialize(Arrays.asList(
+            is(new ExpectationSerializer(new MockServerLogger()).serialize(Arrays.asList(
                 new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
@@ -4481,7 +4482,7 @@ public abstract class AbstractExtendedClientServerIntegrationTest extends Abstra
             );
 
             // then
-            Expectation[] recordedExpectations = new ExpectationSerializer().deserializeArray(
+            Expectation[] recordedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(
                 mockServerClient.retrieveRecordedExpectations(request().withPath(calculatePath("some_path_one")), Format.JSON)
             );
             assertThat(recordedExpectations.length, is(1));
@@ -4493,7 +4494,7 @@ public abstract class AbstractExtendedClientServerIntegrationTest extends Abstra
             );
             assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
             // and
-            recordedExpectations = new ExpectationSerializer().deserializeArray(
+            recordedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(
                 mockServerClient.retrieveRecordedExpectations(request(), Format.JSON)
             );
             assertThat(recordedExpectations.length, is(2));
@@ -4508,7 +4509,7 @@ public abstract class AbstractExtendedClientServerIntegrationTest extends Abstra
             assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
             assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
             // and
-            recordedExpectations = new ExpectationSerializer().deserializeArray(
+            recordedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(
                 mockServerClient.retrieveRecordedExpectations(null, Format.JSON)
             );
             assertThat(recordedExpectations.length, is(2));

@@ -2,36 +2,28 @@ package org.mockserver.client.serialization.deserializers.body;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.JsonTokenId;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.net.MediaType;
 import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.model.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import static org.mockserver.model.NottableString.deserializeNottableString;
 import static org.mockserver.model.NottableString.string;
-import static org.mockserver.model.Parameter.param;
 
 /**
  * @author jamesdbloom
  */
 public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
-
-    private static final Logger logger = LoggerFactory.getLogger(BodyDTODeserializer.class);
 
     private static Map<String, Body.Type> fieldNameToType = new HashMap<>();
 
@@ -47,6 +39,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         fieldNameToType.put("xpath".toLowerCase(), Body.Type.XPATH);
     }
 
+    private final MockServerLogger mockServerLogger = new MockServerLogger(BodyDTODeserializer.class);
     private final Base64Converter base64Converter = new Base64Converter();
 
     public BodyDTODeserializer() {
@@ -72,7 +65,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     try {
                         type = Body.Type.valueOf(jsonParser.getText());
                     } catch (IllegalArgumentException iae) {
-                        logger.debug("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.debug("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "xml", "xmlSchema", "base64Bytes") && type != Body.Type.PARAMETERS) {
@@ -94,7 +87,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     try {
                         matchType = MatchType.valueOf(jsonParser.getText());
                     } catch (IllegalArgumentException iae) {
-                        logger.warn("Ignoring incorrect JsonBodyMatchType with value \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.debug("Ignoring incorrect JsonBodyMatchType with value \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("subString")) {
@@ -102,7 +95,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     try {
                         subString = jsonParser.getBooleanValue();
                     } catch (IllegalArgumentException uce) {
-                        logger.warn("Ignoring unsupported boolean with value \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.debug("Ignoring unsupported boolean with value \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("contentType")) {
@@ -110,7 +103,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     try {
                         contentType = MediaType.parse(jsonParser.getText());
                     } catch (IllegalArgumentException uce) {
-                        logger.warn("Ignoring unsupported MediaType with value \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.debug("Ignoring unsupported MediaType with value \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("charset")) {
@@ -118,9 +111,9 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     try {
                         charset = Charset.forName(jsonParser.getText());
                     } catch (UnsupportedCharsetException uce) {
-                        logger.warn("Ignoring unsupported Charset with value \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.debug("Ignoring unsupported Charset with value \"" + jsonParser.getText() + "\"");
                     } catch (IllegalCharsetNameException icne) {
-                        logger.warn("Ignoring invalid Charset with value \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.debug("Ignoring invalid Charset with value \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("parameters")) {

@@ -27,15 +27,13 @@ import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockserver.mock.HttpStateHandler.STATE_HANDLER;
-import static org.mockserver.proxy.Proxy.HTTP_PROXY;
 
-public class HttpProxyUnificationHandlerTest {
+public class HttpProxyUnificationInitializerTest {
 
     @Test
     public void shouldSwitchToSsl() {
         // given
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationHandler());
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationInitializer(mock(Proxy.class), new HttpStateHandler()));
 
         // and - no SSL handler
         assertThat(embeddedChannel.pipeline().get(SslHandler.class), is(nullValue()));
@@ -52,7 +50,7 @@ public class HttpProxyUnificationHandlerTest {
         // then - should add SSL handlers first
         assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
             "SslHandler#0",
-            "HttpProxyUnificationHandler#0",
+            "HttpProxyUnificationInitializer#0",
             "DefaultChannelPipeline$TailContext#0"
         ));
     }
@@ -61,11 +59,8 @@ public class HttpProxyUnificationHandlerTest {
     public void shouldSwitchToSOCKS() throws IOException, InterruptedException {
         // given - embedded channel
         short localPort = 1234;
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationHandler());
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationInitializer(mock(Proxy.class), new HttpStateHandler()));
         embeddedChannel.attr(HttpProxy.HTTP_CONNECT_SOCKET).set(new InetSocketAddress(localPort));
-
-        // and - mock logger
-        RelayConnectHandler.logger = mock(Logger.class);
 
         // and - no SOCKS handlers
         assertThat(embeddedChannel.pipeline().get(SocksProxyHandler.class), is(nullValue()));
@@ -92,7 +87,7 @@ public class HttpProxyUnificationHandlerTest {
             "SocksCmdRequestDecoder#0",
             "SocksMessageEncoder#0",
             "SocksProxyHandler#0",
-            "HttpProxyUnificationHandler#0",
+            "HttpProxyUnificationInitializer#0",
             "DefaultChannelPipeline$TailContext#0"
         ));
     }
@@ -101,9 +96,7 @@ public class HttpProxyUnificationHandlerTest {
     public void shouldSwitchToHttp() {
         // given
         EmbeddedChannel embeddedChannel = new EmbeddedChannel();
-        embeddedChannel.attr(STATE_HANDLER).set(new HttpStateHandler());
-        embeddedChannel.attr(HTTP_PROXY).set(mock(Proxy.class));
-        embeddedChannel.pipeline().addLast(new HttpProxyUnificationHandler());
+        embeddedChannel.pipeline().addLast(new HttpProxyUnificationInitializer(mock(Proxy.class), new HttpStateHandler()));
 
         // and - no HTTP handlers
         assertThat(embeddedChannel.pipeline().get(HttpServerCodec.class), is(nullValue()));
@@ -130,7 +123,7 @@ public class HttpProxyUnificationHandlerTest {
     @Test
     public void shouldSupportUnknownProtocol() {
         // given
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationHandler());
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationInitializer(mock(Proxy.class), new HttpStateHandler()));
 
         // and - channel open
         assertThat(embeddedChannel.isOpen(), is(true));

@@ -7,7 +7,8 @@ import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.filters.MockServerLog;
+import org.mockserver.filters.MockServerEventLog;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -40,7 +41,7 @@ public class MockServerClientIntegrationTest {
 
     private static MockServerClient mockServerClient;
     private static EchoServer echoServer;
-    private static MockServerLog logFilter;
+    private static MockServerEventLog logFilter;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -920,7 +921,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new HttpRequestSerializer().serialize(Arrays.asList(
+                .withBody(new StringBody(new HttpRequestSerializer(new MockServerLogger()).serialize(Arrays.asList(
                     request("/some_request_one"),
                     request("/some_request_two")
                 ))))
@@ -969,7 +970,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new HttpRequestSerializer().serialize(Arrays.asList(
+                .withBody(new StringBody(new HttpRequestSerializer(new MockServerLogger()).serialize(Arrays.asList(
                     request("/some_request_one"),
                     request("/some_request_two")
                 ))))
@@ -1008,7 +1009,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRequestsAsJson() {
         // given
-        String serializedRequests = new HttpRequestSerializer().serialize(Arrays.asList(
+        String serializedRequests = new HttpRequestSerializer(new MockServerLogger()).serialize(Arrays.asList(
             request("/some_request_one"),
             request("/some_request_two")
         ));
@@ -1107,7 +1108,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new ExpectationSerializer().serialize(
+                .withBody(new StringBody(new ExpectationSerializer(new MockServerLogger()).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
                 )))
@@ -1156,7 +1157,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new ExpectationSerializer().serialize(
+                .withBody(new StringBody(new ExpectationSerializer(new MockServerLogger()).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
                 )))
@@ -1195,7 +1196,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveActiveExpectationsAsJson() {
         // given
-        String serializeExpectations = new ExpectationSerializer().serialize(
+        String serializeExpectations = new ExpectationSerializer(new MockServerLogger()).serialize(
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         );
@@ -1294,7 +1295,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new ExpectationSerializer().serialize(
+                .withBody(new StringBody(new ExpectationSerializer(new MockServerLogger()).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
                 )))
@@ -1343,7 +1344,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new ExpectationSerializer().serialize(
+                .withBody(new StringBody(new ExpectationSerializer(new MockServerLogger()).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
                 )))
@@ -1382,7 +1383,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRecordedExpectationsAsJson() {
         // given
-        String serializeExpectations = new ExpectationSerializer().serialize(
+        String serializeExpectations = new ExpectationSerializer(new MockServerLogger()).serialize(
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         );

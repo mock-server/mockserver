@@ -1,16 +1,13 @@
 package org.mockserver.callback;
 
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.HttpStateHandler;
 
 import java.util.UUID;
 
@@ -20,16 +17,19 @@ import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException
 /**
  * @author jamesdbloom
  */
+@ChannelHandler.Sharable
 public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter {
 
     private static final AttributeKey<Boolean> CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET = AttributeKey.valueOf("CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET");
     private static final String UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI = "/_mockserver_callback_websocket";
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     private WebSocketServerHandshaker handshaker;
     private WebSocketClientRegistry webSocketClientRegistry;
+    private final MockServerLogger mockServerLogger;
 
-    public CallbackWebSocketServerHandler(WebSocketClientRegistry webSocketClientRegistry) {
-        this.webSocketClientRegistry = webSocketClientRegistry;
+    public CallbackWebSocketServerHandler(HttpStateHandler httpStateHandler) {
+        webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();
+        mockServerLogger = httpStateHandler.getMockServerLogger();
     }
 
     @Override
@@ -98,7 +98,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            logger.error("web socket server caught exception", cause);
+            mockServerLogger.error("web socket server caught exception", cause);
         }
         ctx.close();
     }

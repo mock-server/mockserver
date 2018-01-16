@@ -7,7 +7,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.client.serialization.model.HttpResponseDTO;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
@@ -33,7 +33,7 @@ public class VelocityTemplateEngineTest {
     public ExpectedException exception = ExpectedException.none();
 
     @Mock
-    private LoggingFormatter logFormatter;
+    private MockServerLogger logFormatter;
 
     @Before
     public void setupTestFixture() {
@@ -68,7 +68,7 @@ public class VelocityTemplateEngineTest {
                 .withStatusCode(200)
                 .withBody("{'name': 'value'}")
         ));
-        verify(logFormatter).infoLog(eq(request), startsWith("Generated output:"), anyVararg());
+        verify(logFormatter).info(eq(request), startsWith("Generated output:"), anyVararg());
     }
 
     @Test
@@ -98,7 +98,7 @@ public class VelocityTemplateEngineTest {
                 .withStatusCode(406)
                 .withBody("some_body")
         ));
-        verify(logFormatter).infoLog(eq(request), startsWith("Generated output:"), anyVararg());
+        verify(logFormatter).info(eq(request), startsWith("Generated output:"), anyVararg());
     }
 
     @Test
@@ -136,7 +136,7 @@ public class VelocityTemplateEngineTest {
                 .withSecure(true)
                 .withBody("some_body")
         ));
-        verify(logFormatter).infoLog(eq(request), startsWith("Generated output:"), anyVararg());
+        verify(logFormatter).info(eq(request), startsWith("Generated output:"), anyVararg());
     }
 
     @Test
@@ -171,7 +171,7 @@ public class VelocityTemplateEngineTest {
                 .withQueryStringParameter("queryParameter", "someValue")
                 .withBody("{'name': 'value'}")
         ));
-        verify(logFormatter).infoLog(eq(request), startsWith("Generated output:"), anyVararg());
+        verify(logFormatter).info(eq(request), startsWith("Generated output:"), anyVararg());
     }
 
     @Test

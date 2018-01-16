@@ -6,12 +6,10 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.logging.LoggingFormatter;
-import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpClassCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
@@ -19,9 +17,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isNull;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpRequest.request;
@@ -33,7 +29,7 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public class HttpForwardClassCallbackActionHandlerTest {
 
-    private LoggingFormatter logFormatter;
+    private MockServerLogger logFormatter;
 
     @Mock
     private NettyHttpClient httpClient;
@@ -43,7 +39,7 @@ public class HttpForwardClassCallbackActionHandlerTest {
 
     @Before
     public void setupFixture() {
-        logFormatter = new LoggingFormatter(LoggerFactory.getLogger(HttpForwardClassCallbackActionHandlerTest.class), new HttpStateHandler());
+        logFormatter = new MockServerLogger(HttpForwardClassCallbackActionHandlerTest.class);
         httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(logFormatter);
         // SettableFuture<HttpResponse> httpResponse = SettableFuture.create();
 

@@ -1,20 +1,14 @@
 package org.mockserver.mock.action;
 
 import com.google.common.util.concurrent.SettableFuture;
-import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
-import org.mockserver.filters.HopByHopHeaderFilter;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.javascript.JavaScriptTemplateEngine;
 import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
-
-import java.util.Arrays;
-
-import static org.mockserver.model.HttpResponse.notFoundResponse;
 
 /**
  * @author jamesdbloom
@@ -24,7 +18,7 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
     private JavaScriptTemplateEngine javaScriptTemplateEngine;
     private VelocityTemplateEngine velocityTemplateEngine;
 
-    public HttpForwardTemplateActionHandler(LoggingFormatter logFormatter) {
+    public HttpForwardTemplateActionHandler(MockServerLogger logFormatter) {
         super(logFormatter);
         javaScriptTemplateEngine = new JavaScriptTemplateEngine(logFormatter);
         velocityTemplateEngine = new VelocityTemplateEngine(logFormatter);

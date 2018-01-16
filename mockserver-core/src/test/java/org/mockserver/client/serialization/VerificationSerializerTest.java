@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.client.serialization.model.VerificationDTO;
 import org.mockserver.client.serialization.model.VerificationTimesDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
@@ -61,7 +62,7 @@ public class VerificationSerializerTest {
 
     @Before
     public void setupTestFixture() {
-        verificationSerializer = spy(new VerificationSerializer());
+        verificationSerializer = spy(new VerificationSerializer(new MockServerLogger()));
 
         initMocks(this);
     }

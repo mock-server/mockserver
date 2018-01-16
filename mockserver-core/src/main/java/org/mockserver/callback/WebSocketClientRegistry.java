@@ -6,6 +6,7 @@ import org.mockserver.client.netty.websocket.WebSocketException;
 import org.mockserver.client.serialization.WebSocketMessageSerializer;
 import org.mockserver.client.serialization.model.WebSocketClientIdDTO;
 import org.mockserver.collections.CircularHashMap;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
@@ -14,7 +15,7 @@ import org.mockserver.model.HttpResponse;
  */
 public class WebSocketClientRegistry {
 
-    private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer();
+    private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer(new MockServerLogger());
     private CircularHashMap<String, ChannelHandlerContext> clientRegistry = new CircularHashMap<>(100);
     private CircularHashMap<String, WebSocketResponseCallback> callbackResponseRegistry = new CircularHashMap<>(100);
     private CircularHashMap<String, WebSocketRequestCallback> callbackForwardRegistry = new CircularHashMap<>(100);

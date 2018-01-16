@@ -4,31 +4,21 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import org.mockserver.configuration.IntegerStringListParser;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mockserver.MockServerBuilder;
 import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.stop.StopEventQueue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
 import java.util.*;
 
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
  */
 public class Main {
-    static {
-        if (System.getProperty("logback.configurationFile") == null) {
-            System.setProperty("logback.configurationFile", "example_logback.xml");
-        }
-    }
-
-    private static final String SERVER_PORT_KEY = "serverPort";
-    private static final String PROXY_PORT_KEY = "proxyPort";
-    private static final String PROXY_REMOTE_PORT_KEY = "proxyRemotePort";
-    private static final String PROXY_REMOTE_HOST_KEY = "proxyRemoteHost";
     static final String USAGE = "" +
         "   java -jar <path to mockserver-jetty-jar-with-dependencies.jar> [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]" + NEW_LINE +
         "                                                                                       " + NEW_LINE +
@@ -58,8 +48,11 @@ public class Main {
         "                                                                                       " + NEW_LINE +
         "   i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com" + NEW_LINE +
         "                                                                                       " + NEW_LINE;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
+    private static final String SERVER_PORT_KEY = "serverPort";
+    private static final String PROXY_PORT_KEY = "proxyPort";
+    private static final String PROXY_REMOTE_PORT_KEY = "proxyRemotePort";
+    private static final String PROXY_REMOTE_HOST_KEY = "proxyRemoteHost";
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(Main.class);
     private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
     @VisibleForTesting
     static ProxyBuilder httpProxyBuilder = new ProxyBuilder();
@@ -73,6 +66,11 @@ public class Main {
     static Runtime runtime = Runtime.getRuntime();
     private static boolean usagePrinted = false;
 
+    static {
+        if (System.getProperty("logback.configurationFile") == null) {
+            System.setProperty("logback.configurationFile", "example_logback.xml");
+        }
+    }
 
     /**
      * Run the MockServer directly providing the parseArguments for the server and httpProxyBuilder as the only input parameters (if not provided the server port defaults to 8080 and the httpProxyBuilder is not started).
@@ -88,8 +86,8 @@ public class Main {
 
         Map<String, String> parsedArguments = parseArguments(arguments);
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(NEW_LINE + NEW_LINE + "Using command line options: " +
+        if (MOCK_SERVER_LOGGER.isEnabled(DEBUG)) {
+            MOCK_SERVER_LOGGER.debug(NEW_LINE + NEW_LINE + "Using command line options: " +
                 Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments) + NEW_LINE);
         }
 

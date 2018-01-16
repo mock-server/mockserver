@@ -6,12 +6,12 @@ import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.Queues;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.log.model.*;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.Expectation;
-import org.mockserver.ui.MockServerLogNotifier;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.ui.MockServerEventLogNotifier;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 
@@ -22,7 +22,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 /**
  * @author jamesdbloom
  */
-public class MockServerLog extends MockServerLogNotifier {
+public class MockServerEventLog extends MockServerEventLogNotifier {
 
     private final static List<Class<? extends LogEntry>> MESSAGE_LOG_TYPES = Collections.<Class<? extends LogEntry>>singletonList(
         MessageLogEntry.class
@@ -32,14 +32,9 @@ public class MockServerLog extends MockServerLogNotifier {
         RequestResponseLogEntry.class,
         ExpectationMatchLogEntry.class
     );
-    private final static List<Class<? extends LogEntry>> EXPECTATION_LOG_TYPES = Arrays.<Class<? extends LogEntry>>asList(
+    private final static List<Class<? extends LogEntry>> EXPECTATION_LOG_TYPES = Collections.<Class<? extends LogEntry>>singletonList(
         RequestResponseLogEntry.class
     );
-    public static Predicate<LogEntry> notMessageLogEntryPredicate = new Predicate<LogEntry>() {
-        public boolean apply(LogEntry logEntry) {
-            return !(logEntry instanceof MessageLogEntry);
-        }
-    };
     static Predicate<LogEntry> messageLogPredicate = new Predicate<LogEntry>() {
         public boolean apply(LogEntry input) {
             return MESSAGE_LOG_TYPES.contains(input.getClass());
@@ -65,11 +60,10 @@ public class MockServerLog extends MockServerLogNotifier {
             return ((ExpectationLogEntry) logEntry).getExpectation();
         }
     };
-    private final LoggingFormatter logFormatter;
-
+    private MockServerLogger logFormatter;
     private Queue<LogEntry> requestLog = Queues.synchronizedQueue(EvictingQueue.<LogEntry>create(100));
     private MatcherBuilder matcherBuilder;
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+    private HttpRequestSerializer httpRequestSerializer;
     private Function<LogEntry, String> logEntryToMessage = new Function<LogEntry, String>() {
         public String apply(LogEntry logEntry) {
             MessageLogEntry messageLogEntry = (MessageLogEntry) logEntry;
@@ -77,9 +71,10 @@ public class MockServerLog extends MockServerLogNotifier {
         }
     };
 
-    public MockServerLog(LoggingFormatter logFormatter) {
+    public MockServerEventLog(MockServerLogger logFormatter) {
         this.logFormatter = logFormatter;
         this.matcherBuilder = new MatcherBuilder(logFormatter);
+        httpRequestSerializer = new HttpRequestSerializer(logFormatter);
     }
 
     public void add(LogEntry logEntry) {
@@ -166,7 +161,7 @@ public class MockServerLog extends MockServerLogNotifier {
                 List<HttpRequest> allRequestsArray = retrieveRequests(null);
                 String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verification.getHttpRequest());
                 String serializedAllRequestInLog = allRequestsArray.size() == 1 ? httpRequestSerializer.serialize(true, allRequestsArray.get(0)) : httpRequestSerializer.serialize(true, allRequestsArray);
-                logFormatter.infoLog(verification.getHttpRequest(), "request not found " + verification.getTimes() + ", expected:{}" + NEW_LINE + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
+                logFormatter.info(verification.getHttpRequest(), "request not found " + verification.getTimes() + ", expected:{}" + NEW_LINE + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
                 failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
             }
         }
@@ -199,7 +194,7 @@ public class MockServerLog extends MockServerLogNotifier {
                         String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verificationSequence.getHttpRequests());
                         String serializedAllRequestInLog = allRequestsArray.size() == 1 ? httpRequestSerializer.serialize(true, allRequestsArray.get(0)) : httpRequestSerializer.serialize(true, allRequestsArray);
                         failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
-                        logFormatter.infoLog(verificationSequence.getHttpRequests(), "request sequence not found, expected:{}" + NEW_LINE + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
+                        logFormatter.info(verificationSequence.getHttpRequests(), "request sequence not found, expected:{}" + NEW_LINE + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
                         break;
                     }
                 }

@@ -3,10 +3,10 @@ package org.mockserver.client.serialization;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -62,7 +62,7 @@ public class WebSocketMessageSerializerTest {
             "}";
 
         // when
-        Object httpResponse = new WebSocketMessageSerializer().deserialize(requestBytes);
+        Object httpResponse = new WebSocketMessageSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new HttpResponseDTO()
@@ -81,7 +81,7 @@ public class WebSocketMessageSerializerTest {
     @Test
     public void shouldSerializeCompleteResponse() throws IOException {
         // when
-        String jsonHttpResponse = new WebSocketMessageSerializer().serialize(
+        String jsonHttpResponse = new WebSocketMessageSerializer(new MockServerLogger()).serialize(
             new HttpResponseDTO()
                 .setStatusCode(123)
                 .setBody(BodyWithContentTypeDTO.createDTO(exact("somebody")))
@@ -139,7 +139,7 @@ public class WebSocketMessageSerializerTest {
             "}";
 
         // when
-        Object httpRequest = new WebSocketMessageSerializer().deserialize(requestBytes);
+        Object httpRequest = new WebSocketMessageSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new HttpRequestDTO()
@@ -163,7 +163,7 @@ public class WebSocketMessageSerializerTest {
     @Test
     public void shouldSerializeCompleteRequest() throws IOException {
         // when
-        String jsonHttpRequest = new WebSocketMessageSerializer().serialize(
+        String jsonHttpRequest = new WebSocketMessageSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
                 .setMethod(string("someMethod"))
                 .setPath(string("somePath"))

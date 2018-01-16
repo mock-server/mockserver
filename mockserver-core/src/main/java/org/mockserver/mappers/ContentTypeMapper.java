@@ -5,8 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import io.netty.handler.codec.http.HttpConstants;
 import io.netty.util.CharsetUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -30,7 +29,7 @@ public class ContentTypeMapper {
      * </pre>
      */
     public static final Charset DEFAULT_HTTP_CHARACTER_SET = CharsetUtil.ISO_8859_1;
-    private static final Logger logger = LoggerFactory.getLogger(ContentTypeMapper.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ContentTypeMapper.class);
 
     private static final Set<String> UTF_8_CONTENT_TYPES = ImmutableSet.<String>builder()
         .add("application/atom+xml")
@@ -106,9 +105,9 @@ public class ContentTypeMapper {
                 try {
                     charset = Charset.forName(charsetName);
                 } catch (UnsupportedCharsetException uce) {
-                    logger.info("Unsupported character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
+                    MOCK_SERVER_LOGGER.info("Unsupported character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
                 } catch (IllegalCharsetNameException icne) {
-                    logger.info("Illegal character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
+                    MOCK_SERVER_LOGGER.info("Illegal character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
                 }
             } else if (UTF_8_CONTENT_TYPES.contains(contentType)) {
                 charset = CharsetUtil.UTF_8;

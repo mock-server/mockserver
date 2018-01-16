@@ -2,6 +2,7 @@ package org.mockserver.log.model;
 
 import org.mockserver.model.HttpRequest;
 
+import javax.annotation.Nullable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,7 +16,7 @@ public class MessageLogEntry extends LogEntry {
     private final String message;
     protected Date timeStamp = new Date();
 
-    public MessageLogEntry(HttpRequest httpRequest, String message) {
+    public MessageLogEntry(@Nullable HttpRequest httpRequest, String message) {
         super(httpRequest);
         this.message = message;
     }

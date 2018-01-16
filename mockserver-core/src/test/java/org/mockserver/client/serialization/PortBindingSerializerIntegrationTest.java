@@ -1,6 +1,7 @@
 package org.mockserver.client.serialization;
 
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 
 import java.io.IOException;
@@ -29,7 +30,7 @@ public class PortBindingSerializerIntegrationTest {
                 "}";
 
         // when
-        PortBinding portBinding = new PortBindingSerializer().deserialize(requestBytes);
+        PortBinding portBinding = new PortBindingSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(portBinding(0, 1080, 0), portBinding);
@@ -47,7 +48,7 @@ public class PortBindingSerializerIntegrationTest {
                 "}";
 
         // when
-        PortBinding portBinding = new PortBindingSerializer().deserialize(requestBytes);
+        PortBinding portBinding = new PortBindingSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(portBinding(0, 1080, 0), portBinding);
@@ -59,7 +60,7 @@ public class PortBindingSerializerIntegrationTest {
         String requestBytes = "{ }";
 
         // when
-        PortBinding portBinding = new PortBindingSerializer().deserialize(requestBytes);
+        PortBinding portBinding = new PortBindingSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(portBinding(), portBinding);
@@ -68,7 +69,7 @@ public class PortBindingSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObject() throws IOException {
         // when
-        String jsonPortBinding = new PortBindingSerializer().serialize(
+        String jsonPortBinding = new PortBindingSerializer(new MockServerLogger()).serialize(
                 new PortBinding().setPorts(Arrays.asList(0, 1080, 0))
         );
 

@@ -12,15 +12,13 @@ import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.ssl.SslHandler;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.http.HttpProxy;
-import org.mockserver.proxy.http.HttpProxyUnificationHandler;
-import org.mockserver.proxy.relay.RelayConnectHandler;
+import org.mockserver.proxy.http.HttpProxyUnificationInitializer;
 import org.mockserver.proxy.socks.SocksProxyHandler;
 import org.mockserver.unification.PortUnificationHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -31,15 +29,14 @@ import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockserver.mock.HttpStateHandler.STATE_HANDLER;
-import static org.mockserver.proxy.Proxy.HTTP_PROXY;
+import static org.slf4j.event.Level.TRACE;
 
 public class DirectProxyUnificationHandlerTest {
 
     @Test
     public void shouldSwitchToSsl() {
         // given
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationHandler());
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationInitializer(mock(Proxy.class), new HttpStateHandler()));
 
         // and - no SSL handler
         assertThat(embeddedChannel.pipeline().get(SslHandler.class), is(nullValue()));
@@ -54,17 +51,17 @@ public class DirectProxyUnificationHandlerTest {
         }));
 
         // then - should add SSL handlers first
-        if (LoggerFactory.getLogger(PortUnificationHandler.class).isTraceEnabled()) {
+        if (new MockServerLogger(PortUnificationHandler.class).isEnabled(TRACE)) {
             assertThat(embeddedChannel.pipeline().names(), contains(
                 "SslHandler#0",
                 "LoggingHandler#0",
-                "HttpProxyUnificationHandler#0",
+                "HttpProxyUnificationInitializer#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
             assertThat(embeddedChannel.pipeline().names(), contains(
                 "SslHandler#0",
-                "HttpProxyUnificationHandler#0",
+                "HttpProxyUnificationInitializer#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         }
@@ -74,11 +71,8 @@ public class DirectProxyUnificationHandlerTest {
     public void shouldSwitchToSOCKS() throws IOException, InterruptedException {
         // given - embedded channel
         short localPort = 1234;
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationHandler());
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationInitializer(mock(Proxy.class), new HttpStateHandler()));
         embeddedChannel.attr(HttpProxy.HTTP_CONNECT_SOCKET).set(new InetSocketAddress(localPort));
-
-        // and - mock logger
-        RelayConnectHandler.logger = mock(Logger.class);
 
         // and - no SOCKS handlers
         assertThat(embeddedChannel.pipeline().get(SocksProxyHandler.class), is(nullValue()));
@@ -101,13 +95,13 @@ public class DirectProxyUnificationHandlerTest {
         })));
 
         // and then - should add SOCKS handlers first
-        if (LoggerFactory.getLogger(PortUnificationHandler.class).isTraceEnabled()) {
+        if (new MockServerLogger().isEnabled(TRACE)) {
             assertThat(embeddedChannel.pipeline().names(), contains(
                 "LoggingHandler#0",
                 "SocksCmdRequestDecoder#0",
                 "SocksMessageEncoder#0",
                 "SocksProxyHandler#0",
-                "HttpProxyUnificationHandler#0",
+                "HttpProxyUnificationInitializer#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
@@ -115,7 +109,7 @@ public class DirectProxyUnificationHandlerTest {
                 "SocksCmdRequestDecoder#0",
                 "SocksMessageEncoder#0",
                 "SocksProxyHandler#0",
-                "HttpProxyUnificationHandler#0",
+                "HttpProxyUnificationInitializer#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         }
@@ -125,9 +119,7 @@ public class DirectProxyUnificationHandlerTest {
     public void shouldSwitchToHttp() {
         // given
         EmbeddedChannel embeddedChannel = new EmbeddedChannel();
-        embeddedChannel.attr(STATE_HANDLER).set(new HttpStateHandler());
-        embeddedChannel.attr(HTTP_PROXY).set(mock(Proxy.class));
-        embeddedChannel.pipeline().addLast(new HttpProxyUnificationHandler());
+        embeddedChannel.pipeline().addLast(new HttpProxyUnificationInitializer(mock(Proxy.class), new HttpStateHandler()));
 
         // and - no HTTP handlers
         assertThat(embeddedChannel.pipeline().get(HttpServerCodec.class), is(nullValue()));
@@ -138,7 +130,7 @@ public class DirectProxyUnificationHandlerTest {
         embeddedChannel.writeInbound(Unpooled.wrappedBuffer("GET /somePath HTTP/1.1\r\nHost: some.random.host\r\n\r\n".getBytes(UTF_8)));
 
         // then - should add HTTP handlers last
-        if (LoggerFactory.getLogger(PortUnificationHandler.class).isTraceEnabled()) {
+        if (new MockServerLogger(PortUnificationHandler.class).isEnabled(TRACE)) {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "LoggingHandler#0",
                 "HttpServerCodec#0",
@@ -169,7 +161,7 @@ public class DirectProxyUnificationHandlerTest {
     @Test
     public void shouldSupportUnknownProtocol() {
         // given
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationHandler());
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new HttpProxyUnificationInitializer(mock(Proxy.class), new HttpStateHandler()));
 
         // and - channel open
         assertThat(embeddedChannel.isOpen(), is(true));

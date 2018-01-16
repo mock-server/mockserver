@@ -1,26 +1,27 @@
 package org.mockserver.url;
 
 import com.google.common.base.Charsets;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
 import java.io.ByteArrayOutputStream;
 import java.net.URLDecoder;
 import java.util.Arrays;
 
+import static org.slf4j.event.Level.TRACE;
+
 /**
  * @author jamesdbloom
  */
 public class URLEncoder {
-    private static final Logger logger = LoggerFactory.getLogger(URLEncoder.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(URLEncoder.class);
     private static final int[] urlAllowedCharacters = new int[]{'-', '.', '_', '~', '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=', ':', '@', '/', '?'};
 
     static {
         Arrays.sort(URLEncoder.urlAllowedCharacters);
 
-        if (logger.isTraceEnabled()) {
+        if (MOCK_SERVER_LOGGER.isEnabled(TRACE)) {
             for (int i = 0; i < urlAllowedCharacters.length; i++) {
-                logger.trace("urlAllowedCharacters[" + i + "] = " + (char) urlAllowedCharacters[i]);
+                MOCK_SERVER_LOGGER.trace("urlAllowedCharacters[" + i + "] = " + (char) urlAllowedCharacters[i]);
             }
         }
     }
@@ -47,7 +48,7 @@ public class URLEncoder {
             }
             return new String(bos.toByteArray(), Charsets.UTF_8);
         } catch (Exception e) {
-            logger.trace("Exception while decoding or encoding url [" + input + "]", e);
+            MOCK_SERVER_LOGGER.trace("Exception while decoding or encoding url [" + input + "]", e);
             return input;
         }
     }

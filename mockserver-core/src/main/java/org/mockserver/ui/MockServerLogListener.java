@@ -1,11 +1,11 @@
 package org.mockserver.ui;
 
-import org.mockserver.filters.MockServerLog;
+import org.mockserver.filters.MockServerEventLog;
 
 /**
  * @author jamesdbloom
  */
 public interface MockServerLogListener {
 
-    void updated(MockServerLog mockServerLog);
+    void updated(MockServerEventLog mockServerLog);
 }

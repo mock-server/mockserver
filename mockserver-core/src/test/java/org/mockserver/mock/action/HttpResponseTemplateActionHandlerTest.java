@@ -2,11 +2,10 @@ package org.mockserver.mock.action;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
 
-import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,11 +25,11 @@ public class HttpResponseTemplateActionHandlerTest {
 
     private HttpResponseTemplateActionHandler httpResponseTemplateActionHandler;
 
-    private LoggingFormatter mockLogFormatter;
+    private MockServerLogger mockLogFormatter;
 
     @Before
     public void setupMocks() {
-        mockLogFormatter = mock(LoggingFormatter.class);
+        mockLogFormatter = mock(MockServerLogger.class);
         httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(mockLogFormatter);
         initMocks(this);
     }

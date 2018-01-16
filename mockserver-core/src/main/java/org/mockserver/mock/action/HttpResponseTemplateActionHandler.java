@@ -1,7 +1,7 @@
 package org.mockserver.mock.action;
 
 import org.mockserver.client.serialization.model.HttpResponseDTO;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
@@ -19,7 +19,7 @@ public class HttpResponseTemplateActionHandler {
     private JavaScriptTemplateEngine javaScriptTemplateEngine;
     private VelocityTemplateEngine velocityTemplateEngine;
 
-    public HttpResponseTemplateActionHandler(LoggingFormatter logFormatter) {
+    public HttpResponseTemplateActionHandler(MockServerLogger logFormatter) {
         javaScriptTemplateEngine = new JavaScriptTemplateEngine(logFormatter);
         velocityTemplateEngine = new VelocityTemplateEngine(logFormatter);
     }

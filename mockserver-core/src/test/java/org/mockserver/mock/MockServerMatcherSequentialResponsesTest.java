@@ -2,7 +2,7 @@ package org.mockserver.mock;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
@@ -21,7 +21,7 @@ public class MockServerMatcherSequentialResponsesTest {
 
     private HttpResponse[] httpResponse;
 
-    private LoggingFormatter mockLogFormatter;
+    private MockServerLogger mockLogFormatter;
 
     @Before
     public void prepareTestFixture() {
@@ -30,7 +30,7 @@ public class MockServerMatcherSequentialResponsesTest {
                 new HttpResponse(),
                 new HttpResponse()
         };
-        mockLogFormatter = mock(LoggingFormatter.class);
+        mockLogFormatter = mock(MockServerLogger.class);
         mockServerMatcher = new MockServerMatcher(mockLogFormatter);
     }
 

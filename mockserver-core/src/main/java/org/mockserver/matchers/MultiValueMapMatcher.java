@@ -1,6 +1,8 @@
 package org.mockserver.matchers;
 
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.KeyToMultiValue;
 import org.mockserver.model.KeysToMultiValues;
 
@@ -11,25 +13,27 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class MultiValueMapMatcher extends NotMatcher<List<KeyToMultiValue>> {
+    private final MockServerLogger mockServerLogger;
     private final CaseInsensitiveRegexMultiMap multiMap;
 
-    public MultiValueMapMatcher(CaseInsensitiveRegexMultiMap multiMap) {
+    public MultiValueMapMatcher(MockServerLogger mockServerLogger, CaseInsensitiveRegexMultiMap multiMap) {
+        this.mockServerLogger = mockServerLogger;
         this.multiMap = multiMap;
     }
 
     public boolean matches(KeyToMultiValue... values) {
-        return matches(Arrays.asList(values));
+        return matches(null, Arrays.asList(values));
     }
 
-    public boolean matches(List<KeyToMultiValue> values) {
+    public boolean matches(HttpRequest context, List<KeyToMultiValue> values) {
         boolean result = false;
 
-        if (multiMap == null) {
+        if (multiMap == null || multiMap.isEmpty()) {
             result = true;
         } else if (KeysToMultiValues.toCaseInsensitiveRegexMultiMap(values).containsAll(multiMap)) {
             result = true;
         } else {
-            logger.trace("Map [{}] is not a subset of {}", multiMap, values);
+            mockServerLogger.trace(context, "Map [{}] is not a subset of {}", multiMap, values);
         }
 
         return reverseResultIfNot(result);

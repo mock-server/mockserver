@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.client.serialization.model.VerificationDTO;
 import org.mockserver.client.serialization.model.VerificationTimesDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationTimes;
 
@@ -33,7 +34,7 @@ public class VerificationSerializerIntegrationTest {
                 "}";
 
         // when
-        Verification verification = new VerificationSerializer().deserialize(requestBytes);
+        Verification verification = new VerificationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new VerificationDTO()
@@ -51,7 +52,7 @@ public class VerificationSerializerIntegrationTest {
                 "}";
 
         // when
-        Verification verification = new VerificationSerializer().deserialize(requestBytes);
+        Verification verification = new VerificationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new VerificationDTO()
@@ -62,7 +63,7 @@ public class VerificationSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObject() throws IOException {
         // when
-        String jsonExpectation = new VerificationSerializer().serialize(
+        String jsonExpectation = new VerificationSerializer(new MockServerLogger()).serialize(
                 new VerificationDTO()
                         .setHttpRequest(new HttpRequestDTO(request().withMethod("GET").withPath("somepath")))
                         .setTimes(new VerificationTimesDTO(VerificationTimes.exactly(2)))
@@ -85,7 +86,7 @@ public class VerificationSerializerIntegrationTest {
     @Test
     public void shouldSerializePartialObject() throws IOException {
         // when
-        String jsonExpectation = new VerificationSerializer().serialize(
+        String jsonExpectation = new VerificationSerializer(new MockServerLogger()).serialize(
                 new VerificationDTO()
                         .setHttpRequest(new HttpRequestDTO(request()))
                         .buildObject()

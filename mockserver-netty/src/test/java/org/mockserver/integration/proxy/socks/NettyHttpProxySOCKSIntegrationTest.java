@@ -17,17 +17,19 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.streams.IOStreamUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -48,7 +50,7 @@ import static org.mockserver.verify.VerificationTimes.exactly;
  */
 public class NettyHttpProxySOCKSIntegrationTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(NettyHttpProxySOCKSIntegrationTest.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(NettyHttpProxySOCKSIntegrationTest.class);
 
     private final static Integer SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
@@ -60,13 +62,13 @@ public class NettyHttpProxySOCKSIntegrationTest {
     @BeforeClass
     public static void setupFixture() {
         // start server
-        insecureEchoServer = new EchoServer( false);
+        insecureEchoServer = new EchoServer(false);
         secureEchoServer = new EchoServer(true);
 
         // start proxy
         httpProxy = new ProxyBuilder()
-                .withLocalPort(PROXY_HTTP_PORT)
-                .build();
+            .withLocalPort(PROXY_HTTP_PORT)
+            .build();
 
         // start client
         proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
@@ -98,13 +100,13 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 @Override
                 public List<java.net.Proxy> select(URI uri) {
                     return Collections.singletonList(
-                            new java.net.Proxy(
-                                    java.net.Proxy.Type.SOCKS,
-                                    new InetSocketAddress(
-                                            System.getProperty("http.proxyHost"),
-                                            Integer.parseInt(System.getProperty("http.proxyPort"))
-                                    )
+                        new java.net.Proxy(
+                            java.net.Proxy.Type.SOCKS,
+                            new InetSocketAddress(
+                                System.getProperty("http.proxyHost"),
+                                Integer.parseInt(System.getProperty("http.proxyPort"))
                             )
+                        )
                     );
                 }
 
@@ -138,13 +140,13 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 @Override
                 public List<java.net.Proxy> select(URI uri) {
                     return Collections.singletonList(
-                            new java.net.Proxy(
-                                    java.net.Proxy.Type.SOCKS,
-                                    new InetSocketAddress(
-                                            System.getProperty("http.proxyHost"),
-                                            Integer.parseInt(System.getProperty("http.proxyPort"))
-                                    )
+                        new java.net.Proxy(
+                            java.net.Proxy.Type.SOCKS,
+                            new InetSocketAddress(
+                                System.getProperty("http.proxyHost"),
+                                Integer.parseInt(System.getProperty("http.proxyPort"))
                             )
+                        )
                     );
                 }
 
@@ -173,57 +175,57 @@ public class NettyHttpProxySOCKSIntegrationTest {
     public void shouldProxyRequestsUsingHttpClientViaSOCKS() throws Exception {
         // given
         Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
-                .register("http", new ConnectionSocketFactory() {
+            .register("http", new ConnectionSocketFactory() {
 
-                    public Socket createSocket(final HttpContext context) throws IOException {
-                        return new Socket(new java.net.Proxy(
-                                java.net.Proxy.Type.SOCKS,
-                                new InetSocketAddress(
-                                        System.getProperty("http.proxyHost"),
-                                        Integer.parseInt(System.getProperty("http.proxyPort"))
-                                )));
+                public Socket createSocket(final HttpContext context) throws IOException {
+                    return new Socket(new java.net.Proxy(
+                        java.net.Proxy.Type.SOCKS,
+                        new InetSocketAddress(
+                            System.getProperty("http.proxyHost"),
+                            Integer.parseInt(System.getProperty("http.proxyPort"))
+                        )));
+                }
+
+                public Socket connectSocket(
+                    final int connectTimeout,
+                    final Socket socket,
+                    final HttpHost host,
+                    final InetSocketAddress remoteAddress,
+                    final InetSocketAddress localAddress,
+                    final HttpContext context) throws IOException {
+                    Socket sock;
+                    if (socket != null) {
+                        sock = socket;
+                    } else {
+                        sock = createSocket(context);
                     }
-
-                    public Socket connectSocket(
-                            final int connectTimeout,
-                            final Socket socket,
-                            final HttpHost host,
-                            final InetSocketAddress remoteAddress,
-                            final InetSocketAddress localAddress,
-                            final HttpContext context) throws IOException {
-                        Socket sock;
-                        if (socket != null) {
-                            sock = socket;
-                        } else {
-                            sock = createSocket(context);
-                        }
-                        if (localAddress != null) {
-                            sock.bind(localAddress);
-                        }
-                        try {
-                            sock.connect(remoteAddress, connectTimeout);
-                        } catch (SocketTimeoutException ex) {
-                            throw new ConnectTimeoutException(ex, host, remoteAddress.getAddress());
-                        }
-                        return sock;
+                    if (localAddress != null) {
+                        sock.bind(localAddress);
                     }
+                    try {
+                        sock.connect(remoteAddress, connectTimeout);
+                    } catch (SocketTimeoutException ex) {
+                        throw new ConnectTimeoutException(ex, host, remoteAddress.getAddress());
+                    }
+                    return sock;
+                }
 
-                })
-                .build();
+            })
+            .build();
 
         PoolingHttpClientConnectionManager clientConnectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
         HttpClient httpClient = HttpClients.custom()
-                .setConnectionManager(clientConnectionManager)
-                .build();
+            .setConnectionManager(clientConnectionManager)
+            .build();
 
         // when
         HttpPost request = new HttpPost(
-                new URIBuilder()
-                        .setScheme("http")
-                        .setHost("localhost")
-                        .setPort(insecureEchoServer.getPort())
-                        .setPath("/test_headers_and_body")
-                        .build()
+            new URIBuilder()
+                .setScheme("http")
+                .setHost("localhost")
+                .setPort(insecureEchoServer.getPort())
+                .setPath("/test_headers_and_body")
+                .build()
         );
         request.setEntity(new StringEntity("an_example_body"));
         HttpResponse response = httpClient.execute(request);
@@ -234,10 +236,10 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
         // and
         proxyClient.verify(
-                request()
-                        .withPath("/test_headers_and_body")
-                        .withBody("an_example_body"),
-                exactly(1)
+            request()
+                .withPath("/test_headers_and_body")
+                .withBody("an_example_body"),
+            exactly(1)
         );
     }
 
@@ -245,52 +247,52 @@ public class NettyHttpProxySOCKSIntegrationTest {
     public void shouldProxyRequestsUsingHttpClientViaSOCKSToSecureServerPort() throws Exception {
         // given
         Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
-                .register("https", new ConnectionSocketFactory() {
+            .register("https", new ConnectionSocketFactory() {
 
-                    public Socket createSocket(final HttpContext context) throws IOException {
-                        return new Socket(new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
+                public Socket createSocket(final HttpContext context) throws IOException {
+                    return new Socket(new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
+                }
+
+                public Socket connectSocket(
+                    final int connectTimeout,
+                    final Socket socket,
+                    final HttpHost host,
+                    final InetSocketAddress remoteAddress,
+                    final InetSocketAddress localAddress,
+                    final HttpContext context) throws IOException {
+                    Socket sock;
+                    if (socket != null) {
+                        sock = socket;
+                    } else {
+                        sock = createSocket(context);
                     }
-
-                    public Socket connectSocket(
-                            final int connectTimeout,
-                            final Socket socket,
-                            final HttpHost host,
-                            final InetSocketAddress remoteAddress,
-                            final InetSocketAddress localAddress,
-                            final HttpContext context) throws IOException {
-                        Socket sock;
-                        if (socket != null) {
-                            sock = socket;
-                        } else {
-                            sock = createSocket(context);
-                        }
-                        if (localAddress != null) {
-                            sock.bind(localAddress);
-                        }
-                        try {
-                            sock.connect(remoteAddress, connectTimeout);
-                        } catch (SocketTimeoutException ex) {
-                            throw new ConnectTimeoutException(ex, host, remoteAddress.getAddress());
-                        }
-                        return sslSocketFactory().wrapSocket(sock);
+                    if (localAddress != null) {
+                        sock.bind(localAddress);
                     }
+                    try {
+                        sock.connect(remoteAddress, connectTimeout);
+                    } catch (SocketTimeoutException ex) {
+                        throw new ConnectTimeoutException(ex, host, remoteAddress.getAddress());
+                    }
+                    return sslSocketFactory().wrapSocket(sock);
+                }
 
-                })
-                .build();
+            })
+            .build();
 
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(reg);
         HttpClient httpClient = HttpClients.custom()
-                .setConnectionManager(cm)
-                .build();
+            .setConnectionManager(cm)
+            .build();
 
         // when
         HttpPost request = new HttpPost(
-                new URIBuilder()
-                        .setScheme("https")
-                        .setHost("localhost")
-                        .setPort(secureEchoServer.getPort())
-                        .setPath("/test_headers_and_body")
-                        .build()
+            new URIBuilder()
+                .setScheme("https")
+                .setHost("localhost")
+                .setPort(secureEchoServer.getPort())
+                .setPath("/test_headers_and_body")
+                .build()
         );
         request.setEntity(new StringEntity("an_example_body"));
         request.addHeader("Secure", "true");
@@ -302,10 +304,10 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
         // and
         proxyClient.verify(
-                request()
-                        .withPath("/test_headers_and_body")
-                        .withBody("an_example_body"),
-                exactly(1)
+            request()
+                .withPath("/test_headers_and_body")
+                .withBody("an_example_body"),
+            exactly(1)
         );
     }
 
@@ -327,13 +329,13 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 @Override
                 public List<java.net.Proxy> select(URI uri) {
                     return Collections.singletonList(
-                            new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", PROXY_HTTP_PORT))
+                        new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", PROXY_HTTP_PORT))
                     );
                 }
 
                 @Override
                 public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-                    logger.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+                    MOCK_SERVER_LOGGER.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
                 }
             });
 
@@ -349,12 +351,12 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                    "GET /test_headers_and_body HTTP/1.1\r\n" +
-                    "Host: localhost:" + (useTLS ? secureEchoServer.getPort() : insecureEchoServer.getPort()) + "\r\n" +
-                    "X-Test: test_headers_and_body\r\n" +
-                    "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
-                    "\r\n" +
-                    "an_example_body" + "\r\n"
+                "GET /test_headers_and_body HTTP/1.1\r\n" +
+                "Host: localhost:" + (useTLS ? secureEchoServer.getPort() : insecureEchoServer.getPort()) + "\r\n" +
+                "X-Test: test_headers_and_body\r\n" +
+                "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
+                "\r\n" +
+                "an_example_body" + "\r\n"
             ).getBytes(Charsets.UTF_8));
             output.flush();
 
@@ -365,11 +367,11 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
             // and
             proxyClient.verify(
-                    request()
-                            .withMethod("GET")
-                            .withPath("/test_headers_and_body")
-                            .withBody("an_example_body"),
-                    exactly(1)
+                request()
+                    .withMethod("GET")
+                    .withPath("/test_headers_and_body")
+                    .withBody("an_example_body"),
+                exactly(1)
             );
         } finally {
             ProxySelector.setDefault(proxySelector);

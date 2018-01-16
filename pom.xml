@@ -560,9 +560,7 @@
                         <exclude>**/*IntegrationTest.java</exclude>
                     </excludes>
                     <systemProperties>
-                        <mockserver.logLevel>WARN</mockserver.logLevel>
                         <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
-                        <!--<mockserver.maxSocketTimeout>25000</mockserver.maxSocketTimeout>-->
                     </systemProperties>
                 </configuration>
             </plugin>
@@ -577,9 +575,7 @@
                         <include>**/*IntegrationTest.java</include>
                     </includes>
                     <systemProperties>
-                        <mockserver.logLevel>WARN</mockserver.logLevel>
                         <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
-                        <!--<mockserver.maxSocketTimeout>25000</mockserver.maxSocketTimeout>-->
                     </systemProperties>
                 </configuration>
                 <executions>

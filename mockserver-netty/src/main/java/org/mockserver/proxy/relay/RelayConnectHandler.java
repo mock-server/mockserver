@@ -1,6 +1,5 @@
 package org.mockserver.proxy.relay;
 
-import com.google.common.annotations.VisibleForTesting;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -10,8 +9,7 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.logging.LoggingHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
 import java.net.InetSocketAddress;
 
@@ -22,15 +20,16 @@ import static org.mockserver.proxy.Proxy.PROXYING;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledDownstream;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledUpstream;
+import static org.slf4j.event.Level.TRACE;
 
 @ChannelHandler.Sharable
 public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler<T> {
-    @VisibleForTesting
-    public static Logger logger = LoggerFactory.getLogger(RelayConnectHandler.class);
+    private final MockServerLogger mockServerLogger;
     private final String host;
     private final int port;
 
-    public RelayConnectHandler(String host, int port) {
+    public RelayConnectHandler(MockServerLogger mockServerLogger, String host, int port) {
+        this.mockServerLogger = mockServerLogger;
         this.host = host;
         this.port = port;
     }
@@ -58,7 +57,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                     downstreamPipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(clientCtx.alloc(), host, port));
                                 }
 
-                                if (logger.isTraceEnabled()) {
+                                if (mockServerLogger.isEnabled(TRACE)) {
                                     downstreamPipeline.addLast(new LoggingHandler("downstream                -->"));
                                 }
 
@@ -68,7 +67,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                                 downstreamPipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-                                downstreamPipeline.addLast(new DownstreamProxyRelayHandler(serverCtx.channel(), logger));
+                                downstreamPipeline.addLast(new DownstreamProxyRelayHandler(mockServerLogger, serverCtx.channel()));
 
 
                                 // upstream
@@ -78,7 +77,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                     upstreamPipeline.addLast(nettySslContextFactory().createServerSslContext().newHandler(serverCtx.alloc()));
                                 }
 
-                                if (logger.isTraceEnabled()) {
+                                if (mockServerLogger.isEnabled(TRACE)) {
                                     upstreamPipeline.addLast(new LoggingHandler("upstream <-- "));
                                 }
 
@@ -88,7 +87,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
                                 upstreamPipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-                                upstreamPipeline.addLast(new UpstreamProxyRelayHandler(serverCtx.channel(), clientCtx.channel(), logger));
+                                upstreamPipeline.addLast(new UpstreamProxyRelayHandler(mockServerLogger, serverCtx.channel(), clientCtx.channel()));
                             }
                         });
                 }
@@ -122,7 +121,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
     private void failure(String message, Throwable cause, ChannelHandlerContext ctx, Object response) {
         if (shouldNotIgnoreException(cause)) {
-            logger.warn(message, cause);
+            mockServerLogger.error(message, cause);
         }
         Channel channel = ctx.channel();
         channel.writeAndFlush(response);

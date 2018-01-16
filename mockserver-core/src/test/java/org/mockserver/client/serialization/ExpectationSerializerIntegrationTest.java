@@ -5,6 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -46,7 +47,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation[] expectations = new ExpectationSerializer().deserializeArray(requestBytes);
+        Expectation[] expectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes);
 
         // then
         assertArrayEquals(new Expectation[]{
@@ -83,7 +84,7 @@ public class ExpectationSerializerIntegrationTest {
             " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"");
 
         // when
-        new ExpectationSerializer().deserializeArray(requestBytes);
+        new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes);
     }
 
     @Test
@@ -128,7 +129,7 @@ public class ExpectationSerializerIntegrationTest {
             .buildObject();
 
         // when
-        Expectation[] expectations = new ExpectationSerializer().deserializeArray(requestBytes);
+        Expectation[] expectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes);
 
         // then
         assertArrayEquals(new Expectation[]{
@@ -188,7 +189,7 @@ public class ExpectationSerializerIntegrationTest {
             "]");
 
         // when
-        new ExpectationSerializer().deserializeArray(requestBytes);
+        new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes);
     }
 
     @Test
@@ -248,7 +249,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -332,7 +333,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -400,7 +401,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -468,7 +469,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -533,7 +534,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -600,7 +601,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -673,7 +674,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -741,7 +742,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -806,7 +807,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -874,7 +875,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -953,7 +954,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -997,7 +998,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1029,7 +1030,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1068,7 +1069,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
@@ -1090,7 +1091,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObjectWithResponse() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1188,7 +1189,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObjectWithResponseTemplate() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1254,7 +1255,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObjectWithResponseClassCallback() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1315,7 +1316,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObjectWithResponseObjectCallback() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1376,7 +1377,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObjectWithForward() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1441,7 +1442,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObjectWithForwardTemplate() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1507,7 +1508,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObjectWithForwardClassCallback() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1568,7 +1569,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObjectWithForwardObjectCallback() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1629,7 +1630,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObjectWithOverrideForwardedRequest() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1703,7 +1704,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObjectWithError() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1771,7 +1772,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObjectWithHttpTemplateResponse() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1840,7 +1841,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializePartialRequestAndResponse() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -1877,7 +1878,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeStringXPathBody() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -1940,7 +1941,7 @@ public class ExpectationSerializerIntegrationTest {
             "        </xs:complexType>" + NEW_LINE +
             "    </xs:element>" + NEW_LINE +
             "</xs:schema>";
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2000,7 +2001,7 @@ public class ExpectationSerializerIntegrationTest {
             "  }," + NEW_LINE +
             "  \"required\": [\"firstName\", \"lastName\"]" + NEW_LINE +
             "}";
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2043,7 +2044,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeStringJsonBody() {
         // when
         String jsonBody = "{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}";
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2082,7 +2083,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeStringRegexBody() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2121,7 +2122,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializeStringParameterBody() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2166,7 +2167,7 @@ public class ExpectationSerializerIntegrationTest {
     @Test
     public void shouldSerializePartialExpectation() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2209,7 +2210,7 @@ public class ExpectationSerializerIntegrationTest {
                     .setBody(new StringBodyDTO(exact("someBody")))
             )
             .buildObject();
-        String jsonExpectation = new ExpectationSerializer().serialize(new Expectation[]{
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new Expectation[]{
             expectation,
             expectation,
             expectation

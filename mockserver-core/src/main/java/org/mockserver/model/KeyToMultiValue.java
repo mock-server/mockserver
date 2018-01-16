@@ -80,4 +80,24 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
     public void addValues(NottableString... values) {
         addNottableValues(Arrays.asList(values));
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        KeyToMultiValue that = (KeyToMultiValue) o;
+        return Objects.equals(name, that.name) && Objects.equals(values, that.values);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, values);
+    }
 }

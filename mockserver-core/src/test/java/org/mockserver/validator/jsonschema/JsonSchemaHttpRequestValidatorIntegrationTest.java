@@ -2,6 +2,7 @@ package org.mockserver.validator.jsonschema;
 
 import org.junit.Test;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.logging.MockServerLogger;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static org.hamcrest.core.Is.is;
@@ -24,7 +25,7 @@ import static org.mockserver.model.XmlSchemaBody.xmlSchema;
  */
 public class JsonSchemaHttpRequestValidatorIntegrationTest {
 
-    private JsonSchemaValidator jsonSchemaValidator = new JsonSchemaHttpRequestValidator();
+    private JsonSchemaValidator jsonSchemaValidator = new JsonSchemaHttpRequestValidator(new MockServerLogger());
 
     @Test
     public void shouldValidateValidCompleteRequestFromRawJson() {
@@ -57,7 +58,7 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
     @Test
     public void shouldValidateValidCompleteRequestWithBinaryBody() {
         // when
-        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer().serialize(
+        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer(new MockServerLogger()).serialize(
             request()
                 .withBody(binary("somebody".getBytes(UTF_8)))
         )), is(""));
@@ -66,7 +67,7 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
     @Test
     public void shouldValidateValidCompleteRequestWithJsonBody() {
         // when
-        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer().serialize(
+        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer(new MockServerLogger()).serialize(
             request()
                 .withBody(json("{" + NEW_LINE +
                     "    \"id\": 1," + NEW_LINE +
@@ -80,7 +81,7 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
     @Test
     public void shouldValidateValidCompleteRequestWithJsonSchemaBody() {
         // when
-        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer().serialize(
+        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer(new MockServerLogger()).serialize(
             request()
                 .withBody(jsonSchema("{" + NEW_LINE +
                     "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
@@ -118,7 +119,7 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
     @Test
     public void shouldValidateValidCompleteRequestWithParameterBody() {
         // when
-        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer().serialize(
+        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer(new MockServerLogger()).serialize(
             request()
                 .withBody(params(
                     param("paramOne", "paramOneValueOne"),
@@ -131,7 +132,7 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
     @Test
     public void shouldValidateValidCompleteRequestWithRegexBody() {
         // when
-        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer().serialize(
+        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer(new MockServerLogger()).serialize(
             request()
                 .withBody(regex("[a-z]{1,3}"))
         )), is(""));
@@ -140,7 +141,7 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
     @Test
     public void shouldValidateValidCompleteRequestWithStringBody() {
         // when
-        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer().serialize(
+        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer(new MockServerLogger()).serialize(
             request()
                 .withBody(exact("string_body"))
         )), is(""));
@@ -149,7 +150,7 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
     @Test
     public void shouldValidateValidCompleteRequestWithXPathBody() {
         // when
-        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer().serialize(
+        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer(new MockServerLogger()).serialize(
             request()
             .withBody(xpath("/bookstore/book[year=2005]/price"))
         )), is(""));
@@ -158,7 +159,7 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
     @Test
     public void shouldValidateValidCompleteRequestWithXMLBody() {
         // when
-        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer().serialize(
+        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer(new MockServerLogger()).serialize(
             request()
                 .withBody(xml("" +
                     "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
@@ -176,7 +177,7 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
     @Test
     public void shouldValidateValidCompleteRequestWithXMLSchemaBody() {
         // when
-        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer().serialize(
+        assertThat(jsonSchemaValidator.isValid(new HttpRequestSerializer(new MockServerLogger()).serialize(
             request()
                 .withBody(xmlSchema("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
                     "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +

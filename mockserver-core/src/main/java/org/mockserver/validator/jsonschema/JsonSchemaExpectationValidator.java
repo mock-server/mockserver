@@ -1,40 +1,30 @@
 package org.mockserver.validator.jsonschema;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
 /**
  * @author jamesdbloom
  */
 public class JsonSchemaExpectationValidator extends JsonSchemaValidator {
 
-    public static Logger logger = LoggerFactory.getLogger(JsonSchemaExpectationValidator.class);
-    private static String jsonSchema = addReferencesIntoSchema(
-        "org/mockserver/model/schema/",
-        "expectation",
-        "httpRequest",
-        "httpResponse",
-        "httpTemplate",
-        "httpForward",
-        "httpClassCallback",
-        "httpObjectCallback",
-        "httpOverrideForwardedRequest",
-        "httpError",
-        "times",
-        "timeToLive",
-        "body",
-        "bodyWithContentType",
-        "delay",
-        "connectionOptions",
-        "keyToMultiValue",
-        "keyToValue"
-    );
-
-    public JsonSchemaExpectationValidator() {
-        super(jsonSchema);
-    }
-
-    public String getSchema() {
-        return jsonSchema;
+    public JsonSchemaExpectationValidator(MockServerLogger mockServerLogger) {
+        super(mockServerLogger, "org/mockserver/model/schema/",
+            "expectation",
+            "httpRequest",
+            "httpResponse",
+            "httpTemplate",
+            "httpForward",
+            "httpClassCallback",
+            "httpObjectCallback",
+            "httpOverrideForwardedRequest",
+            "httpError",
+            "times",
+            "timeToLive",
+            "body",
+            "bodyWithContentType",
+            "delay",
+            "connectionOptions",
+            "keyToMultiValue",
+            "keyToValue");
     }
 }

@@ -2,8 +2,7 @@ package org.mockserver.socket;
 
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -28,7 +27,7 @@ public class KeyStoreFactory {
     public static final String CERTIFICATE_DOMAIN = "localhost";
     public static final String KEY_STORE_CERT_ALIAS = "mockserver-client-cert";
 
-    private static final Logger logger = LoggerFactory.getLogger(KeyStoreFactory.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(KeyStoreFactory.class);
     private static final String KEY_STORE_CA_ALIAS = "mockserver-ca-cert";
 
     /**
@@ -102,7 +101,7 @@ public class KeyStoreFactory {
             File keyStoreFile = new File(keyStoreFileName);
             try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFile)) {
                 keyStore.store(fileOutputStream, keyStorePassword);
-                logger.trace("Saving key store to file [" + keyStoreFileName + "]");
+                MOCK_SERVER_LOGGER.trace("Saving key store to file [" + keyStoreFileName + "]");
             }
             if (deleteOnExit) {
                 keyStoreFile.deleteOnExit();
@@ -132,10 +131,10 @@ public class KeyStoreFactory {
 
     private SSLContext getSSLContextInstance() throws NoSuchAlgorithmException {
         try {
-            logger.debug("Using protocol {}", SSL_CONTEXT_PROTOCOL);
+            MOCK_SERVER_LOGGER.debug("Using protocol {}", SSL_CONTEXT_PROTOCOL);
             return SSLContext.getInstance(SSL_CONTEXT_PROTOCOL);
         } catch (NoSuchAlgorithmException e) {
-            logger.warn("Protocol {} not available, falling back to {}", SSL_CONTEXT_PROTOCOL, SSL_CONTEXT_FALLBACK_PROTOCOL);
+            MOCK_SERVER_LOGGER.warn("Protocol {} not available, falling back to {}", SSL_CONTEXT_PROTOCOL, SSL_CONTEXT_FALLBACK_PROTOCOL);
             return SSLContext.getInstance(SSL_CONTEXT_FALLBACK_PROTOCOL);
         }
     }

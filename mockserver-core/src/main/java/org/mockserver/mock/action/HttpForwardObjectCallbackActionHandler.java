@@ -3,7 +3,7 @@ package org.mockserver.mock.action;
 import com.google.common.util.concurrent.SettableFuture;
 import org.mockserver.callback.WebSocketRequestCallback;
 import org.mockserver.callback.WebSocketClientRegistry;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
@@ -17,13 +17,13 @@ import static org.mockserver.scheduler.Scheduler.submit;
  * @author jamesdbloom
  */
 public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
-    private final LoggingFormatter logFormatter;
+    private final MockServerLogger logFormatter;
     private WebSocketClientRegistry webSocketClientRegistry;
 
     public HttpForwardObjectCallbackActionHandler(HttpStateHandler httpStateHandler) {
-        super(httpStateHandler.getLogFormatter());
+        super(httpStateHandler.getMockServerLogger());
         this.webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();
-        this.logFormatter = httpStateHandler.getLogFormatter();
+        this.logFormatter = httpStateHandler.getMockServerLogger();
     }
 
     public void handle(final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous) {
@@ -37,9 +37,9 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         try {
                             HttpResponse response = responseFuture.get();
                             responseWriter.writeResponse(request, response, false);
-                            logFormatter.infoLog(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for object callback action:{}", request, request, httpObjectCallback);
+                            logFormatter.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for object callback action:{}", request, request, httpObjectCallback);
                         } catch (Exception ex) {
-                            logFormatter.errorLog(request, ex, ex.getMessage());
+                            logFormatter.error(request, ex, ex.getMessage());
                         }
                     }
                 }, synchronous);

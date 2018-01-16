@@ -5,7 +5,7 @@ import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.log.model.*;
-import org.mockserver.logging.LoggingFormatter;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -20,7 +20,7 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.mockito.Mockito.mock;
-import static org.mockserver.filters.MockServerLog.*;
+import static org.mockserver.filters.MockServerEventLog.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -31,13 +31,13 @@ public class LogFilterTest {
             return logEntry;
         }
     };
-    private MockServerLog logFilter;
-    private LoggingFormatter mockLogFormatter;
+    private MockServerEventLog logFilter;
+    private MockServerLogger mockLogFormatter;
 
     @Before
     public void setupTestFixture() {
-        mockLogFormatter = mock(LoggingFormatter.class);
-        logFilter = new MockServerLog(mockLogFormatter);
+        mockLogFormatter = mock(MockServerLogger.class);
+        logFilter = new MockServerEventLog(mockLogFormatter);
     }
 
     @Test

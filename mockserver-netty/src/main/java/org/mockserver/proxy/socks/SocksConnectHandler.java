@@ -8,13 +8,14 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.socks.*;
 import io.netty.handler.ssl.SslHandler;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.proxy.relay.RelayConnectHandler;
 
 @ChannelHandler.Sharable
 public final class SocksConnectHandler extends RelayConnectHandler<SocksCmdRequest> {
 
-    public SocksConnectHandler(String host, int port) {
-        super(host, port);
+    public SocksConnectHandler(MockServerLogger mockServerLogger, String host, int port) {
+        super(mockServerLogger, host, port);
     }
 
     protected void removeCodecSupport(ChannelHandlerContext ctx) {

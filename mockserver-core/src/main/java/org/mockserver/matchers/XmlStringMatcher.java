@@ -1,8 +1,8 @@
 package org.mockserver.matchers;
 
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -15,23 +15,25 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 public class XmlStringMatcher extends BodyMatcher<NottableString> {
-    private static Logger logger = LoggerFactory.getLogger(XmlStringMatcher.class);
+    private final MockServerLogger mockServerLogger;
     private NottableString matcher = string("THIS SHOULD NEVER MATCH");
     private StringToXmlDocumentParser stringToXmlDocumentParser = new StringToXmlDocumentParser();
 
-    public XmlStringMatcher(final String matcher) {
+    public XmlStringMatcher(MockServerLogger mockServerLogger, final String matcher) {
+        this.mockServerLogger = mockServerLogger;
         try {
             this.matcher = string(normaliseXmlString(matcher));
         } catch (Exception e) {
-            logger.error("Error while creating xml string matcher for [" + matcher + "]" + e.getMessage(), e);
+            mockServerLogger.error("Error while creating xml string matcher for [" + matcher + "]" + e.getMessage(), e);
         }
     }
 
-    public XmlStringMatcher(final NottableString matcher) {
+    public XmlStringMatcher(MockServerLogger mockServerLogger, final NottableString matcher) {
+        this.mockServerLogger = mockServerLogger;
         try {
             this.matcher = normaliseXmlNottableString(matcher);
         } catch (Exception e) {
-            logger.error("Error while creating xml string matcher for [" + matcher + "]" + e.getMessage(), e);
+            mockServerLogger.error("Error while creating xml string matcher for [" + matcher + "]" + e.getMessage(), e);
         }
     }
 
@@ -39,7 +41,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
         return stringToXmlDocumentParser.normaliseXmlString(input, new StringToXmlDocumentParser.ErrorLogger() {
             @Override
             public void logError(final String matched, final Exception exception) {
-                logger.debug("SAXParseException while parsing [" + input + "]", exception);
+                mockServerLogger.error("SAXParseException while parsing [" + input + "]", exception);
             }
         });
     }
@@ -50,10 +52,10 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
     }
 
     public boolean matches(String matched) {
-        return matches(string(matched));
+        return matches(null, string(matched));
     }
 
-    public boolean matches(NottableString matched) {
+    public boolean matches(HttpRequest context, NottableString matched) {
         boolean result = false;
 
         try {
@@ -61,11 +63,11 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
                 result = true;
             }
         } catch (Exception e) {
-            logger.trace("Error while matching xml string [" + matcher + "] against xml string [" + matched + "] assuming no match - " + e.getMessage());
+            mockServerLogger.trace(context, "Error while matching xml string [" + matcher + "] against xml string [" + matched + "] assuming no match - " + e.getMessage());
         }
 
         if (!result) {
-            logger.trace("Failed to match [{}] with [{}]", matched, this.matcher);
+            mockServerLogger.trace(context, "Failed to match [{}] with [{}]", matched, this.matcher);
         }
 
         return matcher.isNot() != reverseResultIfNot(result);

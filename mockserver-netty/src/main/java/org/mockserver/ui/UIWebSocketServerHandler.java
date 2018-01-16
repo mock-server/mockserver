@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.*;
@@ -17,15 +14,14 @@ import io.netty.util.ReferenceCountUtil;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.collections.CircularHashMap;
-import org.mockserver.filters.MockServerLog;
+import org.mockserver.filters.MockServerEventLog;
 import org.mockserver.log.model.MessageLogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.MockServerMatcher;
-import org.mockserver.ui.model.ValueWithKey;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.ui.model.ValueWithKey;
 
 import java.util.Map;
 
@@ -36,17 +32,18 @@ import static org.mockserver.model.HttpRequest.request;
 /**
  * @author jamesdbloom
  */
+@ChannelHandler.Sharable
 public class UIWebSocketServerHandler extends ChannelInboundHandlerAdapter implements MockServerLogListener, MockServerMatcherListener {
 
     private static final AttributeKey<Boolean> CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET = AttributeKey.valueOf("CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET");
     private static final String UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI = "/_mockserver_ui_websocket";
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerLogger mockServerLogger;
     private WebSocketServerHandshaker handshaker;
     private CircularHashMap<ChannelHandlerContext, HttpRequest> clientRegistry = new CircularHashMap<>(100);
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
+    private HttpRequestSerializer httpRequestSerializer;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private MockServerMatcher mockServerMatcher;
-    private MockServerLog mockServerLog;
+    private MockServerEventLog mockServerLog;
     private Function<ObjectWithReflectiveEqualsHashCodeToString, Object> wrapValueWithKey = new Function<ObjectWithReflectiveEqualsHashCodeToString, Object>() {
         public ValueWithKey apply(ObjectWithReflectiveEqualsHashCodeToString input) {
             return new ValueWithKey(input);
@@ -58,6 +55,8 @@ public class UIWebSocketServerHandler extends ChannelInboundHandlerAdapter imple
         mockServerMatcher.registerListener(this);
         mockServerLog = httpStateHandler.getMockServerLog();
         mockServerLog.registerListener(this);
+        mockServerLogger = httpStateHandler.getMockServerLogger();
+        httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
     }
 
     @Override
@@ -140,13 +139,13 @@ public class UIWebSocketServerHandler extends ChannelInboundHandlerAdapter imple
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            logger.error("web socket server caught exception", cause);
+            mockServerLogger.error("web socket server caught exception", cause);
         }
         ctx.close();
     }
 
     @Override
-    public void updated(MockServerLog mockServerLog) {
+    public void updated(MockServerEventLog mockServerLog) {
         for (Map.Entry<ChannelHandlerContext, HttpRequest> registryEntry : clientRegistry.entrySet()) {
             sendUpdate(registryEntry.getValue(), registryEntry.getKey());
         }
@@ -172,7 +171,7 @@ public class UIWebSocketServerHandler extends ChannelInboundHandlerAdapter imple
                 })
             ));
         } catch (JsonProcessingException jpe) {
-            logger.error("Exception while updating UI", jpe);
+            mockServerLogger.error("Exception while updating UI", jpe);
         }
     }
 }
