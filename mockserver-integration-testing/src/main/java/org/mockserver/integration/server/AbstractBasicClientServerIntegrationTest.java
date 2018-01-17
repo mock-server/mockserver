@@ -54,7 +54,6 @@ import static org.mockserver.model.StringBody.exact;
  */
 public abstract class AbstractBasicClientServerIntegrationTest {
 
-    protected static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(AbstractBasicClientServerIntegrationTest.class);
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
     protected static List<String> headersToIgnore = ImmutableList.of(

@@ -235,7 +235,7 @@ public class ActionHandler {
                         httpStateHandler.log(new RequestResponseLogEntry(request, response));
                         mockServerLogger.info(
                             request,
-                            "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
+                            "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " as curl:{}",
                             response,
                             request,
                             httpRequestToCurlSerializer.toCurl(request, remoteAddress)

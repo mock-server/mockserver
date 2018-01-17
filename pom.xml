@@ -49,7 +49,7 @@
         <slf4j.version>1.7.25</slf4j.version>
         <tomcat.version>8.0.47</tomcat.version>
         <jackson.version>2.9.2</jackson.version>
-        <netty.version>4.1.17.Final</netty.version>
+        <netty.version>4.1.19.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.58</boucycastle.verion>
         <spring.version>4.3.12.RELEASE</spring.version>
@@ -208,6 +208,11 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-handler</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler-proxy</artifactId>
                 <version>${netty.version}</version>
             </dependency>
             <dependency>

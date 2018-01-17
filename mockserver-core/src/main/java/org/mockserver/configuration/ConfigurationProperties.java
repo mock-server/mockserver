@@ -1,6 +1,7 @@
 package org.mockserver.configuration;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import io.netty.util.NettyRuntime;
 import io.netty.util.internal.SystemPropertyUtil;
@@ -12,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.security.KeyStore;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -227,6 +229,34 @@ public class ConfigurationProperties {
             throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
         }
         System.setProperty("mockserver.logLevel", level);
+    }
+
+    public static InetSocketAddress httpProxy() {
+        return readInetSocketAddressProperty("mockserver.httpProxy");
+    }
+
+    public static InetSocketAddress httpsProxy() {
+        return readInetSocketAddressProperty("mockserver.httpsProxy");
+    }
+
+    public static InetSocketAddress httpSocksProxy() {
+        return readInetSocketAddressProperty("mockserver.httpSocksProxy");
+    }
+
+    private static InetSocketAddress readInetSocketAddressProperty(String s) {
+        InetSocketAddress inetSocketAddress = null;
+        String proxy = readPropertyHierarchically(s, null);
+        if (!Strings.isNullOrEmpty(proxy)) {
+            String[] proxyParts = proxy.split(":");
+            if (proxyParts.length > 1) {
+                try {
+                    inetSocketAddress = new InetSocketAddress(proxyParts[0], Integer.parseInt(proxyParts[1]));
+                } catch (NumberFormatException nfe) {
+                    MockServerLogger.MOCK_SERVER_LOGGER.error("NumberFormatException converting value \"" + proxyParts[1] + "\" into an integer", nfe);
+                }
+            }
+        }
+        return inetSocketAddress;
     }
 
     private static List<Integer> readIntegerListProperty(String key, Integer defaultValue) {

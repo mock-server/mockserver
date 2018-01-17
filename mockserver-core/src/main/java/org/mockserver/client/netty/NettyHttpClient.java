@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.ConfigurationProperties.httpProxy;
 
 public class NettyHttpClient {
 
@@ -37,13 +38,16 @@ public class NettyHttpClient {
         .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
         .handler(new HttpClientInitializer());
     private final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
+    private InetSocketAddress httpProxyAddress = httpProxy();
 
     public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {
         return sendRequest(httpRequest, httpRequest.socketAddressFromHostHeader());
     }
 
     public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) throws SocketConnectionException {
-        if (remoteAddress == null) {
+        if (httpProxyAddress != null) {
+            remoteAddress = httpProxyAddress;
+        } else if (remoteAddress == null) {
             remoteAddress = httpRequest.socketAddressFromHostHeader();
         }
 

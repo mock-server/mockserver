@@ -11,6 +11,8 @@ import org.mockserver.server.netty.codec.MockServerServerCodec;
 import org.mockserver.ui.UIWebSocketServerHandler;
 import org.mockserver.unification.PortUnificationHandler;
 
+import static org.mockserver.proxy.Proxy.PROXYING;
+
 /**
  * @author jamesdbloom
  */
@@ -30,6 +32,7 @@ public class DirectProxyUnificationInitializer extends PortUnificationHandler {
 
     @Override
     protected void configurePipeline(ChannelHandlerContext ctx, ChannelPipeline pipeline) {
+        ctx.channel().attr(PROXYING).set(Boolean.TRUE);
         pipeline.addLast(callbackWebSocketServerHandler);
         pipeline.addLast(uiWebSocketServerHandler);
         pipeline.addLast(new MockServerServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel())));

@@ -304,7 +304,7 @@ public class ActionHandlerTest {
         verify(mockNettyHttpClient).sendRequest(request, remoteAddress);
         verify(mockLogFormatter).info(
             request,
-            "returning response:{}" + NEW_LINE + " for request as json:{}" + NEW_LINE + " as curl:{}",
+            "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " as curl:{}",
             response("some_body"),
             request,
             new HttpRequestToCurlSerializer().toCurl(request, remoteAddress)
