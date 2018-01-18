@@ -1,30 +1,35 @@
 package org.mockserver.configuration;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
-import org.apache.commons.io.IOUtils;
+import io.netty.util.NettyRuntime;
+import io.netty.util.internal.SystemPropertyUtil;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.KeyStoreFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
 import java.security.KeyStore;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
  */
 public class ConfigurationProperties {
 
-    static final long DEFAULT_MAX_TIMEOUT = 120;
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationProperties.class);
+    private static final String DEFAULT_LOG_LEVEL = "INFO";
+    private static final long DEFAULT_MAX_TIMEOUT = 20;
+    private static final int DEFAULT_MAX_EXPECTATIONS = 1000;
+    private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = Math.max(1, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors() * 5));
     private static final Properties PROPERTIES = readPropertyFile();
 
     private static final Set<String> ALL_SUBJECT_ALTERNATIVE_DOMAINS = Sets.newConcurrentHashSet();
@@ -38,21 +43,25 @@ public class ConfigurationProperties {
         addSslSubjectAlternativeNameIps(readPropertyHierarchically("mockserver.sslSubjectAlternativeNameIps", "127.0.0.1,0.0.0.0").split(","));
     }
 
-    // property file config
-    public static String propertyFile() {
+    private static String propertyFile() {
         return System.getProperty("mockserver.propertyFile", "mockserver.properties");
     }
 
-    // cors config for API
     public static boolean enableCORSForAPI() {
         return Boolean.parseBoolean(readPropertyHierarchically("mockserver.enableCORSForAPI", "" + true));
+    }
+
+    public static boolean enableCORSForAPIHasBeenSetExplicitly() {
+        return (
+            System.getProperty("mockserver.enableCORSForAPI") != null ||
+                PROPERTIES.getProperty("mockserver.enableCORSForAPI") != null
+        );
     }
 
     public static void enableCORSForAPI(boolean enableCORSForAPI) {
         System.setProperty("mockserver.enableCORSForAPI", "" + enableCORSForAPI);
     }
 
-    // cors config for all responses
     public static boolean enableCORSForAllResponses() {
         return Boolean.parseBoolean(readPropertyHierarchically("mockserver.enableCORSForAllResponses", "" + false));
     }
@@ -61,7 +70,22 @@ public class ConfigurationProperties {
         System.setProperty("mockserver.enableCORSForAllResponses", "" + enableCORSForAPI);
     }
 
-    // socket config
+    public static int maxExpectations() {
+        return readIntegerProperty("mockserver.maxExpectations", DEFAULT_MAX_EXPECTATIONS);
+    }
+
+    public static void maxExpectations(int count) {
+        System.setProperty("mockserver.maxExpectations", "" + count);
+    }
+
+    public static int nioEventLoopThreadCount() {
+        return readIntegerProperty("mockserver.nioEventLoopThreadCount", DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT);
+    }
+
+    public static void nioEventLoopThreadCount(int count) {
+        System.setProperty("mockserver.nioEventLoopThreadCount", "" + count);
+    }
+
     public static long maxSocketTimeout() {
         return readLongProperty("mockserver.maxSocketTimeout", TimeUnit.SECONDS.toMillis(DEFAULT_MAX_TIMEOUT));
     }
@@ -70,7 +94,6 @@ public class ConfigurationProperties {
         System.setProperty("mockserver.maxSocketTimeout", "" + milliseconds);
     }
 
-    // ssl config
     public static String javaKeyStoreFilePath() {
         return readPropertyHierarchically("mockserver.javaKeyStoreFilePath", KeyStoreFactory.defaultKeyStoreFileName());
     }
@@ -128,7 +151,7 @@ public class ConfigurationProperties {
             }
         }
         if (subjectAlternativeDomainsModified) {
-            System.setProperty("mockserver.sslSubjectAlternativeNameDomains", Joiner.on(",").join(new TreeSet(ALL_SUBJECT_ALTERNATIVE_DOMAINS)));
+            System.setProperty("mockserver.sslSubjectAlternativeNameDomains", Joiner.on(",").join(new TreeSet<>(ALL_SUBJECT_ALTERNATIVE_DOMAINS)));
             rebuildKeyStore(true);
         }
     }
@@ -153,7 +176,7 @@ public class ConfigurationProperties {
             }
         }
         if (subjectAlternativeIpsModified) {
-            System.setProperty("mockserver.sslSubjectAlternativeNameIps", Joiner.on(",").join(new TreeSet(ALL_SUBJECT_ALTERNATIVE_IPS)));
+            System.setProperty("mockserver.sslSubjectAlternativeNameIps", Joiner.on(",").join(new TreeSet<>(ALL_SUBJECT_ALTERNATIVE_IPS)));
             rebuildKeyStore(true);
         }
     }
@@ -171,18 +194,16 @@ public class ConfigurationProperties {
         ConfigurationProperties.REBUILD_KEY_STORE.set(rebuildKeyStore);
     }
 
-    // mockserver config
     public static List<Integer> mockServerPort() {
-        return readIntegerProperty("mockserver.mockServerPort", -1);
+        return readIntegerListProperty("mockserver.mockServerPort", -1);
     }
 
     public static void mockServerPort(Integer... port) {
         System.setProperty("mockserver.mockServerPort", INTEGER_STRING_LIST_PARSER.toString(port));
     }
 
-    // proxy config
     public static Integer proxyPort() {
-        List<Integer> ports = readIntegerProperty("mockserver.proxyPort", -1);
+        List<Integer> ports = readIntegerListProperty("mockserver.proxyPort", -1);
         if (!ports.isEmpty()) {
             return ports.get(0);
         } else {
@@ -194,66 +215,8 @@ public class ConfigurationProperties {
         System.setProperty("mockserver.proxyPort", INTEGER_STRING_LIST_PARSER.toString(port));
     }
 
-    private static List<Integer> readIntegerProperty(String key, Integer defaultValue) {
-        try {
-            return INTEGER_STRING_LIST_PARSER.toList(readPropertyHierarchically(key, "" + defaultValue));
-        } catch (NumberFormatException nfe) {
-            LOGGER.error("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, "" + defaultValue) + "]", nfe);
-            return Arrays.asList();
-        }
-    }
-
-    private static Long readLongProperty(String key, long defaultValue) {
-        try {
-            return Long.parseLong(readPropertyHierarchically(key, "" + defaultValue));
-        } catch (NumberFormatException nfe) {
-            LOGGER.error("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, "" + defaultValue) + "]", nfe);
-            return defaultValue;
-        }
-    }
-
-    public static Properties readPropertyFile() {
-
-        Properties properties = new Properties();
-
-        InputStream inputStream = ConfigurationProperties.class.getClassLoader().getResourceAsStream(propertyFile());
-        if (inputStream != null) {
-            try {
-                properties.load(inputStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-                LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
-            }
-        } else {
-            LOGGER.debug("Property file not found on classpath using path [" + propertyFile() + "]");
-            try {
-                properties.load(new FileInputStream(propertyFile()));
-            } catch (FileNotFoundException e) {
-                LOGGER.debug("Property file not found using path [" + propertyFile() + "]");
-            } catch (IOException e) {
-                e.printStackTrace();
-                LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
-            }
-        }
-
-        if (!properties.isEmpty()) {
-            IOUtils.closeQuietly(inputStream);
-            Enumeration<?> propertyNames = properties.propertyNames();
-
-            StringBuilder propertiesLogDump = new StringBuilder();
-            propertiesLogDump.append("Reading properties from property file [").append(propertyFile()).append("]:\n");
-            while (propertyNames.hasMoreElements()) {
-                String propertyName = String.valueOf(propertyNames.nextElement());
-                propertiesLogDump.append("\t").append(propertyName).append(" = ").append(properties.getProperty(propertyName)).append("\n");
-            }
-            LOGGER.info(propertiesLogDump.toString());
-        }
-
-        return properties;
-    }
-
-    public static String readPropertyHierarchically(String key, String defaultValue) {
-        return System.getProperty(key, PROPERTIES.getProperty(key, defaultValue));
+    public static Level logLevel() {
+        return Level.valueOf(readPropertyHierarchically("mockserver.logLevel", DEFAULT_LOG_LEVEL));
     }
 
     /**
@@ -261,63 +224,112 @@ public class ConfigurationProperties {
      *
      * @param level the log level, which can be ALL, DEBUG, INFO, WARN, ERROR, OFF
      */
-    public static void overrideLogLevel(String level) {
-        if (level != null) {
-            if (!Arrays.asList("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF").contains(level)) {
-                throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
+    public static void logLevel(String level) {
+        if (!Arrays.asList("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF").contains(level)) {
+            throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
+        }
+        System.setProperty("mockserver.logLevel", level);
+    }
+
+    public static InetSocketAddress httpProxy() {
+        return readInetSocketAddressProperty("mockserver.httpProxy");
+    }
+
+    public static InetSocketAddress httpsProxy() {
+        return readInetSocketAddressProperty("mockserver.httpsProxy");
+    }
+
+    public static InetSocketAddress httpSocksProxy() {
+        return readInetSocketAddressProperty("mockserver.httpSocksProxy");
+    }
+
+    private static InetSocketAddress readInetSocketAddressProperty(String s) {
+        InetSocketAddress inetSocketAddress = null;
+        String proxy = readPropertyHierarchically(s, null);
+        if (!Strings.isNullOrEmpty(proxy)) {
+            String[] proxyParts = proxy.split(":");
+            if (proxyParts.length > 1) {
+                try {
+                    inetSocketAddress = new InetSocketAddress(proxyParts[0], Integer.parseInt(proxyParts[1]));
+                } catch (NumberFormatException nfe) {
+                    MockServerLogger.MOCK_SERVER_LOGGER.error("NumberFormatException converting value \"" + proxyParts[1] + "\" into an integer", nfe);
+                }
             }
-            System.setProperty("mockserver.logLevel", level);
-            System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", level);
-            overrideLogLevelWithReflection(level, "org.mockserver");
-            overrideLogLevelWithReflection(level, "org.mockserver.mockserver");
-            overrideLogLevelWithReflection(level, "org.mockserver.mockserver.MockServerHandler");
-            overrideLogLevelWithReflection(level, "org.mockserver.proxy");
-            overrideLogLevelWithReflection(level, "org.mockserver.proxy.http.HttpProxyHandler");
-            overrideLogLevelWithReflection(level, "org.mockserver.matchers.HttpRequestMatcher");
-            overrideLogLevelWithReflection(level, "org.mockserver.filters.LogFilter");
+        }
+        return inetSocketAddress;
+    }
+
+    private static List<Integer> readIntegerListProperty(String key, Integer defaultValue) {
+        try {
+            return INTEGER_STRING_LIST_PARSER.toList(readPropertyHierarchically(key, "" + defaultValue));
+        } catch (NumberFormatException nfe) {
+            MockServerLogger.MOCK_SERVER_LOGGER.error("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, "" + defaultValue) + "]", nfe);
+            return Collections.emptyList();
         }
     }
 
-    private static void overrideLogLevelWithReflection(String level, String loggerName) {
-        Logger logger = LoggerFactory.getLogger(loggerName);
-
+    private static Integer readIntegerProperty(String key, int defaultValue) {
         try {
-            // check if logback-classic is being used
-            Class logbackLevelClass = ConfigurationProperties.class.getClassLoader().loadClass("ch.qos.logback.classic.Level");
-
-            // convert string to log level
-            Method toLevelMethod = logbackLevelClass.getDeclaredMethod("toLevel", String.class);
-            toLevelMethod.setAccessible(true);
-            Object levelInstance = toLevelMethod.invoke(logbackLevelClass, level);
-
-            // update log level
-            Method setLevelMethod = logger.getClass().getDeclaredMethod("setLevel", logbackLevelClass);
-            if (setLevelMethod != null) {
-                setLevelMethod.invoke(logger, levelInstance);
-            }
-        } catch (Exception e) {
-            ConfigurationProperties.LOGGER.debug("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
-        }
-
-
-        try {
-            // check if SimpleLogger is used (i.e. in maven plugin)
-            Class loggerClass = logger.getClass();
-            if (logger.getClass().getName().equals("org.slf4j.impl.SimpleLogger")) {
-                // convert string to log level
-                Method stringToLevelMethod = loggerClass.getDeclaredMethod("stringToLevel", String.class);
-                stringToLevelMethod.setAccessible(true);
-                Object logLevelInstance = stringToLevelMethod.invoke(logger, level);
-
-                // update log level
-                Field currentLogLevelField = loggerClass.getDeclaredField("currentLogLevel");
-                currentLogLevelField.setAccessible(true);
-                currentLogLevelField.set(logger, logLevelInstance);
-            }
-        } catch (Exception e) {
-            ConfigurationProperties.LOGGER.debug("Exception updating logging level using reflection, likely cause is Logback is not on the classpath");
+            return Integer.parseInt(readPropertyHierarchically(key, "" + defaultValue));
+        } catch (NumberFormatException nfe) {
+            MockServerLogger.MOCK_SERVER_LOGGER.error("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, "" + defaultValue) + "]", nfe);
+            return defaultValue;
         }
     }
 
+    private static Long readLongProperty(String key, long defaultValue) {
+        try {
+            return Long.parseLong(readPropertyHierarchically(key, "" + defaultValue));
+        } catch (NumberFormatException nfe) {
+            MockServerLogger.MOCK_SERVER_LOGGER.error("NumberFormatException converting " + key + " with value [" + readPropertyHierarchically(key, "" + defaultValue) + "]", nfe);
+            return defaultValue;
+        }
+    }
+
+    private static Properties readPropertyFile() {
+
+        Properties properties = new Properties();
+
+        try (InputStream inputStream = ConfigurationProperties.class.getClassLoader().getResourceAsStream(propertyFile())) {
+            if (inputStream != null) {
+                try {
+                    properties.load(inputStream);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    MockServerLogger.MOCK_SERVER_LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
+                }
+            } else {
+                MockServerLogger.MOCK_SERVER_LOGGER.debug("Property file not found on classpath using path [" + propertyFile() + "]");
+                try {
+                    properties.load(new FileInputStream(propertyFile()));
+                } catch (FileNotFoundException e) {
+                    MockServerLogger.MOCK_SERVER_LOGGER.debug("Property file not found using path [" + propertyFile() + "]");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    MockServerLogger.MOCK_SERVER_LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
+                }
+            }
+        } catch (IOException ioe) {
+            // ignore
+        }
+
+        if (!properties.isEmpty()) {
+            Enumeration<?> propertyNames = properties.propertyNames();
+
+            StringBuilder propertiesLogDump = new StringBuilder();
+            propertiesLogDump.append("Reading properties from property file [").append(propertyFile()).append("]:" + NEW_LINE);
+            while (propertyNames.hasMoreElements()) {
+                String propertyName = String.valueOf(propertyNames.nextElement());
+                propertiesLogDump.append("\t").append(propertyName).append(" = ").append(properties.getProperty(propertyName)).append(NEW_LINE);
+            }
+            MockServerLogger.MOCK_SERVER_LOGGER.info(propertiesLogDump.toString());
+        }
+
+        return properties;
+    }
+
+    private static String readPropertyHierarchically(String key, String defaultValue) {
+        return System.getProperty(key, PROPERTIES != null ? PROPERTIES.getProperty(key, defaultValue) : defaultValue);
+    }
 
 }

@@ -3,8 +3,6 @@ package org.mockserver.mockserver;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.stop.StopEventQueue;
 
-import java.util.List;
-
 /**
  * @author jamesdbloom
  */

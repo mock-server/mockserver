@@ -33,3 +33,12 @@
     };
 
 }(this, this.document));
+
+function scrollActiveMenuItemIntoView() {
+    var activeMenuItem = document.querySelector("li.active");
+    if (activeMenuItem) {
+        activeMenuItem.scrollIntoView({inline: 'nearest', behaviour: 'auto'});
+    }
+}
+
+window.onload = scrollActiveMenuItemIntoView;

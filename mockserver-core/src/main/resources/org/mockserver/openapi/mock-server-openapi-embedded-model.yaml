@@ -1,0 +1,673 @@
+openapi: 3.0.0
+servers:
+  - url: 'http://localhost:1080/'
+  - url: 'https://localhost:1080/'
+info:
+  title: Mock Server API
+  version: "5.3.0"
+  description: >-
+    MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby and a simple REST API (as shown below).
+
+
+    MockServer Proxy is a proxy that introspects all proxied traffic including encrypted SSL traffic and supports Port Forwarding, Web Proxying (i.e. HTTP proxy), HTTPS Tunneling Proxying (using HTTP CONNECT) and SOCKS Proxying (i.e. dynamic port forwarding).
+
+
+    Both MockServer and the MockServer Proxy record all received requests so that it is possible to verify exactly what requests have been sent by the system under test.
+  license:
+    url: 'https://github.com/jamesdbloom/mockserver/blob/master/LICENSE.md'
+    name: Apache 2.0
+tags:
+  - name: expectation
+    description: Create expectations (only supported by MockServer)
+  - name: verify
+    description: Verify requests (both MockServer & MockServer Proxy)
+  - name: control
+    description: Manage state or process (both MockServer & MockServer Proxy)
+
+paths:
+  /expectation:
+    put:
+      tags:
+        - expectation
+      summary: create expectation
+      responses:
+        '201':
+          description: expectation created
+        '400':
+          description: incorrect request format
+        '406':
+          description: invalid expectation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              title: list of expectations
+              type: array
+              additionalProperties: false
+              items:
+                $ref: "#/components/schemas/Expectations"
+        description: expectation to create
+        required: true
+  /clear:
+    put:
+      tags:
+        - control
+      summary: clears expectations and recorded requests that match the request matcher
+      responses:
+        '200':
+          description: expectations and recorded requests cleared
+        '400':
+          description: incorrect request format
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HttpRequest"
+        description: request used to match expectations and recored requests to clear
+  /reset:
+    put:
+      tags:
+        - control
+      summary: clears all expectations and recorded requests
+      responses:
+        '200':
+          description: expectations and recorded requests cleared
+  /retrieve:
+    put:
+      tags:
+        - control
+      summary: retrieve recorded requests, active expectations, recorded expectations or log messages
+      parameters:
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: ["java", "json"]
+          description: changes response format, default if not specificed is "json", supported values are "java", "json"
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: ["logs", "requests", "recorded_expectations", "active_expectations"]
+          description: specifies the type of object that is retrieve, default if not specified is "requests", supported values are "logs", "requests", "recorded_expectations", "active_expectations"
+      responses:
+        '200':
+          description: recorded requests or active expectations returned
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    additionalProperties: false
+                    items:
+                      $ref: "#/components/schemas/Expectation"
+                  - type: array
+                    additionalProperties: false
+                    items:
+                      $ref: "#/components/schemas/HttpResponse"
+            application/java:
+              schema:
+                type: string
+                description: Java code for the list of either Expectations or HttpResponses
+            text/plain:
+              schema:
+                type: string
+                description: List of recorded log messages
+        '400':
+          description: incorrect request format
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HttpRequest"
+        description: >-
+          request used to match which recorded requests, expectations or log messages to return, an empty body matches all requests, expectations or log messages
+  /verify:
+    put:
+      tags:
+        - verify
+      summary: verify a request has been received a specific number of times
+      responses:
+        '200':
+          description: matching request has been received specified number of times
+        '400':
+          description: incorrect request format
+        '406':
+          description: request has not been received specified numbers of times
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: 'JUnit expected:<...> but was:<...> format'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Verification"
+        description: request matcher and the number of times to match
+        required: true
+  /verifySequence:
+    put:
+      tags:
+        - verify
+      summary: verify a sequence of request has been received in the specific order
+      responses:
+        '202':
+          description: request sequence has been received in specified order
+        '400':
+          description: incorrect request format
+        '406':
+          description: request sequence has not been received in specified order
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: 'JUnit expected:<...> but was:<...> format'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerificationSequence"
+        description: the sequence of requests matchers
+        required: true
+  /status:
+    put:
+      tags:
+        - control
+      summary: return listening ports
+      responses:
+        '200':
+          description: MockServer is running and listening on the listed ports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ports"
+  /bind:
+    put:
+      tags:
+        - control
+      summary: bind additional listening ports
+      description: only supported on Netty version
+      responses:
+        '200':
+          description: >-
+            listening on additional requested ports, note: the response ony
+            contains ports added for the request, to list all ports use /status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ports"
+        '400':
+          description: incorrect request format
+        '406':
+          description: >-
+            unable to bind to ports (i.e. already bound or JVM process doesn't
+            have permission)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Ports"
+        description: >-
+          list of ports to bind to, where 0 indicates dynamically bind to any
+          available port
+        required: true
+  /stop:
+    put:
+      tags:
+        - control
+      summary: stop running process
+      description: only supported on Netty version
+      responses:
+        '200':
+          description: MockServer process is stopping
+components:
+  schemas:
+    Expectations:
+      title: "list of expectations"
+      oneOf:
+      - type: array
+        additionalProperties: false
+        items:
+          $ref: "#/components/schemas/Expectation"
+      - $ref: "#/components/schemas/Expectation"
+    Expectation:
+      title: "expectation"
+      type: object
+      additionalProperties: false
+      properties:
+        httpRequest:
+          $ref: "#/components/schemas/HttpRequest"
+        httpResponse:
+          $ref: "#/components/schemas/HttpResponse"
+        httpResponseTemplate:
+          $ref: "#/components/schemas/HttpTemplate"
+        httpResponseClassCallback:
+          $ref: "#/components/schemas/HttpClassCallback"
+        httpResponseObjectCallback:
+          $ref: "#/components/schemas/HttpObjectCallback"
+        httpForward:
+          $ref: "#/components/schemas/HttpForward"
+        httpForwardTemplate:
+          $ref: "#/components/schemas/HttpTemplate"
+        httpForwardClassCallback:
+          $ref: "#/components/schemas/HttpClassCallback"
+        httpForwardObjectCallback:
+          $ref: "#/components/schemas/HttpObjectCallback"
+        httpOverrideForwardedRequest:
+          $ref: "#/components/schemas/HttpOverrideForwardedRequest"
+        httpError:
+          $ref: "#/components/schemas/HttpError"
+        times:
+          $ref: "#/components/schemas/Times"
+        timeToLive:
+          $ref: "#/components/schemas/TimeToLive"
+      oneOf:
+      - required:
+        - httpResponse
+      - required:
+        - httpForward
+      - required:
+        - httpClassCallback
+      - required:
+        - httpError
+      - required:
+        - httpObjectCallback
+    HttpRequest:
+      title: "request matcher"
+      type: object
+      additionalProperties: false
+      properties:
+        body:
+          $ref: "#/components/schemas/Body"
+        headers:
+          $ref: "#/components/schemas/KeyToMultiValue"
+        cookies:
+          $ref: "#/components/schemas/KeyToValue"
+        queryStringParameters:
+          $ref: "#/components/schemas/KeyToMultiValue"
+        path:
+          type: string
+        method:
+          type: string
+        secure:
+          type: boolean
+        keepAlive:
+          type: boolean
+    HttpResponse:
+      title: "response to return"
+      type: object
+      additionalProperties: false
+      properties:
+        body:
+          $ref: "#/components/schemas/BodyWithContentType"
+        delay:
+          $ref: "#/components/schemas/Delay"
+        cookies:
+          $ref: "#/components/schemas/KeyToValue"
+        connectionOptions:
+          $ref: "#/components/schemas/ConnectionOptions"
+        headers:
+          $ref: "#/components/schemas/KeyToMultiValue"
+        statusCode:
+          type: integer
+        reasonPhrase:
+          type: string
+    HttpTemplate:
+      title: "template to generate response / request"
+      type: object
+      additionalProperties: false
+      properties:
+        templateType:
+          enum:
+          - JAVASCRIPT
+          - VELOCITY
+        template:
+          type: string
+        delay:
+          $ref: "#/components/schemas/Delay"
+    HttpForward:
+      title: host and port to forward to
+      type: object
+      additionalProperties: false
+      properties:
+        host:
+          type: string
+        port:
+          type: integer
+        scheme:
+          enum:
+          - HTTP
+          - HTTPS
+        delay:
+          $ref: "#/components/schemas/Delay"
+    HttpClassCallback:
+      title: class callback
+      type: object
+      additionalProperties: false
+      properties:
+        callbackClass:
+          type: string
+    HttpObjectCallback:
+      title: object / method callback
+      type: object
+      additionalProperties: false
+      properties:
+        clientId:
+          type: string
+    HttpOverrideForwardedRequest:
+      title: override forwarded request
+      type: object
+      additionalProperties: false
+      properties:
+        httpRequest:
+          $ref: "#/components/schemas/HttpRequest"
+        delay:
+          $ref: "#/components/schemas/Delay"
+    HttpError:
+      title: error behaviour
+      type: object
+      additionalProperties: false
+      properties:
+        delay:
+          $ref: "#/components/schemas/Delay"
+        dropConnection:
+          type: boolean
+        responseBytes:
+          type: string
+    Times:
+      title: "number of responses"
+      type: object
+      additionalProperties: false
+      properties:
+        remainingTimes:
+          type: integer
+        unlimited:
+          type: boolean
+    TimeToLive:
+      title: "time expectation is valid for"
+      type: object
+      additionalProperties: false
+      properties:
+        timeUnit:
+          enum:
+          - HOURS
+          - MINUTES
+          - SECONDS
+          - MILLISECONDS
+          - MICROSECONDS
+          - NANOSECONDS
+        timeToLive:
+          type: integer
+        unlimited:
+          type: boolean
+    KeyToMultiValue:
+      oneOf:
+      - type: array
+        additionalProperties: false
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            values:
+              type: array
+              items:
+                type: string
+      - type: object
+        # additionalProperties: false
+        # patternProperties:
+        #   "^\\S+$":
+        #     type: array
+        #     items:
+        #       type: string
+    KeyToValue:
+      oneOf:
+      - type: array
+        additionalProperties: false
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            value:
+              type: string
+      - type: object
+      #   additionalProperties: false
+      #   patternProperties:
+      #     "^\\S+$":
+      #       type: string
+    Body:
+      title: "request body matcher"
+      oneOf:
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - BINARY
+          base64Bytes:
+            type: string
+          contentType:
+            type: string
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - JSON
+          json:
+            type: string
+          contentType:
+            type: string
+          matchType:
+            enum:
+            - STRICT
+            - ONLY_MATCHING_FIELDS
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - JSON_SCHEMA
+          jsonSchema:
+            type: string
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - PARAMETERS
+          parameters:
+            $ref: "#/components/schemas/KeyToMultiValue"
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - REGEX
+          regex:
+            type: string
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - STRING
+          string:
+            type: string
+          contentType:
+            type: string
+          subString:
+            type: boolean
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - XML
+          xml:
+            type: string
+          contentType:
+            type: string
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - XML_SCHEMA
+          xmlSchema:
+            type: string
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - XPATH
+          xpath:
+            type: string
+      - type: string
+    BodyWithContentType:
+      title: "response body"
+      oneOf:
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - BINARY
+          base64Bytes:
+            type: string
+          contentType:
+            type: string
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - JSON
+          json:
+            type: string
+          contentType:
+            type: string
+          matchType:
+            enum:
+            - STRICT
+            - ONLY_MATCHING_FIELDS
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - PARAMETERS
+          parameters:
+            $ref: "#/components/schemas/KeyToMultiValue"
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - STRING
+          string:
+            type: string
+          contentType:
+            type: string
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - XML
+          xml:
+            type: string
+          contentType:
+            type: string
+      - type: string
+    Delay:
+      title: "response delay"
+      type: object
+      additionalProperties: false
+      properties:
+        timeUnit:
+          type: string
+        value:
+          type: integer
+    ConnectionOptions:
+      title: "connection options"
+      type: object
+      additionalProperties: false
+      properties:
+        closeSocket:
+          type: boolean
+        contentLengthHeaderOverride:
+          type: integer
+        suppressContentLengthHeader:
+          type: boolean
+        suppressConnectionHeader:
+          type: boolean
+        keepAliveOverride:
+          type: boolean
+    Verification:
+      title: "verification"
+      type: object
+      additionalProperties: false
+      properties:
+        httpRequest:
+          $ref: "#/components/schemas/HttpRequest"
+        times:
+          $ref: "#/components/schemas/VerificationTimes"
+    VerificationTimes:
+      title: "number of request to verify"
+      type: object
+      additionalProperties: false
+      properties:
+        count:
+          type: integer
+        exact:
+          type: boolean
+    VerificationSequence:
+      title: "verification sequence"
+      type: object
+      additionalProperties: false
+      properties:
+        httpRequests:
+          type: array
+          items:
+            $ref: "#/components/schemas/HttpRequest"
+    Ports:
+      title: "list of ports"
+      type: object
+      additionalProperties: false
+      properties:
+        ports:
+          items:
+            type: number
+          type: array

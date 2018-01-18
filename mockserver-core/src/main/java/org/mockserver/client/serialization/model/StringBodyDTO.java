@@ -3,14 +3,13 @@ package org.mockserver.client.serialization.model;
 import com.google.common.net.MediaType;
 import org.mockserver.model.StringBody;
 
-import java.nio.charset.Charset;
-
 /**
  * @author jamesdbloom
  */
-public class StringBodyDTO extends BodyDTO {
+public class StringBodyDTO extends BodyWithContentTypeDTO {
 
     private String string;
+    private boolean subString;
 
     public StringBodyDTO(StringBody stringBody) {
         this(stringBody, stringBody.getNot());
@@ -19,6 +18,7 @@ public class StringBodyDTO extends BodyDTO {
     public StringBodyDTO(StringBody stringBody, Boolean not) {
         super(stringBody.getType(), not, stringBody.getContentType());
         string = stringBody.getValue();
+        subString = stringBody.isSubString();
     }
 
     protected StringBodyDTO() {
@@ -28,7 +28,11 @@ public class StringBodyDTO extends BodyDTO {
         return string;
     }
 
+    public boolean isSubString() {
+        return subString;
+    }
+
     public StringBody buildObject() {
-        return new StringBody(string, (contentType != null ? MediaType.parse(contentType) : null));
+        return new StringBody(string, subString, (contentType != null ? MediaType.parse(contentType) : null));
     }
 }

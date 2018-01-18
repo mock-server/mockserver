@@ -11,6 +11,7 @@ import org.mockserver.server.netty.codec.MockServerResponseEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -124,6 +125,45 @@ public class MockServerResponseEncoderBasicMappingTest {
     }
 
     @Test
+    public void shouldEncodeReasonPhrase() {
+        // given
+        httpResponse.withReasonPhrase("someReasonPhrase");
+
+        // when
+        new MockServerResponseEncoder().encode(null, httpResponse, output);
+
+        // then
+        FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
+        assertThat(fullHttpResponse.status().reasonPhrase(), is("someReasonPhrase"));
+    }
+
+    @Test
+    public void shouldEncodeNoReasonPhrase() {
+        // given
+        httpResponse.withReasonPhrase(null);
+
+        // when
+        new MockServerResponseEncoder().encode(null, httpResponse, output);
+
+        // then
+        FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
+        assertThat(fullHttpResponse.status().reasonPhrase(), is("OK"));
+    }
+
+    @Test
+    public void shouldEncodeNoReasonPhraseAndStatusCode() {
+        // given
+        httpResponse.withStatusCode(404);
+
+        // when
+        new MockServerResponseEncoder().encode(null, httpResponse, output);
+
+        // then
+        FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
+        assertThat(fullHttpResponse.status().reasonPhrase(), is("Not Found"));
+    }
+
+    @Test
     public void shouldEncodeStringBody() {
         // given
         httpResponse.withBody("somebody");
@@ -139,7 +179,7 @@ public class MockServerResponseEncoderBasicMappingTest {
     @Test
     public void shouldEncodeBinaryBody() {
         // given
-        httpResponse.withBody(binary("somebody".getBytes()));
+        httpResponse.withBody(binary("somebody".getBytes(UTF_8)));
 
         // when
         new MockServerResponseEncoder().encode(null, httpResponse, output);

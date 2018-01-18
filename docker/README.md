@@ -62,8 +62,8 @@ run_mockserver.sh [-logLevel <level>] [-serverPort <port>] [-proxyPort <port>] \
                                  INFO - all interactions
 
     -serverPort <port>           Specifies the HTTP, HTTPS, SOCKS and HTTP
-                                 CONNECT port for proxy. Port unification
-                                 supports for all protocols on the same port
+                                 CONNECT port(s) for proxy. Port unification
+                                 supports for all protocols on the same port(s)
 
     -proxyPort <port>            Specifies the HTTP and HTTPS port for the
                                  MockServer. Port unification is used to
@@ -84,9 +84,23 @@ run_mockserver.sh [-logLevel <level>] [-serverPort <port>] [-proxyPort <port>] \
                                  proxyRemotePort has been specified,
                                  proxyRemoteHost will default to "localhost".
 
-i.e. run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090 \ 
+i.e. run_mockserver.sh -logLevel INFO -serverPort 1080,1081 -proxyPort 1090 \ 
                        -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com
 ```
+
+The `logLevel` can also be modified by passing environment variable through docker-compose.yml file. The following is a sample docker-compose.yml file for changing logLevel:
+
+ ```
+ mockServer:
+   image: jamesdbloom/mockserver:latest
+   ports:
+   - 1080:1080
+   environment:
+   - LOG_LEVEL=WARN
+ ```
+ 
+If no `LOG_LEVEL` value is passed in docker-compose, the default value will be `INFO` unless you run the container with other logLevel value on command line.  
+
 
 ### What is MockServer
 

@@ -1,23 +1,24 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.net.MediaType;
 
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.mockserver.model.Cookie.cookie;
-import static org.mockserver.model.Header.header;
-import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
+import static org.mockserver.model.HttpStatusCode.OK_200;
 
 /**
  * @author jamesdbloom
  */
 public class HttpResponse extends Action {
     private Integer statusCode;
-    private Body body;
-    private Map<NottableString, Header> headers = new LinkedHashMap<NottableString, Header>();
-    private Map<NottableString, Cookie> cookies = new LinkedHashMap<NottableString, Cookie>();
+    private String reasonPhrase;
+    private BodyWithContentType body;
+    private Headers headers = new Headers();
+    private Cookies cookies = new Cookies();
     private Delay delay;
     private ConnectionOptions connectionOptions;
 
@@ -34,14 +35,14 @@ public class HttpResponse extends Action {
      * @param body a string
      */
     public static HttpResponse response(String body) {
-        return new HttpResponse().withStatusCode(200).withBody(body);
+        return new HttpResponse().withStatusCode(OK_200.code()).withReasonPhrase(OK_200.reasonPhrase()).withBody(body);
     }
 
     /**
      * Static builder to create a not found response.
      */
     public static HttpResponse notFoundResponse() {
-        return new HttpResponse().withStatusCode(404);
+        return new HttpResponse().withStatusCode(NOT_FOUND_404.code()).withReasonPhrase(NOT_FOUND_404.reasonPhrase());
     }
 
     /**
@@ -58,6 +59,22 @@ public class HttpResponse extends Action {
 
     public Integer getStatusCode() {
         return statusCode;
+    }
+
+    /**
+     * The reason phrase to return, if no reason code is returned this will
+     * be defaulted to the standard reason phrase for the statusCode,
+     * i.e. for a statusCode of 200 the standard reason phrase is "OK"
+     *
+     * @param reasonPhrase an string such as "Not Found" or "OK"
+     */
+    public HttpResponse withReasonPhrase(String reasonPhrase) {
+        this.reasonPhrase = reasonPhrase;
+        return this;
+    }
+
+    public String getReasonPhrase() {
+        return reasonPhrase;
     }
 
     /**
@@ -87,6 +104,19 @@ public class HttpResponse extends Action {
         return this;
     }
 
+    /**
+     * Set response body to return a string response body with the specified encoding. <b>Note:</b> The character set of the
+     * response will be forced to the specified charset, even if the Content-Type header specifies otherwise.
+     *
+     * @param body        a string
+     * @param contentType media type, if charset is included this will be used for encoding string
+     */
+    public HttpResponse withBody(String body, MediaType contentType) {
+        if (body != null) {
+            this.body = new StringBody(body, contentType);
+        }
+        return this;
+    }
 
     /**
      * Set response body to return as binary such as a pdf or image
@@ -117,12 +147,12 @@ public class HttpResponse extends Action {
      *
      * @param body an instance of one of the Body subclasses including StringBody or BinaryBody
      */
-    public HttpResponse withBody(Body body) {
+    public HttpResponse withBody(BodyWithContentType body) {
         this.body = body;
         return this;
     }
 
-    public Body getBody() {
+    public BodyWithContentType getBody() {
         return body;
     }
 
@@ -135,28 +165,32 @@ public class HttpResponse extends Action {
         }
     }
 
+    public Headers getHeaders() {
+        return this.headers;
+    }
+
+    public HttpResponse withHeaders(Headers headers) {
+        this.headers = headers;
+        return this;
+    }
+
     /**
      * The headers to return as a list of Header objects
      *
      * @param headers a list of Header objects
      */
     public HttpResponse withHeaders(List<Header> headers) {
-        this.headers.clear();
-        for (Header header : headers) {
-            withHeader(header);
-        }
+        this.headers.withEntries(headers);
         return this;
     }
 
     /**
      * The headers to return as a varargs of Header objects
      *
-     * @param headers a varargs of Header objects
+     * @param headers varargs of Header objects
      */
     public HttpResponse withHeaders(Header... headers) {
-        if (headers != null) {
-            withHeaders(Arrays.asList(headers));
-        }
+        this.headers.withEntries(headers);
         return this;
     }
 
@@ -165,14 +199,10 @@ public class HttpResponse extends Action {
      * the same name already exists this will NOT be modified but
      * two headers will exist
      *
-     * @param header a Header objects
+     * @param header a Header object
      */
     public HttpResponse withHeader(Header header) {
-        if (this.headers.containsKey(header.getName())) {
-            this.headers.get(header.getName()).addNottableValues(header.getValues());
-        } else {
-            this.headers.put(header.getName(), header);
-        }
+        this.headers.withEntry(header);
         return this;
     }
 
@@ -182,14 +212,10 @@ public class HttpResponse extends Action {
      * two headers will exist
      *
      * @param name   the header name
-     * @param values the header values which can be a varags of strings or regular expressions
+     * @param values the header values
      */
     public HttpResponse withHeader(String name, String... values) {
-        if (this.headers.containsKey(string(name))) {
-            this.headers.get(string(name)).addValues(values);
-        } else {
-            this.headers.put(string(name), header(name, values));
-        }
+        this.headers.withEntry(name, values);
         return this;
     }
 
@@ -197,10 +223,10 @@ public class HttpResponse extends Action {
      * Update header to return as a Header object, if a header with
      * the same name already exists it will be modified
      *
-     * @param header a Header objects
+     * @param header a Header object
      */
-    public HttpResponse updateHeader(Header header) {
-        this.headers.put(header.getName(), header);
+    public HttpResponse replaceHeader(Header header) {
+        this.headers.replaceEntry(header);
         return this;
     }
 
@@ -209,49 +235,53 @@ public class HttpResponse extends Action {
      * the same name already exists it will be modified
      *
      * @param name   the header name
-     * @param values the header values which can be a varags of strings or regular expressions
+     * @param values the header values
      */
-    public HttpResponse updateHeader(String name, String... values) {
-        this.headers.put(string(name), header(name, values));
+    public HttpResponse replaceHeader(String name, String... values) {
+        this.headers.replaceEntry(name, values);
         return this;
     }
 
-    public List<Header> getHeaders() {
-        return new ArrayList<Header>(headers.values());
+    public List<Header> getHeaderList() {
+        return this.headers.getEntries();
     }
 
     public List<String> getHeader(String name) {
-        List<String> headerValues = new ArrayList<String>();
-        for (NottableString headerName : headers.keySet()) {
-            if (headerName.equalsIgnoreCase(string(name))) {
-                for (NottableString headerValue : headers.get(headerName).getValues()) {
-                    headerValues.add(headerValue.getValue());
-                }
-            }
-        }
-        return headerValues;
+        return this.headers.getValues(name);
     }
 
     public String getFirstHeader(String name) {
-        List<String> headerValues = getHeader(name);
-        if (headerValues.size() > 0) {
-            return headerValues.get(0);
-        } else {
-            return "";
-        }
+        return this.headers.getFirstValue(name);
     }
 
+    /**
+     * Returns true if a header with the specified name has been added
+     *
+     * @param name the header name
+     * @return true if a header has been added with that name otherwise false
+     */
+    public boolean containsHeader(String name) {
+        return this.headers.containsEntry(name);
+    }
+
+    public Cookies getCookies() {
+        return this.cookies;
+    }
+
+    public HttpResponse withCookies(Cookies cookies) {
+        this.cookies = cookies;
+        return this;
+    }
+
+    /**
+     * Returns true if a header with the specified name has been added
+     *
+     * @param name  the header name
+     * @param value the header value
+     * @return true if a header has been added with that name otherwise false
+     */
     public boolean containsHeader(String name, String value) {
-        for (NottableString headerName : headers.keySet()) {
-            if (headerName.equalsIgnoreCase(string(name))) {
-                for (NottableString headerValue : headers.get(headerName).getValues()) {
-                    if (headerValue.equalsIgnoreCase(value)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+        return this.headers.containsEntry(name, value);
     }
 
     /**
@@ -260,10 +290,7 @@ public class HttpResponse extends Action {
      * @param cookies a list of Cookie objects
      */
     public HttpResponse withCookies(List<Cookie> cookies) {
-        this.cookies.clear();
-        for (Cookie cookie : cookies) {
-            withCookie(cookie);
-        }
+        this.cookies.withEntries(cookies);
         return this;
     }
 
@@ -273,9 +300,7 @@ public class HttpResponse extends Action {
      * @param cookies a varargs of Cookie objects
      */
     public HttpResponse withCookies(Cookie... cookies) {
-        if (cookies != null) {
-            withCookies(Arrays.asList(cookies));
-        }
+        this.cookies.withEntries(cookies);
         return this;
     }
 
@@ -285,7 +310,7 @@ public class HttpResponse extends Action {
      * @param cookie a Cookie object
      */
     public HttpResponse withCookie(Cookie cookie) {
-        this.cookies.put(cookie.getName(), cookie);
+        this.cookies.withEntry(cookie);
         return this;
     }
 
@@ -293,15 +318,29 @@ public class HttpResponse extends Action {
      * Add cookie to return as Set-Cookie header
      *
      * @param name  the cookies name
-     * @param value the cookies value which can be a string or regular expression
+     * @param value the cookies value
      */
     public HttpResponse withCookie(String name, String value) {
-        this.cookies.put(string(name), cookie(name, value));
+        this.cookies.withEntry(name, value);
         return this;
     }
 
-    public List<Cookie> getCookies() {
-        return new ArrayList<Cookie>(cookies.values());
+    /**
+     * Adds one cookie to match on or to not match on using the NottableString, each NottableString can either be a positive matching value,
+     * such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
+     * can be a plain string or a regex (for more details of the supported regex syntax see
+     * http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)
+     *
+     * @param name  the cookies name
+     * @param value the cookies value
+     */
+    public HttpResponse withCookie(NottableString name, NottableString value) {
+        this.cookies.withEntry(name, value);
+        return this;
+    }
+
+    public List<Cookie> getCookieList() {
+        return this.cookies.getEntries();
     }
 
     /**
@@ -344,27 +383,20 @@ public class HttpResponse extends Action {
         return connectionOptions;
     }
 
-    @JsonIgnore
-    public HttpResponse applyDelay() {
-        if (delay != null) {
-            delay.applyDelay();
-        }
-        return this;
-    }
-
     @Override
     @JsonIgnore
     public Type getType() {
         return Type.RESPONSE;
     }
 
-    public HttpResponse shallowClone() {
+    public HttpResponse clone() {
         return response()
-                .withStatusCode(getStatusCode())
-                .withBody(getBody())
-                .withHeaders(getHeaders())
-                .withCookies(getCookies())
-                .withConnectionOptions(getConnectionOptions());
+            .withStatusCode(getStatusCode())
+            .withReasonPhrase(getReasonPhrase())
+            .withBody(getBody())
+            .withHeaders(getHeaders().clone())
+            .withCookies(getCookies().clone())
+            .withDelay(getDelay())
+            .withConnectionOptions(getConnectionOptions());
     }
 }
-

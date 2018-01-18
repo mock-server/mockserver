@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.JsonSchemaBody.jsonSchemaFromResource;
 
@@ -35,14 +36,14 @@ public class JsonSchemaBodyTest {
         JsonSchemaBody jsonSchemaBody = jsonSchemaFromResource("org/mockserver/model/testJsonSchema.json");
 
         // then
-        assertThat(jsonSchemaBody.getValue(), is("{\n" +
-                "  \"type\": \"object\",\n" +
-                "  \"properties\": {\n" +
-                "    \"someField\": {\n" +
-                "      \"type\": \"string\"\n" +
-                "    }\n" +
-                "  },\n" +
-                "  \"required\": [\"someField\"]\n" +
+        assertThat(jsonSchemaBody.getValue(), is("{" + NEW_LINE +
+                "  \"type\": \"object\"," + NEW_LINE +
+                "  \"properties\": {" + NEW_LINE +
+                "    \"someField\": {" + NEW_LINE +
+                "      \"type\": \"string\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"required\": [\"someField\"]" + NEW_LINE +
                 "}"));
     }
 

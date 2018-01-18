@@ -1,13 +1,15 @@
 {
-  "title": "verification sequence",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "httpRequests": {
-      "type": "array",
-      "items": {
-        "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/httpRequest.json"
-      }
+    "title": "verification sequence",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "httpRequests": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/httpRequest"
+            }
+        }
+    },
+    "definitions": {
     }
-  }
 }

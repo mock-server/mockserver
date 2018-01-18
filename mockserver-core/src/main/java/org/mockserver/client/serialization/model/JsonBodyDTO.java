@@ -5,12 +5,10 @@ import org.mockserver.matchers.MatchType;
 import org.mockserver.model.Body;
 import org.mockserver.model.JsonBody;
 
-import java.nio.charset.Charset;
-
 /**
  * @author jamesdbloom
  */
-public class JsonBodyDTO extends BodyDTO {
+public class JsonBodyDTO extends BodyWithContentTypeDTO {
 
     private String json;
     private MatchType matchType;

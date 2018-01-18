@@ -1,0 +1,21 @@
+{
+    "title": "template to generate response / request",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "templateType": {
+            "enum": [
+                "JAVASCRIPT",
+                "VELOCITY"
+            ]
+        },
+        "template": {
+            "type": "string"
+        },
+        "delay": {
+            "$ref": "#/definitions/delay"
+        }
+    },
+    "definitions": {
+    }
+}

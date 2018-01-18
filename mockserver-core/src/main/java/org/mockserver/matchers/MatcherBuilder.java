@@ -1,6 +1,7 @@
 package org.mockserver.matchers;
 
-import io.netty.handler.codec.http.QueryStringDecoder;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 
 /**
@@ -8,12 +9,18 @@ import org.mockserver.model.HttpRequest;
  */
 public class MatcherBuilder {
 
+    private final MockServerLogger logFormatter;
+
+    public MatcherBuilder(MockServerLogger logFormatter) {
+        this.logFormatter = logFormatter;
+    }
+
     public HttpRequestMatcher transformsToMatcher(HttpRequest httpRequest) {
-        if (httpRequest != null) {
-            return new HttpRequestMatcher(httpRequest);
-        } else {
-            return new HttpRequestMatcher(null);
-        }
+        return new HttpRequestMatcher(httpRequest, logFormatter);
+    }
+
+    public HttpRequestMatcher transformsToMatcher(Expectation expectation) {
+        return new HttpRequestMatcher(expectation, logFormatter);
     }
 
 }

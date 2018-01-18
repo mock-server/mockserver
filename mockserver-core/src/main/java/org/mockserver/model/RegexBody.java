@@ -8,7 +8,7 @@ public class RegexBody extends Body {
     private String regex;
 
     public RegexBody(String regex) {
-        super(Type.REGEX, null);
+        super(Type.REGEX);
         this.regex = regex;
     }
 

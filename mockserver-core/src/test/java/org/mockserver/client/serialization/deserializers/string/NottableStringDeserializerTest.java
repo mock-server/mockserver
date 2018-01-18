@@ -11,6 +11,7 @@ import java.io.IOException;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 
@@ -53,13 +54,13 @@ public class NottableStringDeserializerTest {
     @Test
     public void shouldParseJSONWithMethodWithNot() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"method\" : {" + System.getProperty("line.separator") +
-                "            \"not\" : true," + System.getProperty("line.separator") +
-                "            \"value\" : \"HEAD\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"method\" : {" + NEW_LINE +
+                "            \"not\" : true," + NEW_LINE +
+                "            \"value\" : \"HEAD\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -76,10 +77,10 @@ public class NottableStringDeserializerTest {
     @Test
     public void shouldParseJSONWithMethod() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"method\" : \"HEAD\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"method\" : \"HEAD\"" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -96,13 +97,13 @@ public class NottableStringDeserializerTest {
     @Test
     public void shouldParseJSONWithPathWithNot() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\" : {" + System.getProperty("line.separator") +
-                "            \"not\" : true," + System.getProperty("line.separator") +
-                "            \"value\" : \"/some/path\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"path\" : {" + NEW_LINE +
+                "            \"not\" : true," + NEW_LINE +
+                "            \"value\" : \"/some/path\"" + NEW_LINE +
+                "        }" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when
@@ -119,10 +120,10 @@ public class NottableStringDeserializerTest {
     @Test
     public void shouldParseJSONWithPath() throws IOException {
         // given
-        String json = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\" : \"/some/path\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
+        String json = ("{" + NEW_LINE +
+                "    \"httpRequest\": {" + NEW_LINE +
+                "        \"path\" : \"/some/path\"" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "}");
 
         // when

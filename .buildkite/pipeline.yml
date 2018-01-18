@@ -1,8 +1,8 @@
 steps:
   - label: "update docker image"
-    command: "docker pull jamesdbloom/mockserver:build"
+    command: "docker pull jamesdbloom/mockserver:maven"
 
   - wait
 
   - label: "build"
-    command: "docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:maven /build/mockserver/scripts/local_quick_build.sh"
+    command: "docker run --memory=4096m --oom-kill-disable -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:maven /build/mockserver/scripts/local_quick_build.sh"

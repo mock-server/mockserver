@@ -67,28 +67,8 @@
         <appender-ref ref="STDOUT" />
     </appender>
 
-    <!-- request log configuration -->
-    <appender name="REQUEST_LOG" class="org.mockserver.logging.DelayedFileCreationRollingFileAppender">
-        <file>${log.dir:-./}mockserver_request.log</file>
-
-        <encoder>
-            <pattern>%msg%n</pattern>
-        </encoder>
-
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${log.dir:-./}mockserver_request.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>100MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-            <maxHistory>3</maxHistory>
-        </rollingPolicy>
-    </appender>
-
-    <logger name="REQUEST" level="INFO" additivity="false">
-        <appender-ref ref="REQUEST_LOG"/>
-    </logger>
-
     <logger name="org.mockserver" level="${mockserver.logLevel:-WARN}"/>
+    <logger name="io.netty.handler.ssl.SslHandler" level="WARN"/>
 
     <root level="${root.logLevel:-WARN}">
         <appender-ref ref="ASYNC_FILE"/>

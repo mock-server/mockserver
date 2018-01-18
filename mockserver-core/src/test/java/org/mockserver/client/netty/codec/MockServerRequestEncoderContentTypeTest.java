@@ -3,6 +3,7 @@ package org.mockserver.client.netty.codec;
 import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.FullHttpRequest;
+import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.mappers.ContentTypeMapper;
@@ -12,6 +13,7 @@ import org.mockserver.model.HttpRequest;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -259,7 +261,7 @@ public class MockServerRequestEncoderContentTypeTest {
     @Test
     public void shouldReturnContentTypeForBinaryBody() {
         // given
-        httpRequest.withBody(binary("somebody".getBytes()));
+        httpRequest.withBody(binary("somebody".getBytes(UTF_8)));
 
         // when
         new MockServerRequestEncoder().encode(null, httpRequest, output);
@@ -272,7 +274,7 @@ public class MockServerRequestEncoderContentTypeTest {
     @Test
     public void shouldReturnContentTypeForBinaryBodyWithContentType() {
         // given - a request & response
-        httpRequest.withBody(binary("somebody".getBytes(), MediaType.QUICKTIME));
+        httpRequest.withBody(binary("somebody".getBytes(UTF_8), MediaType.QUICKTIME));
 
         // when
         new MockServerRequestEncoder().encode(null, httpRequest, output);
@@ -309,7 +311,7 @@ public class MockServerRequestEncoderContentTypeTest {
     }
 
     @Test
-    public void shouldReturnContentTypeForJsonSchemaBody() {
+    public void shouldNotReturnContentTypeForJsonSchemaBody() {
         // given
         httpRequest.withBody(jsonSchema("somebody"));
 
@@ -318,7 +320,7 @@ public class MockServerRequestEncoderContentTypeTest {
 
         // then
         FullHttpRequest fullHttpResponse = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpResponse.headers().getAll("Content-Type"), containsInAnyOrder("application/json"));
+        assertThat(fullHttpResponse.headers().getAll("Content-Type"), empty());
     }
 
     @Test

@@ -8,17 +8,16 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.client.serialization.model.ExpectationDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
+import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
@@ -31,86 +30,42 @@ public class ExpectationSerializationErrorsTest {
     private ObjectMapper objectMapper;
     @Mock
     private ObjectWriter objectWriter;
+    @Mock
+    private JsonArraySerializer jsonArraySerializer;
+    @Mock
+    private JsonSchemaExpectationValidator expectationValidator;
     @InjectMocks
     private ExpectationSerializer expectationSerializer;
 
-
     @Before
     public void setupTestFixture() {
-        expectationSerializer = spy(new ExpectationSerializer());
+        expectationSerializer = spy(new ExpectationSerializer(new MockServerLogger()));
 
         initMocks(this);
     }
 
     @Test
-    public void shouldHandleExceptionWhileSerializingObject() throws IOException {
-        // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing expectation to JSON with value { }");
-        // and
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(ExpectationDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
-
-        // when
-        expectationSerializer.serialize(new Expectation(null, null, null));
-    }
-
-    @Test
-    public void shouldHandleExceptionWhileSerializingArray() throws IOException {
-        // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing expectation to JSON with value [{ }]");
-        // and
-        when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(ExpectationDTO[].class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
-
-        // when
-        expectationSerializer.serialize(new Expectation[]{new Expectation(null, null, null)});
-    }
-
-    @Test
     public void shouldHandleNullAndEmptyWhileSerializingArray() throws IOException {
         // when
-        assertEquals("", expectationSerializer.serialize(new Expectation[]{}));
-        assertEquals("", expectationSerializer.serialize((Expectation[]) null));
-    }
-
-    @Test
-    public void shouldHandleExceptionWhileDeserializingObject() throws IOException {
-        // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing response [requestBytes] for Expectation");
-        // and
-        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
-
-        // when
-        expectationSerializer.deserialize("requestBytes");
-    }
-
-    @Test
-    public void shouldHandleExceptionWhileDeserializingArray() throws IOException {
-        // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing response [requestBytes] for Expectation[]");
-        // and
-        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO[].class))).thenThrow(new IOException("TEST EXCEPTION"));
-
-        // when
-        expectationSerializer.deserializeArray("requestBytes");
+        assertEquals("[]", expectationSerializer.serialize(new Expectation[]{}));
+        assertEquals("[]", expectationSerializer.serialize((Expectation[]) null));
     }
 
     @Test
     public void shouldValidateInputForObject() throws IOException {
         // given
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Expected an JSON Expectation object but http body is empty");
+        thrown.expectMessage("1 error:" + NEW_LINE + " - an expectation is required but value was \"\"");
         // when
         expectationSerializer.deserialize("");
     }
 
     @Test
     public void shouldValidateInputForArray() throws IOException {
+        // given
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("1 error:" + NEW_LINE + " - an expectation or expectation array is required but value was \"\"");
         // when
-        assertArrayEquals(new Expectation[]{}, expectationSerializer.deserializeArray(""));
+        expectationSerializer.deserializeArray("");
     }
 }

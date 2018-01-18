@@ -2,6 +2,9 @@
 
 export MAVEN_OPTS='-XX:MaxPermSize=1024m -Xmx1024m'
 
+rm -rf jekyll-www.mock-server.com/_site
+rm -rf jekyll-www.mock-server.com/apidocs
+
 mvn javadoc:aggregate -DreportOutputDirectory='${basedir}/jekyll-www.mock-server.com'
 
 cd jekyll-www.mock-server.com

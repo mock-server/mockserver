@@ -1,12 +1,13 @@
 package org.mockserver.client.serialization.java;
 
 import com.google.common.base.Strings;
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.model.*;
 
 import java.util.List;
 
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.client.serialization.java.ExpectationToJavaSerializer.INDENT_SIZE;
 
 /**
@@ -14,31 +15,36 @@ import static org.mockserver.client.serialization.java.ExpectationToJavaSerializ
  */
 public class HttpResponseToJavaSerializer implements ToJavaSerializer<HttpResponse> {
 
+    private final Base64Converter base64Converter = new Base64Converter();
+
     @Override
-    public String serializeAsJava(int numberOfSpacesToIndent, HttpResponse httpResponse) {
+    public String serialize(int numberOfSpacesToIndent, HttpResponse httpResponse) {
         StringBuffer output = new StringBuffer();
         if (httpResponse != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("response()");
             if (httpResponse.getStatusCode() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withStatusCode(").append(httpResponse.getStatusCode()).append(")");
             }
-            outputHeaders(numberOfSpacesToIndent + 1, output, httpResponse.getHeaders());
-            outputCookies(numberOfSpacesToIndent + 1, output, httpResponse.getCookies());
-            if (httpResponse.getBodyAsString() != null && httpResponse.getBodyAsString().length() > 0) {
+            if (httpResponse.getReasonPhrase() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withReasonPhrase(\"").append(StringEscapeUtils.escapeJava(httpResponse.getReasonPhrase())).append("\")");
+            }
+            outputHeaders(numberOfSpacesToIndent + 1, output, httpResponse.getHeaderList());
+            outputCookies(numberOfSpacesToIndent + 1, output, httpResponse.getCookieList());
+            if (!Strings.isNullOrEmpty(httpResponse.getBodyAsString())) {
                 if (httpResponse.getBody() instanceof BinaryBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     BinaryBody body = (BinaryBody) httpResponse.getBody();
-                    output.append(".withBody(Base64Converter.base64StringToBytes(\"").append(Base64Converter.bytesToBase64String(body.getRawBytes())).append("\"))");
+                    output.append(".withBody(new Base64Converter().base64StringToBytes(\"").append(base64Converter.bytesToBase64String(body.getRawBytes())).append("\"))");
                 } else {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withBody(\"").append(StringEscapeUtils.escapeJava(httpResponse.getBodyAsString())).append("\")");
                 }
             }
             if (httpResponse.getDelay() != null) {
-                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDelay(").append(new DelayToJavaSerializer().serializeAsJava(0, httpResponse.getDelay())).append(")");
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDelay(").append(new DelayToJavaSerializer().serialize(0, httpResponse.getDelay())).append(")");
             }
             if (httpResponse.getConnectionOptions() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withConnectionOptions(");
-                output.append(new ConnectionOptionsToJavaSerializer().serializeAsJava(numberOfSpacesToIndent + 2, httpResponse.getConnectionOptions()));
+                output.append(new ConnectionOptionsToJavaSerializer().serialize(numberOfSpacesToIndent + 2, httpResponse.getConnectionOptions()));
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(")");
             }
         }
@@ -62,11 +68,11 @@ public class HttpResponseToJavaSerializer implements ToJavaSerializer<HttpRespon
         }
     }
 
-    private <T extends ObjectWithReflectiveEqualsHashCodeToString> StringBuffer appendObject(int numberOfSpacesToIndent, StringBuffer output, MultiValueToJavaSerializer<T> toJavaSerializer, List<T> objects) {
-        return output.append(toJavaSerializer.serializeAsJava(numberOfSpacesToIndent, objects));
+    private <T extends ObjectWithReflectiveEqualsHashCodeToString> void appendObject(int numberOfSpacesToIndent, StringBuffer output, MultiValueToJavaSerializer<T> toJavaSerializer, List<T> objects) {
+        output.append(toJavaSerializer.serializeAsJava(numberOfSpacesToIndent, objects));
     }
 
     private StringBuffer appendNewLineAndIndent(int numberOfSpacesToIndent, StringBuffer output) {
-        return output.append(System.getProperty("line.separator")).append(Strings.padStart("", numberOfSpacesToIndent, ' '));
+        return output.append(NEW_LINE).append(Strings.padStart("", numberOfSpacesToIndent, ' '));
     }
 }

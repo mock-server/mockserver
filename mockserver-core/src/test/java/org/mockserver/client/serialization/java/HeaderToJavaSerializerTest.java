@@ -7,22 +7,23 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 
 public class HeaderToJavaSerializerTest {
 
     @Test
     public void shouldSerializeHeader() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
                         "        new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")",
-                new HeaderToJavaSerializer().serializeAsJava(1, new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"))
+                new HeaderToJavaSerializer().serialize(1, new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"))
         );
     }
 
     @Test
     public void shouldSerializeMultipleHeaders() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
                         "        new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," +
-                        System.getProperty("line.separator") +
+                        NEW_LINE +
                         "        new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")",
                 new HeaderToJavaSerializer().serializeAsJava(1, new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"), new Header("requestHeaderNameTwo", "requestHeaderValueTwo"))
         );
@@ -30,9 +31,9 @@ public class HeaderToJavaSerializerTest {
 
     @Test
     public void shouldSerializeListOfHeaders() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
+        assertEquals(NEW_LINE +
                         "        new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," +
-                        System.getProperty("line.separator") +
+                        NEW_LINE +
                         "        new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")",
                 new HeaderToJavaSerializer().serializeAsJava(1, Arrays.asList(
                         new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),

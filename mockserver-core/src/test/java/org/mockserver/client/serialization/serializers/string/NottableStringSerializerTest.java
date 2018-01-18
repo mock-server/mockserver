@@ -47,7 +47,7 @@ public class NottableStringSerializerTest {
     @Test
     public void shouldSerializeNotNottableStringWithExclamationMark() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(org.mockserver.model.NottableString.not("!some_string")),
-                is("{\"not\":true,\"value\":\"!some_string\"}"));
+                is("\"!!some_string\""));
     }
 
     @Test
@@ -59,6 +59,6 @@ public class NottableStringSerializerTest {
     @Test
     public void shouldSerializeNottableStringWithExclamationMarkAndNot() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(string("!some_string"))),
-                is("{\"not\":true,\"value\":\"!some_string\"}"));
+                is("\"!!some_string\""));
     }
 }

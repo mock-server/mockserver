@@ -1,0 +1,257 @@
+package org.mockserver.examples.mockserver;
+
+import com.google.common.base.Charsets;
+import com.google.common.net.MediaType;
+import org.apache.commons.io.IOUtils;
+import org.mockserver.client.server.MockServerClient;
+import org.mockserver.matchers.Times;
+import org.mockserver.model.HttpStatusCode;
+import org.mockserver.model.HttpTemplate;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_DISPOSITION;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static org.mockserver.model.BinaryBody.binary;
+import static org.mockserver.model.ConnectionOptions.connectionOptions;
+import static org.mockserver.model.Header.header;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpTemplate.template;
+
+/**
+ * @author jamesdbloom
+ */
+public class ResponseActionExamples {
+
+    public void responseLiteralWithBodyOnly() {
+        new MockServerClient("localhost", 1080)
+            // this request matcher matches every request
+            .when(
+                request()
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void responseLiteralWithUTF16BodyResponse() {
+        new MockServerClient("localhost", 1080)
+            // this request matcher matches every request
+            .when(
+                request()
+            )
+            .respond(
+                response()
+                    .withHeader(
+                        CONTENT_TYPE.toString(),
+                        MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString()
+                    )
+                    .withBody("我说中国话".getBytes(Charsets.UTF_16))
+            );
+    }
+
+    public void responseLiteralWithStatusCodeAndReasonPhraseOnly() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withPath("/some/path")
+            )
+            .respond(
+                response()
+                    .withStatusCode(418)
+                    .withReasonPhrase("I'm a teapot")
+            );
+    }
+
+    public void respondDifferentlyForTheSameRequest() {
+        MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+
+        // respond once with 200, then respond twice with 204, then
+        // respond with 404 as no remaining active expectations
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path"),
+                Times.exactly(1)
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+            );
+
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path"),
+                Times.exactly(2)
+            )
+            .respond(
+                response()
+                    .withStatusCode(204)
+            );
+    }
+
+    public void responseLiteralWithBinaryPNGBody() throws IOException {
+        byte[] pngBytes = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("org/mockserver/examples/mockserver/test.png"));
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/ws/rest/user/[0-9]+/icon/[0-9]+\\.png")
+            )
+            .respond(
+                response()
+                    .withStatusCode(HttpStatusCode.OK_200.code())
+                    .withHeaders(
+                        header(CONTENT_TYPE.toString(), MediaType.PNG.toString()),
+                        header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\"")
+                    )
+                    .withBody(binary(pngBytes))
+            );
+    }
+
+    public void responseLiteralWith10SecondDelay() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+                    .withDelay(TimeUnit.SECONDS, 10)
+            );
+    }
+
+    public void responseLiteralWithConnectionOptionsToSuppressHeaders() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+                    .withConnectionOptions(
+                        connectionOptions()
+                            .withSuppressConnectionHeader(true)
+                            .withSuppressContentLengthHeader(true)
+                    )
+            );
+    }
+
+    public void responseLiteralWithConnectionOptionsToOverrideHeaders() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+                    .withConnectionOptions(
+                        connectionOptions()
+                            .withKeepAliveOverride(false)
+                            .withContentLengthHeaderOverride(10)
+                    )
+            );
+    }
+
+    public void responseLiteralWithConnectionOptionsToCloseSocket() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+                    .withConnectionOptions(
+                        connectionOptions()
+                            .withCloseSocket(true)
+                    )
+            );
+    }
+
+    public void javascriptTemplatedResponse() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .respond(
+                template(
+                    HttpTemplate.TemplateType.JAVASCRIPT,
+                    "return {" + System.getProperty("line.separator") +
+                        "     'statusCode': 200," + System.getProperty("line.separator") +
+                        "     'cookies': {" + System.getProperty("line.separator") +
+                        "          'session' : request.headers['session-id'][0]" + System.getProperty("line.separator") +
+                        "     }," + System.getProperty("line.separator") +
+                        "     'headers': {" + System.getProperty("line.separator") +
+                        "          'Date' : Date()" + System.getProperty("line.separator") +
+                        "     }," + System.getProperty("line.separator") +
+                        "     'body': JSON.stringify(" + System.getProperty("line.separator") +
+                        "               {" + System.getProperty("line.separator") +
+                        "                    method: request.method," + System.getProperty("line.separator") +
+                        "                    path: request.path," + System.getProperty("line.separator") +
+                        "                    body: request.body" + System.getProperty("line.separator") +
+                        "               }" + System.getProperty("line.separator") +
+                        "          )" + System.getProperty("line.separator") +
+                        "};"
+                )
+            );
+    }
+
+    public void javascriptTemplatedResponseWithDelay() {
+        String template = "" +
+            "if (request.method === 'POST' && request.path === '/somePath') {" + System.getProperty("line.separator") +
+            "    return {" + System.getProperty("line.separator") +
+            "        'statusCode': 200," + System.getProperty("line.separator") +
+            "        'body': JSON.stringify({name: 'value'})" + System.getProperty("line.separator") +
+            "    };" + System.getProperty("line.separator") +
+            "} else {" + System.getProperty("line.separator") +
+            "    return {" + System.getProperty("line.separator") +
+            "        'statusCode': 406," + System.getProperty("line.separator") +
+            "        'body': request.body" + System.getProperty("line.separator") +
+            "    };" + System.getProperty("line.separator") +
+            "}";
+
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .respond(
+                template(HttpTemplate.TemplateType.JAVASCRIPT)
+                    .withTemplate(template)
+                    .withDelay(TimeUnit.MINUTES, 2)
+            );
+
+    }
+
+    public void velocityTemplatedResponse() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .respond(
+                template(
+                    HttpTemplate.TemplateType.VELOCITY,
+                    "{" + System.getProperty("line.separator") +
+                        "     \"statusCode\": 200," + System.getProperty("line.separator") +
+                        "     \"cookies\": { " + System.getProperty("line.separator") +
+                        "          \"session\": \"$!request.headers['Session-Id'][0]\"" + System.getProperty("line.separator") +
+                        "     }," + System.getProperty("line.separator") +
+                        "     \"headers\": {" + System.getProperty("line.separator") +
+                        "          \"Client-User-Agent\": [ \"$!request.headers['User-Agent'][0]\" ]" + System.getProperty("line.separator") +
+                        "     }," + System.getProperty("line.separator") +
+                        "     \"body\": $!request.body" + System.getProperty("line.separator") +
+                        "}"
+                )
+            );
+    }
+}

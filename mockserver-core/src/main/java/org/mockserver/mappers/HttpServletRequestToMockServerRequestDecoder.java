@@ -1,5 +1,8 @@
 package org.mockserver.mappers;
 
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
+import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.model.*;
@@ -19,15 +22,19 @@ import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SE
  */
 public class HttpServletRequestToMockServerRequestDecoder {
     public HttpRequest mapHttpServletRequestToMockServerRequest(HttpServletRequest httpServletRequest) {
-        HttpRequest httpRequest = new HttpRequest();
-        setMethod(httpRequest, httpServletRequest);
-        setPath(httpRequest, httpServletRequest);
-        setQueryString(httpRequest, httpServletRequest);
-        setBody(httpRequest, httpServletRequest);
-        setHeaders(httpRequest, httpServletRequest);
-        setCookies(httpRequest, httpServletRequest);
-        httpRequest.withSecure(httpServletRequest.isSecure());
-        return httpRequest;
+        HttpRequest request = new HttpRequest();
+        setMethod(request, httpServletRequest);
+
+        setPath(request, httpServletRequest);
+        setQueryString(request, httpServletRequest);
+
+        setBody(request, httpServletRequest);
+        setHeaders(request, httpServletRequest);
+        setCookies(request, httpServletRequest);
+
+        request.withKeepAlive(isKeepAlive(httpServletRequest));
+        request.withSecure(httpServletRequest.isSecure());
+        return request;
     }
 
     private void setMethod(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
@@ -50,7 +57,7 @@ public class HttpServletRequestToMockServerRequestDecoder {
             if (ContentTypeMapper.isBinary(httpServletRequest.getHeader(CONTENT_TYPE.toString()))) {
                 httpRequest.withBody(new BinaryBody(bodyBytes));
             } else {
-                Charset requestCharset = ContentTypeMapper.determineCharsetForMessage(httpServletRequest);
+                Charset requestCharset = ContentTypeMapper.getCharsetFromContentTypeHeader(httpServletRequest.getHeader(CONTENT_TYPE.toString()));
                 httpRequest.withBody(new StringBody(new String(bodyBytes, requestCharset), DEFAULT_HTTP_CHARACTER_SET.equals(requestCharset) ? null : requestCharset));
             }
         }
@@ -79,5 +86,18 @@ public class HttpServletRequestToMockServerRequestDecoder {
             }
         }
         httpRequest.withCookies(mappedCookies);
+    }
+
+    public boolean isKeepAlive(HttpServletRequest httpServletRequest) {
+        CharSequence connection = httpServletRequest.getHeader(HttpHeaderNames.CONNECTION.toString());
+        if (connection != null && HttpHeaderValues.CLOSE.contentEqualsIgnoreCase(connection)) {
+            return false;
+        }
+
+        if (httpServletRequest.getProtocol().equals("HTTP/1.1")) {
+            return !HttpHeaderValues.CLOSE.contentEqualsIgnoreCase(connection);
+        } else {
+            return HttpHeaderValues.KEEP_ALIVE.contentEqualsIgnoreCase(connection);
+        }
     }
 }

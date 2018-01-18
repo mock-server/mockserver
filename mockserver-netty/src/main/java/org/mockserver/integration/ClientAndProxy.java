@@ -4,6 +4,8 @@ import org.mockserver.client.proxy.ProxyClient;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
 
+import java.util.List;
+
 /**
  * @author jamesdbloom
  */
@@ -31,5 +33,13 @@ public class ClientAndProxy extends ProxyClient {
 
     public boolean isRunning() {
         return httpProxy.isRunning();
+    }
+
+    public Integer getPort() {
+        return httpProxy.getPort();
+    }
+
+    public List<Integer> getPorts() {
+        return httpProxy.getPorts();
     }
 }

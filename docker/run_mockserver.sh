@@ -10,9 +10,9 @@ function showUsage {
     echo >&2 "                                                WARN - exceptions and errors"
     echo >&2 "                                                INFO - all interactions"
     echo >&2 "                                                "
-    echo >&2 "        -serverPort <port>                      Specifies the HTTP and HTTPS port for the"
+    echo >&2 "        -serverPort <port>                      Specifies the HTTP and HTTPS port(s) for the"
     echo >&2 "                                                MockServer. Port unification is used to"
-    echo >&2 "                                                support HTTP and HTTPS on the same port"
+    echo >&2 "                                                support HTTP and HTTPS on the same port(s)"
     echo >&2 "                                                "
     echo >&2 "        -proxyPort <port>                       Specifies the HTTP, HTTPS, SOCKS and HTTP"
     echo >&2 "                                                CONNECT port for proxy. Port unification"
@@ -35,7 +35,7 @@ function showUsage {
     echo >&2 "                                                "
     echo >&2 "        -genericJVMOptions <system parameters>  Specified generic JVM options or system properties."
     echo >&2 "                                                                                   "
-    echo >&2 "   i.e. /opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -genericJVMOptions \"-Dmockserver.enableCORSForAllResponses=true -Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'\""
+    echo >&2 "   i.e. /opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort 1080,1081 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -genericJVMOptions \"-Dmockserver.enableCORSForAllResponses=true -Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'\""
     echo >&2 "                                                                                   "
     exit 1
 }
@@ -88,11 +88,14 @@ then
     showUsage
 fi
 
-LOG_LEVEL="INFO"
-
-if [ -n "$logLevel" ]
+if [ -z "$LOG_LEVEL" ]
 then
-    LOG_LEVEL="$logLevel"
+    if [ -n "$logLevel" ]
+    then
+        LOG_LEVEL="$logLevel"
+    else
+        LOG_LEVEL="INFO"
+    fi
 fi
 
 validateArgument $LOG_LEVEL "OFF ERROR WARN INFO DEBUG TRACE ALL." "Invalid value '$LOG_LEVEL' for 'logLevel'"

@@ -1,7 +1,7 @@
 package org.mockserver.verify;
 
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
+import org.mockserver.model.ObjectWithJsonToString;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class VerificationSequence extends ObjectWithReflectiveEqualsHashCodeToString {
+public class VerificationSequence extends ObjectWithJsonToString {
     private List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
 
     public static VerificationSequence verificationSequence() {

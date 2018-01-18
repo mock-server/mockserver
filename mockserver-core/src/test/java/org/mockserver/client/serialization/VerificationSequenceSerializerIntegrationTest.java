@@ -3,12 +3,14 @@ package org.mockserver.client.serialization;
 import org.junit.Test;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.client.serialization.model.VerificationSequenceDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.verify.VerificationSequence;
 
 import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -17,48 +19,26 @@ import static org.mockserver.model.HttpRequest.request;
 public class VerificationSequenceSerializerIntegrationTest {
 
     @Test
-    public void shouldIgnoreExtraFields() throws IOException {
-        // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "  \"httpRequests\" : [ {" + System.getProperty("line.separator") +
-                "    \"path\" : \"some_path_one\"," + System.getProperty("line.separator") +
-                "    \"random_field\" : \"random_value\"" + System.getProperty("line.separator") +
-                "  } ]," + System.getProperty("line.separator") +
-                "  \"random_field\" : \"random_value\"" + System.getProperty("line.separator") +
-                "}";
-
-        // when
-        VerificationSequence verificationSequence = new VerificationSequenceSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new VerificationSequenceDTO()
-                .setHttpRequests(Arrays.asList(
-                        new HttpRequestDTO(request("some_path_one"))
-                ))
-                .buildObject(), verificationSequence);
-    }
-
-    @Test
     public void shouldDeserializeCompleteObject() throws IOException {
         // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "  \"httpRequests\" : [ {" + System.getProperty("line.separator") +
-                "    \"path\" : \"some_path_one\"," + System.getProperty("line.separator") +
-                "    \"body\" : \"some_body_one\"" + System.getProperty("line.separator") +
-                "  }, {" + System.getProperty("line.separator") +
-                "    \"path\" : \"some_body_multiple\"," + System.getProperty("line.separator") +
-                "    \"body\" : \"some_body_multiple\"" + System.getProperty("line.separator") +
-                "  }, {" + System.getProperty("line.separator") +
-                "    \"path\" : \"some_path_three\"," + System.getProperty("line.separator") +
-                "    \"body\" : \"some_body_three\"" + System.getProperty("line.separator") +
-                "  }, {" + System.getProperty("line.separator") +
-                "    \"path\" : \"some_body_multiple\"," + System.getProperty("line.separator") +
-                "    \"body\" : \"some_body_multiple\"" + System.getProperty("line.separator") +
-                "  } ]" + System.getProperty("line.separator") +
+        String requestBytes = "{" + NEW_LINE +
+                "  \"httpRequests\" : [ {" + NEW_LINE +
+                "    \"path\" : \"some_path_one\"," + NEW_LINE +
+                "    \"body\" : \"some_body_one\"" + NEW_LINE +
+                "  }, {" + NEW_LINE +
+                "    \"path\" : \"some_body_multiple\"," + NEW_LINE +
+                "    \"body\" : \"some_body_multiple\"" + NEW_LINE +
+                "  }, {" + NEW_LINE +
+                "    \"path\" : \"some_path_three\"," + NEW_LINE +
+                "    \"body\" : \"some_body_three\"" + NEW_LINE +
+                "  }, {" + NEW_LINE +
+                "    \"path\" : \"some_body_multiple\"," + NEW_LINE +
+                "    \"body\" : \"some_body_multiple\"" + NEW_LINE +
+                "  } ]" + NEW_LINE +
                 "}";
 
         // when
-        VerificationSequence verificationSequence = new VerificationSequenceSerializer().deserialize(requestBytes);
+        VerificationSequence verificationSequence = new VerificationSequenceSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new VerificationSequenceDTO()
@@ -74,12 +54,12 @@ public class VerificationSequenceSerializerIntegrationTest {
     @Test
     public void shouldDeserializeEmptyObject() throws IOException {
         // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "    \"path\": \"somePath\"" + System.getProperty("line.separator") +
+        String requestBytes = "{" + NEW_LINE +
+                "  \"httpRequests\" : [ ]" + NEW_LINE +
                 "}";
 
         // when
-        VerificationSequence verificationSequence = new VerificationSequenceSerializer().deserialize(requestBytes);
+        VerificationSequence verificationSequence = new VerificationSequenceSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new VerificationSequenceDTO()
@@ -90,14 +70,14 @@ public class VerificationSequenceSerializerIntegrationTest {
     @Test
     public void shouldDeserializePartialObject() throws IOException {
         // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "  \"httpRequests\" : [ {" + System.getProperty("line.separator") +
-                "    \"path\" : \"some_path_one\"" + System.getProperty("line.separator") +
-                "  } ]" + System.getProperty("line.separator") +
+        String requestBytes = "{" + NEW_LINE +
+                "  \"httpRequests\" : [ {" + NEW_LINE +
+                "    \"path\" : \"some_path_one\"" + NEW_LINE +
+                "  } ]" + NEW_LINE +
                 "}";
 
         // when
-        VerificationSequence verificationSequence = new VerificationSequenceSerializer().deserialize(requestBytes);
+        VerificationSequence verificationSequence = new VerificationSequenceSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new VerificationSequenceDTO()
@@ -110,7 +90,7 @@ public class VerificationSequenceSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObject() throws IOException {
         // when
-        String jsonExpectation = new VerificationSequenceSerializer().serialize(
+        String jsonExpectation = new VerificationSequenceSerializer(new MockServerLogger()).serialize(
                 new VerificationSequenceDTO()
                         .setHttpRequests(Arrays.asList(
                                 new HttpRequestDTO(request("some_path_one").withBody("some_body_one")),
@@ -122,27 +102,27 @@ public class VerificationSequenceSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequests\" : [ {" + System.getProperty("line.separator") +
-                "    \"path\" : \"some_path_one\"," + System.getProperty("line.separator") +
-                "    \"body\" : \"some_body_one\"" + System.getProperty("line.separator") +
-                "  }, {" + System.getProperty("line.separator") +
-                "    \"path\" : \"some_body_multiple\"," + System.getProperty("line.separator") +
-                "    \"body\" : \"some_body_multiple\"" + System.getProperty("line.separator") +
-                "  }, {" + System.getProperty("line.separator") +
-                "    \"path\" : \"some_path_three\"," + System.getProperty("line.separator") +
-                "    \"body\" : \"some_body_three\"" + System.getProperty("line.separator") +
-                "  }, {" + System.getProperty("line.separator") +
-                "    \"path\" : \"some_body_multiple\"," + System.getProperty("line.separator") +
-                "    \"body\" : \"some_body_multiple\"" + System.getProperty("line.separator") +
-                "  } ]" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequests\" : [ {" + NEW_LINE +
+                "    \"path\" : \"some_path_one\"," + NEW_LINE +
+                "    \"body\" : \"some_body_one\"" + NEW_LINE +
+                "  }, {" + NEW_LINE +
+                "    \"path\" : \"some_body_multiple\"," + NEW_LINE +
+                "    \"body\" : \"some_body_multiple\"" + NEW_LINE +
+                "  }, {" + NEW_LINE +
+                "    \"path\" : \"some_path_three\"," + NEW_LINE +
+                "    \"body\" : \"some_body_three\"" + NEW_LINE +
+                "  }, {" + NEW_LINE +
+                "    \"path\" : \"some_body_multiple\"," + NEW_LINE +
+                "    \"body\" : \"some_body_multiple\"" + NEW_LINE +
+                "  } ]" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
     @Test
     public void shouldSerializePartialObject() throws IOException {
         // when
-        String jsonExpectation = new VerificationSequenceSerializer().serialize(
+        String jsonExpectation = new VerificationSequenceSerializer(new MockServerLogger()).serialize(
                 new VerificationSequenceDTO()
                         .setHttpRequests(Arrays.asList(
                                 new HttpRequestDTO(request("some_path_one").withBody("some_body_one"))
@@ -151,18 +131,18 @@ public class VerificationSequenceSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequests\" : [ {" + System.getProperty("line.separator") +
-                "    \"path\" : \"some_path_one\"," + System.getProperty("line.separator") +
-                "    \"body\" : \"some_body_one\"" + System.getProperty("line.separator") +
-                "  } ]" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequests\" : [ {" + NEW_LINE +
+                "    \"path\" : \"some_path_one\"," + NEW_LINE +
+                "    \"body\" : \"some_body_one\"" + NEW_LINE +
+                "  } ]" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
     @Test
     public void shouldSerializeEmptyObject() throws IOException {
         // when
-        String jsonExpectation = new VerificationSequenceSerializer().serialize(
+        String jsonExpectation = new VerificationSequenceSerializer(new MockServerLogger()).serialize(
                 new VerificationSequenceDTO()
                         .setHttpRequests(Arrays.<HttpRequestDTO>asList())
                         .buildObject()

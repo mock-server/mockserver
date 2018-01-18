@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author jamesdbloom
  */
-public class TimeToLiveDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class TimeToLiveDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<TimeToLive> {
 
     private TimeUnit timeUnit;
     private Long timeToLive;

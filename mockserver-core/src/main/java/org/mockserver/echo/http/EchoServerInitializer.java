@@ -7,29 +7,27 @@ import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.logging.LoggingHandler;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.server.netty.codec.MockServerServerCodec;
-import org.mockserver.socket.NettySslContextFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import static org.mockserver.echo.http.EchoServer.LOG_FILTER;
-import static org.mockserver.echo.http.EchoServer.NEXT_RESPONSE;
+import static org.mockserver.echo.http.EchoServer.*;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
  */
 public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
+    private final MockServerLogger mockServerLogger;
     private final boolean secure;
     private final EchoServer.Error error;
 
-    public EchoServerInitializer(boolean secure, EchoServer.Error error) {
+    public EchoServerInitializer(MockServerLogger mockServerLogger, boolean secure, EchoServer.Error error) {
         if (!secure && error == EchoServer.Error.CLOSE_CONNECTION) {
             throw new IllegalArgumentException("Error type CLOSE_CONNECTION is not supported in non-secure mode");
         }
+        this.mockServerLogger = mockServerLogger;
         this.secure = secure;
         this.error = error;
     }
@@ -45,7 +43,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
             pipeline.addLast(nettySslContextFactory().createServerSslContext().newHandler(channel.alloc()));
         }
 
-        if (logger.isTraceEnabled()) {
+        if (mockServerLogger.isEnabled(TRACE)) {
             pipeline.addLast(new LoggingHandler("EchoServer <-->"));
         }
 
@@ -55,8 +53,18 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
 
         pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-        pipeline.addLast(new MockServerServerCodec(secure));
+        pipeline.addLast(new MockServerServerCodec(mockServerLogger, secure));
 
-        pipeline.addLast(new EchoServerHandler(error, secure, channel.attr(LOG_FILTER).get(), channel.attr(NEXT_RESPONSE).get()));
+        if (!secure && error == EchoServer.Error.CLOSE_CONNECTION) {
+            throw new IllegalArgumentException("Error type CLOSE_CONNECTION is not supported in non-secure mode");
+        }
+
+        pipeline.addLast(new EchoServerHandler(
+            mockServerLogger,
+            error,
+            channel.attr(LOG_FILTER).get(),
+            channel.attr(NEXT_RESPONSE).get(),
+            channel.attr(ONLY_RESPONSE).get()
+        ));
     }
 }

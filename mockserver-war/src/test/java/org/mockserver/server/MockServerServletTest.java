@@ -1,621 +1,419 @@
 package org.mockserver.server;
 
+import com.google.common.collect.ImmutableSet;
+import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationSequenceSerializer;
-import org.mockserver.client.serialization.VerificationSerializer;
-import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
-import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
+import org.mockserver.client.serialization.PortBindingSerializer;
+import org.mockserver.log.model.RequestLogEntry;
+import org.mockserver.log.model.RequestResponseLogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
-import org.mockserver.model.*;
-import org.mockserver.filters.RequestLogFilter;
-import org.mockserver.verify.Verification;
-import org.mockserver.verify.VerificationSequence;
-import org.mockserver.verify.VerificationTimes;
+import org.mockserver.model.RetrieveType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 
+import static com.google.common.net.MediaType.JSON_UTF_8;
+import static org.apache.commons.codec.Charsets.UTF_8;
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.model.ConnectionOptions.connectionOptions;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.verify.Verification.verification;
+import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.PortBinding.portBinding;
 
 /**
  * @author jamesdbloom
  */
 public class MockServerServletTest {
 
-    @Mock
-    private MockServerMatcher mockMockServerMatcher;
-    @Mock
-    private HttpServletRequestToMockServerRequestDecoder mockHttpServletRequestToMockServerRequestDecoder;
-    @Mock
-    private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder;
-    @Mock
-    private ExpectationSerializer mockExpectationSerializer;
-    @Mock
-    private HttpRequestSerializer mockHttpRequestSerializer;
-    @Mock
-    private VerificationSerializer mockVerificationSerializer;
-    @Mock
-    private VerificationSequenceSerializer mockVerificationSequenceSerializer;
-    @Mock
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
+
+    private HttpStateHandler httpStateHandler;
     private ActionHandler mockActionHandler;
-    @Mock
-    private RequestLogFilter mockRequestLogFilter;
+
     @InjectMocks
     private MockServerServlet mockServerServlet;
 
+    private MockHttpServletResponse response;
+
     @Before
-    public void setupTestFixture() {
+    public void setupFixture() {
+        mockActionHandler = mock(ActionHandler.class);
+        httpStateHandler = spy(new HttpStateHandler());
+        response = new MockHttpServletResponse();
         mockServerServlet = new MockServerServlet();
+
 
         initMocks(this);
     }
 
-    @Test
-    public void shouldReturnMatchedExpectation() {
-        // given
-        HttpRequest request = new HttpRequest().withPath("somepath");
-        HttpResponse response = new HttpResponse().withHeaders(new Header("name", "value")).withBody("somebody");
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
+    private MockHttpServletRequest buildHttpServletRequest(String method, String requestURI, String body) {
+        MockHttpServletRequest expectationRetrieveRequestsRequest = new MockHttpServletRequest(method, requestURI);
+        expectationRetrieveRequestsRequest.setContent(body.getBytes());
+        return expectationRetrieveRequestsRequest;
+    }
 
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
-        when(mockMockServerMatcher.retrieveAction(any(HttpRequest.class))).thenReturn(response);
-        when(mockActionHandler.processAction(any(HttpResponse.class), any(HttpRequest.class))).thenReturn(response);
-
-        // when
-        mockServerServlet.service(httpServletRequest, httpServletResponse);
-
-        // then
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
-        verify(mockMockServerMatcher).retrieveAction(request);
-        when(mockActionHandler.processAction(response, request)).thenReturn(response);
-        verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
-        assertThat(httpServletResponse.getStatus(), is(200));
+    private void assertResponse(MockHttpServletResponse response, int responseStatusCode, String responseBody) {
+        assertThat(response.getStatus(), is(responseStatusCode));
+        assertThat(new String(response.getContentAsByteArray(), UTF_8), is(responseBody));
     }
 
     @Test
-    public void shouldFailForExpectationWithConnectionOptions() throws UnsupportedEncodingException {
+    public void shouldRetrieveRequests() {
         // given
-        HttpRequest request = new HttpRequest().withPath("somepath");
-        HttpResponse response = new HttpResponse().withConnectionOptions(connectionOptions());
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
-        when(mockMockServerMatcher.retrieveAction(any(HttpRequest.class))).thenReturn(response);
-        when(mockActionHandler.processAction(any(HttpResponse.class), any(HttpRequest.class))).thenReturn(response);
+        MockHttpServletRequest expectationRetrieveRequestsRequest = buildHttpServletRequest(
+            "PUT",
+            "/retrieve",
+            httpRequestSerializer.serialize(request("request_one"))
+        );
+        httpStateHandler.log(new RequestLogEntry(request("request_one")));
 
         // when
-        mockServerServlet.service(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(expectationRetrieveRequestsRequest, response);
 
         // then
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
-        verify(mockMockServerMatcher).retrieveAction(request);
-        when(mockActionHandler.processAction(response, request)).thenReturn(response);
-        verifyNoMoreInteractions(mockServerResponseToHttpServletResponseEncoder);
-        assertThat(httpServletResponse.getStatus(), is(406));
-        assertThat(httpServletResponse.getContentAsString(), is("ConnectionOptions is not supported by MockServer deployable WAR due to limitations in the JEE specification; use mockserver-netty to enable these features"));
+        assertResponse(response, 200, httpRequestSerializer.serialize(Collections.singletonList(
+            request("request_one")
+        )));
     }
 
     @Test
-    public void shouldForwardMatchedExpectation() throws IOException {
+    public void shouldClear() {
         // given
-        HttpRequest request = new HttpRequest().withPath("somepath");
-        HttpForward forward = new HttpForward().withHost("some-host").withPort(1234);
-        HttpResponse response = new HttpResponse();
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
-        when(mockMockServerMatcher.retrieveAction(any(HttpRequest.class))).thenReturn(forward);
-        when(mockActionHandler.processAction(any(HttpForward.class), any(HttpRequest.class))).thenReturn(response);
+        httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
+        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+        MockHttpServletRequest clearRequest = buildHttpServletRequest(
+            "PUT",
+            "/clear",
+            httpRequestSerializer.serialize(request("request_one"))
+        );
 
         // when
-        mockServerServlet.service(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(clearRequest, response);
 
         // then
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
-        verify(mockMockServerMatcher).retrieveAction(request);
-        when(mockActionHandler.processAction(forward, request)).thenReturn(response);
-        verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
-        assertThat(httpServletResponse.getStatus(), is(200));
+        assertResponse(response, 200, "");
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(nullValue()));
+        assertThat(httpStateHandler.retrieve(request("/retrieve")
+            .withMethod("PUT")
+            .withBody(
+                httpRequestSerializer.serialize(request("request_one"))
+            )), is(response().withBody("[]", JSON_UTF_8).withStatusCode(200)));
     }
 
     @Test
-    public void shouldFailForExpectationWithError() throws IOException {
+    public void shouldReturnStatus() {
         // given
-        HttpRequest request = new HttpRequest().withPath("somepath");
-        HttpError error = new HttpError().withDropConnection(true);
-        HttpResponse response = new HttpResponse();
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
-        when(mockMockServerMatcher.retrieveAction(any(HttpRequest.class))).thenReturn(error);
-        when(mockActionHandler.processAction(any(HttpForward.class), any(HttpRequest.class))).thenReturn(response);
+        MockHttpServletRequest statusRequest = buildHttpServletRequest(
+            "PUT",
+            "/status",
+            ""
+        );
 
         // when
-        mockServerServlet.service(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(statusRequest, response);
 
         // then
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
-        verify(mockMockServerMatcher).retrieveAction(request);
-        when(mockActionHandler.processAction(error, request)).thenReturn(response);
-        verifyNoMoreInteractions(mockServerResponseToHttpServletResponseEncoder);
-        assertThat(httpServletResponse.getStatus(), is(406));
-        assertThat(httpServletResponse.getContentAsString(), is("HttpError is not supported by MockServer deployable WAR due to limitations in the JEE specification; use mockserver-netty to enable these features"));
+        assertResponse(response, 200, portBindingSerializer.serialize(
+            portBinding(80)
+        ));
     }
 
     @Test
-    public void shouldCallbackMatchedExpectation() throws IOException {
+    public void shouldBindNewPorts() {
         // given
-        HttpRequest request = new HttpRequest().withPath("somepath");
-        HttpClassCallback callback = new HttpClassCallback().withCallbackClass("some-class");
-        HttpResponse response = new HttpResponse();
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "somepath");
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class))).thenReturn(request);
-        when(mockMockServerMatcher.retrieveAction(any(HttpRequest.class))).thenReturn(callback);
-        when(mockActionHandler.processAction(any(HttpClassCallback.class), any(HttpRequest.class))).thenReturn(response);
+        MockHttpServletRequest statusRequest = buildHttpServletRequest(
+            "PUT",
+            "/bind", portBindingSerializer.serialize(
+                portBinding(1080, 1090)
+            ));
 
         // when
-        mockServerServlet.service(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(statusRequest, response);
 
         // then
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest)).thenReturn(request);
-        verify(mockMockServerMatcher).retrieveAction(request);
-        when(mockActionHandler.processAction(callback, request)).thenReturn(response);
-        verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
-        assertThat(httpServletResponse.getStatus(), is(200));
+        assertResponse(response, 501, "");
     }
 
     @Test
-    public void setupExpectation() throws IOException {
+    public void shouldStop() throws InterruptedException {
         // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        HttpRequest httpRequest = mock(HttpRequest.class);
-        Times times = mock(Times.class);
-        TimeToLive timeToLive = mock(TimeToLive.class);
-        Expectation expectation = new Expectation(httpRequest, times, timeToLive).thenRespond(new HttpResponse());
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/expectation")
-                                .withBody("requestBytes")
-                );
-        when(mockExpectationSerializer.deserializeArray("requestBytes")).thenReturn(new Expectation[]{expectation});
-        when(mockMockServerMatcher.when(same(httpRequest), same(times), same(timeToLive))).thenReturn(expectation);
+        MockHttpServletRequest statusRequest = buildHttpServletRequest(
+            "PUT",
+            "/stop",
+            ""
+        );
 
         // when
-        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
+        mockServerServlet.service(statusRequest, response);
 
         // then
-        verify(mockMockServerMatcher).when(same(httpRequest), same(times), same(timeToLive));
-        assertEquals(HttpServletResponse.SC_CREATED, httpServletResponse.getStatus());
+        assertResponse(response, 501, "");
     }
 
     @Test
-    public void setupExpectationFromJSONWithAllDefault() throws IOException {
+    public void shouldRetrieveRecordedExpectations() {
         // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/expectation");
-        String jsonExpectation = "{" +
-                "    \"httpRequest\": {" +
-                "        \"method\": \"\", " +
-                "        \"path\": \"\", " +
-                "        \"body\": \"\", " +
-                "        \"headers\": [ ], " +
-                "        \"cookies\": [ ] " +
-                "    }, " +
-                "    \"httpResponse\": {" +
-                "        \"statusCode\": 200, " +
-                "        \"body\": \"\", " +
-                "        \"cookies\": [ ], " +
-                "        \"headers\": [ ], " +
-                "        \"delay\": {" +
-                "            \"timeUnit\": \"MICROSECONDS\", " +
-                "            \"value\": 0" +
-                "        }" +
-                "    }, " +
-                "    \"times\": {" +
-                "        \"remainingTimes\": 1, " +
-                "        \"unlimited\": true" +
-                "    }" +
-                "}";
-        httpServletRequest.setContent(jsonExpectation.getBytes());
+        httpStateHandler.log(new RequestResponseLogEntry(
+            request("request_one"),
+            response("response_one")
+        ));
+        MockHttpServletRequest expectationRetrieveExpectationsRequest = buildHttpServletRequest(
+            "PUT",
+            "/retrieve",
+            httpRequestSerializer.serialize(request("request_one"))
+        );
+        expectationRetrieveExpectationsRequest.setQueryString("type=" + RetrieveType.RECORDED_EXPECTATIONS.name());
 
         // when
-        new MockServerServlet().service(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(expectationRetrieveExpectationsRequest, response);
 
         // then
-        assertEquals(httpServletResponse.getStatus(), HttpServletResponse.SC_CREATED);
+        assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
+            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one"))
+        )));
     }
 
     @Test
-    public void setupExpectationFromJSONWithAllEmpty() throws IOException {
+    public void shouldAddExpectation() {
         // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/expectation");
-        String jsonExpectation = "{" +
-                "    \"httpRequest\": { }," +
-                "    \"httpResponse\": { }," +
-                "    \"times\": { }" +
-                "}";
-        httpServletRequest.setContent(jsonExpectation.getBytes());
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        MockHttpServletRequest request = buildHttpServletRequest(
+            "PUT",
+            "/expectation",
+            expectationSerializer.serialize(expectationOne)
+        );
 
         // when
-        new MockServerServlet().service(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(request, response);
 
         // then
-        assertEquals(httpServletResponse.getStatus(), HttpServletResponse.SC_CREATED);
+        assertResponse(response, 201, "");
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(expectationOne));
     }
 
     @Test
-    public void setupExpectationFromJSONWithPartiallyEmptyFields() throws IOException {
+    public void shouldRetrieveActiveExpectations() {
         // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/expectation");
-        String jsonExpectation = "{" +
-                "    \"httpRequest\": {" +
-                "        \"path\": \"\"" +
-                "    }, " +
-                "    \"httpResponse\": {" +
-                "        \"body\": \"\"" +
-                "    }, " +
-                "    \"times\": {" +
-                "        \"remainingTimes\": 1, " +
-                "        \"unlimited\": true" +
-                "    }" +
-                "}";
-        httpServletRequest.setContent(jsonExpectation.getBytes());
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        MockHttpServletRequest expectationRetrieveExpectationsRequest = buildHttpServletRequest(
+            "PUT",
+            "/retrieve",
+            httpRequestSerializer.serialize(request("request_one"))
+        );
+        expectationRetrieveExpectationsRequest.setQueryString("type=" + RetrieveType.ACTIVE_EXPECTATIONS.name());
 
         // when
-        new MockServerServlet().service(httpServletRequest, httpServletResponse);
+        mockServerServlet.service(expectationRetrieveExpectationsRequest, response);
 
         // then
-        assertEquals(httpServletResponse.getStatus(), HttpServletResponse.SC_CREATED);
+        assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
+            expectationOne
+        )));
     }
 
     @Test
-    public void shouldClearExpectationsAndLogs() throws IOException {
+    public void shouldRetrieveLogMessages() {
         // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        HttpRequest httpRequest = new HttpRequest();
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/clear")
-                                .withBody("requestBytes")
-                );
-        when(mockHttpRequestSerializer.deserialize("requestBytes")).thenReturn(httpRequest);
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        MockHttpServletRequest retrieveLogRequest = buildHttpServletRequest(
+            "PUT",
+            "/retrieve",
+            httpRequestSerializer.serialize(request("request_one"))
+        );
+        retrieveLogRequest.setQueryString("type=" + RetrieveType.LOGS.name());
 
         // when
-        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
+        mockServerServlet.service(retrieveLogRequest, response);
 
         // then
-        verify(mockMockServerMatcher).clear(httpRequest);
-        verify(mockRequestLogFilter).clear(httpRequest);
+        assertThat(response.getStatus(), is(200));
+        String[] splitBody = new String(response.getContentAsByteArray(), UTF_8).split("------------------------------------\n");
+        assertThat(splitBody.length, is(2));
+        assertThat(
+            splitBody[0],
+            is(endsWith("creating expectation:" + NEW_LINE +
+                "" + NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"httpRequest\" : {" + NEW_LINE +
+                "\t    \"path\" : \"request_one\"" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"times\" : {" + NEW_LINE +
+                "\t    \"unlimited\" : true" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"timeToLive\" : {" + NEW_LINE +
+                "\t    \"unlimited\" : true" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"httpResponse\" : {" + NEW_LINE +
+                "\t    \"statusCode\" : 200," + NEW_LINE +
+                "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "\t    \"body\" : \"response_one\"" + NEW_LINE +
+                "\t  }" + NEW_LINE +
+                "\t}" + NEW_LINE))
+        );
+        assertThat(
+            splitBody[1],
+            is(endsWith("retrieving logs that match:" + NEW_LINE +
+                NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                "\t}" + NEW_LINE +
+                NEW_LINE))
+        );
     }
 
     @Test
-    public void shouldClearExpectationsOnly() throws IOException {
+    public void shouldUseActionHandlerToHandleNonAPIRequestsOnDefaultPort() {
         // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        HttpRequest httpRequest = new HttpRequest();
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/clear")
-                                .withQueryStringParameter("type", "expectation")
-                                .withBody("requestBytes")
-                );
-        when(mockHttpRequestSerializer.deserialize("requestBytes")).thenReturn(httpRequest);
+        MockHttpServletRequest request = buildHttpServletRequest(
+            "GET",
+            "request_one",
+            ""
+        );
+        request.setLocalAddr("local_address");
+        request.setLocalPort(80);
 
         // when
-        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
+        mockServerServlet.service(request, response);
 
         // then
-        verify(mockMockServerMatcher).clear(httpRequest);
-        verifyNoMoreInteractions(mockRequestLogFilter);
+        verify(mockActionHandler).processAction(
+            eq(
+                request("request_one")
+                    .withMethod("GET")
+                    .withKeepAlive(true)
+                    .withSecure(false)
+            ),
+            any(ServletResponseWriter.class),
+            isNull(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address",
+                "localhost",
+                "127.0.0.1"
+            )),
+            eq(false),
+            eq(true));
     }
 
     @Test
-    public void shouldClearLogsOnly() throws IOException {
+    public void shouldUseActionHandlerToHandleNonAPIRequestsOnNonDefaultPort() {
         // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        HttpRequest httpRequest = new HttpRequest();
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/clear")
-                                .withQueryStringParameter("type", "log")
-                                .withBody("requestBytes")
-                );
-        when(mockHttpRequestSerializer.deserialize("requestBytes")).thenReturn(httpRequest);
+        MockHttpServletRequest request = buildHttpServletRequest(
+            "GET",
+            "request_one",
+            ""
+        );
+        request.setLocalAddr("local_address");
+        request.setLocalPort(666);
 
         // when
-        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
+        mockServerServlet.service(request, response);
 
         // then
-        verifyNoMoreInteractions(mockMockServerMatcher);
-        verify(mockRequestLogFilter).clear(httpRequest);
+        verify(mockActionHandler).processAction(
+            eq(
+                request("request_one")
+                    .withMethod("GET")
+                    .withKeepAlive(true)
+                    .withSecure(false)
+            ),
+            any(ServletResponseWriter.class),
+            isNull(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address:666",
+                "localhost:666",
+                "127.0.0.1:666"
+            )),
+            eq(false),
+            eq(true));
     }
 
     @Test
-    public void shouldResetMockServer() throws IOException {
+    public void shouldUseActionHandlerToHandleNonAPISecureRequestsOnDefaultPort() {
         // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(new HttpResponse());
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/reset")
-                                .withBody("requestBytes")
-                );
-        when(mockExpectationSerializer.deserialize("requestBytes")).thenReturn(expectation);
+        MockHttpServletRequest request = buildHttpServletRequest(
+            "GET",
+            "request_one",
+            ""
+        );
+        request.setSecure(true);
+        request.setLocalAddr("local_address");
+        request.setLocalPort(443);
 
         // when
-        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
+        mockServerServlet.service(request, response);
 
         // then
-        verify(mockMockServerMatcher).reset();
+        verify(mockActionHandler).processAction(
+            eq(
+                request("request_one")
+                    .withMethod("GET")
+                    .withKeepAlive(true)
+                    .withSecure(true)
+            ),
+            any(ServletResponseWriter.class),
+            isNull(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address",
+                "localhost",
+                "127.0.0.1"
+            )),
+            eq(false),
+            eq(true));
     }
 
     @Test
-    public void shouldDumpAllExpectationsToLog() throws IOException {
+    public void shouldUseActionHandlerToHandleNonAPISecureRequestsOnNonDefaultPort() {
         // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        HttpRequest httpRequest = new HttpRequest();
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/dumpToLog")
-                                .withBody("requestBytes")
-                );
-        when(mockHttpRequestSerializer.deserialize("requestBytes")).thenReturn(httpRequest);
+        MockHttpServletRequest request = buildHttpServletRequest(
+            "GET",
+            "request_one",
+            ""
+        );
+        request.setSecure(true);
+        request.setLocalAddr("local_address");
+        request.setLocalPort(666);
 
         // when
-        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
+        mockServerServlet.service(request, response);
 
         // then
-        verify(mockHttpRequestSerializer).deserialize("requestBytes");
-        verify(mockMockServerMatcher).dumpToLog(httpRequest);
+        verify(mockActionHandler).processAction(
+            eq(
+                request("request_one")
+                    .withMethod("GET")
+                    .withKeepAlive(true)
+                    .withSecure(true)
+            ),
+            any(ServletResponseWriter.class),
+            isNull(ChannelHandlerContext.class),
+            eq(ImmutableSet.of(
+                "local_address:666",
+                "localhost:666",
+                "127.0.0.1:666"
+            )),
+            eq(false),
+            eq(true));
     }
 
-    @Test
-    public void shouldReturnRecordedRequests() throws IOException {
-        // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/retrieve")
-                                .withBody("requestBytes")
-                );
-
-        // and - a request matcher
-        HttpRequest request = new HttpRequest();
-        when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(request);
-
-        // and - a set of requests retrieved from the log
-        HttpRequest[] httpRequests = {request, request};
-        when(mockRequestLogFilter.retrieve(any(HttpRequest.class))).thenReturn(httpRequests);
-        when(mockHttpRequestSerializer.serialize(httpRequests)).thenReturn("request_response");
-
-        // when
-        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
-
-        // then
-        verify(mockRequestLogFilter).retrieve(request);
-        assertThat(httpServletResponse.getContentAsByteArray(), is("request_response".getBytes()));
-        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
-    }
-
-    @Test
-    public void shouldReturnSetupExpectationsRequests() throws IOException {
-        // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/retrieve")
-                                .withQueryStringParameter("type", "expectation")
-                                .withBody("requestBytes")
-                );
-
-        // and - a request matcher
-        HttpRequest request = new HttpRequest();
-        when(mockHttpRequestSerializer.deserialize(anyString())).thenReturn(request);
-
-        // and - a set of expectations retrieved from the matcher
-        Expectation expectation = new Expectation(new HttpRequest(), Times.unlimited(), TimeToLive.unlimited()).thenRespond(new HttpResponse());
-        Expectation[] expectations = {expectation, expectation};
-        when(mockMockServerMatcher.retrieveExpectations(any(HttpRequest.class))).thenReturn(expectations);
-        when(mockExpectationSerializer.serialize(expectations)).thenReturn("expectations_response");
-
-        // when
-        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
-
-        // then
-        verify(mockMockServerMatcher).retrieveExpectations(request);
-        assertThat(httpServletResponse.getContentAsByteArray(), is("expectations_response".getBytes()));
-        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
-    }
-
-    @Test
-    public void shouldVerifyRequestNotMatching() throws IOException {
-        // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        Verification verification = verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/verify")
-                                .withBody("requestBytes")
-                );
-        when(mockVerificationSerializer.deserialize("requestBytes")).thenReturn(verification);
-        when(mockRequestLogFilter.verify(verification)).thenReturn("verification_error");
-
-        // when
-        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
-
-        // then
-        verify(mockRequestLogFilter).verify(verification);
-        assertThat(httpServletResponse.getContentAsString(), is("verification_error"));
-        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.NOT_ACCEPTABLE_406.code()));
-    }
-
-    @Test
-    public void shouldVerifyRequestMatching() throws IOException {
-        // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        Verification verification = verification().withRequest(new HttpRequest()).withTimes(VerificationTimes.once());
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/verify")
-                                .withBody("requestBytes")
-                );
-        when(mockVerificationSerializer.deserialize("requestBytes")).thenReturn(verification);
-        when(mockRequestLogFilter.verify(verification)).thenReturn("");
-
-        // when
-        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
-
-        // then
-        verify(mockRequestLogFilter).verify(verification);
-        assertThat(httpServletResponse.getContentAsString(), is(""));
-        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.ACCEPTED_202.code()));
-    }
-
-    @Test
-    public void shouldVerifySequenceRequestNotMatching() throws IOException {
-        // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        VerificationSequence verification = new VerificationSequence().withRequests(request("one"), request("two"));
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/verifySequence")
-                                .withBody("requestBytes")
-                );
-        when(mockVerificationSequenceSerializer.deserialize("requestBytes")).thenReturn(verification);
-        when(mockRequestLogFilter.verify(verification)).thenReturn("verification_error");
-
-        // when
-        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
-
-        // then
-        verify(mockRequestLogFilter).verify(verification);
-        assertThat(httpServletResponse.getContentAsString(), is("verification_error"));
-        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.NOT_ACCEPTABLE_406.code()));
-    }
-
-    @Test
-    public void shouldVerifySequenceRequestMatching() throws IOException {
-        // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        VerificationSequence verification = new VerificationSequence().withRequests(request("one"), request("two"));
-
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/verifySequence")
-                                .withBody("requestBytes")
-                );
-        when(mockVerificationSequenceSerializer.deserialize("requestBytes")).thenReturn(verification);
-        when(mockRequestLogFilter.verify(verification)).thenReturn("");
-
-        // when
-        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
-
-        // then
-        verify(mockRequestLogFilter).verify(verification);
-        assertThat(httpServletResponse.getContentAsString(), is(""));
-        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.ACCEPTED_202.code()));
-    }
-
-    @Test
-    public void shouldGetStatus() throws IOException {
-        // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/status");
-        httpServletRequest.setLocalPort(1080);
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/status")
-                );
-
-        // when
-        mockServerServlet.service(httpServletRequest, httpServletResponse);
-
-        // then
-        assertThat(httpServletResponse.getContentAsString(), is("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"ports\" : [ 1080 ]" + System.getProperty("line.separator") +
-                "}"));
-        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.OK_200.code()));
-    }
-
-    @Test
-    public void shouldPreventBindingToAdditionalPort() throws IOException {
-        // given
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-        when(mockHttpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(any(HttpServletRequest.class)))
-                .thenReturn(
-                        request()
-                                .withMethod("PUT")
-                                .withPath("/bind")
-                );
-
-        // when
-        mockServerServlet.service(new MockHttpServletRequest(), httpServletResponse);
-
-        // then
-        assertThat(httpServletResponse.getStatus(), is(HttpStatusCode.NOT_IMPLEMENTED_501.code()));
-    }
 }

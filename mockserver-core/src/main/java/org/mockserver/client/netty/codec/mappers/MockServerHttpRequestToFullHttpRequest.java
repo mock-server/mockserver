@@ -40,7 +40,7 @@ public class MockServerHttpRequestToFullHttpRequest {
 
     public String getURI(HttpRequest httpRequest) {
         QueryStringEncoder queryStringEncoder = new QueryStringEncoder(httpRequest.getPath().getValue());
-        for (Parameter parameter : httpRequest.getQueryStringParameters()) {
+        for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
             for (NottableString value : parameter.getValues()) {
                 queryStringEncoder.addParam(parameter.getName().getValue(), value.getValue());
             }
@@ -54,7 +54,7 @@ public class MockServerHttpRequestToFullHttpRequest {
         Body body = httpRequest.getBody();
         if (body != null) {
             Object bodyContents = body.getValue();
-            Charset bodyCharset = body.getCharset(ContentTypeMapper.determineCharsetForMessage(httpRequest));
+            Charset bodyCharset = body.getCharset(ContentTypeMapper.getCharsetFromContentTypeHeader(httpRequest.getFirstHeader(CONTENT_TYPE.toString())));
             if (bodyContents instanceof byte[]) {
                 content = Unpooled.copiedBuffer((byte[]) bodyContents);
             } else if (bodyContents instanceof String) {
@@ -68,25 +68,25 @@ public class MockServerHttpRequestToFullHttpRequest {
 
     private void setCookies(HttpRequest httpRequest, FullHttpRequest request) {
         List<io.netty.handler.codec.http.cookie.Cookie> cookies = new ArrayList<io.netty.handler.codec.http.cookie.Cookie>();
-        for (org.mockserver.model.Cookie cookie : httpRequest.getCookies()) {
+        for (org.mockserver.model.Cookie cookie : httpRequest.getCookieList()) {
             cookies.add(new io.netty.handler.codec.http.cookie.DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
         }
         if (cookies.size() > 0) {
             request.headers().set(
-                    COOKIE.toString(),
-                    io.netty.handler.codec.http.cookie.ClientCookieEncoder.LAX.encode(cookies)
+                COOKIE.toString(),
+                io.netty.handler.codec.http.cookie.ClientCookieEncoder.LAX.encode(cookies)
             );
         }
     }
 
     private void setHeader(HttpRequest httpRequest, FullHttpRequest request) {
-        for (Header header : httpRequest.getHeaders()) {
+        for (Header header : httpRequest.getHeaderList()) {
             String headerName = header.getName().getValue();
             // do not set hop-by-hop headers
             if (!headerName.equalsIgnoreCase(CONTENT_LENGTH.toString())
-                    && !headerName.equalsIgnoreCase(TRANSFER_ENCODING.toString())
-                    && !headerName.equalsIgnoreCase(HOST.toString())
-                    && !headerName.equalsIgnoreCase(ACCEPT_ENCODING.toString())) {
+                && !headerName.equalsIgnoreCase(TRANSFER_ENCODING.toString())
+                && !headerName.equalsIgnoreCase(HOST.toString())
+                && !headerName.equalsIgnoreCase(ACCEPT_ENCODING.toString())) {
                 if (!header.getValues().isEmpty()) {
                     for (NottableString headerValue : header.getValues()) {
                         request.headers().add(headerName, headerValue.getValue());
@@ -110,7 +110,7 @@ public class MockServerHttpRequestToFullHttpRequest {
 
         if (!request.headers().contains(CONTENT_TYPE)) {
             if (httpRequest.getBody() != null
-                    && httpRequest.getBody().getContentType() != null) {
+                && httpRequest.getBody().getContentType() != null) {
                 request.headers().set(CONTENT_TYPE, httpRequest.getBody().getContentType());
             }
         }

@@ -1,7 +1,7 @@
 package org.mockserver.matchers;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 
 import java.util.Arrays;
 
@@ -9,14 +9,15 @@ import java.util.Arrays;
  * @author jamesdbloom
  */
 public class BinaryMatcher extends BodyMatcher<byte[]> {
-    private static Logger logger = LoggerFactory.getLogger(BinaryMatcher.class);
+    private final MockServerLogger mockServerLogger;
     private final byte[] matcher;
 
-    public BinaryMatcher(byte[] matcher) {
+    public BinaryMatcher(MockServerLogger mockServerLogger, byte[] matcher) {
+        this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
     }
 
-    public boolean matches(byte[] matched) {
+    public boolean matches(HttpRequest context, byte[] matched) {
         boolean result = false;
 
         if (matcher == null || matcher.length == 0 || Arrays.equals(matcher, matched)) {
@@ -24,7 +25,7 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
         }
 
         if (!result) {
-            logger.trace("Failed to perform binary match [{}] with [{}] because {}", matched);
+            mockServerLogger.trace(context, "Failed to perform binary match [{}] with [{}] because {}", matched);
         }
 
         return reverseResultIfNot(result);

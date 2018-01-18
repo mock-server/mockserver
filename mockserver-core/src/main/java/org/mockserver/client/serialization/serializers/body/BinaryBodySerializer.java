@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.model.BinaryBody;
-import org.mockserver.model.XmlBody;
 
 import java.io.IOException;
 
@@ -24,7 +23,7 @@ public class BinaryBodySerializer extends StdSerializer<BinaryBody> {
             jgen.writeStringField("contentType", binaryBody.getContentType());
         }
         jgen.writeStringField("type", binaryBody.getType().name());
-        jgen.writeStringField("value", binaryBody.toString());
+        jgen.writeStringField("base64Bytes", binaryBody.toString());
         jgen.writeEndObject();
     }
 }

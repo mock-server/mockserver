@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -207,28 +208,28 @@ public class MockServerRequestEncoderBasicMappingTest {
     @Test
     public void shouldEncodeBinaryBody() {
         // given
-        httpRequest.withBody(binary("somebody".getBytes()));
+        httpRequest.withBody(binary("somebody".getBytes(UTF_8)));
 
         // when
         new MockServerRequestEncoder().encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().array(), is("somebody".getBytes()));
+        assertThat(fullHttpRequest.content().array(), is("somebody".getBytes(UTF_8)));
         assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), nullValue());
     }
 
     @Test
     public void shouldEncodeBinaryBodyWithContentType() {
         // given
-        httpRequest.withBody(binary("somebody".getBytes(), MediaType.QUICKTIME));
+        httpRequest.withBody(binary("somebody".getBytes(UTF_8), MediaType.QUICKTIME));
 
         // when
         new MockServerRequestEncoder().encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().array(), is("somebody".getBytes()));
+        assertThat(fullHttpRequest.content().array(), is("somebody".getBytes(UTF_8)));
         assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is(MediaType.QUICKTIME.toString()));
     }
 

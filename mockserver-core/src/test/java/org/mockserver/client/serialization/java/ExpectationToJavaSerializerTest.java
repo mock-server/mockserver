@@ -1,515 +1,820 @@
 package org.mockserver.client.serialization.java;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.client.serialization.Base64Converter;
-import org.mockserver.matchers.TimeToLive;
-import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.matchers.TimeToLive.unlimited;
+import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
+import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
+import static org.mockserver.model.HttpForward.forward;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpTemplate.template;
 
 /**
  * @author jamesdbloom
  */
 public class ExpectationToJavaSerializerTest {
 
+    private final Base64Converter base64Converter = new Base64Converter();
+
     @Test
-    public void shouldSerializeFullObjectWithResponseAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "        new MockServerClient(\"localhost\", 1080)" + System.getProperty("line.separator") +
-                        "        .when(" + System.getProperty("line.separator") +
-                        "                request()" + System.getProperty("line.separator") +
-                        "                        .withMethod(\"GET\")" + System.getProperty("line.separator") +
-                        "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
-                        "                        .withHeaders(" + System.getProperty("line.separator") +
-                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withCookies(" + System.getProperty("line.separator") +
-                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + System.getProperty("line.separator") +
-                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withQueryStringParameters(" + System.getProperty("line.separator") +
-                        "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withBody(new StringBody(\"somebody\"))," + System.getProperty("line.separator") +
-                        "                Times.once()" + System.getProperty("line.separator") +
-                        "        )" + System.getProperty("line.separator") +
-                        "        .respond(" + System.getProperty("line.separator") +
-                        "                response()" + System.getProperty("line.separator") +
-                        "                        .withStatusCode(304)" + System.getProperty("line.separator") +
-                        "                        .withHeaders(" + System.getProperty("line.separator") +
-                        "                                new Header(\"responseHeaderNameOne\", \"responseHeaderValueOneOne\", \"responseHeaderValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                                new Header(\"responseHeaderNameTwo\", \"responseHeaderValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withCookies(" + System.getProperty("line.separator") +
-                        "                                new Cookie(\"responseCookieNameOne\", \"responseCookieValueOne\")," + System.getProperty("line.separator") +
-                        "                                new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
-                        "                        .withDelay(new Delay(TimeUnit.MINUTES, 1))" + System.getProperty("line.separator") +
-                        "                        .withConnectionOptions(" + System.getProperty("line.separator") +
-                        "                                connectionOptions()" + System.getProperty("line.separator") +
-                        "                                        .withSuppressContentLengthHeader(true)" + System.getProperty("line.separator") +
-                        "                                        .withContentLengthHeaderOverride(10)" + System.getProperty("line.separator") +
-                        "                                        .withSuppressConnectionHeader(true)" + System.getProperty("line.separator") +
-                        "                                        .withKeepAliveOverride(true)" + System.getProperty("line.separator") +
-                        "                                        .withCloseSocket(true)" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
-                        new Expectation(
-                                new HttpRequest()
-                                        .withMethod("GET")
-                                        .withPath("somePath")
-                                        .withQueryStringParameters(
-                                                new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
-                                                new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
-                                        )
-                                        .withHeaders(
-                                                new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
-                                                new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
-                                        )
-                                        .withCookies(
-                                                new Cookie("requestCookieNameOne", "requestCookieValueOne"),
-                                                new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                                        )
-                                        .withBody(new StringBody("somebody")),
-                                Times.once(),
-                                TimeToLive.unlimited()).thenRespond(
-                                new HttpResponse()
-                                        .withStatusCode(304)
-                                        .withHeaders(
-                                                new Header("responseHeaderNameOne", "responseHeaderValueOneOne", "responseHeaderValueOneTwo"),
-                                                new Header("responseHeaderNameTwo", "responseHeaderValueTwo")
-                                        )
-                                        .withCookies(
-                                                new Cookie("responseCookieNameOne", "responseCookieValueOne"),
-                                                new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
-                                        )
-                                        .withBody("responseBody")
-                                        .withDelay(new Delay(TimeUnit.MINUTES, 1))
-                                        .withConnectionOptions(
-                                                connectionOptions()
-                                                        .withSuppressContentLengthHeader(true)
-                                                        .withContentLengthHeaderOverride(10)
-                                                        .withSuppressConnectionHeader(true)
-                                                        .withKeepAliveOverride(true)
-                                                        .withCloseSocket(true)
-                                        )
+    public void shouldSerializeArrayOfObjectsAsJava() throws IOException {
+        assertEquals(NEW_LINE +
+                "new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                ".when(" + NEW_LINE +
+                "        request()" + NEW_LINE +
+                "                .withPath(\"somePathOne\")," + NEW_LINE +
+                "        Times.once()" + NEW_LINE +
+                ")" + NEW_LINE +
+                ".respond(" + NEW_LINE +
+                "        response()" + NEW_LINE +
+                "                .withStatusCode(200)" + NEW_LINE +
+                "                .withReasonPhrase(\"OK\")" + NEW_LINE +
+                "                .withBody(\"responseBodyOne\")" + NEW_LINE +
+                ");" + NEW_LINE +
+                NEW_LINE +
+                NEW_LINE +
+                "new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                ".when(" + NEW_LINE +
+                "        request()" + NEW_LINE +
+                "                .withPath(\"somePathOne\")," + NEW_LINE +
+                "        Times.once()" + NEW_LINE +
+                ")" + NEW_LINE +
+                ".respond(" + NEW_LINE +
+                "        response()" + NEW_LINE +
+                "                .withStatusCode(200)" + NEW_LINE +
+                "                .withReasonPhrase(\"OK\")" + NEW_LINE +
+                "                .withBody(\"responseBodyOne\")" + NEW_LINE +
+                ");" + NEW_LINE +
+                NEW_LINE,
+            new ExpectationToJavaSerializer().serialize(
+                Arrays.asList(
+                    new Expectation(
+                        request("somePathOne"),
+                        once(),
+                        unlimited()
+                    )
+                        .thenRespond(
+                            response("responseBodyOne")
+                        ),
+                    new Expectation(
+                        request("somePathOne"),
+                        once(),
+                        unlimited()
+                    )
+                        .thenRespond(
+                            response("responseBodyOne")
                         )
                 )
+            )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithResponseAsJava() throws IOException {
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withMethod(\"GET\")" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withHeaders(" + NEW_LINE +
+                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withCookies(" + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withQueryStringParameters(" + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                "                Times.once()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .respond(" + NEW_LINE +
+                "                response()" + NEW_LINE +
+                "                        .withStatusCode(304)" + NEW_LINE +
+                "                        .withHeaders(" + NEW_LINE +
+                "                                new Header(\"responseHeaderNameOne\", \"responseHeaderValueOneOne\", \"responseHeaderValueOneTwo\")," + NEW_LINE +
+                "                                new Header(\"responseHeaderNameTwo\", \"responseHeaderValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withCookies(" + NEW_LINE +
+                "                                new Cookie(\"responseCookieNameOne\", \"responseCookieValueOne\")," + NEW_LINE +
+                "                                new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withBody(\"responseBody\")" + NEW_LINE +
+                "                        .withDelay(new Delay(TimeUnit.MINUTES, 1))" + NEW_LINE +
+                "                        .withConnectionOptions(" + NEW_LINE +
+                "                                connectionOptions()" + NEW_LINE +
+                "                                        .withSuppressContentLengthHeader(true)" + NEW_LINE +
+                "                                        .withContentLengthHeaderOverride(10)" + NEW_LINE +
+                "                                        .withSuppressConnectionHeader(true)" + NEW_LINE +
+                "                                        .withKeepAliveOverride(true)" + NEW_LINE +
+                "                                        .withCloseSocket(true)" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withMethod("GET")
+                        .withPath("somePath")
+                        .withQueryStringParameters(
+                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                        )
+                        .withHeaders(
+                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                        )
+                        .withCookies(
+                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                        )
+                        .withBody(new StringBody("somebody")),
+                    once(),
+                    unlimited()
+                )
+                    .thenRespond(
+                        response()
+                            .withStatusCode(304)
+                            .withHeaders(
+                                new Header("responseHeaderNameOne", "responseHeaderValueOneOne", "responseHeaderValueOneTwo"),
+                                new Header("responseHeaderNameTwo", "responseHeaderValueTwo")
+                            )
+                            .withCookies(
+                                new Cookie("responseCookieNameOne", "responseCookieValueOne"),
+                                new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
+                            )
+                            .withBody("responseBody")
+                            .withDelay(new Delay(TimeUnit.MINUTES, 1))
+                            .withConnectionOptions(
+                                connectionOptions()
+                                    .withSuppressContentLengthHeader(true)
+                                    .withContentLengthHeaderOverride(10)
+                                    .withSuppressConnectionHeader(true)
+                                    .withKeepAliveOverride(true)
+                                    .withCloseSocket(true)
+                            )
+                    )
+            )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithResponseTemplateAsJava() throws IOException {
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withMethod(\"GET\")" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withHeaders(" + NEW_LINE +
+                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withCookies(" + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withQueryStringParameters(" + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                "                Times.once()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .respond(" + NEW_LINE +
+                "                template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
+                "                        .withTemplate(\"if (request.method === 'POST' && request.path === '/somePath') {\\n    return {\\n        'statusCode': 200,\\n        'body': JSON.stringify({name: 'value'})\\n    };\\n} else {\\n    return {\\n        'statusCode': 406,\\n        'body': request.body\\n    };\\n}\")" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withMethod("GET")
+                        .withPath("somePath")
+                        .withQueryStringParameters(
+                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                        )
+                        .withHeaders(
+                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                        )
+                        .withCookies(
+                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                        )
+                        .withBody(new StringBody("somebody")),
+                    once(),
+                    unlimited()
+                )
+                    .thenRespond(
+                        template(HttpTemplate.TemplateType.JAVASCRIPT, "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
+                            "    return {" + NEW_LINE +
+                            "        'statusCode': 200," + NEW_LINE +
+                            "        'body': JSON.stringify({name: 'value'})" + NEW_LINE +
+                            "    };" + NEW_LINE +
+                            "} else {" + NEW_LINE +
+                            "    return {" + NEW_LINE +
+                            "        'statusCode': 406," + NEW_LINE +
+                            "        'body': request.body" + NEW_LINE +
+                            "    };" + NEW_LINE +
+                            "}"
+                        )
+                    )
+            )
         );
     }
 
     @Test
     public void shouldSerializeFullObjectWithParameterBodyResponseAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "        new MockServerClient(\"localhost\", 1080)" + System.getProperty("line.separator") +
-                        "        .when(" + System.getProperty("line.separator") +
-                        "                request()" + System.getProperty("line.separator") +
-                        "                        .withBody(" + System.getProperty("line.separator") +
-                        "                                new ParameterBody(" + System.getProperty("line.separator") +
-                        "                                        new Parameter(\"requestBodyParameterNameOne\", \"requestBodyParameterValueOneOne\", \"requestBodyParameterValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                                        new Parameter(\"requestBodyParameterNameTwo\", \"requestBodyParameterValueTwo\")" + System.getProperty("line.separator") +
-                        "                                )" + System.getProperty("line.separator") +
-                        "                        )," + System.getProperty("line.separator") +
-                        "                Times.once()" + System.getProperty("line.separator") +
-                        "        )" + System.getProperty("line.separator") +
-                        "        .respond(" + System.getProperty("line.separator") +
-                        "                response()" + System.getProperty("line.separator") +
-                        "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
-                        "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
-                        new Expectation(
-                                new HttpRequest()
-                                        .withBody(
-                                                new ParameterBody(
-                                                        new Parameter("requestBodyParameterNameOne", "requestBodyParameterValueOneOne", "requestBodyParameterValueOneTwo"),
-                                                        new Parameter("requestBodyParameterNameTwo", "requestBodyParameterValueTwo")
-                                                )
-                                        ),
-                                Times.once(),
-                                TimeToLive.unlimited())
-                                .thenRespond(
-                                        new HttpResponse()
-                                                .withBody("responseBody")
-                                )
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withBody(" + NEW_LINE +
+                "                                new ParameterBody(" + NEW_LINE +
+                "                                        new Parameter(\"requestBodyParameterNameOne\", \"requestBodyParameterValueOneOne\", \"requestBodyParameterValueOneTwo\")," + NEW_LINE +
+                "                                        new Parameter(\"requestBodyParameterNameTwo\", \"requestBodyParameterValueTwo\")" + NEW_LINE +
+                "                                )" + NEW_LINE +
+                "                        )," + NEW_LINE +
+                "                Times.once()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .respond(" + NEW_LINE +
+                "                response()" + NEW_LINE +
+                "                        .withBody(\"responseBody\")" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withBody(
+                            new ParameterBody(
+                                new Parameter("requestBodyParameterNameOne", "requestBodyParameterValueOneOne", "requestBodyParameterValueOneTwo"),
+                                new Parameter("requestBodyParameterNameTwo", "requestBodyParameterValueTwo")
+                            )
+                        ),
+                    once(),
+                    unlimited()
                 )
+                    .thenRespond(
+                        response()
+                            .withBody("responseBody")
+                    )
+            )
         );
     }
 
     @Test
     public void shouldSerializeFullObjectWithBinaryBodyResponseAsJava() throws IOException {
         // when
-        assertEquals(System.getProperty("line.separator") +
-                        "        new MockServerClient(\"localhost\", 1080)" + System.getProperty("line.separator") +
-                        "        .when(" + System.getProperty("line.separator") +
-                        "                request()" + System.getProperty("line.separator") +
-                        "                        .withBody(Base64Converter.base64StringToBytes(\"" + Base64Converter.bytesToBase64String("request body".getBytes()) + "\"))," + System.getProperty("line.separator") +
-                        "                Times.once()" + System.getProperty("line.separator") +
-                        "        )" + System.getProperty("line.separator") +
-                        "        .respond(" + System.getProperty("line.separator") +
-                        "                response()" + System.getProperty("line.separator") +
-                        "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
-                        "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
-                        new Expectation(
-                                new HttpRequest()
-                                        .withBody(
-                                                new BinaryBody("request body".getBytes())
-                                        ),
-                                Times.once(),
-                                TimeToLive.unlimited())
-                                .thenRespond(
-                                        new HttpResponse()
-                                                .withBody("responseBody")
-                                )
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withBody(new Base64Converter().base64StringToBytes(\"" + base64Converter.bytesToBase64String("request body".getBytes(UTF_8)) + "\"))," + NEW_LINE +
+                "                Times.once()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .respond(" + NEW_LINE +
+                "                response()" + NEW_LINE +
+                "                        .withBody(\"responseBody\")" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withBody(
+                            new BinaryBody("request body".getBytes(UTF_8))
+                        ),
+                    once(),
+                    unlimited()
                 )
+                    .thenRespond(
+                        response()
+                            .withBody("responseBody")
+                    )
+            )
         );
     }
 
     @Test
     public void shouldSerializeFullObjectWithForwardAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "        new MockServerClient(\"localhost\", 1080)" + System.getProperty("line.separator") +
-                        "        .when(" + System.getProperty("line.separator") +
-                        "                request()" + System.getProperty("line.separator") +
-                        "                        .withMethod(\"GET\")" + System.getProperty("line.separator") +
-                        "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
-                        "                        .withHeaders(" + System.getProperty("line.separator") +
-                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withCookies(" + System.getProperty("line.separator") +
-                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + System.getProperty("line.separator") +
-                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withQueryStringParameters(" + System.getProperty("line.separator") +
-                        "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withBody(new StringBody(\"somebody\"))," + System.getProperty("line.separator") +
-                        "                Times.once()" + System.getProperty("line.separator") +
-                        "        )" + System.getProperty("line.separator") +
-                        "        .forward(" + System.getProperty("line.separator") +
-                        "                forward()" + System.getProperty("line.separator") +
-                        "                        .withHost(\"some_host\")" + System.getProperty("line.separator") +
-                        "                        .withPort(9090)" + System.getProperty("line.separator") +
-                        "                        .withScheme(HttpForward.Scheme.HTTPS)" + System.getProperty("line.separator") +
-                        "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
-                        new Expectation(
-                                new HttpRequest()
-                                        .withMethod("GET")
-                                        .withPath("somePath")
-                                        .withQueryStringParameters(
-                                                new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
-                                                new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
-                                        )
-                                        .withHeaders(
-                                                new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
-                                                new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
-                                        )
-                                        .withCookies(
-                                                new Cookie("requestCookieNameOne", "requestCookieValueOne"),
-                                                new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                                        )
-                                        .withBody(new StringBody("somebody")),
-                                Times.once(),
-                                TimeToLive.unlimited())
-                                .thenForward(
-                                        new HttpForward()
-                                                .withHost("some_host")
-                                                .withPort(9090)
-                                                .withScheme(HttpForward.Scheme.HTTPS)
-                                )
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withMethod(\"GET\")" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withHeaders(" + NEW_LINE +
+                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withCookies(" + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withQueryStringParameters(" + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                "                Times.once()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .forward(" + NEW_LINE +
+                "                forward()" + NEW_LINE +
+                "                        .withHost(\"some_host\")" + NEW_LINE +
+                "                        .withPort(9090)" + NEW_LINE +
+                "                        .withScheme(HttpForward.Scheme.HTTPS)" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withMethod("GET")
+                        .withPath("somePath")
+                        .withQueryStringParameters(
+                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                        )
+                        .withHeaders(
+                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                        )
+                        .withCookies(
+                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                        )
+                        .withBody(new StringBody("somebody")),
+                    once(),
+                    unlimited()
                 )
+                    .thenForward(
+                        forward()
+                            .withHost("some_host")
+                            .withPort(9090)
+                            .withScheme(HttpForward.Scheme.HTTPS)
+                    )
+            )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithForwardTemplateAsJava() throws IOException {
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withMethod(\"GET\")" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withHeaders(" + NEW_LINE +
+                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withCookies(" + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withQueryStringParameters(" + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                "                Times.once()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .forward(" + NEW_LINE +
+                "                template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
+                "                        .withTemplate(\"return { 'path': \\\"somePath\\\", 'body': JSON.stringify({name: 'value'}) };\")" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withMethod("GET")
+                        .withPath("somePath")
+                        .withQueryStringParameters(
+                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                        )
+                        .withHeaders(
+                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                        )
+                        .withCookies(
+                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                        )
+                        .withBody(new StringBody("somebody")),
+                    once(),
+                    unlimited()
+                )
+                    .thenForward(
+                        template(HttpTemplate.TemplateType.JAVASCRIPT)
+                            .withTemplate("return { 'path': \"somePath\", 'body': JSON.stringify({name: 'value'}) };")
+                    )
+            )
         );
     }
 
     @Test
     public void shouldSerializeFullObjectWithErrorAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "        new MockServerClient(\"localhost\", 1080)" + System.getProperty("line.separator") +
-                        "        .when(" + System.getProperty("line.separator") +
-                        "                request()" + System.getProperty("line.separator") +
-                        "                        .withMethod(\"GET\")" + System.getProperty("line.separator") +
-                        "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
-                        "                        .withHeaders(" + System.getProperty("line.separator") +
-                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withCookies(" + System.getProperty("line.separator") +
-                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + System.getProperty("line.separator") +
-                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withQueryStringParameters(" + System.getProperty("line.separator") +
-                        "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withBody(new StringBody(\"somebody\"))," + System.getProperty("line.separator") +
-                        "                Times.once()" + System.getProperty("line.separator") +
-                        "        )" + System.getProperty("line.separator") +
-                        "        .error(" + System.getProperty("line.separator") +
-                        "                error()" + System.getProperty("line.separator") +
-                        "                        .withDelay(new Delay(TimeUnit.MINUTES, 1))" + System.getProperty("line.separator") +
-                        "                        .withDropConnection(true)" + System.getProperty("line.separator") +
-                        "                        .withResponseBytes(Base64Converter.base64StringToBytes(\"" + Base64Converter.bytesToBase64String("some_bytes".getBytes()) + "\"))" + System.getProperty("line.separator") +
-                        "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
-                        new Expectation(
-                                new HttpRequest()
-                                        .withMethod("GET")
-                                        .withPath("somePath")
-                                        .withQueryStringParameters(
-                                                new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
-                                                new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
-                                        )
-                                        .withHeaders(
-                                                new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
-                                                new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
-                                        )
-                                        .withCookies(
-                                                new Cookie("requestCookieNameOne", "requestCookieValueOne"),
-                                                new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                                        )
-                                        .withBody(new StringBody("somebody")),
-                                Times.once(),
-                                TimeToLive.unlimited()
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withMethod(\"GET\")" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withHeaders(" + NEW_LINE +
+                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withCookies(" + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withQueryStringParameters(" + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                "                Times.once()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .error(" + NEW_LINE +
+                "                error()" + NEW_LINE +
+                "                        .withDelay(new Delay(TimeUnit.MINUTES, 1))" + NEW_LINE +
+                "                        .withDropConnection(true)" + NEW_LINE +
+                "                        .withResponseBytes(new Base64Converter().base64StringToBytes(\"" + base64Converter.bytesToBase64String("some_bytes".getBytes(UTF_8)) + "\"))" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withMethod("GET")
+                        .withPath("somePath")
+                        .withQueryStringParameters(
+                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
                         )
-                                .thenError(
-                                        error()
-                                                .withDelay(new Delay(TimeUnit.MINUTES, 1))
-                                                .withDropConnection(true)
-                                                .withResponseBytes("some_bytes".getBytes())
-                                )
+                        .withHeaders(
+                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                        )
+                        .withCookies(
+                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                        )
+                        .withBody(new StringBody("somebody")),
+                    once(),
+                    unlimited()
                 )
+                    .thenError(
+                        error()
+                            .withDelay(new Delay(TimeUnit.MINUTES, 1))
+                            .withDropConnection(true)
+                            .withResponseBytes("some_bytes".getBytes(UTF_8))
+                    )
+            )
         );
     }
 
     @Test
-    public void shouldSerializeFullObjectWithCallbackAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "        new MockServerClient(\"localhost\", 1080)" + System.getProperty("line.separator") +
-                        "        .when(" + System.getProperty("line.separator") +
-                        "                request()" + System.getProperty("line.separator") +
-                        "                        .withMethod(\"GET\")" + System.getProperty("line.separator") +
-                        "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
-                        "                        .withHeaders(" + System.getProperty("line.separator") +
-                        "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withCookies(" + System.getProperty("line.separator") +
-                        "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + System.getProperty("line.separator") +
-                        "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withQueryStringParameters(" + System.getProperty("line.separator") +
-                        "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + System.getProperty("line.separator") +
-                        "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + System.getProperty("line.separator") +
-                        "                        )" + System.getProperty("line.separator") +
-                        "                        .withBody(new StringBody(\"somebody\"))," + System.getProperty("line.separator") +
-                        "                Times.once()" + System.getProperty("line.separator") +
-                        "        )" + System.getProperty("line.separator") +
-                        "        .callback(" + System.getProperty("line.separator") +
-                        "                callback()" + System.getProperty("line.separator") +
-                        "                        .withCallbackClass(\"some_class\")" + System.getProperty("line.separator") +
-                        "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
-                        new Expectation(
-                                new HttpRequest()
-                                        .withMethod("GET")
-                                        .withPath("somePath")
-                                        .withQueryStringParameters(
-                                                new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
-                                                new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
-                                        )
-                                        .withHeaders(
-                                                new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
-                                                new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
-                                        )
-                                        .withCookies(
-                                                new Cookie("requestCookieNameOne", "requestCookieValueOne"),
-                                                new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                                        )
-                                        .withBody(new StringBody("somebody")),
-                                Times.once(),
-                                TimeToLive.unlimited())
-                                .thenCallback(
-                                        new HttpClassCallback()
-                                                .withCallbackClass("some_class")
-                                )
+    public void shouldSerializeFullObjectWithClassCallbackAsJava() throws IOException {
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withMethod(\"GET\")" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withHeaders(" + NEW_LINE +
+                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withCookies(" + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withQueryStringParameters(" + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                "                Times.once()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .callback(" + NEW_LINE +
+                "                callback()" + NEW_LINE +
+                "                        .withCallbackClass(\"some_class\")" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withMethod("GET")
+                        .withPath("somePath")
+                        .withQueryStringParameters(
+                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                        )
+                        .withHeaders(
+                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                        )
+                        .withCookies(
+                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                        )
+                        .withBody(new StringBody("somebody")),
+                    once(),
+                    unlimited()
                 )
+                    .thenRespond(
+                        callback()
+                            .withCallbackClass("some_class")
+                    )
+            )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithObjectCallbackAsJava() throws IOException {
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withMethod(\"GET\")" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withHeaders(" + NEW_LINE +
+                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withCookies(" + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withQueryStringParameters(" + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                "                Times.once()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        /*NOT POSSIBLE TO GENERATE CODE FOR OBJECT CALLBACK*/;",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withMethod("GET")
+                        .withPath("somePath")
+                        .withQueryStringParameters(
+                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                        )
+                        .withHeaders(
+                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                        )
+                        .withCookies(
+                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                        )
+                        .withBody(new StringBody("somebody")),
+                    once(),
+                    unlimited()
+                )
+                    .thenRespond(
+                        new HttpObjectCallback()
+                            .withClientId("some_client_id")
+                    )
+            )
         );
     }
 
     @Test
     public void shouldEscapeJsonBodies() throws IOException {
-        assertEquals("" + System.getProperty("line.separator") +
-                        "        new MockServerClient(\"localhost\", 1080)" + System.getProperty("line.separator") +
-                        "        .when(" + System.getProperty("line.separator") +
-                        "                request()" + System.getProperty("line.separator") +
-                        "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
-                        "                        .withBody(new JsonBody(\"[" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "]\", JsonBodyMatchType.ONLY_MATCHING_FIELDS))," + System.getProperty("line.separator") +
-                        "                Times.once()" + System.getProperty("line.separator") +
-                        "        )" + System.getProperty("line.separator") +
-                        "        .respond(" + System.getProperty("line.separator") +
-                        "                response()" + System.getProperty("line.separator") +
-                        "                        .withStatusCode(304)" + System.getProperty("line.separator") +
-                        "                        .withBody(\"[" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    {" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "    }" + StringEscapeUtils.escapeJava(System.getProperty("line.separator")) + "]\")" + System.getProperty("line.separator") +
-                        "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
-                        new Expectation(
-                                new HttpRequest()
-                                        .withPath("somePath")
-                                        .withBody(new JsonBody("[" + System.getProperty("line.separator") +
-                                                "    {" + System.getProperty("line.separator") +
-                                                "        \"id\": \"1\"," + System.getProperty("line.separator") +
-                                                "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\"," + System.getProperty("line.separator") +
-                                                "        \"author\": \"James Tatum\"," + System.getProperty("line.separator") +
-                                                "        \"isbn\": \"0691067570\"," + System.getProperty("line.separator") +
-                                                "        \"publicationDate\": \"1989\"" + System.getProperty("line.separator") +
-                                                "    }," + System.getProperty("line.separator") +
-                                                "    {" + System.getProperty("line.separator") +
-                                                "        \"id\": \"2\"," + System.getProperty("line.separator") +
-                                                "        \"title\": \"You are here : personal geographies and other maps of the imagination\"," + System.getProperty("line.separator") +
-                                                "        \"author\": \"Katharine A. Harmon\"," + System.getProperty("line.separator") +
-                                                "        \"isbn\": \"1568984308\"," + System.getProperty("line.separator") +
-                                                "        \"publicationDate\": \"2004\"" + System.getProperty("line.separator") +
-                                                "    }," + System.getProperty("line.separator") +
-                                                "    {" + System.getProperty("line.separator") +
-                                                "        \"id\": \"3\"," + System.getProperty("line.separator") +
-                                                "        \"title\": \"You just don't understand : women and men in conversation\"," + System.getProperty("line.separator") +
-                                                "        \"author\": \"Deborah Tannen\"," + System.getProperty("line.separator") +
-                                                "        \"isbn\": \"0345372050\"," + System.getProperty("line.separator") +
-                                                "        \"publicationDate\": \"1990\"" + System.getProperty("line.separator") +
-                                                "    }" + System.getProperty("line.separator") +
-                                                "]")),
-                                Times.once(),
-                                TimeToLive.unlimited()).thenRespond(
-                                new HttpResponse()
-                                        .withStatusCode(304)
-                                        .withBody("[" + System.getProperty("line.separator") +
-                                                "    {" + System.getProperty("line.separator") +
-                                                "        \"id\": \"1\"," + System.getProperty("line.separator") +
-                                                "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\"," + System.getProperty("line.separator") +
-                                                "        \"author\": \"James Tatum\"," + System.getProperty("line.separator") +
-                                                "        \"isbn\": \"0691067570\"," + System.getProperty("line.separator") +
-                                                "        \"publicationDate\": \"1989\"" + System.getProperty("line.separator") +
-                                                "    }," + System.getProperty("line.separator") +
-                                                "    {" + System.getProperty("line.separator") +
-                                                "        \"id\": \"2\"," + System.getProperty("line.separator") +
-                                                "        \"title\": \"You are here : personal geographies and other maps of the imagination\"," + System.getProperty("line.separator") +
-                                                "        \"author\": \"Katharine A. Harmon\"," + System.getProperty("line.separator") +
-                                                "        \"isbn\": \"1568984308\"," + System.getProperty("line.separator") +
-                                                "        \"publicationDate\": \"2004\"" + System.getProperty("line.separator") +
-                                                "    }," + System.getProperty("line.separator") +
-                                                "    {" + System.getProperty("line.separator") +
-                                                "        \"id\": \"3\"," + System.getProperty("line.separator") +
-                                                "        \"title\": \"You just don't understand : women and men in conversation\"," + System.getProperty("line.separator") +
-                                                "        \"author\": \"Deborah Tannen\"," + System.getProperty("line.separator") +
-                                                "        \"isbn\": \"0345372050\"," + System.getProperty("line.separator") +
-                                                "        \"publicationDate\": \"1990\"" + System.getProperty("line.separator") +
-                                                "    }" + System.getProperty("line.separator") +
-                                                "]")
-                        )
+        assertEquals("" + NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withBody(new JsonBody(\"[" + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }," + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }," + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }" + StringEscapeUtils.escapeJava(NEW_LINE) + "]\", JsonBodyMatchType.ONLY_MATCHING_FIELDS))," + NEW_LINE +
+                "                Times.once()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .respond(" + NEW_LINE +
+                "                response()" + NEW_LINE +
+                "                        .withStatusCode(304)" + NEW_LINE +
+                "                        .withBody(\"[" + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }," + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }," + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }" + StringEscapeUtils.escapeJava(NEW_LINE) + "]\")" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withPath("somePath")
+                        .withBody(new JsonBody("[" + NEW_LINE +
+                            "    {" + NEW_LINE +
+                            "        \"id\": \"1\"," + NEW_LINE +
+                            "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\"," + NEW_LINE +
+                            "        \"author\": \"James Tatum\"," + NEW_LINE +
+                            "        \"isbn\": \"0691067570\"," + NEW_LINE +
+                            "        \"publicationDate\": \"1989\"" + NEW_LINE +
+                            "    }," + NEW_LINE +
+                            "    {" + NEW_LINE +
+                            "        \"id\": \"2\"," + NEW_LINE +
+                            "        \"title\": \"You are here : personal geographies and other maps of the imagination\"," + NEW_LINE +
+                            "        \"author\": \"Katharine A. Harmon\"," + NEW_LINE +
+                            "        \"isbn\": \"1568984308\"," + NEW_LINE +
+                            "        \"publicationDate\": \"2004\"" + NEW_LINE +
+                            "    }," + NEW_LINE +
+                            "    {" + NEW_LINE +
+                            "        \"id\": \"3\"," + NEW_LINE +
+                            "        \"title\": \"You just don't understand : women and men in conversation\"," + NEW_LINE +
+                            "        \"author\": \"Deborah Tannen\"," + NEW_LINE +
+                            "        \"isbn\": \"0345372050\"," + NEW_LINE +
+                            "        \"publicationDate\": \"1990\"" + NEW_LINE +
+                            "    }" + NEW_LINE +
+                            "]")),
+                    once(),
+                    unlimited()
                 )
+                    .thenRespond(
+                        response()
+                            .withStatusCode(304)
+                            .withBody("[" + NEW_LINE +
+                                "    {" + NEW_LINE +
+                                "        \"id\": \"1\"," + NEW_LINE +
+                                "        \"title\": \"Xenophon's imperial fiction : on the education of Cyrus\"," + NEW_LINE +
+                                "        \"author\": \"James Tatum\"," + NEW_LINE +
+                                "        \"isbn\": \"0691067570\"," + NEW_LINE +
+                                "        \"publicationDate\": \"1989\"" + NEW_LINE +
+                                "    }," + NEW_LINE +
+                                "    {" + NEW_LINE +
+                                "        \"id\": \"2\"," + NEW_LINE +
+                                "        \"title\": \"You are here : personal geographies and other maps of the imagination\"," + NEW_LINE +
+                                "        \"author\": \"Katharine A. Harmon\"," + NEW_LINE +
+                                "        \"isbn\": \"1568984308\"," + NEW_LINE +
+                                "        \"publicationDate\": \"2004\"" + NEW_LINE +
+                                "    }," + NEW_LINE +
+                                "    {" + NEW_LINE +
+                                "        \"id\": \"3\"," + NEW_LINE +
+                                "        \"title\": \"You just don't understand : women and men in conversation\"," + NEW_LINE +
+                                "        \"author\": \"Deborah Tannen\"," + NEW_LINE +
+                                "        \"isbn\": \"0345372050\"," + NEW_LINE +
+                                "        \"publicationDate\": \"1990\"" + NEW_LINE +
+                                "    }" + NEW_LINE +
+                                "]")
+                    )
+            )
         );
     }
 
     @Test
     public void shouldEscapeJsonSchemaBodies() throws IOException {
-        String jsonSchema = "{" + System.getProperty("line.separator") +
-                "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.getProperty("line.separator") +
-                "    \"title\": \"Product\"," + System.getProperty("line.separator") +
-                "    \"description\": \"A product from Acme's catalog\"," + System.getProperty("line.separator") +
-                "    \"type\": \"object\"," + System.getProperty("line.separator") +
-                "    \"properties\": {" + System.getProperty("line.separator") +
-                "        \"id\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"The unique identifier for a product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"integer\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"name\": {" + System.getProperty("line.separator") +
-                "            \"description\": \"Name of the product\"," + System.getProperty("line.separator") +
-                "            \"type\": \"string\"" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"price\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"number\"," + System.getProperty("line.separator") +
-                "            \"minimum\": 0," + System.getProperty("line.separator") +
-                "            \"exclusiveMinimum\": true" + System.getProperty("line.separator") +
-                "        }," + System.getProperty("line.separator") +
-                "        \"tags\": {" + System.getProperty("line.separator") +
-                "            \"type\": \"array\"," + System.getProperty("line.separator") +
-                "            \"items\": {" + System.getProperty("line.separator") +
-                "                \"type\": \"string\"" + System.getProperty("line.separator") +
-                "            }," + System.getProperty("line.separator") +
-                "            \"minItems\": 1," + System.getProperty("line.separator") +
-                "            \"uniqueItems\": true" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"required\": [\"id\", \"name\", \"price\"]" + System.getProperty("line.separator") +
-                "}";
-        assertEquals("" + System.getProperty("line.separator") +
-                        "        new MockServerClient(\"localhost\", 1080)" + System.getProperty("line.separator") +
-                        "        .when(" + System.getProperty("line.separator") +
-                        "                request()" + System.getProperty("line.separator") +
-                        "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
-                        "                        .withBody(new JsonSchemaBody(\"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"))," + System.getProperty("line.separator") +
-                        "                Times.once()" + System.getProperty("line.separator") +
-                        "        )" + System.getProperty("line.separator") +
-                        "        .respond(" + System.getProperty("line.separator") +
-                        "                response()" + System.getProperty("line.separator") +
-                        "                        .withStatusCode(304)" + System.getProperty("line.separator") +
-                        "                        .withBody(\"responseBody\")" + System.getProperty("line.separator") +
-                        "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
-                        new Expectation(
-                                new HttpRequest()
-                                        .withPath("somePath")
-                                        .withBody(new JsonSchemaBody(jsonSchema)),
-                                Times.once(),
-                                TimeToLive.unlimited()).thenRespond(
-                                new HttpResponse()
-                                        .withStatusCode(304)
-                                        .withBody("responseBody")
-                        )
+        String jsonSchema = "{" + NEW_LINE +
+            "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
+            "    \"title\": \"Product\"," + NEW_LINE +
+            "    \"description\": \"A product from Acme's catalog\"," + NEW_LINE +
+            "    \"type\": \"object\"," + NEW_LINE +
+            "    \"properties\": {" + NEW_LINE +
+            "        \"id\": {" + NEW_LINE +
+            "            \"description\": \"The unique identifier for a product\"," + NEW_LINE +
+            "            \"type\": \"integer\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"name\": {" + NEW_LINE +
+            "            \"description\": \"Name of the product\"," + NEW_LINE +
+            "            \"type\": \"string\"" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"price\": {" + NEW_LINE +
+            "            \"type\": \"number\"," + NEW_LINE +
+            "            \"minimum\": 0," + NEW_LINE +
+            "            \"exclusiveMinimum\": true" + NEW_LINE +
+            "        }," + NEW_LINE +
+            "        \"tags\": {" + NEW_LINE +
+            "            \"type\": \"array\"," + NEW_LINE +
+            "            \"items\": {" + NEW_LINE +
+            "                \"type\": \"string\"" + NEW_LINE +
+            "            }," + NEW_LINE +
+            "            \"minItems\": 1," + NEW_LINE +
+            "            \"uniqueItems\": true" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
+            "}";
+        assertEquals("" + NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withBody(new JsonSchemaBody(\"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"))," + NEW_LINE +
+                "                Times.once()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .respond(" + NEW_LINE +
+                "                response()" + NEW_LINE +
+                "                        .withStatusCode(304)" + NEW_LINE +
+                "                        .withBody(\"responseBody\")" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withPath("somePath")
+                        .withBody(new JsonSchemaBody(jsonSchema)),
+                    once(),
+                    unlimited()
                 )
+                    .thenRespond(
+                        response()
+                            .withStatusCode(304)
+                            .withBody("responseBody")
+                    )
+            )
+        );
+    }
+
+    @Test
+    public void shouldEscapeXmlSchemaBodies() throws IOException {
+        String xmlSchema = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+            "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+            "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+            "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+            "    <xs:element name=\"notes\">" + NEW_LINE +
+            "        <xs:complexType>" + NEW_LINE +
+            "            <xs:sequence>" + NEW_LINE +
+            "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+            "                    <xs:complexType>" + NEW_LINE +
+            "                        <xs:sequence>" + NEW_LINE +
+            "                            <xs:element name=\"to\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+            "                            <xs:element name=\"from\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+            "                            <xs:element name=\"heading\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+            "                            <xs:element name=\"body\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+            "                        </xs:sequence>" + NEW_LINE +
+            "                    </xs:complexType>" + NEW_LINE +
+            "                </xs:element>" + NEW_LINE +
+            "            </xs:sequence>" + NEW_LINE +
+            "        </xs:complexType>" + NEW_LINE +
+            "    </xs:element>" + NEW_LINE +
+            "</xs:schema>";
+        assertEquals("" + NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withBody(new XmlSchemaBody(\"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"))," + NEW_LINE +
+                "                Times.once()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .respond(" + NEW_LINE +
+                "                response()" + NEW_LINE +
+                "                        .withStatusCode(304)" + NEW_LINE +
+                "                        .withBody(\"responseBody\")" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withPath("somePath")
+                        .withBody(new XmlSchemaBody(xmlSchema)),
+                    once(),
+                    unlimited()
+                )
+                    .thenRespond(
+                        response()
+                            .withStatusCode(304)
+                            .withBody("responseBody")
+                    )
+            )
         );
     }
 
     @Test
     public void shouldSerializeMinimalObjectAsJava() throws IOException {
-        assertEquals(System.getProperty("line.separator") +
-                        "        new MockServerClient(\"localhost\", 1080)" + System.getProperty("line.separator") +
-                        "        .when(" + System.getProperty("line.separator") +
-                        "                request()" + System.getProperty("line.separator") +
-                        "                        .withPath(\"somePath\")" + System.getProperty("line.separator") +
-                        "                        .withBody(new StringBody(\"responseBody\"))," + System.getProperty("line.separator") +
-                        "                Times.once()" + System.getProperty("line.separator") +
-                        "        )" + System.getProperty("line.separator") +
-                        "        .respond(" + System.getProperty("line.separator") +
-                        "                response()" + System.getProperty("line.separator") +
-                        "                        .withStatusCode(304)" + System.getProperty("line.separator") +
-                        "        );",
-                new ExpectationToJavaSerializer().serializeAsJava(1,
-                        new Expectation(
-                                new HttpRequest()
-                                        .withPath("somePath")
-                                        .withBody(new StringBody("responseBody")),
-                                Times.once(),
-                                TimeToLive.unlimited()).thenRespond(
-                                new HttpResponse()
-                                        .withStatusCode(304)
-                        )
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withBody(new StringBody(\"responseBody\"))," + NEW_LINE +
+                "                Times.once()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .respond(" + NEW_LINE +
+                "                response()" + NEW_LINE +
+                "                        .withStatusCode(304)" + NEW_LINE +
+                "                        .withReasonPhrase(\"randomPhrase\")" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withPath("somePath")
+                        .withBody(new StringBody("responseBody")),
+                    once(),
+                    unlimited()
                 )
+                    .thenRespond(
+                        response()
+                            .withStatusCode(304)
+                            .withReasonPhrase("randomPhrase")
+                    )
+            )
         );
     }
 }

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.client.serialization.model.*;
-import org.mockserver.model.JsonSchemaBody;
 
 import java.io.IOException;
 
@@ -23,20 +22,21 @@ public class HttpResponseDTOSerializer extends StdSerializer<HttpResponseDTO> {
         if (httpResponseDTO.getStatusCode() != null) {
             jgen.writeObjectField("statusCode", httpResponseDTO.getStatusCode());
         }
+        if (httpResponseDTO.getReasonPhrase() != null) {
+            jgen.writeObjectField("reasonPhrase", httpResponseDTO.getReasonPhrase());
+        }
         if (httpResponseDTO.getHeaders() != null && !httpResponseDTO.getHeaders().isEmpty()) {
             jgen.writeObjectField("headers", httpResponseDTO.getHeaders());
         }
         if (httpResponseDTO.getCookies() != null && !httpResponseDTO.getCookies().isEmpty()) {
             jgen.writeObjectField("cookies", httpResponseDTO.getCookies());
         }
-        BodyDTO body = httpResponseDTO.getBody();
+        BodyWithContentTypeDTO body = httpResponseDTO.getBody();
         if (body != null) {
             if (body instanceof StringBodyDTO && !((StringBodyDTO) body).getString().isEmpty()) {
                 jgen.writeObjectField("body", body);
             } else if (body instanceof JsonBodyDTO && !((JsonBodyDTO) body).getJson().isEmpty()) {
                 jgen.writeObjectField("body", ((JsonBodyDTO) body).getJson());
-            } else if (body instanceof JsonSchemaBodyDTO && !((JsonSchemaBodyDTO) body).getJson().isEmpty()) {
-                jgen.writeObjectField("body", ((JsonSchemaBodyDTO) body).getJson());
             } else if (body instanceof XmlBodyDTO && !((XmlBodyDTO) body).getXml().isEmpty()) {
                 jgen.writeObjectField("body", ((XmlBodyDTO) body).getXml());
             } else if (body instanceof ParameterBodyDTO && !((ParameterBodyDTO) body).getParameters().isEmpty()) {

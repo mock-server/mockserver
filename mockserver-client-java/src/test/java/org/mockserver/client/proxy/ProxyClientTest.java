@@ -1,5 +1,7 @@
 package org.mockserver.client.proxy;
 
+import com.google.common.base.Charsets;
+import org.apache.velocity.runtime.directive.contrib.For;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -9,23 +11,26 @@ import org.mockito.Mock;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpStatusCode;
-import org.mockserver.model.StringBody;
+import org.mockserver.model.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
 import java.io.UnsupportedEncodingException;
+import java.text.Normalizer;
+import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -48,6 +53,8 @@ public class ProxyClientTest {
     @Mock
     private ExpectationSerializer mockExpectationSerializer;
     @Mock
+    private HttpRequestSerializer mockHttpRequestSerializer;
+    @Mock
     private VerificationSerializer mockVerificationSerializer;
     @Mock
     private VerificationSequenceSerializer mockVerificationSequenceSerializer;
@@ -55,8 +62,8 @@ public class ProxyClientTest {
     private ProxyClient proxyClient;
 
     @Before
-    public void setupTestFixture() throws Exception {
-        proxyClient = new ProxyClient("localhost", 1090);
+    public void setupTestFixture() {
+        proxyClient = spy(new ProxyClient("localhost", 1090));
 
         initMocks(this);
     }
@@ -82,92 +89,139 @@ public class ProxyClientTest {
     }
 
     @Test
-    public void shouldSendDumpToLogAsJSONRequest() throws Exception {
+    public void shouldSendStopRequest() {
         // when
-        proxyClient.dumpToLogAsJSON();
+        proxyClient.stop();
 
         // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/dumpToLog").withBody(""));
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/stop"),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
     }
 
     @Test
-    public void shouldQueryRunningStatus() throws Exception {
+    public void shouldBeCloseable() throws Exception {
+        // when
+        proxyClient.close();
+
+        // then
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/stop"),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
+    }
+
+    @Test
+    public void shouldQueryRunningStatus() {
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withStatusCode(HttpStatusCode.OK_200.code()));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withStatusCode(HttpStatusCode.OK_200.code()));
 
         // when
         boolean running = proxyClient.isRunning();
 
         // then
         assertTrue(running);
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/status"));
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/status"),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldQueryRunningStatusWhenSocketConnectionException() throws Exception {
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenThrow(SocketConnectionException.class);
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenThrow(SocketConnectionException.class);
 
         // when
         boolean running = proxyClient.isRunning();
 
         // then
         assertFalse(running);
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/status"));
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/status"),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
     }
 
     @Test
-    public void shouldSendStopRequest() throws Exception {
-        // when
-        proxyClient.stop();
-
-        // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/stop"));
-    }
-
-    @Test
-    public void shouldBeCloseabl() throws Exception {
-        // when
-        proxyClient.close();
-
-        // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/stop"));
-    }
-
-    @Test
-    public void shouldSendDumpToLogAsJavaRequest() throws Exception {
-        // when
-        proxyClient.dumpToLogAsJava();
-
-        // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/dumpToLog?type=java").withBody(""));
-    }
-
-    @Test
-    public void shouldSendResetRequest() throws Exception {
+    public void shouldSendResetRequest() {
         // when
         proxyClient.reset();
 
         // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/reset"));
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/reset"),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
     }
 
     @Test
-    public void shouldSendClearRequest() throws Exception {
+    public void shouldSendClearRequest() {
+        // given
+        HttpRequest someRequestMatcher = new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
+        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+
         // when
-        proxyClient
-                .clear(
-                        new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))
-                );
+        proxyClient.clear(someRequestMatcher);
 
         // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/clear").withBody("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "}"));
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/clear")
+                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
+    }
+
+    @Test
+    public void shouldSendClearRequestWithType() {
+        // given
+        HttpRequest someRequestMatcher = new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
+        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+
+        // when
+        proxyClient.clear(someRequestMatcher, ClearType.LOG);
+
+        // then
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/clear")
+                        .withQueryStringParameter("type", "log")
+                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
     }
 
     @Test
@@ -177,87 +231,136 @@ public class ProxyClientTest {
                 .clear(null);
 
         // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/clear").withBody(""));
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/clear")
+                        .withBody("", Charsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
     }
 
     @Test
-    public void shouldReceiveExpectationsAsObjects() throws UnsupportedEncodingException {
+    public void shouldRetrieveRequests() {
+        // given - a request
+        HttpRequest someRequestMatcher = new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
+        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+
+        // and - a client
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
+
+        // and - a response
+        HttpRequest[] httpRequests = {};
+        when(mockHttpRequestSerializer.deserializeArray("body")).thenReturn(httpRequests);
+
+        // when
+        assertSame(httpRequests, proxyClient.retrieveRecordedRequests(someRequestMatcher));
+
+        // then
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/retrieve")
+                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
+                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS);
+        verify(mockHttpRequestSerializer).deserializeArray("body");
+    }
+
+    @Test
+    public void shouldRetrieveRequestsWithNullRequest() {
         // given
+        HttpRequest[] httpRequests = {};
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
+        when(mockHttpRequestSerializer.deserializeArray("body")).thenReturn(httpRequests);
+
+        // when
+        assertSame(httpRequests, proxyClient.retrieveRecordedRequests(null));
+
+        // then
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/retrieve")
+                        .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
+                        .withBody("", Charsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
+        verify(mockHttpRequestSerializer).deserializeArray("body");
+    }
+
+    @Test
+    public void shouldRetrieveRecordedExpectations() throws UnsupportedEncodingException {
+        // given - a request
+        HttpRequest someRequestMatcher = new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
+        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+
+        // and - a client
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
+
+        // and - an expectation
         Expectation[] expectations = {};
-        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("body"));
         when(mockExpectationSerializer.deserializeArray("body")).thenReturn(expectations);
 
         // when
-        assertSame(expectations, proxyClient
-                .retrieveAsExpectations(
-                        new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))
-                ));
+        assertSame(expectations, proxyClient.retrieveRecordedExpectations(someRequestMatcher));
 
         // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/retrieve").withBody("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "}"));
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/retrieve")
+                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
+                        .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
         verify(mockExpectationSerializer).deserializeArray("body");
     }
 
     @Test
-    public void shouldReceiveExpectationsAsObjectsWithNullRequest() throws UnsupportedEncodingException {
+    public void shouldRetrieveExpectationsWithNullRequest() {
         // given
         Expectation[] expectations = {};
-        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
         when(mockExpectationSerializer.deserializeArray("body")).thenReturn(expectations);
 
         // when
-        assertSame(expectations, proxyClient.retrieveAsExpectations(null));
+        assertSame(expectations, proxyClient.retrieveRecordedExpectations(null));
 
         // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/retrieve").withBody(""));
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/retrieve")
+                        .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                        .withQueryStringParameter("format", Format.JSON.name())
+                        .withBody("", Charsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
         verify(mockExpectationSerializer).deserializeArray("body");
     }
 
     @Test
-    public void shouldReceiveExpectationsAsJSON() throws UnsupportedEncodingException {
+    public void shouldVerifyDoesNotMatchSingleRequestNoVerificationTimes() {
         // given
-        String expectations = "body";
-        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("body"));
-
-        // when
-        assertEquals(expectations, proxyClient
-                .retrieveAsJSON(
-                        new HttpRequest()
-                                .withPath("/some_path")
-                                .withBody(new StringBody("some_request_body"))
-                ));
-
-        // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/retrieve").withBody("" +
-                "{" + System.getProperty("line.separator") +
-                "  \"path\" : \"/some_path\"," + System.getProperty("line.separator") +
-                "  \"body\" : \"some_request_body\"" + System.getProperty("line.separator") +
-                "}"));
-    }
-
-    @Test
-    public void shouldReceiveExpectationsAsJSONWithNullRequest() throws UnsupportedEncodingException {
-        // given
-        String expectations = "body";
-        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("body"));
-
-        // when
-        assertEquals(expectations, proxyClient.retrieveAsJSON(null));
-
-        // then
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/retrieve").withBody(""));
-    }
-
-    @Test
-    public void shouldVerifyDoesNotMatchSingleRequestNoVerificationTimes() throws UnsupportedEncodingException {
-        // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
@@ -270,15 +373,23 @@ public class ProxyClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
-            verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verifySequence").withBody("verification_json"));
+            verify(mockHttpClient).sendRequest(
+                    request()
+                            .withHeader(HOST.toString(), "localhost:" + 1090)
+                            .withMethod("PUT")
+                            .withPath("/verifySequence")
+                            .withBody("verification_json", Charsets.UTF_8),
+                20000,
+                TimeUnit.MILLISECONDS
+            );
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
 
     @Test
-    public void shouldVerifyDoesNotMatchMultipleRequestsNoVerificationTimes() throws UnsupportedEncodingException {
+    public void shouldVerifyDoesNotMatchMultipleRequestsNoVerificationTimes() {
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
@@ -291,15 +402,23 @@ public class ProxyClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest, httpRequest));
-            verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verifySequence").withBody("verification_json"));
+            verify(mockHttpClient).sendRequest(
+                    request()
+                            .withHeader(HOST.toString(), "localhost:" + 1090)
+                            .withMethod("PUT")
+                            .withPath("/verifySequence")
+                            .withBody("verification_json", Charsets.UTF_8),
+                20000,
+                TimeUnit.MILLISECONDS
+            );
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
 
     @Test
-    public void shouldVerifyDoesMatchSingleRequestNoVerificationTimes() throws UnsupportedEncodingException {
+    public void shouldVerifyDoesMatchSingleRequestNoVerificationTimes() {
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody(""));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody(""));
         when(mockVerificationSequenceSerializer.serialize(any(VerificationSequence.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
@@ -315,13 +434,21 @@ public class ProxyClientTest {
 
         // then
         verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verifySequence").withBody("verification_json"));
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/verifySequence")
+                        .withBody("verification_json", Charsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
     }
 
     @Test
-    public void shouldVerifyDoesMatchSingleRequestOnce() throws UnsupportedEncodingException {
+    public void shouldVerifyDoesMatchSingleRequestOnce() {
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody(""));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody(""));
         when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
@@ -337,13 +464,21 @@ public class ProxyClientTest {
 
         // then
         verify(mockVerificationSerializer).serialize(verification().withRequest(httpRequest).withTimes(once()));
-        verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verify").withBody("verification_json"));
+        verify(mockHttpClient).sendRequest(
+                request()
+                        .withHeader(HOST.toString(), "localhost:" + 1090)
+                        .withMethod("PUT")
+                        .withPath("/verify")
+                        .withBody("verification_json", Charsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
     }
 
     @Test
-    public void shouldVerifyDoesNotMatchSingleRequest() throws UnsupportedEncodingException {
+    public void shouldVerifyDoesNotMatchSingleRequest() {
         // given
-        when(mockHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("Request not found at least once expected:<foo> but was:<bar>"));
         when(mockVerificationSerializer.serialize(any(Verification.class))).thenReturn("verification_json");
         HttpRequest httpRequest = new HttpRequest()
                 .withPath("/some_path")
@@ -356,7 +491,15 @@ public class ProxyClientTest {
             fail();
         } catch (AssertionError ae) {
             verify(mockVerificationSerializer).serialize(verification().withRequest(httpRequest).withTimes(atLeast(1)));
-            verify(mockHttpClient).sendRequest(request().withHeader(HOST.toString(), "localhost:" + 1090).withMethod("PUT").withPath("/verify").withBody("verification_json"));
+            verify(mockHttpClient).sendRequest(
+                    request()
+                            .withHeader(HOST.toString(), "localhost:" + 1090)
+                            .withMethod("PUT")
+                            .withPath("/verify")
+                            .withBody("verification_json", Charsets.UTF_8),
+                20000,
+                TimeUnit.MILLISECONDS
+            );
             assertThat(ae.getMessage(), is("Request not found at least once expected:<foo> but was:<bar>"));
         }
     }
@@ -388,7 +531,7 @@ public class ProxyClientTest {
         exception.expectMessage(containsString("verify(HttpRequest...) requires a non null non empty array of HttpRequest objects"));
 
         // when
-        proxyClient.verify((HttpRequest)null);
+        proxyClient.verify((HttpRequest) null);
     }
 
     @Test

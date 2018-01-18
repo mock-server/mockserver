@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
@@ -22,15 +23,12 @@ public class ParameterBodyDTOSerializerTest {
                         param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                         param("queryStringParameterTwoName", "queryStringParameterTwoValue")
                 ))),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                        "  \"parameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"queryStringParameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                        "  }, {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"queryStringParameterTwoName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"queryStringParameterTwoValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
+                is("{" + NEW_LINE +
+                        "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                        "  \"parameters\" : {" + NEW_LINE +
+                        "    \"queryStringParameterOneName\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]," + NEW_LINE +
+                        "    \"queryStringParameterTwoName\" : [ \"queryStringParameterTwoValue\" ]" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}"));
     }
 
@@ -40,16 +38,13 @@ public class ParameterBodyDTOSerializerTest {
                         param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                         param("queryStringParameterTwoName", "queryStringParameterTwoValue")
                 ), true)),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"not\" : true," + System.getProperty("line.separator") +
-                        "  \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                        "  \"parameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"queryStringParameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                        "  }, {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"queryStringParameterTwoName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"queryStringParameterTwoValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
+                is("{" + NEW_LINE +
+                        "  \"not\" : true," + NEW_LINE +
+                        "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                        "  \"parameters\" : {" + NEW_LINE +
+                        "    \"queryStringParameterOneName\" : [ \"queryStringParameterOneValueOne\", \"queryStringParameterOneValueTwo\" ]," + NEW_LINE +
+                        "    \"queryStringParameterTwoName\" : [ \"queryStringParameterTwoValue\" ]" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}"));
     }
 
@@ -59,15 +54,12 @@ public class ParameterBodyDTOSerializerTest {
                         param(not("queryStringParameterOneName"), not("queryStringParameterOneValueOne"), not("queryStringParameterOneValueTwo")),
                         param(not("queryStringParameterTwoName"), not("queryStringParameterTwoValue"))
                 ))),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                        "  \"parameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"!queryStringParameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"!queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                        "  }, {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"!queryStringParameterTwoName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"!queryStringParameterTwoValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
+                is("{" + NEW_LINE +
+                        "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                        "  \"parameters\" : {" + NEW_LINE +
+                        "    \"!queryStringParameterOneName\" : [ \"!queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]," + NEW_LINE +
+                        "    \"!queryStringParameterTwoName\" : [ \"!queryStringParameterTwoValue\" ]" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}"));
     }
 
@@ -77,15 +69,12 @@ public class ParameterBodyDTOSerializerTest {
                         param(not("queryStringParameterOneName"), not("queryStringParameterOneValueOne"), not("queryStringParameterOneValueTwo")),
                         param(not("queryStringParameterTwoName"), not("queryStringParameterTwoValue"))
                 ))),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                        "  \"parameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"!queryStringParameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"!queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                        "  }, {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"!queryStringParameterTwoName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"!queryStringParameterTwoValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
+                is("{" + NEW_LINE +
+                        "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                        "  \"parameters\" : {" + NEW_LINE +
+                        "    \"!queryStringParameterOneName\" : [ \"!queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]," + NEW_LINE +
+                        "    \"!queryStringParameterTwoName\" : [ \"!queryStringParameterTwoValue\" ]" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}"));
     }
 
@@ -95,15 +84,12 @@ public class ParameterBodyDTOSerializerTest {
                         param(not("queryStringParameterOneName"), not("queryStringParameterOneValueOne"), not("queryStringParameterOneValueTwo")),
                         param(not("queryStringParameterTwoName"), not("queryStringParameterTwoValue"))
                 ))),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                        "  \"parameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"!queryStringParameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"!queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                        "  }, {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"!queryStringParameterTwoName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"!queryStringParameterTwoValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
+                is("{" + NEW_LINE +
+                        "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                        "  \"parameters\" : {" + NEW_LINE +
+                        "    \"!queryStringParameterOneName\" : [ \"!queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]," + NEW_LINE +
+                        "    \"!queryStringParameterTwoName\" : [ \"!queryStringParameterTwoValue\" ]" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}"));
     }
 
@@ -113,15 +99,12 @@ public class ParameterBodyDTOSerializerTest {
                         param(not("queryStringParameterOneName"), string("queryStringParameterOneValueOne"), not("queryStringParameterOneValueTwo")),
                         param(string("queryStringParameterTwoName"), not("queryStringParameterTwoValue"))
                 ))),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                        "  \"parameters\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"!queryStringParameterOneName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                        "  }, {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"queryStringParameterTwoName\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"!queryStringParameterTwoValue\" ]" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
+                is("{" + NEW_LINE +
+                        "  \"type\" : \"PARAMETERS\"," + NEW_LINE +
+                        "  \"parameters\" : {" + NEW_LINE +
+                        "    \"!queryStringParameterOneName\" : [ \"queryStringParameterOneValueOne\", \"!queryStringParameterOneValueTwo\" ]," + NEW_LINE +
+                        "    \"queryStringParameterTwoName\" : [ \"!queryStringParameterTwoValue\" ]" + NEW_LINE +
+                        "  }" + NEW_LINE +
                         "}"));
     }
 

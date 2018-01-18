@@ -7,6 +7,7 @@ import org.mockserver.model.Parameter;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.client.serialization.java.ExpectationToJavaSerializer.INDENT_SIZE;
 
 /**
@@ -14,9 +15,9 @@ import static org.mockserver.client.serialization.java.ExpectationToJavaSerializ
  */
 public class ParameterToJavaSerializer implements MultiValueToJavaSerializer<Parameter> {
     @Override
-    public String serializeAsJava(int numberOfSpacesToIndent, Parameter parameter) {
+    public String serialize(int numberOfSpacesToIndent, Parameter parameter) {
         StringBuilder output = new StringBuilder();
-        output.append(System.getProperty("line.separator")).append(Strings.padStart("", numberOfSpacesToIndent * INDENT_SIZE, ' '));
+        output.append(NEW_LINE).append(Strings.padStart("", numberOfSpacesToIndent * INDENT_SIZE, ' '));
         output.append("new Parameter(").append(NottableStringToJavaSerializer.serializeNottableString(parameter.getName()));
         for (NottableString value : parameter.getValues()) {
             output.append(", ").append(NottableStringToJavaSerializer.serializeNottableString(value));
@@ -29,7 +30,7 @@ public class ParameterToJavaSerializer implements MultiValueToJavaSerializer<Par
     public String serializeAsJava(int numberOfSpacesToIndent, List<Parameter> parameters) {
         StringBuilder output = new StringBuilder();
         for (int i = 0; i < parameters.size(); i++) {
-            output.append(serializeAsJava(numberOfSpacesToIndent, parameters.get(i)));
+            output.append(serialize(numberOfSpacesToIndent, parameters.get(i)));
             if (i < (parameters.size() - 1)) {
                 output.append(",");
             }

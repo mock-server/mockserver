@@ -1,6 +1,10 @@
 package org.mockserver.matchers;
 
-import org.mockserver.validator.JsonSchemaValidator;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.validator.jsonschema.JsonSchemaValidator;
+
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * See http://json-schema.org/
@@ -8,19 +12,21 @@ import org.mockserver.validator.JsonSchemaValidator;
  * @author jamesdbloom
  */
 public class JsonSchemaMatcher extends BodyMatcher<String> {
-    private final String schema;
-    private final JsonSchemaValidator jsonSchemaValidator;
+    private final MockServerLogger mockServerLogger;
+    private String schema;
+    private JsonSchemaValidator jsonSchemaValidator;
 
-    public JsonSchemaMatcher(String schema) {
+    public JsonSchemaMatcher(MockServerLogger mockServerLogger, String schema) {
+        this.mockServerLogger = mockServerLogger;
         this.schema = schema;
-        jsonSchemaValidator = new JsonSchemaValidator(schema);
+        jsonSchemaValidator = new JsonSchemaValidator(mockServerLogger, schema);
     }
 
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger", "objectMapper"};
+        return new String[]{"logger", "jsonSchemaValidator"};
     }
 
-    public boolean matches(String matched) {
+    public boolean matches(HttpRequest context, String matched) {
         boolean result = false;
 
         try {
@@ -29,10 +35,10 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
             result = validation.isEmpty();
 
             if (!result) {
-                logger.trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", matched, this.schema, validation);
+                mockServerLogger.trace(context, "Failed to match JSON: {}" + NEW_LINE + "with schema: {}" + NEW_LINE + "because: {}", matched, this.schema, validation);
             }
         } catch (Exception e) {
-            logger.trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", matched, this.schema, e.getMessage());
+            mockServerLogger.trace(context, "Failed to match JSON: {}" + NEW_LINE + "with schema: {}" + NEW_LINE + "because: {}", matched, this.schema, e.getMessage());
         }
 
         return reverseResultIfNot(result);

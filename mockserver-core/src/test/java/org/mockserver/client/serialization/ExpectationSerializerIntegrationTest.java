@@ -1,1441 +1,2264 @@
 package org.mockserver.client.serialization;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Charsets.UTF_8;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.ParameterBody.params;
+import static org.mockserver.model.StringBody.exact;
 
 /**
  * @author jamesdbloom
  */
 public class ExpectationSerializerIntegrationTest {
 
-    @Test
-    public void shouldIgnoreExtraFields() throws IOException {
-        // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "        \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"," + System.getProperty("line.separator") +
-                "        \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "}");
-
-        // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                )
-                .buildObject(), expectation);
-    }
+    private final Base64Converter base64Converter = new Base64Converter();
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void shouldIgnoreEmptyStringObjects() throws IOException {
+    public void shouldAllowSingleObjectForArray() {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": \"\"" + System.getProperty("line.separator") +
-                "}");
+        String requestBytes = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"path\": \"somePath\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"httpResponse\": {" + NEW_LINE +
+            "        \"body\": \"someBody\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .buildObject(), expectation);
-    }
-
-    @Test
-    public void shouldHandleNullPrimitives() throws IOException {
-        // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"times\": {" + System.getProperty("line.separator") +
-                "        \"remainingTimes\": null," + System.getProperty("line.separator") +
-                "        \"unlimited\": false" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "}");
-
-        // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                )
-                .setTimes(new TimesDTO(Times.exactly(0)))
-                .buildObject(), expectation);
-    }
-
-    @Test
-    public void shouldHandleEmptyPrimitives() throws IOException {
-        // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"times\": {" + System.getProperty("line.separator") +
-                "        \"remainingTimes\": \"\"," + System.getProperty("line.separator") +
-                "        \"unlimited\": false" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "}");
-
-        // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                )
-                .setTimes(new TimesDTO(Times.exactly(0)))
-                .buildObject(), expectation);
-    }
-
-    @Test
-    public void shouldHandleNullEnums() throws IOException {
-        // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"," + System.getProperty("line.separator") +
-                "        \"delay\": {" + System.getProperty("line.separator") +
-                "            \"timeUnit\": null," + System.getProperty("line.separator") +
-                "            \"value\": null" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "}");
-
-        // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                .setDelay(new DelayDTO(new Delay(null, 0)))
-                )
-                .buildObject(), expectation);
-    }
-
-    @Test
-    public void shouldAllowSingleObjectForArray() throws IOException {
-        // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "        \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"," + System.getProperty("line.separator") +
-                "        \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "}");
-
-        // when
-        Expectation[] expectations = new ExpectationSerializer().deserializeArray(requestBytes);
+        Expectation[] expectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes);
 
         // then
         assertArrayEquals(new Expectation[]{
-                new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setPath(string("somePath"))
-                        )
-                        .setHttpResponse(
-                                new HttpResponseDTO()
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                        )
-                        .buildObject()
+            new ExpectationDTO()
+                .setHttpRequest(
+                    new HttpRequestDTO()
+                        .setPath(string("somePath"))
+                )
+                .setHttpResponse(
+                    new HttpResponseDTO()
+                        .setBody(new StringBodyDTO(exact("someBody")))
+                )
+                .buildObject()
         }, expectations);
     }
 
     @Test
-    public void shouldAllowMultipleObjectsForArray() throws IOException {
+    public void shouldValidateSingleObjectForArray() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"path\": \"somePath\"," + NEW_LINE +
+            "        \"extra_field\": \"extra_value\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"httpResponse\": {" + NEW_LINE +
+            "        \"body\": \"someBody\"," + NEW_LINE +
+            "        \"extra_field\": \"extra_value\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("" +
+            "2 errors:" + NEW_LINE +
+            " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+            " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"");
+
+        // when
+        new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes);
+    }
+
+    @Test
+    public void shouldAllowMultipleObjectsForArray() {
+        // given
         // given
         String requestBytes = ("[" +
-                "  {" + System.getProperty("line.separator") +
-                "      \"httpRequest\": {" + System.getProperty("line.separator") +
-                "          \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "          \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "      }," + System.getProperty("line.separator") +
-                "      \"httpResponse\": {" + System.getProperty("line.separator") +
-                "          \"body\": \"someBody\"," + System.getProperty("line.separator") +
-                "          \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "      }" + System.getProperty("line.separator") +
-                "  }," +
-                "  {" + System.getProperty("line.separator") +
-                "      \"httpRequest\": {" + System.getProperty("line.separator") +
-                "          \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "          \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "      }," + System.getProperty("line.separator") +
-                "      \"httpResponse\": {" + System.getProperty("line.separator") +
-                "          \"body\": \"someBody\"," + System.getProperty("line.separator") +
-                "          \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "      }" + System.getProperty("line.separator") +
-                "  }," +
-                "  {" + System.getProperty("line.separator") +
-                "      \"httpRequest\": {" + System.getProperty("line.separator") +
-                "          \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "          \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "      }," + System.getProperty("line.separator") +
-                "      \"httpResponse\": {" + System.getProperty("line.separator") +
-                "          \"body\": \"someBody\"," + System.getProperty("line.separator") +
-                "          \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
-                "      }" + System.getProperty("line.separator") +
-                "  }" +
-                "]");
+            "  {" + NEW_LINE +
+            "      \"httpRequest\": {" + NEW_LINE +
+            "          \"path\": \"somePath\"" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"httpResponse\": {" + NEW_LINE +
+            "          \"body\": \"someBody\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }," +
+            "  {" + NEW_LINE +
+            "      \"httpRequest\": {" + NEW_LINE +
+            "          \"path\": \"somePath\"" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"httpResponse\": {" + NEW_LINE +
+            "          \"body\": \"someBody\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }," +
+            "  {" + NEW_LINE +
+            "      \"httpRequest\": {" + NEW_LINE +
+            "          \"path\": \"somePath\"" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"httpResponse\": {" + NEW_LINE +
+            "          \"body\": \"someBody\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }" +
+            "]");
         Expectation expectation = new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                )
-                .buildObject();
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setPath(string("somePath"))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new StringBodyDTO(exact("someBody")))
+            )
+            .buildObject();
 
         // when
-        Expectation[] expectations = new ExpectationSerializer().deserializeArray(requestBytes);
+        Expectation[] expectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes);
 
         // then
         assertArrayEquals(new Expectation[]{
-                expectation,
-                expectation,
-                expectation
+            expectation,
+            expectation,
+            expectation
         }, expectations);
     }
 
     @Test
-    public void shouldDeserializeCompleteObjectWithResponse() throws IOException {
+    public void shouldValidateMultipleObjectsForArray() {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"statusCode\" : 304," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"delay\" : {" + System.getProperty("line.separator") +
-                "      \"timeUnit\" : \"MICROSECONDS\"," + System.getProperty("line.separator") +
-                "      \"value\" : 1" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"connectionOptions\" : {" + System.getProperty("line.separator") +
-                "      \"suppressContentLengthHeader\" : true," + System.getProperty("line.separator") +
-                "      \"contentLengthHeaderOverride\" : 50," + System.getProperty("line.separator") +
-                "      \"suppressConnectionHeader\" : true," + System.getProperty("line.separator") +
-                "      \"keepAliveOverride\" : true," + System.getProperty("line.separator") +
-                "      \"closeSocket\" : true" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}");
+        String requestBytes = ("[" +
+            "  {" + NEW_LINE +
+            "      \"httpRequest\": {" + NEW_LINE +
+            "          \"path\": \"somePath\"," + NEW_LINE +
+            "          \"extra_field\": \"extra_value\"" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"httpResponse\": {" + NEW_LINE +
+            "          \"body\": \"someBody\"," + NEW_LINE +
+            "          \"extra_field\": \"extra_value\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }," +
+            "  {" + NEW_LINE +
+            "      \"httpRequest\": {" + NEW_LINE +
+            "          \"path\": \"somePath\"," + NEW_LINE +
+            "          \"extra_field\": \"extra_value\"" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"httpResponse\": {" + NEW_LINE +
+            "          \"body\": \"someBody\"," + NEW_LINE +
+            "          \"extra_field\": \"extra_value\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }," +
+            "  {" + NEW_LINE +
+            "      \"httpRequest\": {" + NEW_LINE +
+            "          \"path\": \"somePath\"," + NEW_LINE +
+            "          \"extra_field\": \"extra_value\"" + NEW_LINE +
+            "      }," + NEW_LINE +
+            "      \"httpResponse\": {" + NEW_LINE +
+            "          \"body\": \"someBody\"," + NEW_LINE +
+            "          \"extra_field\": \"extra_value\"" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "  }" +
+            "]");
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("" +
+            "[" + NEW_LINE +
+            "  2 errors:" + NEW_LINE +
+            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"," + NEW_LINE +
+            "  2 errors:" + NEW_LINE +
+            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"," + NEW_LINE +
+            "  2 errors:" + NEW_LINE +
+            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
+            "]");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes);
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithResponse() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"STRING\"," + NEW_LINE +
+            "      \"string\" : \"someBody\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someCookieName\"," + NEW_LINE +
+            "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"statusCode\" : 304," + NEW_LINE +
+            "    \"body\" : \"someBody\"," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someCookieName\"," + NEW_LINE +
+            "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"connectionOptions\" : {" + NEW_LINE +
+            "      \"suppressContentLengthHeader\" : true," + NEW_LINE +
+            "      \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
+            "      \"suppressConnectionHeader\" : true," + NEW_LINE +
+            "      \"keepAliveOverride\" : true," + NEW_LINE +
+            "      \"closeSocket\" : true" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
-                .setHttpRequest(
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setStatusCode(304)
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+                    .setDelay(
+                        new DelayDTO()
+                            .setTimeUnit(MICROSECONDS)
+                            .setValue(1)
+                    )
+                    .setConnectionOptions(
+                        new ConnectionOptionsDTO(
+                            new ConnectionOptions()
+                                .withSuppressContentLengthHeader(true)
+                                .withContentLengthHeaderOverride(50)
+                                .withSuppressConnectionHeader(true)
+                                .withKeepAliveOverride(true)
+                                .withCloseSocket(true)
+                        )
+                    )
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithParameterRequestBody() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"POST\"," + NEW_LINE +
+            "    \"path\" : \"some_pathRequest\"," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
+            "      \"parameters\" : {" + NEW_LINE +
+            "        \"bodyParameterOneName\" : [ \"Parameter One Value One\", \"Parameter One Value Two\" ]," + NEW_LINE +
+            "        \"bodyParameterTwoName\" : [ \"Parameter Two\" ]" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"statusCode\" : 202," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"headerNameResponse\" : [ \"headerValueResponse\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"cookieNameResponse\" : \"cookieValueResponse\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"some_body_response\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 1," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("POST"))
+                    .setPath(string("some_pathRequest"))
+                    .setBody(new ParameterBodyDTO(params(
+                        param("bodyParameterOneName", "Parameter One Value One", "Parameter One Value Two"),
+                        param("bodyParameterTwoName", "Parameter Two")
+                    )))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setStatusCode(202)
+                    .setBody(new StringBodyDTO(exact("some_body_response")))
+                    .setHeaders(new Headers().withEntries(
+                        header("headerNameResponse", "headerValueResponse")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("cookieNameResponse", "cookieValueResponse")
+                    ))
+            ).buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithResponseTemplate() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"STRING\"," + NEW_LINE +
+            "      \"string\" : \"someBody\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someCookieName\"," + NEW_LINE +
+            "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponseTemplate\" : {" + NEW_LINE +
+            "    \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
+            "    \"template\" : \"some_random_template\"," + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpResponseTemplate(
+                new HttpTemplateDTO()
+                    .setTemplateType(HttpTemplate.TemplateType.JAVASCRIPT)
+                    .setTemplate("some_random_template")
+                    .setDelay(new DelayDTO(new Delay(MICROSECONDS, 1)))
+
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
+        );
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithResponseClassCallback() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"STRING\"," + NEW_LINE +
+            "      \"string\" : \"someBody\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someCookieName\"," + NEW_LINE +
+            "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponseClassCallback\" : {" + NEW_LINE +
+            "    \"callbackClass\" : \"someClass\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpResponseClassCallback(
+                new HttpClassCallbackDTO()
+                    .setCallbackClass("someClass")
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
+        );
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithResponseObjectCallback() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"STRING\"," + NEW_LINE +
+            "      \"string\" : \"someBody\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someCookieName\"," + NEW_LINE +
+            "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponseObjectCallback\" : {" + NEW_LINE +
+            "    \"clientId\" : \"someClientId\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpResponseObjectCallback(
+                new HttpObjectCallbackDTO()
+                    .setClientId("someClientId")
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
+        );
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithForward() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"STRING\"," + NEW_LINE +
+            "      \"string\" : \"someBody\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someCookieName\"," + NEW_LINE +
+            "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpForward\" : {" + NEW_LINE +
+            "    \"host\" : \"someHost\"," + NEW_LINE +
+            "    \"port\" : 1234," + NEW_LINE +
+            "    \"scheme\" : \"HTTPS\"" +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpForward(
+                new HttpForwardDTO()
+                    .setHost("someHost")
+                    .setPort(1234)
+                    .setScheme(HttpForward.Scheme.HTTPS)
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.unlimited())).buildObject(), expectation
+        );
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithForwardTemplate() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"STRING\"," + NEW_LINE +
+            "      \"string\" : \"someBody\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someCookieName\"," + NEW_LINE +
+            "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpForwardTemplate\" : {" + NEW_LINE +
+            "    \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
+            "    \"template\" : \"some_random_template\"," + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpForwardTemplate(
+                new HttpTemplateDTO()
+                    .setTemplateType(HttpTemplate.TemplateType.JAVASCRIPT)
+                    .setTemplate("some_random_template")
+                    .setDelay(new DelayDTO(new Delay(MICROSECONDS, 1)))
+
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
+        );
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithForwardClassCallback() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"STRING\"," + NEW_LINE +
+            "      \"string\" : \"someBody\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someCookieName\"," + NEW_LINE +
+            "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpForwardClassCallback\" : {" + NEW_LINE +
+            "    \"callbackClass\" : \"someClass\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpForwardClassCallback(
+                new HttpClassCallbackDTO()
+                    .setCallbackClass("someClass")
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
+        );
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithForwardObjectCallback() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"STRING\"," + NEW_LINE +
+            "      \"string\" : \"someBody\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someCookieName\"," + NEW_LINE +
+            "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpForwardObjectCallback\" : {" + NEW_LINE +
+            "    \"clientId\" : \"someClientId\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpForwardObjectCallback(
+                new HttpObjectCallbackDTO()
+                    .setClientId("someClientId")
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
+        );
+    }
+
+    @Test
+    public void shouldDeserializeCompleteObjectWithOverrideForwardedRequest() {
+        // given
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpOverrideForwardedRequest\" : {" + NEW_LINE +
+            "    \"httpRequest\" : {" + NEW_LINE +
+            "      \"method\" : \"some_overridden_method\"," + NEW_LINE +
+            "      \"path\" : \"some_overridden_path\"," + NEW_LINE +
+            "      \"body\" : \"some_overridden_body\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
+
+        // when
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpOverrideForwardedRequest(
+                new HttpOverrideForwardedRequestDTO()
+                    .setHttpRequest(
                         new HttpRequestDTO()
-                                .setMethod(string("someMethod"))
-                                .setPath(string("somePath"))
-                                .setQueryStringParameters(Arrays.asList(
-                                        new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                                        new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
-                                ))
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setStatusCode(304)
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
-                                .setDelay(
-                                        new DelayDTO()
-                                                .setTimeUnit(TimeUnit.MICROSECONDS)
-                                                .setValue(1)
-                                )
-                                .setConnectionOptions(
-                                        new ConnectionOptionsDTO(
-                                                new ConnectionOptions()
-                                                        .withSuppressContentLengthHeader(true)
-                                                        .withContentLengthHeaderOverride(50)
-                                                        .withSuppressConnectionHeader(true)
-                                                        .withKeepAliveOverride(true)
-                                                        .withCloseSocket(true)
-                                        )
-                                )
-                )
-                .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation);
-    }
-
-    @Test
-    public void shouldDeserializeCompleteObjectWithForward() throws IOException {
-        // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpForward\" : {" + System.getProperty("line.separator") +
-                "    \"host\" : \"someHost\"," + System.getProperty("line.separator") +
-                "    \"port\" : 1234," + System.getProperty("line.separator") +
-                "    \"scheme\" : \"HTTPS\"" +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}");
-
-        // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setMethod(string("someMethod"))
-                                        .setPath(string("somePath"))
-                                        .setQueryStringParameters(Arrays.asList(
-                                                new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                                                new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
-                                        ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
-                        )
-                        .setHttpForward(
-                                new HttpForwardDTO()
-                                        .setHost("someHost")
-                                        .setPort(1234)
-                                        .setScheme(HttpForward.Scheme.HTTPS)
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5)))
-                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.unlimited())).buildObject(), expectation
+                            .setMethod(string("some_overridden_method"))
+                            .setPath(string("some_overridden_path"))
+                            .setBody(new StringBodyDTO(exact("some_overridden_body")))
+                    )
+                    .setDelay(new DelayDTO()
+                        .setTimeUnit(MICROSECONDS)
+                        .setValue(1)
+                    )
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
         );
     }
 
     @Test
-    public void shouldDeserializeCompleteObjectWithError() throws IOException {
+    public void shouldDeserializeCompleteObjectWithError() {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpError\" : {" + System.getProperty("line.separator") +
-                "    \"delay\" : {" + System.getProperty("line.separator") +
-                "      \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "      \"value\" : 1" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"dropConnection\" : true," + System.getProperty("line.separator") +
-                "    \"responseBytes\" : \"c29tZV9ieXRlcw==\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}");
+        String requestBytes = ("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : [ {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameOne\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + NEW_LINE +
+            "    }, {" + NEW_LINE +
+            "      \"name\" : \"queryStringParameterNameTwo\"," + NEW_LINE +
+            "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"STRING\"," + NEW_LINE +
+            "      \"string\" : \"someBody\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someCookieName\"," + NEW_LINE +
+            "      \"value\" : \"someCookieValue\"" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"headers\" : [ {" + NEW_LINE +
+            "      \"name\" : \"someHeaderName\"," + NEW_LINE +
+            "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    } ]" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpError\" : {" + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"dropConnection\" : true," + NEW_LINE +
+            "    \"responseBytes\" : \"c29tZV9ieXRlcw==\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setMethod(string("someMethod"))
-                                        .setPath(string("somePath"))
-                                        .setQueryStringParameters(Arrays.asList(
-                                                new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                                                new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
-                                        ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
-                        )
-                        .setHttpError(
-                                new HttpErrorDTO()
-                                        .setDelay(new DelayDTO(new Delay(TimeUnit.HOURS, 1)))
-                                        .setDropConnection(Boolean.TRUE)
-                                        .setResponseBytes("some_bytes".getBytes())
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5)))
-                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.unlimited())).buildObject(), expectation
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpError(
+                new HttpErrorDTO()
+                    .setDelay(new DelayDTO(new Delay(TimeUnit.HOURS, 1)))
+                    .setDropConnection(Boolean.TRUE)
+                    .setResponseBytes("some_bytes".getBytes(UTF_8))
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.unlimited())).buildObject(), expectation
         );
     }
 
     @Test
-    public void shouldDeserializeCompleteObjectWithClassCallback() throws IOException {
+    public void shouldDeserializePartialObject() {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpClassCallback\" : {" + System.getProperty("line.separator") +
-                "    \"callbackClass\" : \"someClass\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}");
+        String requestBytes = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"path\": \"somePath\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"httpResponse\": {" + NEW_LINE +
+            "        \"body\": \"someBody\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setMethod(string("someMethod"))
-                                        .setPath(string("somePath"))
-                                        .setQueryStringParameters(Arrays.asList(
-                                                new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                                                new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
-                                        ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
-                        )
-                        .setHttpClassCallback(
-                                new HttpClassCallbackDTO()
-                                        .setCallbackClass("someClass")
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
-        );
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setPath(string("somePath"))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new StringBodyDTO(exact("someBody")))
+            )
+            .buildObject(), expectation);
     }
 
     @Test
-    public void shouldDeserializeCompleteObjectWithObjectCallback() throws IOException {
+    public void shouldDeserializeStringRegexBody() {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"STRING\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someBody\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpObjectCallback\" : {" + System.getProperty("line.separator") +
-                "    \"clientId\" : \"someClientId\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}");
+        String requestBytes = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"path\": \"somePath\"," + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"type\" : \"REGEX\"," + NEW_LINE +
+            "            \"regex\" : \"some[a-zA-Z]*\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"httpResponse\": {" + NEW_LINE +
+            "        \"body\": \"someBody\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setMethod(string("someMethod"))
-                                        .setPath(string("somePath"))
-                                        .setQueryStringParameters(Arrays.asList(
-                                                new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                                                new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
-                                        ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
-                        )
-                        .setHttpObjectCallback(
-                                new HttpObjectCallbackDTO()
-                                        .setClientId("someClientId")
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5))).buildObject(), expectation
-        );
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setPath(string("somePath"))
+                    .setBody(new RegexBodyDTO(new RegexBody("some[a-zA-Z]*")))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new StringBodyDTO(exact("someBody")))
+            )
+            .buildObject(), expectation);
     }
 
     @Test
-    public void shouldDeserializePartialObject() throws IOException {
+    public void shouldDeserializeParameterBody() {
         // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "}");
+        String requestBytes = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"path\": \"somePath\"," + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
+            "            \"parameters\" : [ {" + NEW_LINE +
+            "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
+            "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
+            "                }, {" + NEW_LINE +
+            "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
+            "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+            "            } ]" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"httpResponse\": {" + NEW_LINE +
+            "        \"body\": \"someBody\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
 
         // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
+        Expectation expectation = new ExpectationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new ExpectationDTO()
-                .setHttpRequest(
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setPath(string("somePath"))
+                    .setBody(new ParameterBodyDTO(new ParameterBody(
+                        new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
+                        new Parameter("parameterTwoName", "parameterTwoValue")
+                    )))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new StringBodyDTO(exact("someBody")))
+            )
+            .buildObject(), expectation);
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithResponse() {
+        // when
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setStatusCode(304)
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+                    .setDelay(
+                        new DelayDTO()
+                            .setTimeUnit(MICROSECONDS)
+                            .setValue(1)
+                    )
+                    .setConnectionOptions(
+                        new ConnectionOptionsDTO(
+                            new ConnectionOptions()
+                                .withSuppressContentLengthHeader(true)
+                                .withContentLengthHeaderOverride(50)
+                                .withSuppressConnectionHeader(true)
+                                .withKeepAliveOverride(true)
+                                .withCloseSocket(true)
+                        )
+                    )
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"statusCode\" : 304," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"," + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"connectionOptions\" : {" + NEW_LINE +
+            "      \"suppressContentLengthHeader\" : true," + NEW_LINE +
+            "      \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
+            "      \"suppressConnectionHeader\" : true," + NEW_LINE +
+            "      \"keepAliveOverride\" : true," + NEW_LINE +
+            "      \"closeSocket\" : true" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithResponseTemplate() {
+        // when
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpResponseTemplate(
+                new HttpTemplateDTO()
+                    .setTemplateType(HttpTemplate.TemplateType.JAVASCRIPT)
+                    .setTemplate("some_random_template")
+                    .setDelay(new DelayDTO(new Delay(MICROSECONDS, 1)))
+
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponseTemplate\" : {" + NEW_LINE +
+            "    \"template\" : \"some_random_template\"," + NEW_LINE +
+            "    \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithResponseClassCallback() {
+        // when
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpResponseClassCallback(
+                new HttpClassCallbackDTO()
+                    .setCallbackClass("someClass")
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
+            .buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponseClassCallback\" : {" + NEW_LINE +
+            "    \"callbackClass\" : \"someClass\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "    \"timeToLive\" : 2," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithResponseObjectCallback() {
+        // when
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpResponseObjectCallback(
+                new HttpObjectCallbackDTO()
+                    .setClientId("someClientId")
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
+            .buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponseObjectCallback\" : {" + NEW_LINE +
+            "    \"clientId\" : \"someClientId\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "    \"timeToLive\" : 2," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithForward() {
+        // when
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpForward(
+                new HttpForwardDTO()
+                    .setHost("someHost")
+                    .setPort(1234)
+                    .setScheme(HttpForward.Scheme.HTTPS)
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
+            .buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpForward\" : {" + NEW_LINE +
+            "    \"host\" : \"someHost\"," + NEW_LINE +
+            "    \"port\" : 1234," + NEW_LINE +
+            "    \"scheme\" : \"HTTPS\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "    \"timeToLive\" : 2," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithForwardTemplate() {
+        // when
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpForwardTemplate(
+                new HttpTemplateDTO()
+                    .setTemplateType(HttpTemplate.TemplateType.JAVASCRIPT)
+                    .setTemplate("some_random_template")
+                    .setDelay(new DelayDTO(new Delay(MICROSECONDS, 1)))
+
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpForwardTemplate\" : {" + NEW_LINE +
+            "    \"template\" : \"some_random_template\"," + NEW_LINE +
+            "    \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithForwardClassCallback() {
+        // when
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpForwardClassCallback(
+                new HttpClassCallbackDTO()
+                    .setCallbackClass("someClass")
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
+            .buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpForwardClassCallback\" : {" + NEW_LINE +
+            "    \"callbackClass\" : \"someClass\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "    \"timeToLive\" : 2," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithForwardObjectCallback() {
+        // when
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpForwardObjectCallback(
+                new HttpObjectCallbackDTO()
+                    .setClientId("someClientId")
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
+            .buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpForwardObjectCallback\" : {" + NEW_LINE +
+            "    \"clientId\" : \"someClientId\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "    \"timeToLive\" : 2," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
+    }
+
+    @Test
+    public void shouldSerializeCompleteObjectWithOverrideForwardedRequest() {
+        // when
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpOverrideForwardedRequest(
+                new HttpOverrideForwardedRequestDTO()
+                    .setHttpRequest(
                         new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                )
-                .buildObject(), expectation);
-    }
-
-    @Test
-    public void shouldDeserializeStringRegexBody() throws IOException {
-        // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"REGEX\"," + System.getProperty("line.separator") +
-                "            \"value\" : \"some[a-zA-Z]*\"" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "}");
-
-        // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                                .setBody(new RegexBodyDTO(new RegexBody("some[a-zA-Z]*")))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                )
-                .buildObject(), expectation);
-    }
-
-    @Test
-    public void shouldDeserializeParameterBody() throws IOException {
-        // given
-        String requestBytes = ("{" + System.getProperty("line.separator") +
-                "    \"httpRequest\": {" + System.getProperty("line.separator") +
-                "        \"path\": \"somePath\"," + System.getProperty("line.separator") +
-                "        \"body\" : {" + System.getProperty("line.separator") +
-                "            \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "            \"parameters\" : [ {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                "                }, {" + System.getProperty("line.separator") +
-                "                    \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
-                "                    \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
-                "            } ]" + System.getProperty("line.separator") +
-                "        }" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"httpResponse\": {" + System.getProperty("line.separator") +
-                "        \"body\": \"someBody\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "}");
-
-        // when
-        Expectation expectation = new ExpectationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                                .setBody(new ParameterBodyDTO(new ParameterBody(
-                                        new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
-                                        new Parameter("parameterTwoName", "parameterTwoValue")
-                                )))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                )
-                .buildObject(), expectation);
-    }
-
-    @Test
-    public void shouldSerializeCompleteObjectWithResponse() throws IOException {
-        // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setMethod(string("someMethod"))
-                                        .setPath(string("somePath"))
-                                        .setQueryStringParameters(Arrays.asList(
-                                                new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                                                new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
-                                        ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
-                        )
-                        .setHttpResponse(
-                                new HttpResponseDTO()
-                                        .setStatusCode(304)
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
-                                        .setDelay(
-                                                new DelayDTO()
-                                                        .setTimeUnit(TimeUnit.MICROSECONDS)
-                                                        .setValue(1)
-                                        )
-                                        .setConnectionOptions(
-                                                new ConnectionOptionsDTO(
-                                                        new ConnectionOptions()
-                                                                .withSuppressContentLengthHeader(true)
-                                                                .withContentLengthHeaderOverride(50)
-                                                                .withSuppressConnectionHeader(true)
-                                                                .withKeepAliveOverride(true)
-                                                                .withCloseSocket(true)
-                                                )
-                                        )
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5)))
-                        .buildObject()
+                            .setMethod(string("some_overridden_method"))
+                            .setPath(string("some_overridden_path"))
+                            .setBody(new StringBodyDTO(exact("some_overridden_body")))
+                    )
+                    .setDelay(new DelayDTO()
+                        .setTimeUnit(MICROSECONDS)
+                        .setValue(1)
+                    )
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject()
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"statusCode\" : 304," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"," + System.getProperty("line.separator") +
-                "    \"delay\" : {" + System.getProperty("line.separator") +
-                "      \"timeUnit\" : \"MICROSECONDS\"," + System.getProperty("line.separator") +
-                "      \"value\" : 1" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"connectionOptions\" : {" + System.getProperty("line.separator") +
-                "      \"suppressContentLengthHeader\" : true," + System.getProperty("line.separator") +
-                "      \"contentLengthHeaderOverride\" : 50," + System.getProperty("line.separator") +
-                "      \"suppressConnectionHeader\" : true," + System.getProperty("line.separator") +
-                "      \"keepAliveOverride\" : true," + System.getProperty("line.separator") +
-                "      \"closeSocket\" : true" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpOverrideForwardedRequest\" : {" + NEW_LINE +
+            "    \"httpRequest\" : {" + NEW_LINE +
+            "      \"method\" : \"some_overridden_method\"," + NEW_LINE +
+            "      \"path\" : \"some_overridden_path\"," + NEW_LINE +
+            "      \"body\" : \"some_overridden_body\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
     }
 
     @Test
-    public void shouldSerializeCompleteObjectWithForward() throws IOException {
+    public void shouldSerializeCompleteObjectWithError() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setMethod(string("someMethod"))
-                                        .setPath(string("somePath"))
-                                        .setQueryStringParameters(Arrays.asList(
-                                                new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                                                new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
-                                        ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
-                        )
-                        .setHttpForward(
-                                new HttpForwardDTO()
-                                        .setHost("someHost")
-                                        .setPort(1234)
-                                        .setScheme(HttpForward.Scheme.HTTPS)
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5)))
-                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
-                        .buildObject()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpError(
+                new HttpErrorDTO()
+                    .setResponseBytes("some_bytes".getBytes(UTF_8))
+                    .setDelay(new DelayDTO(new Delay(TimeUnit.HOURS, 1)))
+                    .setDropConnection(false)
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
+            .buildObject()
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpForward\" : {" + System.getProperty("line.separator") +
-                "    \"host\" : \"someHost\"," + System.getProperty("line.separator") +
-                "    \"port\" : 1234," + System.getProperty("line.separator") +
-                "    \"scheme\" : \"HTTPS\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpError\" : {" + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"dropConnection\" : false," + NEW_LINE +
+            "    \"responseBytes\" : \"c29tZV9ieXRlcw==\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "    \"timeToLive\" : 2," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
     }
 
     @Test
-    public void shouldSerializeCompleteObjectWithError() throws IOException {
+    public void shouldSerializeCompleteObjectWithHttpTemplateResponse() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setMethod(string("someMethod"))
-                                        .setPath(string("somePath"))
-                                        .setQueryStringParameters(Arrays.asList(
-                                                new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                                                new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
-                                        ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
-                        )
-                        .setHttpError(
-                                new HttpErrorDTO()
-                                        .setResponseBytes("some_bytes".getBytes())
-                                        .setDelay(new DelayDTO(new Delay(TimeUnit.HOURS, 1)))
-                                        .setDropConnection(false)
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5)))
-                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
-                        .buildObject()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+            )
+            .setHttpResponseTemplate(
+                new HttpTemplateDTO()
+                    .setTemplateType(HttpTemplate.TemplateType.JAVASCRIPT)
+                    .setTemplate("some_random_template")
+                    .setDelay(new DelayDTO(new Delay(MICROSECONDS, 1)))
+
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
+            .buildObject()
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpError\" : {" + System.getProperty("line.separator") +
-                "    \"delay\" : {" + System.getProperty("line.separator") +
-                "      \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "      \"value\" : 1" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"dropConnection\" : false," + System.getProperty("line.separator") +
-                "    \"responseBytes\" : \"" + Base64Converter.bytesToBase64String("some_bytes".getBytes()) + "\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"method\" : \"someMethod\"," + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"queryStringParameters\" : {" + NEW_LINE +
+            "      \"queryStringParameterNameOne\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]," + NEW_LINE +
+            "      \"queryStringParameterNameTwo\" : [ \"queryStringParameterValueTwo_One\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"headers\" : {" + NEW_LINE +
+            "      \"someHeaderName\" : [ \"someHeaderValue\" ]" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"cookies\" : {" + NEW_LINE +
+            "      \"someCookieName\" : \"someCookieValue\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponseTemplate\" : {" + NEW_LINE +
+            "    \"template\" : \"some_random_template\"," + NEW_LINE +
+            "    \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
+            "    \"delay\" : {" + NEW_LINE +
+            "      \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+            "      \"value\" : 1" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "    \"timeToLive\" : 2," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
     }
 
     @Test
-    public void shouldSerializeCompleteObjectWithClassCallback() throws IOException {
+    public void shouldSerializePartialRequestAndResponse() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setMethod(string("someMethod"))
-                                        .setPath(string("somePath"))
-                                        .setQueryStringParameters(Arrays.asList(
-                                                new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                                                new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
-                                        ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
-                        )
-                        .setHttpClassCallback(
-                                new HttpClassCallbackDTO()
-                                        .setCallbackClass("someClass")
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5)))
-                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
-                        .buildObject()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setPath(string("somePath"))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new StringBodyDTO(exact("someBody")))
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
+            .buildObject()
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpClassCallback\" : {" + System.getProperty("line.separator") +
-                "    \"callbackClass\" : \"someClass\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"somePath\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "    \"timeToLive\" : 2," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
     }
 
     @Test
-    public void shouldSerializeCompleteObjectWithObjectCallback() throws IOException {
+    public void shouldSerializeStringXPathBody() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setMethod(string("someMethod"))
-                                        .setPath(string("somePath"))
-                                        .setQueryStringParameters(Arrays.asList(
-                                                new ParameterDTO(new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two")),
-                                                new ParameterDTO(new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One"))
-                                        ))
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                                        .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("someHeaderName", Arrays.asList("someHeaderValue")))))
-                                        .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("someCookieName", "someCookieValue"))))
-                        )
-                        .setHttpObjectCallback(
-                                new HttpObjectCallbackDTO()
-                                        .setClientId("someClientId")
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5)))
-                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
-                        .buildObject()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setPath(string("somePath"))
+                    .setBody(new XPathBodyDTO(new XPathBody("/bookstore/book[price>35]/price")))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new StringBodyDTO(exact("someBody")))
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
+            .buildObject()
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"someMethod\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"queryStringParameters\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameOne\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueOne_One\", \"queryStringParameterValueOne_Two\" ]" + System.getProperty("line.separator") +
-                "    }, {" + System.getProperty("line.separator") +
-                "      \"name\" : \"queryStringParameterNameTwo\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"queryStringParameterValueTwo_One\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"headers\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someHeaderName\"," + System.getProperty("line.separator") +
-                "      \"values\" : [ \"someHeaderValue\" ]" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"cookies\" : [ {" + System.getProperty("line.separator") +
-                "      \"name\" : \"someCookieName\"," + System.getProperty("line.separator") +
-                "      \"value\" : \"someCookieValue\"" + System.getProperty("line.separator") +
-                "    } ]," + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpObjectCallback\" : {" + System.getProperty("line.separator") +
-                "    \"clientId\" : \"someClientId\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"XPATH\"," + NEW_LINE +
+            "      \"xpath\" : \"/bookstore/book[price>35]/price\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "    \"timeToLive\" : 2," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
     }
 
     @Test
-    public void shouldSerializePartialRequestAndResponse() throws IOException {
+    public void shouldSerializeStringXmlSchemaBody() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setPath(string("somePath"))
-                        )
-                        .setHttpResponse(
-                                new HttpResponseDTO()
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5)))
-                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
-                        .buildObject()
+        String xmlSchema = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+            "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+            "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+            "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+            "    <xs:element name=\"notes\">" + NEW_LINE +
+            "        <xs:complexType>" + NEW_LINE +
+            "            <xs:sequence>" + NEW_LINE +
+            "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+            "                    <xs:complexType>" + NEW_LINE +
+            "                        <xs:sequence>" + NEW_LINE +
+            "                            <xs:element name=\"to\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+            "                            <xs:element name=\"from\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+            "                            <xs:element name=\"heading\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+            "                            <xs:element name=\"body\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+            "                        </xs:sequence>" + NEW_LINE +
+            "                    </xs:complexType>" + NEW_LINE +
+            "                </xs:element>" + NEW_LINE +
+            "            </xs:sequence>" + NEW_LINE +
+            "        </xs:complexType>" + NEW_LINE +
+            "    </xs:element>" + NEW_LINE +
+            "</xs:schema>";
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setPath(string("somePath"))
+                    .setBody(new XmlSchemaBodyDTO(new XmlSchemaBody(xmlSchema)))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}")))
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
+            .buildObject()
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"XML_SCHEMA\"," + NEW_LINE +
+            "      \"xmlSchema\" : \"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "    \"timeToLive\" : 2," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
     }
 
     @Test
-    public void shouldSerializeStringXPathBody() throws IOException {
+    public void shouldSerializeStringJsonSchemaBody() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setPath(string("somePath"))
-                                        .setBody(new XPathBodyDTO(new XPathBody("/bookstore/book[price>35]/price")))
-                        )
-                        .setHttpResponse(
-                                new HttpResponseDTO()
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5)))
-                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
-                        .buildObject()
+        String jsonSchema = "{" + NEW_LINE +
+            "  \"title\": \"Example Schema\"," + NEW_LINE +
+            "  \"type\": \"object\"," + NEW_LINE +
+            "  \"properties\": {" + NEW_LINE +
+            "    \"firstName\": {" + NEW_LINE +
+            "      \"type\": \"string\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"lastName\": {" + NEW_LINE +
+            "      \"type\": \"string\"" + NEW_LINE +
+            "    }," + NEW_LINE +
+            "    \"age\": {" + NEW_LINE +
+            "      \"description\": \"Age in years\"," + NEW_LINE +
+            "      \"type\": \"integer\"," + NEW_LINE +
+            "      \"minimum\": 0" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"required\": [\"firstName\", \"lastName\"]" + NEW_LINE +
+            "}";
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setPath(string("somePath"))
+                    .setBody(new JsonSchemaBodyDTO(new JsonSchemaBody(jsonSchema)))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}")))
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
+            .buildObject()
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"XPATH\"," + System.getProperty("line.separator") +
-                "      \"xpath\" : \"/bookstore/book[price>35]/price\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
+            "      \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
+            "    \"timeToLive\" : 2," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
     }
 
     @Test
-    public void shouldSerializeStringJsonSchemaBody() throws IOException {
-        // when
-        String jsonSchema = "{" + System.getProperty("line.separator") +
-                "  \"title\": \"Example Schema\"," + System.getProperty("line.separator") +
-                "  \"type\": \"object\"," + System.getProperty("line.separator") +
-                "  \"properties\": {" + System.getProperty("line.separator") +
-                "    \"firstName\": {" + System.getProperty("line.separator") +
-                "      \"type\": \"string\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"lastName\": {" + System.getProperty("line.separator") +
-                "      \"type\": \"string\"" + System.getProperty("line.separator") +
-                "    }," + System.getProperty("line.separator") +
-                "    \"age\": {" + System.getProperty("line.separator") +
-                "      \"description\": \"Age in years\"," + System.getProperty("line.separator") +
-                "      \"type\": \"integer\"," + System.getProperty("line.separator") +
-                "      \"minimum\": 0" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"required\": [\"firstName\", \"lastName\"]" + System.getProperty("line.separator") +
-                "}";
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setPath(string("somePath"))
-                                        .setBody(new JsonSchemaBodyDTO(new JsonSchemaBody(jsonSchema)))
-                        )
-                        .setHttpResponse(
-                                new HttpResponseDTO()
-                                        .setBody(new JsonBodyDTO(new JsonBody("{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}")))
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5)))
-                        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)))
-                        .buildObject()
-        );
-
-        // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"JSON_SCHEMA\"," + System.getProperty("line.separator") +
-                "      \"jsonSchema\" : \"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"{fieldOne: \\\"valueOne\\\", \\\"fieldTwo\\\": \\\"valueTwo\\\"}\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"timeUnit\" : \"HOURS\"," + System.getProperty("line.separator") +
-                "    \"timeToLive\" : 2," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
-    }
-
-    @Test
-    public void shouldSerializeStringJsonBody() throws IOException {
+    public void shouldSerializeStringJsonBody() {
         // when
         String jsonBody = "{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}";
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setPath(string("somePath"))
-                                        .setBody(new JsonBodyDTO(new JsonBody(jsonBody)))
-                        )
-                        .setHttpResponse(
-                                new HttpResponseDTO()
-                                        .setBody(new JsonBodyDTO(new JsonBody(jsonBody)))
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5)))
-                        .buildObject()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setPath(string("somePath"))
+                    .setBody(new JsonBodyDTO(new JsonBody(jsonBody)))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new JsonBodyDTO(new JsonBody(jsonBody)))
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .buildObject()
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"JSON\"," + System.getProperty("line.separator") +
-                "      \"json\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"JSON\"," + NEW_LINE +
+            "      \"json\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
     }
 
     @Test
-    public void shouldSerializeStringRegexBody() throws IOException {
+    public void shouldSerializeStringRegexBody() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setPath(string("somePath"))
-                                        .setBody(new RegexBodyDTO(new RegexBody("some[a-zA-Z]*")))
-                        )
-                        .setHttpResponse(
-                                new HttpResponseDTO()
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5)))
-                        .buildObject()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setPath(string("somePath"))
+                    .setBody(new RegexBodyDTO(new RegexBody("some[a-zA-Z]*")))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new StringBodyDTO(exact("someBody")))
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .buildObject()
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"REGEX\"," + System.getProperty("line.separator") +
-                "      \"regex\" : \"some[a-zA-Z]*\"" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"REGEX\"," + NEW_LINE +
+            "      \"regex\" : \"some[a-zA-Z]*\"" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
     }
 
     @Test
-    public void shouldSerializeStringParameterBody() throws IOException {
+    public void shouldSerializeStringParameterBody() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setPath(string("somePath"))
-                                        .setBody(new ParameterBodyDTO(new ParameterBody(
-                                                new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
-                                                new Parameter("parameterTwoName", "parameterTwoValue")
-                                        )))
-                        )
-                        .setHttpResponse(
-                                new HttpResponseDTO()
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                        )
-                        .setTimes(new TimesDTO(Times.exactly(5)))
-                        .buildObject()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setPath(string("somePath"))
+                    .setBody(new ParameterBodyDTO(new ParameterBody(
+                        new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
+                        new Parameter("parameterTwoName", "parameterTwoValue")
+                    )))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new StringBodyDTO(exact("someBody")))
+            )
+            .setTimes(new TimesDTO(Times.exactly(5)))
+            .buildObject()
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"," + System.getProperty("line.separator") +
-                "    \"body\" : {" + System.getProperty("line.separator") +
-                "      \"type\" : \"PARAMETERS\"," + System.getProperty("line.separator") +
-                "      \"parameters\" : [ {" + System.getProperty("line.separator") +
-                "        \"name\" : \"parameterOneName\"," + System.getProperty("line.separator") +
-                "        \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + System.getProperty("line.separator") +
-                "      }, {" + System.getProperty("line.separator") +
-                "        \"name\" : \"parameterTwoName\"," + System.getProperty("line.separator") +
-                "        \"values\" : [ \"parameterTwoValue\" ]" + System.getProperty("line.separator") +
-                "      } ]" + System.getProperty("line.separator") +
-                "    }" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 5," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"somePath\"," + NEW_LINE +
+            "    \"body\" : {" + NEW_LINE +
+            "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
+            "      \"parameters\" : {" + NEW_LINE +
+            "        \"parameterOneName\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]," + NEW_LINE +
+            "        \"parameterTwoName\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
+            "      }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 5," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
     }
 
     @Test
-    public void shouldSerializePartialExpectation() throws IOException {
+    public void shouldSerializePartialExpectation() {
         // when
-        String jsonExpectation = new ExpectationSerializer().serialize(new ExpectationDTO()
-                        .setHttpRequest(
-                                new HttpRequestDTO()
-                                        .setPath(string("somePath"))
-                        )
-                        .setHttpResponse(
-                                new HttpResponseDTO()
-                                        .setBody(new StringBodyDTO(new StringBody("someBody")))
-                        )
-                        .buildObject()
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setPath(string("somePath"))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new StringBodyDTO(exact("someBody")))
+            )
+            .buildObject()
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 1," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}", jsonExpectation);
+        assertEquals("{" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"somePath\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 1," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonExpectation);
     }
 
     @Test
-    public void shouldSerializePartialExpectationArray() throws IOException {
+    public void shouldSerializePartialExpectationArray() {
         // when
         Expectation expectation = new ExpectationDTO()
-                .setHttpRequest(
-                        new HttpRequestDTO()
-                                .setPath(string("somePath"))
-                )
-                .setHttpResponse(
-                        new HttpResponseDTO()
-                                .setBody(new StringBodyDTO(new StringBody("someBody")))
-                )
-                .buildObject();
-        String jsonExpectation = new ExpectationSerializer().serialize(new Expectation[]{
-                expectation,
-                expectation,
-                expectation
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setPath(string("somePath"))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new StringBodyDTO(exact("someBody")))
+            )
+            .buildObject();
+        String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new Expectation[]{
+            expectation,
+            expectation,
+            expectation
         });
 
         // then
-        assertEquals("[ {" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 1," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}, {" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 1," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}, {" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somePath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"httpResponse\" : {" + System.getProperty("line.separator") +
-                "    \"body\" : \"someBody\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"remainingTimes\" : 1," + System.getProperty("line.separator") +
-                "    \"unlimited\" : false" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"timeToLive\" : {" + System.getProperty("line.separator") +
-                "    \"unlimited\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "} ]", jsonExpectation);
+        assertEquals("[ {" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"somePath\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 1," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}, {" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"somePath\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 1," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}, {" + NEW_LINE +
+            "  \"httpRequest\" : {" + NEW_LINE +
+            "    \"path\" : \"somePath\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"httpResponse\" : {" + NEW_LINE +
+            "    \"body\" : \"someBody\"" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"times\" : {" + NEW_LINE +
+            "    \"remainingTimes\" : 1," + NEW_LINE +
+            "    \"unlimited\" : false" + NEW_LINE +
+            "  }," + NEW_LINE +
+            "  \"timeToLive\" : {" + NEW_LINE +
+            "    \"unlimited\" : true" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "} ]", jsonExpectation);
     }
 }

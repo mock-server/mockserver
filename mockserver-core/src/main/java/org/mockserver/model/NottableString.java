@@ -3,10 +3,7 @@ package org.mockserver.model;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author jamesdbloom
@@ -20,12 +17,48 @@ public class NottableString extends Not {
         this.not = not;
     }
 
+    public static NottableString deserializeNottableString(String string) {
+        if (string.startsWith("!")) {
+            return not(string.replaceFirst("^!", ""));
+        } else {
+            return string(string.replaceFirst("^!", ""));
+        }
+    }
+
+    public static List<NottableString> deserializeNottableStrings(String... strings) {
+        List<NottableString> nottableStrings = new LinkedList<>();
+        for (String string : strings) {
+            nottableStrings.add(string(string));
+        }
+        return nottableStrings;
+    }
+
+    public static List<NottableString> deserializeNottableStrings(List<String> strings) {
+        List<NottableString> nottableStrings = new LinkedList<>();
+        for (String string : strings) {
+            nottableStrings.add(string(string));
+        }
+        return nottableStrings;
+    }
+
+    public static String serialiseNottableString(NottableString nottableString) {
+        return (nottableString.isNot() ? "!" : "") + nottableString.value;
+    }
+
+    public static List<String> serialiseNottableString(List<NottableString> nottableStrings) {
+        List<String> strings = new LinkedList<>();
+        for (NottableString nottableString : nottableStrings) {
+            strings.add(serialiseNottableString(nottableString));
+        }
+        return strings;
+    }
+
     public static NottableString string(String value, Boolean not) {
         return new NottableString(value, not);
     }
 
     public static NottableString string(String value) {
-        return new NottableString(value, null);
+        return new NottableString(value, false);
     }
 
     public static NottableString not(String value) {
@@ -62,11 +95,6 @@ public class NottableString extends Not {
         return new NottableString(value.toLowerCase(), not);
     }
 
-    @Override
-    public boolean equals(Object other) {
-        return equals(other, false);
-    }
-
     public boolean equalsIgnoreCase(Object other) {
         return equals(other, true);
     }
@@ -90,5 +118,15 @@ public class NottableString extends Not {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return equals(other, false);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value, not);
     }
 }

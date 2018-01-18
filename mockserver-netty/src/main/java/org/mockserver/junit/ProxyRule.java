@@ -5,6 +5,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.mockserver.client.proxy.ProxyClient;
+import org.mockserver.client.server.MockServerClient;
 import org.mockserver.integration.ClientAndProxy;
 import org.mockserver.socket.PortFactory;
 
@@ -17,13 +18,14 @@ public class ProxyRule implements TestRule {
     private final Integer port;
     private final boolean perTestSuite;
     private ClientAndProxyFactory clientAndProxyFactory;
+    private ClientAndProxy clientAndProxy;
 
     /**
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
      * This constructor dynamically allocates a free port for the proxy to use.
      * Note: The getHttpPort getter can be used to retrieve the dynamically allocated port.
      *
-     * @param target        an instance of the test being executed
+     * @param target an instance of the test being executed
      */
     public ProxyRule(Object target) {
         this(PortFactory.findFreePort(), target);
@@ -33,10 +35,10 @@ public class ProxyRule implements TestRule {
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
      * This constructor dynamically allocates a free port for the proxy to use.
      *
-     * @param target        an instance of the test being executed
-     * @param perTestSuite  indicates how many instances of the proxy are created
-     *                      if true a single proxy is created per JVM
-     *                      if false one instance per test class is created
+     * @param target       an instance of the test being executed
+     * @param perTestSuite indicates how many instances of the proxy are created
+     *                     if true a single proxy is created per JVM
+     *                     if false one instance per test class is created
      */
     public ProxyRule(Object target, boolean perTestSuite) {
         this(PortFactory.findFreePort(), target, perTestSuite);
@@ -46,8 +48,8 @@ public class ProxyRule implements TestRule {
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
      * This constructor dynamically create a proxy that accepts HTTP(S) requests on the specified port
      *
-     * @param port          the HTTP(S) port for the proxy
-     * @param target        an instance of the test being executed
+     * @param port   the HTTP(S) port for the proxy
+     * @param target an instance of the test being executed
      */
     public ProxyRule(Integer port, Object target) {
         this(port, target, false);
@@ -57,11 +59,11 @@ public class ProxyRule implements TestRule {
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
      * This constructor dynamically create a proxy that accepts HTTP(S) requests on the specified port
      *
-     * @param port          the HTTP(S) port for the proxy
-     * @param target        an instance of the test being executed
-     * @param perTestSuite  indicates how many instances of the proxy are created
-     *                      if true a single proxy is created per JVM
-     *                      if false one instance per test class is created
+     * @param port         the HTTP(S) port for the proxy
+     * @param target       an instance of the test being executed
+     * @param perTestSuite indicates how many instances of the proxy are created
+     *                     if true a single proxy is created per JVM
+     *                     if false one instance per test class is created
      */
     public ProxyRule(Integer port, Object target, boolean perTestSuite) {
         this.port = port;
@@ -82,7 +84,6 @@ public class ProxyRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                ClientAndProxy clientAndProxy;
                 if (perTestSuite) {
                     if (perTestSuiteClientAndProxy == null) {
                         perTestSuiteClientAndProxy = clientAndProxyFactory.newClientAndProxy();
@@ -122,6 +123,10 @@ public class ProxyRule implements TestRule {
                 }
             }
         }
+    }
+
+    public ProxyClient getClient() {
+        return clientAndProxy;
     }
 
     @VisibleForTesting

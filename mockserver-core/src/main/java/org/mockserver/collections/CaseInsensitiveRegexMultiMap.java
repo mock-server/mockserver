@@ -75,9 +75,11 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
 
         for (Entry<NottableString, NottableString> matcherEntry : entryList()) {
             if (RegexStringMatcher.matches(value, matcherEntry.getValue(), true)
-                    && RegexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
+                && RegexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
                 result = true;
                 break;
+            } else {
+                result = false;
             }
         }
 

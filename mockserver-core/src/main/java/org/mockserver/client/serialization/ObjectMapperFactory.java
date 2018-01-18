@@ -7,13 +7,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.mockserver.client.serialization.deserializers.body.BodyDTODeserializer;
+import org.mockserver.client.serialization.deserializers.body.BodyWithContentTypeDTODeserializer;
+import org.mockserver.client.serialization.deserializers.collections.CookiesDeserializer;
+import org.mockserver.client.serialization.deserializers.collections.HeadersDeserializer;
+import org.mockserver.client.serialization.deserializers.collections.ParametersDeserializer;
 import org.mockserver.client.serialization.deserializers.string.NottableStringDeserializer;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.client.serialization.serializers.TimesSerializer;
 import org.mockserver.client.serialization.serializers.body.*;
+import org.mockserver.client.serialization.serializers.collections.CookiesSerializer;
+import org.mockserver.client.serialization.serializers.collections.HeadersSerializer;
+import org.mockserver.client.serialization.serializers.collections.ParametersSerializer;
 import org.mockserver.client.serialization.serializers.request.HttpRequestDTOSerializer;
 import org.mockserver.client.serialization.serializers.response.HttpResponseDTOSerializer;
 import org.mockserver.client.serialization.serializers.response.HttpResponseSerializer;
 import org.mockserver.client.serialization.serializers.string.NottableStringSerializer;
+import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 
 /**
@@ -61,33 +70,45 @@ public class ObjectMapperFactory {
     private static class Module extends SimpleModule {
 
         Module() {
+            // times
+            addSerializer(Times.class, new TimesSerializer());
             // request
             addSerializer(HttpRequest.class, new org.mockserver.client.serialization.serializers.request.HttpRequestSerializer());
             addSerializer(HttpRequestDTO.class, new HttpRequestDTOSerializer());
             // request body
             addDeserializer(BodyDTO.class, new BodyDTODeserializer());
-            addSerializer(StringBodyDTO.class, new StringBodyDTOSerializer());
-            addSerializer(StringBody.class, new StringBodySerializer());
-            addSerializer(BinaryBodyDTO.class, new BinaryBodyDTOSerializer());
+            addDeserializer(BodyWithContentTypeDTO.class, new BodyWithContentTypeDTODeserializer());
             addSerializer(BinaryBody.class, new BinaryBodySerializer());
-            addSerializer(RegexBodyDTO.class, new RegexBodyDTOSerializer());
-            addSerializer(RegexBody.class, new RegexBodySerializer());
-            addSerializer(JsonBodyDTO.class, new JsonBodyDTOSerializer());
+            addSerializer(BinaryBodyDTO.class, new BinaryBodyDTOSerializer());
             addSerializer(JsonBody.class, new JsonBodySerializer());
-            addSerializer(JsonSchemaBodyDTO.class, new JsonSchemaBodyDTOSerializer());
+            addSerializer(JsonBodyDTO.class, new JsonBodyDTOSerializer());
             addSerializer(JsonSchemaBody.class, new JsonSchemaBodySerializer());
-            addSerializer(XPathBodyDTO.class, new XPathBodyDTOSerializer());
-            addSerializer(XPathBody.class, new XPathBodySerializer());
-            addSerializer(XmlBodyDTO.class, new XmlBodyDTOSerializer());
-            addSerializer(XmlBody.class, new XmlBodySerializer());
-            addSerializer(ParameterBodyDTO.class, new ParameterBodyDTOSerializer());
+            addSerializer(JsonSchemaBodyDTO.class, new JsonSchemaBodyDTOSerializer());
             addSerializer(ParameterBody.class, new ParameterBodySerializer());
+            addSerializer(ParameterBodyDTO.class, new ParameterBodyDTOSerializer());
+            addSerializer(RegexBody.class, new RegexBodySerializer());
+            addSerializer(RegexBodyDTO.class, new RegexBodyDTOSerializer());
+            addSerializer(StringBody.class, new StringBodySerializer());
+            addSerializer(StringBodyDTO.class, new StringBodyDTOSerializer());
+            addSerializer(XmlBody.class, new XmlBodySerializer());
+            addSerializer(XmlBodyDTO.class, new XmlBodyDTOSerializer());
+            addSerializer(XPathBody.class, new XPathBodySerializer());
+            addSerializer(XPathBodyDTO.class, new XPathBodyDTOSerializer());
+            addSerializer(XmlSchemaBody.class, new XmlSchemaBodySerializer());
+            addSerializer(XmlSchemaBodyDTO.class, new XmlSchemaBodyDTOSerializer());
             // nottable string
             addSerializer(NottableString.class, new NottableStringSerializer());
             addDeserializer(NottableString.class, new NottableStringDeserializer());
             // response
             addSerializer(HttpResponse.class, new HttpResponseSerializer());
             addSerializer(HttpResponseDTO.class, new HttpResponseDTOSerializer());
+            // key and multivalue
+            addDeserializer(Headers.class, new HeadersDeserializer());
+            addSerializer(Headers.class, new HeadersSerializer());
+            addDeserializer(Parameters.class, new ParametersDeserializer());
+            addSerializer(Parameters.class, new ParametersSerializer());
+            addDeserializer(Cookies.class, new CookiesDeserializer());
+            addSerializer(Cookies.class, new CookiesSerializer());
         }
 
     }

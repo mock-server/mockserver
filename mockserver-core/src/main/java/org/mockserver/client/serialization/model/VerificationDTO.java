@@ -10,7 +10,7 @@ import static org.mockserver.verify.VerificationTimes.once;
 /**
  * @author jamesdbloom
  */
-public class VerificationDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class VerificationDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<Verification> {
     private HttpRequestDTO httpRequest;
     private VerificationTimesDTO times;
 
@@ -26,8 +26,8 @@ public class VerificationDTO extends ObjectWithReflectiveEqualsHashCodeToString 
 
     public Verification buildObject() {
         return verification()
-                .withRequest((httpRequest != null ? httpRequest.buildObject() : request()))
-                .withTimes((times != null ? times.buildObject() : once()));
+            .withRequest((httpRequest != null ? httpRequest.buildObject() : request()))
+            .withTimes((times != null ? times.buildObject() : once()));
     }
 
     public HttpRequestDTO getHttpRequest() {

@@ -1,7 +1,7 @@
 ---
 title: Creating Expectations
 layout: page
-pageOrder: 4
+pageOrder: 2
 section: 'Mock Server'
 subsection: true
 sitemap:
@@ -10,53 +10,4 @@ sitemap:
   lastmod: 2015-04-18T22:40:27+01:00
 ---
 
-<p>To create an expectation you need to define:</p>
-<ul>
-	<li>the <a href="#request_matchers">request matcher</a> and</li>
-	<li>what <a href="#mock_response">response</a> should be returned or</li>
-	<li>where the request should be <a href="#mock_forward">forwarded</a> or</li>
-	<li>what <a href="#callback">callback</a> should be executed.</li>
-</ul>
-
-<p>MockServer will play expectations in the exact order they are setup. For example, if an expectation <span class="annotation">A</span> is setup to response (or forward) <strong>3</strong> times then expectation <span class="annotation">B</span> is setup to response (or forward)
-	<strong>2</strong> times for the same request MockServer will response (or forward) in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.</p>
-
-<p><strong>Java</strong></p>
-
-{% include_subpage creating_expectations_java_example_code.html %}
-
-<p><strong>JavaScript</strong></p>
-
-{% include_subpage creating_expectations_javascript_example_code.html %}
-
-<p><strong>Ruby</strong></p>
-
-{% include_subpage creating_expectations_ruby_example_code.html %}
-
-<a name="request_matchers" class="anchor" href="#request_matchers">&nbsp;</a>
-
-<h3>Request Matchers</h3>
-
-<p>To specify when a response should be mocked a request matcher must be provided in each expectation.</p>
-
-<p>When an incoming request matches the request matcher in an expectation MockServer will return the response for that expectation.</p>
-
-{% include_subpage creating_expectations_request_matchers.html %}
-
-<a name="mock_response" class="anchor" href="#mock_response">&nbsp;</a>
-
-<h3>Response Actions (Mock Responses)</h3>
-
-{% include_subpage creating_expectations_response_actions.html %}
-
-<a name="mock_forward" class="anchor" href="#mock_forward">&nbsp;</a>
-
-<h3>Forward Actions</h3>
-
-{% include_subpage creating_expectations_forward_actions.html %}
-
-<a name="callback" class="anchor" href="#callback">&nbsp;</a>
-
-<h3>Callback Actions</h3>
-
-{% include_subpage creating_expectations_callback_actions.html %}
+{% include_subpage _includes/creating_expectations.html %}

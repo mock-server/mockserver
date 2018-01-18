@@ -1,24 +1,19 @@
 package org.mockserver.client.serialization.model;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 import org.mockserver.model.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
  */
-public class HttpRequestDTO extends NotDTO {
+public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
     private NottableString method = string("");
     private NottableString path = string("");
-    private List<ParameterDTO> queryStringParameters = new ArrayList<ParameterDTO>();
+    private Parameters queryStringParameters = new Parameters();
     private BodyDTO body;
-    private List<CookieDTO> cookies = new ArrayList<CookieDTO>();
-    private List<HeaderDTO> headers = new ArrayList<HeaderDTO>();
+    private Cookies cookies = new Cookies();
+    private Headers headers = new Headers();
     private Boolean keepAlive = null;
     private Boolean secure = null;
 
@@ -31,21 +26,9 @@ public class HttpRequestDTO extends NotDTO {
         if (httpRequest != null) {
             method = httpRequest.getMethod();
             path = httpRequest.getPath();
-            headers = Lists.transform(httpRequest.getHeaders(), new Function<Header, HeaderDTO>() {
-                public HeaderDTO apply(Header header) {
-                    return new HeaderDTO(header);
-                }
-            });
-            cookies = Lists.transform(httpRequest.getCookies(), new Function<Cookie, CookieDTO>() {
-                public CookieDTO apply(Cookie cookie) {
-                    return new CookieDTO(cookie);
-                }
-            });
-            queryStringParameters = Lists.transform(httpRequest.getQueryStringParameters(), new Function<Parameter, ParameterDTO>() {
-                public ParameterDTO apply(Parameter parameter) {
-                    return new ParameterDTO(parameter);
-                }
-            });
+            headers = httpRequest.getHeaders();
+            cookies = httpRequest.getCookies();
+            queryStringParameters = httpRequest.getQueryStringParameters();
             body = BodyDTO.createDTO(httpRequest.getBody());
             keepAlive = httpRequest.isKeepAlive();
             secure = httpRequest.isSecure();
@@ -57,26 +40,14 @@ public class HttpRequestDTO extends NotDTO {
 
     public HttpRequest buildObject() {
         return new HttpRequest()
-                .withMethod(method)
-                .withPath(path)
-                .withHeaders(Lists.transform(headers, new Function<HeaderDTO, Header>() {
-                    public Header apply(HeaderDTO header) {
-                        return header.buildObject();
-                    }
-                }))
-                .withCookies(Lists.transform(cookies, new Function<CookieDTO, Cookie>() {
-                    public Cookie apply(CookieDTO cookie) {
-                        return cookie.buildObject();
-                    }
-                }))
-                .withQueryStringParameters(Lists.transform(queryStringParameters, new Function<ParameterDTO, Parameter>() {
-                    public Parameter apply(ParameterDTO parameter) {
-                        return parameter.buildObject();
-                    }
-                }))
-                .withBody((body != null ? Not.not(body.buildObject(), body.getNot()) : null))
-                .withSecure(secure)
-                .withKeepAlive(keepAlive);
+            .withMethod(method)
+            .withPath(path)
+            .withHeaders(headers)
+            .withCookies(cookies)
+            .withQueryStringParameters(queryStringParameters)
+            .withBody((body != null ? Not.not(body.buildObject(), body.getNot()) : null))
+            .withSecure(secure)
+            .withKeepAlive(keepAlive);
     }
 
     public NottableString getMethod() {
@@ -97,11 +68,11 @@ public class HttpRequestDTO extends NotDTO {
         return this;
     }
 
-    public List<ParameterDTO> getQueryStringParameters() {
+    public Parameters getQueryStringParameters() {
         return queryStringParameters;
     }
 
-    public HttpRequestDTO setQueryStringParameters(List<ParameterDTO> queryStringParameters) {
+    public HttpRequestDTO setQueryStringParameters(Parameters queryStringParameters) {
         this.queryStringParameters = queryStringParameters;
         return this;
     }
@@ -115,20 +86,20 @@ public class HttpRequestDTO extends NotDTO {
         return this;
     }
 
-    public List<HeaderDTO> getHeaders() {
+    public Headers getHeaders() {
         return headers;
     }
 
-    public HttpRequestDTO setHeaders(List<HeaderDTO> headers) {
+    public HttpRequestDTO setHeaders(Headers headers) {
         this.headers = headers;
         return this;
     }
 
-    public List<CookieDTO> getCookies() {
+    public Cookies getCookies() {
         return cookies;
     }
 
-    public HttpRequestDTO setCookies(List<CookieDTO> cookies) {
+    public HttpRequestDTO setCookies(Cookies cookies) {
         this.cookies = cookies;
         return this;
     }

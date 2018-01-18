@@ -1,0 +1,78 @@
+/* Style the buttons that are used to open and close the accordion panel */
+.accordion {
+    font-family: 'Averia Sans Libre', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: #eee;
+    color: #444;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    text-align: left;
+    border: none;
+    outline: none;
+    transition: 0.5s;
+    margin: 1px;
+    vertical-align: middle;
+}
+
+.accordion.title {
+    padding: 6px;
+    color: black;
+    font-size: 1.1em;
+    background-color: #ccc;
+}
+
+.accordion:hover.title:hover {
+    background-color: #eee;
+}
+
+.accordion.inner {
+    background-color: #000;
+    color: #fff;
+    padding: 2px 8px;
+    width: 99%;
+    margin: 6px;
+}
+
+/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+.accordion.active, .accordion:hover {
+    background-color: #ccc;
+}
+
+/* Style the accordion panel. Note: hidden by default */
+.panel {
+    padding: 0 1%;
+    background-color: white;
+    display: none;
+}
+
+.panel.title {
+    padding: 0 18px;
+    border-style: solid;
+    border-width: 1px;
+    border-bottom-width: 0px;
+    border-top-width: 0px;
+    border-color: #e8e8e8;
+}
+
+button.accordion.active:after {
+    content: "\2212";
+}
+
+button.accordion:after {
+    content: '\002B';
+    color: #cc1313;
+    font-weight: bold;
+    float: right;
+    margin-left: 5px;
+    font-family: 'Averia Sans Libre', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 1.1em;
+}
+
+@media (max-width: 568px) {
+    .accordion {
+        font-size: 0.85em;
+    }
+    .accordion.title {
+        font-size: 1em;
+    }
+}

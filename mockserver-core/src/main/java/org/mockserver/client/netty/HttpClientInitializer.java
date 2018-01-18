@@ -1,46 +1,54 @@
 package org.mockserver.client.netty;
 
-import com.google.common.util.concurrent.SettableFuture;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.proxy.HttpProxyHandler;
+import io.netty.handler.proxy.Socks5ProxyHandler;
 import org.mockserver.client.netty.codec.MockServerClientCodec;
 import org.mockserver.logging.LoggingHandler;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.socket.NettySslContextFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
-import javax.net.ssl.SSLException;
 import java.net.InetSocketAddress;
 
+import static org.mockserver.client.netty.NettyHttpClient.REMOTE_SOCKET;
+import static org.mockserver.client.netty.NettyHttpClient.SECURE;
+import static org.mockserver.configuration.ConfigurationProperties.httpsProxy;
+import static org.mockserver.configuration.ConfigurationProperties.httpSocksProxy;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
+import static org.slf4j.event.Level.TRACE;
 
+@ChannelHandler.Sharable
 public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final boolean secure;
-    private final InetSocketAddress remoteAddress;
-    private HttpClientHandler httpClientHandler = new HttpClientHandler();
-
-    public HttpClientInitializer(boolean secure, InetSocketAddress remoteAddress) {
-        this.secure = secure;
-        this.remoteAddress = remoteAddress;
-    }
+    private final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
+    private final HttpClientConnectionHandler httpClientConnectionHandler = new HttpClientConnectionHandler();
+    private final HttpClientHandler httpClientHandler = new HttpClientHandler();
+    private InetSocketAddress httpsProxyAddress = httpsProxy();
+    private InetSocketAddress socksProxyAddress = httpSocksProxy();
 
     @Override
-    public void initChannel(SocketChannel channel) throws SSLException {
+    public void initChannel(SocketChannel channel) {
         ChannelPipeline pipeline = channel.pipeline();
 
-        if (secure) {
+        if (httpsProxyAddress != null) {
+            pipeline.addLast(new HttpProxyHandler(httpsProxyAddress));
+        } else if (socksProxyAddress != null) {
+            pipeline.addLast(new Socks5ProxyHandler(socksProxyAddress));
+        }
+        pipeline.addLast(httpClientConnectionHandler);
+
+        if (channel.attr(SECURE) != null && channel.attr(SECURE).get() != null && channel.attr(SECURE).get()) {
+            InetSocketAddress remoteAddress = channel.attr(REMOTE_SOCKET).get();
             pipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
         }
 
         // add logging
-        if (logger.isTraceEnabled()) {
+        if (mockServerLogger.isEnabled(TRACE)) {
             pipeline.addLast(new LoggingHandler("NettyHttpClient -->"));
         }
 
@@ -53,9 +61,5 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast(new MockServerClientCodec());
 
         pipeline.addLast(httpClientHandler);
-    }
-
-    public SettableFuture<HttpResponse> getResponseFuture() {
-        return httpClientHandler.getResponseFuture();
     }
 }

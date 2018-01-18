@@ -1,19 +1,14 @@
 package org.mockserver.socket;
 
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -32,7 +27,7 @@ public class KeyStoreFactory {
     public static final String CERTIFICATE_DOMAIN = "localhost";
     public static final String KEY_STORE_CERT_ALIAS = "mockserver-client-cert";
 
-    private static final Logger logger = LoggerFactory.getLogger(KeyStoreFactory.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(KeyStoreFactory.class);
     private static final String KEY_STORE_CA_ALIAS = "mockserver-ca-cert";
 
     /**
@@ -104,13 +99,9 @@ public class KeyStoreFactory {
 
             // save as JKS file
             File keyStoreFile = new File(keyStoreFileName);
-            FileOutputStream fileOutputStream = null;
-            try {
-                fileOutputStream = new FileOutputStream(keyStoreFile);
+            try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFile)) {
                 keyStore.store(fileOutputStream, keyStorePassword);
-                logger.trace("Saving key store to file [" + keyStoreFileName + "]");
-            } finally {
-                IOUtils.closeQuietly(fileOutputStream);
+                MOCK_SERVER_LOGGER.trace("Saving key store to file [" + keyStoreFileName + "]");
             }
             if (deleteOnExit) {
                 keyStoreFile.deleteOnExit();
@@ -140,10 +131,10 @@ public class KeyStoreFactory {
 
     private SSLContext getSSLContextInstance() throws NoSuchAlgorithmException {
         try {
-            logger.debug("Using protocol {}", SSL_CONTEXT_PROTOCOL);
+            MOCK_SERVER_LOGGER.debug("Using protocol {}", SSL_CONTEXT_PROTOCOL);
             return SSLContext.getInstance(SSL_CONTEXT_PROTOCOL);
         } catch (NoSuchAlgorithmException e) {
-            logger.warn("Protocol {} not available, falling back to {}", SSL_CONTEXT_PROTOCOL, SSL_CONTEXT_FALLBACK_PROTOCOL);
+            MOCK_SERVER_LOGGER.warn("Protocol {} not available, falling back to {}", SSL_CONTEXT_PROTOCOL, SSL_CONTEXT_FALLBACK_PROTOCOL);
             return SSLContext.getInstance(SSL_CONTEXT_FALLBACK_PROTOCOL);
         }
     }
@@ -152,15 +143,11 @@ public class KeyStoreFactory {
         KeyStore keystore = null;
         File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
         if (keyStoreFile.exists()) {
-            FileInputStream fileInputStream = null;
-            try {
-                fileInputStream = new FileInputStream(keyStoreFile);
+            try (FileInputStream fileInputStream = new FileInputStream(keyStoreFile)) {
                 keystore = KeyStore.getInstance(KeyStore.getDefaultType());
                 keystore.load(fileInputStream, ConfigurationProperties.javaKeyStorePassword().toCharArray());
             } catch (Exception e) {
                 throw new RuntimeException("Exception while loading KeyStore from " + keyStoreFile.getAbsolutePath(), e);
-            } finally {
-                IOUtils.closeQuietly(fileInputStream);
             }
         }
         System.setProperty("javax.net.ssl.trustStore", keyStoreFile.getAbsolutePath());
@@ -173,17 +160,17 @@ public class KeyStoreFactory {
         keyAndCertificateFactory().buildAndSaveCertificates();
 
         return KeyStoreFactory.saveCertificateAsKeyStore(
-                keyStore,
-                ConfigurationProperties.deleteGeneratedKeyStoreOnExit(),
-                ConfigurationProperties.javaKeyStoreFilePath(),
-                KEY_STORE_CERT_ALIAS,
-                keyAndCertificateFactory().mockServerPrivateKey(),
-                ConfigurationProperties.javaKeyStorePassword().toCharArray(),
-                new X509Certificate[]{
-                        keyAndCertificateFactory().mockServerX509Certificate(),
-                        keyAndCertificateFactory().mockServerCertificateAuthorityX509Certificate()
-                },
+            keyStore,
+            ConfigurationProperties.deleteGeneratedKeyStoreOnExit(),
+            ConfigurationProperties.javaKeyStoreFilePath(),
+            KEY_STORE_CERT_ALIAS,
+            keyAndCertificateFactory().mockServerPrivateKey(),
+            ConfigurationProperties.javaKeyStorePassword().toCharArray(),
+            new X509Certificate[]{
+                keyAndCertificateFactory().mockServerX509Certificate(),
                 keyAndCertificateFactory().mockServerCertificateAuthorityX509Certificate()
+            },
+            keyAndCertificateFactory().mockServerCertificateAuthorityX509Certificate()
         );
     }
 

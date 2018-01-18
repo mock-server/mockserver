@@ -1,8 +1,8 @@
 {
-  "title": "list of expectations",
-  "type": "array",
-  "additionalProperties": false,
-  "items": {
-    "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/expectation.json"
-  }
+    "title": "list of expectations",
+    "type": "array",
+    "additionalProperties": false,
+    "items": {
+        "$ref": "#/definitions/expectation"
+    }
 }

@@ -9,36 +9,28 @@ import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
 import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.socket.PortFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author jamesdbloom
  */
 public class NettyHttpProxyIntegrationTest extends AbstractClientProxyIntegrationTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(NettyHttpProxyIntegrationTest.class);
-
-    private final static Integer SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
     private static Proxy httpProxy;
     private static ProxyClient proxyClient;
 
     @BeforeClass
-    public static void setupFixture() throws Exception {
-        logger.debug("SERVER_HTTP_PORT = " + SERVER_HTTP_PORT);
-        logger.debug("PROXY_HTTP_PORT = " + PROXY_HTTP_PORT);
-
+    public static void setupFixture() {
         servletContext = "";
 
         // start server
-        echoServer = new EchoServer(SERVER_HTTP_PORT, false);
+        echoServer = new EchoServer(false);
 
         // start proxy
         httpProxy = new ProxyBuilder()
-                .withLocalPort(PROXY_HTTP_PORT)
-                .build();
+            .withLocalPort(PROXY_HTTP_PORT)
+            .build();
 
         // start client
         proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
@@ -70,6 +62,6 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientProxyIntegratio
 
     @Override
     public int getServerPort() {
-        return SERVER_HTTP_PORT;
+        return echoServer.getPort();
     }
 }

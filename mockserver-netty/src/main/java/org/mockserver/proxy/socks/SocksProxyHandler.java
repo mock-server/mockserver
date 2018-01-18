@@ -1,23 +1,26 @@
 package org.mockserver.proxy.socks;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.*;
-import org.mockserver.proxy.unification.PortUnificationHandler;
-import org.mockserver.socket.KeyAndCertificateFactory;
-import org.mockserver.socket.KeyStoreFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
-import static org.mockserver.proxy.error.Logging.shouldIgnoreException;
+import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
+import static org.mockserver.proxy.Proxy.PROXYING;
+import static org.mockserver.socket.KeyAndCertificateFactory.addSubjectAlternativeName;
+import static org.mockserver.unification.PortUnificationHandler.disableSslDownstream;
+import static org.mockserver.unification.PortUnificationHandler.enabledSslDownstream;
 
+@ChannelHandler.Sharable
 public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest> {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerLogger mockServerLogger;
 
-    public SocksProxyHandler() {
+    public SocksProxyHandler(MockServerLogger mockServerLogger) {
         super(false);
+        this.mockServerLogger = mockServerLogger;
     }
 
     @Override
@@ -42,16 +45,17 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
                 if (req.cmdType() == SocksCmdType.CONNECT) {
 
                     Channel channel = ctx.channel();
+                    channel.attr(PROXYING).set(Boolean.TRUE);
                     if (String.valueOf(req.port()).endsWith("80")) {
-                        PortUnificationHandler.disableSslDownstream(channel);
+                        disableSslDownstream(channel);
                     } else if (String.valueOf(req.port()).endsWith("443")) {
-                        PortUnificationHandler.enabledSslDownstream(channel);
+                        enabledSslDownstream(channel);
                     }
 
                     // add Subject Alternative Name for SSL certificate
-                    KeyAndCertificateFactory.addSubjectAlternativeName(req.host());
+                    addSubjectAlternativeName(req.host());
 
-                    ctx.pipeline().addAfter(getClass().getSimpleName() + "#0", SocksConnectHandler.class.getSimpleName() + "#0", new SocksConnectHandler(req.host(), req.port()));
+                    ctx.pipeline().addAfter(getClass().getSimpleName() + "#0", SocksConnectHandler.class.getSimpleName() + "#0", new SocksConnectHandler(mockServerLogger, req.host(), req.port()));
                     ctx.pipeline().remove(this);
                     ctx.fireChannelRead(socksRequest);
 
@@ -77,8 +81,8 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        if (!shouldIgnoreException(cause)) {
-            logger.warn("Exception caught by SOCKS proxy handler -> closing pipeline " + ctx.channel(), cause);
+        if (shouldNotIgnoreException(cause)) {
+            mockServerLogger.error("Exception caught by SOCKS proxy handler -> closing pipeline " + ctx.channel(), cause);
         }
         ctx.close();
     }

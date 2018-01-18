@@ -1,25 +1,30 @@
 {
-  "title": "response",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "body": {
-      "type": "string"
+    "title": "response to return",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "body": {
+            "$ref": "#/definitions/bodyWithContentType"
+        },
+        "delay": {
+            "$ref": "#/definitions/delay"
+        },
+        "cookies": {
+            "$ref": "#/definitions/keyToValue"
+        },
+        "connectionOptions": {
+            "$ref": "#/definitions/connectionOptions"
+        },
+        "headers": {
+            "$ref": "#/definitions/keyToMultiValue"
+        },
+        "statusCode": {
+            "type": "integer"
+        },
+        "reasonPhrase": {
+            "type": "string"
+        }
     },
-    "delay": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/delay.json"
-    },
-    "cookies": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/cookies.json"
-    },
-    "connectionOptions": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/connectionOptions.json"
-    },
-    "headers": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/headers.json"
-    },
-    "statusCode": {
-      "type": "integer"
+    "definitions": {
     }
-  }
 }

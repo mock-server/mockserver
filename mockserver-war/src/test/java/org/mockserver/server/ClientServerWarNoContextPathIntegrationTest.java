@@ -19,9 +19,8 @@ import java.io.File;
  */
 public class ClientServerWarNoContextPathIntegrationTest extends DeployableWARAbstractClientServerIntegrationTest {
 
-    private final static int SERVER_HTTP_PORT = 1080; // PortFactory.findFreePort();
-    private final static int SERVER_HTTPS_PORT = 1081; // PortFactory.findFreePort();
-    private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static Tomcat tomcat;
     private static EchoServer echoServer;
 
@@ -56,13 +55,13 @@ public class ClientServerWarNoContextPathIntegrationTest extends DeployableWARAb
         // add servlet
         Context ctx = tomcat.addContext("/" + servletContext, new File(".").getAbsolutePath());
         tomcat.addServlet("/" + servletContext, "mockServerServlet", new MockServerServlet());
-        ctx.addServletMapping("/*", "mockServerServlet");
+        ctx.addServletMappingDecoded("/*", "mockServerServlet");
 
         // start server
         tomcat.start();
 
         // start test server
-        echoServer = new EchoServer(TEST_SERVER_HTTP_PORT, false);
+        echoServer = new EchoServer( false);
 
         // start client
         mockServerClient = new MockServerClient("localhost", SERVER_HTTP_PORT, servletContext);
@@ -90,6 +89,6 @@ public class ClientServerWarNoContextPathIntegrationTest extends DeployableWARAb
 
     @Override
     public int getTestServerPort() {
-        return TEST_SERVER_HTTP_PORT;
+        return echoServer.getPort();
     }
 }

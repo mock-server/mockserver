@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author jamesdbloom
  */
-public class DelayDTO extends ObjectWithReflectiveEqualsHashCodeToString {
+public class DelayDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<Delay> {
 
     private TimeUnit timeUnit;
     private long value;

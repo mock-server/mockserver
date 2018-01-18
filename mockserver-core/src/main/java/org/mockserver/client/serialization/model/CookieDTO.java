@@ -5,7 +5,7 @@ import org.mockserver.model.Cookie;
 /**
  * @author jamesdbloom
  */
-public class CookieDTO extends KeyAndValueDTO {
+public class CookieDTO extends KeyAndValueDTO implements DTO<Cookie> {
 
     public CookieDTO(Cookie cookie) {
         super(cookie);

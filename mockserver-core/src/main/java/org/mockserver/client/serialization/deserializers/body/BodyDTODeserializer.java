@@ -6,20 +6,16 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.net.MediaType;
 import org.mockserver.client.serialization.Base64Converter;
-import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.model.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.mockserver.model.NottableString.string;
@@ -29,20 +25,22 @@ import static org.mockserver.model.NottableString.string;
  */
 public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
 
-    private static final Logger logger = LoggerFactory.getLogger(ObjectMapperFactory.class);
-
-    private static Map<String, Body.Type> fieldNameToType = new HashMap<String, Body.Type>();
+    private static Map<String, Body.Type> fieldNameToType = new HashMap<>();
 
     static {
-        fieldNameToType.put("string".toLowerCase(), Body.Type.STRING);
-        fieldNameToType.put("regex".toLowerCase(), Body.Type.REGEX);
+        fieldNameToType.put("base64Bytes".toLowerCase(), Body.Type.BINARY);
         fieldNameToType.put("json".toLowerCase(), Body.Type.JSON);
         fieldNameToType.put("jsonSchema".toLowerCase(), Body.Type.JSON_SCHEMA);
-        fieldNameToType.put("xpath".toLowerCase(), Body.Type.XPATH);
-        fieldNameToType.put("xml".toLowerCase(), Body.Type.XML);
-        fieldNameToType.put("bytes".toLowerCase(), Body.Type.BINARY);
         fieldNameToType.put("parameters".toLowerCase(), Body.Type.PARAMETERS);
+        fieldNameToType.put("regex".toLowerCase(), Body.Type.REGEX);
+        fieldNameToType.put("string".toLowerCase(), Body.Type.STRING);
+        fieldNameToType.put("xml".toLowerCase(), Body.Type.XML);
+        fieldNameToType.put("xmlSchema".toLowerCase(), Body.Type.XML_SCHEMA);
+        fieldNameToType.put("xpath".toLowerCase(), Body.Type.XPATH);
     }
+
+    private final MockServerLogger mockServerLogger = new MockServerLogger(BodyDTODeserializer.class);
+    private final Base64Converter base64Converter = new Base64Converter();
 
     public BodyDTODeserializer() {
         super(BodyDTO.class);
@@ -54,10 +52,11 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         String valueJsonValue = "";
         Body.Type type = null;
         boolean not = false;
+        boolean subString = false;
         MediaType contentType = null;
         Charset charset = null;
         MatchType matchType = JsonBody.DEFAULT_MATCH_TYPE;
-        List<Parameter> parameters = new ArrayList<Parameter>();
+        Parameters parameters = null;
         if (currentToken == JsonToken.START_OBJECT) {
             while (jsonParser.getCurrentToken() != JsonToken.END_OBJECT) {
                 jsonParser.nextToken();
@@ -66,10 +65,10 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     try {
                         type = Body.Type.valueOf(jsonParser.getText());
                     } catch (IllegalArgumentException iae) {
-                        logger.debug("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.debug("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
                     }
                 }
-                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "xml", "bytes", "value") && type != Body.Type.PARAMETERS) {
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "xml", "xmlSchema", "base64Bytes") && type != Body.Type.PARAMETERS) {
                     String fieldName = jsonParser.getText().toLowerCase();
                     if (fieldNameToType.containsKey(fieldName)) {
                         type = fieldNameToType.get(fieldName);
@@ -88,7 +87,15 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     try {
                         matchType = MatchType.valueOf(jsonParser.getText());
                     } catch (IllegalArgumentException iae) {
-                        logger.warn("Ignoring incorrect JsonBodyMatchType with value \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.debug("Ignoring incorrect JsonBodyMatchType with value \"" + jsonParser.getText() + "\"");
+                    }
+                }
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("subString")) {
+                    jsonParser.nextToken();
+                    try {
+                        subString = jsonParser.getBooleanValue();
+                    } catch (IllegalArgumentException uce) {
+                        mockServerLogger.debug("Ignoring unsupported boolean with value \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("contentType")) {
@@ -96,7 +103,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     try {
                         contentType = MediaType.parse(jsonParser.getText());
                     } catch (IllegalArgumentException uce) {
-                        logger.warn("Ignoring unsupported MediaType with value \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.debug("Ignoring unsupported MediaType with value \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("charset")) {
@@ -104,69 +111,24 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     try {
                         charset = Charset.forName(jsonParser.getText());
                     } catch (UnsupportedCharsetException uce) {
-                        logger.warn("Ignoring unsupported Charset with value \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.debug("Ignoring unsupported Charset with value \"" + jsonParser.getText() + "\"");
                     } catch (IllegalCharsetNameException icne) {
-                        logger.warn("Ignoring invalid Charset with value \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.debug("Ignoring invalid Charset with value \"" + jsonParser.getText() + "\"");
                     }
                 }
-                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "parameters", "value")) {
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("parameters")) {
                     jsonParser.nextToken();
-                    if (jsonParser.isExpectedStartArrayToken()) {
-                        int objectDepth = 1;
-                        NottableString parameterName = string("");
-                        List<NottableString> parameterValues = new ArrayList<NottableString>();
-                        while (objectDepth > 0) {
-                            JsonToken token = jsonParser.getCurrentToken();
-                            switch (token) {
-                                case START_ARRAY:
-                                    break;
-                                case START_OBJECT:
-                                    objectDepth++;
-                                    parameterName = string("");
-                                    parameterValues = new ArrayList<NottableString>();
-                                    break;
-                                case END_OBJECT:
-                                    objectDepth--;
-                                    if (objectDepth >= 1) {
-                                        parameters.add(new Parameter(parameterName, parameterValues));
-                                    }
-                                    break;
-                                case FIELD_NAME:
-                                    if (jsonParser.getText().equalsIgnoreCase("name")) {
-                                        jsonParser.nextToken();
-                                        parameterName = parseNottableString(jsonParser);
-                                    } else if (jsonParser.getText().equalsIgnoreCase("values")) {
-                                        if (jsonParser.nextToken() == JsonToken.START_ARRAY) {
-                                            while (jsonParser.nextToken() != null && jsonParser.getCurrentToken() != JsonToken.END_ARRAY) {
-                                                parameterValues.add(parseNottableString(jsonParser));
-                                            }
-                                        }
-                                    }
-                                    break;
-                                case VALUE_TRUE:
-                                    break;
-                                case VALUE_STRING:
-                                    break;
-                            }
-                            if (objectDepth > 0) {
-                                jsonParser.nextToken();
-                            }
-                        }
-                    }
+                    parameters = jsonParser.readValueAs(Parameters.class);
                 }
             }
             if (type != null) {
                 switch (type) {
-                    case STRING:
+                    case BINARY:
                         if (contentType != null) {
-                            return new StringBodyDTO(new StringBody(valueJsonValue, contentType), not);
-                        } else if (charset != null) {
-                            return new StringBodyDTO(new StringBody(valueJsonValue, charset), not);
+                            return new BinaryBodyDTO(new BinaryBody(base64Converter.base64StringToBytes(valueJsonValue), contentType), not);
                         } else {
-                            return new StringBodyDTO(new StringBody(valueJsonValue), not);
+                            return new BinaryBodyDTO(new BinaryBody(base64Converter.base64StringToBytes(valueJsonValue)), not);
                         }
-                    case REGEX:
-                        return new RegexBodyDTO(new RegexBody(valueJsonValue), not);
                     case JSON:
                         if (contentType != null) {
                             return new JsonBodyDTO(new JsonBody(valueJsonValue, contentType, matchType), not);
@@ -177,8 +139,18 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         }
                     case JSON_SCHEMA:
                         return new JsonSchemaBodyDTO(new JsonSchemaBody(valueJsonValue), not);
-                    case XPATH:
-                        return new XPathBodyDTO(new XPathBody(valueJsonValue), not);
+                    case PARAMETERS:
+                        return new ParameterBodyDTO(new ParameterBody(parameters), not);
+                    case REGEX:
+                        return new RegexBodyDTO(new RegexBody(valueJsonValue), not);
+                    case STRING:
+                        if (contentType != null) {
+                            return new StringBodyDTO(new StringBody(valueJsonValue, subString, contentType), not);
+                        } else if (charset != null) {
+                            return new StringBodyDTO(new StringBody(valueJsonValue, subString, charset), not);
+                        } else {
+                            return new StringBodyDTO(new StringBody(valueJsonValue, subString), not);
+                        }
                     case XML:
                         if (contentType != null) {
                             return new XmlBodyDTO(new XmlBody(valueJsonValue, contentType), not);
@@ -187,14 +159,10 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         } else {
                             return new XmlBodyDTO(new XmlBody(valueJsonValue), not);
                         }
-                    case BINARY:
-                        if (contentType != null) {
-                            return new BinaryBodyDTO(new BinaryBody(Base64Converter.base64StringToBytes(valueJsonValue), contentType), not);
-                        } else {
-                            return new BinaryBodyDTO(new BinaryBody(Base64Converter.base64StringToBytes(valueJsonValue)), not);
-                        }
-                    case PARAMETERS:
-                        return new ParameterBodyDTO(new ParameterBody(parameters), not);
+                    case XML_SCHEMA:
+                        return new XmlSchemaBodyDTO(new XmlSchemaBody(valueJsonValue), not);
+                    case XPATH:
+                        return new XPathBodyDTO(new XPathBody(valueJsonValue), not);
                 }
             }
         } else if (currentToken == JsonToken.VALUE_STRING) {

@@ -1,203 +1,92 @@
 package org.mockserver.proxy;
 
-import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.net.MediaType;
-import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationSequenceSerializer;
-import org.mockserver.client.serialization.VerificationSerializer;
-import org.mockserver.filters.*;
+import org.mockserver.client.serialization.PortBindingSerializer;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
-import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
+import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.HttpStatusCode;
-import org.mockserver.streams.IOStreamUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.responsewriter.ResponseWriter;
+import org.mockserver.server.ServletResponseWriter;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.net.InetSocketAddress;
-
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static org.mockserver.model.HttpResponse.notFoundResponse;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.rtsp.RtspResponseStatuses.NOT_IMPLEMENTED;
+import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.PortBinding.portBinding;
 
 /**
  * @author jamesdbloom
  */
 public class ProxyServlet extends HttpServlet {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    public RequestLogFilter requestLogFilter = new RequestLogFilter();
-    public RequestResponseLogFilter requestResponseLogFilter = new RequestResponseLogFilter();
-    // mockserver
-    private Filters filters = new Filters();
-    // http client
-    private NettyHttpClient httpClient = new NettyHttpClient();
+    private MockServerLogger mockServerLogger;
+    // generic handling
+    private HttpStateHandler httpStateHandler;
+    // serializers
+    private PortBindingSerializer portBindingSerializer;
     // mappers
     private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder();
-    private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder = new MockServerResponseToHttpServletResponseEncoder();
-    // serializers
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    private VerificationSerializer verificationSerializer = new VerificationSerializer();
-    private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
+    // mockserver
+    private ActionHandler actionHandler;
 
     public ProxyServlet() {
-        filters.withFilter(new HttpRequest(), new HopByHopHeaderFilter());
-        filters.withFilter(new HttpRequest(), requestLogFilter);
-        filters.withFilter(new HttpRequest(), requestResponseLogFilter);
-    }
-
-    /**
-     * Add filter for HTTP requests, each filter get called before each request is proxied, if the filter return null then the request is not proxied
-     *
-     * @param httpRequest the request to match against for this filter
-     * @param filter      the filter to execute for this request, if the filter returns null the request will not be proxied
-     */
-    public ProxyServlet withFilter(HttpRequest httpRequest, RequestFilter filter) {
-        filters.withFilter(httpRequest, filter);
-        return this;
-    }
-
-    /**
-     * Add filter for HTTP response, each filter get called after each request has been proxied
-     *
-     * @param httpRequest the request to match against for this filter
-     * @param filter      the filter that is executed after this request has been proxied
-     */
-    public ProxyServlet withFilter(HttpRequest httpRequest, ResponseFilter filter) {
-        filters.withFilter(httpRequest, filter);
-        return this;
+        this.httpStateHandler = new HttpStateHandler();
+        this.mockServerLogger = httpStateHandler.getMockServerLogger();
+        portBindingSerializer = new PortBindingSerializer(mockServerLogger);
+        this.actionHandler = new ActionHandler(httpStateHandler);
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        forwardRequest(request, response);
-    }
+    public void service(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
-    @Override
-    protected void doHead(HttpServletRequest request, HttpServletResponse response) {
-        forwardRequest(request, response);
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-        forwardRequest(request, response);
-    }
-
-    @Override
-    protected void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-
+        ResponseWriter responseWriter = new ServletResponseWriter(httpServletResponse);
+        HttpRequest request = null;
         try {
-            String requestPath = httpServletRequest.getPathInfo() != null && httpServletRequest.getContextPath() != null ? httpServletRequest.getPathInfo() : httpServletRequest.getRequestURI();
-            if (requestPath.equals("/status")) {
 
-                httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
+            request = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
+            if (!httpStateHandler.handle(request, responseWriter, true)) {
 
-            } else if (requestPath.equals("/clear")) {
+                if (request.matches("PUT", "/status")) {
 
-                requestLogFilter.clear(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
-                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+                    responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())), "application/json");
 
-            } else if (requestPath.equals("/reset")) {
+                } else if (request.matches("PUT", "/bind")) {
 
-                requestLogFilter.reset();
-                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+                    responseWriter.writeResponse(request, NOT_IMPLEMENTED);
 
-            } else if (requestPath.equals("/dumpToLog")) {
+                } else if (request.matches("PUT", "/stop")) {
 
-                requestResponseLogFilter.dumpToLog(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)), "java".equals(httpServletRequest.getParameter("type")));
-                httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
+                    responseWriter.writeResponse(request, NOT_IMPLEMENTED);
 
-            } else if (requestPath.equals("/retrieve")) {
-
-                HttpRequest[] requests = requestLogFilter.retrieve(httpRequestSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
-                httpServletResponse.setStatus(HttpStatusCode.OK_200.code());
-                httpServletResponse.setHeader(CONTENT_TYPE.toString(), MediaType.JSON_UTF_8.toString());
-                IOStreamUtils.writeToOutputStream(httpRequestSerializer.serialize(requests).getBytes(), httpServletResponse);
-
-            } else if (requestPath.equals("/verify")) {
-
-                String result = requestLogFilter.verify(verificationSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
-                if (result.isEmpty()) {
-                    httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
                 } else {
-                    httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
-                    httpServletResponse.setHeader(CONTENT_TYPE.toString(), MediaType.JSON_UTF_8.toString());
-                    IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
+
+                    String portExtension = "";
+                    if (!(httpServletRequest.getLocalPort() == 443 && httpServletRequest.isSecure() || httpServletRequest.getLocalPort() == 80)) {
+                        portExtension = ":" + httpServletRequest.getLocalPort();
+                    }
+                    actionHandler.processAction(request, responseWriter, null, ImmutableSet.of(
+                        httpServletRequest.getLocalAddr() + portExtension,
+                        "localhost" + portExtension,
+                        "127.0.0.1" + portExtension
+                    ), true, true);
+
                 }
-
-            } else if (requestPath.equals("/verifySequence")) {
-
-                String result = requestLogFilter.verify(verificationSequenceSerializer.deserialize(IOStreamUtils.readInputStreamToString(httpServletRequest)));
-                if (result.isEmpty()) {
-                    httpServletResponse.setStatus(HttpStatusCode.ACCEPTED_202.code());
-                } else {
-                    httpServletResponse.setStatus(HttpStatusCode.NOT_ACCEPTABLE_406.code());
-                    httpServletResponse.setHeader(CONTENT_TYPE.toString(), MediaType.JSON_UTF_8.toString());
-                    IOStreamUtils.writeToOutputStream(result.getBytes(), httpServletResponse);
-                }
-
-            } else if (requestPath.equals("/stop")) {
-
-                httpServletResponse.setStatus(HttpStatusCode.NOT_IMPLEMENTED_501.code());
-
-            } else {
-                forwardRequest(httpServletRequest, httpServletResponse);
             }
+        } catch (IllegalArgumentException iae) {
+            mockServerLogger.error(request, "Exception processing " + request + "\n" + iae.getMessage());
+            // send request without API CORS headers
+            responseWriter.writeResponse(request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
-            logger.error("Exception processing " + httpServletRequest, e);
-            httpServletResponse.setStatus(HttpStatusCode.BAD_REQUEST_400.code());
+            mockServerLogger.error(request, e, "Exception processing " + request);
+            responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()), true);
         }
     }
 
-    @Override
-    protected void doDelete(HttpServletRequest request, HttpServletResponse response) {
-        forwardRequest(request, response);
-    }
-
-    @Override
-    protected void doOptions(HttpServletRequest request, HttpServletResponse response) {
-        forwardRequest(request, response);
-    }
-
-    @Override
-    protected void doTrace(HttpServletRequest request, HttpServletResponse response) {
-        forwardRequest(request, response);
-    }
-
-    private void forwardRequest(HttpServletRequest request, HttpServletResponse httpServletResponse) {
-        HttpResponse httpResponse = sendRequest(filters.applyOnRequestFilters(httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(request)));
-        mockServerResponseToHttpServletResponseEncoder.mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
-    }
-
-    private HttpResponse sendRequest(HttpRequest httpRequest) {
-        // if HttpRequest was set to null by a filter don't send request
-        if (httpRequest != null) {
-            String hostHeader = httpRequest.getFirstHeader("Host");
-            if (!Strings.isNullOrEmpty(hostHeader)) {
-                String[] hostHeaderParts = hostHeader.split(":");
-
-                boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
-                Integer port = (isSsl ? 443 : 80); // default
-                if (hostHeaderParts.length > 1) {
-                    port = Integer.parseInt(hostHeaderParts[1]);  // non-default
-                }
-                InetSocketAddress remoteAddress = new InetSocketAddress(hostHeaderParts[0], port);
-
-                HttpResponse httpResponse = httpClient.sendRequest(httpRequest, remoteAddress);
-                httpResponse = filters.applyOnResponseFilters(httpRequest, httpResponse);
-                if (httpResponse != null) {
-                    return httpResponse;
-                }
-            } else {
-                logger.error("Host header must be provided for requests being forwarded, the following request does not include the \"Host\" header:" + System.getProperty("line.separator") + httpRequest);
-                throw new IllegalArgumentException("Host header must be provided for requests being forwarded");
-            }
-        }
-        return notFoundResponse();
-    }
 }

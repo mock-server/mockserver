@@ -17,7 +17,7 @@ public class ProxyRuleSubClassTest extends ProxyRuleSuperClass {
     public ProxyRule proxyRule = new ProxyRule(this);
 
     @Test
-    public void shouldSetTestMockServerField() {
+    public void shouldSetTestProxyField() {
         assertThat(proxyClient, is(not(nullValue())));
     }
 

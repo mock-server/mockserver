@@ -15,6 +15,7 @@ import org.mockserver.model.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -64,7 +65,7 @@ public class MockServerResponseDecoderTest {
         mockServerResponseDecoder.decode(null, fullHttpResponse, output);
 
         // then
-        List<Header> headers = ((HttpResponse) output.get(0)).getHeaders();
+        List<Header> headers = ((HttpResponse) output.get(0)).getHeaderList();
         assertThat(headers, containsInAnyOrder(
                 header("headerName1", "headerValue1_1", "headerValue1_2"),
                 header("headerName2", "headerValue2")
@@ -82,7 +83,7 @@ public class MockServerResponseDecoderTest {
         mockServerResponseDecoder.decode(null, fullHttpResponse, output);
 
         // then
-        List<Cookie> cookies = ((HttpResponse) output.get(0)).getCookies();
+        List<Cookie> cookies = ((HttpResponse) output.get(0)).getCookieList();
         assertThat(cookies, containsInAnyOrder(
                 cookie("cookieName1", "cookieValue1"),
                 cookie("cookieName2", "cookieValue2"),
@@ -101,7 +102,7 @@ public class MockServerResponseDecoderTest {
         mockServerResponseDecoder.decode(null, fullHttpResponse, output);
 
         // then
-        List<Cookie> cookies = ((HttpResponse) output.get(0)).getCookies();
+        List<Cookie> cookies = ((HttpResponse) output.get(0)).getCookieList();
         assertThat(cookies, containsInAnyOrder(
                 cookie("cookieName1", "cookie=Value1"),
                 cookie("cookieName2", "cookie==Value2")
@@ -111,7 +112,7 @@ public class MockServerResponseDecoderTest {
     @Test
     public void shouldDecodeUTF8Body() {
         // given
-        fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("some_random_string".getBytes()));
+        fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("some_random_string".getBytes(UTF_8)));
         fullHttpResponse.headers().add(CONTENT_TYPE, MediaType.create("text", "plain").toString());
 
         // when
@@ -139,7 +140,7 @@ public class MockServerResponseDecoderTest {
     @Test
     public void shouldDecodeBinaryBody() {
         // given
-        fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("some_random_bytes".getBytes()));
+        fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("some_random_bytes".getBytes(UTF_8)));
         fullHttpResponse.headers().add(CONTENT_TYPE, "image/jpeg");
 
         // when
@@ -147,7 +148,7 @@ public class MockServerResponseDecoderTest {
 
         // then
         Body body = ((HttpResponse) output.get(0)).getBody();
-        assertThat(body, Is.<Body>is(binary("some_random_bytes".getBytes())));
+        assertThat(body, Is.<Body>is(binary("some_random_bytes".getBytes(UTF_8))));
     }
 
 }

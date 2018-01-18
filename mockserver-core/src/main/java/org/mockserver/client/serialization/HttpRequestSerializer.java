@@ -1,54 +1,130 @@
 package org.mockserver.client.serialization;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.mockserver.client.serialization.model.ExpectationDTO;
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
+import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
  */
 public class HttpRequestSerializer implements Serializer<HttpRequest> {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerLogger mockServerLogger;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
+    private JsonSchemaHttpRequestValidator httpRequestValidator;
+
+    public HttpRequestSerializer(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        httpRequestValidator = new JsonSchemaHttpRequestValidator(mockServerLogger);
+    }
 
     public String serialize(HttpRequest httpRequest) {
+        return serialize(false, httpRequest);
+    }
+
+    public String serialize(boolean prettyPrint, HttpRequest httpRequest) {
         try {
-            return objectMapper
+            if (prettyPrint) {
+                return objectMapper
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(new HttpRequestTemplateObject(httpRequest));
+            } else {
+                return objectMapper
                     .writerWithDefaultPrettyPrinter()
                     .writeValueAsString(new HttpRequestDTO(httpRequest));
+            }
         } catch (Exception e) {
-            logger.error(String.format("Exception while serializing httpRequest to JSON with value %s", httpRequest), e);
+            mockServerLogger.error(String.format("Exception while serializing httpRequest to JSON with value %s", httpRequest), e);
             throw new RuntimeException(String.format("Exception while serializing httpRequest to JSON with value %s", httpRequest), e);
         }
     }
 
+    public String serialize(List<HttpRequest> httpRequests) {
+        return serialize(false, httpRequests);
+    }
+
+    public String serialize(boolean prettyPrint, List<HttpRequest> httpRequests) {
+        return serialize(prettyPrint, httpRequests.toArray(new HttpRequest[httpRequests.size()]));
+    }
+
+    public String serialize(HttpRequest... httpRequests) {
+        return serialize(false, httpRequests);
+    }
+
+    public String serialize(boolean prettyPrint, HttpRequest... httpRequests) {
+        try {
+            if (httpRequests != null && httpRequests.length > 0) {
+                if (prettyPrint) {
+                    HttpRequestTemplateObject[] httpRequestTemplateObjects = new HttpRequestTemplateObject[httpRequests.length];
+                    for (int i = 0; i < httpRequests.length; i++) {
+                        httpRequestTemplateObjects[i] = new HttpRequestTemplateObject(httpRequests[i]);
+                    }
+                    return objectMapper
+                        .writerWithDefaultPrettyPrinter()
+                        .writeValueAsString(httpRequestTemplateObjects);
+                } else {
+                    HttpRequestDTO[] httpRequestDTOs = new HttpRequestDTO[httpRequests.length];
+                    for (int i = 0; i < httpRequests.length; i++) {
+                        httpRequestDTOs[i] = new HttpRequestDTO(httpRequests[i]);
+                    }
+                    return objectMapper
+                        .writerWithDefaultPrettyPrinter()
+                        .writeValueAsString(httpRequestDTOs);
+                }
+            } else {
+                return "[]";
+            }
+        } catch (Exception e) {
+            mockServerLogger.error("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequests), e);
+            throw new RuntimeException("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequests), e);
+        }
+    }
+
     public HttpRequest deserialize(String jsonHttpRequest) {
-        HttpRequest httpRequest = null;
-        if (jsonHttpRequest != null && !jsonHttpRequest.isEmpty()) {
-            try {
-                if (!jsonHttpRequest.contains("\"httpRequest\"")) {
+        if (Strings.isNullOrEmpty(jsonHttpRequest)) {
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request is required but value was \"" + String.valueOf(jsonHttpRequest) + "\"");
+        } else {
+            if (jsonHttpRequest.contains("\"httpRequest\"")) {
+                try {
+                    JsonNode jsonNode = objectMapper.readTree(jsonHttpRequest);
+                    if (jsonNode.has("httpRequest")) {
+                        jsonHttpRequest = jsonNode.get("httpRequest").toString();
+                    }
+                } catch (Exception e) {
+                    mockServerLogger.error("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
+                }
+            }
+            String validationErrors = httpRequestValidator.isValid(jsonHttpRequest);
+            if (validationErrors.isEmpty()) {
+                HttpRequest httpRequest = null;
+                try {
                     HttpRequestDTO httpRequestDTO = objectMapper.readValue(jsonHttpRequest, HttpRequestDTO.class);
                     if (httpRequestDTO != null) {
                         httpRequest = httpRequestDTO.buildObject();
                     }
-                } else {
-                    ExpectationDTO expectationDTO = objectMapper.readValue(jsonHttpRequest, ExpectationDTO.class);
-                    if (expectationDTO != null) {
-                        httpRequest = expectationDTO.buildObject().getHttpRequest();
-                    }
+                } catch (Exception e) {
+                    mockServerLogger.error("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
                 }
-            } catch (Exception e) {
-                logger.info("Exception while parsing HttpRequest for [" + jsonHttpRequest + "]", e);
-                throw new RuntimeException("Exception while parsing HttpRequest for [" + jsonHttpRequest + "]", e);
+                return httpRequest;
+            } else {
+                mockServerLogger.info("Validation failed:{}" + NEW_LINE + " HttpRequest:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonHttpRequest, httpRequestValidator.getSchema());
+                throw new IllegalArgumentException(validationErrors);
             }
         }
-        return httpRequest;
     }
 
     @Override
@@ -57,43 +133,29 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
     }
 
     public HttpRequest[] deserializeArray(String jsonHttpRequests) {
-        HttpRequest[] httpRequests = new HttpRequest[]{};
-        if (jsonHttpRequests != null && !jsonHttpRequests.isEmpty()) {
-            try {
-                HttpRequestDTO[] httpRequestDTOs = objectMapper.readValue(jsonHttpRequests, HttpRequestDTO[].class);
-                if (httpRequestDTOs != null && httpRequestDTOs.length > 0) {
-                    httpRequests = new HttpRequest[httpRequestDTOs.length];
-                    for (int i = 0; i < httpRequestDTOs.length; i++) {
-                        httpRequests[i] = httpRequestDTOs[i].buildObject();
+        List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
+        if (Strings.isNullOrEmpty(jsonHttpRequests)) {
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request or request array is required but value was \"" + String.valueOf(jsonHttpRequests) + "\"");
+        } else {
+            List<String> jsonRequestList = jsonArraySerializer.returnJSONObjects(jsonHttpRequests);
+            if (jsonRequestList.isEmpty()) {
+                throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request or array of request is required");
+            } else {
+                List<String> validationErrorsList = new ArrayList<String>();
+                for (String jsonExpecation : jsonRequestList) {
+                    try {
+                        httpRequests.add(deserialize(jsonExpecation));
+                    } catch (IllegalArgumentException iae) {
+                        validationErrorsList.add(iae.getMessage());
                     }
+
                 }
-            } catch (Exception e) {
-                logger.error("Exception while parsing response [" + jsonHttpRequests + "] for HttpRequest[]", e);
-                throw new RuntimeException("Exception while parsing response [" + jsonHttpRequests + "] for HttpRequest[]", e);
+                if (!validationErrorsList.isEmpty()) {
+                    throw new IllegalArgumentException((validationErrorsList.size() > 1 ? "[" : "") + Joiner.on("," + NEW_LINE).join(validationErrorsList) + (validationErrorsList.size() > 1 ? "]" : ""));
+                }
             }
         }
-        return httpRequests;
+        return httpRequests.toArray(new HttpRequest[httpRequests.size()]);
     }
 
-    public String serialize(List<HttpRequest> httpRequests) {
-        return serialize(httpRequests.toArray(new HttpRequest[httpRequests.size()]));
-    }
-
-    public String serialize(HttpRequest... httpRequest) {
-        try {
-            if (httpRequest != null && httpRequest.length > 0) {
-                HttpRequestDTO[] httpRequestDTOs = new HttpRequestDTO[httpRequest.length];
-                for (int i = 0; i < httpRequest.length; i++) {
-                    httpRequestDTOs[i] = new HttpRequestDTO(httpRequest[i]);
-                }
-                return objectMapper
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(httpRequestDTOs);
-            }
-            return "";
-        } catch (Exception e) {
-            logger.error("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequest), e);
-            throw new RuntimeException("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequest), e);
-        }
-    }
 }

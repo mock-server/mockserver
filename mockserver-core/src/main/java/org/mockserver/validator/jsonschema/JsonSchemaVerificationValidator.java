@@ -1,0 +1,23 @@
+package org.mockserver.validator.jsonschema;
+
+import org.mockserver.logging.MockServerLogger;
+
+/**
+ * @author jamesdbloom
+ */
+public class JsonSchemaVerificationValidator extends JsonSchemaValidator {
+
+    public JsonSchemaVerificationValidator(MockServerLogger mockServerLogger) {
+        super(
+            mockServerLogger,
+            "org/mockserver/model/schema/",
+            "verification",
+            "httpRequest",
+            "body",
+            "keyToMultiValue",
+            "keyToValue",
+            "verificationTimes"
+        );
+    }
+
+}

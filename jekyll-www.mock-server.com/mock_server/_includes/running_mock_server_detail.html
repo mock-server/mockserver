@@ -7,7 +7,7 @@
 <pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-    &lt;<span class="element">version</span>&gt;<span class="element_value">3.10.8</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">5.3.0</span>&lt;/<span class="element">version</span>&gt;
     &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">proxyPort</span>&gt;<span class="element_value">1090</span>&lt;/<span class="element">proxyPort</span>&gt;
@@ -42,7 +42,7 @@
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">3.10.8</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">5.3.0</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">proxyPort</span>&gt;<span class="element_value">1090</span>&lt;/<span class="element">proxyPort</span>&gt;
@@ -164,7 +164,7 @@
 &lt;<span class="element">dependency</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;<span class="element">/groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty</span>&lt;<span class="element">/artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">3.10.8</span>&lt;<span class="element">/version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">5.3.0</span>&lt;<span class="element">/version</span>&gt;
 &lt;<span class="element">/dependency</span>&gt;</code></pre>
 
 <p>To start the server and create a client the simplest way is to the start factory methods <span class="inline_code">ClientAndServer.startClientAndServer</span> or <span class="inline_code">ClientAndProxy.startClientAndProxy</span> as follows:</p>
@@ -202,14 +202,23 @@
 
 <h2>Running MockServer via a JUnit @Rule</h2>
 
-<p>MockServer can be run using the MockServerRule. The MockServerRule starts MockServer on a free port before the any test runs and stops MockServer after all tests have completed. A MockServerClient is then assigned to any field in the unit test of type org.mockserver.client.server.MockServerClient</p>
+<p>MockServer can be run using the <strong>MockServerRule</strong>. The <strong>MockServerRule</strong> starts MockServer on a free port before the any test runs and stops MockServer after all tests have completed.</p>
+<p>An instance of <strong>MockServerClient</strong> is assigned to any field in the unit test of type <strong>org.mockserver.client.server.MockServerClient</strong>. Alternatively an instance of <strong>MockServerClient</strong> can be retrieved from the <strong>MockServerRule</strong> using the method <strong>getClient()</strong>.</p>
 
 <pre><code class="code"><span class="annotation">@Rule</span>
 <span class="keyword">public</span> MockServerRule mockServerRule = <span class="keyword">new</span> MockServerRule(<span class="keyword">this</span>);
 
 <span class="keyword">private</span> MockServerClient mockServerClient;</code></pre>
 
-<p>Any test method can now use the <strong>mockServerClient</strong> field to <a href="/mock_server/creating_expectations.html">create expectation</a> or <a href="/mock_server/verification.html">verify</a> requests.</p>
+<p>The MockServerRule can added to your project by including the following maven dependency:</p>
+
+<pre class="prettyprint lang-xml code"><code class="code">&lt;dependency&gt;
+    &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
+    &lt;artifactId&gt;mockserver-netty&lt;/artifactId&gt;
+    &lt;version&gt;5.3.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+
+<p>Any test method can now use the <strong>mockServerClient</strong> field to <a href="/mock_server/getting_started.html#setup_expectations">create expectation</a> or <a href="/mock_server/verification.html">verify</a> requests.</p>
 
 <p>The MockServerRule has the following constructors:</p>
 
@@ -253,12 +262,21 @@
  */</span>
 <span class="keyword">public</span> MockServerRule(Integer port, Object target, <span class="keyword">boolean</span> per TestSuite);</code></pre>
 
-<p>The proxy can be run using the ProxyRule. The ProxyRule starts the proxy before the any test runs and stops the proxy after all tests have completed. A ProxyClient is then assigned to any field in the unit test of type org.mockserver.client.proxy.ProxyClient</p>
+<p>The proxy can be run using the <strong>ProxyRule</strong>. The <strong>ProxyRule</strong> starts the proxy before the any test runs and stops the proxy after all tests have completed.</p>
+<p>An instance of <strong>ProxyClient</strong> is then assigned to any field in the unit test of type <strong>org.mockserver.client.proxy.ProxyClient</strong>. Alternatively an instance of <strong>ProxyClient</strong> can be retrieved from the <strong>ProxyRule</strong> using the method <strong>getClient()</strong>.</p>
 
 <pre><code class="code"><span class="annotation">@Rule</span>
 <span class="keyword">public</span> ProxyRule proxyRule = <span class="keyword">new</span> ProxyRule(<span class="numeric_literal">1080</span>, <span class="keyword">this</span>);
 
 <span class="keyword">private</span> ProxyClient proxyClient;</code></pre>
+
+<p>The ProxyRule can added to your project by including the following maven dependency:</p>
+
+<pre class="prettyprint lang-xml code"><code class="code">&lt;dependency&gt;
+    &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
+    &lt;artifactId&gt;mockserver-netty&lt;/artifactId&gt;
+    &lt;version&gt;5.3.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
 
 <p>Any test method can now use the <strong>proxyClient</strong> field to <a href="/mock_server/verification.html">verify</a> requests or <a href="/proxy/record_and_replay.html">anaylse a system's behaviour</a>.</p>
 
@@ -314,8 +332,8 @@
 
 <ul>
 	<li><a href="#running_from_command_line_using_homebrew">using homebrew</a> i.e. <strong>brew install mockserver && mockserver</strong></li>
-	<li><a href="#running_from_command_line_using_java">using java directly</a> i.e. <strong>java -jar mockserver-netty-3.10.8-jar-with-dependencies.jar</strong></li>
-	<li><a href="#running_from_command_line_using_maven_plugin">using maven plugin</a> i.e. <strong>mvn org.mock-server:mockserver-maven-plugin:3.10.8:runForked</strong></li>
+	<li><a href="#running_from_command_line_using_java">using java directly</a> i.e. <strong>java -jar mockserver-netty-5.3.0-jar-with-dependencies.jar</strong></li>
+	<li><a href="#running_from_command_line_using_maven_plugin">using maven plugin</a> i.e. <strong>mvn org.mock-server:mockserver-maven-plugin:5.3.0:runForked</strong></li>
 	<li><a href="#docker_container">using docker</a> i.e. <strong>docker run -d -P jamesdbloom/mockserver</strong></li>
 </ul>
 
@@ -393,9 +411,9 @@ i.e. mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080</s
 <p>MockServer can be run directly from the command line using java directly as follow:</p>
 
 <ol>
-	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/3.10.8/mockserver-netty-3.10.8-jar-with-dependencies.jar">mockserver-netty-3.10.8-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/5.3.0/mockserver-netty-5.3.0-jar-with-dependencies.jar">mockserver-netty-5.3.0-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar <span class="command_line_argument_placeholder">&lt;path to mockserver-netty-3.10.8-jar-with-dependencies.jar&gt;</span> -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span></code>
+		<code class="code inline">java -jar <span class="command_line_argument_placeholder">&lt;path to mockserver-netty-5.3.0-jar-with-dependencies.jar&gt;</span> -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span></code>
 	</li>
 </ol>
 
@@ -434,9 +452,9 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <p>For example:</p>
 
-<pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-3.10.8-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
+<pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-5.3.0-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
 
-<p>All interactions with the MockServer are logged including setting up expectations, matching expectations, clearing expectations and verifying requests.  The when running from the command line, Maven plugin, Grunt plugin or npm module the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running. This log can be particularly helpful when trying to debug why a test is failing or expectations are not being matched.</p>
+<p>All interactions with the MockServer are logged including setting up expectations, matching expectations, clearing expectations and verifying requests.  The when running from the command line, Maven plugin, npm module or Grunt plugin the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running. This log can be particularly helpful when trying to debug why a test is failing or expectations are not being matched.</p>
 
 <p>The system property <span class="inline_code">mockserver.logLevel</span> can be used to set the <a href="/mock_server/debugging_issues.html#logging-levels">log level</a>, as shown above.</p>
 
@@ -444,7 +462,7 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <p>A custom <a href="http://logback.qos.ch">logback</a> configuration file can be specified using the <span class="inline_code">logback.configurationFile</span> system property with an absolute or relative file path or a classpath, as follows:</p>
 
-<pre><code class="code">java -Droot.logLevel=WARN -Dmockserver.logLevel=INFO -Dlogback.configurationFile=example_logback.xml -jar ~/Downloads/mockserver-netty-3.10.8-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
+<pre><code class="code">java -Droot.logLevel=WARN -Dmockserver.logLevel=INFO -Dlogback.configurationFile=example_logback.xml -jar ~/Downloads/mockserver-netty-5.3.0-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
 
 <p>A custom <a href="http://logback.qos.ch">logback</a> configuration file will also be automatically picked up if it is called <strong>logback.xml</strong> and is in the root of the classpath, however, the jar-with-dependencies already contains a <strong>logback.xml</strong> file, so to override this, the overriding <strong>logback.xml</strong> file must be higher (i.e. earlier) in the classpath.</p>
 
@@ -465,7 +483,7 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <p>MockServer can be run directly from the command line and using the <strong>mockserver-maven-plugin</strong> as follow:</p>
 
-<pre><code class="code">mvn -Dmockserver.serverPort=<span class="numeric_literal">1080</span> -Dmockserver.proxyPort=<span class="numeric_literal">1090</span> -Dmockserver.logLevel=INFO org.mock-server:mockserver-maven-plugin:3.10.8:runForked</code></pre>
+<pre><code class="code">mvn -Dmockserver.serverPort=<span class="numeric_literal">1080</span> -Dmockserver.proxyPort=<span class="numeric_literal">1090</span> -Dmockserver.logLevel=INFO org.mock-server:mockserver-maven-plugin:5.3.0:runForked</code></pre>
 
 <p>When run from the command line the Maven plugin can be configured with the following properties:</p>
 
@@ -483,7 +501,7 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <p>The <span class="annotation">runForked</span> goal of the <strong>mockserver-maven-plugin</strong> will fork a JVM process containing the Netty based MockServer. To stop the forked JVM process use the <span class="annotation">stopForked</span> goal, as follows:</p>
 
-<pre><code class="code">mvn -Dmockserver.serverPort=<span class="numeric_literal">1080</span> -Dmockserver.proxyPort=<span class="numeric_literal">1090</span> org.mock-server:mockserver-maven-plugin:3.10.8:stopForked</code></pre>
+<pre><code class="code">mvn -Dmockserver.serverPort=<span class="numeric_literal">1080</span> -Dmockserver.proxyPort=<span class="numeric_literal">1090</span> org.mock-server:mockserver-maven-plugin:5.3.0:stopForked</code></pre>
 
 <p>For more information on the <strong>mockserver-maven-plugin</strong> see the section on <a href="#maven_plugin">MockServer Maven Plugin</a></p>
 
@@ -494,8 +512,8 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 <p>To run as a WAR deployed on any JEE web server:</p>
 
 <ol>
-	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/3.10.8/mockserver-war-3.10.8.war">mockserver-war-3.10.8.war</a> from Maven Central</li>
-	<li>deploy <strong>mockserver-war-3.10.8.war</strong> to any JEE web server</li>
+	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/5.3.0/mockserver-war-5.3.0.war">mockserver-war-5.3.0.war</a> from Maven Central</li>
+	<li>deploy <strong>mockserver-war-5.3.0.war</strong> to any JEE web server</li>
 </ol>
 
 <p><strong>WAR Context Path</strong></p>
@@ -506,9 +524,9 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <pre><code class="code"><span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port, String contextPath)</code></pre>
 
-<a name="mockserver_grunt" class="anchor" href="#mockserver_grunt">&nbsp;</a>
+<a name="mockserver_node" class="anchor" href="#mockserver_node">&nbsp;</a>
 
-<h2>MockServer Grunt Plugin & NPM Module</h2>
+<h2>NPM Module & MockServer Grunt Plugin</h2>
 
 {% include_subpage ../mock_server/_includes/running_npm_module.html %}
 
@@ -517,12 +535,6 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 <h2>Docker Container</h2>
 
 {% include_subpage ../mock_server/_includes/running_docker_container.html %}
-
-<a name="vertx-module" class="anchor" href="#vertx-module">&nbsp;</a>
-
-<h2>Vert.X Module</h2>
-
-{% include_subpage ../mock_server/_includes/running_vertx_module.html %}
 
 <a name="build-and-run-from-source" class="anchor" href="#build-and-run-from-source">&nbsp;</a>
 
@@ -541,12 +553,6 @@ cd mockserver</code></pre>
 
 <p>This will produce a jar file under the target directory called, as follows:</p>
 
-<pre><code class="code">mockserver-netty/target/mockserver-netty-3.10.8-jar-with-dependencies.jar</code></pre>
+<pre><code class="code">mockserver-netty/target/mockserver-netty-5.3.0-jar-with-dependencies.jar</code></pre>
 
 <p>Run MockServer then using the executable jar as per the instruction above in <a href="#running_from_command_line">Running From The Command Line</a></p>
-
-<h2>Requirements</h2>
-
-<ul>
-    <li><strong>Java 6+</strong>&nbsp;&nbsp;&nbsp;to use the Netty version, the Maven Plugin and MockServer WAR and MockServer Proxy WAR</li>
-</ul>

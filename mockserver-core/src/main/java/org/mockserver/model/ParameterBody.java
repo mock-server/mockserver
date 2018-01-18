@@ -5,24 +5,29 @@ import com.google.common.net.MediaType;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * @author jamesdbloom
  */
-public class ParameterBody extends Body<List<Parameter>> {
+public class ParameterBody extends BodyWithContentType<List<Parameter>> {
 
     public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.FORM_DATA;
-    private final List<Parameter> parameters;
+    private Parameters parameters = new Parameters();
 
     public ParameterBody(Parameter... parameters) {
-        this(Arrays.asList(parameters));
+        this(new Parameters().withEntries(parameters));
     }
 
     public ParameterBody(List<Parameter> parameters) {
+        this(new Parameters().withEntries(parameters));
+    }
+
+    public ParameterBody(Parameters parameters) {
         super(Type.PARAMETERS, DEFAULT_CONTENT_TYPE);
-        this.parameters = parameters;
+        if (parameters != null) {
+            this.parameters = parameters;
+        }
     }
 
     public static ParameterBody params(Parameter... parameters) {
@@ -33,14 +38,14 @@ public class ParameterBody extends Body<List<Parameter>> {
         return new ParameterBody(parameters);
     }
 
-    public List<Parameter> getValue() {
-        return parameters;
+    public Parameters getValue() {
+        return this.parameters;
     }
 
     @Override
     public String toString() {
         StringBuilder body = new StringBuilder();
-        List<Parameter> bodyParameters = parameters;
+        List<Parameter> bodyParameters = this.parameters.getEntries();
         for (int i = 0; i < bodyParameters.size(); i++) {
             Parameter parameter = bodyParameters.get(i);
             if (parameter.getValues().isEmpty()) {

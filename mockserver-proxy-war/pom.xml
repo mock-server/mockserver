@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver</artifactId>
-        <version>3.10.9-SNAPSHOT</version>
+        <version>5.3.1-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -62,6 +62,10 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+        </dependency>
 
         <!-- Tomcat Server (integration testing) -->
         <dependency>
@@ -80,8 +84,9 @@
         <plugins>
             <!-- create war classes jar -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>2.4</version>
+                <version>3.2.0</version>
                 <configuration>
                     <attachClasses>true</attachClasses>
                 </configuration>

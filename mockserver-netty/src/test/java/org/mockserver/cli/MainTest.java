@@ -14,6 +14,7 @@ import java.io.PrintStream;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
@@ -210,9 +211,9 @@ public class MainTest {
         Main.main("-serverPort", "A", "-proxyPort", "1");
 
         verify(mockPrintStream, times(1)).print(Main.USAGE);
-        verify(mockPrintStream, times(1)).println(System.getProperty("line.separator") + "   =====================================================================================================");
+        verify(mockPrintStream, times(1)).println(NEW_LINE + "   =====================================================================================================");
         verify(mockPrintStream, times(1)).println("   serverPort value \"A\" is invalid, please specify a comma separated list of ports i.e. \"1080,1081,1082\"");
-        verify(mockPrintStream, times(1)).println("   =====================================================================================================" + System.getProperty("line.separator"));
+        verify(mockPrintStream, times(1)).println("   =====================================================================================================" + NEW_LINE);
         verify(mockRuntime, times(1)).exit(1);
         verifyZeroInteractions(mockProxyBuilder);
     }
@@ -222,9 +223,9 @@ public class MainTest {
         Main.main("-serverPort", "1", "-proxyPort", "A");
 
         verify(mockPrintStream, times(1)).print(Main.USAGE);
-        verify(mockPrintStream, times(1)).println(System.getProperty("line.separator") + "   =================================================================");
+        verify(mockPrintStream, times(1)).println(NEW_LINE + "   =================================================================");
         verify(mockPrintStream, times(1)).println("   proxyPort value \"A\" is invalid, please specify a port i.e. \"1080\"");
-        verify(mockPrintStream, times(1)).println("   =================================================================" + System.getProperty("line.separator"));
+        verify(mockPrintStream, times(1)).println("   =================================================================" + NEW_LINE);
         verify(mockRuntime, times(1)).exit(1);
         verifyZeroInteractions(mockProxyBuilder);
     }
@@ -234,9 +235,9 @@ public class MainTest {
         Main.main("-serverPort", "1", "-proxyPort", "2", "-proxyRemotePort", "A", "-proxyRemoteHost", "1234567890");
 
         verify(mockPrintStream, times(1)).print(Main.USAGE);
-        verify(mockPrintStream, times(1)).println(System.getProperty("line.separator") + "   =======================================================================");
+        verify(mockPrintStream, times(1)).println(NEW_LINE + "   =======================================================================");
         verify(mockPrintStream, times(1)).println("   proxyRemotePort value \"A\" is invalid, please specify a port i.e. \"1080\"");
-        verify(mockPrintStream, times(1)).println("   =======================================================================" + System.getProperty("line.separator"));
+        verify(mockPrintStream, times(1)).println("   =======================================================================" + NEW_LINE);
         verify(mockRuntime, times(1)).exit(1);
         verifyZeroInteractions(mockProxyBuilder);
     }
@@ -246,9 +247,9 @@ public class MainTest {
         Main.main("-serverPort", "1", "-proxyPort", "2", "-proxyRemotePort", "3", "-proxyRemoteHost", "http://localhost");
 
         verify(mockPrintStream, times(1)).print(Main.USAGE);
-        verify(mockPrintStream, times(1)).println(System.getProperty("line.separator") + "   ===============================================================================================================");
+        verify(mockPrintStream, times(1)).println(NEW_LINE + "   ===============================================================================================================");
         verify(mockPrintStream, times(1)).println("   proxyRemoteHost value \"http://localhost\" is invalid, please specify a host name i.e. \"localhost\" or \"127.0.0.1\"");
-        verify(mockPrintStream, times(1)).println("   ===============================================================================================================" + System.getProperty("line.separator"));
+        verify(mockPrintStream, times(1)).println("   ===============================================================================================================" + NEW_LINE);
         verify(mockRuntime, times(1)).exit(1);
         verifyZeroInteractions(mockProxyBuilder);
     }
@@ -258,12 +259,12 @@ public class MainTest {
         Main.main("-serverPort", "A", "-proxyPort", "B", "-proxyRemotePort", "C", "-proxyRemoteHost", "http://localhost");
 
         verify(mockPrintStream, times(1)).print(Main.USAGE);
-        verify(mockPrintStream, times(1)).println(System.getProperty("line.separator") + "   ===============================================================================================================");
+        verify(mockPrintStream, times(1)).println(NEW_LINE + "   ===============================================================================================================");
         verify(mockPrintStream, times(1)).println("   serverPort value \"A\" is invalid, please specify a comma separated list of ports i.e. \"1080,1081,1082\"");
         verify(mockPrintStream, times(1)).println("   proxyPort value \"B\" is invalid, please specify a port i.e. \"1080\"");
         verify(mockPrintStream, times(1)).println("   proxyRemotePort value \"C\" is invalid, please specify a port i.e. \"1080\"");
         verify(mockPrintStream, times(1)).println("   proxyRemoteHost value \"http://localhost\" is invalid, please specify a host name i.e. \"localhost\" or \"127.0.0.1\"");
-        verify(mockPrintStream, times(1)).println("   ===============================================================================================================" + System.getProperty("line.separator"));
+        verify(mockPrintStream, times(1)).println("   ===============================================================================================================" + NEW_LINE);
         verify(mockRuntime, times(1)).exit(1);
         verifyZeroInteractions(mockProxyBuilder);
     }

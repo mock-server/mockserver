@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Enumeration;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -31,7 +32,7 @@ public class HttpServletRequestToMockServerRequestDecoderTest {
         httpServletRequest.addHeader("headerName1", "headerValue1_2");
         httpServletRequest.addHeader("headerName2", "headerValue2");
         httpServletRequest.setCookies(new javax.servlet.http.Cookie("cookieName1", "cookieValue1"), new javax.servlet.http.Cookie("cookieName2", "cookieValue2"));
-        httpServletRequest.setContent("bodyParameterNameOne=bodyParameterValueOne_One&bodyParameterNameOne=bodyParameterValueOne_Two&bodyParameterNameTwo=bodyParameterValueTwo_One".getBytes());
+        httpServletRequest.setContent("bodyParameterNameOne=bodyParameterValueOne_One&bodyParameterNameOne=bodyParameterValueOne_Two&bodyParameterNameTwo=bodyParameterValueTwo_One".getBytes(UTF_8));
 
         // when
         HttpRequest httpRequest = new HttpServletRequestToMockServerRequestDecoder().mapHttpServletRequestToMockServerRequest(httpServletRequest);
@@ -46,9 +47,15 @@ public class HttpServletRequestToMockServerRequestDecoderTest {
         assertEquals(Arrays.asList(
                 new Parameter("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
                 new Parameter("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
-        ), httpRequest.getQueryStringParameters());
-        assertEquals(Lists.newArrayList(new Header("headerName1", "headerValue1_1", "headerValue1_2"), new Header("headerName2", "headerValue2")), httpRequest.getHeaders());
-        assertEquals(Lists.newArrayList(new Cookie("cookieName1", "cookieValue1"), new Cookie("cookieName2", "cookieValue2")), httpRequest.getCookies());
+        ), httpRequest.getQueryStringParameterList());
+        assertEquals(Lists.newArrayList(
+                new Header("headerName1", "headerValue1_1", "headerValue1_2"),
+                new Header("headerName2", "headerValue2")
+        ), httpRequest.getHeaderList());
+        assertEquals(Lists.newArrayList(
+                new Cookie("cookieName1", "cookieValue1"),
+                new Cookie("cookieName2", "cookieValue2")
+        ), httpRequest.getCookieList());
     }
 
     @Test
@@ -57,7 +64,7 @@ public class HttpServletRequestToMockServerRequestDecoderTest {
         MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("GET", "/requestURI");
         httpServletRequest.setContextPath("contextPath");
         httpServletRequest.setPathInfo("/pathInfo");
-        httpServletRequest.setContent("".getBytes());
+        httpServletRequest.setContent("".getBytes(UTF_8));
 
         // when
         HttpRequest httpRequest = new HttpServletRequestToMockServerRequestDecoder().mapHttpServletRequestToMockServerRequest(httpServletRequest);

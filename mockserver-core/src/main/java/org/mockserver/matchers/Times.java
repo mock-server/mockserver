@@ -39,7 +39,6 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
         if (unlimited || remainingTimes > 0) {
             return true;
         } else {
-            logger.trace("Remaining count is 0");
             return false;
         }
     }
@@ -57,5 +56,13 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
             unlimited = false;
         }
         return this;
+    }
+
+    public Times clone() {
+        if (unlimited) {
+            return Times.unlimited();
+        } else {
+            return Times.exactly(remainingTimes);
+        }
     }
 }

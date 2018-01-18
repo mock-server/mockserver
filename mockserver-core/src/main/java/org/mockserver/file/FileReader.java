@@ -3,10 +3,7 @@ package org.mockserver.file;
 import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 /**
  * @author jamesdbloom
@@ -16,8 +13,8 @@ public class FileReader {
     public static String readFileFromClassPathOrPath(String filePath) {
         try {
             return IOUtils.toString(openStreamToFileFromClassPathOrPath(filePath), Charsets.UTF_8.name());
-        } catch (IOException e) {
-            throw new RuntimeException("Exception while loading \"" + filePath + "\"");
+        } catch (IOException ioe) {
+            throw new RuntimeException("Exception while loading \"" + filePath + "\"", ioe);
         }
     }
 
@@ -28,6 +25,10 @@ public class FileReader {
             inputStream = new FileInputStream(filename);
         }
         return inputStream;
+    }
+
+    public static Reader openReaderToFileFromClassPathOrPath(String filename) throws FileNotFoundException {
+        return new InputStreamReader(openStreamToFileFromClassPathOrPath(filename));
     }
 
 

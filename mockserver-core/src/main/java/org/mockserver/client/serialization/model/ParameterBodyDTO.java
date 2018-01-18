@@ -1,18 +1,14 @@
 package org.mockserver.client.serialization.model;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import org.mockserver.model.Parameter;
 import org.mockserver.model.ParameterBody;
-
-import java.util.List;
+import org.mockserver.model.Parameters;
 
 /**
  * @author jamesdbloom
  */
-public class ParameterBodyDTO extends BodyDTO {
+public class ParameterBodyDTO extends BodyWithContentTypeDTO {
 
-    private List<ParameterDTO> parameters;
+    private Parameters parameters;
 
     public ParameterBodyDTO(ParameterBody parameterBody) {
         this(parameterBody, false);
@@ -20,25 +16,17 @@ public class ParameterBodyDTO extends BodyDTO {
 
     public ParameterBodyDTO(ParameterBody parameterBody, Boolean not) {
         super(parameterBody.getType(), not, parameterBody.getContentType());
-        parameters = Lists.transform(parameterBody.getValue(), new Function<Parameter, ParameterDTO>() {
-            public ParameterDTO apply(Parameter parameter) {
-                return new ParameterDTO(parameter);
-            }
-        });
+        parameters = parameterBody.getValue();
     }
 
     protected ParameterBodyDTO() {
     }
 
-    public List<ParameterDTO> getParameters() {
+    public Parameters getParameters() {
         return parameters;
     }
 
     public ParameterBody buildObject() {
-        return new ParameterBody(Lists.transform(parameters, new Function<ParameterDTO, Parameter>() {
-            public Parameter apply(ParameterDTO parameterDTO) {
-                return parameterDTO.buildObject();
-            }
-        }));
+        return new ParameterBody(parameters);
     }
 }

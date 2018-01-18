@@ -10,10 +10,16 @@ public abstract class ObjectWithJsonToString extends ObjectWithReflectiveEqualsH
     @Override
     public String toString() {
         try {
-            return ObjectMapperFactory
-                    .createObjectMapper()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(this);
+            String valueAsString = ObjectMapperFactory
+                .createObjectMapper()
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(this);
+            if (valueAsString.startsWith("\"") && valueAsString.endsWith("\"")) {
+                valueAsString = valueAsString
+                    .replaceAll("^\"", "")
+                    .replaceAll("\"$", "");
+            }
+            return valueAsString;
         } catch (Exception e) {
             return super.toString();
         }

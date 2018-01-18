@@ -1,0 +1,6 @@
+ mockServer:
+   image: jamesdbloom/mockserver:mockserver-5.3.0
+   ports:
+   - 1080:1080
+   environment:
+   - LOG_LEVEL=INFO

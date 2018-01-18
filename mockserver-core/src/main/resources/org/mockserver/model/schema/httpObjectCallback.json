@@ -1,0 +1,10 @@
+{
+    "title": "object / method callback",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "clientId": {
+            "type": "string"
+        }
+    }
+}

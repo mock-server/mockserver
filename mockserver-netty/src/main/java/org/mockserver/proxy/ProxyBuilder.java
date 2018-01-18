@@ -49,7 +49,7 @@ public class ProxyBuilder {
     public Proxy build() {
         if (localPort != null) {
             if (remoteHost != null && remotePort != null) {
-                return new DirectProxy(localPort, remoteHost, remotePort).withStopEventQueue(stopEventQueue);
+                return new DirectProxy(remoteHost, remotePort, localPort).withStopEventQueue(stopEventQueue);
             } else {
                 return new HttpProxy(localPort).withStopEventQueue(stopEventQueue);
             }

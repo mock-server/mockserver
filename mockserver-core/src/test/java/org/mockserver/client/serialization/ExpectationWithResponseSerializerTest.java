@@ -3,14 +3,18 @@ package org.mockserver.client.serialization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -18,12 +22,16 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.StringBody.exact;
 
 /**
  * @author jamesdbloom
@@ -31,52 +39,68 @@ import static org.mockserver.model.NottableString.string;
 public class ExpectationWithResponseSerializerTest {
 
     private final Expectation fullExpectation = new Expectation(
-            new HttpRequest()
-                    .withMethod("GET")
-                    .withPath("somePath")
-                    .withQueryStringParameters(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))
-                    .withBody(new StringBody("somebody"))
-                    .withHeaders(new Header("headerName", "headerValue"))
-                    .withCookies(new Cookie("cookieName", "cookieValue")),
-            Times.once(),
-            TimeToLive.exactly(TimeUnit.HOURS, 2l))
-            .thenRespond(
-                    new HttpResponse()
-                            .withStatusCode(304)
-                            .withBody("responseBody")
-                            .withHeaders(new Header("headerName", "headerValue"))
-                            .withCookies(new Cookie("cookieName", "cookieValue"))
-                            .withDelay(new Delay(TimeUnit.MICROSECONDS, 1))
-            );
+        new HttpRequest()
+            .withMethod("GET")
+            .withPath("somePath")
+            .withQueryStringParameters(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))
+            .withBody(new StringBody("someBody"))
+            .withHeaders(new Header("headerName", "headerValue"))
+            .withCookies(new Cookie("cookieName", "cookieValue")),
+        Times.once(),
+        TimeToLive.exactly(TimeUnit.HOURS, 2l))
+        .thenRespond(
+            new HttpResponse()
+                .withStatusCode(304)
+                .withReasonPhrase("randomReason")
+                .withBody("responseBody")
+                .withHeaders(new Header("headerName", "headerValue"))
+                .withCookies(new Cookie("cookieName", "cookieValue"))
+                .withDelay(new Delay(TimeUnit.MICROSECONDS, 1))
+        );
     private final ExpectationDTO fullExpectationDTO = new ExpectationDTO()
-            .setHttpRequest(
-                    new HttpRequestDTO()
-                            .setMethod(string("GET"))
-                            .setPath(string("somePath"))
-                            .setQueryStringParameters(Arrays.<ParameterDTO>asList((ParameterDTO) new ParameterDTO(new Parameter("queryParameterName", Arrays.asList("queryParameterValue")))))
-                            .setBody(BodyDTO.createDTO(new StringBody("somebody")))
-                            .setHeaders(Arrays.<HeaderDTO>asList(new HeaderDTO(new Header("headerName", Arrays.asList("headerValue")))))
-                            .setCookies(Arrays.<CookieDTO>asList(new CookieDTO(new Cookie("cookieName", "cookieValue"))))
+        .setHttpRequest(
+            new HttpRequestDTO()
+                .setMethod(string("GET"))
+                .setPath(string("somePath"))
+                .setQueryStringParameters(new Parameters().withEntries(
+                    param("queryParameterName", "queryParameterValue")
+                ))
+                .setBody(new StringBodyDTO(exact("someBody")))
+                .setHeaders(new Headers().withEntries(
+                    header("headerName", "headerValue")
+                ))
+                .setCookies(new Cookies().withEntries(
+                    cookie("cookieName", "cookieValue")
+                ))
+        )
+        .setHttpResponse(
+            new HttpResponseDTO(
+                new HttpResponse()
+                    .withStatusCode(304)
+                    .withReasonPhrase("randomReason")
+                    .withBody("responseBody")
+                    .withHeaders(new Header("headerName", "headerValue"))
+                    .withCookies(new Cookie("cookieName", "cookieValue"))
+                    .withDelay(new Delay(TimeUnit.MICROSECONDS, 1))
             )
-            .setHttpResponse(
-                    new HttpResponseDTO(
-                            new HttpResponse()
-                                    .withStatusCode(304)
-                                    .withBody("responseBody")
-                                    .withHeaders(new Header("headerName", "headerValue"))
-                                    .withCookies(new Cookie("cookieName", "cookieValue"))
-                                    .withDelay(new Delay(TimeUnit.MICROSECONDS, 1))
-                    )
-            )
-            .setTimes(new TimesDTO(Times.once()))
-            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)));
+        )
+        .setTimes(new TimesDTO(Times.once()))
+        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)));
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Mock
     private ObjectMapper objectMapper;
     @Mock
     private ObjectWriter objectWriter;
+    @Mock
+    private JsonArraySerializer jsonArraySerializer;
+    @Mock
+    private JsonSchemaExpectationValidator expectationValidator;
+
     @InjectMocks
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
 
 
     @Before
@@ -102,7 +126,6 @@ public class ExpectationWithResponseSerializerTest {
         // given
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
 
-
         // when
         expectationSerializer.serialize(new Expectation[]{fullExpectation, fullExpectation});
 
@@ -115,6 +138,7 @@ public class ExpectationWithResponseSerializerTest {
     public void shouldDeserializeObject() throws IOException {
         // given
         when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
+        when(expectationValidator.isValid("requestBytes")).thenReturn("");
 
         // when
         Expectation expectation = expectationSerializer.deserialize("requestBytes");
@@ -126,12 +150,47 @@ public class ExpectationWithResponseSerializerTest {
     @Test
     public void shouldDeserializeArray() throws IOException {
         // given
-        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO[].class))).thenReturn(new ExpectationDTO[]{fullExpectationDTO, fullExpectationDTO});
+        when(jsonArraySerializer.returnJSONObjects("requestBytes")).thenReturn(Arrays.asList("requestBytes", "requestBytes"));
+        when(expectationValidator.isValid("requestBytes")).thenReturn("");
+        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
 
         // when
         Expectation[] expectations = expectationSerializer.deserializeArray("requestBytes");
 
         // then
         assertArrayEquals(new Expectation[]{fullExpectation, fullExpectation}, expectations);
+    }
+
+    @Test
+    public void shouldDeserializeObjectWithError() throws IOException {
+        // given
+        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
+        when(expectationValidator.isValid("requestBytes")).thenReturn("an error");
+
+        // then
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("an error");
+
+        // when
+        expectationSerializer.deserialize("requestBytes");
+    }
+
+    @Test
+    public void shouldDeserializeArrayWithError() throws IOException {
+        // given
+        when(jsonArraySerializer.returnJSONObjects("requestBytes")).thenReturn(Arrays.asList("requestBytes", "requestBytes"));
+        when(expectationValidator.isValid("requestBytes")).thenReturn("an error");
+        when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
+
+        // then
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("" +
+            "[" + NEW_LINE +
+            "  an error," + NEW_LINE +
+            "  an error" + NEW_LINE +
+            "]");
+
+        // when
+        expectationSerializer.deserializeArray("requestBytes");
     }
 }

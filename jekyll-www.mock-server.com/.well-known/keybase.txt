@@ -1,0 +1,55 @@
+==================================================================
+https://keybase.io/jdb197
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of https://www.mock-server.com
+  * I am jdb197 (https://keybase.io/jdb197) on keybase.
+  * I have a public key ASAIDPMUvr-G_xHQVpLONu_2X8_nEJDjGKFYOc7G6Ht-2Qo
+
+To do so, I am signing this object:
+
+{
+  "body": {
+    "key": {
+      "eldest_kid": "0120080cf314bebf86ff11d05692ce36eff65fcfe71090e318a15839cec6e87b7ed90a",
+      "host": "keybase.io",
+      "kid": "0120080cf314bebf86ff11d05692ce36eff65fcfe71090e318a15839cec6e87b7ed90a",
+      "uid": "ec37ae692d738198b6e4b03e43ac9f19",
+      "username": "jdb197"
+    },
+    "merkle_root": {
+      "ctime": 1509727075,
+      "hash": "97a6dc6670f453ab0b8ba77324504a5d64edba9f86373d9dfeec5cef9c5ed4057adc9065a6ed5876969a70a5b067872dfb3cf696c5d8b17c7d35bc4745fb5647",
+      "hash_meta": "8b108fed467757e89245494f4256aec1f42d8e773f581a3e63095eedee761eb9",
+      "seqno": 1663306
+    },
+    "service": {
+      "hostname": "www.mock-server.com",
+      "protocol": "https:"
+    },
+    "type": "web_service_binding",
+    "version": 1
+  },
+  "client": {
+    "name": "keybase.io go client",
+    "version": "1.0.34"
+  },
+  "ctime": 1509727098,
+  "expire_in": 504576000,
+  "prev": "6e79f11e679422adbcfe27422d0cbd422e08fd73ad7160351a416fef80664554",
+  "seqno": 8,
+  "tag": "signature"
+}
+
+which yields the signature:
+
+hKRib2R5hqhkZXRhY2hlZMOpaGFzaF90eXBlCqNrZXnEIwEgCAzzFL6/hv8R0FaSzjbv9l/P5xCQ4xihWDnOxuh7ftkKp3BheWxvYWTFA0l7ImJvZHkiOnsia2V5Ijp7ImVsZGVzdF9raWQiOiIwMTIwMDgwY2YzMTRiZWJmODZmZjExZDA1NjkyY2UzNmVmZjY1ZmNmZTcxMDkwZTMxOGExNTgzOWNlYzZlODdiN2VkOTBhIiwiaG9zdCI6ImtleWJhc2UuaW8iLCJraWQiOiIwMTIwMDgwY2YzMTRiZWJmODZmZjExZDA1NjkyY2UzNmVmZjY1ZmNmZTcxMDkwZTMxOGExNTgzOWNlYzZlODdiN2VkOTBhIiwidWlkIjoiZWMzN2FlNjkyZDczODE5OGI2ZTRiMDNlNDNhYzlmMTkiLCJ1c2VybmFtZSI6ImpkYjE5NyJ9LCJtZXJrbGVfcm9vdCI6eyJjdGltZSI6MTUwOTcyNzA3NSwiaGFzaCI6Ijk3YTZkYzY2NzBmNDUzYWIwYjhiYTc3MzI0NTA0YTVkNjRlZGJhOWY4NjM3M2Q5ZGZlZWM1Y2VmOWM1ZWQ0MDU3YWRjOTA2NWE2ZWQ1ODc2OTY5YTcwYTViMDY3ODcyZGZiM2NmNjk2YzVkOGIxN2M3ZDM1YmM0NzQ1ZmI1NjQ3IiwiaGFzaF9tZXRhIjoiOGIxMDhmZWQ0Njc3NTdlODkyNDU0OTRmNDI1NmFlYzFmNDJkOGU3NzNmNTgxYTNlNjMwOTVlZWRlZTc2MWViOSIsInNlcW5vIjoxNjYzMzA2fSwic2VydmljZSI6eyJob3N0bmFtZSI6Ind3dy5tb2NrLXNlcnZlci5jb20iLCJwcm90b2NvbCI6Imh0dHBzOiJ9LCJ0eXBlIjoid2ViX3NlcnZpY2VfYmluZGluZyIsInZlcnNpb24iOjF9LCJjbGllbnQiOnsibmFtZSI6ImtleWJhc2UuaW8gZ28gY2xpZW50IiwidmVyc2lvbiI6IjEuMC4zNCJ9LCJjdGltZSI6MTUwOTcyNzA5OCwiZXhwaXJlX2luIjo1MDQ1NzYwMDAsInByZXYiOiI2ZTc5ZjExZTY3OTQyMmFkYmNmZTI3NDIyZDBjYmQ0MjJlMDhmZDczYWQ3MTYwMzUxYTQxNmZlZjgwNjY0NTU0Iiwic2Vxbm8iOjgsInRhZyI6InNpZ25hdHVyZSJ9o3NpZ8RAgpAa/HK/PRuQiOlWieBp2jOYhHnEe1SMQh6JksKfoCnJP+7iuBXQUdKgq/Q2veyMJGbSUO8f2fhuRd1CcHRXDahzaWdfdHlwZSCkaGFzaIKkdHlwZQildmFsdWXEIE+oifdP/LZ13ZDYTsVUuL/lsP+/GOk7rzmhkAPQN9UCo3RhZ80CAqd2ZXJzaW9uAQ==
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/jdb197
+
+==================================================================

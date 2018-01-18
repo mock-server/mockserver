@@ -2,11 +2,13 @@ package org.mockserver.client.serialization;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import org.mockserver.client.serialization.model.WebSocketMessageDTO;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -15,16 +17,13 @@ import java.util.Map;
 public class WebSocketMessageSerializer {
 
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private Map<Class, Serializer> serializers;
 
-    private static Map<Class, Serializer> serializers = new HashMap<Class, Serializer>();
-
-    static {
-        for (Serializer serializer : Arrays.asList(
-                new HttpRequestSerializer(),
-                new HttpResponseSerializer()
-        )) {
-            serializers.put(serializer.supportsType(), serializer);
-        }
+    public WebSocketMessageSerializer(MockServerLogger mockServerLogger) {
+        serializers = ImmutableMap.<Class, Serializer>of(
+            HttpRequest.class, new HttpRequestSerializer(mockServerLogger),
+            HttpResponse.class, new HttpResponseSerializer(mockServerLogger)
+        );
     }
 
     public String serialize(Object message) throws JsonProcessingException {

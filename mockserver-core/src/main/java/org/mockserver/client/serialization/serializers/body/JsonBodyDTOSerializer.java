@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.client.serialization.model.JsonBodyDTO;
-import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.JsonBody;
 
 import java.io.IOException;

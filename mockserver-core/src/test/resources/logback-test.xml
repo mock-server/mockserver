@@ -10,7 +10,7 @@
     <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
         <queueSize>128</queueSize>
         <discardingThreshold>0</discardingThreshold>
-        <appender-ref ref="FILE" />
+        <appender-ref ref="FILE"/>
     </appender>
 
     <logger name="org.mockserver" level="WARN"/>

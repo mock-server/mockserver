@@ -51,9 +51,6 @@ public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
         if (unlimited || isAfterNow(endDate)) {
             return true;
         } else {
-            if (logger.isTraceEnabled()) {
-                logger.trace("Remaining time is " + (endDate.getTime() - createdDate.getTime()) + "ms");
-            }
             return false;
         }
     }

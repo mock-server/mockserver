@@ -6,9 +6,10 @@ import org.mockserver.client.serialization.Base64Converter;
 /**
  * @author jamesdbloom
  */
-public class BinaryBody extends Body<byte[]> {
+public class BinaryBody extends BodyWithContentType<byte[]> {
 
     private final byte[] bytes;
+    private final Base64Converter base64Converter = new Base64Converter();
 
     public BinaryBody(byte[] bytes) {
         this(bytes, null);
@@ -37,6 +38,6 @@ public class BinaryBody extends Body<byte[]> {
 
     @Override
     public String toString() {
-        return bytes != null ? Base64Converter.bytesToBase64String(bytes) : null;
+        return bytes != null ? base64Converter.bytesToBase64String(bytes) : null;
     }
 }

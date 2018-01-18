@@ -150,8 +150,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                         new DefaultProxyRoutePlanner(
                                 new HttpHost(
                                         System.getProperty("http.proxyHost"),
-                                        Integer.parseInt(System.getProperty("http.proxyPort")
-                                        )
+                                        Integer.parseInt(System.getProperty("http.proxyPort"))
                                 )
                         )
                 ).build();

@@ -1,5 +1,7 @@
 package org.mockserver.url;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * @author jamesdbloom
  */
@@ -13,10 +15,12 @@ public class URLParser {
     }
 
     public static String returnPath(String path) {
+        String result = "";
         if (URLParser.isFullUrl(path)) {
-            return path.replaceAll(schemeHostAndPortRegex, "");
+            result = path.replaceAll(schemeHostAndPortRegex, "");
         } else {
-            return path;
+            result = path;
         }
+        return StringUtils.substringBefore(result, "?");
     }
 }

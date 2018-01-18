@@ -8,20 +8,19 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
-import org.mockserver.mock.Expectation;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 
 import java.io.IOException;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
@@ -40,7 +39,7 @@ public class HttpRequestSerializationErrorsTest {
 
     @Before
     public void setupTestFixture() {
-        httpRequestSerializer = spy(new HttpRequestSerializer());
+        httpRequestSerializer = spy(new HttpRequestSerializer(new MockServerLogger()));
 
         initMocks(this);
     }
@@ -74,17 +73,15 @@ public class HttpRequestSerializationErrorsTest {
     @Test
     public void shouldHandleNullAndEmptyWhileSerializingArray() throws IOException {
         // when
-        assertEquals("", httpRequestSerializer.serialize(new HttpRequest[]{}));
-        assertEquals("", httpRequestSerializer.serialize((HttpRequest[]) null));
+        assertEquals("[]", httpRequestSerializer.serialize(new HttpRequest[]{}));
+        assertEquals("[]", httpRequestSerializer.serialize((HttpRequest[]) null));
     }
 
     @Test
     public void shouldHandleExceptionWhileDeserializingObject() throws IOException {
         // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing HttpRequest for [requestBytes]");
-        // and
-        when(objectMapper.readValue(eq("requestBytes"), same(HttpRequestDTO.class))).thenThrow(new IOException("TEST EXCEPTION"));
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("JsonParseException - Unrecognized token 'requestBytes': was expecting ('true', 'false' or 'null')");
 
         // when
         httpRequestSerializer.deserialize("requestBytes");
@@ -93,23 +90,21 @@ public class HttpRequestSerializationErrorsTest {
     @Test
     public void shouldHandleExceptionWhileDeserializingArray() throws IOException {
         // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while parsing response [requestBytes] for HttpRequest[]");
-        // and
-        when(objectMapper.readValue(eq("requestBytes"), same(HttpRequestDTO[].class))).thenThrow(new IOException("TEST EXCEPTION"));
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'requestBytes': was expecting ('true', 'false' or 'null')" + NEW_LINE +
+                " at [Source: (String)\"requestBytes\"; line: 1, column: 25]");
 
         // when
         httpRequestSerializer.deserializeArray("requestBytes");
     }
 
     @Test
-    public void shouldHandleEmptyStringOrNull() throws IOException {
-        assertNull(httpRequestSerializer.deserialize(""));
-        assertNull(httpRequestSerializer.deserialize(null));
-    }
-
-    @Test
     public void shouldValidateInputForArray() throws IOException {
+        // given
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("1 error:" + NEW_LINE +
+                " - a request or request array is required but value was \"\"");
+
         // when
         assertArrayEquals(new HttpRequest[]{}, httpRequestSerializer.deserializeArray(""));
     }

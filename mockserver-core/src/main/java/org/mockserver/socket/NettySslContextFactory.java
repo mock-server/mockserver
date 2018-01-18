@@ -4,8 +4,6 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLException;
 import java.security.cert.X509Certificate;
@@ -17,15 +15,12 @@ import static org.mockserver.socket.KeyAndCertificateFactory.keyAndCertificateFa
  */
 public class NettySslContextFactory {
 
-    private static final Logger logger = LoggerFactory.getLogger(KeyStoreFactory.class);
-
+    private static final NettySslContextFactory NETTY_SSL_CONTEXT_FACTORY = new NettySslContextFactory();
     private SslContext clientSslContext = null;
     private SslContext serverSslContext = null;
 
-    private static final NettySslContextFactory NETTY_SSL_CONTEXT_FACTORY = new NettySslContextFactory();
-
     private NettySslContextFactory() {
-
+        System.setProperty("https.protocols", "SSLv3,TLSv1,TLSv1.1,TLSv1.2");
     }
 
     public static NettySslContextFactory nettySslContextFactory() {
@@ -36,8 +31,8 @@ public class NettySslContextFactory {
         if (clientSslContext == null || ConfigurationProperties.rebuildKeyStore()) {
             try {
                 clientSslContext = SslContextBuilder.forClient()
-                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                        .build();
+                    .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                    .build();
             } catch (SSLException e) {
                 throw new RuntimeException("Exception creating SSL context for client", e);
             }
@@ -63,13 +58,13 @@ public class NettySslContextFactory {
         keyAndCertificateFactory().buildAndSaveCertificates();
 
         return SslContextBuilder.forServer(
-                keyAndCertificateFactory().mockServerPrivateKey(),
-                // do we need this password??
-                ConfigurationProperties.javaKeyStorePassword(),
-                new X509Certificate[]{
-                        keyAndCertificateFactory().mockServerX509Certificate(),
-                        keyAndCertificateFactory().mockServerCertificateAuthorityX509Certificate()
-                }
+            keyAndCertificateFactory().mockServerPrivateKey(),
+            // do we need this password??
+            ConfigurationProperties.javaKeyStorePassword(),
+            new X509Certificate[]{
+                keyAndCertificateFactory().mockServerX509Certificate(),
+                keyAndCertificateFactory().mockServerCertificateAuthorityX509Certificate()
+            }
         ).build();
     }
 

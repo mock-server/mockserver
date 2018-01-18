@@ -2,8 +2,7 @@ package org.mockserver.streams;
 
 import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -14,11 +13,14 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 
+import static com.google.common.base.Charsets.UTF_8;
+import static org.mockserver.character.Character.NEW_LINE;
+
 /**
  * @author jamesdbloom
  */
 public class IOStreamUtils {
-    private static final Logger logger = LoggerFactory.getLogger(IOStreamUtils.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(IOStreamUtils.class);
 
     public static String readInputStreamToString(Socket socket) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -32,14 +34,14 @@ public class IOStreamUtils {
             if (line.length() == 0) {
 
                 if (contentLength != null) {
-                    result.append('\n');
+                    result.append(NEW_LINE);
                     for (int position = 0; position < contentLength; position++) {
                         result.append((char) bufferedReader.read());
                     }
                 }
                 break;
             }
-            result.append(line).append('\n');
+            result.append(line).append(NEW_LINE);
         }
         return result.toString();
     }
@@ -48,7 +50,7 @@ public class IOStreamUtils {
         try {
             return IOUtils.toString(request.getInputStream(), Charsets.UTF_8.name());
         } catch (IOException ioe) {
-            logger.error("IOException while reading HttpServletRequest input stream", ioe);
+            MOCK_SERVER_LOGGER.error("IOException while reading HttpServletRequest input stream", ioe);
             throw new RuntimeException("IOException while reading HttpServletRequest input stream", ioe);
         }
     }
@@ -57,7 +59,7 @@ public class IOStreamUtils {
         try {
             return IOUtils.toByteArray(request.getInputStream());
         } catch (IOException ioe) {
-            logger.error("IOException while reading HttpServletRequest input stream", ioe);
+            MOCK_SERVER_LOGGER.error("IOException while reading HttpServletRequest input stream", ioe);
             throw new RuntimeException("IOException while reading HttpServletRequest input stream", ioe);
         }
     }
@@ -68,13 +70,13 @@ public class IOStreamUtils {
             output.write(data);
             output.close();
         } catch (IOException ioe) {
-            logger.error(String.format("IOException while writing [%s] to HttpServletResponse output stream", new String(data)), ioe);
+            MOCK_SERVER_LOGGER.error(String.format("IOException while writing [%s] to HttpServletResponse output stream", new String(data)), ioe);
             throw new RuntimeException(String.format("IOException while writing [%s] to HttpServletResponse output stream", new String(data)), ioe);
         }
     }
 
     public static ByteBuffer createBasicByteBuffer(String input) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(input.length()).put(input.getBytes());
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(input.length()).put(input.getBytes(UTF_8));
         byteBuffer.flip();
         return byteBuffer;
     }

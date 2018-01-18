@@ -2,10 +2,7 @@ package org.mockserver.client.serialization.model;
 
 import org.hamcrest.core.Is;
 import org.junit.Test;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.Parameter;
+import org.mockserver.model.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -15,7 +12,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertTrue;
+import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.StringBody.exact;
 
 /**
@@ -27,11 +28,11 @@ public class HttpRequestDTOTest {
     public void shouldReturnValuesSetInConstructor() {
         // given
         BodyDTO body = BodyDTO.createDTO(exact("body"));
-        List<CookieDTO> cookies = Arrays.asList(new CookieDTO(new Cookie("name", "value")));
-        List<HeaderDTO> headers = Arrays.asList(new HeaderDTO(new Header("name", "value")));
+        Cookies cookies = new Cookies().withEntries(cookie("name", "value"));
+        Headers headers = new Headers().withEntries(header("name", "value"));
         String method = "METHOD";
         String path = "path";
-        List<ParameterDTO> queryStringParameters = Arrays.asList(new ParameterDTO(new Parameter("name", "value")));
+        Parameters queryStringParameters = new Parameters().withEntries(param("name", "value"));
         HttpRequest httpRequest = new HttpRequest()
                 .withBody("body")
                 .withCookies(new Cookie("name", "value"))
@@ -80,11 +81,11 @@ public class HttpRequestDTOTest {
 
         // then
         assertThat(builtHttpRequest.getBody(), Is.<org.mockserver.model.Body>is(exact(body)));
-        assertThat(builtHttpRequest.getCookies(), containsInAnyOrder(cookie));
-        assertThat(builtHttpRequest.getHeaders(), containsInAnyOrder(header));
+        assertThat(builtHttpRequest.getCookieList(), containsInAnyOrder(cookie));
+        assertThat(builtHttpRequest.getHeaderList(), containsInAnyOrder(header));
         assertThat(builtHttpRequest.getMethod(), is(string(method)));
         assertThat(builtHttpRequest.getPath(), is(string(path)));
-        assertThat(builtHttpRequest.getQueryStringParameters(), containsInAnyOrder(parameter));
+        assertThat(builtHttpRequest.getQueryStringParameterList(), containsInAnyOrder(parameter));
         assertThat(builtHttpRequest.isKeepAlive(), is(Boolean.TRUE));
         assertThat(builtHttpRequest.isSecure(), is(Boolean.TRUE));
     }
@@ -93,11 +94,11 @@ public class HttpRequestDTOTest {
     public void shouldReturnValuesSetInSetter() {
         // given
         BodyDTO body = BodyDTO.createDTO(exact("body"));
-        List<CookieDTO> cookies = Arrays.asList(new CookieDTO());
-        List<HeaderDTO> headers = Arrays.asList(new HeaderDTO());
+        Cookies cookies = new Cookies().withEntries(cookie("name", "value"));
+        Headers headers = new Headers().withEntries(header("name", "value"));
         String method = "METHOD";
         String path = "path";
-        List<ParameterDTO> queryStringParameters = Arrays.asList(new ParameterDTO());
+        Parameters queryStringParameters = new Parameters().withEntries(param("name", "value"));
         HttpRequest httpRequest = new HttpRequest();
 
         // when
@@ -130,11 +131,11 @@ public class HttpRequestDTOTest {
 
         // then
         assertThat(httpRequestDTO.getBody(), is(nullValue()));
-        assertThat(httpRequestDTO.getCookies(), is(empty()));
-        assertThat(httpRequestDTO.getHeaders(), is(empty()));
+        assertTrue(httpRequestDTO.getCookies().isEmpty());
+        assertTrue(httpRequestDTO.getHeaders().isEmpty());
         assertThat(httpRequestDTO.getMethod(), is(string("")));
         assertThat(httpRequestDTO.getPath(), is(string("")));
-        assertThat(httpRequestDTO.getQueryStringParameters(), is(empty()));
+        assertTrue(httpRequestDTO.getQueryStringParameters().isEmpty());
         assertThat(httpRequestDTO.getKeepAlive(), is(nullValue()));
         assertThat(httpRequestDTO.getSecure(), is(nullValue()));
     }
@@ -146,11 +147,11 @@ public class HttpRequestDTOTest {
 
         // then
         assertThat(httpRequestDTO.getBody(), is(nullValue()));
-        assertThat(httpRequestDTO.getCookies(), is(empty()));
-        assertThat(httpRequestDTO.getHeaders(), is(empty()));
+        assertTrue(httpRequestDTO.getCookies().isEmpty());
+        assertTrue(httpRequestDTO.getHeaders().isEmpty());
         assertThat(httpRequestDTO.getMethod(), is(string("")));
         assertThat(httpRequestDTO.getPath(), is(string("")));
-        assertThat(httpRequestDTO.getQueryStringParameters(), is(empty()));
+        assertTrue(httpRequestDTO.getQueryStringParameters().isEmpty());
         assertThat(httpRequestDTO.getKeepAlive(), is(nullValue()));
         assertThat(httpRequestDTO.getSecure(), is(nullValue()));
     }

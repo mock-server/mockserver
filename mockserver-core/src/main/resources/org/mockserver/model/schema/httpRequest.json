@@ -1,25 +1,33 @@
 {
-  "title": "request matcher",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "body": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/body.json"
+    "title": "request matcher",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "body": {
+            "$ref": "#/definitions/body"
+        },
+        "headers": {
+            "$ref": "#/definitions/keyToMultiValue"
+        },
+        "cookies": {
+            "$ref": "#/definitions/keyToValue"
+        },
+        "queryStringParameters": {
+            "$ref": "#/definitions/keyToMultiValue"
+        },
+        "path": {
+            "type": "string"
+        },
+        "method": {
+            "type": "string"
+        },
+        "secure": {
+            "type": "boolean"
+        },
+        "keepAlive": {
+            "type": "boolean"
+        }
     },
-    "headers": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/headers.json"
-    },
-    "cookies": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/cookies.json"
-    },
-    "queryStringParameters": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/queryStringParameters.json"
-    },
-    "path": {
-      "type": "string"
-    },
-    "method": {
-      "type": "string"
+    "definitions": {
     }
-  }
 }

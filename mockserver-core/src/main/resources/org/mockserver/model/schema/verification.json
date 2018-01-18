@@ -1,13 +1,15 @@
 {
-  "title": "verification",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "httpRequest": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/httpRequest.json"
+    "title": "verification",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "httpRequest": {
+            "$ref": "#/definitions/httpRequest"
+        },
+        "times": {
+            "$ref": "#/definitions/verificationTimes"
+        }
     },
-    "times": {
-      "$ref": "https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/model/schema/verificationTimes.json"
+    "definitions": {
     }
-  }
 }

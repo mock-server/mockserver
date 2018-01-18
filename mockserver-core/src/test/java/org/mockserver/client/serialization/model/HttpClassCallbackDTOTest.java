@@ -6,6 +6,7 @@ import org.mockserver.model.HttpClassCallback;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.model.HttpClassCallback.callback;
 
 /**
  * @author jamesdbloom
@@ -17,8 +18,7 @@ public class HttpClassCallbackDTOTest {
         // given
         String callbackClass = HttpClassCallbackDTOTest.class.getName();
 
-        HttpClassCallback httpClassCallback = new HttpClassCallback()
-                .withCallbackClass(callbackClass);
+        HttpClassCallback httpClassCallback = callback(callbackClass);
 
         // when
         HttpClassCallbackDTO httpClassCallbackDTO = new HttpClassCallbackDTO(httpClassCallback);

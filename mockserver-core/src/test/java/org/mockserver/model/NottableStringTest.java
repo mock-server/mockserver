@@ -30,7 +30,7 @@ public class NottableStringTest {
 
         // then
         assertThat(nottableString.isNot(), is(false));
-        assertThat(nottableString.getNot(), nullValue());
+        assertThat(nottableString.getNot(), is(false));
         assertThat(nottableString.getValue(), is("value"));
     }
 
@@ -86,6 +86,33 @@ public class NottableStringTest {
         assertFalse(NottableString.string("value").equalsIgnoreCase("OTHER_value"));
 
         assertFalse(string("value").equalsIgnoreCase(NottableString.not("VALUE")));
+    }
+
+    @Test
+    public void shouldEqualForNotValueNull() {
+        assertTrue(NottableString.not("value").equals(string("value", true)));
+        assertTrue(NottableString.string("value").equals(string("value", false)));
+
+        NottableString initiallyTrueValue = NottableString.string("value");
+        initiallyTrueValue.setNot(true);
+        assertTrue(initiallyTrueValue.equals(string("value", true)));
+        assertTrue(initiallyTrueValue.equals(NottableString.not("value")));
+
+        NottableString initiallyFalseValue = NottableString.not("value");
+        initiallyFalseValue.setNot(false);
+        assertTrue(initiallyFalseValue.equals(string("value")));
+        assertTrue(initiallyFalseValue.equals(string("value", false)));
+    }
+
+    @Test
+    public void shouldConvertToString() {
+        assertThat(NottableString.not("value").toString(), is("!value"));
+        assertThat("" + NottableString.not("value"), is("!value"));
+        assertThat(String.valueOf(NottableString.not("value")), is("!value"));
+
+        assertThat(NottableString.string("value").toString(), is("value"));
+        assertThat("" + NottableString.string("value"), is("value"));
+        assertThat(String.valueOf(NottableString.string("value")), is("value"));
     }
 
 }

@@ -8,7 +8,7 @@ public class XPathBody extends Body {
     private final String xpath;
 
     public XPathBody(String xpath) {
-        super(Type.XPATH, null);
+        super(Type.XPATH);
         this.xpath = xpath;
     }
 

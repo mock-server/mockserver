@@ -5,7 +5,9 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static org.junit.Assert.*;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpError.error;
 
 /**
@@ -31,23 +33,23 @@ public class HttpErrorTest {
 
     @Test
     public void returnsResponseBytes() {
-        assertArrayEquals("some_bytes".getBytes(), new HttpError().withResponseBytes("some_bytes".getBytes()).getResponseBytes());
+        assertArrayEquals("some_bytes".getBytes(UTF_8), new HttpError().withResponseBytes("some_bytes".getBytes(UTF_8)).getResponseBytes());
     }
 
     @Test
     public void shouldReturnFormattedRequestInToString() {
-        TestCase.assertEquals("{" + System.getProperty("line.separator") +
-                        "  \"delay\" : {" + System.getProperty("line.separator") +
-                        "    \"timeUnit\" : \"DAYS\"," + System.getProperty("line.separator") +
-                        "    \"value\" : 10" + System.getProperty("line.separator") +
-                        "  }," + System.getProperty("line.separator") +
-                        "  \"dropConnection\" : true," + System.getProperty("line.separator") +
-                        "  \"responseBytes\" : \"c29tZV9ieXRlcw==\"" + System.getProperty("line.separator") +
+        TestCase.assertEquals("{" + NEW_LINE +
+                        "  \"delay\" : {" + NEW_LINE +
+                        "    \"timeUnit\" : \"DAYS\"," + NEW_LINE +
+                        "    \"value\" : 10" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"dropConnection\" : true," + NEW_LINE +
+                        "  \"responseBytes\" : \"c29tZV9ieXRlcw==\"" + NEW_LINE +
                         "}",
                 error()
                         .withDelay(TimeUnit.DAYS, 10)
                         .withDropConnection(true)
-                        .withResponseBytes("some_bytes".getBytes())
+                        .withResponseBytes("some_bytes".getBytes(UTF_8))
                         .toString()
         );
     }

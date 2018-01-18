@@ -1,45 +1,60 @@
 package org.mockserver.client.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import org.mockserver.client.serialization.model.VerificationDTO;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.validator.jsonschema.JsonSchemaVerificationValidator;
 import org.mockserver.verify.Verification;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
  */
 public class VerificationSerializer implements Serializer<Verification> {
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final MockServerLogger mockServerLogger;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private JsonSchemaVerificationValidator verificationValidator;
+
+    public VerificationSerializer(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        verificationValidator = new JsonSchemaVerificationValidator(mockServerLogger);
+    }
 
     public String serialize(Verification verification) {
         try {
             return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(new VerificationDTO(verification));
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(new VerificationDTO(verification));
         } catch (Exception e) {
-            logger.error("Exception while serializing verification to JSON with value " + verification, e);
+            mockServerLogger.error("Exception while serializing verification to JSON with value " + verification, e);
             throw new RuntimeException("Exception while serializing verification to JSON with value " + verification, e);
         }
     }
 
     public Verification deserialize(String jsonVerification) {
-        Verification verification = null;
-        if (jsonVerification != null && !jsonVerification.isEmpty()) {
-            try {
-                VerificationDTO verificationDTO = objectMapper.readValue(jsonVerification, VerificationDTO.class);
-                if (verificationDTO != null) {
-                    verification = verificationDTO.buildObject();
+        if (Strings.isNullOrEmpty(jsonVerification)) {
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a verification is required but value was \"" + String.valueOf(jsonVerification) + "\"");
+        } else {
+            String validationErrors = verificationValidator.isValid(jsonVerification);
+            if (validationErrors.isEmpty()) {
+                Verification verification = null;
+                try {
+                    VerificationDTO verificationDTO = objectMapper.readValue(jsonVerification, VerificationDTO.class);
+                    if (verificationDTO != null) {
+                        verification = verificationDTO.buildObject();
+                    }
+                } catch (Exception e) {
+                    mockServerLogger.error("Exception while parsing [" + jsonVerification + "] for Verification", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonVerification + "] for Verification", e);
                 }
-            } catch (Exception e) {
-                logger.info("Exception while parsing response [" + jsonVerification + "] for verification", e);
-                throw new RuntimeException("Exception while parsing response [" + jsonVerification + "] for verification", e);
+                return verification;
+            } else {
+                mockServerLogger.info("Validation failed:{}" + NEW_LINE + " Verification:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonVerification, verificationValidator.getSchema());
+                throw new IllegalArgumentException(validationErrors);
             }
         }
-        return verification;
     }
 
     @Override

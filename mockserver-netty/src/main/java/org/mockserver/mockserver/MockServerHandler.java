@@ -1,333 +1,130 @@
 package org.mockserver.mockserver;
 
-import com.google.common.base.Joiner;
 import com.google.common.net.MediaType;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpServerCodec;
-import org.mockserver.client.serialization.*;
-import org.mockserver.filters.RequestLogFilter;
-import org.mockserver.logging.LogFormatter;
-import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
+import org.mockserver.client.serialization.PortBindingSerializer;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
-import org.mockserver.mockserver.callback.ExpectationCallbackResponse;
-import org.mockserver.mockserver.callback.WebSocketClientRegistry;
-import org.mockserver.model.*;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.PortBinding;
+import org.mockserver.proxy.connect.HttpConnectHandler;
+import org.mockserver.responsewriter.NettyResponseWriter;
+import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.socket.KeyAndCertificateFactory;
-import org.mockserver.validator.ExpectationValidator;
-import org.mockserver.verify.Verification;
-import org.mockserver.verify.VerificationSequence;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.BindException;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.*;
-import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
-import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
-import static io.netty.handler.codec.http.HttpResponseStatus.*;
-import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
-import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
-import static org.mockserver.model.ConnectionOptions.connectionOptions;
-import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
-import static org.mockserver.model.Header.header;
-import static org.mockserver.model.HttpResponse.notFoundResponse;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
+import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
+import static org.mockserver.proxy.Proxy.*;
+import static org.mockserver.unification.PortUnificationHandler.enabledSslUpstreamAndDownstream;
 
+/**
+ * @author jamesdbloom
+ */
 @ChannelHandler.Sharable
 public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private LogFormatter logFormatter = new LogFormatter(logger);
-    // mockserver
-    private MockServer server;
-    private RequestLogFilter requestLogFilter;
-    private MockServerMatcher mockServerMatcher;
-    private WebSocketClientRegistry webSocketClientRegistry;
-    private ActionHandler actionHandler;
+    private MockServerLogger mockServerLogger;
+    // generic handling
+    private HttpStateHandler httpStateHandler;
     // serializers
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer();
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer();
-    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer();
-    private VerificationSerializer verificationSerializer = new VerificationSerializer();
-    private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer();
-    // validators
-    private ExpectationValidator expectationValidator = new ExpectationValidator();
+    private PortBindingSerializer portBindingSerializer;
+    // server
+    private MockServer server;
+    // expectations
+    private ActionHandler actionHandler;
 
-    public MockServerHandler(MockServer server, MockServerMatcher mockServerMatcher, WebSocketClientRegistry webSocketClientRegistry, RequestLogFilter requestLogFilter) {
+    public MockServerHandler(MockServer server, HttpStateHandler httpStateHandler) {
+        super(false);
         this.server = server;
-        this.requestLogFilter = requestLogFilter;
-        this.mockServerMatcher = mockServerMatcher;
-        this.webSocketClientRegistry = webSocketClientRegistry;
-        actionHandler = new ActionHandler(requestLogFilter);
+        this.httpStateHandler = httpStateHandler;
+        this.mockServerLogger = httpStateHandler.getMockServerLogger();
+        portBindingSerializer = new PortBindingSerializer(mockServerLogger);
+        this.actionHandler = new ActionHandler(httpStateHandler);
     }
 
     @Override
-    protected void channelRead0(final ChannelHandlerContext ctx, final HttpRequest request) {
+    protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
 
+        ResponseWriter responseWriter = new NettyResponseWriter(ctx);
         try {
 
-            if ((enableCORSForAPI() || enableCORSForAllResponses()) && request.getMethod().getValue().equals("OPTIONS") && !request.getFirstHeader("Origin").isEmpty()) {
+            if (!httpStateHandler.handle(request, responseWriter, false)) {
 
-                writeResponse(ctx, request, OK);
+                if (request.matches("PUT", "/status")) {
 
-            } else if (request.matches("PUT", "/status")) {
+                    responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(server.getPorts())), "application/json");
 
-                List<Integer> actualPortBindings = server.getPorts();
-                writeResponse(ctx, request, OK, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
+                } else if (request.matches("PUT", "/bind")) {
 
-            } else if (request.matches("PUT", "/bind")) {
-
-                PortBinding requestedPortBindings = portBindingSerializer.deserialize(request.getBodyAsString());
-                try {
-                    List<Integer> actualPortBindings = server.bindToPorts(requestedPortBindings.getPorts());
-                    writeResponse(ctx, request, ACCEPTED, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
-                } catch (RuntimeException e) {
-                    if (e.getCause() instanceof BindException) {
-                        writeResponse(ctx, request, NOT_ACCEPTABLE, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());
-                    } else {
-                        throw e;
-                    }
-                }
-
-            } else if (request.matches("PUT", "/expectation")) {
-
-                for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString())) {
-                    String validationErrors = expectationValidator.isValid(expectation);
-                    if (validationErrors.isEmpty()) {
-                        KeyAndCertificateFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
-                        mockServerMatcher
-                                .when(expectation.getHttpRequest(), expectation.getTimes(), expectation.getTimeToLive())
-                                .thenRespond(expectation.getHttpResponse())
-                                .thenForward(expectation.getHttpForward())
-                                .thenError(expectation.getHttpError())
-                                .thenCallback(expectation.getHttpClassCallback())
-                                .thenCallback(expectation.getHttpObjectCallback());
-                        logFormatter.infoLog("creating expectation:{}", expectation);
-                        writeResponse(ctx, request, CREATED);
-                    } else {
-                        writeResponse(ctx, request, NOT_ACCEPTABLE, validationErrors, MediaType.create("text", "plain").toString());
-                    }
-                }
-
-            } else if (request.matches("PUT", "/clear")) {
-
-                org.mockserver.model.HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
-                if (request.hasQueryStringParameter("type", "expectation")) {
-                    logFormatter.infoLog("clearing expectations that match:{}", httpRequest);
-                    mockServerMatcher.clear(httpRequest);
-                } else if (request.hasQueryStringParameter("type", "log")) {
-                    logFormatter.infoLog("clearing request logs that match:{}", httpRequest);
-                    requestLogFilter.clear(httpRequest);
-                } else {
-                    logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
-                    requestLogFilter.clear(httpRequest);
-                    mockServerMatcher.clear(httpRequest);
-                }
-                logFormatter.infoLog("clearing expectations and request logs that match:{}", httpRequest);
-                writeResponse(ctx, request, ACCEPTED);
-
-            } else if (request.matches("PUT", "/reset")) {
-
-                requestLogFilter.reset();
-                mockServerMatcher.reset();
-                logFormatter.infoLog("resetting all expectations and request logs");
-                writeResponse(ctx, request, ACCEPTED);
-
-            } else if (request.matches("PUT", "/dumpToLog")) {
-
-                mockServerMatcher.dumpToLog(httpRequestSerializer.deserialize(request.getBodyAsString()));
-                writeResponse(ctx, request, ACCEPTED);
-
-            } else if (request.matches("PUT", "/retrieve")) {
-
-                HttpRequest httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
-                if (request.hasQueryStringParameter("type", "expectation")) {
-                    Expectation[] expectations = mockServerMatcher.retrieveExpectations(httpRequest);
-                    logFormatter.infoLog("retrieving expectations that match:{}", httpRequest);
-                    writeResponse(ctx, request, OK, expectationSerializer.serialize(expectations), "application/json");
-                } else {
-                    HttpRequest[] requests = requestLogFilter.retrieve(httpRequest);
-                    logFormatter.infoLog("retrieving requests that match:{}", httpRequest);
-                    writeResponse(ctx, request, OK, httpRequestSerializer.serialize(requests), "application/json");
-                }
-
-            } else if (request.matches("PUT", "/verify")) {
-
-                Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
-                String result = requestLogFilter.verify(verification);
-                logFormatter.infoLog("verifying requests that match:{}", verification);
-                if (result.isEmpty()) {
-                    writeResponse(ctx, request, ACCEPTED);
-                } else {
-                    writeResponse(ctx, request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
-                }
-
-            } else if (request.matches("PUT", "/verifySequence")) {
-
-                VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
-                String result = requestLogFilter.verify(verificationSequence);
-                logFormatter.infoLog("verifying sequence that match:{}", verificationSequence);
-                if (result.isEmpty()) {
-                    writeResponse(ctx, request, ACCEPTED);
-                } else {
-                    writeResponse(ctx, request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
-                }
-
-            } else if (request.matches("PUT", "/stop")) {
-
-                ctx.writeAndFlush(response().withStatusCode(ACCEPTED.code()));
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        server.stop();
-                    }
-                }).start();
-
-            } else {
-
-                Action handle = mockServerMatcher.retrieveAction(request);
-                if (handle instanceof HttpError) {
-                    HttpError httpError = ((HttpError) handle).applyDelay();
-                    if (httpError.getResponseBytes() != null) {
-                        // write byte directly by skipping over HTTP codec
-                        ChannelHandlerContext httpCodecContext = ctx.pipeline().context(HttpServerCodec.class);
-                        if (httpCodecContext != null) {
-                            httpCodecContext.writeAndFlush(Unpooled.wrappedBuffer(httpError.getResponseBytes())).awaitUninterruptibly();
+                    PortBinding requestedPortBindings = portBindingSerializer.deserialize(request.getBodyAsString());
+                    try {
+                        List<Integer> actualPortBindings = server.bindToPorts(requestedPortBindings.getPorts());
+                        responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
+                    } catch (RuntimeException e) {
+                        if (e.getCause() instanceof BindException) {
+                            responseWriter.writeResponse(request, BAD_REQUEST, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());
+                        } else {
+                            throw e;
                         }
                     }
-                    if (httpError.getDropConnection()) {
-                        ctx.close();
-                    }
-                } else if (handle instanceof HttpObjectCallback) {
-                    String clientId = ((HttpObjectCallback) handle).getClientId();
-                    webSocketClientRegistry.registerCallbackResponseHandler(clientId, new ExpectationCallbackResponse() {
+
+                } else if (request.matches("PUT", "/stop")) {
+
+                    ctx.writeAndFlush(response().withStatusCode(OK.code()));
+                    new Thread(new Runnable() {
                         @Override
-                        public void handle(HttpResponse response) {
-                            logFormatter.infoLog("returning response:{}" + System.getProperty("line.separator") + " for request:{}", response, request);
-                            writeResponse(ctx, request, response.withConnectionOptions(connectionOptions().withCloseSocket(true)));
+                        public void run() {
+                            server.stop();
                         }
-                    });
-                    webSocketClientRegistry.sendClientMessage(clientId, request);
+                    }).start();
+
+                } else if (request.getMethod().getValue().equals("CONNECT")) {
+
+                    ctx.channel().attr(PROXYING).set(Boolean.TRUE);
+                    // assume SSL for CONNECT request
+                    enabledSslUpstreamAndDownstream(ctx.channel());
+                    // add Subject Alternative Name for SSL certificate
+                    KeyAndCertificateFactory.addSubjectAlternativeName(request.getPath().getValue());
+                    ctx.pipeline().addLast(new HttpConnectHandler(mockServerLogger, request.getPath().getValue(), -1));
+                    ctx.pipeline().remove(this);
+                    ctx.fireChannelRead(request);
+
                 } else {
-                    HttpResponse response = actionHandler.processAction(handle, request);
-                    logFormatter.infoLog("returning response:{}" + System.getProperty("line.separator") + " for request:{}", response, request);
-                    writeResponse(ctx, request, response);
+
+                    actionHandler.processAction(request, responseWriter, ctx, getLocalAddresses(ctx), isProxyingRequest(ctx), false);
+
                 }
-
             }
+        } catch (IllegalArgumentException iae) {
+            mockServerLogger.error(request, "Exception processing " + request + "\n" + iae.getMessage());
+            // send request without API CORS headers
+            responseWriter.writeResponse(request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
-            logger.error("Exception processing " + request, e);
-            writeResponse(ctx, request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()));
-        }
-
-    }
-
-    private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus responseStatus) {
-        writeResponse(ctx, request, responseStatus, "", "application/json");
-    }
-
-    private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus responseStatus, String body, String contentType) {
-        HttpResponse response = response()
-                .withStatusCode(responseStatus.code())
-                .withBody(body);
-        if (body != null && !body.isEmpty()) {
-            response.updateHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));
-        }
-        if (enableCORSForAPI()) {
-            addCORSHeaders(response);
-        }
-        writeResponse(ctx, request, response);
-    }
-
-    private void writeResponse(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
-        if (response == null) {
-            response = notFoundResponse();
-        }
-        if (enableCORSForAllResponses()) {
-            addCORSHeaders(response);
-        }
-
-        addConnectionHeader(request, response);
-
-        writeAndCloseSocket(ctx, request, response);
-    }
-
-    private void addCORSHeaders(HttpResponse response) {
-        String methods = "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE";
-        String headers = "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary";
-        if (response.getFirstHeader("Access-Control-Allow-Origin").isEmpty()) {
-            response.withHeader("Access-Control-Allow-Origin", "*");
-        }
-        if (response.getFirstHeader("Access-Control-Allow-Methods").isEmpty()) {
-            response.withHeader("Access-Control-Allow-Methods", methods);
-        }
-        if (response.getFirstHeader("Access-Control-Allow-Headers").isEmpty()) {
-            response.withHeader("Access-Control-Allow-Headers", headers);
-        }
-        if (response.getFirstHeader("Access-Control-Expose-Headers").isEmpty()) {
-            response.withHeader("Access-Control-Expose-Headers", headers);
-        }
-        if (response.getFirstHeader("Access-Control-Max-Age").isEmpty()) {
-            response.withHeader("Access-Control-Max-Age", "1");
-        }
-        if (response.getFirstHeader("X-CORS").isEmpty()) {
-            response.withHeader("X-CORS", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.disableCORS=false");
-        }
-    }
-
-    private void addConnectionHeader(HttpRequest request, HttpResponse response) {
-        ConnectionOptions connectionOptions = response.getConnectionOptions();
-        if (connectionOptions != null && connectionOptions.getKeepAliveOverride() != null) {
-            if (connectionOptions.getKeepAliveOverride()) {
-                response.updateHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
-            } else {
-                response.updateHeader(header(CONNECTION.toString(), CLOSE.toString()));
-            }
-        } else if (connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressConnectionHeader())) {
-            if (request.isKeepAlive() != null && request.isKeepAlive()
-                    && (connectionOptions == null || isFalseOrNull(connectionOptions.getCloseSocket()))) {
-                response.updateHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()));
-            } else {
-                response.updateHeader(header(CONNECTION.toString(), CLOSE.toString()));
-            }
-        }
-    }
-
-    private void writeAndCloseSocket(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
-        boolean closeChannel;
-
-        ConnectionOptions connectionOptions = response.getConnectionOptions();
-        if (connectionOptions != null && connectionOptions.getCloseSocket() != null) {
-            closeChannel = connectionOptions.getCloseSocket();
-        } else {
-            closeChannel = !(request.isKeepAlive() != null && request.isKeepAlive());
-        }
-
-        if (closeChannel) {
-            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-        } else {
-            ctx.write(response);
+            mockServerLogger.error(request, e, "Exception processing " + request);
+            responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()), true);
         }
     }
 
     @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+    public void channelReadComplete(ChannelHandlerContext ctx) {
         ctx.flush();
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        if (!cause.getMessage().contains("Connection reset by peer")) {
-            logger.warn("Exception caught by MockServer handler -> closing pipeline", cause);
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        if (shouldNotIgnoreException(cause)) {
+            new MockServerLogger(this.getClass()).error("Exception caught by " + server.getClass() + " handler -> closing pipeline " + ctx.channel(), cause);
         }
-        ctx.close();
+        closeOnFlush(ctx.channel());
     }
 }

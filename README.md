@@ -28,7 +28,7 @@ In addition MockServer SNAPSHOT artifacts can also be found on [Sonatype](https:
 
 NPM Registry contains the following module:
 
-* [MockServer Grunt Plugin](https://www.npmjs.org/package/mockserver-grunt) - a Node.js module and Grunt plugin to start and stop MockServer <br/> [![mockserver-grunt](https://nodei.co/npm/mockserver-grunt.png?downloads=true)](https://www.npmjs.org/package/mockserver-grunt)
+* [mockserver-node](https://www.npmjs.org/package/mockserver-node) - a Node.js module and Grunt plugin to start and stop MockServer <br/> [![mockserver-node](https://nodei.co/npm/mockserver-node.png?downloads=true)](https://www.npmjs.org/package/mockserver-node)
 * [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy <br/> [![mockserver-client-node](https://nodei.co/npm/mockserver-client.png?downloads=true)](https://www.npmjs.org/package/mockserver-client)
 
 ### Docker Index
@@ -37,22 +37,33 @@ Docker Index contains the following artifacts:
 
 * [MockServer Docker Container](https://hub.docker.com/r/jamesdbloom/mockserver/) - a Docker container containing the Netty MockServer and proxy
 
-### Vert.X Module Registry
-
-Vert.X Module Registry contains the following artifacts:
-
-* [`org.mock-server~mockserver-vertx~2.9`](http://modulereg.vertx.io/) - a Vert.X module that mocks HTTP and HTTPS requests 
-
 ### MockServer Clients
 
 * [mockserver-client-ruby ![mockserver-client](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - Ruby client for both the MockServer and the proxy 
 * [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client for both the MockServer and the proxy 
-* [mockserver-client-javascript](https://github.com/jamesdbloom/mockserver/tree/master/mockserver-client-javascript) - a JavaScript client for both the MockServer and the proxy 
-* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy
+* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.3.0/mockServerClient.js) client for both the MockServer and the proxy
 
-# REST API
-
-https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/10.8
+### API Versions
+Date       | Version | Java API                                                              | REST API
+:--------- |:------- |:--------------------------------------------------------------------- |:-----------
+25-Dec-17  | 5.3.0	 | [Java API](http://mock-server.com/versions/5.3.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
+17-Dec-17  | 5.2.3	 | [Java API](http://mock-server.com/versions/5.2.3/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
+12-Dec-17  | 5.2.2	 | [Java API](http://mock-server.com/versions/5.2.2/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
+11-Dec-17  | 5.2.1	 | [Java API](http://mock-server.com/versions/5.2.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
+10-Dec-17  | 5.2.0	 | [Java API](http://mock-server.com/versions/5.2.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
+06-Dec-17  | 5.1.1	 | [Java API](http://mock-server.com/versions/5.1.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.1.x)
+05-Dec-17  | 5.1.0	 | [Java API](http://mock-server.com/versions/5.1.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.1.x)
+05-Dec-17  | 5.0.1	 | [Java API](http://mock-server.com/versions/5.0.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.0.x)
+04-Dec-17  | 5.0.0	 | [Java API](http://mock-server.com/versions/5.0.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.0.x)
+30-Nov-17  | 4.1.0	 | [Java API](http://mock-server.com/versions/4.1.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/4.x.x)
+28-Nov-17  | 4.0.0	 | [Java API](http://mock-server.com/versions/4.0.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/4.x.x)
+16-Nov-17  | 3.12	 | [Java API](http://mock-server.com/versions/3.12/apidocs/index.html)   | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+10-Sep-17  | 3.11	 | [Java API](http://mock-server.com/versions/3.11/apidocs/index.html)   | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+22-Jun-17  | 3.10.8	 | [Java API](http://mock-server.com/versions/3.10.8/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+02-May-17  | 3.10.7	 | [Java API](http://mock-server.com/versions/3.10.7/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+27-Apr-17  | 3.10.6	 | [Java API](http://mock-server.com/versions/3.10.6/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+25-Apr-17  | 3.10.5	 | [Java API](http://mock-server.com/versions/3.10.5/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+06-Mar-16  | 3.10.4	 |  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
 
 # Issues
 
@@ -64,3 +75,5 @@ Pull requests are, of course, very welcome! Please read our [contributing to the
 
 # Maintainers
 * [James D Bloom](http://blog.jamesdbloom.com)
+
+[![Analytics](https://ga-beacon.appspot.com/UA-32687194-4/mockserver/README.md)](https://github.com/igrigorik/ga-beacon)

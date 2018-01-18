@@ -1,0 +1,201 @@
+<p>The following code examples show how to create different callback actions.</p>
+<button id="button_class_callback" class="accordion">class callback</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">public class CallbackActionExamples {
+
+    public void classCallback() {
+        new ClientAndServer(1080)
+            .when(
+                request()
+                    .withPath("/some.*")
+            )
+            .callback(
+                callback()
+                    .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationResponseCallback")
+            );
+    }
+
+    public static class TestExpectationResponseCallback implements ExpectationResponseCallback {
+
+        @Override
+        public HttpResponse handle(HttpRequest httpRequest) {
+            if (httpRequest.getPath().getValue().endsWith("/path")) {
+                return response()
+                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                    .withHeaders(
+                        header("x-callback", "test_callback_header"),
+                        header("Content-Length", "a_callback_response".getBytes(UTF_8).length),
+                        header("Connection", "keep-alive")
+                    )
+                    .withBody("a_callback_response");
+            } else {
+                return notFoundResponse();
+            }
+        }
+    }
+
+}</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some.*"
+    },
+    "httpClassCallback": {
+        "callbackClass": "org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationResponseCallback"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+    "httpRequest" : {
+        "path" : "/some.*"
+    },
+    "httpClassCallback" : {
+        "callbackClass" : "org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationResponseCallback"
+    }
+}'</code></pre>
+    </div>
+    <p>To use a class callback MockServer must be able to <strong>load the class from the classpath</strong>.</p>
+
+    <p>If MockServer is started using the <a href="/mock_server/running_mock_server.html#junit_rule">JUnit @Rule</a> <strong>org.mockserver.junit.MockServerRule</strong> or using <strong>org.mockserver.integration.ClientAndServer</strong> or directly using the <strong>org.mockserver.mockserver.MockServerBuilder</strong> then any class present in the main or test classpaths will be visible to MockServer.</p>
+
+    <p>If MockServer is started using the <a href="/mock_server/running_mock_server.html#maven_plugin">maven plugin</a> only the non-forked goals (such as <span class="element_value">runAndWait</span> and <span class="element_value">start</span>) will be able to load classes from the main and test classpaths.  It is possible to use classes from a separate maven dependency, however, this dependency must be specified in the plugin configuration <span class="element">dependencies</span> section.  Any dependency added to the plugin configuration <span class="element">dependencies</span> section will then be visible to MockServer run using both forked and non-forked goals.</p>
+
+    <p>The following configuration shows how to use classes from a separate maven dependency in callback actions.</p>
+
+    <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
+     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
+     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">5.3.0</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">configuration</span>&gt;
+        &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
+        &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
+        &lt;<span class="element">pipeLogToConsole</span>&gt;<span class="element_value">true</span>&lt;/<span class="element">pipeLogToConsole</span>&gt;
+     &lt;/<span class="element">configuration</span>&gt;
+     &lt;<span class="element">executions</span>&gt;
+         &lt;<span class="element">execution</span>&gt;
+             &lt;<span class="element">id</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">id</span>&gt;
+             &lt;<span class="element">phase</span>&gt;<span class="element_value">pre-integration-test</span>&lt;/<span class="element">phase</span>&gt;
+             &lt;<span class="element">goals</span>&gt;
+                 &lt;<span class="element">goal</span>&gt;<span class="element_value">runForked</span>&lt;/<span class="element">goal</span>&gt;
+             &lt;/<span class="element">goals</span>&gt;
+         &lt;/<span class="element">execution</span>&gt;
+         &lt;<span class="element">execution</span>&gt;
+             &lt;<span class="element">id</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">id</span>&gt;
+             &lt;<span class="element">phase</span>&gt;<span class="element_value">post-integration-test</span>&lt;/<span class="element">phase</span>&gt;
+             &lt;<span class="element">goals</span>&gt;
+                 &lt;<span class="element">goal</span>&gt;<span class="element_value">stopForked</span>&lt;/<span class="element">goal</span>&gt;
+             &lt;/<span class="element">goals</span>&gt;
+         &lt;/<span class="element">execution</span>&gt;
+     &lt;/<span class="element">executions</span>&gt;
+     &lt;<span class="element">dependencies</span>&gt;
+         &lt;<span class="element">dependency</span>&gt;
+             &lt;<span class="element">groupId</span>&gt;<span class="element_value">com.my-domain</span>&lt;/<span class="element">groupId</span>&gt;
+             &lt;<span class="element">artifactId</span>&gt;<span class="element_value">my-callback-dependency</span>&lt;/<span class="element">artifactId</span>&gt;
+             &lt;<span class="element">version</span>&gt;<span class="element_value">1.0.0</span>&lt;/<span class="element">version</span>&gt;
+         &lt;/<span class="element">dependency</span>&gt;
+     &lt;/<span class="element">dependencies</span>&gt;
+ &lt;/<span class="element">plugin</span>&gt;</code></pre>
+
+    <p>If MockServer is started using the <a href="/mock_server/running_mock_server.html#running_from_command_line">command line</a> then the callback classes must be added to the JVM using the classpath command line switch (<strong>cp</strong> or <strong>classpath</strong>). The <strong>classpath</strong> switch is ignored by the JVM if the
+        <strong>jar</strong> switch is used. So to run the MockServer from the command line directly (with mockserver-netty-5.3.0-jar-with-dependencies.jar) you must specify the <strong>org.mockserver.cli.Main</strong> main class specifically and not use the <strong>jar</strong> switch as follows.</p>
+
+    <pre><code class="code">java -Dfile.encoding=UTF-8 -cp mockserver-netty-5.3.0-jar-with-dependencies.jar:my-callback-dependency.jar org.mockserver.cli.Main -serverPort 1080</code></pre>
+</div>
+<button id="button_method_or_closure_callback" class="accordion">method / closure callback</button>
+<div class="panel">
+    <button class="accordion inner">Java 7</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .callback(
+        new ExpectationResponseCallback() {
+            @Override
+            public HttpResponse handle(HttpRequest request) {
+                if (request.getMethod().getValue().equals("POST")) {
+                    return response()
+                        .withStatusCode(ACCEPTED_202.code())
+                        .withHeaders(
+                            header("x-object-callback", "test_object_callback_header")
+                        )
+                        .withBody("an_object_callback_response");
+                } else {
+                    return notFoundResponse();
+                }
+            }
+        }
+    );</code></pre>
+    </div>
+    <button class="accordion inner">Java 8+</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .callback(
+        request -> {
+            if (request.getMethod().getValue().equals("POST")) {
+                return response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withHeaders(
+                        header("x-object-callback", "test_object_callback_header")
+                    )
+                    .withBody("an_object_callback_response");
+            } else {
+                return notFoundResponse();
+            }
+        }
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+var callback = function (request) {
+    if (request.method === 'POST') {
+        return {
+            'statusCode': 201,
+            'header': {
+                "x-object-callback": ["test_object_callback_header"]
+            },
+            'body': "an_object_callback_response"
+        };
+    } else {
+        return {
+            'statusCode': 404
+        };
+    }
+};
+mockServerClient("localhost", 1080)
+    .mockWithCallback(
+        {
+            'path': '/some/path'
+        },
+        callback
+    )
+    .then(
+        function () {
+            console.log("expectation created");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+    </div>
+</div>

@@ -1,4 +1,5 @@
 exclude: ["vendor", "*.rb", "Gemfile*", "*.gemspec", "*.md", "*.pptx", "*.psd", "images/MockServerScenarios"]
+include: [".well-known"]
 
 # Site settings
 title: Mock Server

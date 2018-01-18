@@ -1,24 +1,23 @@
 package org.mockserver.matchers;
 
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author jamesdbloom
  */
 public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString implements Matcher<Boolean> {
-
-    private static Logger logger = LoggerFactory.getLogger(BooleanMatcher.class);
-
+    private final MockServerLogger mockServerLogger;
     private final Boolean matcher;
 
-    public BooleanMatcher(Boolean matcher) {
+    public BooleanMatcher(MockServerLogger mockServerLogger, Boolean matcher) {
+        this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
     }
 
     @Override
-    public boolean matches(Boolean matched) {
+    public boolean matches(HttpRequest context, Boolean matched) {
         boolean result = false;
 
         if (matcher == null) {
@@ -28,7 +27,7 @@ public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString i
         }
 
         if (!result) {
-            logger.trace("Failed to match [{}] with [{}]", matched, this.matcher);
+            mockServerLogger.trace(context, "Failed to match [{}] with [{}]", matched, this.matcher);
         }
 
         return result;

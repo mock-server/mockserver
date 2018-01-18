@@ -5,17 +5,17 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.integration.server.AbstractBasicClientServerIntegrationTest;
 import org.mockserver.junit.MockServerRule;
 import org.mockserver.socket.PortFactory;
 
 /**
  * @author jamesdbloom
  */
-public class MockServerRuleIntegrationTest extends AbstractMockServerNettyIntegrationTest {
+public class MockServerRuleIntegrationTest extends AbstractBasicClientServerIntegrationTest {
 
     // used fixed port for rule for all tests to ensure MockServer has been shutdown fully between each test
     private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static int TEST_SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
     @Rule
     public MockServerRule mockServerRule = new MockServerRule(this, SERVER_HTTP_PORT);
@@ -23,7 +23,7 @@ public class MockServerRuleIntegrationTest extends AbstractMockServerNettyIntegr
     @BeforeClass
     public static void startServer() {
         // start echo servers
-        echoServer = new EchoServer(TEST_SERVER_HTTP_PORT, false);
+        echoServer = new EchoServer(false);
     }
 
     @AfterClass
@@ -50,6 +50,6 @@ public class MockServerRuleIntegrationTest extends AbstractMockServerNettyIntegr
 
     @Override
     public int getTestServerPort() {
-        return TEST_SERVER_HTTP_PORT;
+        return echoServer.getPort();
     }
 }

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.client.serialization.model.ParameterBodyDTO;
-import org.mockserver.client.serialization.model.ParameterDTO;
 
 import java.io.IOException;
 
@@ -25,14 +24,7 @@ public class ParameterBodyDTOSerializer extends StdSerializer<ParameterBodyDTO> 
         }
         jgen.writeStringField("type", parameterBodyDTO.getType().name());
         if (!parameterBodyDTO.getParameters().isEmpty()) {
-            jgen.writeArrayFieldStart("parameters");
-            for (ParameterDTO parameter : parameterBodyDTO.getParameters()) {
-                jgen.writeStartObject();
-                jgen.writeObjectField("name", parameter.getName());
-                jgen.writeObjectField("values", parameter.getValues());
-                jgen.writeEndObject();
-            }
-            jgen.writeEndArray();
+            jgen.writeObjectField("parameters", parameterBodyDTO.getParameters());
         }
         jgen.writeEndObject();
     }

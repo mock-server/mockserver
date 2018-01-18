@@ -4,8 +4,6 @@ import org.mockserver.model.KeyAndValue;
 import org.mockserver.model.NottableString;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
-import java.util.List;
-
 /**
  * @author jamesdbloom
  */

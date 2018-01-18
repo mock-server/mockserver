@@ -18,7 +18,7 @@ public class MockServerStopTest {
     @Test
     public void canStartAndStopMultipleTimesViaClient() {
         // start server
-        MockServer mockServer = new MockServer(serverPort);
+        new MockServer(serverPort);
 
         // start client
         MockServerClient mockServerClient = new MockServerClient("localhost", serverPort);
@@ -29,7 +29,7 @@ public class MockServerStopTest {
 
             // then
             assertFalse(mockServerClient.isRunning());
-            mockServer = new MockServer(serverPort);
+            new MockServer(serverPort);
             assertTrue(mockServerClient.isRunning());
         }
 

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.client.serialization.model.StringBodyDTO;
-import org.mockserver.mappers.ContentTypeMapper;
 
 import java.io.IOException;
 
@@ -19,18 +18,22 @@ public class StringBodyDTOSerializer extends StdSerializer<StringBodyDTO> {
 
     @Override
     public void serialize(StringBodyDTO stringBodyDTO, JsonGenerator jgen, SerializerProvider provider) throws IOException {
-        boolean notFieldSetAndNonDefault = stringBodyDTO.getNot() != null && stringBodyDTO.getNot();
+        boolean notFieldSetAndNotDefault = stringBodyDTO.getNot() != null && stringBodyDTO.getNot();
+        boolean subStringFieldNotDefault = stringBodyDTO.isSubString();
         boolean contentTypeFieldSet = stringBodyDTO.getContentType() != null;
-        if (notFieldSetAndNonDefault || contentTypeFieldSet) {
+        if (notFieldSetAndNotDefault || contentTypeFieldSet || subStringFieldNotDefault) {
             jgen.writeStartObject();
-            if (notFieldSetAndNonDefault) {
+            if (notFieldSetAndNotDefault) {
                 jgen.writeBooleanField("not", true);
+            }
+            jgen.writeStringField("type", stringBodyDTO.getType().name());
+            jgen.writeStringField("string", stringBodyDTO.getString());
+            if (subStringFieldNotDefault) {
+                jgen.writeBooleanField("subString", true);
             }
             if (contentTypeFieldSet) {
                 jgen.writeStringField("contentType", stringBodyDTO.getContentType());
             }
-            jgen.writeStringField("type", stringBodyDTO.getType().name());
-            jgen.writeStringField("string", stringBodyDTO.getString());
             jgen.writeEndObject();
         } else {
             jgen.writeString(stringBodyDTO.getString());

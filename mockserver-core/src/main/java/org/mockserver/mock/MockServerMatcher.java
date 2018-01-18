@@ -1,87 +1,71 @@
 package org.mockserver.mock;
 
-import com.google.common.annotations.VisibleForTesting;
-import org.mockserver.client.serialization.Base64Converter;
-import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.collections.CircularLinkedList;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
-import org.mockserver.matchers.TimeToLive;
-import org.mockserver.matchers.Times;
-import org.mockserver.model.Action;
+import org.mockserver.ui.MockServerMatcherNotifier;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import static org.mockserver.configuration.ConfigurationProperties.maxExpectations;
 
 /**
  * @author jamesdbloom
  */
-public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToString {
+public class MockServerMatcher extends MockServerMatcherNotifier {
 
-    protected final List<Expectation> expectations = Collections.synchronizedList(new ArrayList<Expectation>());
-    private Logger requestLogger = LoggerFactory.getLogger("REQUEST");
+    protected final List<HttpRequestMatcher> httpRequestMatchers = Collections.synchronizedList(new CircularLinkedList<HttpRequestMatcher>(maxExpectations()));
+    private MatcherBuilder matcherBuilder;
 
-    public Expectation when(HttpRequest httpRequest) {
-        return when(httpRequest, Times.unlimited(), TimeToLive.unlimited());
+    MockServerMatcher(MockServerLogger logFormatter) {
+        this.matcherBuilder = new MatcherBuilder(logFormatter);
     }
 
-    public Expectation when(final HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
-        Expectation expectation;
-        if (times.isUnlimited()) {
-            Collection<Expectation> existingExpectationsWithMatchingRequest = new ArrayList<Expectation>();
-            for (Expectation potentialExpectation : new ArrayList<Expectation>(this.expectations)) {
-                if (potentialExpectation.contains(httpRequest)) {
-                    existingExpectationsWithMatchingRequest.add(potentialExpectation);
-                }
-            }
-            if (!existingExpectationsWithMatchingRequest.isEmpty()) {
-                for (Expectation existingExpectation : existingExpectationsWithMatchingRequest) {
-                    existingExpectation.setNotUnlimitedResponses();
-                }
-                expectation = new Expectation(httpRequest, times, timeToLive);
-            } else {
-                expectation = new Expectation(httpRequest, Times.unlimited(), timeToLive);
-            }
-        } else {
-            expectation = new Expectation(httpRequest, times, timeToLive);
-        }
-        this.expectations.add(expectation);
-        return expectation;
+    public synchronized void add(Expectation expectation) {
+        this.httpRequestMatchers.add(matcherBuilder.transformsToMatcher(expectation));
+        notifyListeners(this);
     }
 
-    public Action retrieveAction(HttpRequest httpRequest) {
-        for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
-            if (expectation.matches(httpRequest)) {
-                expectation.decrementRemainingMatches();
-                if (!expectation.hasRemainingMatches()) {
-                    if (this.expectations.contains(expectation)) {
-                        this.expectations.remove(expectation);
-                    }
-                }
-                return expectation.getAction();
-            } else if (!expectation.isStillAlive()) {
-                if (this.expectations.contains(expectation)) {
-                    this.expectations.remove(expectation);
+    private synchronized List<HttpRequestMatcher> cloneMatchers() {
+        return new ArrayList<>(this.httpRequestMatchers);
+    }
+
+    public synchronized void reset() {
+        this.httpRequestMatchers.clear();
+        notifyListeners(this);
+    }
+
+    public Expectation firstMatchingExpectation(HttpRequest httpRequest) {
+        Expectation matchingExpectation = null;
+        for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
+            if (httpRequestMatcher.matches(null, httpRequest)) {
+                matchingExpectation = httpRequestMatcher.decrementRemainingMatches();
+            }
+            if (!httpRequestMatcher.isActive()) {
+                if (this.httpRequestMatchers.contains(httpRequestMatcher)) {
+                    this.httpRequestMatchers.remove(httpRequestMatcher);
+                    notifyListeners(this);
                 }
             }
+            if (matchingExpectation != null) {
+                break;
+            }
         }
-        return null;
+        return matchingExpectation;
     }
 
     public void clear(HttpRequest httpRequest) {
         if (httpRequest != null) {
-            HttpRequestMatcher httpRequestMatcher = new MatcherBuilder().transformsToMatcher(httpRequest);
-            for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
-                if (httpRequestMatcher.matches(expectation.getHttpRequest(), true)) {
-                    if (this.expectations.contains(expectation)) {
-                        this.expectations.remove(expectation);
+            HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+            for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
+                if (clearHttpRequestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest(), false)) {
+                    if (this.httpRequestMatchers.contains(httpRequestMatcher)) {
+                        this.httpRequestMatchers.remove(httpRequestMatcher);
+                        notifyListeners(this);
                     }
                 }
             }
@@ -90,47 +74,13 @@ public class MockServerMatcher extends ObjectWithReflectiveEqualsHashCodeToStrin
         }
     }
 
-    public void reset() {
-        this.expectations.clear();
-    }
-
-    public void dumpToLog(HttpRequest httpRequest) {
-        ExpectationSerializer expectationSerializer = new ExpectationSerializer();
-        if (httpRequest != null) {
-            for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
-                if (expectation.matches(httpRequest)) {
-                    requestLogger.warn(cleanBase64Response(expectationSerializer.serialize(expectation)));
-                }
-            }
-        } else {
-            for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
-                requestLogger.warn(cleanBase64Response(expectationSerializer.serialize(expectation)));
-            }
-        }
-    }
-
-    @VisibleForTesting
-    String cleanBase64Response(String serializedExpectation) {
-        Pattern base64ResponseBodyPattern = Pattern.compile("[\\s\\S]*\\\"httpResponse\\\"\\s*\\:\\s*\\{[\\s\\S]*\\\"body\\\"\\s*\\:\\s*\\\"(([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==))\\\"[\\s\\S]*");
-        Matcher matcher = base64ResponseBodyPattern.matcher(serializedExpectation);
-        if (matcher.find()) {
-            return serializedExpectation.replace(matcher.group(1), new String(Base64Converter.base64StringToBytes(matcher.group(1))));
-        } else {
-            return serializedExpectation;
-        }
-    }
-
-    public Expectation[] retrieveExpectations(HttpRequest httpRequest) {
+    public List<Expectation> retrieveExpectations(HttpRequest httpRequest) {
         List<Expectation> expectations = new ArrayList<Expectation>();
-        if (httpRequest != null) {
-            for (Expectation expectation : new ArrayList<Expectation>(this.expectations)) {
-                if (expectation.matches(httpRequest)) {
-                    expectations.add(expectation);
-                }
+        for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
+            if (httpRequest == null || httpRequestMatcher.matches(httpRequest, false)) {
+                expectations.add(httpRequestMatcher.getExpectation());
             }
-        } else {
-            expectations.addAll(this.expectations);
         }
-        return expectations.toArray(new Expectation[expectations.size()]);
+        return expectations;
     }
 }

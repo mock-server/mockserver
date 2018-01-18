@@ -1,0 +1,111 @@
+{
+    "title": "response body",
+    "oneOf": [
+        {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "not": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "enum": [
+                        "BINARY"
+                    ]
+                },
+                "base64Bytes": {
+                    "type": "string"
+                },
+                "contentType": {
+                    "type": "string"
+                }
+            }
+        },
+        {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "not": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "enum": [
+                        "JSON"
+                    ]
+                },
+                "json": {
+                    "type": "string"
+                },
+                "contentType": {
+                    "type": "string"
+                },
+                "matchType": {
+                    "enum": [
+                        "STRICT",
+                        "ONLY_MATCHING_FIELDS"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "not": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "enum": [
+                        "PARAMETERS"
+                    ]
+                },
+                "parameters": {
+                    "$ref": "#/definitions/keyToMultiValue"
+                }
+            }
+        },
+        {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "not": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "enum": [
+                        "STRING"
+                    ]
+                },
+                "string": {
+                    "type": "string"
+                },
+                "contentType": {
+                    "type": "string"
+                }
+            }
+        },
+        {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "not": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "enum": [
+                        "XML"
+                    ]
+                },
+                "xml": {
+                    "type": "string"
+                },
+                "contentType": {
+                    "type": "string"
+                }
+            }
+        },
+        {
+            "type": "string"
+        }
+    ]
+}

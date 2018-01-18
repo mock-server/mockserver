@@ -1,6 +1,5 @@
 package org.mockserver.matchers;
 
-import org.mockserver.model.Not;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 /**

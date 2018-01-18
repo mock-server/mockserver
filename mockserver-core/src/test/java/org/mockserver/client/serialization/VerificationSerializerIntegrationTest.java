@@ -4,12 +4,14 @@ import org.junit.Test;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.client.serialization.model.VerificationDTO;
 import org.mockserver.client.serialization.model.VerificationTimesDTO;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationTimes;
 
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -18,40 +20,21 @@ import static org.mockserver.model.HttpRequest.request;
 public class VerificationSerializerIntegrationTest {
 
     @Test
-    public void shouldIgnoreExtraFields() throws IOException {
-        // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"path\" : \"somepath\"," + System.getProperty("line.separator") +
-                "    \"random_field\" : \"random_value\"" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
-                "}";
-
-        // when
-        Verification verification = new VerificationSerializer().deserialize(requestBytes);
-
-        // then
-        assertEquals(new VerificationDTO()
-                .setHttpRequest(new HttpRequestDTO(request().withPath("somepath")))
-                .buildObject(), verification);
-    }
-
-    @Test
     public void shouldDeserializeCompleteObject() throws IOException {
         // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somepath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"count\" : 2," + System.getProperty("line.separator") +
-                "    \"exact\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        String requestBytes = "{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"GET\"," + NEW_LINE +
+                "    \"path\" : \"somepath\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"count\" : 2," + NEW_LINE +
+                "    \"exact\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}";
 
         // when
-        Verification verification = new VerificationSerializer().deserialize(requestBytes);
+        Verification verification = new VerificationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new VerificationDTO()
@@ -63,12 +46,13 @@ public class VerificationSerializerIntegrationTest {
     @Test
     public void shouldDeserializePartialObject() throws IOException {
         // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "    \"path\": \"somePath\"" + System.getProperty("line.separator") +
+        String requestBytes = "{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}";
 
         // when
-        Verification verification = new VerificationSerializer().deserialize(requestBytes);
+        Verification verification = new VerificationSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(new VerificationDTO()
@@ -79,7 +63,7 @@ public class VerificationSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObject() throws IOException {
         // when
-        String jsonExpectation = new VerificationSerializer().serialize(
+        String jsonExpectation = new VerificationSerializer(new MockServerLogger()).serialize(
                 new VerificationDTO()
                         .setHttpRequest(new HttpRequestDTO(request().withMethod("GET").withPath("somepath")))
                         .setTimes(new VerificationTimesDTO(VerificationTimes.exactly(2)))
@@ -87,34 +71,34 @@ public class VerificationSerializerIntegrationTest {
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : {" + System.getProperty("line.separator") +
-                "    \"method\" : \"GET\"," + System.getProperty("line.separator") +
-                "    \"path\" : \"somepath\"" + System.getProperty("line.separator") +
-                "  }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"count\" : 2," + System.getProperty("line.separator") +
-                "    \"exact\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"method\" : \"GET\"," + NEW_LINE +
+                "    \"path\" : \"somepath\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"count\" : 2," + NEW_LINE +
+                "    \"exact\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 
     @Test
     public void shouldSerializePartialObject() throws IOException {
         // when
-        String jsonExpectation = new VerificationSerializer().serialize(
+        String jsonExpectation = new VerificationSerializer(new MockServerLogger()).serialize(
                 new VerificationDTO()
                         .setHttpRequest(new HttpRequestDTO(request()))
                         .buildObject()
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"httpRequest\" : { }," + System.getProperty("line.separator") +
-                "  \"times\" : {" + System.getProperty("line.separator") +
-                "    \"count\" : 1," + System.getProperty("line.separator") +
-                "    \"exact\" : true" + System.getProperty("line.separator") +
-                "  }" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"httpRequest\" : { }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"count\" : 1," + NEW_LINE +
+                "    \"exact\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "}", jsonExpectation);
     }
 }

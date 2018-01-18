@@ -22,7 +22,7 @@ public class ParameterBodyTest {
         );
 
         // then
-        assertThat(parameterBody.getValue(), containsInAnyOrder(new Parameter("some", "value")));
+        assertThat(parameterBody.getValue().getEntries(), containsInAnyOrder(new Parameter("some", "value")));
         assertThat(parameterBody.getType(), is(Body.Type.PARAMETERS));
     }
 
@@ -34,7 +34,7 @@ public class ParameterBodyTest {
         ));
 
         // then
-        assertThat(parameterBody.getValue(), containsInAnyOrder(new Parameter("some", "value")));
+        assertThat(parameterBody.getValue().getEntries(), containsInAnyOrder(new Parameter("some", "value")));
         assertThat(parameterBody.getType(), is(Body.Type.PARAMETERS));
     }
 
@@ -46,7 +46,7 @@ public class ParameterBodyTest {
         );
 
         // then
-        assertThat(parameterBody.getValue(), containsInAnyOrder(new Parameter("some", "value")));
+        assertThat(parameterBody.getValue().getEntries(), containsInAnyOrder(new Parameter("some", "value")));
         assertThat(parameterBody.getType(), is(Body.Type.PARAMETERS));
     }
 
@@ -58,7 +58,7 @@ public class ParameterBodyTest {
         ));
 
         // then
-        assertThat(parameterBody.getValue(), containsInAnyOrder(new Parameter("some", "value")));
+        assertThat(parameterBody.getValue().getEntries(), containsInAnyOrder(new Parameter("some", "value")));
         assertThat(parameterBody.getType(), is(Body.Type.PARAMETERS));
     }
 

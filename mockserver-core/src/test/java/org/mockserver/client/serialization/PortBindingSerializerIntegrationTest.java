@@ -1,12 +1,14 @@
 package org.mockserver.client.serialization;
 
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 
 import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.PortBinding.portBinding;
 
 /**
@@ -18,17 +20,17 @@ public class PortBindingSerializerIntegrationTest {
     @Test
     public void shouldIgnoreExtraFields() throws IOException {
         // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "    \"ports\": [" + System.getProperty("line.separator") +
-                "        0," + System.getProperty("line.separator") +
-                "        1080," + System.getProperty("line.separator") +
-                "        0" + System.getProperty("line.separator") +
-                "    ]," + System.getProperty("line.separator") +
-                "    \"extra_field\": \"extra_value\"" + System.getProperty("line.separator") +
+        String requestBytes = "{" + NEW_LINE +
+                "    \"ports\": [" + NEW_LINE +
+                "        0," + NEW_LINE +
+                "        1080," + NEW_LINE +
+                "        0" + NEW_LINE +
+                "    ]," + NEW_LINE +
+                "    \"extra_field\": \"extra_value\"" + NEW_LINE +
                 "}";
 
         // when
-        PortBinding portBinding = new PortBindingSerializer().deserialize(requestBytes);
+        PortBinding portBinding = new PortBindingSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(portBinding(0, 1080, 0), portBinding);
@@ -37,16 +39,16 @@ public class PortBindingSerializerIntegrationTest {
     @Test
     public void shouldDeserializeCompleteObject() throws IOException {
         // given
-        String requestBytes = "{" + System.getProperty("line.separator") +
-                "    \"ports\": [" + System.getProperty("line.separator") +
-                "        0," + System.getProperty("line.separator") +
-                "        1080," + System.getProperty("line.separator") +
-                "        0" + System.getProperty("line.separator") +
-                "    ]" + System.getProperty("line.separator") +
+        String requestBytes = "{" + NEW_LINE +
+                "    \"ports\": [" + NEW_LINE +
+                "        0," + NEW_LINE +
+                "        1080," + NEW_LINE +
+                "        0" + NEW_LINE +
+                "    ]" + NEW_LINE +
                 "}";
 
         // when
-        PortBinding portBinding = new PortBindingSerializer().deserialize(requestBytes);
+        PortBinding portBinding = new PortBindingSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(portBinding(0, 1080, 0), portBinding);
@@ -58,7 +60,7 @@ public class PortBindingSerializerIntegrationTest {
         String requestBytes = "{ }";
 
         // when
-        PortBinding portBinding = new PortBindingSerializer().deserialize(requestBytes);
+        PortBinding portBinding = new PortBindingSerializer(new MockServerLogger()).deserialize(requestBytes);
 
         // then
         assertEquals(portBinding(), portBinding);
@@ -67,13 +69,13 @@ public class PortBindingSerializerIntegrationTest {
     @Test
     public void shouldSerializeCompleteObject() throws IOException {
         // when
-        String jsonPortBinding = new PortBindingSerializer().serialize(
+        String jsonPortBinding = new PortBindingSerializer(new MockServerLogger()).serialize(
                 new PortBinding().setPorts(Arrays.asList(0, 1080, 0))
         );
 
         // then
-        assertEquals("{" + System.getProperty("line.separator") +
-                "  \"ports\" : [ 0, 1080, 0 ]" + System.getProperty("line.separator") +
+        assertEquals("{" + NEW_LINE +
+                "  \"ports\" : [ 0, 1080, 0 ]" + NEW_LINE +
                 "}", jsonPortBinding);
     }
 }

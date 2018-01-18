@@ -1,11 +1,14 @@
 package org.mockserver.configuration;
 
+import io.netty.util.NettyRuntime;
+import io.netty.util.internal.SystemPropertyUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.socket.KeyStoreFactory;
+import org.slf4j.event.Level;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -17,8 +20,8 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author jamesdbloom
@@ -59,6 +62,25 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldDetectEnableCORSSettingForAPIHasBeenExplicitlySet() {
+        // given
+        System.clearProperty("mockserver.enableCORSForAPI");
+
+        // when
+        assertEquals(false, ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
+        ConfigurationProperties.enableCORSForAPI(true);
+        assertEquals(true, ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
+
+        // given
+        System.clearProperty("mockserver.enableCORSForAPI");
+
+        // when
+        assertEquals(false, ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
+        System.setProperty("mockserver.enableCORSForAPI", "" + true);
+        assertEquals(true, ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
+    }
+
+    @Test
     public void shouldSetAndReadEnableCORSSettingForAllResponses() {
         // given
         System.clearProperty("mockserver.enableCORSForAllResponses");
@@ -71,14 +93,60 @@ public class ConfigurationPropertiesTest {
         assertEquals(false, ConfigurationProperties.enableCORSForAllResponses());
         assertEquals("false", System.getProperty("mockserver.enableCORSForAllResponses"));
     }
-    
+
+    @Test
+    public void shouldSetAndReadNIOEventLoopThreadCount() {
+        // given
+        System.clearProperty("mockserver.nioEventLoopThreadCount");
+        int eventLoopCount = Math.max(1, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors() * 5));
+
+        // when
+        assertEquals(eventLoopCount, ConfigurationProperties.nioEventLoopThreadCount());
+        ConfigurationProperties.nioEventLoopThreadCount(2);
+
+        // then
+        assertEquals(2, ConfigurationProperties.nioEventLoopThreadCount());
+    }
+
+    @Test
+    public void shouldHandleInvalidNIOEventLoopThreadCount() {
+        // given
+        System.setProperty("mockserver.nioEventLoopThreadCount", "invalid");
+        int eventLoopCount = Math.max(1, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors() * 5));
+
+        // then
+        assertEquals(eventLoopCount, ConfigurationProperties.nioEventLoopThreadCount());
+    }
+
+    @Test
+    public void shouldSetAndReadMaxExpectations() {
+        // given
+        System.clearProperty("mockserver.maxExpectations");
+
+        // when
+        assertEquals(1000, ConfigurationProperties.maxExpectations());
+        ConfigurationProperties.maxExpectations(100);
+
+        // then
+        assertEquals(100, ConfigurationProperties.maxExpectations());
+    }
+
+    @Test
+    public void shouldHandleInvalidMaxExpectations() {
+        // given
+        System.setProperty("mockserver.maxExpectations", "invalid");
+
+        // then
+        assertEquals(1000, ConfigurationProperties.maxExpectations());
+    }
+
     @Test
     public void shouldSetAndReadMaxSocketTimeout() {
         // given
-        System.clearProperty("mockserver.maxTimeout");
+        System.clearProperty("mockserver.maxSocketTimeout");
 
         // when
-        assertEquals(TimeUnit.SECONDS.toMillis(ConfigurationProperties.DEFAULT_MAX_TIMEOUT), ConfigurationProperties.maxSocketTimeout());
+        assertEquals(TimeUnit.SECONDS.toMillis(20), ConfigurationProperties.maxSocketTimeout());
         ConfigurationProperties.maxSocketTimeout(100);
 
         // then
@@ -88,10 +156,10 @@ public class ConfigurationPropertiesTest {
     @Test
     public void shouldHandleInvalidMaxSocketTimeout() {
         // given
-        System.setProperty("mockserver.maxTimeout", "invalid");
+        System.setProperty("mockserver.maxSocketTimeout", "invalid");
 
         // then
-        assertEquals(TimeUnit.SECONDS.toMillis(ConfigurationProperties.DEFAULT_MAX_TIMEOUT), ConfigurationProperties.maxSocketTimeout());
+        assertEquals(TimeUnit.SECONDS.toMillis(20), ConfigurationProperties.maxSocketTimeout());
     }
 
     @Test
@@ -344,30 +412,20 @@ public class ConfigurationPropertiesTest {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage(containsString("log level \"WRONG\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\""));
 
-        ConfigurationProperties.overrideLogLevel("WRONG");
+        ConfigurationProperties.logLevel("WRONG");
     }
 
     @Test
-    public void shouldIgnoreNull() {
+    public void shouldSetAndReadLogLevel() {
         // given
         System.clearProperty("mockserver.logLevel");
 
         // when
-        ConfigurationProperties.overrideLogLevel(null);
+        assertEquals(Level.INFO, ConfigurationProperties.logLevel());
+        ConfigurationProperties.logLevel("TRACE");
 
         // then
-        assertNull(System.getProperty("mockserver.logLevel"));
-    }
-
-    @Test
-    public void shouldSetLogLevel() {
-        // given
-        System.clearProperty("mockserver.logLevel");
-
-        // when
-        ConfigurationProperties.overrideLogLevel("TRACE");
-
-        // then
-        assertThat(System.getProperty("mockserver.logLevel"), is("TRACE"));
+        assertEquals(Level.TRACE, ConfigurationProperties.logLevel());
+        assertEquals("TRACE", System.getProperty("mockserver.logLevel"));
     }
 }

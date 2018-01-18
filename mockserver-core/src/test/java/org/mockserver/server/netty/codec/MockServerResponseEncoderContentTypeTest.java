@@ -14,6 +14,7 @@ import org.mockserver.server.netty.codec.MockServerResponseEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -260,7 +261,7 @@ public class MockServerResponseEncoderContentTypeTest {
     @Test
     public void shouldReturnContentTypeForBinaryBody() {
         // given
-        httpResponse.withBody(binary("somebody".getBytes()));
+        httpResponse.withBody(binary("somebody".getBytes(UTF_8)));
 
         // when
         new MockServerResponseEncoder().encode(null, httpResponse, output);
@@ -273,7 +274,7 @@ public class MockServerResponseEncoderContentTypeTest {
     @Test
     public void shouldReturnContentTypeForBinaryBodyWithContentType() {
         // given - a request & response
-        httpResponse.withBody(binary("somebody".getBytes(), MediaType.QUICKTIME));
+        httpResponse.withBody(binary("somebody".getBytes(UTF_8), MediaType.QUICKTIME));
 
         // when
         new MockServerResponseEncoder().encode(null, httpResponse, output);
@@ -310,19 +311,6 @@ public class MockServerResponseEncoderContentTypeTest {
     }
 
     @Test
-    public void shouldReturnContentTypeForJsonSchemaBody() {
-        // given
-        httpResponse.withBody(jsonSchema("somebody"));
-
-        // when
-        new MockServerResponseEncoder().encode(null, httpResponse, output);
-
-        // then
-        FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.headers().getAll("Content-Type"), containsInAnyOrder("application/json"));
-    }
-
-    @Test
     public void shouldReturnContentTypeForParameterBody() {
         // given
         httpResponse.withBody(params(param("key", "value")));
@@ -338,7 +326,7 @@ public class MockServerResponseEncoderContentTypeTest {
     @Test
     public void shouldReturnNoContentTypeForBodyWithNoAssociatedContentType() {
         // given
-        httpResponse.withBody(regex("some_value"));
+        httpResponse.withBody(xml("some_value", (MediaType) null));
 
         // when
         new MockServerResponseEncoder().encode(null, httpResponse, output);

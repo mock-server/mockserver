@@ -1,6 +1,5 @@
 package org.mockserver.socket;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -17,13 +16,14 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.IPAddress;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.file.*;
 import org.mockserver.file.FileReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.mockserver.logging.MockServerLogger;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -43,7 +43,7 @@ import java.util.Random;
  */
 public class KeyAndCertificateFactory {
 
-    private static final Logger logger = LoggerFactory.getLogger(KeyAndCertificateFactory.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(KeyAndCertificateFactory.class);
 
     private static final String PROVIDER_NAME = BouncyCastleProvider.PROVIDER_NAME;
     private static final String SIGNATURE_ALGORITHM = "SHA256WithRSAEncryption";
@@ -71,12 +71,11 @@ public class KeyAndCertificateFactory {
      * Hundred years in the future from starting the proxy should be enough.
      */
     private static final Date NOT_AFTER = new Date(System.currentTimeMillis() + 86400000L * 365 * 100);
+    private static final KeyAndCertificateFactory KEY_AND_CERTIFICATE_FACTORY = new KeyAndCertificateFactory();
 
     static {
         Security.addProvider(new BouncyCastleProvider());
     }
-
-    private static final KeyAndCertificateFactory KEY_AND_CERTIFICATE_FACTORY = new KeyAndCertificateFactory();
 
     private KeyAndCertificateFactory() {
 
@@ -107,20 +106,20 @@ public class KeyAndCertificateFactory {
     }
 
     private static SubjectKeyIdentifier createSubjectKeyIdentifier(Key key) throws IOException {
-        ASN1InputStream is = null;
-        try {
-            is = new ASN1InputStream(new ByteArrayInputStream(key.getEncoded()));
+        try (ASN1InputStream is = new ASN1InputStream(new ByteArrayInputStream(key.getEncoded()))) {
             ASN1Sequence seq = (ASN1Sequence) is.readObject();
-            SubjectPublicKeyInfo info = new SubjectPublicKeyInfo(seq);
+            SubjectPublicKeyInfo info = SubjectPublicKeyInfo.getInstance(seq);
             return new BcX509ExtensionUtils().createSubjectKeyIdentifier(info);
-        } finally {
-            IOUtils.closeQuietly(is);
         }
     }
 
     private static X509Certificate signCertificate(X509v3CertificateBuilder certificateBuilder, PrivateKey signedWithPrivateKey) throws OperatorCreationException, CertificateException {
         ContentSigner signer = new JcaContentSignerBuilder(SIGNATURE_ALGORITHM).setProvider(PROVIDER_NAME).build(signedWithPrivateKey);
         return new JcaX509CertificateConverter().setProvider(PROVIDER_NAME).getCertificate(certificateBuilder.build(signer));
+    }
+
+    public static void main(String[] args) throws Exception {
+        keyAndCertificateFactory().buildAndSaveCertificateAuthorityCertificates();
     }
 
     /**
@@ -197,9 +196,9 @@ public class KeyAndCertificateFactory {
         if (subjectAlternativeNameIps != null) {
             for (String subjectAlternativeNameIp : subjectAlternativeNameIps) {
                 if (IPAddress.isValidIPv6WithNetmask(subjectAlternativeNameIp)
-                        || IPAddress.isValidIPv6(subjectAlternativeNameIp)
-                        || IPAddress.isValidIPv4WithNetmask(subjectAlternativeNameIp)
-                        || IPAddress.isValidIPv4(subjectAlternativeNameIp)) {
+                    || IPAddress.isValidIPv6(subjectAlternativeNameIp)
+                    || IPAddress.isValidIPv4WithNetmask(subjectAlternativeNameIp)
+                    || IPAddress.isValidIPv4(subjectAlternativeNameIp)) {
                     subjectAlternativeNames.add(new GeneralName(GeneralName.iPAddress, subjectAlternativeNameIp));
                 }
             }
@@ -215,10 +214,6 @@ public class KeyAndCertificateFactory {
         cert.verify(certificateAuthorityPublicKey);
 
         return cert;
-    }
-
-    public static void main(String[] args) throws Exception {
-        keyAndCertificateFactory().buildAndSaveCertificateAuthorityCertificates();
     }
 
     /**
@@ -252,19 +247,19 @@ public class KeyAndCertificateFactory {
 
             // generate mockServer certificate
             X509Certificate mockServerCert = createCASignedCert(
-                    mockServerPublicKey,
-                    caCert,
-                    caPrivateKey,
-                    caCert.getPublicKey(),
-                    ConfigurationProperties.sslCertificateDomainName(),
-                    ConfigurationProperties.sslSubjectAlternativeNameDomains(),
-                    ConfigurationProperties.sslSubjectAlternativeNameIps()
+                mockServerPublicKey,
+                caCert,
+                caPrivateKey,
+                caCert.getPublicKey(),
+                ConfigurationProperties.sslCertificateDomainName(),
+                ConfigurationProperties.sslSubjectAlternativeNameDomains(),
+                ConfigurationProperties.sslSubjectAlternativeNameIps()
             );
             saveCertificateAsPEMFile(mockServerCert, "MockServerCertificate.pem", true);
             saveCertificateAsPEMFile(mockServerPublicKey, "MockServerPublicKey.pem", true);
             saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey.pem", true);
         } catch (Exception e) {
-            logger.error("Error while refreshing certificates", e);
+            MOCK_SERVER_LOGGER.error("Error while refreshing certificates", e);
         }
         return this;
     }
@@ -274,14 +269,10 @@ public class KeyAndCertificateFactory {
      */
     private void saveCertificateAsPEMFile(Object x509Certificate, String filename, boolean deleteOnExit) throws IOException {
         File pemFile = new File(filename);
-        FileWriter pemfileWriter = new FileWriter(pemFile);
-        JcaPEMWriter jcaPEMWriter = null;
-        try {
-            jcaPEMWriter = new JcaPEMWriter(pemfileWriter);
-            jcaPEMWriter.writeObject(x509Certificate);
-        } finally {
-            IOUtils.closeQuietly(jcaPEMWriter);
-            IOUtils.closeQuietly(pemfileWriter);
+        try (FileWriter pemfileWriter = new FileWriter(pemFile)) {
+            try (JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(pemfileWriter)) {
+                jcaPEMWriter.writeObject(x509Certificate);
+            }
         }
         if (deleteOnExit) {
             pemFile.deleteOnExit();

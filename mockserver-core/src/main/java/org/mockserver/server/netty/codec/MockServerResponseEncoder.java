@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 
@@ -19,9 +20,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 
 /**
@@ -35,13 +34,22 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
 
     public DefaultFullHttpResponse encode(HttpResponse response) {
         DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
-                HttpVersion.HTTP_1_1,
-                HttpResponseStatus.valueOf((response.getStatusCode() != null ? response.getStatusCode() : 200)),
-                getBody(response)
+            HttpVersion.HTTP_1_1,
+            getStatus(response),
+            getBody(response)
         );
         setHeaders(response, defaultFullHttpResponse);
         setCookies(response, defaultFullHttpResponse);
         return defaultFullHttpResponse;
+    }
+
+    private HttpResponseStatus getStatus(HttpResponse response) {
+        int statusCode = response.getStatusCode() != null ? response.getStatusCode() : 200;
+        if (!StringUtils.isEmpty(response.getReasonPhrase())) {
+            return new HttpResponseStatus(statusCode, response.getReasonPhrase());
+        } else {
+            return HttpResponseStatus.valueOf(statusCode);
+        }
     }
 
     private ByteBuf getBody(HttpResponse response) {
@@ -50,7 +58,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         Body body = response.getBody();
         if (body != null) {
             Object bodyContents = body.getValue();
-            Charset bodyCharset = body.getCharset(ContentTypeMapper.determineCharsetForMessage(response));
+            Charset bodyCharset = body.getCharset(ContentTypeMapper.getCharsetFromContentTypeHeader(response.getFirstHeader(CONTENT_TYPE.toString())));
             if (bodyContents instanceof byte[]) {
                 content = Unpooled.copiedBuffer((byte[]) bodyContents);
             } else if (bodyContents instanceof String) {
@@ -63,8 +71,8 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
     }
 
     private void setHeaders(HttpResponse response, DefaultFullHttpResponse defaultFullHttpResponse) {
-        if (response.getHeaders() != null) {
-            for (Header header : response.getHeaders()) {
+        if (response.getHeaderList() != null) {
+            for (Header header : response.getHeaderList()) {
                 for (NottableString value : header.getValues()) {
                     defaultFullHttpResponse.headers().add(header.getName().getValue(), value.getValue());
                 }
@@ -74,7 +82,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         // Content-Type
         if (Strings.isNullOrEmpty(response.getFirstHeader(CONTENT_TYPE.toString()))) {
             if (response.getBody() != null
-                    && response.getBody().getContentType() != null) {
+                && response.getBody().getContentType() != null) {
                 defaultFullHttpResponse.headers().set(CONTENT_TYPE, response.getBody().getContentType());
             }
         }
@@ -91,7 +99,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
                 byte[] bodyBytes = new byte[0];
                 if (body != null) {
                     Object bodyContents = body.getValue();
-                    Charset bodyCharset = body.getCharset(ContentTypeMapper.determineCharsetForMessage(response));
+                    Charset bodyCharset = body.getCharset(ContentTypeMapper.getCharsetFromContentTypeHeader(response.getFirstHeader(CONTENT_TYPE.toString())));
                     if (bodyContents instanceof byte[]) {
                         bodyBytes = (byte[]) bodyContents;
                     } else if (bodyContents instanceof String) {
@@ -106,9 +114,9 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
     }
 
     private void setCookies(HttpResponse response, DefaultFullHttpResponse httpServletResponse) {
-        if (response.getCookies() != null) {
+        if (response.getCookieList() != null) {
             List<Cookie> cookieValues = new ArrayList<Cookie>();
-            for (org.mockserver.model.Cookie cookie : response.getCookies()) {
+            for (org.mockserver.model.Cookie cookie : response.getCookieList()) {
                 if (!cookieHeaderAlreadyExists(response, cookie)) {
                     cookieValues.add(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
                 }

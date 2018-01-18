@@ -3,6 +3,7 @@ package org.mockserver.client.serialization.java;
 import com.google.common.base.Strings;
 import org.mockserver.model.HttpClassCallback;
 
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.client.serialization.java.ExpectationToJavaSerializer.INDENT_SIZE;
 
 /**
@@ -11,7 +12,7 @@ import static org.mockserver.client.serialization.java.ExpectationToJavaSerializ
 public class HttpCallbackToJavaSerializer implements ToJavaSerializer<HttpClassCallback> {
 
     @Override
-    public String serializeAsJava(int numberOfSpacesToIndent, HttpClassCallback httpClassCallback) {
+    public String serialize(int numberOfSpacesToIndent, HttpClassCallback httpClassCallback) {
         StringBuffer output = new StringBuffer();
         if (httpClassCallback != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("callback()");
@@ -24,6 +25,6 @@ public class HttpCallbackToJavaSerializer implements ToJavaSerializer<HttpClassC
     }
 
     private StringBuffer appendNewLineAndIndent(int numberOfSpacesToIndent, StringBuffer output) {
-        return output.append(System.getProperty("line.separator")).append(Strings.padStart("", numberOfSpacesToIndent, ' '));
+        return output.append(NEW_LINE).append(Strings.padStart("", numberOfSpacesToIndent, ' '));
     }
 }

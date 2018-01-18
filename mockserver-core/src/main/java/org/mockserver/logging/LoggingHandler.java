@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import java.net.SocketAddress;
 
+import static org.mockserver.character.Character.NEW_LINE;
+
 @Sharable
 public class LoggingHandler extends ChannelDuplexHandler {
 
@@ -173,7 +175,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
     protected String format(ChannelHandlerContext ctx, String message) {
         String chStr = ctx.channel().toString() + ' ' + message;
         if (logger.isTraceEnabled()) {
-            chStr += "\nchannel: " + ctx.channel().id() + "\npipeline: " + ctx.pipeline().names() + "\n";
+            chStr += NEW_LINE + "channel: " + ctx.channel().id() + NEW_LINE + "pipeline: " + ctx.pipeline().names() + NEW_LINE;
         }
         return chStr;
     }
@@ -194,12 +196,12 @@ public class LoggingHandler extends ChannelDuplexHandler {
         StringBuilder dump = new StringBuilder(rows * 80 + eventName.length() + 16);
 
         dump.append(eventName).append('(').append(length).append('B').append(')')
-                .append(NEWLINE)
-                .append("         +-------------------------------------------------+")
-                .append(NEWLINE)
-                .append("         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |")
-                .append(NEWLINE)
-                .append("+--------+-------------------------------------------------+----------------+");
+            .append(NEWLINE)
+            .append("         +-------------------------------------------------+")
+            .append(NEWLINE)
+            .append("         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |")
+            .append(NEWLINE)
+            .append("+--------+-------------------------------------------------+----------------+");
 
         final int startIndex = buf.readerIndex();
         final int endIndex = buf.writerIndex();
@@ -218,7 +220,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
             if (relIdxMod16 == 15) {
                 dump.append(" |");
                 if (i > 15 && buf.readableBytes() > i) {
-                    dump.append(buf.toString(i - 15, 16, Charsets.UTF_8).replaceAll("" + System.getProperty("line.separator"), "/").replaceAll("\r", "/"));
+                    dump.append(buf.toString(i - 15, 16, Charsets.UTF_8).replaceAll("" + NEW_LINE, "/").replaceAll("\r", "/"));
                 } else {
                     for (int j = i - 15; j <= i; j++) {
                         dump.append(BYTE2CHAR[buf.getUnsignedByte(j)]);

@@ -17,6 +17,7 @@ public class MockServerRule implements TestRule {
     private final Integer[] port;
     private final boolean perTestSuite;
     private ClientAndServerFactory clientAndServerFactory;
+    private ClientAndServer clientAndServer;
 
     /**
      * Start the MockServer prior to test execution and stop the MockServer after the tests have completed.
@@ -87,7 +88,6 @@ public class MockServerRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                ClientAndServer clientAndServer;
                 if (perTestSuite) {
                     if (perTestSuiteClientAndServer == null) {
                         perTestSuiteClientAndServer = clientAndServerFactory.newClientAndServer();
@@ -104,10 +104,12 @@ public class MockServerRule implements TestRule {
                 }
                 setMockServerClient(target, clientAndServer);
                 try {
+                    if (!perTestSuite) {
+                        clientAndServer.reset();
+                    }
                     base.evaluate();
                 } finally {
                     if (!perTestSuite) {
-                        clientAndServer.reset();
                         clientAndServer.stop();
                     }
                 }
@@ -128,6 +130,10 @@ public class MockServerRule implements TestRule {
                 }
             }
         }
+    }
+
+    public MockServerClient getClient() {
+        return clientAndServer;
     }
 
     @VisibleForTesting

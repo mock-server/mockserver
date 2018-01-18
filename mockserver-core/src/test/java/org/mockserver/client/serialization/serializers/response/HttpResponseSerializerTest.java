@@ -13,124 +13,99 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
-import static org.mockserver.model.XPathBody.xpath;
 
 public class HttpResponseSerializerTest {
 
     @Test
     public void shouldReturnFormattedResponseWithNoFieldsSet() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(new HttpResponseDTO(response())),
-                is("{ }"));
+            is("{ }"));
     }
 
     @Test
     public void shouldReturnFormattedResponseWithAllFieldsSet() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
-                        response()
-                                .withStatusCode(302)
-                                .withBody("some_body")
-                                .withHeaders(new Header("header_name", "header_value"))
-                                .withCookies(new Cookie("cookie_name", "cookie_value"))
-                                .withDelay(new Delay(TimeUnit.MICROSECONDS, 1))
-                                .withConnectionOptions(
-                                        new ConnectionOptions()
-                                                .withSuppressContentLengthHeader(true)
-                                                .withContentLengthHeaderOverride(50)
-                                                .withSuppressConnectionHeader(true)
-                                                .withKeepAliveOverride(true)
-                                                .withCloseSocket(true)
-                                )
-                ),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"statusCode\" : 302," + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"header_name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"header_value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"cookie_name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"cookie_value\"" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : \"some_body\"," + System.getProperty("line.separator") +
-                        "  \"delay\" : {" + System.getProperty("line.separator") +
-                        "    \"timeUnit\" : \"MICROSECONDS\"," + System.getProperty("line.separator") +
-                        "    \"value\" : 1" + System.getProperty("line.separator") +
-                        "  }," + System.getProperty("line.separator") +
-                        "  \"connectionOptions\" : {" + System.getProperty("line.separator") +
-                        "    \"suppressContentLengthHeader\" : true," + System.getProperty("line.separator") +
-                        "    \"contentLengthHeaderOverride\" : 50," + System.getProperty("line.separator") +
-                        "    \"suppressConnectionHeader\" : true," + System.getProperty("line.separator") +
-                        "    \"keepAliveOverride\" : true," + System.getProperty("line.separator") +
-                        "    \"closeSocket\" : true" + System.getProperty("line.separator") +
-                        "  }" + System.getProperty("line.separator") +
-                        "}"));
+            response()
+                .withStatusCode(302)
+                .withReasonPhrase("randomReason")
+                .withBody("some_body")
+                .withHeaders(new Header("header_name", "header_value"))
+                .withCookies(new Cookie("cookie_name", "cookie_value"))
+                .withDelay(new Delay(TimeUnit.MICROSECONDS, 1))
+                .withConnectionOptions(
+                    new ConnectionOptions()
+                        .withSuppressContentLengthHeader(true)
+                        .withContentLengthHeaderOverride(50)
+                        .withSuppressConnectionHeader(true)
+                        .withKeepAliveOverride(true)
+                        .withCloseSocket(true)
+                )
+            ),
+            is("{" + NEW_LINE +
+                "  \"statusCode\" : 302," + NEW_LINE +
+                "  \"reasonPhrase\" : \"randomReason\"," + NEW_LINE +
+                "  \"headers\" : {" + NEW_LINE +
+                "    \"header_name\" : [ \"header_value\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"cookies\" : {" + NEW_LINE +
+                "    \"cookie_name\" : \"cookie_value\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"body\" : \"some_body\"," + NEW_LINE +
+                "  \"delay\" : {" + NEW_LINE +
+                "    \"timeUnit\" : \"MICROSECONDS\"," + NEW_LINE +
+                "    \"value\" : 1" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"connectionOptions\" : {" + NEW_LINE +
+                "    \"suppressContentLengthHeader\" : true," + NEW_LINE +
+                "    \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
+                "    \"suppressConnectionHeader\" : true," + NEW_LINE +
+                "    \"keepAliveOverride\" : true," + NEW_LINE +
+                "    \"closeSocket\" : true" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}"));
     }
 
     @Test
     public void shouldReturnFormattedResponseWithJsonBodyInToString() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
-                        response()
-                                .withStatusCode(302)
-                                .withBody(json("{ \"key\": \"some_value\" }"))
-                                .withHeaders(new Header("header_name", "header_value"))
-                                .withCookies(new Cookie("cookie_name", "cookie_value"))
-                ),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"statusCode\" : 302," + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"header_name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"header_value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"cookie_name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"cookie_value\"" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"body\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"" + System.getProperty("line.separator") +
-                        "}"));
+            response()
+                .withStatusCode(302)
+                .withBody(json("{ \"key\": \"some_value\" }"))
+                .withHeaders(new Header("header_name", "header_value"))
+                .withCookies(new Cookie("cookie_name", "cookie_value"))
+            ),
+            is("{" + NEW_LINE +
+                "  \"statusCode\" : 302," + NEW_LINE +
+                "  \"headers\" : {" + NEW_LINE +
+                "    \"header_name\" : [ \"header_value\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"cookies\" : {" + NEW_LINE +
+                "    \"cookie_name\" : \"cookie_value\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"body\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"" + NEW_LINE +
+                "}"));
     }
 
     @Test
     public void shouldReturnFormattedResponseWithDefaultStatusCode() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
-                        response()
-                                .withStatusCode(200)
-                                .withHeaders(new Header("header_name", "header_value"))
-                                .withCookies(new Cookie("cookie_name", "cookie_value"))
-                ),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"statusCode\" : 200," + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"header_name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"header_value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"cookie_name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"cookie_value\"" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
-                        "}")
-        );
-    }
-
-    @Test
-    public void shouldReturnFormattedResponseWithInvalidBody() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
-                        response()
-                                .withBody(xpath("//some/xml/path"))
-                                .withHeaders(new Header("header_name", "header_value"))
-                                .withCookies(new Cookie("cookie_name", "cookie_value"))
-                ),
-                is("{" + System.getProperty("line.separator") +
-                        "  \"headers\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"header_name\"," + System.getProperty("line.separator") +
-                        "    \"values\" : [ \"header_value\" ]" + System.getProperty("line.separator") +
-                        "  } ]," + System.getProperty("line.separator") +
-                        "  \"cookies\" : [ {" + System.getProperty("line.separator") +
-                        "    \"name\" : \"cookie_name\"," + System.getProperty("line.separator") +
-                        "    \"value\" : \"cookie_value\"" + System.getProperty("line.separator") +
-                        "  } ]" + System.getProperty("line.separator") +
-                        "}")
+            response()
+                .withStatusCode(200)
+                .withHeaders(new Header("header_name", "header_value"))
+                .withCookies(new Cookie("cookie_name", "cookie_value"))
+            ),
+            is("{" + NEW_LINE +
+                "  \"statusCode\" : 200," + NEW_LINE +
+                "  \"headers\" : {" + NEW_LINE +
+                "    \"header_name\" : [ \"header_value\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"cookies\" : {" + NEW_LINE +
+                "    \"cookie_name\" : \"cookie_value\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}")
         );
     }
 

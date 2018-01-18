@@ -2,584 +2,221 @@ package org.mockserver.matchers;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.validator.jsonschema.JsonSchemaValidator;
 import org.slf4j.Logger;
+import org.slf4j.event.Level;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.ConfigurationProperties.logLevel;
 
 /**
  * @author jamesdbloom
  */
 public class JsonSchemaMatcherTest {
 
-    @Mock
+    public static final String JSON_SCHEMA = "{" + NEW_LINE +
+        "    \"type\": \"object\"," + NEW_LINE +
+        "    \"properties\": {" + NEW_LINE +
+        "        \"enumField\": {" + NEW_LINE +
+        "            \"enum\": [ \"one\", \"two\" ]" + NEW_LINE +
+        "        }," + NEW_LINE +
+        "        \"arrayField\": {" + NEW_LINE +
+        "            \"type\": \"array\"," + NEW_LINE +
+        "            \"minItems\": 1," + NEW_LINE +
+        "            \"items\": {" + NEW_LINE +
+        "                \"type\": \"string\"" + NEW_LINE +
+        "            }," + NEW_LINE +
+        "            \"uniqueItems\": true" + NEW_LINE +
+        "        }," + NEW_LINE +
+        "        \"stringField\": {" + NEW_LINE +
+        "            \"type\": \"string\"," + NEW_LINE +
+        "            \"minLength\": 5," + NEW_LINE +
+        "            \"maxLength\": 6" + NEW_LINE +
+        "        }," + NEW_LINE +
+        "        \"booleanField\": {" + NEW_LINE +
+        "            \"type\": \"boolean\"" + NEW_LINE +
+        "        }," + NEW_LINE +
+        "        \"objectField\": {" + NEW_LINE +
+        "            \"type\": \"object\"," + NEW_LINE +
+        "            \"properties\": {" + NEW_LINE +
+        "                \"stringField\": {" + NEW_LINE +
+        "                    \"type\": \"string\"," + NEW_LINE +
+        "                    \"minLength\": 1," + NEW_LINE +
+        "                    \"maxLength\": 3" + NEW_LINE +
+        "                }" + NEW_LINE +
+        "            }," + NEW_LINE +
+        "            \"required\": [ \"stringField\" ]" + NEW_LINE +
+        "        }" + NEW_LINE +
+        "    }," + NEW_LINE +
+        "    \"additionalProperties\" : false," + NEW_LINE +
+        "    \"required\": [ \"enumField\", \"arrayField\" ]" + NEW_LINE +
+        "}";
     protected Logger logger;
-
-    public static final String JSON_SCHEMA = "{\n" +
-            "    \"type\": \"object\",\n" +
-            "    \"properties\": {\n" +
-            "        \"enumField\": {\n" +
-            "            \"enum\": [ \"one\", \"two\" ]\n" +
-            "        },\n" +
-            "        \"arrayField\": {\n" +
-            "            \"type\": \"array\",\n" +
-            "            \"minItems\": 1,\n" +
-            "            \"items\": {\n" +
-            "                \"type\": \"string\"\n" +
-            "            },\n" +
-            "            \"uniqueItems\": true\n" +
-            "        },\n" +
-            "        \"stringField\": {\n" +
-            "            \"type\": \"string\",\n" +
-            "            \"minLength\": 5,\n" +
-            "            \"maxLength\": 6\n" +
-            "        },\n" +
-            "        \"booleanField\": {\n" +
-            "            \"type\": \"boolean\"\n" +
-            "        },\n" +
-            "        \"objectField\": {\n" +
-            "            \"type\": \"object\",\n" +
-            "            \"properties\": {\n" +
-            "                \"stringField\": {\n" +
-            "                    \"type\": \"string\",\n" +
-            "                    \"minLength\": 1,\n" +
-            "                    \"maxLength\": 3\n" +
-            "                }\n" +
-            "            },\n" +
-            "            \"required\": [ \"stringField\" ]\n" +
-            "        }\n" +
-            "    },\n" +
-            "    \"additionalProperties\" : false,\n" +
-            "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
-            "}";
+    @Mock
+    private JsonSchemaValidator mockJsonSchemaValidator;
+    @InjectMocks
+    private JsonSchemaMatcher jsonSchemaMatcher;
 
     @Before
-    public void createMocks() {
+    public void setupMocks() {
+        logger = mock(Logger.class);
+        jsonSchemaMatcher = new JsonSchemaMatcher(new MockServerLogger(logger, null), JSON_SCHEMA);
         initMocks(this);
+
+        when(logger.isTraceEnabled()).thenReturn(true);
+        when(logger.isInfoEnabled()).thenReturn(true);
+        when(logger.isErrorEnabled()).thenReturn(true);
     }
 
     @Test
     public void shouldMatchJson() {
-        assertTrue(new JsonSchemaMatcher(JSON_SCHEMA).matches("{arrayField: [ \"one\" ], enumField: \"one\"}"));
+        // given
+        String json = "some_json";
+        when(mockJsonSchemaValidator.isValid(json)).thenReturn("");
+
+        // then
+        assertTrue(jsonSchemaMatcher.matches(null, json));
     }
 
     @Test
-    public void shouldNotMatchJsonMissingRequiredFields() {
-        // given
-        JsonSchemaMatcher jsonSchemaMatcher = new JsonSchemaMatcher(JSON_SCHEMA);
-        jsonSchemaMatcher.logger = logger;
+    public void shouldNotMatchJson() {
+        Level originalLevel = logLevel();
+        try {
+            // given
+            logLevel("TRACE");
+            String json = "some_json";
+            when(mockJsonSchemaValidator.isValid(json)).thenReturn("validator_error");
 
-        // then
-        assertFalse(jsonSchemaMatcher.matches("{}"));
+            // when
+            assertFalse(jsonSchemaMatcher.matches(null, json));
 
-        // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
-                "{}",
-                "{\n" +
-                        "    \"type\": \"object\",\n" +
-                        "    \"properties\": {\n" +
-                        "        \"enumField\": {\n" +
-                        "            \"enum\": [ \"one\", \"two\" ]\n" +
-                        "        },\n" +
-                        "        \"arrayField\": {\n" +
-                        "            \"type\": \"array\",\n" +
-                        "            \"minItems\": 1,\n" +
-                        "            \"items\": {\n" +
-                        "                \"type\": \"string\"\n" +
-                        "            },\n" +
-                        "            \"uniqueItems\": true\n" +
-                        "        },\n" +
-                        "        \"stringField\": {\n" +
-                        "            \"type\": \"string\",\n" +
-                        "            \"minLength\": 5,\n" +
-                        "            \"maxLength\": 6\n" +
-                        "        },\n" +
-                        "        \"booleanField\": {\n" +
-                        "            \"type\": \"boolean\"\n" +
-                        "        },\n" +
-                        "        \"objectField\": {\n" +
-                        "            \"type\": \"object\",\n" +
-                        "            \"properties\": {\n" +
-                        "                \"stringField\": {\n" +
-                        "                    \"type\": \"string\",\n" +
-                        "                    \"minLength\": 1,\n" +
-                        "                    \"maxLength\": 3\n" +
-                        "                }\n" +
-                        "            },\n" +
-                        "            \"required\": [ \"stringField\" ]\n" +
-                        "        }\n" +
-                        "    },\n" +
-                        "    \"additionalProperties\" : false,\n" +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
-                        "}",
-                "com.github.fge.jsonschema.core.report.ListProcessingReport: failure\n" +
-                        "--- BEGIN MESSAGES ---\n" +
-                        "error: object has missing required properties ([\"arrayField\",\"enumField\"])\n" +
-                        "    level: \"error\"\n" +
-                        "    schema: {\"loadingURI\":\"#\",\"pointer\":\"\"}\n" +
-                        "    instance: {\"pointer\":\"\"}\n" +
-                        "    domain: \"validation\"\n" +
-                        "    keyword: \"required\"\n" +
-                        "    required: [\"arrayField\",\"enumField\"]\n" +
-                        "    missing: [\"arrayField\",\"enumField\"]\n" +
-                        "---  END MESSAGES  ---\n" +
-                        "");
+            // then
+            verify(logger).trace("Failed to match JSON: " + NEW_LINE +
+                NEW_LINE +
+                "\tsome_json" + NEW_LINE +
+                NEW_LINE +
+                "with schema: " + NEW_LINE +
+                NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t    \"type\": \"object\"," + NEW_LINE +
+                "\t    \"properties\": {" + NEW_LINE +
+                "\t        \"enumField\": {" + NEW_LINE +
+                "\t            \"enum\": [ \"one\", \"two\" ]" + NEW_LINE +
+                "\t        }," + NEW_LINE +
+                "\t        \"arrayField\": {" + NEW_LINE +
+                "\t            \"type\": \"array\"," + NEW_LINE +
+                "\t            \"minItems\": 1," + NEW_LINE +
+                "\t            \"items\": {" + NEW_LINE +
+                "\t                \"type\": \"string\"" + NEW_LINE +
+                "\t            }," + NEW_LINE +
+                "\t            \"uniqueItems\": true" + NEW_LINE +
+                "\t        }," + NEW_LINE +
+                "\t        \"stringField\": {" + NEW_LINE +
+                "\t            \"type\": \"string\"," + NEW_LINE +
+                "\t            \"minLength\": 5," + NEW_LINE +
+                "\t            \"maxLength\": 6" + NEW_LINE +
+                "\t        }," + NEW_LINE +
+                "\t        \"booleanField\": {" + NEW_LINE +
+                "\t            \"type\": \"boolean\"" + NEW_LINE +
+                "\t        }," + NEW_LINE +
+                "\t        \"objectField\": {" + NEW_LINE +
+                "\t            \"type\": \"object\"," + NEW_LINE +
+                "\t            \"properties\": {" + NEW_LINE +
+                "\t                \"stringField\": {" + NEW_LINE +
+                "\t                    \"type\": \"string\"," + NEW_LINE +
+                "\t                    \"minLength\": 1," + NEW_LINE +
+                "\t                    \"maxLength\": 3" + NEW_LINE +
+                "\t                }" + NEW_LINE +
+                "\t            }," + NEW_LINE +
+                "\t            \"required\": [ \"stringField\" ]" + NEW_LINE +
+                "\t        }" + NEW_LINE +
+                "\t    }," + NEW_LINE +
+                "\t    \"additionalProperties\" : false," + NEW_LINE +
+                "\t    \"required\": [ \"enumField\", \"arrayField\" ]" + NEW_LINE +
+                "\t}" + NEW_LINE +
+                NEW_LINE +
+                "because: " + NEW_LINE +
+                NEW_LINE +
+                "\tvalidator_error" + NEW_LINE);
+        } finally {
+            logLevel(originalLevel.toString());
+        }
     }
 
     @Test
-    public void shouldNotMatchJsonTooFewItems() {
-        // given
-        JsonSchemaMatcher jsonSchemaMatcher = new JsonSchemaMatcher(JSON_SCHEMA);
-        jsonSchemaMatcher.logger = logger;
+    public void shouldHandleExpection() {
+        Level originalLevel = logLevel();
+        try {
+            // given
+            logLevel("TRACE");
+            String json = "some_json";
+            when(mockJsonSchemaValidator.isValid(json)).thenThrow(new RuntimeException("TEST_EXCEPTION"));
 
-        // then
-        assertFalse(jsonSchemaMatcher.matches("{arrayField: [ ],         enumField: \\\"one\\\"}"));
+            // when
+            assertFalse(jsonSchemaMatcher.matches(null, json));
 
-        // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
-                "{arrayField: [ ],         enumField: \\\"one\\\"}",
-                "{\n" +
-                        "    \"type\": \"object\",\n" +
-                        "    \"properties\": {\n" +
-                        "        \"enumField\": {\n" +
-                        "            \"enum\": [ \"one\", \"two\" ]\n" +
-                        "        },\n" +
-                        "        \"arrayField\": {\n" +
-                        "            \"type\": \"array\",\n" +
-                        "            \"minItems\": 1,\n" +
-                        "            \"items\": {\n" +
-                        "                \"type\": \"string\"\n" +
-                        "            },\n" +
-                        "            \"uniqueItems\": true\n" +
-                        "        },\n" +
-                        "        \"stringField\": {\n" +
-                        "            \"type\": \"string\",\n" +
-                        "            \"minLength\": 5,\n" +
-                        "            \"maxLength\": 6\n" +
-                        "        },\n" +
-                        "        \"booleanField\": {\n" +
-                        "            \"type\": \"boolean\"\n" +
-                        "        },\n" +
-                        "        \"objectField\": {\n" +
-                        "            \"type\": \"object\",\n" +
-                        "            \"properties\": {\n" +
-                        "                \"stringField\": {\n" +
-                        "                    \"type\": \"string\",\n" +
-                        "                    \"minLength\": 1,\n" +
-                        "                    \"maxLength\": 3\n" +
-                        "                }\n" +
-                        "            },\n" +
-                        "            \"required\": [ \"stringField\" ]\n" +
-                        "        }\n" +
-                        "    },\n" +
-                        "    \"additionalProperties\" : false,\n" +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
-                        "}",
-                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
-                        " at [Source: {arrayField: [ ],         enumField: \\\"one\\\"}; line: 1, column: 39]");
-    }
-
-    @Test
-    public void shouldNotMatchJsonTooLongString() {
-        // given
-        JsonSchemaMatcher jsonSchemaMatcher = new JsonSchemaMatcher(JSON_SCHEMA);
-        jsonSchemaMatcher.logger = logger;
-
-        // then
-        assertFalse(jsonSchemaMatcher.matches("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}"));
-
-        // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
-                "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}",
-                "{\n" +
-                        "    \"type\": \"object\",\n" +
-                        "    \"properties\": {\n" +
-                        "        \"enumField\": {\n" +
-                        "            \"enum\": [ \"one\", \"two\" ]\n" +
-                        "        },\n" +
-                        "        \"arrayField\": {\n" +
-                        "            \"type\": \"array\",\n" +
-                        "            \"minItems\": 1,\n" +
-                        "            \"items\": {\n" +
-                        "                \"type\": \"string\"\n" +
-                        "            },\n" +
-                        "            \"uniqueItems\": true\n" +
-                        "        },\n" +
-                        "        \"stringField\": {\n" +
-                        "            \"type\": \"string\",\n" +
-                        "            \"minLength\": 5,\n" +
-                        "            \"maxLength\": 6\n" +
-                        "        },\n" +
-                        "        \"booleanField\": {\n" +
-                        "            \"type\": \"boolean\"\n" +
-                        "        },\n" +
-                        "        \"objectField\": {\n" +
-                        "            \"type\": \"object\",\n" +
-                        "            \"properties\": {\n" +
-                        "                \"stringField\": {\n" +
-                        "                    \"type\": \"string\",\n" +
-                        "                    \"minLength\": 1,\n" +
-                        "                    \"maxLength\": 3\n" +
-                        "                }\n" +
-                        "            },\n" +
-                        "            \"required\": [ \"stringField\" ]\n" +
-                        "        }\n" +
-                        "    },\n" +
-                        "    \"additionalProperties\" : false,\n" +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
-                        "}",
-                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
-                        " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}; line: 1, column: 17]");
-    }
-
-    @Test
-    public void shouldNotMatchJsonIncorrectEnum() {
-        // given
-        JsonSchemaMatcher jsonSchemaMatcher = new JsonSchemaMatcher(JSON_SCHEMA);
-        jsonSchemaMatcher.logger = logger;
-
-        // then
-        assertFalse(jsonSchemaMatcher.matches("{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}"));
-
-        // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", "{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}", "{\n" +
-                        "    \"type\": \"object\",\n" +
-                        "    \"properties\": {\n" +
-                        "        \"enumField\": {\n" +
-                        "            \"enum\": [ \"one\", \"two\" ]\n" +
-                        "        },\n" +
-                        "        \"arrayField\": {\n" +
-                        "            \"type\": \"array\",\n" +
-                        "            \"minItems\": 1,\n" +
-                        "            \"items\": {\n" +
-                        "                \"type\": \"string\"\n" +
-                        "            },\n" +
-                        "            \"uniqueItems\": true\n" +
-                        "        },\n" +
-                        "        \"stringField\": {\n" +
-                        "            \"type\": \"string\",\n" +
-                        "            \"minLength\": 5,\n" +
-                        "            \"maxLength\": 6\n" +
-                        "        },\n" +
-                        "        \"booleanField\": {\n" +
-                        "            \"type\": \"boolean\"\n" +
-                        "        },\n" +
-                        "        \"objectField\": {\n" +
-                        "            \"type\": \"object\",\n" +
-                        "            \"properties\": {\n" +
-                        "                \"stringField\": {\n" +
-                        "                    \"type\": \"string\",\n" +
-                        "                    \"minLength\": 1,\n" +
-                        "                    \"maxLength\": 3\n" +
-                        "                }\n" +
-                        "            },\n" +
-                        "            \"required\": [ \"stringField\" ]\n" +
-                        "        }\n" +
-                        "    },\n" +
-                        "    \"additionalProperties\" : false,\n" +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
-                        "}",
-                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
-                        " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}; line: 1, column: 17]");
-    }
-
-    @Test
-    public void shouldNotMatchJsonExtraField() {
-        // given
-        JsonSchemaMatcher jsonSchemaMatcher = new JsonSchemaMatcher(JSON_SCHEMA);
-        jsonSchemaMatcher.logger = logger;
-
-        // then
-        assertFalse(jsonSchemaMatcher.matches("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}"));
-
-        // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
-                "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}",
-                "{\n" +
-                        "    \"type\": \"object\",\n" +
-                        "    \"properties\": {\n" +
-                        "        \"enumField\": {\n" +
-                        "            \"enum\": [ \"one\", \"two\" ]\n" +
-                        "        },\n" +
-                        "        \"arrayField\": {\n" +
-                        "            \"type\": \"array\",\n" +
-                        "            \"minItems\": 1,\n" +
-                        "            \"items\": {\n" +
-                        "                \"type\": \"string\"\n" +
-                        "            },\n" +
-                        "            \"uniqueItems\": true\n" +
-                        "        },\n" +
-                        "        \"stringField\": {\n" +
-                        "            \"type\": \"string\",\n" +
-                        "            \"minLength\": 5,\n" +
-                        "            \"maxLength\": 6\n" +
-                        "        },\n" +
-                        "        \"booleanField\": {\n" +
-                        "            \"type\": \"boolean\"\n" +
-                        "        },\n" +
-                        "        \"objectField\": {\n" +
-                        "            \"type\": \"object\",\n" +
-                        "            \"properties\": {\n" +
-                        "                \"stringField\": {\n" +
-                        "                    \"type\": \"string\",\n" +
-                        "                    \"minLength\": 1,\n" +
-                        "                    \"maxLength\": 3\n" +
-                        "                }\n" +
-                        "            },\n" +
-                        "            \"required\": [ \"stringField\" ]\n" +
-                        "        }\n" +
-                        "    },\n" +
-                        "    \"additionalProperties\" : false,\n" +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
-                        "}",
-                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
-                        " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}; line: 1, column: 17]");
-    }
-
-
-    @Test
-    public void shouldNotMatchJsonIncorrectSubField() {
-        // given
-        JsonSchemaMatcher jsonSchemaMatcher = new JsonSchemaMatcher(JSON_SCHEMA);
-        jsonSchemaMatcher.logger = logger;
-
-        // then
-        assertFalse(jsonSchemaMatcher.matches("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }"));
-
-        // and
-        verify(logger).trace(
-                "Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
-                "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }",
-                "{\n" +
-                        "    \"type\": \"object\",\n" +
-                        "    \"properties\": {\n" +
-                        "        \"enumField\": {\n" +
-                        "            \"enum\": [ \"one\", \"two\" ]\n" +
-                        "        },\n" +
-                        "        \"arrayField\": {\n" +
-                        "            \"type\": \"array\",\n" +
-                        "            \"minItems\": 1,\n" +
-                        "            \"items\": {\n" +
-                        "                \"type\": \"string\"\n" +
-                        "            },\n" +
-                        "            \"uniqueItems\": true\n" +
-                        "        },\n" +
-                        "        \"stringField\": {\n" +
-                        "            \"type\": \"string\",\n" +
-                        "            \"minLength\": 5,\n" +
-                        "            \"maxLength\": 6\n" +
-                        "        },\n" +
-                        "        \"booleanField\": {\n" +
-                        "            \"type\": \"boolean\"\n" +
-                        "        },\n" +
-                        "        \"objectField\": {\n" +
-                        "            \"type\": \"object\",\n" +
-                        "            \"properties\": {\n" +
-                        "                \"stringField\": {\n" +
-                        "                    \"type\": \"string\",\n" +
-                        "                    \"minLength\": 1,\n" +
-                        "                    \"maxLength\": 3\n" +
-                        "                }\n" +
-                        "            },\n" +
-                        "            \"required\": [ \"stringField\" ]\n" +
-                        "        }\n" +
-                        "    },\n" +
-                        "    \"additionalProperties\" : false,\n" +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
-                        "}",
-                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
-                        " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }; line: 1, column: 17]");
-    }
-
-
-    @Test
-    public void shouldNotMatchJsonMissingSubField() {
-        // given
-        JsonSchemaMatcher jsonSchemaMatcher = new JsonSchemaMatcher(JSON_SCHEMA);
-        jsonSchemaMatcher.logger = logger;
-
-        // then
-        assertFalse(jsonSchemaMatcher.matches("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }"));
-
-        // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
-                "{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }",
-                "{\n" +
-                        "    \"type\": \"object\",\n" +
-                        "    \"properties\": {\n" +
-                        "        \"enumField\": {\n" +
-                        "            \"enum\": [ \"one\", \"two\" ]\n" +
-                        "        },\n" +
-                        "        \"arrayField\": {\n" +
-                        "            \"type\": \"array\",\n" +
-                        "            \"minItems\": 1,\n" +
-                        "            \"items\": {\n" +
-                        "                \"type\": \"string\"\n" +
-                        "            },\n" +
-                        "            \"uniqueItems\": true\n" +
-                        "        },\n" +
-                        "        \"stringField\": {\n" +
-                        "            \"type\": \"string\",\n" +
-                        "            \"minLength\": 5,\n" +
-                        "            \"maxLength\": 6\n" +
-                        "        },\n" +
-                        "        \"booleanField\": {\n" +
-                        "            \"type\": \"boolean\"\n" +
-                        "        },\n" +
-                        "        \"objectField\": {\n" +
-                        "            \"type\": \"object\",\n" +
-                        "            \"properties\": {\n" +
-                        "                \"stringField\": {\n" +
-                        "                    \"type\": \"string\",\n" +
-                        "                    \"minLength\": 1,\n" +
-                        "                    \"maxLength\": 3\n" +
-                        "                }\n" +
-                        "            },\n" +
-                        "            \"required\": [ \"stringField\" ]\n" +
-                        "        }\n" +
-                        "    },\n" +
-                        "    \"additionalProperties\" : false,\n" +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
-                        "}",
-                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
-                        " at [Source: {arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }; line: 1, column: 17]");
-    }
-
-
-    @Test
-    public void shouldNotMatchJsonMultipleErrors() {
-        // given
-        JsonSchemaMatcher jsonSchemaMatcher = new JsonSchemaMatcher(JSON_SCHEMA);
-        jsonSchemaMatcher.logger = logger;
-
-        // then
-        assertFalse(jsonSchemaMatcher.matches("{arrayField: [ ],  stringField: \\\"1234\\\"}"));
-
-        // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}",
-                "{arrayField: [ ],  stringField: \\\"1234\\\"}",
-                "{\n" +
-                        "    \"type\": \"object\",\n" +
-                        "    \"properties\": {\n" +
-                        "        \"enumField\": {\n" +
-                        "            \"enum\": [ \"one\", \"two\" ]\n" +
-                        "        },\n" +
-                        "        \"arrayField\": {\n" +
-                        "            \"type\": \"array\",\n" +
-                        "            \"minItems\": 1,\n" +
-                        "            \"items\": {\n" +
-                        "                \"type\": \"string\"\n" +
-                        "            },\n" +
-                        "            \"uniqueItems\": true\n" +
-                        "        },\n" +
-                        "        \"stringField\": {\n" +
-                        "            \"type\": \"string\",\n" +
-                        "            \"minLength\": 5,\n" +
-                        "            \"maxLength\": 6\n" +
-                        "        },\n" +
-                        "        \"booleanField\": {\n" +
-                        "            \"type\": \"boolean\"\n" +
-                        "        },\n" +
-                        "        \"objectField\": {\n" +
-                        "            \"type\": \"object\",\n" +
-                        "            \"properties\": {\n" +
-                        "                \"stringField\": {\n" +
-                        "                    \"type\": \"string\",\n" +
-                        "                    \"minLength\": 1,\n" +
-                        "                    \"maxLength\": 3\n" +
-                        "                }\n" +
-                        "            },\n" +
-                        "            \"required\": [ \"stringField\" ]\n" +
-                        "        }\n" +
-                        "    },\n" +
-                        "    \"additionalProperties\" : false,\n" +
-                        "    \"required\": [ \"enumField\", \"arrayField\" ]\n" +
-                        "}",
-                "JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (number, String, array, object, 'true', 'false' or 'null')\n" +
-                        " at [Source: {arrayField: [ ],  stringField: \\\"1234\\\"}; line: 1, column: 34]");
-    }
-
-    @Test
-    public void shouldNotMatchIllegalJson() {
-        // given
-        JsonSchemaMatcher jsonSchemaMatcher = new JsonSchemaMatcher("illegal_json");
-        jsonSchemaMatcher.logger = logger;
-
-        // then
-        assertFalse(jsonSchemaMatcher.matches("illegal_json"));
-
-        // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", "illegal_json", "illegal_json", "JsonParseException - Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')\n" +
-                " at [Source: illegal_json; line: 1, column: 25]");
-
-        // and
-        assertFalse(jsonSchemaMatcher.matches("some_other_illegal_json"));
-
-        // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", "some_other_illegal_json", "illegal_json", "JsonParseException - Unrecognized token 'illegal_json': was expecting ('true', 'false' or 'null')\n" +
-                " at [Source: illegal_json; line: 1, column: 25]");
-    }
-
-    @Test
-    public void shouldNotMatchNullExpectation() {
-        // given
-        JsonSchemaMatcher jsonSchemaMatcher = new JsonSchemaMatcher(null);
-        jsonSchemaMatcher.logger = logger;
-
-        // then
-        assertFalse(new JsonSchemaMatcher(null).matches("some_value"));
-
-        // and
-        verifyNoMoreInteractions(logger);
-    }
-
-    @Test
-    public void shouldNotMatchEmptyExpectation() {
-        // given
-        JsonSchemaMatcher jsonSchemaMatcher = new JsonSchemaMatcher("");
-        jsonSchemaMatcher.logger = logger;
-
-        // then
-        assertFalse(jsonSchemaMatcher.matches("some_value"));
-
-        // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", "some_value", "", "JsonMappingException - No content to map due to end-of-input\n" +
-                " at [Source: ; line: 1, column: 0]");
-    }
-
-    @Test
-    public void shouldNotMatchNullTest() {
-        // given
-        JsonSchemaMatcher jsonSchemaMatcher = new JsonSchemaMatcher("some_value");
-        jsonSchemaMatcher.logger = logger;
-
-        // then
-        assertFalse(jsonSchemaMatcher.matches(null));
-
-        // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", null, "some_value", "JsonParseException - Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')\n" +
-                " at [Source: some_value; line: 1, column: 21]");
-    }
-
-    @Test
-    public void shouldNotMatchEmptyTest() {
-        // given
-        JsonSchemaMatcher jsonSchemaMatcher = new JsonSchemaMatcher("some_value");
-        jsonSchemaMatcher.logger = logger;
-
-        // then
-        assertFalse(jsonSchemaMatcher.matches(""));
-
-        // and
-        verify(logger).trace("Failed to perform JSON match \"{}\" with schema \"{}\" because {}", "", "some_value", "JsonParseException - Unrecognized token 'some_value': was expecting ('true', 'false' or 'null')\n" +
-                " at [Source: some_value; line: 1, column: 21]");
+            // then
+            verify(logger).trace("Failed to match JSON: " + NEW_LINE +
+                NEW_LINE +
+                "\tsome_json" + NEW_LINE +
+                NEW_LINE +
+                "with schema: " + NEW_LINE +
+                NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t    \"type\": \"object\"," + NEW_LINE +
+                "\t    \"properties\": {" + NEW_LINE +
+                "\t        \"enumField\": {" + NEW_LINE +
+                "\t            \"enum\": [ \"one\", \"two\" ]" + NEW_LINE +
+                "\t        }," + NEW_LINE +
+                "\t        \"arrayField\": {" + NEW_LINE +
+                "\t            \"type\": \"array\"," + NEW_LINE +
+                "\t            \"minItems\": 1," + NEW_LINE +
+                "\t            \"items\": {" + NEW_LINE +
+                "\t                \"type\": \"string\"" + NEW_LINE +
+                "\t            }," + NEW_LINE +
+                "\t            \"uniqueItems\": true" + NEW_LINE +
+                "\t        }," + NEW_LINE +
+                "\t        \"stringField\": {" + NEW_LINE +
+                "\t            \"type\": \"string\"," + NEW_LINE +
+                "\t            \"minLength\": 5," + NEW_LINE +
+                "\t            \"maxLength\": 6" + NEW_LINE +
+                "\t        }," + NEW_LINE +
+                "\t        \"booleanField\": {" + NEW_LINE +
+                "\t            \"type\": \"boolean\"" + NEW_LINE +
+                "\t        }," + NEW_LINE +
+                "\t        \"objectField\": {" + NEW_LINE +
+                "\t            \"type\": \"object\"," + NEW_LINE +
+                "\t            \"properties\": {" + NEW_LINE +
+                "\t                \"stringField\": {" + NEW_LINE +
+                "\t                    \"type\": \"string\"," + NEW_LINE +
+                "\t                    \"minLength\": 1," + NEW_LINE +
+                "\t                    \"maxLength\": 3" + NEW_LINE +
+                "\t                }" + NEW_LINE +
+                "\t            }," + NEW_LINE +
+                "\t            \"required\": [ \"stringField\" ]" + NEW_LINE +
+                "\t        }" + NEW_LINE +
+                "\t    }," + NEW_LINE +
+                "\t    \"additionalProperties\" : false," + NEW_LINE +
+                "\t    \"required\": [ \"enumField\", \"arrayField\" ]" + NEW_LINE +
+                "\t}" + NEW_LINE +
+                NEW_LINE +
+                "because: " + NEW_LINE +
+                NEW_LINE +
+                "\tTEST_EXCEPTION" + NEW_LINE);
+        } finally {
+            logLevel(originalLevel.toString());
+        }
     }
 
     @Test
     public void showHaveCorrectEqualsBehaviour() {
-        assertEquals(new JsonSchemaMatcher("some_value"), new JsonSchemaMatcher("some_value"));
+        MockServerLogger mockServerLogger = new MockServerLogger();
+        assertEquals(new JsonSchemaMatcher(mockServerLogger, JSON_SCHEMA), new JsonSchemaMatcher(mockServerLogger, JSON_SCHEMA));
     }
 }

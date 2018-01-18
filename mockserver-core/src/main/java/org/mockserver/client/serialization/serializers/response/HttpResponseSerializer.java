@@ -22,10 +22,13 @@ public class HttpResponseSerializer extends StdSerializer<HttpResponse> {
         if (httpResponse.getStatusCode() != null) {
             jgen.writeObjectField("statusCode", httpResponse.getStatusCode());
         }
-        if (httpResponse.getHeaders() != null && !httpResponse.getHeaders().isEmpty()) {
+        if (httpResponse.getReasonPhrase() != null) {
+            jgen.writeObjectField("reasonPhrase", httpResponse.getReasonPhrase());
+        }
+        if (httpResponse.getHeaderList() != null && !httpResponse.getHeaderList().isEmpty()) {
             jgen.writeObjectField("headers", httpResponse.getHeaders());
         }
-        if (httpResponse.getCookies() != null && !httpResponse.getCookies().isEmpty()) {
+        if (httpResponse.getCookieList() != null && !httpResponse.getCookieList().isEmpty()) {
             jgen.writeObjectField("cookies", httpResponse.getCookies());
         }
         Body body = httpResponse.getBody();

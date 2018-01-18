@@ -1,7 +1,7 @@
 ---
 title: Debugging Issues
 layout: page
-pageOrder: 6
+pageOrder: 7
 section: 'Mock Server'
 subsection: true
 sitemap:
@@ -13,13 +13,521 @@ sitemap:
 <p>MockServer supports the following features to simplify debugging</p>
 
 <ul>
+    <li>
+        <p>Retrieve the following items:</p>
+        <ul>
+            <li><strong><a href="#retrieving_recorded_requests">recorded requests</a></strong></li>
+            <li><strong><a href="#retrieving_recorded_requests">active expectations</a></strong></li>
+            <li><strong><a href="#retrieving_recorded_requests">recorded expectations</a></strong></li>
+            <li><strong><a href="#retrieving_recorded_requests">logs</a></strong></li>
+        </ul>
+    </li>
     <li>Configurable <a href="#logging-levels">log level</a></li>
     <li>Clear and simple log messages for all actions</li>
+    <li>JSON Schema validation of all requests to the REST API, with clear failure messages</li>
     <li>Clear failure messages when verifying requests (that support "show difference" in IntelliJ)</li>
-    <li>Ability to <a href="#dumping-expectations-to-logs">dump all configured expectations to the log</a></li>
 </ul>
 
-<p>In addition MockServer has simple and straight forward code that can be <a href="#debugging-java-code">easily debugged manually</a> when the logs don't provide enough information to determine why something is behaving as expected.</p>
+<a name="retrieving_recorded_requests" class="anchor" href="#retrieving_recorded_requests">&nbsp;</a>
+
+<h2>Retrieving Recorded Requests</h2>
+
+<p>All requests the MockServer or the proxy receives are recorded.</p>
+
+<p>It is possible to retrieve the recorded request, as show below in the code examples.</p>
+
+<p>Requests are returned in the order they are received, and which requests are returned can be filter using a <a href="/mock_server/getting_started.html#request_matchers">request matcher</a>.</p>
+
+<button id="button_recorded_reqs" class="accordion title"><strong>Retrieving Recorded Requests Code Examples</strong></button>
+<div class="panel title">
+    <button id="button_retrieve_all_recorded_reqs" class="accordion">retrieve all recorded requests</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequests(
+        request()
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .retrieveRecordedRequests({})
+    .then(
+        function (recordedRequests) {
+            console.log(JSON.stringify(recordedRequests));
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS"</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_reqs_using_request_matcher" class="accordion">retrieve recorded requests using request matcher</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequests(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedRequests({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (recordedRequests) {
+        console.log(JSON.stringify(recordedRequests));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS" -d '{
+    "path": "/some/path",
+    "method": "POST"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_reqs_as_java" class="accordion">retrieve recorded requests as java</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String recordedRequests = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequests(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JAVA
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS&format=JAVA" -d '{
+    "path": "/some/path"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_reqs_as_json" class="accordion">retrieve recorded requests as json</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String recordedRequests = new MockServerClient("localhost", 1080)
+    .retrieveRecordedRequests(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JSON
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedRequests({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (recordedRequests) {
+        console.log(JSON.stringify(recordedRequests));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS&format=JSON" -d '{
+    "path": "/some/path"
+}'</code></pre>
+        </div>
+    </div>
+</div>
+
+<a name="retrieving_active_expectations" class="anchor" href="#retrieving_active_expectations">&nbsp;</a>
+
+<h2>Retrieving Active Expectations</h2>
+
+<p>It is possible to retrieve the active expectations, as show below in the code examples.</p>
+
+<p>Expectations are returned in the order they have been added, and which expectations are returned can be filter using a <a href="/mock_server/getting_started.html#request_matchers">request matcher</a>.</p>
+
+<button id="button_active_expectations" class="accordion title"><strong>Retrieving Active Expectations Code Examples</strong></button>
+<div class="panel title">
+    <button id="button_retrieve_all_active_expectations" class="accordion">retrieve all active expectations</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">Expectation[] activeExpectations = new MockServerClient("localhost", 1080)
+    .retrieveActiveExpectations(
+        request()
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .retrieveActiveExpectations({})
+    .then(
+        function (activeExpectations) {
+            console.log(JSON.stringify(activeExpectations));
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS"</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_active_expectations_using_request_matcher" class="accordion">retrieve active expectations using request matcher</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">Expectation[] activeExpectations = new MockServerClient("localhost", 1080)
+    .retrieveActiveExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveActiveExpectations({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (activeExpectations) {
+        console.log(JSON.stringify(activeExpectations));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS" -d '{
+    "path": "/some/path",
+    "method": "POST"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_active_expectations_as_java" class="accordion">retrieve active expectations as java</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String activeExpectations = new MockServerClient("localhost", 1080)
+    .retrieveActiveExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JAVA
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS&format=JAVA" -d '{
+    "path": "/some/path"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_active_expectations_as_json" class="accordion">retrieve active expectations as json</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String activeExpectations = new MockServerClient("localhost", 1080)
+    .retrieveActiveExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JSON
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveActiveExpectations({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (activeExpectations) {
+        console.log(JSON.stringify(activeExpectations));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS&format=JSON" -d '{
+    "path": "/some/path"
+}'</code></pre>
+        </div>
+    </div>
+</div>
+
+<a name="retrieving_recorded_expectations" class="anchor" href="#retrieving_recorded_expectations">&nbsp;</a>
+
+<h2>Retrieving Recorded Expectations</h2>
+
+<p>For MockServer <a href="/mock_server/getting_started.html#forward_action">forward actions</a> or all proxy requests expectations are recorded containing the request received and response returned.</p>
+
+<p>It is possible to retrieve the recorded expectations, as show below in the code examples.</p>
+
+<p>Expectations are returned in the order they have been recorded, and which expectations are returned can be filter using a <a href="/mock_server/getting_started.html#request_matchers">request matcher</a>.</p>
+
+<button id="button_recorded_expectations" class="accordion title"><strong>Retrieving Recorded Expectations Code Examples</strong></button>
+<div class="panel title">
+    <button id="button_retrieve_all_recorded_expectations" class="accordion">retrieve all recorded expectations</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new MockServerClient("localhost", 1080)
+    .retrieveRecordedExpectations(
+        request()
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .retrieveRecordedExpectations({})
+    .then(
+        function (recordedExpectations) {
+            console.log(JSON.stringify(recordedExpectations));
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS"</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_expectations_using_request_matcher" class="accordion">retrieve recorded expectations using request matcher</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new MockServerClient("localhost", 1080)
+    .retrieveRecordedExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedExpectations({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (recordedExpectations) {
+        console.log(JSON.stringify(recordedExpectations));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS" -d '{
+    "path": "/some/path",
+    "method": "POST"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_expectations_as_java" class="accordion">retrieve recorded expectations as java</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String recordedExpectations = new MockServerClient("localhost", 1080)
+    .retrieveRecordedExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JAVA
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS&format=JAVA" -d '{
+    "path": "/some/path"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_expectations_as_json" class="accordion">retrieve recorded expectations as json</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String recordedExpectations = new MockServerClient("localhost", 1080)
+    .retrieveRecordedExpectations(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST"),
+        Format.JSON
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedExpectations({
+    "path": "/some/path",
+    "method": "POST"
+}).then(
+    function (recordedExpectations) {
+        console.log(JSON.stringify(recordedExpectations));
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" -d '{
+    "path": "/some/path"
+}'</code></pre>
+        </div>
+    </div>
+</div>
+
+<a name="retrieving_recorded_logs" class="anchor" href="#retrieving_recorded_logs">&nbsp;</a>
+
+<h2>Retrieving Recorded Logs</h2>
+
+<p>MockServer and the proxy record log messages for all major actions, including:</p>
+<ul>
+    <li>adding expectations</li>
+    <li><a href="/mock_server/getting_started.html#request_matchers">matching requests</a></li>
+    <li>executing actions (<a href="/mock_server/getting_started.html#response_action">response</a>, <a href="/mock_server/getting_started.html#forward_action">forward</a>, <a href="/mock_server/getting_started.html#callback_action">callback</a> & <a href="/mock_server/getting_started.html#error_action">error</a>)</li>
+    <li>returning responses</li>
+    <li>clearing logs, expectations & recorded requests</li>
+    <li>resetting logs, expectations & recorded requests</li>
+</ul>
+
+<p>It is possible to retrieve the recorded log messages, as show below in the code examples.</p>
+
+<p>Log messages are returned in the order they have been recorded, and which log messages are returned can be filter using a <a href="/mock_server/getting_started.html#request_matchers">request matcher</a>.</p>
+
+<button id="button_recorded_log_messages" class="accordion title"><strong>Retrieving Recorded Log Events Code Examples</strong></button>
+<div class="panel title">
+    <button id="button_retrieve_all_recorded_log_messages" class="accordion">retrieve all recorded log messages</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String logMessages = new MockServerClient("localhost", 1080)
+    .retrieveLogMessages(
+        request()
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .retrieveLogMessages({})
+    .then(
+        function (logMessages) {
+            // logMessages is a String[]
+            console.log(logMessages);
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS"</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_log_messages_using_request_matcher" class="accordion">retrieve recorded log messages using request matcher</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String logMessages = new MockServerClient("localhost", 1080)
+    .retrieveLogMessages(
+        request()
+            .withPath("/some/path")
+            .withMethod("POST")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .retrieveLogMessages({
+        "path": "/some/path",
+        "method": "POST"
+    })
+    .then(
+        function (logMessages) {
+            // logMessages is a String[]
+            console.log(logMessages);
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS" -d '{
+    "path": "/some/path",
+    "method": "POST"
+}'</code></pre>
+        </div>
+    </div>
+    <button id="button_retrieve_recorded_log_messages_as_array" class="accordion">retrieve recorded log messages as array</button>
+    <div class="panel">
+        <button class="accordion inner">Java</button>
+        <div class="panel">
+            <pre class="prettyprint lang-java code"><code class="code">String[] logMessages = new MockServerClient("localhost", 1080)
+    .retrieveLogMessagesArray(
+        request()
+            .withPath("/some/path")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript</button>
+        <div class="panel">
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
+    .retrieveLogMessages({
+        "path": "/some/path"
+    })
+    .then(
+        function (logMessages) {
+            // logMessages is a String[]
+            console.log(logMessages);
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+        </div>
+    </div>
+</div>
 
 <a name="logging-levels" class="anchor" href="#logging-levels">&nbsp;</a>
 
@@ -30,14 +538,14 @@ sitemap:
 <p>The following information is logged:</p>
 
 <ul>
-    <li><strong>WARN</strong> - exceptions, errors and expectation dump when <span class="inline_code">mockServerClient.dumpToLog()</span> is called</li>
+    <li><strong>WARN</strong> - exceptions, errors</li>
     <li><strong>INFO</strong> - all interactions with the MockServer including setting up expectations, matching expectations, clearing expectations and verifying requests</li>
     <li><strong>TRACE</strong> - all matcher results, including when specific matchers fail (such as HeaderMatcher)</li>
 </ul>
 
 <p>The <strong>TRACE</strong> level logging results in a lot of verbose logging but can be very helpful to debug why a complex matcher (such as the JSON Schema matcher) is not matching.</p>
 
-<p>When MockServer is run from the command line, Maven plugin, Grunt plugin or npm module the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running.</p>
+<p>When MockServer is run from the command line, Maven plugin, npm module or Grunt plugin the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running.</p>
 
 <a name="logging_with_api" class="anchor" href="#logging_with_api">&nbsp;</a>
 
@@ -49,21 +557,19 @@ sitemap:
 
 <p>A custom <a href="http://logback.qos.ch">logback</a> configuration file can be specified using the <span class="inline_code">logback.configurationFile</span> system property with an absolute or relative file path or a classpath, as follows: <code class="code inline">-Dlogback.configurationFile=example_logback.xml</code></p>
 
-<p>A custom <a href="http://logback.qos.ch">logback</a> configuration file will also be automatically picked up if it is called <strong>logback.xml</strong> and is in the root of the classpath, however, the jar-with-dependencies already contains a <strong>logback.xml</strong> file, so to override this, the overriding <strong>logback.xml</strong> file must be higher (i.e. earlier) in the classpath.</p>
-
 <a name="logging_with_command_line" class="anchor" href="#logging_with_command_line">&nbsp;</a>
 
 <h3>Logging with Command Line</h3>
 
 <p>When running MockServer directly from <a href="/mock_server/running_mock_server.html#running_from_command_line">the command line</a> the system property <span class="inline_code">mockserver.logLevel</span> can be used to set the log level, as follows:</p>
 
-<pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-3.10.8-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
+<pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-5.3.0-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
 
 <p>It is also possible to specify a custom <a href="http://logback.qos.ch">logback</a> configuration file to override the default MockServer or MockServer Proxy logging settings. An example <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-netty/src/main/resources/example_logback.xml">logback configuration file</a> is available in github.</p>
 
 <p>A custom <a href="http://logback.qos.ch">logback</a> configuration file can be specified using the <span class="inline_code">logback.configurationFile</span> system property with an absolute or relative file path or a classpath, as follows:</p>
 
-<pre><code class="code">java -Droot.logLevel=WARN -Dmockserver.logLevel=INFO -Dlogback.configurationFile=example_logback.xml -jar ~/Downloads/mockserver-netty-3.10.8-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
+<pre><code class="code">java -Droot.logLevel=WARN -Dmockserver.logLevel=INFO -Dlogback.configurationFile=example_logback.xml -jar ~/Downloads/mockserver-netty-5.3.0-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
 
 <p>A custom <a href="http://logback.qos.ch">logback</a> configuration file will also be automatically picked up if it is called <strong>logback.xml</strong> and is in the root of the classpath, however, the jar-with-dependencies already contains a <strong>logback.xml</strong> file, so to override this, the overriding <strong>logback.xml</strong> file must be higher (i.e. earlier) in the classpath.</p>
 
@@ -76,7 +582,7 @@ sitemap:
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">3.10.8</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">5.3.0</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">proxyPort</span>&gt;<span class="element_value">1090</span>&lt;/<span class="element">proxyPort</span>&gt;
@@ -102,10 +608,10 @@ sitemap:
 
 <a name="logging-with-node" class="anchor" href="#logging-with-node">&nbsp;</a>
 
-<h3>Logging with Grunt plugin or npm module</h3>
+<h3>Logging with npm module or Grunt plugin</h3>
 
-<p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver_grunt"><strong>mockserver-grunt</strong></a> Grunt plugin and Node.js (npm) module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the
-	<span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging. In addition the <span class="inline_code">--verbose</span> command line flag can be used for Grunt builds to enable the <strong>mockserver-grunt</strong> verbose option dynamically.</p>
+<p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver_node"><strong>mockserver-node</strong></a> Grunt plugin and Node.js (npm) module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the
+	<span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging. In addition the <span class="inline_code">--verbose</span> command line flag can be used for Grunt builds to enable the <strong>mockserver-node</strong> verbose option dynamically.</p>
 
 <a name="disabling-logging" class="anchor" href="#disabling-logging">&nbsp;</a>
 
@@ -114,133 +620,8 @@ sitemap:
 <p>To disable logging the following options can be used:</p>
 
 <ul>
-<li><code class="code inline">-Dmockserver.logLevel=OFF</code> - to disable logging from the MockServer and MockServer Proxy classes</li>
-<li><code class="code inline">-Droot.logLevel=OFF</code> - to disable all logging from all other classes (i.e. all none MockServer and MockServer Proxy classes)</li>
+<li><code class="code inline">-Dmockserver.logLevel=OFF</code> - to disable logging from the MockServer and Proxy classes</li>
+<li><code class="code inline">-Droot.logLevel=OFF</code> - to disable all logging from all other classes</li>
 </ul>
 
 <p>If logging is disabled then no log file will be created.  This is because the log files are only created when the first item is written to the log file.</p>
-
-<a name="dumping-expectations-to-logs" class="anchor" href="#dumping-expectations-to-logs">&nbsp;</a>
-
-<h2>Dumping Expectations To Log</h2>
-
-<p>To simplify debugging MockServer expectations can be dumped to the log at <strong>WARN</strong> level using pretty-printed JSON.</p>
-
-<p>To dump <strong>all expectations</strong> to the log use <strong>dumpToLog</strong> as follows:</p>
-
-<h4>Java</h4>
-
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).dumpToLog()</code></pre>
-
-<h4>JavaScript</h4>
-
-<pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).dumpToLogs();</code></pre>
-
-<h4>Ruby</h4>
-
-<pre><code class="code">client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
-client.dump_log()</code></pre>
-
-<p>To dump <strong>only specific</strong> expectations to the log use <strong>dumpToLog</strong> as follows:</p>
-
-<h4>Java</h4>
-
-<pre><code class="code"><span class="keyword">new</span> MockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).dumpToLog(
-        request()
-                .withMethod(<span class="string_literal">"GET"</span>)
-                .withPath(<span class="string_literal">"/somePath"</span>)
-);</code></pre>
-
-<h4>JavaScript</h4>
-
-<pre><code class="code">mockServerClient(<span class="string_literal">"localhost"</span>, <span class="numeric_literal">1080</span>).dumpToLogs(<span class="string_literal">'/somePath'</span>);</code></pre>
-
-<h4>Ruby</h4>
-
-<pre><code class="code">client = MockServerClient.new(<span class="string_literal">'localhost'</span>, <span class="numeric_literal">1080</span>)
-client.dump_log(request(<span class="ruby_constant">:GET</span>, <span class="string_literal">'/somePath'</span>))</code></pre>
-
-<a name="debugging-java-code" class="anchor" href="#debugging-java-code">&nbsp;</a>
-
-<h2>Debugging Java Code</h2>
-
-<p>To further understand why an exception is not being matched it is possible to debug the MockServer java code, in the following classes:</p>
-
-<ul>
-	<li><strong>org.mockserver.mockserver.MockServerHandler</strong> - main entry point for handling requests in for all versions of MockServer except the deployable WAR</li>
-	<li><strong>org.mockserver.server.MockServerServlet</strong> - main entry point for handling requests in the deployable WAR</li>
-	<li><strong>org.mockserver.matchers.HttpRequestMatcher</strong> - main class that orchestrates request matching</li>
-	<li><strong>org.mockserver.mock.MockServerMatcher</strong> - main class that orchestrates expectation, including matching, ttl, times and returning correct action</li>
-</ul>
-
-<a name="debugging-with-api" class="anchor" href="#debugging-with-api">&nbsp;</a>
-
-<h3>Debugging JUnit @Rule or API</h3>
-
-<p>Debugging when using the JUnit @Rule or API should be as simple as running your test in debug.</p>
-
-<a name="debugging-with-command-line" class="anchor" href="#debugging-with-command-line">&nbsp;</a>
-
-<h3>Debugging Command Line</h3>
-
-<p>Debugging a remote JVM (i.e. when running MockServer from the command line) typically requires providing the <span class="inline_code">-agentlib:jdwp</span> command line switch, as follows:</p>
-
-<pre><code class="code">java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=<span class="numeric_literal">5005</span> -jar ~/Downloads/mockserver-netty-3.10.8-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
-
-<a name="debugging-with-maven-plugin" class="anchor" href="#debugging-with-maven-plugin">&nbsp;</a>
-
-<h3>Debugging Maven Plugin</h3>
-
-<p>Maven can be debugged using <span class="inline_code">mvnDebug</span> which using a debug port of 8000, as follows:</p>
-
-<pre><code class="code">mvnDebug test</code></pre>
-
-<p><span class="inline_code">mvnDebug</span> runs the JVM using the following additional settings: <span class="inline_code">-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=<span class="numeric_literal">8000</span></span></p>
-
-<p>If you are using the <a href="http://maven.apache.org/surefire/maven-surefire-plugin">surefire plugin</a> to run your tests you can debug your tests using the <a href="http://maven.apache.org/surefire/maven-surefire-plugin/examples/debugging.html">surefire plugin debug options</a>, as follows:</p>
-
-<pre><code class="code">mvn -Dmaven.surefire.debug test</code></pre>
-
-<p>If you are using the <a href="http://maven.apache.org/surefire/maven-failsafe-plugin">failsafe plugin</a> to run your tests you can debug your tests using the <a href="http://maven.apache.org/surefire/maven-failsafe-plugin/examples/debugging.html">failsafe plugin debug options</a>, as follows:</p>
-
-<pre><code class="code">mvn -Dmaven.failsafe.debug verify</code></pre>
-
-<a name="debugging-with-node" class="anchor" href="#debugging-with-node">&nbsp;</a>
-
-<h3>Debugging Grunt plugin or npm module</h3>
-
-<p>To debug the Grunt plugin or npm module you need to provide the <span class="inline_code">javaDebugPort</span> option.  This option will enable the following command line switch <span class="inline_code">'-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=' + options.javaDebugPort</span>.</p>
-
-<p>For example debug <strong>node module</strong>, as follows:</p>
-
-<pre><code class="code">var mockserver = require(<span class="string_literal">'mockserver-grunt'</span>);
-mockserver.start_mockserver({
-                serverPort: <span class="numeric_literal">1080</span>,
-                proxyPort: <span class="numeric_literal">1090</span>,
-                javaDebugPort: <span class="keyword">5005</span>
-            });
-
-<span class="comment">// do something</span>
-
-mockserver.stop_mockserver();</code></pre>
-
-<p>For example debug <strong>Grunt plugin</strong>, as follows:</p>
-
-<pre><code class="code">grunt.initConfig({
-    start_mockserver: {
-        start: {
-            options: {
-                serverPort: <span class="numeric_literal">1080</span>,
-                proxyPort: <span class="numeric_literal">1090</span>,
-                javaDebugPort: <span class="keyword">5005</span>
-            }
-        }
-    },
-    stop_mockserver: {
-        stop: {
-
-        }
-    }
-});
-
-grunt.loadNpmTasks(<span class="string_literal">'mockserver-grunt'</span>);</code></pre>

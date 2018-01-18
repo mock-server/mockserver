@@ -1,7 +1,5 @@
 package org.mockserver.validator;
 
-import java.util.List;
-
 /**
  * @author jamesdbloom
  */
