@@ -6,7 +6,7 @@ import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.model.StringBody;
+import org.mockserver.model.Not;
 
 import java.util.concurrent.TimeUnit;
 
@@ -255,15 +255,15 @@ public class RequestMatcherExamples {
     }
 
     public void matchRequestBySubStringBody() {
-new MockServerClient("localhost", 1080)
-    .when(
-        request()
-            .withBody(subString("some_string"))
-    )
-    .respond(
-        response()
-            .withBody("some_response_body")
-    );
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withBody(subString("some_string"))
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
     }
 
     public void matchRequestByRegexBody() {
@@ -359,7 +359,7 @@ new MockServerClient("localhost", 1080)
                     .withBody(
                         // matches any request with an XML body that does NOT
                         // contain an element that matches the XPath expression
-                        not(xpath("/bookstore/book[price>30]/price"))
+                        Not.not(xpath("/bookstore/book[price>30]/price"))
                     )
             )
             .respond(

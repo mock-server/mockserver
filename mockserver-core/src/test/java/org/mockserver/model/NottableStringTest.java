@@ -19,7 +19,6 @@ public class NottableStringTest {
 
         // then
         assertThat(nottableString.isNot(), is(true));
-        assertThat(nottableString.getNot(), is(true));
         assertThat(nottableString.getValue(), is("value"));
     }
 
@@ -30,7 +29,6 @@ public class NottableStringTest {
 
         // then
         assertThat(nottableString.isNot(), is(false));
-        assertThat(nottableString.getNot(), is(false));
         assertThat(nottableString.getValue(), is("value"));
     }
 
@@ -41,7 +39,6 @@ public class NottableStringTest {
 
         // then
         assertThat(nottableString.isNot(), is(false));
-        assertThat(nottableString.getNot(), nullValue());
         assertThat(nottableString.getValue(), is("value"));
     }
 
@@ -94,14 +91,8 @@ public class NottableStringTest {
         assertTrue(NottableString.string("value").equals(string("value", false)));
 
         NottableString initiallyTrueValue = NottableString.string("value");
-        initiallyTrueValue.setNot(true);
-        assertTrue(initiallyTrueValue.equals(string("value", true)));
-        assertTrue(initiallyTrueValue.equals(NottableString.not("value")));
-
-        NottableString initiallyFalseValue = NottableString.not("value");
-        initiallyFalseValue.setNot(false);
-        assertTrue(initiallyFalseValue.equals(string("value")));
-        assertTrue(initiallyFalseValue.equals(string("value", false)));
+        assertTrue(initiallyTrueValue.equals(string("value", null)));
+        assertFalse(string("value", null).isNot());
     }
 
     @Test

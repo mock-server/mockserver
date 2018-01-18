@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 
@@ -8,13 +9,20 @@ import java.util.*;
 /**
  * @author jamesdbloom
  */
-public class NottableString extends Not {
+public class NottableString extends ObjectWithJsonToString {
 
     private final String value;
+    private final Boolean not;
+    private final int hashCode;
 
     private NottableString(String value, Boolean not) {
         this.value = value;
-        this.not = not;
+        if (not != null) {
+            this.not = not;
+        } else {
+            this.not = Boolean.FALSE;
+        }
+        this.hashCode = Objects.hash(value, not);
     }
 
     public static NottableString deserializeNottableString(String string) {
@@ -42,7 +50,7 @@ public class NottableString extends Not {
     }
 
     public static String serialiseNottableString(NottableString nottableString) {
-        return (nottableString.isNot() ? "!" : "") + nottableString.value;
+        return (nottableString.not ? "!" : "") + nottableString.value;
     }
 
     public static List<String> serialiseNottableString(List<NottableString> nottableStrings) {
@@ -83,6 +91,11 @@ public class NottableString extends Not {
         return value;
     }
 
+    @JsonIgnore
+    public boolean isNot() {
+        return not;
+    }
+
     public NottableString capitalize() {
         final String[] split = (value + "_").split("-");
         for (int i = 0; i < split.length; i++) {
@@ -102,9 +115,9 @@ public class NottableString extends Not {
     private boolean equals(Object other, boolean ignoreCase) {
         if (other instanceof String) {
             if (ignoreCase) {
-                return isNot() != ((String) other).equalsIgnoreCase(value);
+                return not != ((String) other).equalsIgnoreCase(value);
             } else {
-                return isNot() != other.equals(value);
+                return not != other.equals(value);
             }
         } else if (other instanceof NottableString) {
             NottableString otherNottableString = (NottableString) other;
@@ -112,9 +125,9 @@ public class NottableString extends Not {
                 return value == null;
             }
             if (ignoreCase) {
-                return otherNottableString.isNot() == (isNot() == otherNottableString.getValue().equalsIgnoreCase(value));
+                return otherNottableString.not == (not == otherNottableString.getValue().equalsIgnoreCase(value));
             } else {
-                return otherNottableString.isNot() == (isNot() == otherNottableString.getValue().equals(value));
+                return otherNottableString.not == (not == otherNottableString.getValue().equals(value));
             }
         }
         return false;
@@ -127,6 +140,6 @@ public class NottableString extends Not {
 
     @Override
     public int hashCode() {
-        return Objects.hash(value, not);
+        return hashCode;
     }
 }

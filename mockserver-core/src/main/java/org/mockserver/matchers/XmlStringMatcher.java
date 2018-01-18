@@ -48,7 +48,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
 
     public NottableString normaliseXmlNottableString(final NottableString input)
         throws IOException, SAXException, ParserConfigurationException, TransformerException {
-        return string(normaliseXmlString(input.getValue()), input.getNot());
+        return string(normaliseXmlString(input.getValue()), input.isNot());
     }
 
     public boolean matches(String matched) {
