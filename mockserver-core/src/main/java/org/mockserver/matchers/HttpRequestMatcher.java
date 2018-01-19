@@ -175,7 +175,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     boolean methodMatches = Strings.isNullOrEmpty(request.getMethod().getValue()) || matches(methodMatcher, request.getMethod());
                     boolean pathMatches = Strings.isNullOrEmpty(request.getPath().getValue()) || matches(pathMatcher, request.getPath());
                     boolean queryStringParametersMatches = matches(queryStringParameterMatcher, (request.getQueryStringParameterList() != null ? new ArrayList<KeyToMultiValue>(request.getQueryStringParameterList()) : null));
-                    boolean bodyMatches = bodyMatches(request, request.getMethod());
+                    boolean bodyMatches = bodyMatches(request);
                     boolean headersMatch = matches(headerMatcher, (request.getHeaderList() != null ? new ArrayList<KeyToMultiValue>(request.getHeaderList()) : null));
                     boolean cookiesMatch = matches(cookieMatcher, (request.getCookieList() != null ? new ArrayList<KeyAndValue>(request.getCookieList()) : null));
                     boolean keepAliveMatches = matches(keepAliveMatcher, request.isKeepAlive());
@@ -216,7 +216,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         return matches;
     }
 
-    private boolean bodyMatches(HttpRequest request, NottableString method) {
+    private boolean bodyMatches(HttpRequest request) {
         boolean bodyMatches = true;
         String bodyAsString = request.getBody() != null ? new String(request.getBody().getRawBytes(), request.getBody().getCharset(Charsets.UTF_8)) : "";
         if (!bodyAsString.isEmpty()) {
@@ -235,8 +235,8 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             if (!bodyMatches) {
                 try {
                     bodyMatches = bodyDTOMatcher.equals(objectMapper.readValue(bodyAsString, BodyDTO.class));
-                } catch (IOException e) {
-                    // ignore this exception as this exception will always get thrown for "normal" HTTP requests (i.e. not clear or retrieve)
+                } catch (Throwable e) {
+                    // ignore this exception as this exception would typically get thrown for "normal" HTTP requests (i.e. not clear or retrieve)
                 }
             }
         }
