@@ -106,8 +106,10 @@ public class HttpStateHandler {
     public Expectation firstMatchingExpectation(HttpRequest request) {
         if (mockServerMatcher.httpRequestMatchers.isEmpty()) {
             logFormatter.info(request(), "no active expectations when receiving request:{}", request);
+            return null;
+        } else {
+            return mockServerMatcher.firstMatchingExpectation(request);
         }
-        return mockServerMatcher.firstMatchingExpectation(request);
     }
 
     public void log(LogEntry logEntry) {

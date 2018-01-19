@@ -2,8 +2,7 @@ package org.mockserver.model;
 
 import java.util.*;
 
-import static org.mockserver.model.NottableString.string;
-import static org.mockserver.model.NottableString.strings;
+import static org.mockserver.model.NottableString.*;
 
 /**
  * @author jamesdbloom
@@ -11,6 +10,7 @@ import static org.mockserver.model.NottableString.strings;
 public class KeyToMultiValue extends ObjectWithJsonToString {
     private final NottableString name;
     private final List<NottableString> values;
+    private int hashCode;
 
     public KeyToMultiValue(String name, String... values) {
         this(string(name), strings(values));
@@ -31,6 +31,7 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
         } else {
             this.values = new ArrayList<>(values);
         }
+        this.hashCode = Objects.hash(this.name, this.values);
     }
 
     public NottableString getName() {
@@ -42,25 +43,18 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
     }
 
     public void addValue(String value) {
-        if (values != null && !values.contains(string(value))) {
-            values.add(string(value));
-        }
+        addValue(deserializeNottableString(value));
     }
 
     public void addValue(NottableString value) {
         if (values != null && !values.contains(value)) {
             values.add(value);
         }
+        this.hashCode = Objects.hash(name, values);
     }
 
     public void addValues(List<String> values) {
-        if (this.values != null) {
-            for (String value : values) {
-                if (!this.values.contains(string(value))) {
-                    this.values.add(string(value));
-                }
-            }
-        }
+        addNottableValues(deserializeNottableStrings(values));
     }
 
     public void addNottableValues(List<NottableString> values) {
@@ -89,15 +83,16 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        if (!super.equals(o)) {
+        if (hashCode() != o.hashCode()) {
             return false;
         }
         KeyToMultiValue that = (KeyToMultiValue) o;
-        return Objects.equals(name, that.name) && Objects.equals(values, that.values);
+        return Objects.equals(name, that.name) &&
+            Objects.equals(values, that.values);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, values);
+        return hashCode;
     }
 }
