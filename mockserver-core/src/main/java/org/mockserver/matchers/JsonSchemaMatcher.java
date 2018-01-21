@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.jsonschema.JsonSchemaValidator;
@@ -12,6 +13,7 @@ import static org.mockserver.character.Character.NEW_LINE;
  * @author jamesdbloom
  */
 public class JsonSchemaMatcher extends BodyMatcher<String> {
+    private static final String[] excludedFields = {"mockServerLogger", "jsonSchemaValidator"};
     private final MockServerLogger mockServerLogger;
     private String schema;
     private JsonSchemaValidator jsonSchemaValidator;
@@ -20,10 +22,6 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
         this.mockServerLogger = mockServerLogger;
         this.schema = schema;
         jsonSchemaValidator = new JsonSchemaValidator(mockServerLogger, schema);
-    }
-
-    protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger", "jsonSchemaValidator"};
     }
 
     public boolean matches(HttpRequest context, String matched) {
@@ -42,6 +40,12 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
         }
 
         return reverseResultIfNot(result);
+    }
+
+    @Override
+    @JsonIgnore
+    protected String[] fieldsExcludedFromEqualsAndHashCode() {
+        return excludedFields;
     }
 
 }

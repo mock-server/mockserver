@@ -19,9 +19,6 @@ public class XmlSchemaBodyDTO extends BodyDTO {
         this.xmlSchema = xmlSchemaBody.getValue();
     }
 
-    protected XmlSchemaBodyDTO() {
-    }
-
     public String getXml() {
         return xmlSchema;
     }

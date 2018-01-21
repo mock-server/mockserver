@@ -7,22 +7,18 @@ import org.mockserver.model.ObjectWithJsonToString;
  */
 public class NotDTO extends ObjectWithJsonToString {
 
-    Boolean not;
+    final Boolean not;
 
     public NotDTO(Boolean not) {
         if (not != null && not) {
-            this.not = true;
+            this.not = Boolean.TRUE;
+        } else {
+            this.not = Boolean.FALSE;
         }
-    }
-
-    public NotDTO() {
     }
 
     public Boolean getNot() {
         return not;
     }
 
-    public void setNot(Boolean not) {
-        this.not = not;
-    }
 }

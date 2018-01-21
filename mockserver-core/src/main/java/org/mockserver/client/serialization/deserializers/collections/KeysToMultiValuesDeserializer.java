@@ -9,10 +9,7 @@ import org.mockserver.model.KeysToMultiValues;
 import org.mockserver.model.NottableString;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-import static org.mockserver.model.NottableString.deserializeNottableString;
 import static org.mockserver.model.NottableString.deserializeNottableStrings;
 import static org.mockserver.model.NottableString.string;
 

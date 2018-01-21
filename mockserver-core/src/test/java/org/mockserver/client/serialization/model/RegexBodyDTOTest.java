@@ -37,9 +37,4 @@ public class RegexBodyDTOTest {
     public void shouldReturnCorrectObjectFromStaticBuilder() {
         assertThat(regex("some_body"), is(new RegexBody("some_body")));
     }
-
-    @Test
-    public void coverage() {
-        new RegexBodyDTO();
-    }
 }

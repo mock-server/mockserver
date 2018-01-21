@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
@@ -20,6 +21,7 @@ import static org.mockserver.model.NottableString.string;
  */
 public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
+    private static final String[] excludedFields = {"mockServerLogger", "objectMapper"};
     private MockServerLogger mockServerLogger;
     private Expectation expectation;
     private HttpRequest httpRequest;
@@ -47,7 +49,6 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             withKeepAlive(httpRequest.isKeepAlive());
             withSsl(httpRequest.isSecure());
         }
-        addFieldsExcludedFromEqualsAndHashCode("mockServerLogger", "objectMapper");
     }
 
 
@@ -65,7 +66,6 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             withKeepAlive(httpRequest.isKeepAlive());
             withSsl(httpRequest.isSecure());
         }
-        addFieldsExcludedFromEqualsAndHashCode("mockServerLogger", "objectMapper");
     }
 
     public Expectation getExpectation() {
@@ -274,5 +274,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         } catch (Exception e) {
             return super.toString();
         }
+    }
+
+    @Override
+    @JsonIgnore
+    public String[] fieldsExcludedFromEqualsAndHashCode() {
+        return excludedFields;
     }
 }

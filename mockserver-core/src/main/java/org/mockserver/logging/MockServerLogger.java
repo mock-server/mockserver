@@ -28,108 +28,108 @@ public class MockServerLogger {
         this(MockServerLogger.class);
     }
 
-    public MockServerLogger(Class loggerClass) {
+    public MockServerLogger(final Class loggerClass) {
         this(LoggerFactory.getLogger(loggerClass), null);
     }
 
-    public MockServerLogger(Logger logger, @Nullable HttpStateHandler httpStateHandler) {
+    public MockServerLogger(final Logger logger, final @Nullable HttpStateHandler httpStateHandler) {
         this.logger = logger;
         this.httpStateHandler = httpStateHandler;
     }
 
-    public void trace(String message, Object... arguments) {
+    public void trace(final String message, final Object... arguments) {
         trace(null, message, arguments);
     }
 
-    public void trace(HttpRequest request, String message, Object... arguments) {
+    public void trace(final HttpRequest request, final String message, final Object... arguments) {
         if (isEnabled(TRACE)) {
-            String logMessage = formatLogMessage(message, arguments);
+            final String logMessage = formatLogMessage(message, arguments);
             logger.trace(logMessage);
             logger.info(logMessage);
             addLogEvents(request, logMessage);
         }
     }
 
-    public void debug(String message, Object... arguments) {
+    public void debug(final String message, final Object... arguments) {
         debug(null, message, arguments);
     }
 
-    public void debug(HttpRequest request, String message, Object... arguments) {
+    public void debug(final HttpRequest request, final String message, final Object... arguments) {
         if (isEnabled(DEBUG)) {
-            String logMessage = formatLogMessage(message, arguments);
+            final String logMessage = formatLogMessage(message, arguments);
             logger.trace(logMessage);
             logger.info(logMessage);
             addLogEvents(request, logMessage);
         }
     }
 
-    public void info(String message, Object... arguments) {
+    public void info(final String message, final Object... arguments) {
         info((HttpRequest) null, message, arguments);
     }
 
-    public void info(HttpRequest request, String message, Object... arguments) {
+    public void info(final HttpRequest request, final String message, final Object... arguments) {
         if (isEnabled(INFO)) {
-            String logMessage = formatLogMessage(message, arguments);
+            final String logMessage = formatLogMessage(message, arguments);
             logger.info(logMessage);
             addLogEvents(request, logMessage);
         }
     }
 
-    public void info(List<HttpRequest> requests, String message, Object... arguments) {
+    public void info(final List<HttpRequest> requests, final String message, final Object... arguments) {
         if (isEnabled(INFO)) {
-            String logMessage = formatLogMessage(message, arguments);
+            final String logMessage = formatLogMessage(message, arguments);
             logger.info(logMessage);
             addLogEvents(requests, logMessage);
         }
     }
 
-    public void warn(String message) {
+    public void warn(final String message) {
         warn((HttpRequest) null, message);
     }
 
-    public void warn(String message, Object... arguments) {
+    public void warn(final String message, final Object... arguments) {
         warn(null, message, arguments);
     }
 
-    public void warn(@Nullable HttpRequest request, String message, Object... arguments) {
+    public void warn(final @Nullable HttpRequest request, final String message, final Object... arguments) {
         if (isEnabled(WARN)) {
-            String logMessage = formatLogMessage(message, arguments);
+            final String logMessage = formatLogMessage(message, arguments);
             logger.error(logMessage);
             addLogEvents(request, logMessage);
         }
     }
 
-    public void error(String message, Throwable throwable) {
+    public void error(final String message, final Throwable throwable) {
         error((HttpRequest) null, throwable, message);
     }
 
-    public void error(@Nullable HttpRequest request, String message, Object... arguments) {
+    public void error(final @Nullable HttpRequest request, final String message, final Object... arguments) {
         error(request, null, message, arguments);
     }
 
-    public void error(@Nullable HttpRequest request, Throwable throwable, String message, Object... arguments) {
+    public void error(final @Nullable HttpRequest request, final Throwable throwable, final String message, final Object... arguments) {
         if (isEnabled(ERROR)) {
-            String logMessage = formatLogMessage(message, arguments);
+            final String logMessage = formatLogMessage(message, arguments);
             logger.error(logMessage, throwable);
             addLogEvents(request, logMessage);
         }
     }
 
-    public void error(List<HttpRequest> requests, Throwable throwable, String message, Object... arguments) {
+    public void error(final List<HttpRequest> requests, final Throwable throwable, final String message, final Object... arguments) {
         if (isEnabled(ERROR)) {
-            String logMessage = formatLogMessage(message, arguments);
+            final String logMessage = formatLogMessage(message, arguments);
             logger.error(logMessage, throwable);
             addLogEvents(requests, logMessage);
         }
     }
 
-    private void addLogEvents(@Nullable HttpRequest request, String logMessage) {
+    private void addLogEvents(final @Nullable HttpRequest request, final String logMessage) {
         if (httpStateHandler != null) {
             httpStateHandler.log(new MessageLogEntry(request, logMessage));
         }
     }
 
-    private void addLogEvents(List<HttpRequest> requests, String logMessage) {
+    private void addLogEvents(final List<HttpRequest> requests, final String logMessage) {
         if (httpStateHandler != null) {
             for (HttpRequest httpRequest : requests) {
                 httpStateHandler.log(new MessageLogEntry(httpRequest, logMessage));
@@ -137,7 +137,7 @@ public class MockServerLogger {
         }
     }
 
-    public boolean isEnabled(Level level) {
+    public boolean isEnabled(final Level level) {
         return level.toInt() >= ConfigurationProperties.logLevel().toInt();
     }
 }

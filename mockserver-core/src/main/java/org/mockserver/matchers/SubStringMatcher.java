@@ -11,6 +11,7 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 public class SubStringMatcher extends BodyMatcher<NottableString> {
+    private static final String[] excludedFields = {"mockserverLogger"};
     private final MockServerLogger mockServerLogger;
     private final NottableString matcher;
 
@@ -64,6 +65,6 @@ public class SubStringMatcher extends BodyMatcher<NottableString> {
 
     @Override
     public String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger"};
+        return excludedFields;
     }
 }

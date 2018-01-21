@@ -15,6 +15,7 @@ import java.io.IOException;
 import static com.google.common.base.Charsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.RegexBody.regex;
@@ -421,7 +422,7 @@ public class BodyDTODeserializerTest {
         ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
 
         // then
-        assertEquals(new ExpectationDTO()
+        ExpectationDTO expected = new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setBody(new ParameterBodyDTO(
@@ -430,7 +431,8 @@ public class BodyDTODeserializerTest {
                             new Parameter("parameterTwoName", "parameterTwoValue")
                         )
                     ))
-            ), expectationDTO);
+            );
+        assertEquals(expected, expectationDTO);
     }
 
     @Test

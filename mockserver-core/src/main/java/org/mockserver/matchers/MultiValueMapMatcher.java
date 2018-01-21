@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -13,6 +14,7 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class MultiValueMapMatcher extends NotMatcher<List<KeyToMultiValue>> {
+    private static final String[] excludedFields = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final CaseInsensitiveRegexMultiMap multiMap;
 
@@ -37,5 +39,11 @@ public class MultiValueMapMatcher extends NotMatcher<List<KeyToMultiValue>> {
         }
 
         return reverseResultIfNot(result);
+    }
+
+    @Override
+    @JsonIgnore
+    protected String[] fieldsExcludedFromEqualsAndHashCode() {
+        return excludedFields;
     }
 }

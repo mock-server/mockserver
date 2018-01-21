@@ -43,7 +43,7 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
     }
 
     public void addValue(String value) {
-        addValue(deserializeNottableString(value));
+        addValue(string(value));
     }
 
     public void addValue(NottableString value) {

@@ -40,9 +40,4 @@ public class BinaryBodyDTOTest {
         assertThat(binaryBody.getValue(), is(body));
         assertThat(binaryBody.getType(), is(Body.Type.BINARY));
     }
-
-    @Test
-    public void coverage() {
-        new BinaryBodyDTO();
-    }
 }

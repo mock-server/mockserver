@@ -38,9 +38,4 @@ public class JsonSchemaBodyDTOTest {
     public void shouldReturnCorrectObjectFromStaticBuilder() {
         assertThat(jsonSchema("some_body"), is(new JsonSchemaBody("some_body")));
     }
-
-    @Test
-    public void coverage() {
-        new JsonSchemaBodyDTO();
-    }
 }

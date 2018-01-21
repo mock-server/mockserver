@@ -10,7 +10,6 @@ import org.mockserver.model.NottableString;
 
 import java.io.IOException;
 
-import static org.mockserver.model.NottableString.deserializeNottableString;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -41,7 +40,7 @@ public class NottableStringDeserializer extends JsonDeserializer<NottableString>
 
             return string(string, not);
         } else if (jsonParser.getCurrentToken() == JsonToken.VALUE_STRING || jsonParser.getCurrentToken() == JsonToken.FIELD_NAME) {
-            return deserializeNottableString(ctxt.readValue(jsonParser, String.class));
+            return string(ctxt.readValue(jsonParser, String.class));
         }
         return null;
     }

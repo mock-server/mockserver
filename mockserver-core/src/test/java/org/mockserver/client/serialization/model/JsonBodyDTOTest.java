@@ -101,9 +101,4 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getMatchType(), is(STRICT));
         assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
     }
-
-    @Test
-    public void coverage() {
-        new JsonBodyDTO();
-    }
 }

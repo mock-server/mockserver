@@ -14,9 +14,6 @@ public abstract class BodyWithContentTypeDTO extends BodyDTO {
         this.contentType = contentType;
     }
 
-    public BodyWithContentTypeDTO() {
-    }
-
     public static BodyWithContentTypeDTO createDTO(BodyWithContentType body) {
         BodyWithContentTypeDTO result = null;
 

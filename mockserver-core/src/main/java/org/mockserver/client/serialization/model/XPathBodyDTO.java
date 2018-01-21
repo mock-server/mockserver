@@ -19,9 +19,6 @@ public class XPathBodyDTO extends BodyDTO {
         this.xpath = xPathBody.getValue();
     }
 
-    protected XPathBodyDTO() {
-    }
-
     public String getXPath() {
         return xpath;
     }

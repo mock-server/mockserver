@@ -21,6 +21,10 @@ public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
         this(httpRequest, false);
     }
 
+    public HttpRequestDTO() {
+        super(false);
+    }
+
     public HttpRequestDTO(HttpRequest httpRequest, Boolean not) {
         super(not);
         if (httpRequest != null) {
@@ -33,9 +37,6 @@ public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
             keepAlive = httpRequest.isKeepAlive();
             secure = httpRequest.isSecure();
         }
-    }
-
-    public HttpRequestDTO() {
     }
 
     public HttpRequest buildObject() {

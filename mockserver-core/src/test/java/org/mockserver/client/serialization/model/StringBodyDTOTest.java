@@ -88,9 +88,4 @@ public class StringBodyDTOTest {
         assertThat(subString("some_body"), is(new StringBody("some_body", true)));
         assertThat(subString("some_body", Charsets.UTF_16), is(new StringBody("some_body", true, Charsets.UTF_16)));
     }
-
-    @Test
-    public void coverage() {
-        new StringBodyDTO();
-    }
 }

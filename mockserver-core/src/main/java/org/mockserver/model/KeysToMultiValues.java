@@ -179,4 +179,21 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     public boolean isEmpty() {
         return listMultimap.isEmpty();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof KeysToMultiValues)) {
+            return false;
+        }
+        KeysToMultiValues<?, ?> that = (KeysToMultiValues<?, ?>) o;
+        return Objects.equals(listMultimap, that.listMultimap);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(listMultimap);
+    }
 }

@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
@@ -9,18 +10,18 @@ import org.mockserver.model.HttpRequest;
  */
 public class MatcherBuilder {
 
-    private final MockServerLogger logFormatter;
+    private final MockServerLogger mockServerLogger;
 
-    public MatcherBuilder(MockServerLogger logFormatter) {
-        this.logFormatter = logFormatter;
+    public MatcherBuilder(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
     }
 
     public HttpRequestMatcher transformsToMatcher(HttpRequest httpRequest) {
-        return new HttpRequestMatcher(httpRequest, logFormatter);
+        return new HttpRequestMatcher(httpRequest, mockServerLogger);
     }
 
     public HttpRequestMatcher transformsToMatcher(Expectation expectation) {
-        return new HttpRequestMatcher(expectation, logFormatter);
+        return new HttpRequestMatcher(expectation, mockServerLogger);
     }
 
 }

@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.logging.MockServerLogger;
@@ -17,6 +18,7 @@ import java.util.Map;
  * @author jamesdbloom
  */
 public class ParameterStringMatcher extends BodyMatcher<String> {
+    private static final String[] excludedFields = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final MultiValueMapMatcher matcher;
 
@@ -53,5 +55,11 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
             }
         }
         return new ArrayList<KeyToMultiValue>(mappedParameters.values());
+    }
+
+    @Override
+    @JsonIgnore
+    protected String[] fieldsExcludedFromEqualsAndHashCode() {
+        return excludedFields;
     }
 }
