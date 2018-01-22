@@ -308,8 +308,8 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(httpExpectationToJavaSerializer.serialize(Arrays.asList(
-                new Expectation(request("request_one")).thenRespond(response("response_one")),
-                new Expectation(request("request_one")).thenRespond(response("request_three"))
+                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one")),
+                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("request_three"))
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
         );
         verify(mockLogFormatter).info(request("request_one"), "retrieving recorded_expectations in java that match:{}", request("request_one"));

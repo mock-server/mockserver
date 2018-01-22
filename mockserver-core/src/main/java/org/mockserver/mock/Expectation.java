@@ -252,12 +252,6 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
-    public void setNotUnlimitedResponses() {
-        if (times != null) {
-            times.setNotUnlimitedResponses();
-        }
-    }
-
     public boolean contains(HttpRequest httpRequest) {
         return httpRequest != null && this.httpRequest.equals(httpRequest);
     }

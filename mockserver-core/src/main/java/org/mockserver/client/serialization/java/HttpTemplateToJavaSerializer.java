@@ -10,7 +10,7 @@ import static org.mockserver.client.serialization.java.ExpectationToJavaSerializ
 /**
  * @author jamesdbloom
  */
-public class HttpResponseTemplateToJavaSerializer implements ToJavaSerializer<HttpTemplate> {
+public class HttpTemplateToJavaSerializer implements ToJavaSerializer<HttpTemplate> {
 
     @Override
     public String serialize(int numberOfSpacesToIndent, HttpTemplate httpTemplate) {

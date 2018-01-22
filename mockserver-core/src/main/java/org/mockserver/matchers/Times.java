@@ -8,7 +8,7 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
 
     private int remainingTimes;
-    private boolean unlimited;
+    private final boolean unlimited;
 
     private Times(int remainingTimes, boolean unlimited) {
         this.remainingTimes = remainingTimes;
@@ -46,14 +46,6 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
     public Times decrement() {
         if (!unlimited) {
             remainingTimes--;
-        }
-        return this;
-    }
-
-    public Times setNotUnlimitedResponses() {
-        if (unlimited) {
-            remainingTimes = 1;
-            unlimited = false;
         }
         return this;
     }

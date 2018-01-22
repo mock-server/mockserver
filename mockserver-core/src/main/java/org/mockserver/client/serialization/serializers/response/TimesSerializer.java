@@ -1,10 +1,9 @@
-package org.mockserver.client.serialization.serializers;
+package org.mockserver.client.serialization.serializers.response;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.matchers.Times;
-import org.mockserver.model.XPathBody;
 
 import java.io.IOException;
 

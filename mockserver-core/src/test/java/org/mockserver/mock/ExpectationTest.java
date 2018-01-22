@@ -106,7 +106,6 @@ public class ExpectationTest {
         Expectation expectation = new Expectation(null, null, TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).thenRespond((HttpClassCallback)null).thenRespond((HttpObjectCallback)null);
 
         // then
-        expectation.setNotUnlimitedResponses();
         assertTrue(expectation.isActive());
         assertFalse(expectation.contains(null));
         assertNull(expectation.getHttpRequest());
