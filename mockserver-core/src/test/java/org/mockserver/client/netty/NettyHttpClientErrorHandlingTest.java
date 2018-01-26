@@ -3,7 +3,6 @@ package org.mockserver.client.netty;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.socket.PortFactory;
@@ -15,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
-import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
@@ -76,8 +74,8 @@ public class NettyHttpClientErrorHandlingTest {
                     .withStatusCode(200)
                     .withReasonPhrase("OK")
                     .withHeader(header(CONTENT_LENGTH.toString(), "this is an example body".length() / 2))
-                    .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
                     .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
+                    .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
                     .withBody(exact("this is an "))
             ));
         } finally {

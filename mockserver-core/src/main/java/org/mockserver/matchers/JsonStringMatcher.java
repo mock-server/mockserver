@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -12,6 +13,7 @@ import static org.skyscreamer.jsonassert.JSONCompare.compareJSON;
  * @author jamesdbloom
  */
 public class JsonStringMatcher extends BodyMatcher<String> {
+    private static final String[] excludedFields = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final String matcher;
     private final MatchType matchType;
@@ -49,5 +51,11 @@ public class JsonStringMatcher extends BodyMatcher<String> {
         }
 
         return reverseResultIfNot(result);
+    }
+
+    @Override
+    @JsonIgnore
+    protected String[] fieldsExcludedFromEqualsAndHashCode() {
+        return excludedFields;
     }
 }

@@ -37,9 +37,4 @@ public class XmlBodyDTOTest {
     public void shouldReturnCorrectObjectFromStaticBuilder() {
         assertThat(xml("some_body"), is(new XmlBody("some_body")));
     }
-
-    @Test
-    public void coverage() {
-        new XmlBodyDTO();
-    }
 }

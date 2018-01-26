@@ -21,9 +21,6 @@ public class StringBodyDTO extends BodyWithContentTypeDTO {
         subString = stringBody.isSubString();
     }
 
-    protected StringBodyDTO() {
-    }
-
     public String getString() {
         return string;
     }

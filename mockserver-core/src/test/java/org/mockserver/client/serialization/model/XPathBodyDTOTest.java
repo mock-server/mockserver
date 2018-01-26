@@ -37,9 +37,4 @@ public class XPathBodyDTOTest {
     public void shouldReturnCorrectObjectFromStaticBuilder() {
         assertThat(xpath("some_body"), is(new XPathBody("some_body")));
     }
-
-    @Test
-    public void coverage() {
-        new XPathBodyDTO();
-    }
 }

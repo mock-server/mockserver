@@ -365,6 +365,11 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
+    public void jsonBodyThatIsNotValidDTODoesNotThrowException() {
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(new StringBody("somebody")), mockServerLogger).matches(null, new HttpRequest().withBody("{\"method\":\"any\",\"service\":\"any_service\", \"parameters\": { \"applicationName\":\"name\",\"password\":\"pwd\",\"username\":\"user\" } }")));
+    }
+
+    @Test
     public void matchesMatchingBodyWithCharset() {
         assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(new StringBody("我说中国话", Charsets.UTF_16)), mockServerLogger).matches(null, new HttpRequest().withBody("我说中国话", Charsets.UTF_16)));
     }

@@ -8,10 +8,6 @@ import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 
@@ -38,23 +34,24 @@ public class FullHttpResponseToMockServerResponse {
     }
 
     private void setHeaders(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {
-        Map<String, Header> mappedHeaders = new HashMap<String, Header>();
+        Headers headers = new Headers();
         for (String headerName : fullHttpResponse.headers().names()) {
-            mappedHeaders.put(headerName, new Header(headerName, fullHttpResponse.headers().getAll(headerName)));
+            headers.withEntry(new Header(headerName, fullHttpResponse.headers().getAll(headerName)));
         }
-        List<Header> headers = new ArrayList<Header>(mappedHeaders.values());
-        httpResponse.withHeaders(headers);
+        if (!headers.isEmpty()) {
+            httpResponse.withHeaders(headers);
+        }
     }
 
     private void setCookies(HttpResponse httpResponse) {
-        Map<String, Cookie> mappedCookies = new HashMap<String, Cookie>();
+        Cookies cookies = new Cookies();
         for (Header header : httpResponse.getHeaderList()) {
             if (header.getName().getValue().equalsIgnoreCase("Set-Cookie")) {
                 for (NottableString cookieHeader : header.getValues()) {
                     io.netty.handler.codec.http.cookie.Cookie httpCookie = ClientCookieDecoder.LAX.decode(cookieHeader.getValue());
                     String name = httpCookie.name().trim();
                     String value = httpCookie.value().trim();
-                    mappedCookies.put(name, new Cookie(name, value));
+                    cookies.withEntry(new Cookie(name, value));
                 }
             }
             if (header.getName().getValue().equalsIgnoreCase("Cookie")) {
@@ -62,12 +59,14 @@ public class FullHttpResponseToMockServerResponse {
                     for (io.netty.handler.codec.http.cookie.Cookie httpCookie : ServerCookieDecoder.LAX.decode(cookieHeader.getValue())) {
                         String name = httpCookie.name().trim();
                         String value = httpCookie.value().trim();
-                        mappedCookies.put(name, new Cookie(name, value));
+                        cookies.withEntry(new Cookie(name, value));
                     }
                 }
             }
         }
-        httpResponse.withCookies(new ArrayList<Cookie>(mappedCookies.values()));
+        if (!cookies.isEmpty()) {
+            httpResponse.withCookies(cookies);
+        }
     }
 
     private void setBody(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {

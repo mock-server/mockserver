@@ -19,9 +19,6 @@ public class JsonSchemaBodyDTO extends BodyDTO {
         this.jsonSchema = jsonSchemaBody.getValue();
     }
 
-    protected JsonSchemaBodyDTO() {
-    }
-
     public String getJson() {
         return jsonSchema;
     }

@@ -62,9 +62,4 @@ public class ParameterBodyDTOTest {
                 )
         );
     }
-
-    @Test
-    public void coverage() {
-        new ParameterBodyDTO();
-    }
 }

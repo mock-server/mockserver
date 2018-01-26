@@ -13,7 +13,7 @@ import org.mockserver.client.serialization.deserializers.collections.HeadersDese
 import org.mockserver.client.serialization.deserializers.collections.ParametersDeserializer;
 import org.mockserver.client.serialization.deserializers.string.NottableStringDeserializer;
 import org.mockserver.client.serialization.model.*;
-import org.mockserver.client.serialization.serializers.TimesSerializer;
+import org.mockserver.client.serialization.serializers.response.TimesSerializer;
 import org.mockserver.client.serialization.serializers.body.*;
 import org.mockserver.client.serialization.serializers.collections.CookiesSerializer;
 import org.mockserver.client.serialization.serializers.collections.HeadersSerializer;

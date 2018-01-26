@@ -14,9 +14,6 @@ public abstract class BodyDTO extends NotDTO implements DTO<Body> {
         this.type = type;
     }
 
-    public BodyDTO() {
-    }
-
     public static BodyDTO createDTO(Body body) {
         BodyDTO result = null;
 

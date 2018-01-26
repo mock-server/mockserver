@@ -21,6 +21,10 @@ public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
         this(httpRequest, false);
     }
 
+    public HttpRequestDTO() {
+        super(false);
+    }
+
     public HttpRequestDTO(HttpRequest httpRequest, Boolean not) {
         super(not);
         if (httpRequest != null) {
@@ -35,17 +39,14 @@ public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
         }
     }
 
-    public HttpRequestDTO() {
-    }
-
     public HttpRequest buildObject() {
         return new HttpRequest()
             .withMethod(method)
             .withPath(path)
-            .withHeaders(headers)
-            .withCookies(cookies)
             .withQueryStringParameters(queryStringParameters)
             .withBody((body != null ? Not.not(body.buildObject(), body.getNot()) : null))
+            .withHeaders(headers)
+            .withCookies(cookies)
             .withSecure(secure)
             .withKeepAlive(keepAlive);
     }

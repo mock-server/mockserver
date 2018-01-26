@@ -14,7 +14,6 @@ public class TimesTest {
     public void shouldCreateCorrectObjects() {
         // when
         assertThat(Times.unlimited().isUnlimited(), is(true));
-        assertThat(Times.unlimited().setNotUnlimitedResponses().isUnlimited(), is(false));
         assertThat(Times.once().isUnlimited(), is(false));
         assertThat(Times.once().getRemainingTimes(), is(1));
         assertThat(Times.exactly(5).isUnlimited(), is(false));

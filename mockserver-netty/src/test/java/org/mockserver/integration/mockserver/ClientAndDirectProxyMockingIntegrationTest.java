@@ -8,6 +8,7 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.integration.server.AbstractBasicClientServerIntegrationTest;
 import org.mockserver.mock.Expectation;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.socket.PortFactory;
@@ -358,11 +359,22 @@ public class ClientAndDirectProxyMockingIntegrationTest extends AbstractBasicCli
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
                     "\t  \"path\" : \"/some_path_one\",",
-                " for response action:" + NEW_LINE +
+                " for expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
-                    "\t  \"body\" : \"some_body\"" + NEW_LINE +
-                    "\t}"
+                    "\t  \"httpRequest\" : {" + NEW_LINE +
+                    "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"times\" : {" + NEW_LINE +
+                    "\t    \"remainingTimes\" : 3" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"timeToLive\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"httpResponse\" : {" + NEW_LINE +
+                    "\t    \"body\" : \"some_body\"" + NEW_LINE +
+                    "\t  }" + NEW_LINE +
+                    "\t}" + NEW_LINE
             },
             new String[]{
                 "request:" + NEW_LINE +
@@ -427,11 +439,22 @@ public class ClientAndDirectProxyMockingIntegrationTest extends AbstractBasicCli
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
                     "\t  \"path\" : \"/some_path_three\",",
-                " for response action:" + NEW_LINE +
+                " for expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
-                    "\t  \"body\" : \"some_body\"" + NEW_LINE +
-                    "\t}"
+                    "\t  \"httpRequest\" : {" + NEW_LINE +
+                    "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"times\" : {" + NEW_LINE +
+                    "\t    \"remainingTimes\" : 2" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"timeToLive\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"httpResponse\" : {" + NEW_LINE +
+                    "\t    \"body\" : \"some_body\"" + NEW_LINE +
+                    "\t  }" + NEW_LINE +
+                    "\t}" + NEW_LINE
             },
             "retrieving logs that match:" + NEW_LINE +
                 NEW_LINE +

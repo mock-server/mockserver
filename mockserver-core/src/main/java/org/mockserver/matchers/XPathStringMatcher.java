@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -13,6 +14,7 @@ import javax.xml.xpath.XPathFactory;
  * @author jamesdbloom
  */
 public class XPathStringMatcher extends BodyMatcher<String> {
+    private static final String[] excludedFields = {"mockServerLogger", "xpathExpression"};
     private final MockServerLogger mockServerLogger;
     private final String matcher;
     private final StringToXmlDocumentParser stringToXmlDocumentParser = new StringToXmlDocumentParser();
@@ -59,7 +61,8 @@ public class XPathStringMatcher extends BodyMatcher<String> {
     }
 
     @Override
+    @JsonIgnore
     public String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger", "xpathExpression"};
+        return excludedFields;
     }
 }

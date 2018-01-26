@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 
@@ -9,6 +10,7 @@ import java.util.Arrays;
  * @author jamesdbloom
  */
 public class BinaryMatcher extends BodyMatcher<byte[]> {
+    private static final String[] excludedFields = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final byte[] matcher;
 
@@ -32,7 +34,8 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
     }
 
     @Override
+    @JsonIgnore
     public String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger"};
+        return excludedFields;
     }
 }

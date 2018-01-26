@@ -26,16 +26,16 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     }
 
     public synchronized void add(Expectation expectation) {
-        this.httpRequestMatchers.add(matcherBuilder.transformsToMatcher(expectation));
+        httpRequestMatchers.add(matcherBuilder.transformsToMatcher(expectation));
         notifyListeners(this);
     }
 
     private synchronized List<HttpRequestMatcher> cloneMatchers() {
-        return new ArrayList<>(this.httpRequestMatchers);
+        return new ArrayList<>(httpRequestMatchers);
     }
 
     public synchronized void reset() {
-        this.httpRequestMatchers.clear();
+        httpRequestMatchers.clear();
         notifyListeners(this);
     }
 
@@ -46,8 +46,8 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
                 matchingExpectation = httpRequestMatcher.decrementRemainingMatches();
             }
             if (!httpRequestMatcher.isActive()) {
-                if (this.httpRequestMatchers.contains(httpRequestMatcher)) {
-                    this.httpRequestMatchers.remove(httpRequestMatcher);
+                if (httpRequestMatchers.contains(httpRequestMatcher)) {
+                    httpRequestMatchers.remove(httpRequestMatcher);
                     notifyListeners(this);
                 }
             }
@@ -63,8 +63,8 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
             HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
                 if (clearHttpRequestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest(), false)) {
-                    if (this.httpRequestMatchers.contains(httpRequestMatcher)) {
-                        this.httpRequestMatchers.remove(httpRequestMatcher);
+                    if (httpRequestMatchers.contains(httpRequestMatcher)) {
+                        httpRequestMatchers.remove(httpRequestMatcher);
                         notifyListeners(this);
                     }
                 }
@@ -82,5 +82,9 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
             }
         }
         return expectations;
+    }
+
+    public boolean isEmpty() {
+        return httpRequestMatchers.isEmpty();
     }
 }

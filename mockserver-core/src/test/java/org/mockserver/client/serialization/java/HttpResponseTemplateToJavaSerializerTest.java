@@ -35,7 +35,7 @@ public class HttpResponseTemplateToJavaSerializerTest {
                         ) +
                         "\")" + NEW_LINE +
                         "                .withDelay(new Delay(TimeUnit.SECONDS, 5))",
-                new HttpResponseTemplateToJavaSerializer().serialize(1,
+                new HttpTemplateToJavaSerializer().serialize(1,
                         new HttpTemplate(HttpTemplate.TemplateType.JAVASCRIPT)
                                 .withTemplate("if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
                                         "    return {" + NEW_LINE +

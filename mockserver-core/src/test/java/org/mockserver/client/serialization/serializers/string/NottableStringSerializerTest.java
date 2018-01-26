@@ -52,13 +52,13 @@ public class NottableStringSerializerTest {
 
     @Test
     public void shouldSerializeNottableStringWithNot() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(string("some_string"))),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(string("some_string", true)),
                 is("\"!some_string\""));
     }
 
     @Test
     public void shouldSerializeNottableStringWithExclamationMarkAndNot() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(string("!some_string"))),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(string("!some_string", true)),
                 is("\"!!some_string\""));
     }
 }

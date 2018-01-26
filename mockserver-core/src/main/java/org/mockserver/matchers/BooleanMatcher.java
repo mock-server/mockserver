@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
@@ -8,6 +9,7 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
  * @author jamesdbloom
  */
 public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString implements Matcher<Boolean> {
+    private static final String[] excludedFields = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final Boolean matcher;
 
@@ -34,9 +36,9 @@ public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString i
     }
 
     @Override
+    @JsonIgnore
     public String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger"};
+        return excludedFields;
     }
-
 
 }

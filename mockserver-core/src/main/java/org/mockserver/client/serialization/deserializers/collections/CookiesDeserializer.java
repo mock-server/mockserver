@@ -11,7 +11,6 @@ import org.mockserver.model.NottableString;
 
 import java.io.IOException;
 
-import static org.mockserver.model.NottableString.deserializeNottableString;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -41,10 +40,10 @@ public class CookiesDeserializer extends StdDeserializer<Cookies> {
             JsonToken t = p.nextToken();
             switch (t.id()) {
                 case JsonTokenId.ID_FIELD_NAME:
-                    key = deserializeNottableString(ctxt.readValue(p, String.class));
+                    key = string(ctxt.readValue(p, String.class));
                     break;
                 case JsonTokenId.ID_STRING:
-                    cookies.withEntry(key, deserializeNottableString(ctxt.readValue(p, String.class)));
+                    cookies.withEntry(key, string(ctxt.readValue(p, String.class)));
                     break;
                 case JsonTokenId.ID_END_OBJECT:
                     return cookies;
@@ -73,9 +72,9 @@ public class CookiesDeserializer extends StdDeserializer<Cookies> {
                     break;
                 case JsonTokenId.ID_STRING:
                     if ("name".equals(fieldName)) {
-                        key = deserializeNottableString(ctxt.readValue(p, String.class));
+                        key = string(ctxt.readValue(p, String.class));
                     } else if ("value".equals(fieldName)) {
-                        value = deserializeNottableString(ctxt.readValue(p, String.class));
+                        value = string(ctxt.readValue(p, String.class));
                     }
                     break;
                 case JsonTokenId.ID_END_OBJECT:

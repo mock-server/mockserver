@@ -216,7 +216,7 @@ public class ConfigurationProperties {
     }
 
     public static Level logLevel() {
-        return Level.valueOf(readPropertyHierarchically("mockserver.logLevel", DEFAULT_LOG_LEVEL));
+        return Level.valueOf(System.getProperty("mockserver.logLevel", DEFAULT_LOG_LEVEL));
     }
 
     /**

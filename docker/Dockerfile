@@ -12,9 +12,13 @@ FROM openjdk:alpine
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
 
 # obtain MockServer jar and script
-RUN apk add --update openssl ca-certificates bash
+RUN apk add --update openssl ca-certificates bash wget
 ADD run_mockserver.sh /opt/mockserver/run_mockserver.sh
-RUN wget -O /opt/mockserver/mockserver-netty-jar-with-dependencies.jar https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/5.3.0/mockserver-netty-5.3.0-jar-with-dependencies.jar
+ARG VERSION=5.3.0
+ARG RESPOSITORY_URL=https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/$VERSION/mockserver-netty-$VERSION-jar-with-dependencies.jar
+# https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=org.mock-server&a=mockserver-netty&c=jar-with-dependencies&e=jar&v=LATEST
+RUN echo "using mockserver version $RESPOSITORY_URL"
+RUN wget --max-redirect=1 -O /opt/mockserver/mockserver-netty-jar-with-dependencies.jar $RESPOSITORY_URL
 
 # set working directory
 WORKDIR /opt/mockserver

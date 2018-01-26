@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 import java.util.Date;
@@ -10,18 +11,16 @@ import java.util.concurrent.TimeUnit;
  */
 public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
 
+    private static final String[] excludedFields = {"endDate"};
     private final TimeUnit timeUnit;
     private final Long timeToLive;
     private final boolean unlimited;
-    private final Date createdDate;
     private Date endDate;
 
     private TimeToLive(TimeUnit timeUnit, Long timeToLive, boolean unlimited) {
-        addFieldsExcludedFromEqualsAndHashCode("createdDate", "endDate");
         this.timeUnit = timeUnit;
         this.timeToLive = timeToLive;
         this.unlimited = unlimited;
-        createdDate = new Date();
         if (!unlimited) {
             endDate = new Date(System.currentTimeMillis() + timeUnit.toMillis(timeToLive));
         }
@@ -57,5 +56,11 @@ public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
 
     private boolean isAfterNow(Date date) {
         return date.getTime() > System.currentTimeMillis();
+    }
+
+    @Override
+    @JsonIgnore
+    protected String[] fieldsExcludedFromEqualsAndHashCode() {
+        return excludedFields;
     }
 }

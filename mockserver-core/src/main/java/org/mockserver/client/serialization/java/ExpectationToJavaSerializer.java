@@ -30,8 +30,13 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
         if (expectation != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("new MockServerClient(\"localhost\", 1080)");
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".when(");
-            output.append(new HttpRequestToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpRequest())).append(",");
-            appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append("Times.once()");
+            output.append(new HttpRequestToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpRequest()));
+            if (expectation.getTimeToLive() != null) {
+                output.append(",").append(new TimesToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getTimes()));
+            }
+            if (expectation.getTimeToLive() != null) {
+                output.append(",").append(new TimeToLiveToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getTimeToLive()));
+            }
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
             if (expectation.getHttpResponse() != null) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".respond(");
@@ -40,8 +45,16 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
             }
             if (expectation.getHttpResponseTemplate() != null) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".respond(");
-                output.append(new HttpResponseTemplateToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpResponseTemplate()));
+                output.append(new HttpTemplateToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpResponseTemplate()));
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
+            }
+            if (expectation.getHttpResponseClassCallback() != null) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".respond(");
+                output.append(new HttpClassCallbackToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpResponseClassCallback()));
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
+            }
+            if (expectation.getHttpResponseObjectCallback() != null) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("/*NOT POSSIBLE TO GENERATE CODE FOR OBJECT CALLBACK*/");
             }
             if (expectation.getHttpForward() != null) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".forward(");
@@ -50,21 +63,21 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
             }
             if (expectation.getHttpForwardTemplate() != null) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".forward(");
-                output.append(new HttpResponseTemplateToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpForwardTemplate()));
+                output.append(new HttpTemplateToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpForwardTemplate()));
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
+            }
+            if (expectation.getHttpForwardClassCallback() != null) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".forward(");
+                output.append(new HttpClassCallbackToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpForwardClassCallback()));
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
+            }
+            if (expectation.getHttpForwardObjectCallback() != null) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("/*NOT POSSIBLE TO GENERATE CODE FOR OBJECT CALLBACK*/");
             }
             if (expectation.getHttpError() != null) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".error(");
                 output.append(new HttpErrorToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpError()));
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
-            }
-            if (expectation.getHttpResponseClassCallback() != null) {
-                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".callback(");
-                output.append(new HttpCallbackToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpResponseClassCallback()));
-                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
-            }
-            if (expectation.getHttpResponseObjectCallback() != null) {
-                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("/*NOT POSSIBLE TO GENERATE CODE FOR OBJECT CALLBACK*/");
             }
             output.append(";");
         }

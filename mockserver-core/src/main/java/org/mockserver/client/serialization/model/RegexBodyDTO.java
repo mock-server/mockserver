@@ -19,9 +19,6 @@ public class RegexBodyDTO extends BodyDTO {
         this.regex = regexBody.getValue();
     }
 
-    protected RegexBodyDTO() {
-    }
-
     public String getRegex() {
         return regex;
     }

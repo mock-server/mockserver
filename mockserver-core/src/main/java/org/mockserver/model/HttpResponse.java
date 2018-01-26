@@ -391,12 +391,12 @@ public class HttpResponse extends Action {
 
     public HttpResponse clone() {
         return response()
-            .withStatusCode(getStatusCode())
-            .withReasonPhrase(getReasonPhrase())
-            .withBody(getBody())
-            .withHeaders(getHeaders().clone())
-            .withCookies(getCookies().clone())
-            .withDelay(getDelay())
-            .withConnectionOptions(getConnectionOptions());
+            .withStatusCode(statusCode)
+            .withReasonPhrase(reasonPhrase)
+            .withBody(body)
+            .withHeaders(headers.clone())
+            .withCookies(cookies.clone())
+            .withDelay(delay)
+            .withConnectionOptions(connectionOptions);
     }
 }

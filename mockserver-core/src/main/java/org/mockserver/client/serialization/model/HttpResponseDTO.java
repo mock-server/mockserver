@@ -17,6 +17,9 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
     private DelayDTO delay;
     private ConnectionOptionsDTO connectionOptions;
 
+    public HttpResponseDTO() {
+    }
+
     public HttpResponseDTO(HttpResponse httpResponse) {
         if (httpResponse != null) {
             statusCode = httpResponse.getStatusCode();
@@ -27,9 +30,6 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
             delay = (httpResponse.getDelay() != null ? new DelayDTO(httpResponse.getDelay()) : null);
             connectionOptions = (httpResponse.getConnectionOptions() != null ? new ConnectionOptionsDTO(httpResponse.getConnectionOptions()) : null);
         }
-    }
-
-    public HttpResponseDTO() {
     }
 
     public HttpResponse buildObject() {

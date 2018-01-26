@@ -123,7 +123,7 @@ public class ActionHandlerTest {
         verify(mockHttpResponseActionHandler).handle(response);
         verify(mockResponseWriter).writeResponse(request, this.response, false);
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockLogFormatter).info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for response action:{}", this.response, request, response);
+        verify(mockLogFormatter).info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", this.response, request, expectation);
     }
 
     @Test
@@ -140,7 +140,7 @@ public class ActionHandlerTest {
         verify(mockHttpResponseTemplateActionHandler).handle(template, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockLogFormatter).info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated response action:{}", response, request, template);
+        verify(mockLogFormatter).info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation);
     }
 
     @Test
@@ -157,7 +157,7 @@ public class ActionHandlerTest {
         verify(mockHttpResponseClassCallbackActionHandler).handle(callback, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockLogFormatter).info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, callback);
+        verify(mockLogFormatter).info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation);
     }
 
     @Test
@@ -192,7 +192,7 @@ public class ActionHandlerTest {
         verify(mockHttpForwardActionHandler).handle(forward, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
         verify(mockHttpStateHandler, times(1)).log(new RequestResponseLogEntry(request, response));
-        verify(mockLogFormatter).info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for forward action:{}", response, request, forward);
+        verify(mockLogFormatter).info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation);
     }
 
     @Test
@@ -209,7 +209,7 @@ public class ActionHandlerTest {
         verify(mockHttpForwardTemplateActionHandler).handle(template, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
         verify(mockHttpStateHandler, times(1)).log(new RequestResponseLogEntry(request, response));
-        verify(mockLogFormatter).info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for templated forward action:{}", response, request, template);
+        verify(mockLogFormatter).info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation);
     }
 
     @Test
@@ -226,7 +226,7 @@ public class ActionHandlerTest {
         verify(mockHttpForwardClassCallbackActionHandler).handle(callback, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockLogFormatter).info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for class callback action:{}", response, request, callback);
+        verify(mockLogFormatter).info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation);
     }
 
     @Test
@@ -276,7 +276,7 @@ public class ActionHandlerTest {
         // then
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
         verify(mockHttpErrorActionHandler).handle(error, mockChannelHandlerContext);
-        verify(mockLogFormatter).info(request, "returning error:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for error action:{}", error, request, error);
+        verify(mockLogFormatter).info(request, "returning error:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", error, request, expectation);
     }
 
     @Test

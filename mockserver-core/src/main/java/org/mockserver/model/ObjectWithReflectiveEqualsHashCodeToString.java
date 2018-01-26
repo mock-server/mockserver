@@ -18,15 +18,8 @@ public abstract class ObjectWithReflectiveEqualsHashCodeToString {
         ReflectionToStringBuilder.setDefaultStyle(ToStringStyle.SHORT_PREFIX_STYLE);
     }
 
-    @JsonIgnore
-    private String[] fieldsExcludedFromEqualsAndHashCode = new String[]{"logger", "fieldsExcludedFromEqualsAndHashCode"};
-
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return fieldsExcludedFromEqualsAndHashCode;
-    }
-
-    protected void addFieldsExcludedFromEqualsAndHashCode(String... toExclude) {
-        fieldsExcludedFromEqualsAndHashCode = ArrayUtils.addAll(fieldsExcludedFromEqualsAndHashCode, toExclude);
+        return null;
     }
 
     @Override

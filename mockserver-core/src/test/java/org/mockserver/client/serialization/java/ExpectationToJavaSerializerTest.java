@@ -3,10 +3,10 @@ package org.mockserver.client.serialization.java;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.client.serialization.Base64Converter;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -14,6 +14,7 @@ import static com.google.common.base.Charsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.TimeToLive.unlimited;
+import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpClassCallback.callback;
@@ -31,13 +32,12 @@ public class ExpectationToJavaSerializerTest {
     private final Base64Converter base64Converter = new Base64Converter();
 
     @Test
-    public void shouldSerializeArrayOfObjectsAsJava() throws IOException {
+    public void shouldSerializeArrayOfObjectsAsJava() {
         assertEquals(NEW_LINE +
                 "new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
                 ".when(" + NEW_LINE +
                 "        request()" + NEW_LINE +
-                "                .withPath(\"somePathOne\")," + NEW_LINE +
-                "        Times.once()" + NEW_LINE +
+                "                .withPath(\"somePathOne\")" + NEW_LINE +
                 ")" + NEW_LINE +
                 ".respond(" + NEW_LINE +
                 "        response()" + NEW_LINE +
@@ -51,7 +51,8 @@ public class ExpectationToJavaSerializerTest {
                 ".when(" + NEW_LINE +
                 "        request()" + NEW_LINE +
                 "                .withPath(\"somePathOne\")," + NEW_LINE +
-                "        Times.once()" + NEW_LINE +
+                "        Times.exactly(2)," + NEW_LINE +
+                "        TimeToLive.exactly(TimeUnit.MINUTES, 1L)" + NEW_LINE +
                 ")" + NEW_LINE +
                 ".respond(" + NEW_LINE +
                 "        response()" + NEW_LINE +
@@ -65,15 +66,15 @@ public class ExpectationToJavaSerializerTest {
                     new Expectation(
                         request("somePathOne"),
                         once(),
-                        unlimited()
+                        null
                     )
                         .thenRespond(
                             response("responseBodyOne")
                         ),
                     new Expectation(
                         request("somePathOne"),
-                        once(),
-                        unlimited()
+                        exactly(2),
+                        TimeToLive.exactly(TimeUnit.MINUTES, 1L)
                     )
                         .thenRespond(
                             response("responseBodyOne")
@@ -84,7 +85,7 @@ public class ExpectationToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeFullObjectWithResponseAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithResponseAsJava() {
         assertEquals(NEW_LINE +
                 "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
                 "        .when(" + NEW_LINE +
@@ -104,7 +105,8 @@ public class ExpectationToJavaSerializerTest {
                 "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
-                "                Times.once()" + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +
@@ -176,7 +178,7 @@ public class ExpectationToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeFullObjectWithResponseTemplateAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithResponseTemplateAsJava() {
         assertEquals(NEW_LINE +
                 "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
                 "        .when(" + NEW_LINE +
@@ -196,7 +198,8 @@ public class ExpectationToJavaSerializerTest {
                 "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
-                "                Times.once()" + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
@@ -242,7 +245,7 @@ public class ExpectationToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeFullObjectWithParameterBodyResponseAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithParameterBodyResponseAsJava() {
         assertEquals(NEW_LINE +
                 "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
                 "        .when(" + NEW_LINE +
@@ -253,7 +256,8 @@ public class ExpectationToJavaSerializerTest {
                 "                                        new Parameter(\"requestBodyParameterNameTwo\", \"requestBodyParameterValueTwo\")" + NEW_LINE +
                 "                                )" + NEW_LINE +
                 "                        )," + NEW_LINE +
-                "                Times.once()" + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +
@@ -280,14 +284,15 @@ public class ExpectationToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeFullObjectWithBinaryBodyResponseAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithBinaryBodyResponseAsJava() {
         // when
         assertEquals(NEW_LINE +
                 "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
                 "        .when(" + NEW_LINE +
                 "                request()" + NEW_LINE +
                 "                        .withBody(new Base64Converter().base64StringToBytes(\"" + base64Converter.bytesToBase64String("request body".getBytes(UTF_8)) + "\"))," + NEW_LINE +
-                "                Times.once()" + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +
@@ -311,7 +316,7 @@ public class ExpectationToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeFullObjectWithForwardAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithResponseClassCallbackAsJava() {
         assertEquals(NEW_LINE +
                 "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
                 "        .when(" + NEW_LINE +
@@ -331,7 +336,119 @@ public class ExpectationToJavaSerializerTest {
                 "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
-                "                Times.once()" + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .respond(" + NEW_LINE +
+                "                callback()" + NEW_LINE +
+                "                        .withCallbackClass(\"some_class\")" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withMethod("GET")
+                        .withPath("somePath")
+                        .withQueryStringParameters(
+                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                        )
+                        .withHeaders(
+                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                        )
+                        .withCookies(
+                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                        )
+                        .withBody(new StringBody("somebody")),
+                    once(),
+                    unlimited()
+                )
+                    .thenRespond(
+                        callback()
+                            .withCallbackClass("some_class")
+                    )
+            )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithResponseObjectCallbackAsJava() {
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withMethod(\"GET\")" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withHeaders(" + NEW_LINE +
+                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withCookies(" + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withQueryStringParameters(" + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        /*NOT POSSIBLE TO GENERATE CODE FOR OBJECT CALLBACK*/;",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withMethod("GET")
+                        .withPath("somePath")
+                        .withQueryStringParameters(
+                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                        )
+                        .withHeaders(
+                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                        )
+                        .withCookies(
+                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                        )
+                        .withBody(new StringBody("somebody")),
+                    once(),
+                    unlimited()
+                )
+                    .thenRespond(
+                        new HttpObjectCallback()
+                            .withClientId("some_client_id")
+                    )
+            )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithForwardAsJava() {
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withMethod(\"GET\")" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withHeaders(" + NEW_LINE +
+                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withCookies(" + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withQueryStringParameters(" + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .forward(" + NEW_LINE +
                 "                forward()" + NEW_LINE +
@@ -371,7 +488,7 @@ public class ExpectationToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeFullObjectWithForwardTemplateAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithForwardTemplateAsJava() {
         assertEquals(NEW_LINE +
                 "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
                 "        .when(" + NEW_LINE +
@@ -391,7 +508,8 @@ public class ExpectationToJavaSerializerTest {
                 "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
-                "                Times.once()" + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .forward(" + NEW_LINE +
                 "                template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
@@ -427,7 +545,7 @@ public class ExpectationToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeFullObjectWithErrorAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithForwardClassCallbackAsJava() {
         assertEquals(NEW_LINE +
                 "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
                 "        .when(" + NEW_LINE +
@@ -447,7 +565,119 @@ public class ExpectationToJavaSerializerTest {
                 "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
                 "                        )" + NEW_LINE +
                 "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
-                "                Times.once()" + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .forward(" + NEW_LINE +
+                "                callback()" + NEW_LINE +
+                "                        .withCallbackClass(\"some_class\")" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withMethod("GET")
+                        .withPath("somePath")
+                        .withQueryStringParameters(
+                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                        )
+                        .withHeaders(
+                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                        )
+                        .withCookies(
+                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                        )
+                        .withBody(new StringBody("somebody")),
+                    once(),
+                    unlimited()
+                )
+                    .thenForward(
+                        callback()
+                            .withCallbackClass("some_class")
+                    )
+            )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithForwardObjectCallbackAsJava() {
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withMethod(\"GET\")" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withHeaders(" + NEW_LINE +
+                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withCookies(" + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withQueryStringParameters(" + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        /*NOT POSSIBLE TO GENERATE CODE FOR OBJECT CALLBACK*/;",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withMethod("GET")
+                        .withPath("somePath")
+                        .withQueryStringParameters(
+                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                        )
+                        .withHeaders(
+                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                        )
+                        .withCookies(
+                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                        )
+                        .withBody(new StringBody("somebody")),
+                    once(),
+                    unlimited()
+                )
+                    .thenForward(
+                        new HttpObjectCallback()
+                            .withClientId("some_client_id")
+                    )
+            )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithErrorAsJava() {
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withMethod(\"GET\")" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withHeaders(" + NEW_LINE +
+                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withCookies(" + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withQueryStringParameters(" + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .error(" + NEW_LINE +
                 "                error()" + NEW_LINE +
@@ -487,123 +717,15 @@ public class ExpectationToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeFullObjectWithClassCallbackAsJava() throws IOException {
-        assertEquals(NEW_LINE +
-                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
-                "        .when(" + NEW_LINE +
-                "                request()" + NEW_LINE +
-                "                        .withMethod(\"GET\")" + NEW_LINE +
-                "                        .withPath(\"somePath\")" + NEW_LINE +
-                "                        .withHeaders(" + NEW_LINE +
-                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
-                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
-                "                        )" + NEW_LINE +
-                "                        .withCookies(" + NEW_LINE +
-                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
-                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
-                "                        )" + NEW_LINE +
-                "                        .withQueryStringParameters(" + NEW_LINE +
-                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
-                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
-                "                        )" + NEW_LINE +
-                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
-                "                Times.once()" + NEW_LINE +
-                "        )" + NEW_LINE +
-                "        .callback(" + NEW_LINE +
-                "                callback()" + NEW_LINE +
-                "                        .withCallbackClass(\"some_class\")" + NEW_LINE +
-                "        );",
-            new ExpectationToJavaSerializer().serialize(1,
-                new Expectation(
-                    request()
-                        .withMethod("GET")
-                        .withPath("somePath")
-                        .withQueryStringParameters(
-                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
-                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
-                        )
-                        .withHeaders(
-                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
-                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
-                        )
-                        .withCookies(
-                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
-                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                        )
-                        .withBody(new StringBody("somebody")),
-                    once(),
-                    unlimited()
-                )
-                    .thenRespond(
-                        callback()
-                            .withCallbackClass("some_class")
-                    )
-            )
-        );
-    }
-
-    @Test
-    public void shouldSerializeFullObjectWithObjectCallbackAsJava() throws IOException {
-        assertEquals(NEW_LINE +
-                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
-                "        .when(" + NEW_LINE +
-                "                request()" + NEW_LINE +
-                "                        .withMethod(\"GET\")" + NEW_LINE +
-                "                        .withPath(\"somePath\")" + NEW_LINE +
-                "                        .withHeaders(" + NEW_LINE +
-                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
-                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
-                "                        )" + NEW_LINE +
-                "                        .withCookies(" + NEW_LINE +
-                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
-                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
-                "                        )" + NEW_LINE +
-                "                        .withQueryStringParameters(" + NEW_LINE +
-                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
-                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
-                "                        )" + NEW_LINE +
-                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
-                "                Times.once()" + NEW_LINE +
-                "        )" + NEW_LINE +
-                "        /*NOT POSSIBLE TO GENERATE CODE FOR OBJECT CALLBACK*/;",
-            new ExpectationToJavaSerializer().serialize(1,
-                new Expectation(
-                    request()
-                        .withMethod("GET")
-                        .withPath("somePath")
-                        .withQueryStringParameters(
-                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
-                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
-                        )
-                        .withHeaders(
-                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
-                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
-                        )
-                        .withCookies(
-                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
-                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                        )
-                        .withBody(new StringBody("somebody")),
-                    once(),
-                    unlimited()
-                )
-                    .thenRespond(
-                        new HttpObjectCallback()
-                            .withClientId("some_client_id")
-                    )
-            )
-        );
-    }
-
-    @Test
-    public void shouldEscapeJsonBodies() throws IOException {
+    public void shouldEscapeJsonBodies() {
         assertEquals("" + NEW_LINE +
                 "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
                 "        .when(" + NEW_LINE +
                 "                request()" + NEW_LINE +
                 "                        .withPath(\"somePath\")" + NEW_LINE +
                 "                        .withBody(new JsonBody(\"[" + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"1\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"Xenophon's imperial fiction : on the education of Cyrus\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"James Tatum\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"0691067570\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"1989\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }," + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"2\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"You are here : personal geographies and other maps of the imagination\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"Katharine A. Harmon\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"1568984308\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"2004\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }," + StringEscapeUtils.escapeJava(NEW_LINE) + "    {" + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"id\\\": \\\"3\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"title\\\": \\\"You just don't understand : women and men in conversation\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"author\\\": \\\"Deborah Tannen\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"isbn\\\": \\\"0345372050\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) + "        \\\"publicationDate\\\": \\\"1990\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) + "    }" + StringEscapeUtils.escapeJava(NEW_LINE) + "]\", JsonBodyMatchType.ONLY_MATCHING_FIELDS))," + NEW_LINE +
-                "                Times.once()" + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +
@@ -672,7 +794,7 @@ public class ExpectationToJavaSerializerTest {
     }
 
     @Test
-    public void shouldEscapeJsonSchemaBodies() throws IOException {
+    public void shouldEscapeJsonSchemaBodies() {
         String jsonSchema = "{" + NEW_LINE +
             "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
             "    \"title\": \"Product\"," + NEW_LINE +
@@ -709,7 +831,8 @@ public class ExpectationToJavaSerializerTest {
                 "                request()" + NEW_LINE +
                 "                        .withPath(\"somePath\")" + NEW_LINE +
                 "                        .withBody(new JsonSchemaBody(\"" + StringEscapeUtils.escapeJava(jsonSchema) + "\"))," + NEW_LINE +
-                "                Times.once()" + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +
@@ -734,7 +857,7 @@ public class ExpectationToJavaSerializerTest {
     }
 
     @Test
-    public void shouldEscapeXmlSchemaBodies() throws IOException {
+    public void shouldEscapeXmlSchemaBodies() {
         String xmlSchema = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
             "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
             "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
@@ -762,7 +885,8 @@ public class ExpectationToJavaSerializerTest {
                 "                request()" + NEW_LINE +
                 "                        .withPath(\"somePath\")" + NEW_LINE +
                 "                        .withBody(new XmlSchemaBody(\"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"))," + NEW_LINE +
-                "                Times.once()" + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +
@@ -787,14 +911,15 @@ public class ExpectationToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeMinimalObjectAsJava() throws IOException {
+    public void shouldSerializeMinimalObjectAsJava() {
         assertEquals(NEW_LINE +
                 "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
                 "        .when(" + NEW_LINE +
                 "                request()" + NEW_LINE +
                 "                        .withPath(\"somePath\")" + NEW_LINE +
                 "                        .withBody(new StringBody(\"responseBody\"))," + NEW_LINE +
-                "                Times.once()" + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
                 "        )" + NEW_LINE +
                 "        .respond(" + NEW_LINE +
                 "                response()" + NEW_LINE +

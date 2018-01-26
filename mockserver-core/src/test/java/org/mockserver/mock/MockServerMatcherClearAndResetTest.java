@@ -140,7 +140,6 @@ public class MockServerMatcherClearAndResetTest {
         // then
         assertThat(mockServerMatcher.httpRequestMatchers, hasItems(new MatcherBuilder(logFormatter).transformsToMatcher(expectation)));
     }
-
     @Test
     public void shouldClearNoExpectations() {
         // given

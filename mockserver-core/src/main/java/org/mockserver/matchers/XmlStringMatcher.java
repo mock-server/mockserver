@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
@@ -15,6 +16,7 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 public class XmlStringMatcher extends BodyMatcher<NottableString> {
+    private static final String[] excludedFields = {"mockServerLogger", "stringToXmlDocumentParser"};
     private final MockServerLogger mockServerLogger;
     private NottableString matcher = string("THIS SHOULD NEVER MATCH");
     private StringToXmlDocumentParser stringToXmlDocumentParser = new StringToXmlDocumentParser();
@@ -48,7 +50,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
 
     public NottableString normaliseXmlNottableString(final NottableString input)
         throws IOException, SAXException, ParserConfigurationException, TransformerException {
-        return string(normaliseXmlString(input.getValue()), input.getNot());
+        return string(normaliseXmlString(input.getValue()), input.isNot());
     }
 
     public boolean matches(String matched) {
@@ -71,5 +73,11 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
         }
 
         return matcher.isNot() != reverseResultIfNot(result);
+    }
+
+    @Override
+    @JsonIgnore
+    protected String[] fieldsExcludedFromEqualsAndHashCode() {
+        return excludedFields;
     }
 }

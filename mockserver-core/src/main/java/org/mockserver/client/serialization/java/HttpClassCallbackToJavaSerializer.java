@@ -9,7 +9,7 @@ import static org.mockserver.client.serialization.java.ExpectationToJavaSerializ
 /**
  * @author jamesdbloom
  */
-public class HttpCallbackToJavaSerializer implements ToJavaSerializer<HttpClassCallback> {
+public class HttpClassCallbackToJavaSerializer implements ToJavaSerializer<HttpClassCallback> {
 
     @Override
     public String serialize(int numberOfSpacesToIndent, HttpClassCallback httpClassCallback) {

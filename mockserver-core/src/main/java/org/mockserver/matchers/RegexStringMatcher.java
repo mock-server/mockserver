@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -14,6 +15,7 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 public class RegexStringMatcher extends BodyMatcher<NottableString> {
+    private static final String[] excludedFields = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final NottableString matcher;
 
@@ -103,5 +105,11 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         }
 
         return (matcher.isNot() || matched.isNot()) != reverseResultIfNot(result);
+    }
+
+    @Override
+    @JsonIgnore
+    protected String[] fieldsExcludedFromEqualsAndHashCode() {
+        return excludedFields;
     }
 }

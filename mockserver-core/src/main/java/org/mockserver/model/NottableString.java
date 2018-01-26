@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 
@@ -8,21 +9,34 @@ import java.util.*;
 /**
  * @author jamesdbloom
  */
-public class NottableString extends Not {
+public class NottableString extends ObjectWithJsonToString {
 
     private final String value;
+    private final Boolean not;
+    private final int hashCode;
+    private final String json;
 
     private NottableString(String value, Boolean not) {
         this.value = value;
-        this.not = not;
+        if (not != null) {
+            this.not = not;
+        } else {
+            this.not = Boolean.FALSE;
+        }
+        this.hashCode = Objects.hash(this.value, this.not);
+        this.json = (this.not ? "!" : "") + this.value;
     }
 
-    public static NottableString deserializeNottableString(String string) {
-        if (string.startsWith("!")) {
-            return not(string.replaceFirst("^!", ""));
+    private NottableString(String value) {
+        if (value != null && value.startsWith("!")) {
+            this.value = value.replaceFirst("^!", "");
+            this.not = Boolean.TRUE;
         } else {
-            return string(string.replaceFirst("^!", ""));
+            this.value = value;
+            this.not = Boolean.FALSE;
         }
+        this.hashCode = Objects.hash(this.value, this.not);
+        this.json = (this.not ? "!" : "") + this.value;
     }
 
     public static List<NottableString> deserializeNottableStrings(String... strings) {
@@ -42,13 +56,13 @@ public class NottableString extends Not {
     }
 
     public static String serialiseNottableString(NottableString nottableString) {
-        return (nottableString.isNot() ? "!" : "") + nottableString.value;
+        return nottableString.toString();
     }
 
     public static List<String> serialiseNottableString(List<NottableString> nottableStrings) {
         List<String> strings = new LinkedList<>();
         for (NottableString nottableString : nottableStrings) {
-            strings.add(serialiseNottableString(nottableString));
+            strings.add(nottableString.toString());
         }
         return strings;
     }
@@ -58,7 +72,7 @@ public class NottableString extends Not {
     }
 
     public static NottableString string(String value) {
-        return new NottableString(value, false);
+        return new NottableString(value);
     }
 
     public static NottableString not(String value) {
@@ -66,12 +80,18 @@ public class NottableString extends Not {
     }
 
     public static List<NottableString> strings(String... values) {
-        return strings(Arrays.asList(values));
+        List<NottableString> nottableValues = new ArrayList<>();
+        if (values != null) {
+            for (String value : values) {
+                nottableValues.add(string(value));
+            }
+        }
+        return nottableValues;
     }
 
     public static List<NottableString> strings(Collection<String> values) {
-        List<NottableString> nottableValues = new ArrayList<NottableString>();
-        if (values != null && !values.isEmpty()) {
+        List<NottableString> nottableValues = new ArrayList<>();
+        if (values != null) {
             for (String value : values) {
                 nottableValues.add(string(value));
             }
@@ -81,6 +101,11 @@ public class NottableString extends Not {
 
     public String getValue() {
         return value;
+    }
+
+    @JsonIgnore
+    public boolean isNot() {
+        return not;
     }
 
     public NottableString capitalize() {
@@ -102,19 +127,20 @@ public class NottableString extends Not {
     private boolean equals(Object other, boolean ignoreCase) {
         if (other instanceof String) {
             if (ignoreCase) {
-                return isNot() != ((String) other).equalsIgnoreCase(value);
+                return not != ((String) other).equalsIgnoreCase(value);
             } else {
-                return isNot() != other.equals(value);
+                return not != other.equals(value);
             }
         } else if (other instanceof NottableString) {
-            NottableString otherNottableString = (NottableString) other;
-            if (otherNottableString.getValue() == null) {
+            NottableString that = (NottableString) other;
+            if (that.getValue() == null) {
                 return value == null;
             }
+            boolean reverse = (that.not != this.not) && (that.not || this.not);
             if (ignoreCase) {
-                return otherNottableString.isNot() == (isNot() == otherNottableString.getValue().equalsIgnoreCase(value));
+                return reverse != that.getValue().equalsIgnoreCase(value);
             } else {
-                return otherNottableString.isNot() == (isNot() == otherNottableString.getValue().equals(value));
+                return reverse != that.getValue().equals(value);
             }
         }
         return false;
@@ -122,11 +148,26 @@ public class NottableString extends Not {
 
     @Override
     public boolean equals(Object other) {
-        return equals(other, false);
+        if (other instanceof String) {
+            return not != other.equals(value);
+        } else if (other instanceof NottableString) {
+            NottableString that = (NottableString) other;
+            if (that.getValue() == null) {
+                return this.value == null;
+            }
+            boolean reverse = (that.not != this.not) && (that.not || this.not);
+            return reverse != that.getValue().equals(this.value);
+        }
+        return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value, not);
+        return hashCode;
+    }
+
+    @Override
+    public String toString() {
+        return json;
     }
 }

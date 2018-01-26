@@ -2,7 +2,6 @@ package org.mockserver.mappers;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
-import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.model.*;
@@ -46,9 +45,11 @@ public class HttpServletRequestToMockServerRequestDecoder {
     }
 
     private void setQueryString(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
+        Parameters parameters = new Parameters();
         if (StringUtils.isNotEmpty(httpServletRequest.getQueryString())) {
-            httpRequest.withQueryStringParameters(new QueryStringDecoder("?" + httpServletRequest.getQueryString()).parameters());
+            parameters.withEntries(new QueryStringDecoder("?" + httpServletRequest.getQueryString()).parameters());
         }
+        httpRequest.withQueryStringParameters(parameters);
     }
 
     private void setBody(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
@@ -64,7 +65,7 @@ public class HttpServletRequestToMockServerRequestDecoder {
     }
 
     private void setHeaders(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        List<Header> mappedHeaders = new ArrayList<Header>();
+        Headers headers = new Headers();
         Enumeration<String> headerNames = httpServletRequest.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();
@@ -73,19 +74,19 @@ public class HttpServletRequestToMockServerRequestDecoder {
             while (headerValues.hasMoreElements()) {
                 mappedHeaderValues.add(headerValues.nextElement());
             }
-            mappedHeaders.add(new Header(headerName, mappedHeaderValues.toArray(new String[mappedHeaderValues.size()])));
+            headers.withEntry(new Header(headerName, mappedHeaderValues.toArray(new String[mappedHeaderValues.size()])));
         }
-        httpRequest.withHeaders(mappedHeaders);
+        httpRequest.withHeaders(headers);
     }
 
     private void setCookies(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        List<Cookie> mappedCookies = new ArrayList<Cookie>();
+        Cookies cookies = new Cookies();
         if (httpServletRequest.getCookies() != null) {
             for (javax.servlet.http.Cookie cookie : httpServletRequest.getCookies()) {
-                mappedCookies.add(new Cookie(cookie.getName(), cookie.getValue()));
+                cookies.withEntry(new Cookie(cookie.getName(), cookie.getValue()));
             }
         }
-        httpRequest.withCookies(mappedCookies);
+        httpRequest.withCookies(cookies);
     }
 
     public boolean isKeepAlive(HttpServletRequest httpServletRequest) {

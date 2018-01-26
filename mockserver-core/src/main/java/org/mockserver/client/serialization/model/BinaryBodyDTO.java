@@ -23,9 +23,6 @@ public class BinaryBodyDTO extends BodyWithContentTypeDTO {
         }
     }
 
-    protected BinaryBodyDTO() {
-    }
-
     public String getValue() {
         return value;
     }

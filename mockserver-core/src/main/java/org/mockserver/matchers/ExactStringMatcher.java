@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -11,6 +12,7 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 public class ExactStringMatcher extends BodyMatcher<NottableString> {
+    private static final String[] excludedFields = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final NottableString matcher;
 
@@ -63,7 +65,8 @@ public class ExactStringMatcher extends BodyMatcher<NottableString> {
     }
 
     @Override
+    @JsonIgnore
     public String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger"};
+        return excludedFields;
     }
 }

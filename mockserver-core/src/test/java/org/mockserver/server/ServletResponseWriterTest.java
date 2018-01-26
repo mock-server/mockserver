@@ -121,7 +121,7 @@ public class ServletResponseWriterTest {
             verify(mockServerResponseToHttpServletResponseEncoder).mapMockServerResponseToHttpServletResponse(
                 response
                     .withHeader("Access-Control-Allow-Origin", "*")
-                    .withHeader("Access-Control-Allow-Methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE")
+                    .withHeader("Access-Control-Allow-Methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE")
                     .withHeader("Access-Control-Allow-Headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary")
                     .withHeader("Access-Control-Expose-Headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary")
                     .withHeader("Access-Control-Max-Age", "300")

@@ -3,14 +3,15 @@ package org.mockserver.client.serialization.serializers.body;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.Test;
 import org.mockserver.client.serialization.ObjectMapperFactory;
+import org.mockserver.model.Not;
 
 import java.io.IOException;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 
@@ -33,7 +34,7 @@ public class ParameterBodySerializerTest {
 
     @Test
     public void shouldSerializeParameterBodyDTOWithNot() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(not(params(
+        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(Not.not(params(
                         param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                         param("queryStringParameterTwoName", "queryStringParameterTwoValue")
                 ))),

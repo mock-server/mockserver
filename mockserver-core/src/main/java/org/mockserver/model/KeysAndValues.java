@@ -13,12 +13,7 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
 
     private Map<NottableString, NottableString> map = new LinkedHashMap<>();
 
-    @SafeVarargs
-    public static <T extends KeyAndValue> CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(T... entries) {
-        return toCaseInsensitiveRegexMultiMap(Arrays.asList(entries));
-    }
-
-    public static <T extends KeyAndValue> CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(List<T> entries) {
+    public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(List<T> entries) {
         CaseInsensitiveRegexHashMap caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap();
         if (entries != null) {
             for (KeyAndValue keyToMultiValue : entries) {

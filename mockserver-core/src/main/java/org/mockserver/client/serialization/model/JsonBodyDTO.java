@@ -23,9 +23,6 @@ public class JsonBodyDTO extends BodyWithContentTypeDTO {
         this.matchType = jsonBody.getMatchType();
     }
 
-    protected JsonBodyDTO() {
-    }
-
     public String getJson() {
         return json;
     }

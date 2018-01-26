@@ -19,9 +19,6 @@ public class XmlBodyDTO extends BodyWithContentTypeDTO {
         this.xml = xmlBody.getValue();
     }
 
-    protected XmlBodyDTO() {
-    }
-
     public String getXml() {
         return xml;
     }

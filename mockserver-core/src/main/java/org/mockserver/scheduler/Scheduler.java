@@ -50,17 +50,19 @@ public class Scheduler {
     }
 
     public static void submit(SettableFuture<HttpResponse> future, Runnable command, boolean synchronous) {
-        if (synchronous) {
-            try {
-                future.get(ConfigurationProperties.maxSocketTimeout(), TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                future.setException(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
-            } catch (InterruptedException | ExecutionException ex) {
-                future.setException(ex);
+        if (future != null) {
+            if (synchronous) {
+                try {
+                    future.get(ConfigurationProperties.maxSocketTimeout(), TimeUnit.MILLISECONDS);
+                } catch (TimeoutException e) {
+                    future.setException(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
+                } catch (InterruptedException | ExecutionException ex) {
+                    future.setException(ex);
+                }
+                command.run();
+            } else {
+                future.addListener(command, scheduler);
             }
-            command.run();
-        } else {
-            future.addListener(command, scheduler);
         }
     }
 }
