@@ -50,7 +50,7 @@ public class MockServerIntegrationTest extends AbstractMockServerNettyIntegratio
     @Test
     public void shouldThrowExceptionIfFailToBindToSocket() {
         // given
-        System.out.println(NEW_LINE + NEW_LINE + "--- IGNORE THE FOLLOWING java.net.BindException EXCEPTION ---" + NEW_LINE + NEW_LINE);
+        System.out.println(NEW_LINE + NEW_LINE + "+++ IGNORE THE FOLLOWING java.net.BindException EXCEPTION +++" + NEW_LINE + NEW_LINE);
         expectedException.expect(RuntimeException.class);
         expectedException.expectMessage(containsString("Exception while binding MockServer to port "));
 
