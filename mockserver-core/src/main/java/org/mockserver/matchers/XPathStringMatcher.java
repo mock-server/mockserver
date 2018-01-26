@@ -57,7 +57,7 @@ public class XPathStringMatcher extends BodyMatcher<String> {
             mockServerLogger.trace("Failed to match [{}] with [{}]", matched, this.matcher);
         }
 
-        return reverseResultIfNot(result);
+        return not != result;
     }
 
     @Override

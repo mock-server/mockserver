@@ -24,7 +24,7 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
         jsonSchemaValidator = new JsonSchemaValidator(mockServerLogger, schema);
     }
 
-    public boolean matches(HttpRequest context, String matched) {
+    public boolean matches(final HttpRequest context, String matched) {
         boolean result = false;
 
         try {
@@ -39,7 +39,7 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
             mockServerLogger.trace(context, "Failed to match JSON: {}" + NEW_LINE + "with schema: {}" + NEW_LINE + "because: {}", matched, this.schema, e.getMessage());
         }
 
-        return reverseResultIfNot(result);
+        return not != result;
     }
 
     @Override

@@ -57,7 +57,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
         return matches(null, string(matched));
     }
 
-    public boolean matches(HttpRequest context, NottableString matched) {
+    public boolean matches(final HttpRequest context, NottableString matched) {
         boolean result = false;
 
         try {
@@ -72,7 +72,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
             mockServerLogger.trace(context, "Failed to match [{}] with [{}]", matched, this.matcher);
         }
 
-        return matcher.isNot() != reverseResultIfNot(result);
+        return matcher.isNot() != (not != result);
     }
 
     @Override

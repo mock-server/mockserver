@@ -14,8 +14,4 @@ public abstract class NotMatcher<MatchedType> extends ObjectWithReflectiveEquals
         return matcher;
     }
 
-    boolean reverseResultIfNot(boolean result) {
-        return not != result;
-    }
-
 }

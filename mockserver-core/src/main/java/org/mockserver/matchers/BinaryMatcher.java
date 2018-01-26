@@ -19,7 +19,7 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
         this.matcher = matcher;
     }
 
-    public boolean matches(HttpRequest context, byte[] matched) {
+    public boolean matches(final HttpRequest context, byte[] matched) {
         boolean result = false;
 
         if (matcher == null || matcher.length == 0 || Arrays.equals(matcher, matched)) {
@@ -27,10 +27,10 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
         }
 
         if (!result) {
-            mockServerLogger.trace(context, "Failed to perform binary match [{}] with [{}] because {}", matched);
+            mockServerLogger.trace(context, "Failed to perform binary match [{}] with [{}] because {}", (Object) matched);
         }
 
-        return reverseResultIfNot(result);
+        return not != result;
     }
 
     @Override

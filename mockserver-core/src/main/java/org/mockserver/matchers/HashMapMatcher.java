@@ -22,7 +22,7 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
         }
     }
 
-    public boolean matches(HttpRequest context, KeysAndValues values) {
+    public boolean matches(final HttpRequest context, KeysAndValues values) {
         boolean result = false;
 
         if (hashMap == null || hashMap.isEmpty() || values == null) {
@@ -33,6 +33,6 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
             mockServerLogger.trace(context, "Map [{}] is not a subset of {}", this.hashMap, values);
         }
 
-        return reverseResultIfNot(result);
+        return not != result;
     }
 }

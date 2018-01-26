@@ -26,7 +26,7 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
         return new String[]{"logger", "xmlSchemaValidator"};
     }
 
-    public boolean matches(HttpRequest context, String matched) {
+    public boolean matches(final HttpRequest context, String matched) {
         boolean result = false;
 
         try {
@@ -41,7 +41,7 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
             mockServerLogger.trace(context, "Failed to match XML: {}" + NEW_LINE + "with schema: {}" + NEW_LINE + "because: {}", matched, this.schema, e.getMessage());
         }
 
-        return reverseResultIfNot(result);
+        return not != result;
     }
 
 }
