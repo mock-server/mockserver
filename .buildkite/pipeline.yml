@@ -5,4 +5,4 @@ steps:
   - wait
 
   - label: "build"
-    command: "docker run --memory=4096m --oom-kill-disable -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:maven /build/mockserver/scripts/local_deploy_snapshot.sh"
+    command: "docker run --memory=4096m --oom-kill-disable -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr -e BUILDKITE_BRANCH='$BUILDKITE_BRANCH' jamesdbloom/mockserver:maven /build/mockserver/scripts/local_deploy_snapshot.sh"
