@@ -42,7 +42,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     public Expectation firstMatchingExpectation(HttpRequest httpRequest) {
         Expectation matchingExpectation = null;
         for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
-            if (httpRequestMatcher.matches(null, httpRequest)) {
+            if (httpRequestMatcher.matches(httpRequest, httpRequest)) {
                 matchingExpectation = httpRequestMatcher.decrementRemainingMatches();
             }
             if (!httpRequestMatcher.isActive()) {
@@ -62,7 +62,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
         if (httpRequest != null) {
             HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
-                if (clearHttpRequestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest(), false)) {
+                if (clearHttpRequestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
                     if (httpRequestMatchers.contains(httpRequestMatcher)) {
                         httpRequestMatchers.remove(httpRequestMatcher);
                         notifyListeners(this);
@@ -76,8 +76,10 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
 
     public List<Expectation> retrieveExpectations(HttpRequest httpRequest) {
         List<Expectation> expectations = new ArrayList<Expectation>();
+        HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
         for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
-            if (httpRequest == null || httpRequestMatcher.matches(httpRequest, false)) {
+            if (httpRequest == null ||
+                requestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
                 expectations.add(httpRequestMatcher.getExpectation());
             }
         }

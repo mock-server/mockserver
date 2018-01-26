@@ -4,11 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.KeyToMultiValue;
 import org.mockserver.model.Parameters;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author jamesdbloom
@@ -23,10 +19,10 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
         this.matcher = new MultiValueMapMatcher(mockServerLogger, parameters);
     }
 
-    public boolean matches(HttpRequest context, String matched) {
+    public boolean matches(final HttpRequest context, String matched) {
         boolean result = false;
 
-        if (matcher.matches(null, parseString(matched))) {
+        if (matcher.matches(context, parseString(matched))) {
             result = true;
         }
 
@@ -34,7 +30,7 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
             mockServerLogger.trace(context, "Failed to match [{}] with [{}]", matched, this.matcher);
         }
 
-        return reverseResultIfNot(result);
+        return not != result;
     }
 
     private Parameters parseString(String matched) {

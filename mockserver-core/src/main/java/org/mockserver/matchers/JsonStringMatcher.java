@@ -24,7 +24,7 @@ public class JsonStringMatcher extends BodyMatcher<String> {
         this.matchType = matchType;
     }
 
-    public boolean matches(HttpRequest context, String matched) {
+    public boolean matches(final HttpRequest context, String matched) {
         boolean result = false;
 
         JSONCompareResult jsonCompareResult;
@@ -50,7 +50,7 @@ public class JsonStringMatcher extends BodyMatcher<String> {
             mockServerLogger.trace(context, "Failed to perform JSON match \"{}\" with \"{}\" because {}", matched, this.matcher, e.getMessage());
         }
 
-        return reverseResultIfNot(result);
+        return not != result;
     }
 
     @Override

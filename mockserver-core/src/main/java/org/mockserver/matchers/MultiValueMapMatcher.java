@@ -4,11 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.KeyToMultiValue;
 import org.mockserver.model.KeysToMultiValues;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author jamesdbloom
@@ -27,7 +23,7 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
         }
     }
 
-    public boolean matches(HttpRequest context, KeysToMultiValues values) {
+    public boolean matches(final HttpRequest context, KeysToMultiValues values) {
         boolean result = false;
 
         if (multiMap == null || multiMap.isEmpty()) {
@@ -38,7 +34,7 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
             mockServerLogger.trace(context, "Map [{}] is not a subset of {}", multiMap, values);
         }
 
-        return reverseResultIfNot(result);
+        return not != result;
     }
 
     @Override

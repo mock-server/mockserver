@@ -93,7 +93,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         return matches(null, string(matched));
     }
 
-    public boolean matches(HttpRequest context, NottableString matched) {
+    public boolean matches(final HttpRequest context, NottableString matched) {
         boolean result = false;
 
         if (matches(matcher.getValue(), matched.getValue(), false)) {
@@ -104,7 +104,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             mockServerLogger.trace(context, "Failed to match [{}] with [{}]", matched, this.matcher);
         }
 
-        return (matcher.isNot() || matched.isNot()) != reverseResultIfNot(result);
+        return matched.isNot() != (matcher.isNot() != (not != result));
     }
 
     @Override

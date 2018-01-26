@@ -90,7 +90,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         if (request != null) {
             HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(request);
             for (LogEntry logEntry : new LinkedList<>(requestLog)) {
-                if (requestMatcher.matches(logEntry.getHttpRequest(), false)) {
+                if (requestMatcher.matches(logEntry.getHttpRequest())) {
                     requestLog.remove(logEntry);
                 }
             }
@@ -132,7 +132,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         List<T> matchingLogEntries = new ArrayList<>();
         HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
         for (LogEntry logEntry : new LinkedList<>(this.requestLog)) {
-            if (logEntryPredicate.apply(logEntry) && httpRequestMatcher.matches(logEntry.getHttpRequest(), false)) {
+            if (logEntryPredicate.apply(logEntry) && httpRequestMatcher.matches(logEntry.getHttpRequest())) {
                 matchingLogEntries.add(logEntryToTypeFunction.apply(logEntry));
             }
         }
@@ -182,7 +182,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                     boolean foundRequest = false;
                     for (; !foundRequest && requestLogCounter < requestLog.size(); requestLogCounter++) {
                         LogEntry logEntry = requestLog.get(requestLogCounter);
-                        if (!(logEntry instanceof MessageLogEntry) && httpRequestMatcher.matches(logEntry.getHttpRequest(), false)) {
+                        if (!(logEntry instanceof MessageLogEntry) && httpRequestMatcher.matches(logEntry.getHttpRequest())) {
                             // move on to next request
                             foundRequest = true;
                         }

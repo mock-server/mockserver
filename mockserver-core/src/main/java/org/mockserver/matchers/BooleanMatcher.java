@@ -19,7 +19,7 @@ public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString i
     }
 
     @Override
-    public boolean matches(HttpRequest context, Boolean matched) {
+    public boolean matches(final HttpRequest context, Boolean matched) {
         boolean result = false;
 
         if (matcher == null) {
