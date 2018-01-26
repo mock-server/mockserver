@@ -2,12 +2,8 @@ package org.mockserver.matchers;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.KeyToMultiValue;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.mockserver.model.Headers;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -17,269 +13,290 @@ import static org.junit.Assert.assertTrue;
  */
 public class MapMatcherTest {
 
-    private MultiValueMapMatcher mapMatcher;
-    private CaseInsensitiveRegexMultiMap multimap;
-    private List<KeyToMultiValue> keyToMultiValues;
+    private Headers matcher;
+    private Headers matched;
 
     @Before
     public void setupTestFixture() {
-        multimap = new CaseInsensitiveRegexMultiMap();
-        mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), multimap);
-        keyToMultiValues = new ArrayList<KeyToMultiValue>();
+        matcher = new Headers();
+        matched = new Headers();
     }
 
     @Test
     public void matchesMatchingValues() {
         // given
-        multimap.put("foo", "bar");
+        matcher.withEntry("foo", "bar");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
+        matched.withEntry("foo", "bar");
 
         // then
-        assertTrue(mapMatcher.matches(null, keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void doesNotMatchEmptyValueInExpectation() {
         // given
-        multimap.put("foo", "");
+        matcher.withEntry("foo", "");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo", "bar", "bob"));
+        matched.withEntry("foo", "bar", "bob");
 
         // then
-        assertTrue(mapMatcher.matches(null, keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void matchesMatchingRegexValue() {
         // given
-        multimap.put("foo", "b.*");
+        matcher.withEntry("foo", "b.*");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo", "bar", "bob"));
+        matched.withEntry("foo", "bar", "bob");
 
         // then
-        assertTrue(mapMatcher.matches(null, keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void matchesMatchingRegexKey() {
         // given
-        multimap.put("f.*", "bar");
+        matcher.withEntry("f.*", "bar");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
+        matched.withEntry("foo", "bar");
 
         // then
-        assertTrue(mapMatcher.matches(null, keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void matchesMatchingRegexValueAndKey() {
         // given
-        multimap.put("f.*", "b.*");
+        matcher.withEntry("f.*", "b.*");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo", "bar"));
+        matched.withEntry("foo", "bar");
 
         // then
-        assertTrue(mapMatcher.matches(null, keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void matchesMatchingValuesWithExtraValues() {
         // given
-        multimap.put("foo1", "bar1");
+        matcher.withEntry("foo1", "bar1");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
-        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
-        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+        matched.withEntry("foo0", "bar0");
+        matched.withEntry("foo1", "bar1");
+        matched.withEntry("foo2", "bar2");
 
         // then
-        assertTrue(mapMatcher.matches(null, keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void matchesMatchingValuesIgnoringCase() {
         // given
-        multimap.put("foo1", "bar1");
-        multimap.put("FOO2", "bar2");
+        matcher.withEntry("foo1", "bar1");
+        matcher.withEntry("FOO2", "bar2");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
-        keyToMultiValues.add(new KeyToMultiValue("FOO1", "bar1"));
-        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+        matched.withEntry("foo0", "bar0");
+        matched.withEntry("FOO1", "bar1");
+        matched.withEntry("foo2", "bar2");
 
         // then
-        assertTrue(mapMatcher.matches(null, keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void matchesMatchingRegexValuesWithExtraValues() {
         // given
-        multimap.put("foo1", ".*1");
-        multimap.put("foo2", ".*2");
+        matcher.withEntry("foo1", ".*1");
+        matcher.withEntry("foo2", ".*2");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
-        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
-        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+        matched.withEntry("foo0", "bar0");
+        matched.withEntry("foo1", "bar1");
+        matched.withEntry("foo2", "bar2");
 
         // then
-        assertTrue(mapMatcher.matches(null, keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void matchesMatchingRegexKeysWithExtraValues() {
         // given
-        multimap.put("f.*1", "bar1");
-        multimap.put("f.*2", "bar2");
+        matcher.withEntry("f.*1", "bar1");
+        matcher.withEntry("f.*2", "bar2");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
-        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
-        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+        matched.withEntry("foo0", "bar0");
+        matched.withEntry("foo1", "bar1");
+        matched.withEntry("foo2", "bar2");
 
         // then
-        assertTrue(mapMatcher.matches(null, keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void matchesMatchingRegexKeysAndValuesWithExtraValues() {
         // given
-        multimap.put("f.*1", ".*1");
-        multimap.put("f.*2", ".*2");
+        matcher.withEntry("f.*1", ".*1");
+        matcher.withEntry("f.*2", ".*2");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
-        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
-        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+        matched.withEntry("foo0", "bar0");
+        matched.withEntry("foo1", "bar1");
+        matched.withEntry("foo2", "bar2");
 
         // then
-        assertTrue(mapMatcher.matches(null, keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void matchesMatchingRegexValuesIgnoringCase() {
         // given
-        multimap.put("FOO1", ".*1");
-        multimap.put("foo2", ".*2");
+        matcher.withEntry("FOO1", ".*1");
+        matcher.withEntry("foo2", ".*2");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
-        keyToMultiValues.add(new KeyToMultiValue("FOO2", "bar2"));
+        matched.withEntry("foo1", "bar1");
+        matched.withEntry("FOO2", "bar2");
 
         // then
-        assertTrue(mapMatcher.matches(null, keyToMultiValues));
+        assertTrue(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void matchesEmptyExpectation() {
-        assertTrue(mapMatcher.matches(null, keyToMultiValues));
+        // given
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+
+        // then
+        assertTrue(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void doesNotMatchDifferentKeys() {
         // given
-        multimap.put("foo", "bar");
+        matcher.withEntry("foo", "bar");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar"));
+        matched.withEntry("foo2", "bar");
 
         // then
-        assertFalse(mapMatcher.matches(null, keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void doesNotMatchDifferentValues() {
         // given
-        multimap.put("foo", "bar");
+        matcher.withEntry("foo", "bar");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo", "bar2"));
+        matched.withEntry("foo", "bar2");
 
         // then
-        assertFalse(mapMatcher.matches(null, keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void doesNotMatchDifferentEmptyValue() {
         // given
-        multimap.put("foo", "bar");
+        matcher.withEntry("foo", "bar");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo", ""));
+        matched.withEntry("foo", "");
 
         // then
-        assertFalse(mapMatcher.matches(null, keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void doesNotMatchIncorrectRegexValue() {
         // given
-        multimap.put("foo1", "a.*1");
+        matcher.withEntry("foo1", "a.*1");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
-        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
-        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+        matched.withEntry("foo0", "bar0");
+        matched.withEntry("foo1", "bar1");
+        matched.withEntry("foo2", "bar2");
 
         // then
-        assertFalse(mapMatcher.matches(null, keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void doesNotMatchIncorrectRegexKey() {
         // given
-        multimap.put("g.*1", "bar1");
+        matcher.withEntry("g.*1", "bar1");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
-        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
-        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+        matched.withEntry("foo0", "bar0");
+        matched.withEntry("foo1", "bar1");
+        matched.withEntry("foo2", "bar2");
 
         // then
-        assertFalse(mapMatcher.matches(null, keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void doesNotMatchIncorrectRegexKeyAndValue() {
         // given
-        multimap.put("g.*1", "a.*1");
+        matcher.withEntry("g.*1", "a.*1");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo0", "bar0"));
-        keyToMultiValues.add(new KeyToMultiValue("foo1", "bar1"));
-        keyToMultiValues.add(new KeyToMultiValue("foo2", "bar2"));
+        matched.withEntry("foo0", "bar0");
+        matched.withEntry("foo1", "bar1");
+        matched.withEntry("foo2", "bar2");
 
         // then
-        assertFalse(mapMatcher.matches(null, keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void shouldHandleIllegalRegexValuePattern() {
         // given
-        multimap.put("foo", "/{}");
+        matcher.withEntry("foo", "/{}");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo", "/{}/"));
+        matched.withEntry("foo", "/{}/");
 
         // then
-        assertFalse(mapMatcher.matches(null, keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, matched));
     }
 
     @Test
     public void shouldHandleIllegalRegexKeyPattern() {
         // given
-        multimap.put("/{}", "bar");
+        matcher.withEntry("/{}", "bar");
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
 
         // when
-        keyToMultiValues.add(new KeyToMultiValue("foo", "/{}/"));
+        matched.withEntry("foo", "/{}/");
 
         // then
-        assertFalse(mapMatcher.matches(null, keyToMultiValues));
+        assertFalse(mapMatcher.matches(null, matched));
     }
 }

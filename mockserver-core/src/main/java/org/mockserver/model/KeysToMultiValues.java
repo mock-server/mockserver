@@ -16,12 +16,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     private ListMultimap<NottableString, NottableString> listMultimap = LinkedListMultimap.create();
 
-    @SafeVarargs
-    public static <T extends KeyToMultiValue> CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(T... entries) {
-        return toCaseInsensitiveRegexMultiMap(Arrays.asList(entries));
-    }
-
-    public static <T extends KeyToMultiValue> CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(List<T> entries) {
+    public CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(List<T> entries) {
         CaseInsensitiveRegexMultiMap caseInsensitiveRegexMultiMap = new CaseInsensitiveRegexMultiMap();
         if (entries != null) {
             for (KeyToMultiValue keyToMultiValue : entries) {

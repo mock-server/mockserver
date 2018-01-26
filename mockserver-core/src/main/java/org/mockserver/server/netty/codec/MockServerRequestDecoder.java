@@ -46,9 +46,9 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
             setPath(httpRequest, fullHttpRequest);
             setQueryString(httpRequest, new QueryStringDecoder(fullHttpRequest.uri()));
 
-            setBody(httpRequest, fullHttpRequest);
             setHeaders(httpRequest, fullHttpRequest);
             setCookies(httpRequest, fullHttpRequest);
+            setBody(httpRequest, fullHttpRequest);
 
             httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
             httpRequest.withSecure(isSecure);
@@ -65,11 +65,37 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
     }
 
     private void setQueryString(HttpRequest httpRequest, QueryStringDecoder queryStringDecoder) {
+        Parameters parameters = new Parameters();
         try {
-            httpRequest.withQueryStringParameters(queryStringDecoder.parameters());
+            parameters.withEntries(queryStringDecoder.parameters());
         } catch (IllegalArgumentException iae) {
             mockServerLogger.debug(httpRequest, "Exception while parsing query string", iae);
         }
+        httpRequest.withQueryStringParameters(parameters);
+    }
+
+    private void setHeaders(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
+        Headers headers = new Headers();
+        HttpHeaders httpHeaders = fullHttpResponse.headers();
+        for (String headerName : httpHeaders.names()) {
+            headers.withEntry(new Header(headerName, httpHeaders.getAll(headerName)));
+        }
+        httpRequest.withHeaders(headers);
+    }
+
+    private void setCookies(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
+        Cookies cookies = new Cookies();
+        for (String cookieHeader : fullHttpResponse.headers().getAll(COOKIE)) {
+            Set<io.netty.handler.codec.http.cookie.Cookie> decodedCookies =
+                ServerCookieDecoder.LAX.decode(cookieHeader);
+            for (io.netty.handler.codec.http.cookie.Cookie decodedCookie : decodedCookies) {
+                cookies.withEntry(new Cookie(
+                    decodedCookie.name(),
+                    decodedCookie.value()
+                ));
+            }
+        }
+        httpRequest.withCookies(cookies);
     }
 
     private void setBody(HttpRequest httpRequest, FullHttpRequest fullHttpRequest) {
@@ -83,26 +109,6 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
                     Charset requestCharset = ContentTypeMapper.getCharsetFromContentTypeHeader(fullHttpRequest.headers().get(CONTENT_TYPE));
                     httpRequest.withBody(new StringBody(new String(bodyBytes, requestCharset), DEFAULT_HTTP_CHARACTER_SET.equals(requestCharset) ? null : requestCharset));
                 }
-            }
-        }
-    }
-
-    private void setHeaders(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
-        HttpHeaders headers = fullHttpResponse.headers();
-        for (String headerName : headers.names()) {
-            httpRequest.withHeader(new Header(headerName, headers.getAll(headerName)));
-        }
-    }
-
-    private void setCookies(HttpRequest httpRequest, FullHttpRequest fullHttpResponse) {
-        for (String cookieHeader : fullHttpResponse.headers().getAll(COOKIE)) {
-            Set<io.netty.handler.codec.http.cookie.Cookie> decodedCookies =
-                ServerCookieDecoder.LAX.decode(cookieHeader);
-            for (io.netty.handler.codec.http.cookie.Cookie decodedCookie : decodedCookies) {
-                httpRequest.withCookie(new Cookie(
-                    decodedCookie.name(),
-                    decodedCookie.value()
-                ));
             }
         }
     }

@@ -3,35 +3,31 @@ package org.mockserver.matchers;
 import org.mockserver.collections.CaseInsensitiveRegexHashMap;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.KeyAndValue;
 import org.mockserver.model.KeysAndValues;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author jamesdbloom
  */
-public class HashMapMatcher extends NotMatcher<List<KeyAndValue>> {
+public class HashMapMatcher extends NotMatcher<KeysAndValues> {
 
     private final MockServerLogger mockServerLogger;
     private final CaseInsensitiveRegexHashMap hashMap;
 
-    public HashMapMatcher(MockServerLogger mockServerLogger, CaseInsensitiveRegexHashMap hashMap) {
+    public HashMapMatcher(MockServerLogger mockServerLogger, KeysAndValues keysAndValues) {
         this.mockServerLogger = mockServerLogger;
-        this.hashMap = hashMap;
+        if (keysAndValues != null) {
+            this.hashMap = keysAndValues.toCaseInsensitiveRegexMultiMap();
+        } else {
+            this.hashMap = null;
+        }
     }
 
-    public boolean matches(KeyAndValue... values) {
-        return matches(null, Arrays.asList(values));
-    }
-
-    public boolean matches(HttpRequest context, List<KeyAndValue> values) {
+    public boolean matches(HttpRequest context, KeysAndValues values) {
         boolean result = false;
 
-        if (hashMap == null || hashMap.isEmpty()) {
+        if (hashMap == null || hashMap.isEmpty() || values == null) {
             result = true;
-        } else if (KeysAndValues.toCaseInsensitiveRegexMultiMap(values).containsAll(hashMap)) {
+        } else if (values.toCaseInsensitiveRegexMultiMap().containsAll(hashMap)) {
             result = true;
         } else {
             mockServerLogger.trace(context, "Map [{}] is not a subset of {}", this.hashMap, values);

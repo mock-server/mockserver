@@ -10,9 +10,6 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableString.string;
 
@@ -81,7 +78,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     }
 
     private void withQueryStringParameters(Parameters parameters) {
-        this.queryStringParameterMatcher = new MultiValueMapMatcher(mockServerLogger, parameters.toCaseInsensitiveRegexMultiMap());
+        this.queryStringParameterMatcher = new MultiValueMapMatcher(mockServerLogger, parameters);
     }
 
     private void withBody(Body body) {
@@ -144,11 +141,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     }
 
     private void withHeaders(Headers headers) {
-        this.headerMatcher = new MultiValueMapMatcher(mockServerLogger, headers.toCaseInsensitiveRegexMultiMap());
+        this.headerMatcher = new MultiValueMapMatcher(mockServerLogger, headers);
     }
 
     private void withCookies(Cookies cookies) {
-        this.cookieMatcher = new HashMapMatcher(mockServerLogger, cookies.toCaseInsensitiveRegexMultiMap());
+        this.cookieMatcher = new HashMapMatcher(mockServerLogger, cookies);
     }
 
     private void withKeepAlive(Boolean keepAlive) {
@@ -174,10 +171,10 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                 if (request != null) {
                     boolean methodMatches = Strings.isNullOrEmpty(request.getMethod().getValue()) || matches(methodMatcher, request.getMethod());
                     boolean pathMatches = Strings.isNullOrEmpty(request.getPath().getValue()) || matches(pathMatcher, request.getPath());
-                    boolean queryStringParametersMatches = matches(queryStringParameterMatcher, (request.getQueryStringParameterList() != null ? new ArrayList<KeyToMultiValue>(request.getQueryStringParameterList()) : null));
+                    boolean queryStringParametersMatches = matches(queryStringParameterMatcher, request.getQueryStringParameters());
                     boolean bodyMatches = bodyMatches(request);
-                    boolean headersMatch = matches(headerMatcher, (request.getHeaderList() != null ? new ArrayList<KeyToMultiValue>(request.getHeaderList()) : null));
-                    boolean cookiesMatch = matches(cookieMatcher, (request.getCookieList() != null ? new ArrayList<KeyAndValue>(request.getCookieList()) : null));
+                    boolean headersMatch = matches(headerMatcher, request.getHeaders());
+                    boolean cookiesMatch = matches(cookieMatcher, request.getCookies());
                     boolean keepAliveMatches = matches(keepAliveMatcher, request.isKeepAlive());
                     boolean sslMatches = matches(sslMatcher, request.isSecure());
 

@@ -140,8 +140,6 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public String verify(Verification verification) {
-        LinkedList<LogEntry> requestLog = new LinkedList<>(this.requestLog);
-
         String failureMessage = "";
 
         if (verification != null) {

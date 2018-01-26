@@ -19,7 +19,6 @@ import org.mockserver.verify.VerificationTimes;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -130,7 +129,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
             boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
             HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port))
                 .get(30, (isDebug ? TimeUnit.MINUTES : TimeUnit.SECONDS));
-            List<Header> headers = new ArrayList<Header>();
+            Headers headers = new Headers();
             for (Header header : httpResponse.getHeaderList()) {
                 if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
                     if (header.getName().getValue().equalsIgnoreCase(CONTENT_TYPE.toString())) {
@@ -142,7 +141,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
                         }
                         header = header(header.getName().lowercase(), header.getValues());
                     }
-                    headers.add(header);
+                    headers.withEntry(header);
                 }
             }
             httpResponse.withHeaders(headers);
@@ -324,6 +323,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
                         )
                         .withBody("an_example_body_http"),
                     headersToIgnore
+
                 )
             );
             // - in https

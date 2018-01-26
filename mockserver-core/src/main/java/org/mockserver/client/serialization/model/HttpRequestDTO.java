@@ -43,10 +43,10 @@ public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
         return new HttpRequest()
             .withMethod(method)
             .withPath(path)
-            .withHeaders(headers)
-            .withCookies(cookies)
             .withQueryStringParameters(queryStringParameters)
             .withBody((body != null ? Not.not(body.buildObject(), body.getNot()) : null))
+            .withHeaders(headers)
+            .withCookies(cookies)
             .withSecure(secure)
             .withKeepAlive(keepAlive);
     }

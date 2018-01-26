@@ -1,9 +1,9 @@
 package org.mockserver.filters;
 
 import org.mockserver.model.Header;
+import org.mockserver.model.Headers;
 import org.mockserver.model.HttpRequest;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -26,13 +26,17 @@ public class HopByHopHeaderFilter {
                 "proxy-authenticate",
                 "upgrade"
             );
-            List<Header> filteredHeaders = new ArrayList<Header>();
+            Headers headers = new Headers();
             for (Header header : request.getHeaderList()) {
                 if (!headersToRemove.contains(header.getName().getValue().toLowerCase(Locale.ENGLISH))) {
-                    filteredHeaders.add(header);
+                    headers.withEntry(header);
                 }
             }
-            return request.clone().withHeaders(filteredHeaders);
+            HttpRequest clonedRequest = request.clone();
+            if (!headers.isEmpty()) {
+                clonedRequest.withHeaders(headers);
+            }
+            return clonedRequest;
         } else {
             return null;
         }

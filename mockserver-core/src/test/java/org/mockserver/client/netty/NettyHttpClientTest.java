@@ -7,12 +7,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.socket.PortFactory;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.*;
@@ -55,10 +52,10 @@ public class NettyHttpClientTest {
             response()
                 .withStatusCode(200)
                 .withReasonPhrase("OK")
-                .withHeader(header(CONTENT_LENGTH.toString(), 0))
                 .withHeader(header(HOST.toString(), "0.0.0.0:" + echoServer.getPort()))
-                .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
                 .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
+                .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
+                .withHeader(header(CONTENT_LENGTH.toString(), 0))
         ));
     }
 
@@ -77,9 +74,9 @@ public class NettyHttpClientTest {
                 .withStatusCode(200)
                 .withReasonPhrase("OK")
                 .withHeader(header(HOST.toString(), "www.google.com"))
-                .withHeader(header(CONTENT_LENGTH.toString(), 0))
                 .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
                 .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
+                .withHeader(header(CONTENT_LENGTH.toString(), 0))
         ));
     }
 
@@ -97,9 +94,9 @@ public class NettyHttpClientTest {
             response()
                 .withStatusCode(200)
                 .withReasonPhrase("OK")
-                .withHeader(header(CONTENT_LENGTH.toString(), 0))
                 .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
                 .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
+                .withHeader(header(CONTENT_LENGTH.toString(), 0))
         ));
     }
 
@@ -117,7 +114,7 @@ public class NettyHttpClientTest {
                 .withCookie(cookie("some_cookie_name", "some_cookie_value"))
                 .withCookie(cookie("another_cookie_name", "another_cookie_value"))
                 .withBody(exact("this is an example body"))
-        ).get(10, TimeUnit.SECONDS);;
+        ).get(10, TimeUnit.SECONDS);
 
         // then
         assertThat(httpResponse, is(

@@ -2,17 +2,13 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.KeyToMultiValue;
-import org.mockserver.model.Parameter;
 import org.mockserver.model.Parameters;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author jamesdbloom
@@ -24,7 +20,7 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
 
     public ParameterStringMatcher(MockServerLogger mockServerLogger, Parameters parameters) {
         this.mockServerLogger = mockServerLogger;
-        this.matcher = new MultiValueMapMatcher(mockServerLogger, ((parameters != null ? parameters.toCaseInsensitiveRegexMultiMap() : new CaseInsensitiveRegexMultiMap())));
+        this.matcher = new MultiValueMapMatcher(mockServerLogger, parameters);
     }
 
     public boolean matches(HttpRequest context, String matched) {
@@ -41,20 +37,8 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
         return reverseResultIfNot(result);
     }
 
-    private List<KeyToMultiValue> parseString(String matched) {
-        Map<String, Parameter> mappedParameters = new HashMap<>();
-        Map<String, List<String>> parameters = new QueryStringDecoder("?" + matched).parameters();
-        for (String name : parameters.keySet()) {
-            // TODO(jamesdbloom) support nottable parameters
-            for (String value : parameters.get(name)) {
-                if (mappedParameters.containsKey(name)) {
-                    mappedParameters.get(name).addValue(value);
-                } else {
-                    mappedParameters.put(name, new Parameter(name, value));
-                }
-            }
-        }
-        return new ArrayList<KeyToMultiValue>(mappedParameters.values());
+    private Parameters parseString(String matched) {
+        return new Parameters().withEntries(new QueryStringDecoder("?" + matched).parameters());
     }
 
     @Override

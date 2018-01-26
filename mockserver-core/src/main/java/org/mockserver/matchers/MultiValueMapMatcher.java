@@ -13,26 +13,26 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class MultiValueMapMatcher extends NotMatcher<List<KeyToMultiValue>> {
+public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
     private static final String[] excludedFields = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final CaseInsensitiveRegexMultiMap multiMap;
 
-    public MultiValueMapMatcher(MockServerLogger mockServerLogger, CaseInsensitiveRegexMultiMap multiMap) {
+    public MultiValueMapMatcher(MockServerLogger mockServerLogger, KeysToMultiValues keysToMultiValues) {
         this.mockServerLogger = mockServerLogger;
-        this.multiMap = multiMap;
+        if (keysToMultiValues != null) {
+            this.multiMap = keysToMultiValues.toCaseInsensitiveRegexMultiMap();
+        } else {
+            this.multiMap = null;
+        }
     }
 
-    public boolean matches(KeyToMultiValue... values) {
-        return matches(null, Arrays.asList(values));
-    }
-
-    public boolean matches(HttpRequest context, List<KeyToMultiValue> values) {
+    public boolean matches(HttpRequest context, KeysToMultiValues values) {
         boolean result = false;
 
         if (multiMap == null || multiMap.isEmpty()) {
             result = true;
-        } else if (KeysToMultiValues.toCaseInsensitiveRegexMultiMap(values).containsAll(multiMap)) {
+        } else if (values.toCaseInsensitiveRegexMultiMap().containsAll(multiMap)) {
             result = true;
         } else {
             mockServerLogger.trace(context, "Map [{}] is not a subset of {}", multiMap, values);

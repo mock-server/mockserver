@@ -70,11 +70,11 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         return content;
     }
 
-    private void setHeaders(HttpResponse response, DefaultFullHttpResponse defaultFullHttpResponse) {
+    private void setHeaders(HttpResponse response, DefaultFullHttpResponse fullHttpResponse) {
         if (response.getHeaderList() != null) {
             for (Header header : response.getHeaderList()) {
                 for (NottableString value : header.getValues()) {
-                    defaultFullHttpResponse.headers().add(header.getName().getValue(), value.getValue());
+                    fullHttpResponse.headers().add(header.getName().getValue(), value.getValue());
                 }
             }
         }
@@ -83,7 +83,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         if (Strings.isNullOrEmpty(response.getFirstHeader(CONTENT_TYPE.toString()))) {
             if (response.getBody() != null
                 && response.getBody().getContentType() != null) {
-                defaultFullHttpResponse.headers().set(CONTENT_TYPE, response.getBody().getContentType());
+                fullHttpResponse.headers().set(CONTENT_TYPE, response.getBody().getContentType());
             }
         }
 
@@ -93,7 +93,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
             boolean overrideContentLength = connectionOptions != null && connectionOptions.getContentLengthHeaderOverride() != null;
             boolean addContentLength = connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressContentLengthHeader());
             if (overrideContentLength) {
-                defaultFullHttpResponse.headers().set(CONTENT_LENGTH, connectionOptions.getContentLengthHeaderOverride());
+                fullHttpResponse.headers().set(CONTENT_LENGTH, connectionOptions.getContentLengthHeaderOverride());
             } else if (addContentLength) {
                 Body body = response.getBody();
                 byte[] bodyBytes = new byte[0];
@@ -108,12 +108,12 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
                         bodyBytes = body.toString().getBytes(bodyCharset);
                     }
                 }
-                defaultFullHttpResponse.headers().set(CONTENT_LENGTH, bodyBytes.length);
+                fullHttpResponse.headers().set(CONTENT_LENGTH, bodyBytes.length);
             }
         }
     }
 
-    private void setCookies(HttpResponse response, DefaultFullHttpResponse httpServletResponse) {
+    private void setCookies(HttpResponse response, DefaultFullHttpResponse fullHttpResponse) {
         if (response.getCookieList() != null) {
             List<Cookie> cookieValues = new ArrayList<Cookie>();
             for (org.mockserver.model.Cookie cookie : response.getCookieList()) {
@@ -122,7 +122,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
                 }
             }
             for (Cookie cookieValue : cookieValues) {
-                httpServletResponse.headers().add(SET_COOKIE, ServerCookieEncoder.LAX.encode(cookieValue));
+                fullHttpResponse.headers().add(SET_COOKIE, ServerCookieEncoder.LAX.encode(cookieValue));
             }
         }
     }
