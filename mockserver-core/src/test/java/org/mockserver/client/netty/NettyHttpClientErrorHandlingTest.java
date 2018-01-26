@@ -16,6 +16,7 @@ import static io.netty.handler.codec.http.HttpHeaderValues.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
@@ -32,7 +33,10 @@ public class NettyHttpClientErrorHandlingTest {
         // then
         int freePort = PortFactory.findFreePort();
         exception.expect(ExecutionException.class);
-        exception.expectMessage(containsString("Connection refused: /127.0.0.1:" + freePort));
+        exception.expectMessage(anyOf(
+            containsString("Connection refused: /127.0.0.1:" + freePort),
+            containsString("Channel closed before valid response")
+        ));
 
         // when
         new NettyHttpClient().sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort))
