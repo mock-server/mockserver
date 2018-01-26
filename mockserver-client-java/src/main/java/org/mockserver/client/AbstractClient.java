@@ -437,7 +437,7 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
         return new ForwardChainExpectation(this, new Expectation(httpRequest, times, timeToLive));
     }
 
-    void sendExpectation(Expectation expectation) {
+    public void sendExpectation(Expectation expectation) {
         HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", Charsets.UTF_8));
         if (httpResponse != null && httpResponse.getStatusCode() != 201) {
             throw new ClientException(formatErrorMessage(NEW_LINE + "error:%s" + NEW_LINE + "while submitted expectation:%s", httpResponse.getBody(), expectation));
