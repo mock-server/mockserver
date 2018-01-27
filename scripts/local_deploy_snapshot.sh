@@ -10,7 +10,7 @@ mvn -version
 echo
 
 CURRENT_BRANCH="$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')"
-if test "$CURRENT_BRANCH" = "master" || "$BUILDKITE_BRANCH" = "master"; then
+if test "$BUILDKITE_BRANCH" = "master" || "$CURRENT_BRANCH" = "master"; then
     echo "BRANCH: MASTER"
     mvn clean deploy $1 -Djava.security.egd=file:/dev/./urandom
 else
