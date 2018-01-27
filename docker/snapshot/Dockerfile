@@ -14,7 +14,7 @@ MAINTAINER James Bloom "jamesdbloom@gmail.com"
 # obtain MockServer jar and script
 RUN apk add --update openssl ca-certificates bash wget
 ADD run_mockserver.sh /opt/mockserver/run_mockserver.sh
-RUN wget --max-redirect=1 -O /opt/mockserver/mockserver-netty-jar-with-dependencies.jar https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=org.mock-server&a=mockserver-netty&c=jar-with-dependencies&e=jar&v=LATEST
+RUN wget --max-redirect=1 -O /opt/mockserver/mockserver-netty-jar-with-dependencies.jar "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=org.mock-server&a=mockserver-netty&c=jar-with-dependencies&e=jar&v=LATEST"
 
 # set working directory
 WORKDIR /opt/mockserver
