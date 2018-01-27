@@ -8,7 +8,7 @@ echo
 mvn -version
 echo
 
-if test "$CURRENT_BRANCH" = "master"; then
+if test "$BUILDKITE_BRANCH" = "master"; then
     echo "BRANCH: MASTER"
     mvn clean deploy $1 -Djava.security.egd=file:/dev/./urandom
 else
