@@ -3,6 +3,7 @@ package org.mockserver.client;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.Version;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.*;
@@ -89,10 +90,18 @@ public abstract class AbstractClient<T extends AbstractClient> implements Closea
             ConfigurationProperties.maxSocketTimeout(),
             TimeUnit.MILLISECONDS
         );
-        if (response != null &&
-            response.getStatusCode() != null &&
-            response.getStatusCode() == BAD_REQUEST.code()) {
-            throw new IllegalArgumentException(response.getBodyAsString());
+        if (response != null) {
+            if (response.getStatusCode() != null &&
+                response.getStatusCode() == BAD_REQUEST.code()) {
+                throw new IllegalArgumentException(response.getBodyAsString());
+            }
+            String serverVersion = response.getFirstHeader("version");
+            String clientVersion = Version.getVersion();
+            if (!Strings.isNullOrEmpty(serverVersion) &&
+                !Strings.isNullOrEmpty(clientVersion) &&
+                !clientVersion.equals(serverVersion)) {
+                throw new ClientException("Client version \"" + clientVersion + "\" does not match server version \"" + serverVersion + "\"");
+            }
         }
         return response;
     }

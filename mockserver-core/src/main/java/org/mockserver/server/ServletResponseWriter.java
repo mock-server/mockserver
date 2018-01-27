@@ -55,6 +55,9 @@ public class ServletResponseWriter extends ResponseWriter {
         } else if (apiResponse && enableCORSForAPI()) {
             addCORSHeaders.addCORSHeaders(request, response);
         }
+        if (apiResponse) {
+            response.withHeader("version", org.mockserver.Version.getVersion());
+        }
 
         addConnectionHeader(request, response);
 

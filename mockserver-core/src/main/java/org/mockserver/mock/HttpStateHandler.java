@@ -113,7 +113,9 @@ public class HttpStateHandler {
     }
 
     public void log(LogEntry logEntry) {
-        mockServerLog.add(logEntry);
+        if (mockServerLog != null) {
+            mockServerLog.add(logEntry);
+        }
     }
 
     public HttpResponse retrieve(HttpRequest request) {

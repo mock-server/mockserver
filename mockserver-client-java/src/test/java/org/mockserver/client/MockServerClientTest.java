@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.Version;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.netty.websocket.WebSocketClient;
@@ -29,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.containsString;
@@ -73,7 +76,7 @@ public class MockServerClientTest {
 
     @Test
     public void shouldHandleNullHostnameExceptions() {
-        // given
+        // then
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage(containsString("Host can not be null or empty"));
 
@@ -83,12 +86,81 @@ public class MockServerClientTest {
 
     @Test
     public void shouldHandleNullContextPathExceptions() {
-        // given
+        // then
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage(containsString("ContextPath can not be null"));
 
         // when
         new MockServerClient("localhost", 1080, null);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldHandleInvalidExpectationException() {
+        // then
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("error_body"));
+
+        // given
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class)))
+            .thenReturn(response()
+                .withStatusCode(BAD_REQUEST.code())
+                .withBody("error_body")
+            );
+
+        // when
+        ForwardChainExpectation forwardChainExpectation = mockServerClient.when(request());
+        forwardChainExpectation.respond(response());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldHandleUnmatchingServerVersion() {
+        try {
+            System.setProperty("MOCKSERVER_VERSION", "some_version");
+
+            // then
+            exception.expect(ClientException.class);
+            exception.expectMessage(containsString("Client version \"" + Version.getVersion() + "\" does not match server version \"another_non_matching_version\""));
+
+            // given
+            when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class)))
+                .thenReturn(response()
+                    .withHeader("version", "another_non_matching_version")
+                    .withStatusCode(CREATED.code())
+                );
+
+            // when
+            ForwardChainExpectation forwardChainExpectation = mockServerClient.when(request());
+            forwardChainExpectation.respond(response());
+        } finally {
+            System.clearProperty("MOCKSERVER_VERSION");
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldHandleMatchingServerVersion() {
+        try {
+            // given
+            System.setProperty("MOCKSERVER_VERSION", "same_version");
+            when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class)))
+                .thenReturn(response()
+                    .withHeader("version", Version.getVersion())
+                    .withStatusCode(CREATED.code())
+                );
+
+            // when
+            ForwardChainExpectation forwardChainExpectation = mockServerClient.when(request());
+            forwardChainExpectation.respond(response());
+        } catch (Throwable t) {
+            // then - no exception should be thrown
+            fail();
+        } finally {
+            System.clearProperty("MOCKSERVER_VERSION");
+        }
+
+
     }
 
     @Test
@@ -788,7 +860,7 @@ public class MockServerClientTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void shouldQueryRunningStatusWhenSocketConnectionException() throws Exception {
+    public void shouldQueryRunningStatusWhenSocketConnectionException() {
         // given
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenThrow(SocketConnectionException.class);
 
@@ -871,7 +943,7 @@ public class MockServerClientTest {
     }
 
     @Test
-    public void shouldSendClearRequestForNullRequest() throws Exception {
+    public void shouldSendClearRequestForNullRequest() {
         // when
         mockServerClient
             .clear(null);

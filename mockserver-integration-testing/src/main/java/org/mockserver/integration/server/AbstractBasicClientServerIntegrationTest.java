@@ -72,6 +72,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
         HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS.toString(),
         HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS.toString(),
         HttpHeaderNames.ACCESS_CONTROL_MAX_AGE.toString(),
+        "version",
         "x-cors"
     );
     protected static NettyHttpClient httpClient = new NettyHttpClient();
