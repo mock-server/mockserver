@@ -1261,7 +1261,13 @@ public abstract class AbstractBasicClientServerIntegrationTest {
     @Test
     public void shouldRetrieveActiveExpectations() {
         // when
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4))
+        HttpRequest complexRequest = request()
+            .withPath(calculatePath("some_path.*"))
+            .withHeader("some", "header")
+            .withQueryStringParameter("some", "parameter")
+            .withCookie("some", "parameter")
+            .withBody("some_body");
+        mockServerClient.when(complexRequest, exactly(4))
             .respond(response().withBody("some_body"));
         mockServerClient.when(request().withPath(calculatePath("some_path.*")))
             .respond(response().withBody("some_body"));
@@ -1274,7 +1280,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
         assertThat(
             mockServerClient.retrieveActiveExpectations(request().withPath(calculatePath("some_path.*"))),
             arrayContaining(
-                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                new Expectation(complexRequest, exactly(4), TimeToLive.unlimited())
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body"))
@@ -1284,7 +1290,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
         assertThat(
             mockServerClient.retrieveActiveExpectations(null),
             arrayContaining(
-                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                new Expectation(complexRequest, exactly(4), TimeToLive.unlimited())
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body")),
@@ -1295,11 +1301,10 @@ public abstract class AbstractBasicClientServerIntegrationTest {
             )
         );
 
-        Expectation[] expectations = mockServerClient.retrieveActiveExpectations(request());
         assertThat(
-            expectations,
+            mockServerClient.retrieveActiveExpectations(request()),
             arrayContaining(
-                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                new Expectation(complexRequest, exactly(4), TimeToLive.unlimited())
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body")),
@@ -1321,17 +1326,29 @@ public abstract class AbstractBasicClientServerIntegrationTest {
                     .withHost("127.0.0.1")
                     .withPort(secureEchoServer.getPort())
             );
+            HttpRequest complexRequest = request()
+                .withPath(calculatePath("some_path_one"))
+                .withHeader("some", "header")
+                .withQueryStringParameter("some", "parameter")
+                .withCookie("some", "parameter")
+                .withBody("some_body_one");
             assertEquals(
-                response("some_body_one"),
+                response("some_body_one")
+                    .withHeader("some", "header")
+                    .withHeader("cookie", "some=parameter")
+                    .withHeader("set-cookie", "some=parameter")
+                    .withCookie("some", "parameter"),
                 makeRequest(
-                    request().withPath(calculatePath("some_path_one")).withBody("some_body_one"),
+                    complexRequest,
                     headersToIgnore
                 )
             );
             assertEquals(
                 response("some_body_three"),
                 makeRequest(
-                    request().withPath(calculatePath("some_path_three")).withBody("some_body_three"),
+                    request()
+                        .withPath(calculatePath("some_path_three"))
+                        .withBody("some_body_three"),
                     headersToIgnore
                 )
             );
