@@ -104,23 +104,43 @@ COMMAND_LINE_OPTS=""
 
 if [ -n "$serverPort" ]
 then
-    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -serverPort $serverPort"
+    SERVER_PORT="$serverPort"
 fi
-if [ -n "$proxyPort" ]
+if [ -n "$SERVER_PORT" ]
 then
-    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -proxyPort $proxyPort"
-fi
-if [ -n "$proxyRemotePort" ]
-then
-    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -proxyRemotePort $proxyRemotePort"
-fi
-if [ -n "$proxyRemoteHost" ]
-then
-    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -proxyRemoteHost $proxyRemoteHost"
-fi
-if [ -n "$genericJVMOptions" ]
-then
-    GENERIC_JVM_OPTIONS="$genericJVMOptions"
+    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -serverPort $SERVER_PORT"
 fi
 
-runCommand "java $GENERIC_JVM_OPTIONS -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -jar /opt/mockserver/mockserver-netty-jar-with-dependencies.jar$COMMAND_LINE_OPTS"
+if [ -n "$proxyPort" ]
+then
+    PROXY_PORT="$proxyPort"
+fi
+if [ -n "$PROXY_PORT" ]
+then
+    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -proxyPort $PROXY_PORT"
+fi
+
+if [ -n "$proxyRemotePort" ]
+then
+    PROXY_REMOTE_PORT="$proxyRemotePort"
+fi
+if [ -n "$PROXY_REMOTE_PORT" ]
+then
+    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -proxyRemotePort $PROXY_REMOTE_PORT"
+fi
+
+if [ -n "$proxyRemoteHost" ]
+then
+    PROXY_REMOTE_HOST="$proxyRemoteHost"
+fi
+if [ -n "$PROXY_REMOTE_HOST" ]
+then
+    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -proxyRemoteHost $PROXY_REMOTE_HOST"
+fi
+
+if [ -n "$genericJVMOptions" ]
+then
+    JVM_OPTIONS="$genericJVMOptions"
+fi
+
+runCommand "java $JVM_OPTIONS -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -jar /opt/mockserver/mockserver-netty-jar-with-dependencies.jar$COMMAND_LINE_OPTS"
