@@ -28,7 +28,6 @@ import org.mockserver.streams.IOStreamUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;

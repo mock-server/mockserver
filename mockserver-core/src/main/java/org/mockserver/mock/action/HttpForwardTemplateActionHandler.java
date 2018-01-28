@@ -1,6 +1,7 @@
 package org.mockserver.mock.action;
 
 import com.google.common.util.concurrent.SettableFuture;
+import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.model.HttpRequestDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -18,8 +19,8 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
     private JavaScriptTemplateEngine javaScriptTemplateEngine;
     private VelocityTemplateEngine velocityTemplateEngine;
 
-    public HttpForwardTemplateActionHandler(MockServerLogger logFormatter) {
-        super(logFormatter);
+    public HttpForwardTemplateActionHandler(MockServerLogger logFormatter, NettyHttpClient httpClient) {
+        super(logFormatter, httpClient);
         javaScriptTemplateEngine = new JavaScriptTemplateEngine(logFormatter);
         velocityTemplateEngine = new VelocityTemplateEngine(logFormatter);
     }

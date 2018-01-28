@@ -2,17 +2,19 @@ package org.mockserver.integration.mockserver;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
+import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.AbstractBasicClientServerIntegrationTest;
 import org.mockserver.mockserver.MockServer;
 
+import static org.mockserver.client.netty.proxy.ProxyConfiguration.proxyConfiguration;
+
 /**
  * @author jamesdbloom
  */
-@Ignore
-public class ClientViaHttpProxyIntegrationTest extends AbstractBasicClientServerIntegrationTest {
+//@Ignore
+public class ClientViaSocksProxyIntegrationTest extends AbstractBasicClientServerIntegrationTest {
 
     private static MockServer mockServer;
     private static MockServer proxy;
@@ -22,8 +24,7 @@ public class ClientViaHttpProxyIntegrationTest extends AbstractBasicClientServer
     public static void startServer() {
         proxy = new MockServer();
 
-        System.setProperty("mockserver.httpProxy", "127.0.0.1:" + String.valueOf(proxy.getPort()));
-        mockServer = new MockServer();
+        mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.SOCKS5, "127.0.0.1:" + String.valueOf(proxy.getPort())));
 
         echoServer = new EchoServer(false);
 
@@ -32,8 +33,6 @@ public class ClientViaHttpProxyIntegrationTest extends AbstractBasicClientServer
 
     @AfterClass
     public static void stopServer() {
-        System.clearProperty("mockserver.httpProxy");
-
         proxy.stop();
 
         mockServer.stop();

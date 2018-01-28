@@ -46,7 +46,7 @@ public class HttpProxyHandler extends SimpleChannelInboundHandler<HttpRequest> {
         this.httpStateHandler = httpStateHandler;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.actionHandler = new ActionHandler(httpStateHandler);
+        this.actionHandler = new ActionHandler(httpStateHandler, null);
     }
 
     @Override

@@ -37,7 +37,7 @@ public class MockServerServlet extends HttpServlet {
         this.httpStateHandler = new HttpStateHandler();
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.actionHandler = new ActionHandler(httpStateHandler);
+        this.actionHandler = new ActionHandler(httpStateHandler, null);
     }
 
     @Override

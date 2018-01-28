@@ -29,7 +29,7 @@ public class HttpForwardObjectCallbackActionHandlerTest {
         when(mockHttpStateHandler.getWebSocketClientRegistry()).thenReturn(mockWebSocketClientRegistry);
 
         // when
-        new HttpForwardObjectCallbackActionHandler(mockHttpStateHandler).handle(httpObjectCallback, request, mockResponseWriter, true);
+        new HttpForwardObjectCallbackActionHandler(mockHttpStateHandler, null).handle(httpObjectCallback, request, mockResponseWriter, true);
 
         // then
         verify(mockWebSocketClientRegistry).registerCallbackHandler(eq("some_clientId"), any(WebSocketRequestCallback.class));

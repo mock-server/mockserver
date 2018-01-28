@@ -1,6 +1,7 @@
 package org.mockserver.mock.action;
 
 import com.google.common.util.concurrent.SettableFuture;
+import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpClassCallback;
 import org.mockserver.model.HttpRequest;
@@ -14,8 +15,8 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
 
-    public HttpForwardClassCallbackActionHandler(MockServerLogger mockServerLogger) {
-        super(mockServerLogger);
+    public HttpForwardClassCallbackActionHandler(MockServerLogger mockServerLogger, NettyHttpClient httpClient) {
+        super(mockServerLogger, httpClient);
     }
 
     public SettableFuture<HttpResponse> handle(HttpClassCallback httpClassCallback, HttpRequest request) {

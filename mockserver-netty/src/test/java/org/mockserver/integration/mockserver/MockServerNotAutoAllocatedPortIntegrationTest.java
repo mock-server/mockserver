@@ -11,7 +11,7 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 /**
  * @author jamesdbloom
  */
-public class MockServerAutoAllocatedPortIntegrationTest extends AbstractBasicClientServerIntegrationTest {
+public class MockServerNotAutoAllocatedPortIntegrationTest extends AbstractBasicClientServerIntegrationTest {
 
     private static int severHttpPort = PortFactory.findFreePort();
     private static EchoServer echoServer;

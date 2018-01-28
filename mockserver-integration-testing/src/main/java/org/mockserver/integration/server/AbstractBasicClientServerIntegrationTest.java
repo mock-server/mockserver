@@ -211,6 +211,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
     @Test
     public void shouldForwardRequestInHTTPS() {
         EchoServer secureEchoServer = new EchoServer(true);
+
         try {
             // when
             mockServerClient

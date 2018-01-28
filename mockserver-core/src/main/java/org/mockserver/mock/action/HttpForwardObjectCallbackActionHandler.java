@@ -3,6 +3,7 @@ package org.mockserver.mock.action;
 import com.google.common.util.concurrent.SettableFuture;
 import org.mockserver.callback.WebSocketRequestCallback;
 import org.mockserver.callback.WebSocketClientRegistry;
+import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpObjectCallback;
@@ -20,8 +21,8 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
     private final MockServerLogger logFormatter;
     private WebSocketClientRegistry webSocketClientRegistry;
 
-    public HttpForwardObjectCallbackActionHandler(HttpStateHandler httpStateHandler) {
-        super(httpStateHandler.getMockServerLogger());
+    public HttpForwardObjectCallbackActionHandler(HttpStateHandler httpStateHandler, NettyHttpClient httpClient) {
+        super(httpStateHandler.getMockServerLogger(), httpClient);
         this.webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();
         this.logFormatter = httpStateHandler.getMockServerLogger();
     }

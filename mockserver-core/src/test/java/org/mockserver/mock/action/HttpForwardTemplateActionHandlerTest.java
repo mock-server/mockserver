@@ -32,17 +32,14 @@ import static org.mockserver.model.HttpTemplate.template;
  */
 public class HttpForwardTemplateActionHandlerTest {
 
-    @Mock
     private NettyHttpClient mockHttpClient;
-    @InjectMocks
     private HttpForwardTemplateActionHandler httpForwardTemplateActionHandler;
-
-    private MockServerLogger mockLogFormatter;
 
     @Before
     public void setupMocks() {
-        mockLogFormatter = mock(MockServerLogger.class);
-        httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(mockLogFormatter);
+        mockHttpClient = mock(NettyHttpClient.class);
+        MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
+        httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(mockLogFormatter, mockHttpClient);
         initMocks(this);
     }
 

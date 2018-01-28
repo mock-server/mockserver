@@ -26,15 +26,14 @@ import static org.mockserver.model.HttpRequest.request;
  */
 public class HttpForwardActionHandlerTest {
 
-    @InjectMocks
     private HttpForwardActionHandler httpForwardActionHandler;
-    @Mock
     private NettyHttpClient mockHttpClient;
 
     @Before
     public void setupMocks() {
+        mockHttpClient = mock(NettyHttpClient.class);
         MockServerLogger logFormatter = mock(MockServerLogger.class);
-        httpForwardActionHandler = new HttpForwardActionHandler(logFormatter);
+        httpForwardActionHandler = new HttpForwardActionHandler(logFormatter, mockHttpClient);
         initMocks(this);
     }
 
