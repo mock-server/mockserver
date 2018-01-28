@@ -2,43 +2,53 @@ package org.mockserver.integration.mockserver;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.AbstractBasicClientServerIntegrationTest;
-import org.mockserver.proxy.ProxyBuilder;
-import org.mockserver.socket.PortFactory;
+import org.mockserver.mockserver.MockServer;
 
 /**
  * @author jamesdbloom
  */
-public class ClientAndProxyMockingIntegrationTest extends AbstractBasicClientServerIntegrationTest {
+@Ignore
+public class ClientViaHttpProxyIntegrationTest extends AbstractBasicClientServerIntegrationTest {
 
-    private static int mockServerPort;
+    private static MockServer mockServer;
+    private static MockServer proxy;
     private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() {
-        mockServerPort = new ProxyBuilder().withLocalPort(0).build().getPort();
-        mockServerClient = new MockServerClient("localhost", mockServerPort);
+        proxy = new MockServer();
+
+        System.setProperty("mockserver.httpProxy", "127.0.0.1:" + String.valueOf(proxy.getPort()));
+        mockServer = new MockServer();
 
         echoServer = new EchoServer(false);
+
+        mockServerClient = new MockServerClient("localhost", mockServer.getPort(), servletContext);
     }
 
     @AfterClass
     public static void stopServer() {
-        mockServerClient.stop();
+        System.clearProperty("mockserver.httpProxy");
+
+        proxy.stop();
+
+        mockServer.stop();
 
         echoServer.stop();
     }
 
     @Override
     public int getMockServerPort() {
-        return mockServerPort;
+        return mockServer.getPort();
     }
 
     @Override
     public int getMockServerSecurePort() {
-        return mockServerPort;
+        return mockServer.getPort();
     }
 
     @Override

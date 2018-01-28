@@ -15,20 +15,18 @@ import org.mockserver.socket.PortFactory;
 public class MockServerRuleIntegrationTest extends AbstractBasicClientServerIntegrationTest {
 
     // used fixed port for rule for all tests to ensure MockServer has been shutdown fully between each test
-    private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private static final int MOCK_SERVER_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
     @Rule
-    public MockServerRule mockServerRule = new MockServerRule(this, SERVER_HTTP_PORT);
+    public MockServerRule mockServerRule = new MockServerRule(this, MOCK_SERVER_PORT);
 
     @BeforeClass
     public static void startServer() {
-        // start echo servers
         echoServer = new EchoServer(false);
     }
 
     @AfterClass
     public static void stopServer() {
-        // stop echo server
         echoServer.stop();
     }
 

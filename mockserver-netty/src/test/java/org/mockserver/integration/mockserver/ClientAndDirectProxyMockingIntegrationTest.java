@@ -5,13 +5,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.integration.ClientAndServer;
 import org.mockserver.integration.server.AbstractBasicClientServerIntegrationTest;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
-import org.mockserver.socket.PortFactory;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -34,41 +32,35 @@ import static org.mockserver.model.StringBody.exact;
  */
 public class ClientAndDirectProxyMockingIntegrationTest extends AbstractBasicClientServerIntegrationTest {
 
-    private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private static int mockServerPort;
     private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() {
-
-        // start echo servers
         echoServer = new EchoServer(false);
-        // start direct proxy and client
-        new ProxyBuilder()
-            .withLocalPort(SERVER_HTTP_PORT)
+        mockServerPort = new ProxyBuilder()
+            .withLocalPort(0)
             .withDirect("localhost", echoServer.getPort())
-            .build();
-        mockServerClient = new MockServerClient("localhost", SERVER_HTTP_PORT);
+            .build().getPort();
+
+        mockServerClient = new MockServerClient("localhost", mockServerPort);
     }
 
     @AfterClass
     public static void stopServer() {
-        // stop mock server and client
-        if (mockServerClient instanceof ClientAndServer) {
-            mockServerClient.stop();
-        }
+        mockServerClient.stop();
 
-        // stop echo server
         echoServer.stop();
     }
 
     @Override
     public int getMockServerPort() {
-        return SERVER_HTTP_PORT;
+        return mockServerPort;
     }
 
     @Override
     public int getMockServerSecurePort() {
-        return SERVER_HTTP_PORT;
+        return mockServerPort;
     }
 
     @Override

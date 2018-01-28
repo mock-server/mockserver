@@ -13,15 +13,15 @@ import static org.junit.Assert.assertTrue;
  */
 public class MockServerStopTest {
 
-    private final static int serverPort = PortFactory.findFreePort();
+    private final static int MOCK_SERVER_PORT = PortFactory.findFreePort();
 
     @Test
     public void canStartAndStopMultipleTimesViaClient() {
         // start server
-        new MockServer(serverPort);
+        new MockServer(MOCK_SERVER_PORT);
 
         // start client
-        MockServerClient mockServerClient = new MockServerClient("localhost", serverPort);
+        MockServerClient mockServerClient = new MockServerClient("localhost", MOCK_SERVER_PORT);
 
         for (int i = 0; i < 2; i++) {
             // when
@@ -29,7 +29,7 @@ public class MockServerStopTest {
 
             // then
             assertFalse(mockServerClient.isRunning());
-            new MockServer(serverPort);
+            new MockServer(MOCK_SERVER_PORT);
             assertTrue(mockServerClient.isRunning());
         }
 
@@ -41,7 +41,7 @@ public class MockServerStopTest {
     @Test
     public void canStartAndStopMultipleTimes() {
         // start server
-        MockServer mockServer = new MockServer(serverPort);
+        MockServer mockServer = new MockServer(MOCK_SERVER_PORT);
 
         for (int i = 0; i < 2; i++) {
             // when
@@ -49,7 +49,7 @@ public class MockServerStopTest {
 
             // then
             assertFalse(mockServer.isRunning());
-            mockServer = new MockServer(serverPort);
+            mockServer = new MockServer(MOCK_SERVER_PORT);
             assertTrue(mockServer.isRunning());
         }
 

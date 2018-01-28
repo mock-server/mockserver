@@ -2,11 +2,9 @@ package org.mockserver.integration.mockserver;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.integration.server.AbstractBasicClientServerIntegrationTest;
-import org.mockserver.socket.PortFactory;
 
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 
@@ -15,37 +13,32 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
  */
 public class ClientAndServerIntegrationTest extends AbstractBasicClientServerIntegrationTest {
 
-    private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private static int mockServerPort;
     private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() {
-        // start mock server and client
-        mockServerClient = startClientAndServer(SERVER_HTTP_PORT);
+        mockServerClient = startClientAndServer();
+        mockServerPort = ((ClientAndServer) mockServerClient).getPort();
 
-        // start echo servers
         echoServer = new EchoServer(false);
     }
 
     @AfterClass
     public static void stopServer() {
-        // stop mock server and client
-        if (mockServerClient instanceof ClientAndServer) {
-            mockServerClient.stop();
-        }
+        mockServerClient.stop();
 
-        // stop echo server
         echoServer.stop();
     }
 
     @Override
     public int getMockServerPort() {
-        return SERVER_HTTP_PORT;
+        return mockServerPort;
     }
 
     @Override
     public int getMockServerSecurePort() {
-        return SERVER_HTTP_PORT;
+        return mockServerPort;
     }
 
     @Override

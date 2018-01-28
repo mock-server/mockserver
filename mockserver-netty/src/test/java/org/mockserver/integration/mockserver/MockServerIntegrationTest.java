@@ -8,7 +8,6 @@ import org.junit.rules.ExpectedException;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.mockserver.MockServer;
-import org.mockserver.socket.PortFactory;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -19,28 +18,24 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
  */
 public class MockServerIntegrationTest extends AbstractMockServerNettyIntegrationTest {
 
-    private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private static int mockServerPort;
     private static MockServer mockServer;
     private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() {
-        // start mock server
-        mockServer = new MockServer(SERVER_HTTP_PORT);
+        mockServer = new MockServer();
+        mockServerPort = mockServer.getPort();
 
-        // start test server
         echoServer = new EchoServer( false);
 
-        // start client
-        mockServerClient = new MockServerClient("localhost", SERVER_HTTP_PORT, servletContext);
+        mockServerClient = new MockServerClient("localhost", mockServerPort, servletContext);
     }
 
     @AfterClass
-    public static void stopServer() throws Exception {
-        // stop mock server
+    public static void stopServer() {
         mockServer.stop();
 
-        // stop test server
         echoServer.stop();
     }
 
@@ -55,17 +50,17 @@ public class MockServerIntegrationTest extends AbstractMockServerNettyIntegratio
         expectedException.expectMessage(containsString("Exception while binding MockServer to port "));
 
         // when
-        startClientAndServer(SERVER_HTTP_PORT);
+        startClientAndServer(mockServerPort);
     }
 
     @Override
     public int getMockServerPort() {
-        return SERVER_HTTP_PORT;
+        return mockServerPort;
     }
 
     @Override
     public int getMockServerSecurePort() {
-        return SERVER_HTTP_PORT;
+        return mockServerPort;
     }
 
     @Override
