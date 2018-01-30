@@ -446,7 +446,7 @@ public class MockServerClientTest {
                 .setHttpResponse(new HttpResponseDTO(new HttpResponse()
                     .withBody("some_response_body")
                     .withHeaders(new Header("responseName", "responseValue"))))
-                .setTimes(new TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -476,7 +476,7 @@ public class MockServerClientTest {
                 .setHttpResponse(new HttpResponseDTO(new HttpResponse()
                     .withBody("some_response_body")
                     .withHeaders(new Header("responseName", "responseValue"))))
-                .setTimes(new TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -508,7 +508,7 @@ public class MockServerClientTest {
                             .withCallbackClass("some_class")
                     )
                 )
-                .setTimes(new TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -555,7 +555,7 @@ public class MockServerClientTest {
                             .withClientId("some_client_id")
                     )
                 )
-                .setTimes(new TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -591,7 +591,7 @@ public class MockServerClientTest {
                             .withScheme(HttpForward.Scheme.HTTPS)
                     )
                 )
-                .setTimes(new TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -627,7 +627,7 @@ public class MockServerClientTest {
                             .withScheme(HttpForward.Scheme.HTTPS)
                     )
                 )
-                .setTimes(new TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -659,7 +659,7 @@ public class MockServerClientTest {
                             .withCallbackClass("some_class")
                     )
                 )
-                .setTimes(new TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -706,7 +706,7 @@ public class MockServerClientTest {
                             .withClientId("some_client_id")
                     )
                 )
-                .setTimes(new TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -738,7 +738,7 @@ public class MockServerClientTest {
                             )
                     )
                 )
-                .setTimes(new TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -772,7 +772,7 @@ public class MockServerClientTest {
                             .withResponseBytes("random_bytes".getBytes(UTF_8))
                     )
                 )
-                .setTimes(new TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -801,7 +801,7 @@ public class MockServerClientTest {
                 .setHttpResponse(new HttpResponseDTO(new HttpResponse()
                     .withBody("some_response_body")
                     .withHeaders(new Header("responseName", "responseValue"))))
-                .setTimes(new TimesDTO(Times.unlimited()))
+                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.unlimited()))
                 .buildObject()
         );
     }

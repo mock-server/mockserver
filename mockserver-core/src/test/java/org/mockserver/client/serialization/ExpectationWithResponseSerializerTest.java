@@ -84,7 +84,7 @@ public class ExpectationWithResponseSerializerTest {
                     .withDelay(new Delay(TimeUnit.MICROSECONDS, 1))
             )
         )
-        .setTimes(new TimesDTO(Times.once()))
+        .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.once()))
         .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)));
 
     @Rule

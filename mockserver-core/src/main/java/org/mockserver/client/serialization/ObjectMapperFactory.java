@@ -13,6 +13,7 @@ import org.mockserver.client.serialization.deserializers.collections.HeadersDese
 import org.mockserver.client.serialization.deserializers.collections.ParametersDeserializer;
 import org.mockserver.client.serialization.deserializers.string.NottableStringDeserializer;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.client.serialization.serializers.response.TimesDTOSerializer;
 import org.mockserver.client.serialization.serializers.response.TimesSerializer;
 import org.mockserver.client.serialization.serializers.body.*;
 import org.mockserver.client.serialization.serializers.collections.CookiesSerializer;
@@ -72,6 +73,7 @@ public class ObjectMapperFactory {
         Module() {
             // times
             addSerializer(Times.class, new TimesSerializer());
+            addSerializer(TimesDTO.class, new TimesDTOSerializer());
             // request
             addSerializer(HttpRequest.class, new org.mockserver.client.serialization.serializers.request.HttpRequestSerializer());
             addSerializer(HttpRequestDTO.class, new HttpRequestDTOSerializer());

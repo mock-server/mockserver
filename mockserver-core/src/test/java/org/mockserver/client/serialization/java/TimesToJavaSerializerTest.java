@@ -2,9 +2,6 @@ package org.mockserver.client.serialization.java;
 
 import org.junit.Test;
 import org.mockserver.matchers.Times;
-import org.mockserver.model.HttpClassCallback;
-
-import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;

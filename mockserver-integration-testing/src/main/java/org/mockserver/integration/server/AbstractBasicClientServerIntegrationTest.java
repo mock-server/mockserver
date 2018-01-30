@@ -1,29 +1,17 @@
 package org.mockserver.integration.server;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.verify.VerificationTimes;
 
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;

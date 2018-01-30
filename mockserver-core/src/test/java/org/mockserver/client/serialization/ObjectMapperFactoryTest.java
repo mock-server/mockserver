@@ -110,7 +110,7 @@ public class ObjectMapperFactoryTest {
                             .setValue(1)
                     )
             )
-            .setTimes(new TimesDTO(Times.exactly(5))), expectationDTO);
+            .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(5))), expectationDTO);
     }
 
 }

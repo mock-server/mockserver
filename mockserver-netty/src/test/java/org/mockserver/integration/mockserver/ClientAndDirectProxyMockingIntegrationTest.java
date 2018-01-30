@@ -8,7 +8,6 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.AbstractBasicClientServerIntegrationTest;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.proxy.Proxy;
 import org.mockserver.proxy.ProxyBuilder;
 
 import static org.hamcrest.MatcherAssert.assertThat;

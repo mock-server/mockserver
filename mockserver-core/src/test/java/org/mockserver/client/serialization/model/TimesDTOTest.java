@@ -14,7 +14,7 @@ public class TimesDTOTest {
     @Test
     public void shouldReturnValuesSetInConstructor() {
         // when
-        TimesDTO times = new TimesDTO(Times.exactly(5));
+        org.mockserver.client.serialization.model.TimesDTO times = new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(5));
 
         // then
         assertThat(times.getRemainingTimes(), is(5));
@@ -24,13 +24,13 @@ public class TimesDTOTest {
     @Test
     public void shouldBuildCorrectObject() {
         // when
-        Times times = new TimesDTO(Times.unlimited()).buildObject();
+        Times times = new org.mockserver.client.serialization.model.TimesDTO(Times.unlimited()).buildObject();
 
         // then
         assertThat(times.isUnlimited(), is(true));
 
         // when
-        times = new TimesDTO(Times.exactly(5)).buildObject();
+        times = new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(5)).buildObject();
 
         // then
         assertThat(times.getRemainingTimes(), is(5));

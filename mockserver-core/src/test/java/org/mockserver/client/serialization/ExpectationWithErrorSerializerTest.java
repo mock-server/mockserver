@@ -82,7 +82,7 @@ public class ExpectationWithErrorSerializerTest {
                     .withResponseBytes("some_bytes".getBytes(UTF_8))
             )
         )
-        .setTimes(new TimesDTO(Times.once()))
+        .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.once()))
         .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)));
 
     @Rule

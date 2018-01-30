@@ -8,7 +8,6 @@ import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.AbstractServerIntegrationTestBase;
 import org.mockserver.mockserver.MockServer;
-import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
 

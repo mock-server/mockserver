@@ -75,7 +75,7 @@ public class ExpectationWithResponseClassCallbackSerializerTest {
                     .withCallbackClass("some_random_class")
             )
         )
-        .setTimes(new TimesDTO(Times.once()))
+        .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.once()))
         .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)));
 
     @Rule

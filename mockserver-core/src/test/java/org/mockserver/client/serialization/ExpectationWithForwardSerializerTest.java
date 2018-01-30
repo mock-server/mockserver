@@ -18,7 +18,6 @@ import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.core.Is.is;
@@ -86,7 +85,7 @@ public class ExpectationWithForwardSerializerTest {
                                     .withScheme(HttpForward.Scheme.HTTPS)
                     )
             )
-            .setTimes(new TimesDTO(Times.once()))
+            .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.once()))
             .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)));
 
     @Rule
