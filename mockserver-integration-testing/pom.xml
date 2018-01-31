@@ -80,10 +80,6 @@
             <groupId>janino</groupId>
             <artifactId>janino</artifactId>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>mockserver-logging</artifactId>
-        </dependency>
 
         <!-- test -->
         <dependency>

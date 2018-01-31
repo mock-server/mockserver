@@ -2,7 +2,7 @@
     <!-- To completely disable all logging completely -Droot.logLevel=OFF -Dmockserver.logLevel=OFF -->
 
     <!-- application log -->
-    <appender name="FILE" class="org.mockserver.logging.DelayedFileCreationRollingFileAppender">
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${log.dir:-./}mockserver.log</file>
         <encoder>
             <pattern>%date %level [%thread] %logger{35} [%file:%line] %msg%n</pattern>

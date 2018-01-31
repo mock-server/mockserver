@@ -8,27 +8,32 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.model.HttpForward.forward;
+import static org.mockserver.model.HttpTemplate.TemplateType.JAVASCRIPT;
+import static org.mockserver.model.HttpTemplate.TemplateType.VELOCITY;
+import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.model.HttpTemplate.template;
 
 /**
  * @author jamesdbloom
  */
-public class HttpForwardTest {
+public class HttpTemplateTest {
 
     @Test
     public void shouldAlwaysCreateNewObject() {
-        assertEquals(new HttpForward().forward(), forward());
-        assertNotSame(forward(), forward());
+        assertEquals(new HttpTemplate(JAVASCRIPT).template(JAVASCRIPT), template(JAVASCRIPT));
+        assertEquals(new HttpTemplate(VELOCITY).template(VELOCITY), template(VELOCITY));
+        assertNotSame(template(JAVASCRIPT), template(JAVASCRIPT));
+        assertNotSame(template(VELOCITY), template(VELOCITY));
     }
 
     @Test
-    public void returnsPort() {
-        assertEquals(new Integer(9090), new HttpForward().withPort(9090).getPort());
+    public void returnsTemplate() {
+        assertEquals("some_template", new HttpTemplate(JAVASCRIPT).withTemplate("some_template").getTemplate());
     }
 
     @Test
-    public void returnsHost() {
-        assertEquals("some_host", new HttpForward().withHost("some_host").getHost());
+    public void returnsTemplateType() {
+        assertEquals(JAVASCRIPT, new HttpTemplate(JAVASCRIPT).getTemplateType());
     }
 
     @Test
@@ -38,25 +43,17 @@ public class HttpForwardTest {
     }
 
     @Test
-    public void returnsScheme() {
-        assertEquals(HttpForward.Scheme.HTTPS, new HttpForward().withScheme(HttpForward.Scheme.HTTPS).getScheme());
-    }
-
-    @Test
     public void shouldReturnFormattedRequestInToString() {
         TestCase.assertEquals("{" + NEW_LINE +
-                "  \"host\" : \"some_host\"," + NEW_LINE +
-                "  \"port\" : 9090," + NEW_LINE +
-                "  \"scheme\" : \"HTTPS\"," + NEW_LINE +
+                "  \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
+                "  \"template\" : \"some_template\"," + NEW_LINE +
                 "  \"delay\" : {" + NEW_LINE +
                 "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
                 "    \"value\" : 1" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}",
-            forward()
-                .withHost("some_host")
-                .withPort(9090)
-                .withScheme(HttpForward.Scheme.HTTPS)
+            template(JAVASCRIPT)
+                .withTemplate("some_template")
                 .withDelay(TimeUnit.HOURS, 1)
                 .toString()
         );

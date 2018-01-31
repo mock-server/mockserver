@@ -21,7 +21,7 @@ function runSubModule {
     cd $current_directory
 }
 
-MODULE_LIST="mockserver-logging mockserver-core mockserver-client-java mockserver-integration-testing mockserver-netty mockserver-war mockserver-proxy-war mockserver-maven-plugin mockserver-maven-plugin-integration-tests mockserver-examples"
+MODULE_LIST="mockserver-core mockserver-client-java mockserver-integration-testing mockserver-netty mockserver-war mockserver-proxy-war mockserver-maven-plugin mockserver-maven-plugin-integration-tests mockserver-examples"
 
 for module in $MODULE_LIST; do
     (runSubModule $module);
