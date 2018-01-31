@@ -42,20 +42,20 @@ public class HttpStateHandler {
 
     public static final String LOG_SEPARATOR = "------------------------------------\n";
     // mockserver
-    private MockServerLogger logFormatter = new MockServerLogger(LoggerFactory.getLogger(this.getClass()), this);
-    private MockServerEventLog mockServerLog = new MockServerEventLog(logFormatter);
-    private MockServerMatcher mockServerMatcher = new MockServerMatcher(logFormatter);
+    private MockServerLogger mockServerLogger = new MockServerLogger(LoggerFactory.getLogger(this.getClass()), this);
+    private MockServerEventLog mockServerLog = new MockServerEventLog(mockServerLogger);
+    private MockServerMatcher mockServerMatcher = new MockServerMatcher(mockServerLogger);
     private WebSocketClientRegistry webSocketClientRegistry = new WebSocketClientRegistry();
     // serializers
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(logFormatter);
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(logFormatter);
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(mockServerLogger);
     private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
     private ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
-    private VerificationSerializer verificationSerializer = new VerificationSerializer(logFormatter);
-    private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(logFormatter);
+    private VerificationSerializer verificationSerializer = new VerificationSerializer(mockServerLogger);
+    private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
 
     public MockServerLogger getMockServerLogger() {
-        return logFormatter;
+        return mockServerLogger;
     }
 
     public void clear(HttpRequest request) {
@@ -68,16 +68,16 @@ public class HttpStateHandler {
             switch (retrieveType) {
                 case LOG:
                     mockServerLog.clear(requestMatcher);
-                    logFormatter.info(requestMatcher, "clearing recorded requests and logs that match:{}", requestMatcher);
+                    mockServerLogger.info(requestMatcher, "clearing recorded requests and logs that match:{}", requestMatcher);
                     break;
                 case EXPECTATIONS:
                     mockServerMatcher.clear(requestMatcher);
-                    logFormatter.info(requestMatcher, "clearing expectations that match:{}", requestMatcher);
+                    mockServerLogger.info(requestMatcher, "clearing expectations that match:{}", requestMatcher);
                     break;
                 case ALL:
                     mockServerLog.clear(requestMatcher);
                     mockServerMatcher.clear(requestMatcher);
-                    logFormatter.info(requestMatcher, "clearing expectations and request logs that match:{}", requestMatcher);
+                    mockServerLogger.info(requestMatcher, "clearing expectations and request logs that match:{}", requestMatcher);
                     break;
             }
         } catch (IllegalArgumentException iae) {
@@ -92,20 +92,20 @@ public class HttpStateHandler {
     public void reset() {
         mockServerMatcher.reset();
         mockServerLog.reset();
-        logFormatter.info(request(), "resetting all expectations and request logs" + NEW_LINE);
+        mockServerLogger.info(request(), "resetting all expectations and request logs" + NEW_LINE);
     }
 
     public void add(Expectation... expectations) {
         for (Expectation expectation : expectations) {
             KeyAndCertificateFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
             mockServerMatcher.add(expectation);
-            logFormatter.info(expectation.getHttpRequest(), "creating expectation:{}", expectation);
+            mockServerLogger.info(expectation.getHttpRequest(), "creating expectation:{}", expectation);
         }
     }
 
     public Expectation firstMatchingExpectation(HttpRequest request) {
         if (mockServerMatcher.isEmpty()) {
-            logFormatter.info(request(), "no active expectations when receiving request:{}", request);
+            mockServerLogger.info(request(), "no active expectations when receiving request:{}", request);
             return null;
         } else {
             return mockServerMatcher.firstMatchingExpectation(request);
@@ -129,7 +129,7 @@ public class HttpStateHandler {
             RetrieveType retrieveType = RetrieveType.valueOf(StringUtils.defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "REQUESTS"));
             switch (retrieveType) {
                 case LOGS: {
-                    logFormatter.info(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
+                    mockServerLogger.info(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
                     StringBuilder stringBuffer = new StringBuilder();
                     List<String> retrieveMessages = mockServerLog.retrieveMessages(httpRequest);
                     for (int i = 0; i < retrieveMessages.size(); i++) {
@@ -143,7 +143,7 @@ public class HttpStateHandler {
                     break;
                 }
                 case REQUESTS: {
-                    logFormatter.info(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
+                    mockServerLogger.info(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
                     List<HttpRequest> httpRequests = mockServerLog.retrieveRequests(httpRequest);
                     switch (format) {
                         case JAVA:
@@ -156,7 +156,7 @@ public class HttpStateHandler {
                     break;
                 }
                 case RECORDED_EXPECTATIONS: {
-                    logFormatter.info(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
+                    mockServerLogger.info(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
                     List<Expectation> expectations = mockServerLog.retrieveExpectations(httpRequest);
                     switch (format) {
                         case JAVA:
@@ -169,7 +169,7 @@ public class HttpStateHandler {
                     break;
                 }
                 case ACTIVE_EXPECTATIONS: {
-                    logFormatter.info(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
+                    mockServerLogger.info(httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
                     List<Expectation> expectations = mockServerMatcher.retrieveExpectations(httpRequest);
                     switch (format) {
                         case JAVA:
@@ -210,7 +210,7 @@ public class HttpStateHandler {
     }
 
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
-        logFormatter.trace("received request:{}", request);
+        mockServerLogger.trace("received request:{}", request);
 
         if ((enableCORSForAPI() || enableCORSForAllResponses()) && isPreflightRequest(request)) {
 
@@ -248,7 +248,7 @@ public class HttpStateHandler {
             } else {
                 responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
             }
-            logFormatter.info(request, "verifying requests that match:{}", verification);
+            mockServerLogger.info(request, "verifying requests that match:{}", verification);
 
         } else if (request.matches("PUT", "/verifySequence")) {
 
@@ -259,7 +259,7 @@ public class HttpStateHandler {
             } else {
                 responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
             }
-            logFormatter.info(request, "verifying sequence that match:{}", verificationSequence);
+            mockServerLogger.info(request, "verifying sequence that match:{}", verificationSequence);
 
         } else {
             return false;
