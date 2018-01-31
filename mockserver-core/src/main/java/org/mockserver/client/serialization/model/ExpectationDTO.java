@@ -21,7 +21,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     private HttpObjectCallbackDTO httpForwardObjectCallback;
     private HttpOverrideForwardedRequestDTO httpOverrideForwardedRequest;
     private HttpErrorDTO httpError;
-    private TimesDTO times;
+    private org.mockserver.client.serialization.model.TimesDTO times;
     private TimeToLiveDTO timeToLive;
 
     public ExpectationDTO(Expectation expectation) {
@@ -72,7 +72,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             }
             Times times = expectation.getTimes();
             if (times != null) {
-                this.times = new TimesDTO(times);
+                this.times = new org.mockserver.client.serialization.model.TimesDTO(times);
             }
             TimeToLive timeToLive = expectation.getTimeToLive();
             if (timeToLive != null) {
@@ -134,7 +134,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         if (this.times != null) {
             times = this.times.buildObject();
         } else {
-            times = Times.once();
+            times = Times.unlimited();
         }
         if (this.timeToLive != null) {
             timeToLive = this.timeToLive.buildObject();
@@ -253,11 +253,11 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         return this;
     }
 
-    public TimesDTO getTimes() {
+    public org.mockserver.client.serialization.model.TimesDTO getTimes() {
         return times;
     }
 
-    public ExpectationDTO setTimes(TimesDTO times) {
+    public ExpectationDTO setTimes(org.mockserver.client.serialization.model.TimesDTO times) {
         this.times = times;
         return this;
     }

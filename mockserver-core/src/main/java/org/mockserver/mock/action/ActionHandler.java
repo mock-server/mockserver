@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 import org.mockserver.client.netty.NettyHttpClient;
+import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
@@ -45,22 +46,23 @@ public class ActionHandler {
     private HttpErrorActionHandler httpErrorActionHandler;
 
     // forwarding
-    private NettyHttpClient httpClient = new NettyHttpClient();
+    private NettyHttpClient httpClient;
     private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
-    public ActionHandler(HttpStateHandler httpStateHandler) {
+    public ActionHandler(HttpStateHandler httpStateHandler, ProxyConfiguration proxyConfiguration) {
         this.httpStateHandler = httpStateHandler;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
+        this.httpClient = new NettyHttpClient(proxyConfiguration);
         this.httpResponseActionHandler = new HttpResponseActionHandler();
         this.httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(mockServerLogger);
         this.httpResponseClassCallbackActionHandler = new HttpResponseClassCallbackActionHandler(mockServerLogger);
         this.httpResponseObjectCallbackActionHandler = new HttpResponseObjectCallbackActionHandler(httpStateHandler);
-        this.httpForwardActionHandler = new HttpForwardActionHandler(mockServerLogger);
-        this.httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(mockServerLogger);
-        this.httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(mockServerLogger);
-        this.httpForwardObjectCallbackActionHandler = new HttpForwardObjectCallbackActionHandler(httpStateHandler);
-        this.httpOverrideForwardedRequestCallbackActionHandler = new HttpOverrideForwardedRequestActionHandler(mockServerLogger);
+        this.httpForwardActionHandler = new HttpForwardActionHandler(mockServerLogger, httpClient);
+        this.httpForwardTemplateActionHandler = new HttpForwardTemplateActionHandler(mockServerLogger, httpClient);
+        this.httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(mockServerLogger, httpClient);
+        this.httpForwardObjectCallbackActionHandler = new HttpForwardObjectCallbackActionHandler(httpStateHandler, httpClient);
+        this.httpOverrideForwardedRequestCallbackActionHandler = new HttpOverrideForwardedRequestActionHandler(mockServerLogger, httpClient);
         this.httpErrorActionHandler = new HttpErrorActionHandler();
     }
 

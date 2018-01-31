@@ -4,6 +4,7 @@ import com.google.common.net.MediaType;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.client.serialization.PortBindingSerializer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
@@ -15,6 +16,7 @@ import org.mockserver.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.socket.KeyAndCertificateFactory;
 
+import javax.annotation.Nullable;
 import java.net.BindException;
 import java.util.List;
 
@@ -43,13 +45,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     // expectations
     private ActionHandler actionHandler;
 
-    public MockServerHandler(MockServer server, HttpStateHandler httpStateHandler) {
+    public MockServerHandler(MockServer server, HttpStateHandler httpStateHandler, @Nullable ProxyConfiguration proxyConfiguration) {
         super(false);
         this.server = server;
         this.httpStateHandler = httpStateHandler;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.actionHandler = new ActionHandler(httpStateHandler);
+        this.actionHandler = new ActionHandler(httpStateHandler, proxyConfiguration);
     }
 
     @Override

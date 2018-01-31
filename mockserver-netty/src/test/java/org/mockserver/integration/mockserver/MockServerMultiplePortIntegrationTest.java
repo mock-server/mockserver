@@ -3,7 +3,6 @@ package org.mockserver.integration.mockserver;
 import com.google.common.base.Joiner;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.ClientAndServer;
@@ -12,7 +11,6 @@ import org.mockserver.socket.PortFactory;
 
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.junit.Assert.assertEquals;
@@ -32,27 +30,19 @@ public class MockServerMultiplePortIntegrationTest extends AbstractBasicClientSe
     private final Random random = new Random();
 
     @BeforeClass
-    public static void startServer() throws InterruptedException, ExecutionException {
-        // start mock server and client
+    public static void startServer() {
         mockServerClient = startClientAndServer(0, PortFactory.findFreePort(), 0, PortFactory.findFreePort());
         List<Integer> boundPorts = ((ClientAndServer) mockServerClient).getPorts();
         severHttpPort = boundPorts.toArray(new Integer[boundPorts.size()]);
 
-        // start echo servers
-        echoServer = new EchoServer( false);
+        echoServer = new EchoServer(false);
     }
 
     @AfterClass
     public static void stopServer() {
-        // stop mock server and client
-        if (mockServerClient instanceof ClientAndServer) {
-            mockServerClient.stop();
-        }
+        mockServerClient.stop();
 
-        // stop echo server
-        if (echoServer != null) {
-            echoServer.stop();
-        }
+        echoServer.stop();
     }
 
     @Override

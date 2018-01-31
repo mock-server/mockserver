@@ -38,7 +38,7 @@ public class ExpectationDTOTest {
 
         // then
         assertThat(expectationWithResponse.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
-        assertThat(expectationWithResponse.getTimes(), is(new TimesDTO(Times.exactly(3))));
+        assertThat(expectationWithResponse.getTimes(), is(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3))));
         assertThat(expectationWithResponse.getHttpResponse(), is(new HttpResponseDTO(httpResponse)));
         assertNull(expectationWithResponse.getHttpResponseTemplate());
         assertNull(expectationWithResponse.getHttpResponseClassCallback());
@@ -73,7 +73,7 @@ public class ExpectationDTOTest {
 
         // then
         assertThat(expectationWithResponseClassCallback.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
-        assertThat(expectationWithResponseClassCallback.getTimes(), is(new TimesDTO(Times.exactly(3))));
+        assertThat(expectationWithResponseClassCallback.getTimes(), is(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3))));
         assertNull(expectationWithResponseClassCallback.getHttpResponse());
         assertNull(expectationWithResponseClassCallback.getHttpResponseTemplate());
         assertThat(expectationWithResponseClassCallback.getHttpResponseClassCallback(), is(new HttpClassCallbackDTO(httpResponseClassCallback)));
@@ -90,7 +90,7 @@ public class ExpectationDTOTest {
 
         // then
         assertThat(expectationWithResponseObjectCallback.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
-        assertThat(expectationWithResponseObjectCallback.getTimes(), is(new TimesDTO(Times.exactly(3))));
+        assertThat(expectationWithResponseObjectCallback.getTimes(), is(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3))));
         assertNull(expectationWithResponseObjectCallback.getHttpResponse());
         assertNull(expectationWithResponseObjectCallback.getHttpResponseTemplate());
         assertNull(expectationWithResponseObjectCallback.getHttpResponseClassCallback());
@@ -107,7 +107,7 @@ public class ExpectationDTOTest {
 
         // then
         assertThat(expectationWithForward.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
-        assertThat(expectationWithForward.getTimes(), is(new TimesDTO(Times.exactly(3))));
+        assertThat(expectationWithForward.getTimes(), is(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3))));
         assertNull(expectationWithForward.getHttpResponse());
         assertNull(expectationWithForward.getHttpResponseTemplate());
         assertNull(expectationWithForward.getHttpResponseClassCallback());
@@ -142,7 +142,7 @@ public class ExpectationDTOTest {
 
         // then
         assertThat(expectationWithForwardClassCallback.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
-        assertThat(expectationWithForwardClassCallback.getTimes(), is(new TimesDTO(Times.exactly(3))));
+        assertThat(expectationWithForwardClassCallback.getTimes(), is(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3))));
         assertNull(expectationWithForwardClassCallback.getHttpResponse());
         assertNull(expectationWithForwardClassCallback.getHttpResponseTemplate());
         assertNull(expectationWithForwardClassCallback.getHttpResponseClassCallback());
@@ -159,7 +159,7 @@ public class ExpectationDTOTest {
 
         // then
         assertThat(expectationWithForwardObjectCallback.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
-        assertThat(expectationWithForwardObjectCallback.getTimes(), is(new TimesDTO(Times.exactly(3))));
+        assertThat(expectationWithForwardObjectCallback.getTimes(), is(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3))));
         assertNull(expectationWithForwardObjectCallback.getHttpResponse());
         assertNull(expectationWithForwardObjectCallback.getHttpResponseTemplate());
         assertNull(expectationWithForwardObjectCallback.getHttpResponseClassCallback());
@@ -176,7 +176,7 @@ public class ExpectationDTOTest {
 
         // then
         assertThat(expectationWithOverrideForwardedRequest.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
-        assertThat(expectationWithOverrideForwardedRequest.getTimes(), is(new TimesDTO(Times.exactly(3))));
+        assertThat(expectationWithOverrideForwardedRequest.getTimes(), is(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3))));
         assertNull(expectationWithOverrideForwardedRequest.getHttpResponse());
         assertNull(expectationWithOverrideForwardedRequest.getHttpResponseTemplate());
         assertNull(expectationWithOverrideForwardedRequest.getHttpResponseClassCallback());
@@ -193,7 +193,7 @@ public class ExpectationDTOTest {
 
         // then
         assertThat(expectationWithError.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
-        assertThat(expectationWithError.getTimes(), is(new TimesDTO(Times.exactly(3))));
+        assertThat(expectationWithError.getTimes(), is(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3))));
         assertNull(expectationWithError.getHttpResponse());
         assertNull(expectationWithError.getHttpResponseTemplate());
         assertNull(expectationWithError.getHttpResponseClassCallback());
@@ -397,7 +397,7 @@ public class ExpectationDTOTest {
 
         // then
         assertThat(expectation.getHttpRequest(), is(nullValue()));
-        assertThat(expectation.getTimes(), is(Times.once()));
+        assertThat(expectation.getTimes(), is(Times.unlimited()));
         assertThat(expectation.getHttpResponse(), is(nullValue()));
         assertThat(expectation.getHttpResponseTemplate(), is(nullValue()));
         assertThat(expectation.getHttpResponseClassCallback(), is(nullValue()));
@@ -414,7 +414,7 @@ public class ExpectationDTOTest {
     public void shouldReturnValuesSetInSetter() {
         // given
         HttpRequestDTO httpRequest = new HttpRequestDTO(new HttpRequest().withBody("some_body"));
-        TimesDTO times = new TimesDTO(Times.exactly(3));
+        org.mockserver.client.serialization.model.TimesDTO times = new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3));
         HttpResponseDTO httpResponse = new HttpResponseDTO(new HttpResponse().withBody("some_response_body"));
         HttpTemplateDTO httpResponseTemplate = new HttpTemplateDTO(new HttpTemplate(HttpTemplate.TemplateType.JAVASCRIPT).withTemplate("some_repoonse_template"));
         HttpClassCallbackDTO httpResponseClassCallback = new HttpClassCallbackDTO(new HttpClassCallback().withCallbackClass("some_response_class"));

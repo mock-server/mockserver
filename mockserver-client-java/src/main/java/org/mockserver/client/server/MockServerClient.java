@@ -1,17 +1,7 @@
 package org.mockserver.client.server;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Strings;
 import org.mockserver.client.AbstractClient;
-import org.mockserver.matchers.TimeToLive;
-import org.mockserver.matchers.Times;
-import org.mockserver.mock.Expectation;
-import org.mockserver.model.Format;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.RetrieveType;
 
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 
 /**

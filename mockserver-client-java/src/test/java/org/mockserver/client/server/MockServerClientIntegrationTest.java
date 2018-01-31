@@ -108,7 +108,6 @@ public class MockServerClientIntegrationTest {
                     "    \"body\" : \"some_response_body\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"remainingTimes\" : 0," + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"timeToLive\" : {" + NEW_LINE +
@@ -163,7 +162,6 @@ public class MockServerClientIntegrationTest {
                     "    \"templateType\" : \"VELOCITY\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"remainingTimes\" : 0," + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"timeToLive\" : {" + NEW_LINE +
@@ -217,7 +215,6 @@ public class MockServerClientIntegrationTest {
                     "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"remainingTimes\" : 0," + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"timeToLive\" : {" + NEW_LINE +
@@ -271,7 +268,6 @@ public class MockServerClientIntegrationTest {
                     "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"remainingTimes\" : 0," + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"timeToLive\" : {" + NEW_LINE +
@@ -329,7 +325,6 @@ public class MockServerClientIntegrationTest {
                     "    \"scheme\" : \"HTTPS\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"remainingTimes\" : 0," + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"timeToLive\" : {" + NEW_LINE +
@@ -384,7 +379,6 @@ public class MockServerClientIntegrationTest {
                     "    \"templateType\" : \"VELOCITY\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"remainingTimes\" : 0," + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"timeToLive\" : {" + NEW_LINE +
@@ -438,7 +432,6 @@ public class MockServerClientIntegrationTest {
                     "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"remainingTimes\" : 0," + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"timeToLive\" : {" + NEW_LINE +
@@ -492,7 +485,6 @@ public class MockServerClientIntegrationTest {
                     "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"remainingTimes\" : 0," + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"timeToLive\" : {" + NEW_LINE +
@@ -554,7 +546,6 @@ public class MockServerClientIntegrationTest {
                     "    }" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"remainingTimes\" : 0," + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"timeToLive\" : {" + NEW_LINE +
@@ -610,7 +601,6 @@ public class MockServerClientIntegrationTest {
                     "    \"responseBytes\" : \"c2lsbHlfYnl0ZXM=\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"remainingTimes\" : 0," + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"timeToLive\" : {" + NEW_LINE +
@@ -669,8 +659,7 @@ public class MockServerClientIntegrationTest {
                     "    \"body\" : \"some_response_body\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"remainingTimes\" : 3," + NEW_LINE +
-                    "    \"unlimited\" : false" + NEW_LINE +
+                    "    \"remainingTimes\" : 3" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +

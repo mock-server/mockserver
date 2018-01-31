@@ -29,19 +29,14 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public class HttpForwardClassCallbackActionHandlerTest {
 
-    private MockServerLogger logFormatter;
-
-    @Mock
-    private NettyHttpClient httpClient;
-
-    @InjectMocks
+    private NettyHttpClient mockHttpClient;
     private HttpForwardClassCallbackActionHandler httpForwardClassCallbackActionHandler;
 
     @Before
     public void setupFixture() {
-        logFormatter = new MockServerLogger(HttpForwardClassCallbackActionHandlerTest.class);
-        httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(logFormatter);
-        // SettableFuture<HttpResponse> httpResponse = SettableFuture.create();
+        mockHttpClient = mock(NettyHttpClient.class);
+        MockServerLogger logFormatter = new MockServerLogger(HttpForwardClassCallbackActionHandlerTest.class);
+        httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(logFormatter, mockHttpClient);
 
         initMocks(this);
     }
@@ -59,7 +54,7 @@ public class HttpForwardClassCallbackActionHandlerTest {
 
         // then
         assertThat(actualHttpRequest.get(), is(notFoundResponse()));
-        verifyZeroInteractions(httpClient);
+        verifyZeroInteractions(mockHttpClient);
     }
 
     @Test
@@ -67,7 +62,7 @@ public class HttpForwardClassCallbackActionHandlerTest {
         // given
         SettableFuture<HttpResponse> httpResponse = SettableFuture.create();
         httpResponse.set(response("some_response_body"));
-        when(httpClient.sendRequest(any(HttpRequest.class), isNull(InetSocketAddress.class))).thenReturn(httpResponse);
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), isNull(InetSocketAddress.class))).thenReturn(httpResponse);
 
         HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.HttpForwardClassCallbackActionHandlerTest$TestCallback");
 
@@ -76,7 +71,7 @@ public class HttpForwardClassCallbackActionHandlerTest {
 
         // then
         assertThat(actualHttpRequest.get(), is(httpResponse.get()));
-        verify(httpClient).sendRequest(request("some_path"), null);
+        verify(mockHttpClient).sendRequest(request("some_path"), null);
     }
 
     public static class TestCallback implements ExpectationForwardCallback {

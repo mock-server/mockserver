@@ -13,6 +13,7 @@
 *.gz
 *.iso
 *.jar
+!maven-wrapper.jar
 *.rar
 *.tar
 *.zip

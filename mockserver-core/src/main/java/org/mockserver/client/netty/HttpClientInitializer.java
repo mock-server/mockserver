@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.proxy.HttpProxyHandler;
 import io.netty.handler.proxy.Socks5ProxyHandler;
 import org.mockserver.client.netty.codec.MockServerClientCodec;
+import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
 
@@ -17,8 +18,6 @@ import java.net.InetSocketAddress;
 
 import static org.mockserver.client.netty.NettyHttpClient.REMOTE_SOCKET;
 import static org.mockserver.client.netty.NettyHttpClient.SECURE;
-import static org.mockserver.configuration.ConfigurationProperties.httpsProxy;
-import static org.mockserver.configuration.ConfigurationProperties.httpSocksProxy;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 import static org.slf4j.event.Level.TRACE;
 
@@ -28,17 +27,22 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
     private final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
     private final HttpClientConnectionHandler httpClientConnectionHandler = new HttpClientConnectionHandler();
     private final HttpClientHandler httpClientHandler = new HttpClientHandler();
-    private InetSocketAddress httpsProxyAddress = httpsProxy();
-    private InetSocketAddress socksProxyAddress = httpSocksProxy();
+    private final ProxyConfiguration proxyConfiguration;
+
+    public HttpClientInitializer(ProxyConfiguration proxyConfiguration) {
+        this.proxyConfiguration = proxyConfiguration;
+    }
 
     @Override
     public void initChannel(SocketChannel channel) {
         ChannelPipeline pipeline = channel.pipeline();
 
-        if (httpsProxyAddress != null) {
-            pipeline.addLast(new HttpProxyHandler(httpsProxyAddress));
-        } else if (socksProxyAddress != null) {
-            pipeline.addLast(new Socks5ProxyHandler(socksProxyAddress));
+        if (proxyConfiguration != null) {
+            if (proxyConfiguration.getType() == ProxyConfiguration.Type.HTTPS) {
+                pipeline.addLast(new HttpProxyHandler(proxyConfiguration.getProxyAddress()));
+            } else if (proxyConfiguration.getType() == ProxyConfiguration.Type.SOCKS5) {
+                pipeline.addLast(new Socks5ProxyHandler(proxyConfiguration.getProxyAddress()));
+            }
         }
         pipeline.addLast(httpClientConnectionHandler);
 

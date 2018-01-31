@@ -23,7 +23,7 @@ public class MockServerHandlerTest extends ExpectationHandlerTest {
         mockActionHandler = mock(ActionHandler.class);
 
         httpStateHandler = new HttpStateHandler();
-        mockServerHandler = new MockServerHandler((MockServer) server, httpStateHandler);
+        mockServerHandler = new MockServerHandler((MockServer) server, httpStateHandler, null);
 
         initMocks(this);
 

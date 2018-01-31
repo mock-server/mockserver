@@ -2,7 +2,6 @@ package org.mockserver.client.serialization.java;
 
 import org.junit.Test;
 import org.mockserver.matchers.TimeToLive;
-import org.mockserver.matchers.Times;
 
 import java.util.concurrent.TimeUnit;
 

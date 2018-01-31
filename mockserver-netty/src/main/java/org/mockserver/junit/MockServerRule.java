@@ -9,12 +9,13 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.socket.PortFactory;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 public class MockServerRule implements TestRule {
 
     private static ClientAndServer perTestSuiteClientAndServer;
     private final Object target;
-    private final Integer[] port;
+    private final Integer[] ports;
     private final boolean perTestSuite;
     private ClientAndServerFactory clientAndServerFactory;
     private ClientAndServer clientAndServer;
@@ -47,10 +48,10 @@ public class MockServerRule implements TestRule {
      * This constructor dynamically create a proxy that accepts HTTP(s) requests on the specified port
      *
      * @param target an instance of the test being executed
-     * @param port   the HTTP(S) port for the proxy
+     * @param ports  the HTTP(S) port for the proxy
      */
-    public MockServerRule(Object target, Integer... port) {
-        this(target, false, port);
+    public MockServerRule(Object target, Integer... ports) {
+        this(target, false, ports);
     }
 
     /**
@@ -59,25 +60,31 @@ public class MockServerRule implements TestRule {
      *
      * @param target       an instance of the test being executed
      * @param perTestSuite indicates how many instances of MockServer are created
-     * @param port         the HTTP(S) port for the proxy
+     * @param ports        the HTTP(S) port for the proxy
      */
-    public MockServerRule(Object target, boolean perTestSuite, Integer... port) {
-        this.port = port;
+    public MockServerRule(Object target, boolean perTestSuite, Integer... ports) {
+        this.ports = ports;
         this.target = target;
         this.perTestSuite = perTestSuite;
-        this.clientAndServerFactory = new ClientAndServerFactory(port);
+        this.clientAndServerFactory = new ClientAndServerFactory(ports);
     }
 
     public Integer getPort() {
-        if (port.length > 0) {
-            return port[0];
-        } else {
-            return null;
+        Integer port = null;
+        if (clientAndServer != null) {
+            port = clientAndServer.getPort();
+        } else if (ports.length > 0) {
+            port = ports[0];
         }
+        return port;
     }
 
     public Integer[] getPorts() {
-        return port;
+        if (clientAndServer != null) {
+            List<Integer> ports = clientAndServer.getPorts();
+            return ports.toArray(new Integer[ports.size()]);
+        }
+        return ports;
     }
 
     public Statement apply(Statement base, Description description) {

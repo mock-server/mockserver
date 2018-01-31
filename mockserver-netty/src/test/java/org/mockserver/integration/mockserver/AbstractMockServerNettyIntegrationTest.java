@@ -404,7 +404,7 @@ public abstract class AbstractMockServerNettyIntegrationTest extends SameJVMAbst
 
     @Test
     public void shouldErrorWhenBindingToUnavailableSocket() throws InterruptedException, IOException {
-        System.out.println(NEW_LINE + NEW_LINE + "--- IGNORE THE FOLLOWING java.net.BindException EXCEPTION ---" + NEW_LINE + NEW_LINE);
+        System.out.println(NEW_LINE + NEW_LINE + "+++ IGNORE THE FOLLOWING java.net.BindException EXCEPTION +++" + NEW_LINE + NEW_LINE);
         ServerSocket server = null;
         try {
             // given

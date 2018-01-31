@@ -239,8 +239,8 @@ public class ConfigurationProperties {
         return readInetSocketAddressProperty("mockserver.httpsProxy");
     }
 
-    public static InetSocketAddress httpSocksProxy() {
-        return readInetSocketAddressProperty("mockserver.httpSocksProxy");
+    public static InetSocketAddress socksProxy() {
+        return readInetSocketAddressProperty("mockserver.socksProxy");
     }
 
     private static InetSocketAddress readInetSocketAddressProperty(String s) {

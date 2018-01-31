@@ -1,6 +1,7 @@
 package org.mockserver.mock.action;
 
 import com.google.common.util.concurrent.SettableFuture;
+import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
@@ -13,8 +14,8 @@ import java.net.InetSocketAddress;
  */
 public class HttpForwardActionHandler extends HttpForwardAction {
 
-    public HttpForwardActionHandler(MockServerLogger logFormatter) {
-        super(logFormatter);
+    public HttpForwardActionHandler(MockServerLogger logFormatter, NettyHttpClient httpClient) {
+        super(logFormatter, httpClient);
     }
 
     public SettableFuture<HttpResponse> handle(HttpForward httpForward, HttpRequest httpRequest) {

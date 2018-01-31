@@ -18,11 +18,12 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 public abstract class HttpForwardAction {
 
     protected final MockServerLogger mockServerLogger;
-    private NettyHttpClient httpClient = new NettyHttpClient();
+    private final NettyHttpClient httpClient;
     private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
 
-    HttpForwardAction(MockServerLogger mockServerLogger) {
+    HttpForwardAction(MockServerLogger mockServerLogger, NettyHttpClient httpClient) {
         this.mockServerLogger = mockServerLogger;
+        this.httpClient = httpClient;
     }
 
     protected SettableFuture<HttpResponse> sendRequest(HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) {

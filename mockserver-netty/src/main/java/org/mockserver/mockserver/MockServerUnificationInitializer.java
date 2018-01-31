@@ -4,6 +4,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import org.mockserver.callback.CallbackWebSocketServerHandler;
+import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.server.netty.codec.MockServerServerCodec;
 import org.mockserver.ui.UIWebSocketServerHandler;
@@ -19,11 +20,11 @@ public class MockServerUnificationInitializer extends PortUnificationHandler {
     private UIWebSocketServerHandler uiWebSocketServerHandler;
     private MockServerHandler mockServerHandler;
 
-    public MockServerUnificationInitializer(MockServer server, HttpStateHandler httpStateHandler) {
+    public MockServerUnificationInitializer(MockServer server, HttpStateHandler httpStateHandler, ProxyConfiguration proxyConfiguration) {
         super(httpStateHandler.getMockServerLogger());
         callbackWebSocketServerHandler = new CallbackWebSocketServerHandler(httpStateHandler);
         uiWebSocketServerHandler = new UIWebSocketServerHandler(httpStateHandler);
-        mockServerHandler = new MockServerHandler(server, httpStateHandler);
+        mockServerHandler = new MockServerHandler(server, httpStateHandler, proxyConfiguration);
     }
 
     @Override

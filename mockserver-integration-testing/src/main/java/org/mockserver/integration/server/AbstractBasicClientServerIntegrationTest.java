@@ -1,29 +1,17 @@
 package org.mockserver.integration.server;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.server.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.verify.VerificationTimes;
 
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -51,105 +39,7 @@ import static org.mockserver.model.StringBody.exact;
 /**
  * @author jamesdbloom
  */
-public abstract class AbstractBasicClientServerIntegrationTest {
-
-    protected static MockServerClient mockServerClient;
-    protected static String servletContext = "";
-    protected static List<String> headersToIgnore = ImmutableList.of(
-        HttpHeaderNames.SERVER.toString(),
-        HttpHeaderNames.EXPIRES.toString(),
-        HttpHeaderNames.DATE.toString(),
-        HttpHeaderNames.HOST.toString(),
-        HttpHeaderNames.CONNECTION.toString(),
-        HttpHeaderNames.USER_AGENT.toString(),
-        HttpHeaderNames.CONTENT_LENGTH.toString(),
-        HttpHeaderNames.ACCEPT_ENCODING.toString(),
-        HttpHeaderNames.TRANSFER_ENCODING.toString(),
-        HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(),
-        HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString(),
-        HttpHeaderNames.VARY.toString(),
-        HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS.toString(),
-        HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS.toString(),
-        HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS.toString(),
-        HttpHeaderNames.ACCESS_CONTROL_MAX_AGE.toString(),
-        "x-cors"
-    );
-    protected static NettyHttpClient httpClient = new NettyHttpClient();
-
-    @BeforeClass
-    public static void resetServletContext() {
-        servletContext = "";
-    }
-
-    public abstract int getMockServerPort();
-
-    public abstract int getMockServerSecurePort();
-
-    public abstract int getTestServerPort();
-
-    @Before
-    public void resetServer() {
-        mockServerClient.reset();
-    }
-
-    protected String calculatePath(String path) {
-        return (!path.startsWith("/") ? "/" : "") + path;
-    }
-
-    protected String addContextToPath(String path) {
-        String cleanedPath = path;
-        if (!Strings.isNullOrEmpty(servletContext)) {
-            cleanedPath =
-                (!servletContext.startsWith("/") ? "/" : "") +
-                    servletContext +
-                    (!servletContext.endsWith("/") ? "/" : "") +
-                    (cleanedPath.startsWith("/") ? cleanedPath.substring(1) : cleanedPath);
-        }
-        return (!cleanedPath.startsWith("/") ? "/" : "") + cleanedPath;
-    }
-
-    protected void verifyRequestsMatches(HttpRequest[] httpRequests, HttpRequest... httpRequestMatchers) {
-        if (httpRequests.length != httpRequestMatchers.length) {
-            throw new AssertionError("Number of request matchers does not match number of requests, expected:<" + httpRequestMatchers.length + "> but was:<" + httpRequests.length + ">");
-        } else {
-            for (int i = 0; i < httpRequestMatchers.length; i++) {
-                if (!new HttpRequestMatcher(httpRequestMatchers[i], new MockServerLogger(this.getClass())).matches(null, httpRequests[i])) {
-                    throw new AssertionError("Request does not match request matcher, expected:<" + httpRequestMatchers[i] + "> but was:<" + httpRequests[i] + ">");
-                }
-            }
-        }
-    }
-
-    protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {
-        try {
-            boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
-            int port = (isSsl ? getMockServerSecurePort() : getMockServerPort());
-            httpRequest.withPath(addContextToPath(httpRequest.getPath().getValue()));
-            httpRequest.withHeader(HOST.toString(), "localhost:" + port);
-            boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
-            HttpResponse httpResponse = httpClient.sendRequest(httpRequest, new InetSocketAddress("localhost", port))
-                .get(30, (isDebug ? TimeUnit.MINUTES : TimeUnit.SECONDS));
-            Headers headers = new Headers();
-            for (Header header : httpResponse.getHeaderList()) {
-                if (!headersToIgnore.contains(header.getName().getValue().toLowerCase())) {
-                    if (header.getName().getValue().equalsIgnoreCase(CONTENT_TYPE.toString())) {
-                        // this fixes Tomcat which removes the space between
-                        // media type and charset in the Content-Type header
-                        for (NottableString value : new ArrayList<NottableString>(header.getValues())) {
-                            header.getValues().clear();
-                            header.addValues(value.getValue().replace(";charset", "; charset"));
-                        }
-                        header = header(header.getName().lowercase(), header.getValues());
-                    }
-                    headers.withEntry(header);
-                }
-            }
-            httpResponse.withHeaders(headers);
-            return httpResponse;
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
+public abstract class AbstractBasicClientServerIntegrationTest extends AbstractServerIntegrationTestBase {
 
     @Test
     public void shouldForwardRequestInHTTP() {
@@ -210,6 +100,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
     @Test
     public void shouldForwardRequestInHTTPS() {
         EchoServer secureEchoServer = new EchoServer(true);
+
         try {
             // when
             mockServerClient
@@ -348,6 +239,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
             );
         } finally {
             echoServer.stop();
+            secureEchoServer.stop();
         }
     }
 
@@ -1261,7 +1153,13 @@ public abstract class AbstractBasicClientServerIntegrationTest {
     @Test
     public void shouldRetrieveActiveExpectations() {
         // when
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4))
+        HttpRequest complexRequest = request()
+            .withPath(calculatePath("some_path.*"))
+            .withHeader("some", "header")
+            .withQueryStringParameter("some", "parameter")
+            .withCookie("some", "parameter")
+            .withBody("some_body");
+        mockServerClient.when(complexRequest, exactly(4))
             .respond(response().withBody("some_body"));
         mockServerClient.when(request().withPath(calculatePath("some_path.*")))
             .respond(response().withBody("some_body"));
@@ -1274,7 +1172,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
         assertThat(
             mockServerClient.retrieveActiveExpectations(request().withPath(calculatePath("some_path.*"))),
             arrayContaining(
-                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                new Expectation(complexRequest, exactly(4), TimeToLive.unlimited())
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body"))
@@ -1284,7 +1182,7 @@ public abstract class AbstractBasicClientServerIntegrationTest {
         assertThat(
             mockServerClient.retrieveActiveExpectations(null),
             arrayContaining(
-                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                new Expectation(complexRequest, exactly(4), TimeToLive.unlimited())
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body")),
@@ -1295,11 +1193,10 @@ public abstract class AbstractBasicClientServerIntegrationTest {
             )
         );
 
-        Expectation[] expectations = mockServerClient.retrieveActiveExpectations(request());
         assertThat(
-            expectations,
+            mockServerClient.retrieveActiveExpectations(request()),
             arrayContaining(
-                new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
+                new Expectation(complexRequest, exactly(4), TimeToLive.unlimited())
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body")),
@@ -1321,17 +1218,29 @@ public abstract class AbstractBasicClientServerIntegrationTest {
                     .withHost("127.0.0.1")
                     .withPort(secureEchoServer.getPort())
             );
+            HttpRequest complexRequest = request()
+                .withPath(calculatePath("some_path_one"))
+                .withHeader("some", "header")
+                .withQueryStringParameter("some", "parameter")
+                .withCookie("some", "parameter")
+                .withBody("some_body_one");
             assertEquals(
-                response("some_body_one"),
+                response("some_body_one")
+                    .withHeader("some", "header")
+                    .withHeader("cookie", "some=parameter")
+                    .withHeader("set-cookie", "some=parameter")
+                    .withCookie("some", "parameter"),
                 makeRequest(
-                    request().withPath(calculatePath("some_path_one")).withBody("some_body_one"),
+                    complexRequest,
                     headersToIgnore
                 )
             );
             assertEquals(
                 response("some_body_three"),
                 makeRequest(
-                    request().withPath(calculatePath("some_path_three")).withBody("some_body_three"),
+                    request()
+                        .withPath(calculatePath("some_path_three"))
+                        .withBody("some_body_three"),
                     headersToIgnore
                 )
             );

@@ -91,7 +91,7 @@ public class ActionHandlerTest {
     @Before
     public void setupMocks() {
         mockHttpStateHandler = mock(HttpStateHandler.class);
-        actionHandler = new ActionHandler(mockHttpStateHandler);
+        actionHandler = new ActionHandler(mockHttpStateHandler, null);
         initMocks(this);
         request = request("some_path");
         response = response("some_body");

@@ -7,6 +7,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
+import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -22,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.configuration.ConfigurationProperties.httpProxy;
 
 public class NettyHttpClient {
 
@@ -35,18 +35,26 @@ public class NettyHttpClient {
         .channel(NioSocketChannel.class)
         .option(ChannelOption.AUTO_READ, true)
         .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-        .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-        .handler(new HttpClientInitializer());
+        .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024));
     private final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
-    private InetSocketAddress httpProxyAddress = httpProxy();
+    private final ProxyConfiguration proxyConfiguration;
+
+    public NettyHttpClient() {
+        this(null);
+    }
+
+    public NettyHttpClient(ProxyConfiguration proxyConfiguration) {
+        this.proxyConfiguration = proxyConfiguration;
+        bootstrap.handler(new HttpClientInitializer(proxyConfiguration));
+    }
 
     public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {
         return sendRequest(httpRequest, httpRequest.socketAddressFromHostHeader());
     }
 
     public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) throws SocketConnectionException {
-        if (httpProxyAddress != null) {
-            remoteAddress = httpProxyAddress;
+        if (proxyConfiguration != null && proxyConfiguration.getType() == ProxyConfiguration.Type.HTTP) {
+            remoteAddress = proxyConfiguration.getProxyAddress();
         } else if (remoteAddress == null) {
             remoteAddress = httpRequest.socketAddressFromHostHeader();
         }
