@@ -428,4 +428,18 @@ public class ConfigurationPropertiesTest {
         assertEquals(Level.TRACE, ConfigurationProperties.logLevel());
         assertEquals("TRACE", System.getProperty("mockserver.logLevel"));
     }
+
+    @Test
+    public void shouldSetAndReadDisableRequestAudit() {
+        // given
+        System.clearProperty("mockserver.disableRequestAudit");
+
+        // when
+        assertEquals(false, ConfigurationProperties.disableRequestAudit());
+        ConfigurationProperties.disableRequestAudit(false);
+
+        // then
+        assertEquals(false, ConfigurationProperties.disableRequestAudit());
+        assertEquals("false", System.getProperty("mockserver.disableRequestAudit"));
+    }
 }

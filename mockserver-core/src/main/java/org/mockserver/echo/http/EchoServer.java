@@ -23,11 +23,11 @@ import java.util.concurrent.TimeUnit;
 
 public class EchoServer {
 
+    static final MockServerLogger mockServerLogger = new MockServerLogger(EchoServer.class);
     static final AttributeKey<MockServerEventLog> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     static final AttributeKey<NextResponse> NEXT_RESPONSE = AttributeKey.valueOf("NEXT_RESPONSE");
     static final AttributeKey<OnlyResponse> ONLY_RESPONSE = AttributeKey.valueOf("ONLY_RESPONSE");
 
-    private final MockServerLogger mockServerLogger = new MockServerLogger(EchoServer.class);
     private final MockServerEventLog logFilter = new MockServerEventLog(mockServerLogger);
     private final NextResponse nextResponse = new NextResponse();
     private final OnlyResponse onlyResponse = new OnlyResponse();
@@ -48,7 +48,7 @@ public class EchoServer {
                 new ServerBootstrap().group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 100)
-                    .handler(new LoggingHandler("EchoServer Handler"))
+                    .handler(new LoggingHandler(EchoServer.class))
                     .childHandler(new EchoServerInitializer(mockServerLogger, secure, error))
                     .childAttr(LOG_FILTER, logFilter)
                     .childAttr(NEXT_RESPONSE, nextResponse)

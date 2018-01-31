@@ -26,7 +26,7 @@ import static org.mockserver.character.Character.NEW_LINE;
  */
 public class ConfigurationProperties {
 
-    private static final String DEFAULT_LOG_LEVEL = "INFO";
+    public static final String DEFAULT_LOG_LEVEL = "INFO";
     private static final long DEFAULT_MAX_TIMEOUT = 20;
     private static final int DEFAULT_MAX_EXPECTATIONS = 1000;
     private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = Math.max(1, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors() * 5));
@@ -229,6 +229,14 @@ public class ConfigurationProperties {
             throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
         }
         System.setProperty("mockserver.logLevel", level);
+    }
+
+    public static boolean disableRequestAudit() {
+        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.disableRequestAudit", "" + false));
+    }
+
+    public static void disableRequestAudit(boolean disableRequestAudit) {
+        System.setProperty("mockserver.disableRequestAudit", "" + disableRequestAudit);
     }
 
     public static InetSocketAddress httpProxy() {

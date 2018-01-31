@@ -66,12 +66,6 @@ public class Main {
     static Runtime runtime = Runtime.getRuntime();
     private static boolean usagePrinted = false;
 
-    static {
-        if (System.getProperty("logback.configurationFile") == null) {
-            System.setProperty("logback.configurationFile", "example_logback.xml");
-        }
-    }
-
     /**
      * Run the MockServer directly providing the parseArguments for the server and httpProxyBuilder as the only input parameters (if not provided the server port defaults to 8080 and the httpProxyBuilder is not started).
      *
