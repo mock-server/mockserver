@@ -26,6 +26,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 
 public class NettyHttpClient {
 
+    static final MockServerLogger mockServerLogger = new MockServerLogger(NettyHttpClient.class);
     static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");
     static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
     static final AttributeKey<SettableFuture<HttpResponse>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
@@ -36,7 +37,6 @@ public class NettyHttpClient {
         .option(ChannelOption.AUTO_READ, true)
         .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
         .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024));
-    private final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
     private final ProxyConfiguration proxyConfiguration;
 
     public NettyHttpClient() {
