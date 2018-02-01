@@ -11,7 +11,7 @@ import org.slf4j.event.Level;
 import javax.annotation.Nullable;
 import java.util.List;
 
-import static org.mockserver.configuration.ConfigurationProperties.logLevel;
+import static org.mockserver.configuration.ConfigurationProperties.DEFAULT_LOG_LEVEL;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.slf4j.event.Level.*;
 
@@ -23,6 +23,26 @@ public class MockServerLogger {
     public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger();
     private final Logger logger;
     private final HttpStateHandler httpStateHandler;
+
+    static {
+        setRootLogLevel("io.netty");
+        setRootLogLevel("org.apache.velocity");
+        Logger mockServerLogger = LoggerFactory.getLogger("org.mockserver");
+        if (mockServerLogger instanceof ch.qos.logback.classic.Logger) {
+            ((ch.qos.logback.classic.Logger) mockServerLogger).setLevel(
+                ch.qos.logback.classic.Level.valueOf(System.getProperty("mockserver.logLevel", DEFAULT_LOG_LEVEL))
+            );
+        }
+    }
+
+    public static void setRootLogLevel(String name) {
+        Logger logger = LoggerFactory.getLogger(name);
+        if (logger instanceof ch.qos.logback.classic.Logger) {
+            ((ch.qos.logback.classic.Logger) logger).setLevel(
+                ch.qos.logback.classic.Level.valueOf(System.getProperty("root.logLevel", "WARN"))
+            );
+        }
+    }
 
     public MockServerLogger() {
         this(MockServerLogger.class);
@@ -45,7 +65,6 @@ public class MockServerLogger {
         if (isEnabled(TRACE)) {
             final String logMessage = formatLogMessage(message, arguments);
             logger.trace(logMessage);
-            logger.info(logMessage);
             addLogEvents(request, logMessage);
         }
     }
@@ -57,8 +76,7 @@ public class MockServerLogger {
     public void debug(final HttpRequest request, final String message, final Object... arguments) {
         if (isEnabled(DEBUG)) {
             final String logMessage = formatLogMessage(message, arguments);
-            logger.trace(logMessage);
-            logger.info(logMessage);
+            logger.debug(logMessage);
             addLogEvents(request, logMessage);
         }
     }
@@ -68,7 +86,7 @@ public class MockServerLogger {
     }
 
     public void info(final HttpRequest request, final String message, final Object... arguments) {
-        if (isEnabled(INFO)) {
+        if (!ConfigurationProperties.disableRequestAudit()) {
             final String logMessage = formatLogMessage(message, arguments);
             logger.info(logMessage);
             addLogEvents(request, logMessage);
@@ -76,7 +94,7 @@ public class MockServerLogger {
     }
 
     public void info(final List<HttpRequest> requests, final String message, final Object... arguments) {
-        if (isEnabled(INFO)) {
+        if (!ConfigurationProperties.disableRequestAudit()) {
             final String logMessage = formatLogMessage(message, arguments);
             logger.info(logMessage);
             addLogEvents(requests, logMessage);

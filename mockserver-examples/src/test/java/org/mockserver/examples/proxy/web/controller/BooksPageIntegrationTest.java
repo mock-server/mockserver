@@ -5,6 +5,7 @@ import org.junit.*;
 import org.mockserver.integration.ClientAndProxy;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.examples.proxy.model.Book;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Header;
 import org.mockserver.model.Parameter;
 import org.mockserver.socket.PortFactory;
@@ -36,6 +37,10 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
  */
 public abstract class BooksPageIntegrationTest {
 
+    static {
+        MockServerLogger.setRootLogLevel("org.springframework");
+        MockServerLogger.setRootLogLevel("org.eclipse");
+    }
     private static ClientAndProxy proxy;
     private ClientAndServer mockServer;
     @Resource

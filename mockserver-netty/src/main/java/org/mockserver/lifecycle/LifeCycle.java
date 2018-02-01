@@ -24,6 +24,10 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
 
+    static {
+        new MockServerLogger();
+    }
+
     protected final MockServerLogger mockServerLogger;
     protected EventLoopGroup bossGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
     protected EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
