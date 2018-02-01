@@ -1,12 +1,13 @@
 package org.mockserver.client.serialization.serializers.body;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import org.junit.Test;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.StringBodyDTO;
 import org.mockserver.model.StringBody;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -30,7 +31,7 @@ public class StringBodySerializerTest {
 
     @Test
     public void shouldSerializeStringBodyWithCharset() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBody("string_body", Charsets.UTF_16)),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBody("string_body", StandardCharsets.UTF_16)),
                 is("{\"type\":\"STRING\",\"string\":\"string_body\",\"contentType\":\"text/plain; charset=utf-16\"}"));
     }
 
@@ -48,7 +49,7 @@ public class StringBodySerializerTest {
 
     @Test
     public void shouldSerializeStringBodyWithCharsetAndNot() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(new StringBody("string_body", Charsets.UTF_16))),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(new StringBody("string_body", StandardCharsets.UTF_16))),
                 is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"contentType\":\"text/plain; charset=utf-16\"}"));
     }
 

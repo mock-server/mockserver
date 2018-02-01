@@ -1,7 +1,6 @@
 package org.mockserver.examples.proxy.service.apacheclient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -15,6 +14,8 @@ import org.mockserver.examples.proxy.model.Book;
 import org.mockserver.examples.proxy.service.BookService;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+
+import java.nio.charset.StandardCharsets;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -57,7 +58,7 @@ public class BookServiceApacheHttpClient implements BookService {
                     .setPort(port)
                     .setPath("/get_books")
                     .build()));
-            responseBody = new String(EntityUtils.toByteArray(response.getEntity()), Charsets.UTF_8);
+            responseBody = new String(EntityUtils.toByteArray(response.getEntity()), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new RuntimeException("Exception making request to retrieve all books", e);
         }

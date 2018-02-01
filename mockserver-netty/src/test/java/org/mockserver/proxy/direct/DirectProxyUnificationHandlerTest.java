@@ -22,7 +22,7 @@ import org.mockserver.unification.PortUnificationHandler;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;

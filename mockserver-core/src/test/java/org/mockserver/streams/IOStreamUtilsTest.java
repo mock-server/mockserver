@@ -1,6 +1,5 @@
 package org.mockserver.streams;
 
-import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 

@@ -1,6 +1,5 @@
 package org.mockserver.client;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.SettableFuture;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +19,7 @@ import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -189,7 +189,7 @@ public class MockServerClient implements java.io.Closeable {
      * Bind new ports to listen on
      */
     public List<Integer> bind(Integer... ports) {
-        String boundPorts = sendRequest(request().withMethod("PUT").withPath(calculatePath("bind")).withBody(portBindingSerializer.serialize(portBinding(ports)), Charsets.UTF_8)).getBodyAsString();
+        String boundPorts = sendRequest(request().withMethod("PUT").withPath(calculatePath("bind")).withBody(portBindingSerializer.serialize(portBinding(ports)), StandardCharsets.UTF_8)).getBodyAsString();
         return portBindingSerializer.deserialize(boundPorts).getPorts();
     }
 
@@ -238,7 +238,7 @@ public class MockServerClient implements java.io.Closeable {
      * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
      */
     public MockServerClient clear(HttpRequest httpRequest) {
-        sendRequest(request().withMethod("PUT").withPath(calculatePath("clear")).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
+        sendRequest(request().withMethod("PUT").withPath(calculatePath("clear")).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8));
         return clientClass.cast(this);
     }
 
@@ -249,7 +249,7 @@ public class MockServerClient implements java.io.Closeable {
      * @param type        the type to clear, EXPECTATION, LOG or BOTH
      */
     public MockServerClient clear(HttpRequest httpRequest, ClearType type) {
-        sendRequest(request().withMethod("PUT").withPath(calculatePath("clear")).withQueryStringParameter("type", type.name().toLowerCase()).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8));
+        sendRequest(request().withMethod("PUT").withPath(calculatePath("clear")).withQueryStringParameter("type", type.name().toLowerCase()).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8));
         return clientClass.cast(this);
     }
 
@@ -276,7 +276,7 @@ public class MockServerClient implements java.io.Closeable {
         }
 
         VerificationSequence verificationSequence = new VerificationSequence().withRequests(httpRequests);
-        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verifySequence")).withBody(verificationSequenceSerializer.serialize(verificationSequence), Charsets.UTF_8)).getBodyAsString();
+        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verifySequence")).withBody(verificationSequenceSerializer.serialize(verificationSequence), StandardCharsets.UTF_8)).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -314,7 +314,7 @@ public class MockServerClient implements java.io.Closeable {
         }
 
         Verification verification = verification().withRequest(httpRequest).withTimes(times);
-        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification), Charsets.UTF_8)).getBodyAsString();
+        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -329,7 +329,7 @@ public class MockServerClient implements java.io.Closeable {
      */
     public MockServerClient verifyZeroInteractions() throws AssertionError {
         Verification verification = verification().withRequest(request()).withTimes(exactly(0));
-        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification), Charsets.UTF_8)).getBodyAsString();
+        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -366,7 +366,7 @@ public class MockServerClient implements java.io.Closeable {
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", format.name())
-                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
+                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
     }
@@ -400,7 +400,7 @@ public class MockServerClient implements java.io.Closeable {
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", format.name())
-                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
+                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
     }
@@ -417,7 +417,7 @@ public class MockServerClient implements java.io.Closeable {
                 .withMethod("PUT")
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.LOGS.name())
-                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
+                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
     }
@@ -511,7 +511,7 @@ public class MockServerClient implements java.io.Closeable {
     }
 
     void sendExpectation(Expectation expectation) {
-        HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", Charsets.UTF_8));
+        HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", StandardCharsets.UTF_8));
         if (httpResponse != null && httpResponse.getStatusCode() != 201) {
             throw new ClientException(formatLogMessage("error:{}" + NEW_LINE + "while submitted expectation:{}", httpResponse.getBody(), expectation));
         }
@@ -546,7 +546,7 @@ public class MockServerClient implements java.io.Closeable {
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", format.name())
-                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", Charsets.UTF_8)
+                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
         );
         return httpResponse.getBodyAsString();
     }

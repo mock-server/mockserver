@@ -1,13 +1,14 @@
 package org.mockserver.client.serialization.serializers.body;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import org.junit.Test;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.model.JsonBody;
 import org.mockserver.model.XmlBody;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -35,7 +36,7 @@ public class XmlBodySerializerTest {
 
     @Test
     public void shouldSerializeXmlBodyWithCharsetAndNot() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(new XmlBody("<some><xml></xml></some>", Charsets.UTF_16))),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(not(new XmlBody("<some><xml></xml></some>", StandardCharsets.UTF_16))),
                 is("{\"not\":true,\"contentType\":\"application/xml; charset=utf-16\",\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\"}"));
     }
 

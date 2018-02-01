@@ -4,7 +4,7 @@ import org.junit.Test;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.logging.MockServerLogger;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;

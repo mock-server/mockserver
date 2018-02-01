@@ -1,10 +1,10 @@
 package org.mockserver.model;
 
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -58,7 +58,7 @@ public class ParameterBody extends BodyWithContentType<List<Parameter>> {
                     body.append(parameter.getName().getValue());
                     body.append('=');
                     try {
-                        body.append(URLEncoder.encode(value, Charsets.UTF_8.name()));
+                        body.append(URLEncoder.encode(value, StandardCharsets.UTF_8.name()));
                     } catch (UnsupportedEncodingException uee) {
                         throw new RuntimeException("UnsupportedEncodingException while encoding body parameters for " + parameters, uee);
                     }

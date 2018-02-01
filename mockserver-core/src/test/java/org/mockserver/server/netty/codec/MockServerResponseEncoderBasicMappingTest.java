@@ -11,7 +11,7 @@ import org.mockserver.server.netty.codec.MockServerResponseEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;

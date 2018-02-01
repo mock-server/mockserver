@@ -1,6 +1,5 @@
 package org.mockserver.mappers;
 
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMessage;
@@ -9,6 +8,7 @@ import org.junit.Test;
 
 import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -124,10 +124,10 @@ public class ContentTypeMapperTest {
     @Test
     public void shouldDetermineCharsetFromResponseContentType() {
         // when
-        Charset charset = ContentTypeMapper.getCharsetFromContentTypeHeader(MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString());
+        Charset charset = ContentTypeMapper.getCharsetFromContentTypeHeader(MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString());
 
         // then
-        assertThat(charset, is(Charsets.UTF_16));
+        assertThat(charset, is(StandardCharsets.UTF_16));
     }
 
     @Test

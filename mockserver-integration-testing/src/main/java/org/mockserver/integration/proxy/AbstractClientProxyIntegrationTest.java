@@ -1,6 +1,5 @@
 package org.mockserver.integration.proxy;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
@@ -30,6 +29,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -112,7 +112,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                 "x-test: test_headers_only\r" + NEW_LINE +
                 "Connection: keep-alive\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
@@ -130,11 +130,11 @@ public abstract class AbstractClientProxyIntegrationTest {
             output.write(("" +
                 "GET " + addContextToPath("test_headers_and_body") + " HTTP/1.1\r" + NEW_LINE +
                 "Host: localhost:" + getServerPort() + "\r" + NEW_LINE +
-                "Content-Length: " + "an_example_body".getBytes(Charsets.UTF_8).length + "\r" + NEW_LINE +
+                "Content-Length: " + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "\r" + NEW_LINE +
                 "x-test: test_headers_and_body\r" + NEW_LINE +
                 "\r" + NEW_LINE +
                 "an_example_body"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
@@ -249,7 +249,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                 "Host: localhost:" + getServerPort() + "\r" + NEW_LINE +
                 "Connection: close\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then

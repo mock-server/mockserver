@@ -1,9 +1,10 @@
 package org.mockserver.model;
 
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import org.junit.Test;
 import org.mockserver.matchers.MatchType;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -43,7 +44,7 @@ public class JsonBodyTest {
     @Test
     public void shouldReturnValuesSetInConstructorWithMatchTypeAndCharset() {
         // when
-        JsonBody jsonBody = new JsonBody("some_body", Charsets.UTF_16, MatchType.STRICT);
+        JsonBody jsonBody = new JsonBody("some_body", StandardCharsets.UTF_16, MatchType.STRICT);
 
         // then
         assertThat(jsonBody.getValue(), is("some_body"));
@@ -92,7 +93,7 @@ public class JsonBodyTest {
     @Test
     public void shouldReturnValuesFromStaticBuilderWithCharsetAndMatchType() {
         // when
-        JsonBody jsonBody = json("some_body", Charsets.UTF_16, STRICT);
+        JsonBody jsonBody = json("some_body", StandardCharsets.UTF_16, STRICT);
 
         // then
         assertThat(jsonBody.getValue(), is("some_body"));
@@ -116,7 +117,7 @@ public class JsonBodyTest {
     @Test
     public void shouldReturnValuesFromStaticBuilderWithMatchTypeAndCharset() {
         // when
-        JsonBody jsonBody = json("some_body", Charsets.UTF_16, STRICT);
+        JsonBody jsonBody = json("some_body", StandardCharsets.UTF_16, STRICT);
 
         // then
         assertThat(jsonBody.getValue(), is("some_body"));
@@ -152,7 +153,7 @@ public class JsonBodyTest {
     @Test
     public void shouldReturnValuesFromStaticObjectBuilderWithCharsetAndMatchType() {
         // when
-        JsonBody jsonBody = json(new TestObject(), Charsets.UTF_16, STRICT);
+        JsonBody jsonBody = json(new TestObject(), StandardCharsets.UTF_16, STRICT);
 
         // then
         assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));
@@ -176,7 +177,7 @@ public class JsonBodyTest {
     @Test
     public void shouldReturnValuesFromStaticObjectBuilderWithMatchTypeAndCharset() {
         // when
-        JsonBody jsonBody = json(new TestObject(), Charsets.UTF_16, STRICT);
+        JsonBody jsonBody = json(new TestObject(), StandardCharsets.UTF_16, STRICT);
 
         // then
         assertThat(jsonBody.getValue(), is("{\"fieldOne\":\"valueOne\",\"fieldTwo\":\"valueTwo\"}"));

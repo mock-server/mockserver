@@ -3,7 +3,7 @@ package org.mockserver.matchers;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.matchers.NotMatcher.not;

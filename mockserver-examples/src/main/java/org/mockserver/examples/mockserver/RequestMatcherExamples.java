@@ -1,6 +1,5 @@
 package org.mockserver.examples.mockserver;
 
-import com.google.common.base.Charsets;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
@@ -8,6 +7,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.Not;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.model.Cookie.cookie;
@@ -282,7 +282,7 @@ public class RequestMatcherExamples {
         new MockServerClient("localhost", 1080)
             .when(
                 request()
-                    .withBody(exact("我说中国话", Charsets.UTF_16))
+                    .withBody(exact("我说中国话", StandardCharsets.UTF_16))
             )
             .respond(
                 response()

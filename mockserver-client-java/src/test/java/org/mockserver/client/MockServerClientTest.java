@@ -1,6 +1,5 @@
 package org.mockserver.client;
 
-import com.google.common.base.Charsets;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -25,9 +24,10 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
@@ -911,7 +911,7 @@ public class MockServerClientTest {
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
                 .withPath("/clear")
-                .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+                .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -935,7 +935,7 @@ public class MockServerClientTest {
                 .withMethod("PUT")
                 .withPath("/clear")
                 .withQueryStringParameter("type", "log")
-                .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+                .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -953,7 +953,7 @@ public class MockServerClientTest {
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
                 .withPath("/clear")
-                .withBody("", Charsets.UTF_8),
+                .withBody("", StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -985,7 +985,7 @@ public class MockServerClientTest {
                 .withPath("/retrieve")
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
-                .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+                .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS);
         verify(mockHttpRequestSerializer).deserializeArray("body");
@@ -1009,7 +1009,7 @@ public class MockServerClientTest {
                 .withPath("/retrieve")
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
-                .withBody("", Charsets.UTF_8),
+                .withBody("", StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -1042,7 +1042,7 @@ public class MockServerClientTest {
                 .withPath("/retrieve")
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
-                .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+                .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -1067,7 +1067,7 @@ public class MockServerClientTest {
                 .withPath("/retrieve")
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
-                .withBody("", Charsets.UTF_8),
+                .withBody("", StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -1100,7 +1100,7 @@ public class MockServerClientTest {
                 .withPath("/retrieve")
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
-                .withBody(someRequestMatcher.toString(), Charsets.UTF_8),
+                .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -1125,7 +1125,7 @@ public class MockServerClientTest {
                 .withPath("/retrieve")
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
-                .withBody("", Charsets.UTF_8),
+                .withBody("", StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -1153,7 +1153,7 @@ public class MockServerClientTest {
                     .withHeader(HOST.toString(), "localhost:" + 1080)
                     .withMethod("PUT")
                     .withPath("/verifySequence")
-                    .withBody("verification_json", Charsets.UTF_8),
+                    .withBody("verification_json", StandardCharsets.UTF_8),
                 20000,
                 TimeUnit.MILLISECONDS
             );
@@ -1182,7 +1182,7 @@ public class MockServerClientTest {
                     .withHeader(HOST.toString(), "localhost:" + 1080)
                     .withMethod("PUT")
                     .withPath("/verifySequence")
-                    .withBody("verification_json", Charsets.UTF_8),
+                    .withBody("verification_json", StandardCharsets.UTF_8),
                 20000,
                 TimeUnit.MILLISECONDS
             );
@@ -1214,7 +1214,7 @@ public class MockServerClientTest {
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
                 .withPath("/verifySequence")
-                .withBody("verification_json", Charsets.UTF_8),
+                .withBody("verification_json", StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -1244,7 +1244,7 @@ public class MockServerClientTest {
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
                 .withPath("/verify")
-                .withBody("verification_json", Charsets.UTF_8),
+                .withBody("verification_json", StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -1271,7 +1271,7 @@ public class MockServerClientTest {
                     .withHeader(HOST.toString(), "localhost:" + 1080)
                     .withMethod("PUT")
                     .withPath("/verify")
-                    .withBody("verification_json", Charsets.UTF_8),
+                    .withBody("verification_json", StandardCharsets.UTF_8),
                 20000,
                 TimeUnit.MILLISECONDS
             );

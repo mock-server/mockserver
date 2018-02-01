@@ -1,10 +1,10 @@
 package org.mockserver.url;
 
-import com.google.common.base.Charsets;
 import org.mockserver.logging.MockServerLogger;
 
 import java.io.ByteArrayOutputStream;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.slf4j.event.Level.TRACE;
@@ -28,7 +28,8 @@ public class URLEncoder {
 
     public static String encodeURL(String input) {
         try {
-            byte[] sourceBytes = URLDecoder.decode(input, Charsets.UTF_8.name()).getBytes(Charsets.UTF_8);
+            byte[] sourceBytes = URLDecoder.decode(input, StandardCharsets.UTF_8.name())
+                    .getBytes(StandardCharsets.UTF_8);
             ByteArrayOutputStream bos = new ByteArrayOutputStream(sourceBytes.length);
             for (byte aSource : sourceBytes) {
                 int b = aSource;
@@ -46,7 +47,7 @@ public class URLEncoder {
                     bos.write(hex2);
                 }
             }
-            return new String(bos.toByteArray(), Charsets.UTF_8);
+            return new String(bos.toByteArray(), StandardCharsets.UTF_8);
         } catch (Exception e) {
             MOCK_SERVER_LOGGER.trace("Exception while decoding or encoding url [" + input + "]", e);
             return input;

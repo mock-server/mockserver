@@ -1,6 +1,5 @@
 package org.mockserver.integration.mocking;
 
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
@@ -23,12 +22,13 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
@@ -617,7 +617,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
                 "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
@@ -632,9 +632,9 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // and - socket is closed
             try {
                 // flush data to increase chance that Java / OS notice socket has been closed
-                output.write("some_random_bytes".getBytes(Charsets.UTF_8));
+                output.write("some_random_bytes".getBytes(StandardCharsets.UTF_8));
                 output.flush();
-                output.write("some_random_bytes".getBytes(Charsets.UTF_8));
+                output.write("some_random_bytes".getBytes(StandardCharsets.UTF_8));
                 output.flush();
 
                 TimeUnit.SECONDS.sleep(2);
@@ -662,7 +662,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
                 "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
@@ -704,11 +704,11 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
                 "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
-            assertThat(IOUtils.toString(socket.getInputStream(), Charsets.UTF_8.name()), is("some_random_bytes"));
+            assertThat(IOUtils.toString(socket.getInputStream(), StandardCharsets.UTF_8.name()), is("some_random_bytes"));
         } finally {
             if (socket != null) {
                 socket.close();
@@ -727,11 +727,11 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
                 "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
-            assertThat(IOUtils.toString(sslSocket.getInputStream(), Charsets.UTF_8.name()), is("some_random_bytes"));
+            assertThat(IOUtils.toString(sslSocket.getInputStream(), StandardCharsets.UTF_8.name()), is("some_random_bytes"));
         } finally {
             if (sslSocket != null) {
                 sslSocket.close();
@@ -764,11 +764,11 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "GET " + calculatePath("http_error") + " HTTP/1.1" + NEW_LINE +
                 "Content-Length: 0\r" + NEW_LINE +
                 "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
-            assertThat(IOUtils.toString(socket.getInputStream(), Charsets.UTF_8.name()), is("some_random_bytes"));
+            assertThat(IOUtils.toString(socket.getInputStream(), StandardCharsets.UTF_8.name()), is("some_random_bytes"));
         } finally {
             if (socket != null) {
                 socket.close();

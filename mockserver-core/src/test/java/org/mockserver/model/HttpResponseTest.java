@@ -6,7 +6,7 @@ import org.mockserver.client.serialization.Base64Converter;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.TestCase.*;
 import static org.hamcrest.CoreMatchers.not;
