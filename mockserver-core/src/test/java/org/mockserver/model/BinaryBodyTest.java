@@ -1,13 +1,14 @@
 package org.mockserver.model;
 
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import org.junit.Test;
 import org.mockserver.client.serialization.Base64Converter;
 
+import java.nio.charset.StandardCharsets;
+
 import javax.xml.bind.DatatypeConverter;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
@@ -47,7 +48,7 @@ public class BinaryBodyTest {
         assertThat(binaryBody.getValue(), is(body));
         assertThat(binaryBody.getType(), is(Body.Type.BINARY));
         assertThat(binaryBody.getCharset(null), nullValue());
-        assertThat(binaryBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_8));
+        assertThat(binaryBody.getCharset(StandardCharsets.UTF_8), is(StandardCharsets.UTF_8));
         assertThat(binaryBody.getContentType(), nullValue());
     }
 
@@ -63,7 +64,7 @@ public class BinaryBodyTest {
         assertThat(binaryBody.getValue(), is(body));
         assertThat(binaryBody.getType(), is(Body.Type.BINARY));
         assertThat(binaryBody.getCharset(null), nullValue());
-        assertThat(binaryBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_8));
+        assertThat(binaryBody.getCharset(StandardCharsets.UTF_8), is(StandardCharsets.UTF_8));
         assertThat(binaryBody.getContentType(), nullValue());
     }
 
@@ -78,8 +79,8 @@ public class BinaryBodyTest {
         // then
         assertThat(binaryBody.getValue(), is(body));
         assertThat(binaryBody.getType(), is(Body.Type.BINARY));
-        assertThat(binaryBody.getCharset(null), is(Charsets.UTF_8));
-        assertThat(binaryBody.getCharset(Charsets.UTF_16), is(Charsets.UTF_8));
+        assertThat(binaryBody.getCharset(null), is(StandardCharsets.UTF_8));
+        assertThat(binaryBody.getCharset(StandardCharsets.UTF_16), is(StandardCharsets.UTF_8));
         assertThat(binaryBody.getContentType(), is(MediaType.PLAIN_TEXT_UTF_8.toString()));
     }
 
@@ -95,7 +96,7 @@ public class BinaryBodyTest {
         assertThat(binaryBody.getValue(), is(body));
         assertThat(binaryBody.getType(), is(Body.Type.BINARY));
         assertThat(binaryBody.getCharset(null), nullValue());
-        assertThat(binaryBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_8));
+        assertThat(binaryBody.getCharset(StandardCharsets.UTF_8), is(StandardCharsets.UTF_8));
         assertThat(binaryBody.getContentType(), nullValue());
     }
 

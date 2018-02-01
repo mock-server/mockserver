@@ -1,6 +1,5 @@
 package org.mockserver.mappers;
 
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import org.junit.Test;
 import org.mockserver.model.Cookie;
@@ -13,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -51,7 +51,7 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
     @Test
     public void shouldReturnContentTypeForStringBodyWithCharset() {
         // given
-        HttpResponse httpResponse = response().withBody(exact("somebody", Charsets.US_ASCII));
+        HttpResponse httpResponse = response().withBody(exact("somebody", StandardCharsets.US_ASCII));
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when

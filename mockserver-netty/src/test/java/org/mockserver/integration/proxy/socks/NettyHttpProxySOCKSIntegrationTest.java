@@ -1,6 +1,5 @@
 package org.mockserver.integration.proxy.socks;
 
-import com.google.common.base.Charsets;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -32,6 +31,7 @@ import org.mockserver.streams.IOStreamUtils;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
@@ -234,7 +234,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
         // then
         assertEquals(HttpStatusCode.OK_200.code(), response.getStatusLine().getStatusCode());
-        assertEquals("an_example_body", new String(EntityUtils.toByteArray(response.getEntity()), Charsets.UTF_8));
+        assertEquals("an_example_body", new String(EntityUtils.toByteArray(response.getEntity()), StandardCharsets.UTF_8));
 
         // and
         mockServerClient.verify(
@@ -302,7 +302,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
         // then
         assertEquals(HttpStatusCode.OK_200.code(), response.getStatusLine().getStatusCode());
-        assertEquals("an_example_body", new String(EntityUtils.toByteArray(response.getEntity()), Charsets.UTF_8));
+        assertEquals("an_example_body", new String(EntityUtils.toByteArray(response.getEntity()), StandardCharsets.UTF_8));
 
         // and
         mockServerClient.verify(
@@ -356,10 +356,10 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 "GET /test_headers_and_body HTTP/1.1\r\n" +
                 "Host: localhost:" + (useTLS ? secureEchoServer.getPort() : insecureEchoServer.getPort()) + "\r\n" +
                 "X-Test: test_headers_and_body\r\n" +
-                "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
+                "Content-Length:" + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "\r\n" +
                 "\r\n" +
                 "an_example_body" + "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then

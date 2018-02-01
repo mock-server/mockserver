@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Enumeration;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;

@@ -1,6 +1,5 @@
 package org.mockserver.integration.proxy;
 
-import com.google.common.base.Charsets;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -21,6 +20,7 @@ import org.mockserver.streams.IOStreamUtils;
 import javax.net.ssl.SSLSocket;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
@@ -52,7 +52,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                     "CONNECT localhost:443 HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerSecurePort() + "\r\n" +
                     "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
@@ -78,7 +78,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                     "CONNECT localhost:443 HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerSecurePort() + "\r\n" +
                     "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // - flush CONNECT response
@@ -98,7 +98,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                         "X-Test: test_headers_only\r\n" +
                         "Connection: keep-alive\r\n" +
                         "\r\n"
-                ).getBytes(Charsets.UTF_8));
+                ).getBytes(StandardCharsets.UTF_8));
                 output.flush();
 
                 // then
@@ -108,11 +108,11 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                 output.write(("" +
                         "GET /test_headers_and_body HTTP/1.1\r\n" +
                         "Host: localhost:" + getServerSecurePort() + "\r\n" +
-                        "Content-Length: " + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
+                        "Content-Length: " + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "\r\n" +
                         "X-Test: test_headers_and_body\r\n" +
                         "\r\n" +
                         "an_example_body"
-                ).getBytes(Charsets.UTF_8));
+                ).getBytes(StandardCharsets.UTF_8));
                 output.flush();
 
                 // then
@@ -169,7 +169,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
 
         // then
         assertEquals(HttpStatusCode.OK_200.code(), response.getStatusLine().getStatusCode());
-        assertEquals("an_example_body", new String(EntityUtils.toByteArray(response.getEntity()), com.google.common.base.Charsets.UTF_8));
+        assertEquals("an_example_body", new String(EntityUtils.toByteArray(response.getEntity()), StandardCharsets.UTF_8));
 
         // and
         getProxyClient().verify(
@@ -194,7 +194,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                     "CONNECT localhost:443 HTTP/1.1\r\n" +
                     "Host: localhost:" + getServerSecurePort() + "\r\n" +
                     "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // - flush CONNECT response
@@ -211,7 +211,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                         "GET /not_found HTTP/1.1\r\n" +
                         "Host: localhost:" + getServerSecurePort() + "\r\n" +
                         "\r\n"
-                ).getBytes(Charsets.UTF_8));
+                ).getBytes(StandardCharsets.UTF_8));
                 output.flush();
 
                 // then

@@ -1,6 +1,5 @@
 package org.mockserver.client.serialization.deserializers.body;
 
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
@@ -11,8 +10,9 @@ import org.mockserver.model.*;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
@@ -903,7 +903,7 @@ public class BodyDTODeserializerTest {
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"body\" : {" + NEW_LINE +
             "            \"type\" : \"JSON\"," + NEW_LINE +
-            "            \"charset\" : \"" + Charsets.ISO_8859_1 + "\"," + NEW_LINE +
+            "            \"charset\" : \"" + StandardCharsets.ISO_8859_1 + "\"," + NEW_LINE +
             "            \"json\" : \"{'employees':[{'firstName':'John', 'lastName':'Doe'}]}\"" + NEW_LINE +
             "        }" + NEW_LINE +
             "    }" + NEW_LINE +
@@ -916,7 +916,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}", MediaType.JSON_UTF_8.withCharset(Charsets.ISO_8859_1), MatchType.ONLY_MATCHING_FIELDS)))
+                    .setBody(new JsonBodyDTO(new JsonBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}", MediaType.JSON_UTF_8.withCharset(StandardCharsets.ISO_8859_1), MatchType.ONLY_MATCHING_FIELDS)))
             ), expectationDTO);
     }
 
@@ -1277,7 +1277,7 @@ public class BodyDTODeserializerTest {
         String json = ("{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"body\" : {" + NEW_LINE +
-            "            \"charset\" : \"" + Charsets.US_ASCII + "\"," + NEW_LINE +
+            "            \"charset\" : \"" + StandardCharsets.US_ASCII + "\"," + NEW_LINE +
             "            \"xml\" : \"<some><xml></xml></some>\"" + NEW_LINE +
             "        }" + NEW_LINE +
             "    }" + NEW_LINE +
@@ -1290,7 +1290,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new XmlBodyDTO(new XmlBody("<some><xml></xml></some>", MediaType.APPLICATION_XML_UTF_8.withCharset(Charsets.US_ASCII))))
+                    .setBody(new XmlBodyDTO(new XmlBody("<some><xml></xml></some>", MediaType.APPLICATION_XML_UTF_8.withCharset(StandardCharsets.US_ASCII))))
             ), expectationDTO);
     }
 

@@ -1,6 +1,5 @@
 package org.mockserver.matchers;
 
-import com.google.common.base.Charsets;
 import org.junit.Test;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.logging.MockServerLogger;
@@ -8,7 +7,9 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Charsets.UTF_8;
+import java.nio.charset.StandardCharsets;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -371,7 +372,7 @@ public class HttpRequestMatcherTest {
 
     @Test
     public void matchesMatchingBodyWithCharset() {
-        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(new StringBody("我说中国话", Charsets.UTF_16)), mockServerLogger).matches(null, new HttpRequest().withBody("我说中国话", Charsets.UTF_16)));
+        assertTrue(new HttpRequestMatcher(new HttpRequest().withBody(new StringBody("我说中国话", StandardCharsets.UTF_16)), mockServerLogger).matches(null, new HttpRequest().withBody("我说中国话", StandardCharsets.UTF_16)));
     }
 
     @Test
@@ -706,12 +707,12 @@ public class HttpRequestMatcherTest {
         assertTrue(
             new HttpRequestMatcher(
                 new HttpRequest()
-                    .withBody(json("{ \"some_field\": \"我说中国话\" }", Charsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
+                    .withBody(json("{ \"some_field\": \"我说中国话\" }", StandardCharsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
                 mockServerLogger
             )
                 .matches(
                     null, new HttpRequest()
-                        .withBody(matched, Charsets.UTF_16)
+                        .withBody(matched, StandardCharsets.UTF_16)
                         .withMethod("PUT")
                 )
         );

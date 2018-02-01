@@ -2,7 +2,6 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.*;
@@ -12,6 +11,8 @@ import org.mockserver.model.*;
 
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableString.string;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author jamesdbloom
@@ -219,7 +220,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
     private boolean bodyMatches(HttpRequest context, HttpRequest request) {
         boolean bodyMatches = true;
-        String bodyAsString = request.getBody() != null ? new String(request.getBody().getRawBytes(), request.getBody().getCharset(Charsets.UTF_8)) : "";
+        String bodyAsString = request.getBody() != null ? new String(request.getBody().getRawBytes(), request.getBody().getCharset(StandardCharsets.UTF_8)) : "";
         if (!bodyAsString.isEmpty()) {
             if (bodyMatcher instanceof BinaryMatcher) {
                 bodyMatches = matches(context, bodyMatcher, request.getBodyAsRawBytes());

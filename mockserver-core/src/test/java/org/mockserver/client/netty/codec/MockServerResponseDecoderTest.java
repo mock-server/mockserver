@@ -1,6 +1,5 @@
 package org.mockserver.client.netty.codec;
 
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
@@ -12,10 +11,11 @@ import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -126,8 +126,8 @@ public class MockServerResponseDecoderTest {
     @Test
     public void shouldDecodeUTF16Body() {
         // given
-        fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("我说中国话".getBytes(Charsets.UTF_16)));
-        fullHttpResponse.headers().add(CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString());
+        fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer("我说中国话".getBytes(StandardCharsets.UTF_16)));
+        fullHttpResponse.headers().add(CONTENT_TYPE, MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString());
 
         // when
         mockServerResponseDecoder.decode(null, fullHttpResponse, output);

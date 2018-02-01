@@ -1,6 +1,5 @@
 package org.mockserver.server.netty.codec;
 
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
@@ -14,10 +13,11 @@ import org.mockserver.model.*;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.HttpRequest;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -173,10 +173,10 @@ public class MockServerRequestDecoderTest {
         ));
     }
 
-    /* 
+    /*
      * Test is significant because popular Java REST library Jersey adds $Version=1 to all cookies
-     * in line with RFC2965's recommendation (even though RFC2965 is now marked "Obsolete" by 
-     * RFC6265, this is still common and not hard to handle). 
+     * in line with RFC2965's recommendation (even though RFC2965 is now marked "Obsolete" by
+     * RFC6265, this is still common and not hard to handle).
      */
     @Test
     public void shouldDecodeCookiesWithRFC2965StyleAttributes() {
@@ -193,7 +193,7 @@ public class MockServerRequestDecoderTest {
                 cookie("Customer", "WILE_E_COYOTE")
         ));
     }
-    
+
     @Test
     public void shouldDecodeBodyWithContentTypeAndNoCharset() {
         // given
@@ -253,7 +253,7 @@ public class MockServerRequestDecoderTest {
     @Test
     public void shouldDecodeBodyWithUTF8ContentType() {
         // given
-        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("avro işarəsi: \u20AC".getBytes(Charsets.UTF_8)));
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("avro işarəsi: \u20AC".getBytes(StandardCharsets.UTF_8)));
         fullHttpRequest.headers().add(CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString());
 
         // when
@@ -261,21 +261,21 @@ public class MockServerRequestDecoderTest {
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        assertThat(body, Is.<Body>is(exact("avro işarəsi: \u20AC", Charsets.UTF_8)));
+        assertThat(body, Is.<Body>is(exact("avro işarəsi: \u20AC", StandardCharsets.UTF_8)));
     }
 
     @Test
     public void shouldDecodeBodyWithUTF16ContentType() {
         // given
-        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("我说中国话".getBytes(Charsets.UTF_16)));
-        fullHttpRequest.headers().add(CONTENT_TYPE, MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString());
+        fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("我说中国话".getBytes(StandardCharsets.UTF_16)));
+        fullHttpRequest.headers().add(CONTENT_TYPE, MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString());
 
         // when
         mockServerRequestDecoder.decode(null, fullHttpRequest, output);
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        assertThat(body, Is.<Body>is(exact("我说中国话", Charsets.UTF_16)));
+        assertThat(body, Is.<Body>is(exact("我说中国话", StandardCharsets.UTF_16)));
     }
 
     @Test

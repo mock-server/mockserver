@@ -1,6 +1,5 @@
 package org.mockserver.streams;
 
-import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.mockserver.logging.MockServerLogger;
 
@@ -13,7 +12,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -48,7 +47,7 @@ public class IOStreamUtils {
 
     public static String readInputStreamToString(ServletRequest request) {
         try {
-            return IOUtils.toString(request.getInputStream(), Charsets.UTF_8.name());
+            return IOUtils.toString(request.getInputStream(), UTF_8.name());
         } catch (IOException ioe) {
             MOCK_SERVER_LOGGER.error("IOException while reading HttpServletRequest input stream", ioe);
             throw new RuntimeException("IOException while reading HttpServletRequest input stream", ioe);

@@ -1,6 +1,5 @@
 package org.mockserver.integration.server;
 
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
@@ -17,6 +16,7 @@ import org.mockserver.model.*;
 import org.mockserver.verify.VerificationTimes;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.*;
@@ -312,26 +312,26 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     public void shouldReturnMatchRequestWithBodyInUTF16() {
         // when
         String body = "我说中国话";
-        mockServerClient.when(request().withBody(body, Charsets.UTF_16)).respond(response().withBody(body, Charsets.UTF_8));
+        mockServerClient.when(request().withBody(body, StandardCharsets.UTF_16)).respond(response().withBody(body, StandardCharsets.UTF_8));
 
         // then
         // - in http
         assertEquals(
             response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_8).toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withBody(body),
             makeRequest(
                 request()
                     .withPath(calculatePath(""))
-                    .withBody(body, Charsets.UTF_16),
+                    .withBody(body, StandardCharsets.UTF_16),
                 headersToIgnore)
         );
         // - in https
         assertEquals(
             response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_8).toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withBody(body),
@@ -339,7 +339,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request()
                     .withSecure(true)
                     .withPath(calculatePath(""))
-                    .withBody(body, Charsets.UTF_16),
+                    .withBody(body, StandardCharsets.UTF_16),
                 headersToIgnore)
         );
     }
@@ -351,25 +351,25 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         mockServerClient
             .when(
                 request()
-                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_8).toString())
                     .withBody(body)
             )
             .respond(
                 response()
-                    .withBody(body, Charsets.UTF_8)
+                    .withBody(body, StandardCharsets.UTF_8)
             );
 
         // then
         // - in http
         assertEquals(
             response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_8).toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withBody(body),
             makeRequest(
                 request()
-                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_8).toString())
                     .withPath(calculatePath(""))
                     .withBody(body),
                 headersToIgnore)
@@ -377,13 +377,13 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https
         assertEquals(
             response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_8).toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withBody(body),
             makeRequest(
                 request()
-                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_8).toString())
                     .withSecure(true)
                     .withPath(calculatePath(""))
                     .withBody(body),
@@ -395,13 +395,13 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     public void shouldReturnResponseWithBodyInUTF16() {
         // when
         String body = "我说中国话";
-        mockServerClient.when(request()).respond(response().withBody(body, Charsets.UTF_16));
+        mockServerClient.when(request()).respond(response().withBody(body, StandardCharsets.UTF_16));
 
         // then
         // - in http
         assertEquals(
             response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withBody(body),
@@ -413,7 +413,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https
         assertEquals(
             response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withBody(body),
@@ -435,7 +435,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_8).toString())
                     .withBody(body)
             );
 
@@ -443,7 +443,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http
         assertEquals(
             response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_8).toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withBody(body),
@@ -455,7 +455,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https
         assertEquals(
             response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_8).toString())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_8).toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withBody(body),
@@ -720,7 +720,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
                         "    \"τιμή\": 12.50," + NEW_LINE +
                         "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
-                        "}", Charsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
+                        "}", StandardCharsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
                 exactly(2)
             )
             .respond(
@@ -747,7 +747,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
                         "    \"τιμή\": 12.50," + NEW_LINE +
                         "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
-                        "}", Charsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
+                        "}", StandardCharsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
                 headersToIgnore)
         );
         // - in https
@@ -767,7 +767,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
                         "    \"τιμή\": 12.50," + NEW_LINE +
                         "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
-                        "}", Charsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
+                        "}", StandardCharsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
                 headersToIgnore)
         );
     }
@@ -783,7 +783,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
                         "    \"τιμή\": 12.50," + NEW_LINE +
                         "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
-                        "}", Charsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
+                        "}", StandardCharsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
                 exactly(2)
             )
             .respond(
@@ -802,7 +802,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body"),
             makeRequest(
                 request()
-                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
+                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString())
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody(json("{" + NEW_LINE +
@@ -823,7 +823,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withSecure(true)
-                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString())
+                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString())
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody(json("{" + NEW_LINE +

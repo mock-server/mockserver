@@ -1,7 +1,8 @@
 package org.mockserver.model;
 
-import com.google.common.base.Charsets;
 import org.junit.Test;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
@@ -22,7 +23,7 @@ public class RegexBodyTest {
         assertThat(regexBody.getValue(), is("some_body"));
         assertThat(regexBody.getType(), is(Body.Type.REGEX));
         assertThat(regexBody.getContentType(), nullValue());
-        assertThat(regexBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_8));
+        assertThat(regexBody.getCharset(StandardCharsets.UTF_8), is(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -34,7 +35,7 @@ public class RegexBodyTest {
         assertThat(regexBody.getValue(), is("some_body"));
         assertThat(regexBody.getType(), is(Body.Type.REGEX));
         assertThat(regexBody.getContentType(), nullValue());
-        assertThat(regexBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_8));
+        assertThat(regexBody.getCharset(StandardCharsets.UTF_8), is(StandardCharsets.UTF_8));
     }
 
 }

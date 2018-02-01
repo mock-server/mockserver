@@ -8,7 +8,7 @@ import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.BinaryBodyDTO;
 import org.mockserver.model.BinaryBody;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 

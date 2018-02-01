@@ -1,6 +1,5 @@
 package org.mockserver.examples.mockserver;
 
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.mockserver.client.MockServerClient;
@@ -9,6 +8,7 @@ import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_DISPOSITION;
@@ -47,9 +47,9 @@ public class ResponseActionExamples {
                 response()
                     .withHeader(
                         CONTENT_TYPE.toString(),
-                        MediaType.create("text", "plain").withCharset(Charsets.UTF_16).toString()
+                        MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString()
                     )
-                    .withBody("我说中国话".getBytes(Charsets.UTF_16))
+                    .withBody("我说中国话".getBytes(StandardCharsets.UTF_16))
             );
     }
 

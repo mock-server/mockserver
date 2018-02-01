@@ -1,6 +1,5 @@
 package org.mockserver.client.netty.codec;
 
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -11,11 +10,12 @@ import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -187,7 +187,7 @@ public class MockServerRequestEncoderBasicMappingTest {
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().toString(Charsets.UTF_8), is("somebody"));
+        assertThat(fullHttpRequest.content().toString(StandardCharsets.UTF_8), is("somebody"));
         assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), nullValue());
     }
 
@@ -201,7 +201,7 @@ public class MockServerRequestEncoderBasicMappingTest {
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().toString(Charsets.UTF_8), is("somebody"));
+        assertThat(fullHttpRequest.content().toString(StandardCharsets.UTF_8), is("somebody"));
         assertThat(fullHttpRequest.headers().get(CONTENT_TYPE), is(MediaType.HTML_UTF_8.toString()));
     }
 
@@ -243,7 +243,7 @@ public class MockServerRequestEncoderBasicMappingTest {
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
-        assertThat(fullHttpRequest.content().toString(Charsets.UTF_8), is(""));
+        assertThat(fullHttpRequest.content().toString(StandardCharsets.UTF_8), is(""));
     }
 
 }

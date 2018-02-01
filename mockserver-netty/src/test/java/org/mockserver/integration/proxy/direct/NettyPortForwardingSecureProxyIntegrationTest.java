@@ -1,6 +1,5 @@
 package org.mockserver.integration.proxy.direct;
 
-import com.google.common.base.Charsets;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -11,6 +10,7 @@ import org.mockserver.streams.IOStreamUtils;
 
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
@@ -62,7 +62,7 @@ public class NettyPortForwardingSecureProxyIntegrationTest {
                 "Host: localhost:" + echoServer.getPort() + "\r\n" +
                 "X-Test: test_headers_only\r\n" +
                 "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
@@ -97,10 +97,10 @@ public class NettyPortForwardingSecureProxyIntegrationTest {
                 "GET /test_headers_and_body HTTP/1.1\r\n" +
                 "Host: localhost:" + echoServer.getPort() + "\r\n" +
                 "X-Test: test_headers_and_body\r\n" +
-                "Content-Length:" + "an_example_body".getBytes(Charsets.UTF_8).length + "\r\n" +
+                "Content-Length:" + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "\r\n" +
                 "\r\n" +
                 "an_example_body" + "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
@@ -138,7 +138,7 @@ public class NettyPortForwardingSecureProxyIntegrationTest {
                 "GET /not_found HTTP/1.1\r\n" +
                 "Host: localhost:" + echoServer.getPort() + "\r\n" +
                 "\r\n"
-            ).getBytes(Charsets.UTF_8));
+            ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then

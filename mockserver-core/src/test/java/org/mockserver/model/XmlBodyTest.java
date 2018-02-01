@@ -1,10 +1,10 @@
 package org.mockserver.model;
 
-import com.google.common.base.Charsets;
 import com.google.common.net.MediaType;
 import org.junit.Test;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
@@ -33,21 +33,21 @@ public class XmlBodyTest {
         assertThat(xmlBody.getValue(), is("some_body"));
         assertThat(xmlBody.getType(), is(Body.Type.XML));
         assertThat(xmlBody.getContentType(), is(XmlBody.DEFAULT_CONTENT_TYPE.toString()));
-        assertThat(xmlBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_8));
+        assertThat(xmlBody.getCharset(StandardCharsets.UTF_8), is(StandardCharsets.UTF_8));
         assertThat(xmlBody.getContentType(), is(MediaType.create("application", "xml").toString()));
     }
 
     @Test
     public void shouldReturnValuesSetInConstructorWithCharset() {
         // when
-        XmlBody xmlBody = new XmlBody("some_body", Charsets.UTF_16);
+        XmlBody xmlBody = new XmlBody("some_body", StandardCharsets.UTF_16);
 
         // then
         assertThat(xmlBody.getValue(), is("some_body"));
         assertThat(xmlBody.getType(), is(Body.Type.XML));
-        assertThat(xmlBody.getCharset(null), is(Charsets.UTF_16));
-        assertThat(xmlBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_16));
-        assertThat(xmlBody.getContentType(), is(MediaType.APPLICATION_XML_UTF_8.withCharset(Charsets.UTF_16).toString()));
+        assertThat(xmlBody.getCharset(null), is(StandardCharsets.UTF_16));
+        assertThat(xmlBody.getCharset(StandardCharsets.UTF_8), is(StandardCharsets.UTF_16));
+        assertThat(xmlBody.getContentType(), is(MediaType.APPLICATION_XML_UTF_8.withCharset(StandardCharsets.UTF_16).toString()));
     }
 
     @Test
@@ -59,21 +59,21 @@ public class XmlBodyTest {
         assertThat(xmlBody.getValue(), is("some_body"));
         assertThat(xmlBody.getType(), is(Body.Type.XML));
         assertThat(xmlBody.getContentType(), is(XmlBody.DEFAULT_CONTENT_TYPE.toString()));
-        assertThat(xmlBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_8));
+        assertThat(xmlBody.getCharset(StandardCharsets.UTF_8), is(StandardCharsets.UTF_8));
         assertThat(xmlBody.getContentType(), is(MediaType.create("application", "xml").toString()));
     }
 
     @Test
     public void shouldReturnValueSetInStaticConstructorWithCharset() {
         // when
-        XmlBody xmlBody = xml("some_body", Charsets.UTF_16);
+        XmlBody xmlBody = xml("some_body", StandardCharsets.UTF_16);
 
         // then
         assertThat(xmlBody.getValue(), is("some_body"));
         assertThat(xmlBody.getType(), is(Body.Type.XML));
-        assertThat(xmlBody.getCharset(null), is(Charsets.UTF_16));
-        assertThat(xmlBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_16));
-        assertThat(xmlBody.getContentType(), is(MediaType.APPLICATION_XML_UTF_8.withCharset(Charsets.UTF_16).toString()));
+        assertThat(xmlBody.getCharset(null), is(StandardCharsets.UTF_16));
+        assertThat(xmlBody.getCharset(StandardCharsets.UTF_8), is(StandardCharsets.UTF_16));
+        assertThat(xmlBody.getContentType(), is(MediaType.APPLICATION_XML_UTF_8.withCharset(StandardCharsets.UTF_16).toString()));
     }
 
     @Test
@@ -85,7 +85,7 @@ public class XmlBodyTest {
         assertThat(xmlBody.getValue(), is("some_body"));
         assertThat(xmlBody.getType(), is(Body.Type.XML));
         assertThat(xmlBody.getCharset(null), nullValue());
-        assertThat(xmlBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_8));
+        assertThat(xmlBody.getCharset(StandardCharsets.UTF_8), is(StandardCharsets.UTF_8));
         assertThat(xmlBody.getContentType(), nullValue());
     }
 
@@ -97,8 +97,8 @@ public class XmlBodyTest {
         // then
         assertThat(xmlBody.getValue(), is("some_body"));
         assertThat(xmlBody.getType(), is(Body.Type.XML));
-        assertThat(xmlBody.getCharset(null), is(Charsets.UTF_8));
-        assertThat(xmlBody.getCharset(Charsets.UTF_16), is(Charsets.UTF_8));
+        assertThat(xmlBody.getCharset(null), is(StandardCharsets.UTF_8));
+        assertThat(xmlBody.getCharset(StandardCharsets.UTF_16), is(StandardCharsets.UTF_8));
         assertThat(xmlBody.getContentType(), is(MediaType.PLAIN_TEXT_UTF_8.toString()));
     }
 
@@ -111,7 +111,7 @@ public class XmlBodyTest {
         assertThat(xmlBody.getValue(), is("some_body"));
         assertThat(xmlBody.getType(), is(Body.Type.XML));
         assertThat(xmlBody.getCharset(null), nullValue());
-        assertThat(xmlBody.getCharset(Charsets.UTF_8), is(Charsets.UTF_8));
+        assertThat(xmlBody.getCharset(StandardCharsets.UTF_8), is(StandardCharsets.UTF_8));
         assertThat(xmlBody.getContentType(), nullValue());
     }
 

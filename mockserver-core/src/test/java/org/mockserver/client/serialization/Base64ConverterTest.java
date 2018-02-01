@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
