@@ -96,7 +96,6 @@ public class HttpStateHandler {
     }
 
     public void add(Expectation... expectations) {
-        System.out.println("super.hashCode() = " + super.hashCode());
         for (Expectation expectation : expectations) {
             KeyAndCertificateFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
             mockServerMatcher.add(expectation);
