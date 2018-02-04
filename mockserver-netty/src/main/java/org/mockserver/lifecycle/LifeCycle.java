@@ -10,8 +10,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.stop.StopEventQueue;
-import org.mockserver.stop.Stoppable;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -19,10 +17,12 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.proxy.relay.RelayConnectHandler.HTTP_CONNECT_SOCKET;
+
 /**
  * @author jamesdbloom
  */
-public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
+public abstract class LifeCycle<T extends LifeCycle> {
 
     static {
         new MockServerLogger();
@@ -35,7 +35,6 @@ public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
     protected HttpStateHandler httpStateHandler;
     private List<Future<Channel>> channelOpenedFutures = new ArrayList<>();
     private SettableFuture<String> stopping = SettableFuture.create();
-    private StopEventQueue stopEventQueue = new StopEventQueue();
 
     protected LifeCycle() {
         this.httpStateHandler = new HttpStateHandler();
@@ -44,20 +43,28 @@ public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
 
     public Future<?> stop() {
         stopped();
-        return stopEventQueue.stop(this, stopping, bossGroup, workerGroup);
-    }
 
-    public T withStopEventQueue(StopEventQueue stopEventQueue) {
-        this.stopEventQueue = stopEventQueue;
-        this.stopEventQueue.register(this);
-        return (T) this;
+        // Shut down all event loops to terminate all threads.
+        bossGroup.shutdownGracefully();
+        workerGroup.shutdownGracefully();
+
+        // Wait until all threads are terminated.
+        try {
+            bossGroup.terminationFuture().sync();
+            workerGroup.terminationFuture().sync();
+        } catch (InterruptedException e) {
+            // ignore interrupted exceptions
+        } finally {
+            stopping.set("stopped");
+        }
+        return stopping;
     }
 
     public boolean isRunning() {
         return !bossGroup.isShuttingDown() || !workerGroup.isShuttingDown() || !stopping.isDone();
     }
 
-    public List<Integer> getPorts() {
+    public List<Integer> getLocalPorts() {
         List<Integer> ports = new ArrayList<>();
         for (Future<Channel> channelOpened : channelOpenedFutures) {
             try {
@@ -69,7 +76,7 @@ public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
         return ports;
     }
 
-    public int getPort() {
+    public int getLocalPort() {
         for (Future<Channel> channelOpened : channelOpenedFutures) {
             try {
                 return ((InetSocketAddress) channelOpened.get(2, TimeUnit.SECONDS).localAddress()).getPort();
@@ -99,6 +106,8 @@ public abstract class LifeCycle<T extends LifeCycle> implements Stoppable {
                                         public void operationComplete(ChannelFuture future) {
                                             if (future.isSuccess()) {
                                                 channelOpened.set(future.channel());
+//                                                serverBootstrap.childAttr(HTTP_CONNECT_SOCKET, new InetSocketAddress(((InetSocketAddress) future.channel().localAddress()).getPort()));
+//                                                future.channel().attr(HTTP_CONNECT_SOCKET).set(new InetSocketAddress(((InetSocketAddress) future.channel().localAddress()).getPort()));
                                             } else {
                                                 channelOpened.setException(future.cause());
                                             }

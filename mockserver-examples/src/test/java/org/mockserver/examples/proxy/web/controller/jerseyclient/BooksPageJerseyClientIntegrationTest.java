@@ -1,5 +1,6 @@
 package org.mockserver.examples.proxy.web.controller.jerseyclient;
 
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.mockserver.examples.proxy.configuration.RootConfiguration;
 import org.mockserver.examples.proxy.web.configuration.WebMvcConfiguration;
@@ -30,6 +31,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
         )
 })
 @ActiveProfiles(profiles = {"jerseyClient"})
+@Ignore
 public class BooksPageJerseyClientIntegrationTest extends BooksPageIntegrationTest {
 
 }

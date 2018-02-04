@@ -222,7 +222,7 @@ public class ConfigurationProperties {
     /**
      * Override the debug WARN logging level
      *
-     * @param level the log level, which can be ALL, DEBUG, INFO, WARN, ERROR, OFF
+     * @param level the log level, which can be TRACE, DEBUG, INFO, WARN, ERROR, OFF
      */
     public static void logLevel(String level) {
         if (!Arrays.asList("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF").contains(level)) {

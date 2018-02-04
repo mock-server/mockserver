@@ -13,11 +13,11 @@ import org.mockserver.model.*;
  */
 public class ForwardChainExpectation {
 
-    private final AbstractClient mockServerClient;
+    private final MockServerClient mockServerClient;
     private final Expectation expectation;
     private WebSocketClient webSocketClient;
 
-    public ForwardChainExpectation(AbstractClient mockServerClient, Expectation expectation) {
+    public ForwardChainExpectation(MockServerClient mockServerClient, Expectation expectation) {
         this.mockServerClient = mockServerClient;
         this.expectation = expectation;
     }

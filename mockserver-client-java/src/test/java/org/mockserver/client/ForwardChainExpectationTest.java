@@ -25,7 +25,7 @@ import static org.mockserver.model.HttpTemplate.template;
 
 public class ForwardChainExpectationTest {
 
-    private AbstractClient mockAbstractClient;
+    private MockServerClient mockAbstractClient;
 
     private Expectation mockExpectation;
 
@@ -37,7 +37,7 @@ public class ForwardChainExpectationTest {
 
     @Before
     public void setupMocks() {
-        mockAbstractClient = mock(AbstractClient.class);
+        mockAbstractClient = mock(MockServerClient.class);
         mockExpectation = mock(Expectation.class);
         forwardChainExpectation = new ForwardChainExpectation(mockAbstractClient, mockExpectation);
         initMocks(this);

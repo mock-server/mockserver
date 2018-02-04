@@ -1,8 +1,6 @@
 package org.mockserver.examples.proxy.web.controller;
 
-import io.netty.handler.codec.http.HttpHeaders;
 import org.junit.*;
-import org.mockserver.integration.ClientAndProxy;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.examples.proxy.model.Book;
 import org.mockserver.logging.MockServerLogger;
@@ -22,7 +20,6 @@ import java.util.Arrays;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.integration.ClientAndProxy.startClientAndProxy;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -41,7 +38,7 @@ public abstract class BooksPageIntegrationTest {
         MockServerLogger.setRootLogLevel("org.springframework");
         MockServerLogger.setRootLogLevel("org.eclipse");
     }
-    private static ClientAndProxy proxy;
+    private static ClientAndServer proxy;
     private ClientAndServer mockServer;
     @Resource
     private Environment environment;
@@ -51,12 +48,16 @@ public abstract class BooksPageIntegrationTest {
 
     @BeforeClass
     public static void startProxy() {
-        proxy = startClientAndProxy(PortFactory.findFreePort());
+        proxy = ClientAndServer.startClientAndServer();
+        System.setProperty("http.proxyHost", "127.0.0.1");
+        System.setProperty("http.proxyPort", String.valueOf(proxy.getLocalPort()));
     }
 
     @AfterClass
     public static void stopProxy() {
         proxy.stop();
+        System.clearProperty("http.proxyHost");
+        System.clearProperty("http.proxyPort");
     }
 
     @Before

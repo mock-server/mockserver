@@ -207,7 +207,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                             }
                             mockServerLogger.info(request, "request:{}" + NEW_LINE + " did" + (totalResult ? "" : " not") + " match expectation:{}" + NEW_LINE + " because:{}", request, this, becauseBuilder.toString());
                         } else {
-                            mockServerLogger.info(request, "request:{}" + NEW_LINE + " matched expectation:{}", request, this);
+                            mockServerLogger.info(request, "request:{}" + NEW_LINE + " matched expectation:{}", request, expectation);
                         }
                     }
                     matches = totalResultAfterNotOperatorApplied;

@@ -1,6 +1,6 @@
 package org.mockserver.examples.mockserver;
 
-import org.mockserver.client.server.MockServerClient;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.Format;
 

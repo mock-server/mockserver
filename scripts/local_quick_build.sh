@@ -9,4 +9,4 @@ echo
 mvn -version
 echo
 
-mvn clean install $1 -Djava.security.egd=file:/dev/./urandom
+mvn clean install $1 -Djava.security.egd=file:/dev/urandom

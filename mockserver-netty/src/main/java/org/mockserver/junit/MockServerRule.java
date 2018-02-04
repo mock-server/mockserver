@@ -4,7 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import org.mockserver.client.server.MockServerClient;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.socket.PortFactory;
 
@@ -72,7 +72,7 @@ public class MockServerRule implements TestRule {
     public Integer getPort() {
         Integer port = null;
         if (clientAndServer != null) {
-            port = clientAndServer.getPort();
+            port = clientAndServer.getLocalPort();
         } else if (ports.length > 0) {
             port = ports[0];
         }
@@ -81,7 +81,7 @@ public class MockServerRule implements TestRule {
 
     public Integer[] getPorts() {
         if (clientAndServer != null) {
-            List<Integer> ports = clientAndServer.getPorts();
+            List<Integer> ports = clientAndServer.getLocalPorts();
             return ports.toArray(new Integer[ports.size()]);
         }
         return ports;

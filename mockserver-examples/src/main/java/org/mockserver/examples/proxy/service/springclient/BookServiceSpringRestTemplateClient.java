@@ -58,7 +58,7 @@ public class BookServiceSpringRestTemplateClient implements BookService {
         restTemplate.setMessageConverters(httpMessageConverters);
 
         // configure proxy
-        HttpHost httpHost = new HttpHost(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
+        HttpHost httpHost = new HttpHost(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")), "http");
         DefaultProxyRoutePlanner defaultProxyRoutePlanner = new DefaultProxyRoutePlanner(httpHost);
         HttpClient httpClient = HttpClients.custom().setRoutePlanner(defaultProxyRoutePlanner).build();
         restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(httpClient));

@@ -8,6 +8,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
+import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.proxy.relay.RelayConnectHandler;
@@ -18,8 +19,8 @@ import static org.mockserver.model.HttpResponse.response;
 @ChannelHandler.Sharable
 public final class HttpConnectHandler extends RelayConnectHandler<HttpRequest> {
 
-    public HttpConnectHandler(MockServerLogger mockServerLogger, String host, int port) {
-        super(mockServerLogger, host, port);
+    public HttpConnectHandler(LifeCycle server, MockServerLogger mockServerLogger, String host, int port) {
+        super(server, mockServerLogger, host, port);
     }
 
     protected void removeCodecSupport(ChannelHandlerContext ctx) {

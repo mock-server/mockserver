@@ -21,14 +21,12 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.client.proxy.ProxyClient;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mockserver.MockServer;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.proxy.Proxy;
-import org.mockserver.proxy.ProxyBuilder;
 import org.mockserver.socket.KeyStoreFactory;
-import org.mockserver.socket.PortFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import java.io.IOException;
@@ -52,42 +50,46 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(NettyHttpProxySOCKSIntegrationTest.class);
 
-    private final static Integer SERVER_HTTPS_PORT = PortFactory.findFreePort();
-    private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
+    private static Integer mockServerPort;
     private static EchoServer insecureEchoServer;
     private static EchoServer secureEchoServer;
-    private static Proxy httpProxy;
-    private static ProxyClient proxyClient;
+    private static MockServer httpProxy;
+    private static MockServerClient mockServerClient;
 
     @BeforeClass
     public static void setupFixture() {
-        // start server
         insecureEchoServer = new EchoServer(false);
         secureEchoServer = new EchoServer(true);
 
-        // start proxy
-        httpProxy = new ProxyBuilder()
-            .withLocalPort(PROXY_HTTP_PORT)
-            .build();
+        mockServerPort = new MockServer().getLocalPort();
 
-        // start client
-        proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
+        System.setProperty("http.proxyHost", "127.0.0.1");
+        System.setProperty("http.proxyPort", String.valueOf(mockServerPort));
+
+        mockServerClient = new MockServerClient("localhost", mockServerPort);
     }
 
     @AfterClass
     public static void shutdownFixture() {
-        // stop server
-        insecureEchoServer.stop();
-        secureEchoServer.stop();
+        if (insecureEchoServer != null) {
+            insecureEchoServer.stop();
+        }
+        if (secureEchoServer != null) {
+            secureEchoServer.stop();
+        }
 
-        // stop proxy
-        httpProxy.stop();
+        System.clearProperty("http.proxyHost");
+        System.clearProperty("http.proxyPort");
+
+        if (mockServerClient != null) {
+            mockServerClient.stop();
+        }
     }
 
     @Before
     public void resetProxy() {
-        if (proxyClient != null) {
-            proxyClient.reset();
+        if (mockServerClient != null) {
+            mockServerClient.reset();
         }
     }
 
@@ -125,7 +127,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
             // then
             assertThat(response.getStatusLine().getStatusCode(), is(200));
-            proxyClient.verify(request().withHeader("Host", "127.0.0.1" + ":" + insecureEchoServer.getPort()));
+            mockServerClient.verify(request().withHeader("Host", "127.0.0.1" + ":" + insecureEchoServer.getPort()));
         } finally {
             ProxySelector.setDefault(defaultProxySelector);
         }
@@ -165,7 +167,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
             // then
             assertThat(response.getStatusLine().getStatusCode(), is(200));
-            proxyClient.verify(request().withHeader("Host", "127.0.0.1" + ":" + secureEchoServer.getPort()));
+            mockServerClient.verify(request().withHeader("Host", "127.0.0.1" + ":" + secureEchoServer.getPort()));
         } finally {
             ProxySelector.setDefault(defaultProxySelector);
         }
@@ -235,7 +237,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
         assertEquals("an_example_body", new String(EntityUtils.toByteArray(response.getEntity()), Charsets.UTF_8));
 
         // and
-        proxyClient.verify(
+        mockServerClient.verify(
             request()
                 .withPath("/test_headers_and_body")
                 .withBody("an_example_body"),
@@ -303,7 +305,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
         assertEquals("an_example_body", new String(EntityUtils.toByteArray(response.getEntity()), Charsets.UTF_8));
 
         // and
-        proxyClient.verify(
+        mockServerClient.verify(
             request()
                 .withPath("/test_headers_and_body")
                 .withBody("an_example_body"),
@@ -329,7 +331,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                 @Override
                 public List<java.net.Proxy> select(URI uri) {
                     return Collections.singletonList(
-                        new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", PROXY_HTTP_PORT))
+                        new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", mockServerPort))
                     );
                 }
 
@@ -366,7 +368,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             assertContains(response, "an_example_body");
 
             // and
-            proxyClient.verify(
+            mockServerClient.verify(
                 request()
                     .withMethod("GET")
                     .withPath("/test_headers_and_body")

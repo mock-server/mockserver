@@ -203,7 +203,7 @@
 <h2>Running MockServer via a JUnit @Rule</h2>
 
 <p>MockServer can be run using the <strong>MockServerRule</strong>. The <strong>MockServerRule</strong> starts MockServer on a free port before the any test runs and stops MockServer after all tests have completed.</p>
-<p>An instance of <strong>MockServerClient</strong> is assigned to any field in the unit test of type <strong>org.mockserver.client.server.MockServerClient</strong>. Alternatively an instance of <strong>MockServerClient</strong> can be retrieved from the <strong>MockServerRule</strong> using the method <strong>getClient()</strong>.</p>
+<p>An instance of <strong>MockServerClient</strong> is assigned to any field in the unit test of type <strong>org.mockserver.client.MockServerClient</strong>. Alternatively an instance of <strong>MockServerClient</strong> can be retrieved from the <strong>MockServerRule</strong> using the method <strong>getClient()</strong>.</p>
 
 <pre><code class="code"><span class="annotation">@Rule</span>
 <span class="keyword">public</span> MockServerRule mockServerRule = <span class="keyword">new</span> MockServerRule(<span class="keyword">this</span>);

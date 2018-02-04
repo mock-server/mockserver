@@ -66,9 +66,13 @@ public class ActionHandler {
         this.httpErrorActionHandler = new HttpErrorActionHandler();
     }
 
-    public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyRequest, final boolean synchronous) {
+    public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyThisRequest, final boolean synchronous) {
         final Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
-        if (expectation != null && expectation.getAction() != null) {
+        if (request.getHeaders().containsEntry("X-Forwarded-By", "MockServer")) {
+            responseWriter.writeResponse(request, notFoundResponse(), false);
+            httpStateHandler.log(new RequestLogEntry(request));
+            mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
+        } else if (expectation != null && expectation.getAction() != null) {
             Action action = expectation.getAction();
             switch (action.getType()) {
                 case RESPONSE: {
@@ -223,9 +227,14 @@ public class ActionHandler {
                     break;
                 }
             }
-        } else if (proxyRequest || !localAddresses.contains(request.getFirstHeader(HOST.toString()))) {
+        } else if (proxyThisRequest || !localAddresses.contains(request.getFirstHeader(HOST.toString()))) {
+
             final InetSocketAddress remoteAddress = ctx != null ? ctx.channel().attr(REMOTE_SOCKET).get() : null;
-            final SettableFuture<HttpResponse> responseFuture = httpClient.sendRequest(hopByHopHeaderFilter.onRequest(request), remoteAddress);
+            final HttpRequest clonedRequest = hopByHopHeaderFilter.onRequest(request);
+            if (!proxyThisRequest) {
+                clonedRequest.withHeader("X-Forwarded-By", "MockServer");
+            }
+            final SettableFuture<HttpResponse> responseFuture = httpClient.sendRequest(clonedRequest, remoteAddress);
             submit(responseFuture, new Runnable() {
                 public void run() {
                     try {
@@ -254,4 +263,5 @@ public class ActionHandler {
             mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
         }
     }
+
 }

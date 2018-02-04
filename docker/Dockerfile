@@ -26,4 +26,4 @@ WORKDIR /opt/mockserver
 EXPOSE 1080 1090
 
 # define default command.
-CMD ["/opt/mockserver/run_mockserver.sh", "-logLevel", "INFO", "-serverPort", "1080", "-proxyPort", "1090"]
+CMD ["/opt/mockserver/run_mockserver.sh", "-logLevel", "INFO", "-serverPort", "1080"]

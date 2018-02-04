@@ -6,10 +6,10 @@ import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.mockserver.client.server.MockServerClient;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.integration.server.AbstractBasicClientServerIntegrationTest;
+import org.mockserver.integration.server.AbstractBasicMockingIntegrationTest;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.KeyStoreFactory;
 
@@ -18,7 +18,7 @@ import java.io.File;
 /**
  * @author jamesdbloom
  */
-public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasicClientServerIntegrationTest {
+public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasicMockingIntegrationTest {
 
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();

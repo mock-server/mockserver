@@ -3,61 +3,54 @@ package org.mockserver.integration.proxy.http;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.mockserver.client.proxy.ProxyClient;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
-import org.mockserver.proxy.Proxy;
-import org.mockserver.proxy.ProxyBuilder;
-import org.mockserver.socket.PortFactory;
+import org.mockserver.mockserver.MockServer;
 
 /**
  * @author jamesdbloom
  */
 public class NettyHttpProxyIntegrationTest extends AbstractClientProxyIntegrationTest {
 
-    private final static Integer PROXY_HTTP_PORT = PortFactory.findFreePort();
+    private static int mockServerPort;
     private static EchoServer echoServer;
-    private static Proxy httpProxy;
-    private static ProxyClient proxyClient;
+    private static MockServerClient mockServerClient;
 
     @BeforeClass
     public static void setupFixture() {
         servletContext = "";
 
-        // start server
+        mockServerPort = new MockServer().getLocalPort();
+        mockServerClient = new MockServerClient("localhost", mockServerPort);
+
         echoServer = new EchoServer(false);
-
-        // start proxy
-        httpProxy = new ProxyBuilder()
-            .withLocalPort(PROXY_HTTP_PORT)
-            .build();
-
-        // start client
-        proxyClient = new ProxyClient("localhost", PROXY_HTTP_PORT);
     }
 
     @AfterClass
-    public static void shutdownFixture() {
-        // stop server
-        echoServer.stop();
+    public static void stopServer() {
+        if (mockServerClient != null) {
+            mockServerClient.stop();
+        }
 
-        // stop proxy
-        httpProxy.stop();
+        if (echoServer != null) {
+            echoServer.stop();
+        }
     }
 
     @Before
     public void resetProxy() {
-        proxyClient.reset();
+        mockServerClient.reset();
     }
 
     @Override
     public int getProxyPort() {
-        return PROXY_HTTP_PORT;
+        return mockServerPort;
     }
 
     @Override
-    public ProxyClient getProxyClient() {
-        return proxyClient;
+    public MockServerClient getMockServerClient() {
+        return mockServerClient;
     }
 
     @Override
