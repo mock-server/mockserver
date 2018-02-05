@@ -76,6 +76,14 @@ public abstract class LifeCycle<T extends LifeCycle> {
         return ports;
     }
 
+    /**
+     * @deprecated use getLocalPort instead of getPort
+     */
+    @Deprecated
+    public Integer getPort() {
+        return getLocalPort();
+    }
+
     public int getLocalPort() {
         for (Future<Channel> channelOpened : channelOpenedFutures) {
             try {
