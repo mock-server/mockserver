@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 import org.mockserver.client.netty.NettyHttpClient;
+import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
 import org.mockserver.filters.HopByHopHeaderFilter;
@@ -16,6 +17,7 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.Set;
 
@@ -69,7 +71,7 @@ public class ActionHandler {
     public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyThisRequest, final boolean synchronous) {
         final Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
         if (request.getHeaders().containsEntry("X-Forwarded-By", "MockServer")) {
-            responseWriter.writeResponse(request, notFoundResponse(), false);
+            responseWriter.writeResponse(request, notFoundResponse().withHeader("X-Forwarded-By", "MockServer"), false);
             httpStateHandler.log(new RequestLogEntry(request));
             mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
         } else if (expectation != null && expectation.getAction() != null) {
@@ -243,16 +245,27 @@ public class ActionHandler {
                             response = notFoundResponse();
                         }
                         responseWriter.writeResponse(request, response, false);
-                        httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                        mockServerLogger.info(
-                            request,
-                            "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " as curl:{}",
-                            response,
-                            request,
-                            httpRequestToCurlSerializer.toCurl(request, remoteAddress)
-                        );
+                        if (response.containsHeader("X-Forwarded-By", "MockServer")) {
+                            httpStateHandler.log(new RequestLogEntry(request));
+                            mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
+                        } else {
+                            httpStateHandler.log(new RequestResponseLogEntry(request, response));
+                            mockServerLogger.info(
+                                request,
+                                "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " as curl:{}",
+                                response,
+                                request,
+                                httpRequestToCurlSerializer.toCurl(request, remoteAddress)
+                            );
+                        }
                     } catch (Exception ex) {
-                        mockServerLogger.error(request, ex, ex.getMessage());
+                        if (ex.getCause() instanceof ConnectException || ex.getCause() instanceof SocketConnectionException) {
+                            responseWriter.writeResponse(request, notFoundResponse(), false);
+                            httpStateHandler.log(new RequestLogEntry(request));
+                            mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
+                        } else {
+                            mockServerLogger.error(request, ex, ex.getMessage());
+                        }
                     }
                 }
             }, synchronous);

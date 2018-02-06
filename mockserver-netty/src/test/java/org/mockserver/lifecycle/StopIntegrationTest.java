@@ -1,4 +1,4 @@
-package org.mockserver.integration.mocking;
+package org.mockserver.lifecycle;
 
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
