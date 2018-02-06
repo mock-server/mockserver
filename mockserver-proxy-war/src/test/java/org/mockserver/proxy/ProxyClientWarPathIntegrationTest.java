@@ -5,7 +5,7 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.mockserver.client.proxy.ProxyClient;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
 import org.mockserver.socket.PortFactory;
@@ -21,7 +21,7 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
     private final static int PROXY_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
     private static Tomcat tomcat;
-    private static ProxyClient proxyClient;
+    private static MockServerClient proxyClient;
 
     @BeforeClass
     public static void setupFixture() throws Exception {
@@ -49,7 +49,7 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
         tomcat.start();
 
         // start client
-        proxyClient = new ProxyClient("localhost", PROXY_PORT, servletContext);
+        proxyClient = new MockServerClient("localhost", PROXY_PORT, servletContext);
     }
 
     @AfterClass
@@ -76,7 +76,7 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
     }
 
     @Override
-    public ProxyClient getProxyClient() {
+    public MockServerClient getMockServerClient() {
         return proxyClient;
     }
 

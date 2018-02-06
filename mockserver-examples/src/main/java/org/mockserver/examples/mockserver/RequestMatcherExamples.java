@@ -1,7 +1,7 @@
 package org.mockserver.examples.mockserver;
 
 import com.google.common.base.Charsets;
-import org.mockserver.client.server.MockServerClient;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;

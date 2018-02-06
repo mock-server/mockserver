@@ -6,7 +6,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.client.server.MockServerClient;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.socket.PortFactory;
 
@@ -59,8 +59,8 @@ public class MockServerRuleTestWithMocks {
 
         initMocks(this);
 
-        when(mockClientAndServer.getPort()).thenReturn(httpPort);
-        when(mockClientAndServer.getPorts()).thenReturn(Arrays.asList(httpPort + 1, httpPort + 2));
+        when(mockClientAndServer.getLocalPort()).thenReturn(httpPort);
+        when(mockClientAndServer.getLocalPorts()).thenReturn(Arrays.asList(httpPort + 1, httpPort + 2));
         when(clientAndServerFactory.newClientAndServer()).thenReturn(mockClientAndServer);
     }
 

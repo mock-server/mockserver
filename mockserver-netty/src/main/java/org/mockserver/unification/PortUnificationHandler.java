@@ -11,6 +11,7 @@ import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.codec.socks.SocksProtocolVersion;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
+import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.proxy.socks.SocksProxyHandler;
@@ -24,7 +25,7 @@ import java.util.Set;
 
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
-import static org.mockserver.proxy.Proxy.LOCAL_HOST_HEADERS;
+import static org.mockserver.mockserver.MockServerHandler.LOCAL_HOST_HEADERS;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 import static org.slf4j.event.Level.TRACE;
 
@@ -43,10 +44,10 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     private final SocksMessageEncoder socksMessageEncoder = new SocksMessageEncoder();
     private final HttpContentLengthRemover httpContentLengthRemover = new HttpContentLengthRemover();
 
-    public PortUnificationHandler(MockServerLogger mockServerLogger) {
+    public PortUnificationHandler(LifeCycle server, MockServerLogger mockServerLogger) {
         super(false);
         this.mockServerLogger = mockServerLogger;
-        this.socksProxyHandler = new SocksProxyHandler(mockServerLogger);
+        this.socksProxyHandler = new SocksProxyHandler(server, mockServerLogger);
     }
 
     public static void enabledSslUpstreamAndDownstream(Channel channel) {

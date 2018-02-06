@@ -1,6 +1,6 @@
 package org.mockserver.initialize;
 
-import org.mockserver.client.server.MockServerClient;
+import org.mockserver.client.MockServerClient;
 
 /**
  * @author jamesdbloom

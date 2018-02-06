@@ -4,8 +4,10 @@ import com.google.common.net.MediaType;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.util.AttributeKey;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.client.serialization.PortBindingSerializer;
+import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
@@ -18,7 +20,9 @@ import org.mockserver.socket.KeyAndCertificateFactory;
 
 import javax.annotation.Nullable;
 import java.net.BindException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
@@ -26,7 +30,6 @@ import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
-import static org.mockserver.proxy.Proxy.*;
 import static org.mockserver.unification.PortUnificationHandler.enabledSslUpstreamAndDownstream;
 
 /**
@@ -35,23 +38,37 @@ import static org.mockserver.unification.PortUnificationHandler.enabledSslUpstre
 @ChannelHandler.Sharable
 public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
+    public static final AttributeKey<Boolean> PROXYING = AttributeKey.valueOf("PROXYING");
+    public static final AttributeKey<Set> LOCAL_HOST_HEADERS = AttributeKey.valueOf("LOCAL_HOST_HEADERS");
     private MockServerLogger mockServerLogger;
-    // generic handling
     private HttpStateHandler httpStateHandler;
-    // serializers
     private PortBindingSerializer portBindingSerializer;
-    // server
-    private MockServer server;
-    // expectations
+    private LifeCycle server;
     private ActionHandler actionHandler;
 
-    public MockServerHandler(MockServer server, HttpStateHandler httpStateHandler, @Nullable ProxyConfiguration proxyConfiguration) {
+    public MockServerHandler(LifeCycle server, HttpStateHandler httpStateHandler, @Nullable ProxyConfiguration proxyConfiguration) {
         super(false);
         this.server = server;
         this.httpStateHandler = httpStateHandler;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
-        portBindingSerializer = new PortBindingSerializer(mockServerLogger);
+        this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
         this.actionHandler = new ActionHandler(httpStateHandler, proxyConfiguration);
+    }
+
+    private static boolean isProxyingRequest(ChannelHandlerContext ctx) {
+        if (ctx != null && ctx.channel().attr(PROXYING).get() != null) {
+            return ctx.channel().attr(PROXYING).get();
+        }
+        return false;
+    }
+
+    public static Set<String> getLocalAddresses(ChannelHandlerContext ctx) {
+        if (ctx != null &&
+            ctx.channel().attr(LOCAL_HOST_HEADERS) != null &&
+            ctx.channel().attr(LOCAL_HOST_HEADERS).get() != null) {
+            return ctx.channel().attr(LOCAL_HOST_HEADERS).get();
+        }
+        return new HashSet<>();
     }
 
     @Override
@@ -64,7 +81,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 if (request.matches("PUT", "/status")) {
 
-                    responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(server.getPorts())), "application/json");
+                    responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(server.getLocalPorts())), "application/json");
 
                 } else if (request.matches("PUT", "/bind")) {
 
@@ -97,7 +114,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     enabledSslUpstreamAndDownstream(ctx.channel());
                     // add Subject Alternative Name for SSL certificate
                     KeyAndCertificateFactory.addSubjectAlternativeName(request.getPath().getValue());
-                    ctx.pipeline().addLast(new HttpConnectHandler(mockServerLogger, request.getPath().getValue(), -1));
+                    ctx.pipeline().addLast(new HttpConnectHandler(server, mockServerLogger, request.getPath().getValue(), -1));
                     ctx.pipeline().remove(this);
                     ctx.fireChannelRead(request);
 

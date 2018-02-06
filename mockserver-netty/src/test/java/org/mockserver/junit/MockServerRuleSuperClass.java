@@ -1,8 +1,6 @@
 package org.mockserver.junit;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.mockserver.client.server.MockServerClient;
+import org.mockserver.client.MockServerClient;
 
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;

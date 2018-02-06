@@ -294,14 +294,14 @@ public class ActionHandlerTest {
         when(mockChannel.attr(REMOTE_SOCKET)).thenReturn(inetSocketAddressAttribute);
 
         // and - netty http client
-        when(mockNettyHttpClient.sendRequest(request, remoteAddress)).thenReturn(responseFuture);
+        when(mockNettyHttpClient.sendRequest(request("request_one"), remoteAddress)).thenReturn(responseFuture);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), true, true);
+        actionHandler.processAction(request("request_one"), mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), true, true);
 
         // then
         verify(mockHttpStateHandler).log(new RequestResponseLogEntry(request, response("some_body")));
-        verify(mockNettyHttpClient).sendRequest(request, remoteAddress);
+        verify(mockNettyHttpClient).sendRequest(request("request_one"), remoteAddress);
         verify(mockLogFormatter).info(
             request,
             "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " as curl:{}",

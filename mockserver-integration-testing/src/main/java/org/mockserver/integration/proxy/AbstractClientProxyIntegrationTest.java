@@ -20,7 +20,7 @@ import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.client.proxy.ProxyClient;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.KeyStoreFactory;
@@ -70,7 +70,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     public abstract int getProxyPort();
 
-    public abstract ProxyClient getProxyClient();
+    public abstract MockServerClient getMockServerClient();
 
     public abstract int getServerPort();
 
@@ -92,7 +92,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     @Before
     public void resetServer() {
-        getProxyClient().reset();
+        getMockServerClient().reset();
     }
 
     @Test
@@ -119,7 +119,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             assertContains(IOStreamUtils.readInputStreamToString(socket), "x-test: test_headers_only");
 
             // and
-            getProxyClient().verify(
+            getMockServerClient().verify(
                 request()
                     .withMethod("GET")
                     .withPath("/test_headers_only"),
@@ -143,7 +143,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             assertContains(response, "an_example_body");
 
             // and
-            getProxyClient().verify(
+            getMockServerClient().verify(
                 request()
                     .withMethod("GET")
                     .withPath("/test_headers_and_body")
@@ -179,7 +179,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         assertEquals("an_example_body", new String(EntityUtils.toByteArray(response.getEntity()), UTF_8));
 
         // and
-        getProxyClient().verify(
+        getMockServerClient().verify(
             request()
                 .withMethod("POST")
                 .withPath("/test_headers_and_body")
@@ -221,7 +221,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         assertEquals("an_example_body", new String(EntityUtils.toByteArray(response.getEntity()), UTF_8));
 
         // and
-        getProxyClient().verify(
+        getMockServerClient().verify(
             request()
                 .withMethod("POST")
                 .withPath("/test_headers_and_body")
@@ -256,7 +256,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 404 Not Found");
 
             // and
-            getProxyClient().verify(
+            getMockServerClient().verify(
                 request()
                     .withMethod("GET")
                     .withPath("/not_found"),
@@ -272,7 +272,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnResponseByMatchingPathExactTimes() throws URISyntaxException, IOException {
         // when
-        getProxyClient()
+        getMockServerClient()
             .when(
                 request()
                     .withPath(calculatePath("some_path")), Times.exactly(1)
@@ -312,7 +312,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnResponseByMatchingStringBody() throws IOException, URISyntaxException {
         // when
-        getProxyClient()
+        getMockServerClient()
             .when(
                 request()
                     .withBody(
@@ -344,7 +344,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnResponseByMatchingBodyWithJsonSchema() throws URISyntaxException, IOException {
         // when
-        getProxyClient()
+        getMockServerClient()
             .when(request().withBody(jsonSchema("{" + NEW_LINE +
                 "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + NEW_LINE +
                 "    \"title\": \"Product\"," + NEW_LINE +
@@ -425,32 +425,32 @@ public abstract class AbstractClientProxyIntegrationTest {
         );
 
         // then
-        getProxyClient()
+        getMockServerClient()
             .verify(
                 request()
                     .withMethod("GET")
                     .withPath("/test_headers_and_body")
             );
-        getProxyClient()
+        getMockServerClient()
             .verify(
                 request()
                     .withMethod("GET")
                     .withPath("/test_headers_and_body"),
                 exactly(1)
             );
-        getProxyClient()
+        getMockServerClient()
             .verify(
                 request()
                     .withPath("/test_headers_.*"),
                 atLeast(1)
             );
-        getProxyClient()
+        getMockServerClient()
             .verify(
                 request()
                     .withPath("/test_headers_.*"),
                 exactly(2)
             );
-        getProxyClient()
+        getMockServerClient()
             .verify(
                 request()
                     .withPath("/other_path"),
@@ -486,7 +486,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         );
 
         // then
-        getProxyClient()
+        getMockServerClient()
             .verify(
                 request()
                     .withMethod("GET")
@@ -516,7 +516,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         httpClient.execute(httpGet);
 
         // then
-        getProxyClient()
+        getMockServerClient()
             .verify(
                 request()
                     .withMethod("GET")
@@ -524,7 +524,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                     .withHeader("Proxy-Authorization", "some-random_value")
                     .withHeader("keep-alive", "false")
             );
-        getProxyClient()
+        getMockServerClient()
             .verify(
                 request()
                     .withMethod("GET")
@@ -554,7 +554,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
         // then
         try {
-            getProxyClient()
+            getMockServerClient()
                 .verify(
                     request()
                         .withPath("/test_headers_and_body"), exactly(0)
@@ -588,7 +588,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
         // then
         try {
-            getProxyClient()
+            getMockServerClient()
                 .verify(
                     request()
                         .withPath("/other_path"),
@@ -623,7 +623,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
         // then
         try {
-            getProxyClient()
+            getMockServerClient()
                 .verify(
                     request()
                         .withPath("/other_path")
@@ -667,7 +667,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
         // then
         try {
-            getProxyClient()
+            getMockServerClient()
                 .verify(
                     request()
                         .withPath("/test_headers_and_body"),
@@ -712,7 +712,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
         // then
         try {
-            getProxyClient()
+            getMockServerClient()
                 .verify(
                     request()
                         .withMethod("GET")
@@ -762,7 +762,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                     .build()
             )
         );
-        getProxyClient()
+        getMockServerClient()
             .clear(
                 request()
                     .withMethod("GET")
@@ -770,14 +770,14 @@ public abstract class AbstractClientProxyIntegrationTest {
             );
 
         // then
-        getProxyClient()
+        getMockServerClient()
             .verify(
                 request()
                     .withMethod("GET")
                     .withPath("/test_headers_and_body"),
                 exactly(0)
             );
-        getProxyClient()
+        getMockServerClient()
             .verify(
                 request()
                     .withPath("/test_headers_.*"),
@@ -811,23 +811,23 @@ public abstract class AbstractClientProxyIntegrationTest {
                     .build()
             )
         );
-        getProxyClient().reset();
+        getMockServerClient().reset();
 
         // then
-        getProxyClient()
+        getMockServerClient()
             .verify(
                 request()
                     .withMethod("GET")
                     .withPath("/test_headers_and_body"),
                 exactly(0)
             );
-        getProxyClient()
+        getMockServerClient()
             .verify(
                 request()
                     .withPath("/test_headers_.*"),
                 atLeast(0)
             );
-        getProxyClient()
+        getMockServerClient()
             .verify(
                 request()
                     .withPath("/test_headers_.*"),

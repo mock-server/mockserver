@@ -13,7 +13,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
-import org.mockserver.client.proxy.ProxyClient;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
@@ -37,7 +37,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
 
     public abstract int getServerSecurePort();
 
-    public abstract ProxyClient getProxyClient();
+    public abstract MockServerClient getProxyClient();
 
     @Test
     public void shouldConnectToSecurePort() throws Exception {

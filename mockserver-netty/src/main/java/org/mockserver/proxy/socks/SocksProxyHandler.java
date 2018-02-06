@@ -5,10 +5,11 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.*;
+import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
 
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
-import static org.mockserver.proxy.Proxy.PROXYING;
+import static org.mockserver.mockserver.MockServerHandler.PROXYING;
 import static org.mockserver.socket.KeyAndCertificateFactory.addSubjectAlternativeName;
 import static org.mockserver.unification.PortUnificationHandler.disableSslDownstream;
 import static org.mockserver.unification.PortUnificationHandler.enabledSslDownstream;
@@ -16,10 +17,12 @@ import static org.mockserver.unification.PortUnificationHandler.enabledSslDownst
 @ChannelHandler.Sharable
 public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest> {
 
+    private final LifeCycle server;
     private final MockServerLogger mockServerLogger;
 
-    public SocksProxyHandler(MockServerLogger mockServerLogger) {
+    public SocksProxyHandler(LifeCycle server, MockServerLogger mockServerLogger) {
         super(false);
+        this.server = server;
         this.mockServerLogger = mockServerLogger;
     }
 
@@ -55,7 +58,7 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
                     // add Subject Alternative Name for SSL certificate
                     addSubjectAlternativeName(req.host());
 
-                    ctx.pipeline().addAfter(getClass().getSimpleName() + "#0", SocksConnectHandler.class.getSimpleName() + "#0", new SocksConnectHandler(mockServerLogger, req.host(), req.port()));
+                    ctx.pipeline().addAfter(getClass().getSimpleName() + "#0", SocksConnectHandler.class.getSimpleName() + "#0", new SocksConnectHandler(server, mockServerLogger, req.host(), req.port()));
                     ctx.pipeline().remove(this);
                     ctx.fireChannelRead(socksRequest);
 

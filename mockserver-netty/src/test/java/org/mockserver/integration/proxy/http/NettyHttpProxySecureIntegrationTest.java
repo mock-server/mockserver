@@ -3,60 +3,58 @@ package org.mockserver.integration.proxy.http;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.mockserver.client.proxy.ProxyClient;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.proxy.AbstractClientSecureProxyIntegrationTest;
-import org.mockserver.logging.MockServerLogger;
-import org.mockserver.proxy.Proxy;
-import org.mockserver.proxy.ProxyBuilder;
-import org.mockserver.socket.PortFactory;
+import org.mockserver.mockserver.MockServer;
 
 /**
  * @author jamesdbloom
  */
 public class NettyHttpProxySecureIntegrationTest extends AbstractClientSecureProxyIntegrationTest {
 
-    private final static Integer PROXY_PORT = PortFactory.findFreePort();
+    private static int mockServerPort;
     private static EchoServer echoServer;
-    private static Proxy httpProxy;
-    private static ProxyClient proxyClient;
+    private static MockServerClient mockServerClient;
 
     @BeforeClass
-    public static void setupFixture() throws Exception {
-        // start server
+    public static void setupFixture() {
+        mockServerPort = new MockServer().getLocalPort();
+        mockServerClient = new MockServerClient("localhost", mockServerPort);
+
+        System.setProperty("http.proxyHost", "127.0.0.1");
+        System.setProperty("http.proxyPort", String.valueOf(mockServerPort));
+
         echoServer = new EchoServer(true);
-
-        // start proxy
-        httpProxy = new ProxyBuilder()
-            .withLocalPort(PROXY_PORT)
-            .build();
-
-        // start client
-        proxyClient = new ProxyClient("localhost", PROXY_PORT);
     }
 
     @AfterClass
-    public static void shutdownFixture() {
-        // stop server
-        echoServer.stop();
+    public static void stopServer() {
+        if (echoServer != null) {
+            echoServer.stop();
+        }
 
-        // stop proxy
-        httpProxy.stop();
+        System.clearProperty("http.proxyHost");
+        System.clearProperty("http.proxyPort");
+
+        if (mockServerClient != null) {
+            mockServerClient.stop();
+        }
     }
 
     @Before
     public void resetProxy() {
-        proxyClient.reset();
+        mockServerClient.reset();
     }
 
     @Override
     public int getProxyPort() {
-        return PROXY_PORT;
+        return mockServerPort;
     }
 
     @Override
-    public ProxyClient getProxyClient() {
-        return proxyClient;
+    public MockServerClient getProxyClient() {
+        return mockServerClient;
     }
 
     @Override

@@ -8,15 +8,18 @@ import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.util.AttributeKey;
+import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
 
 import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.concurrent.Future;
 
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
-import static org.mockserver.proxy.Proxy.HTTP_CONNECT_SOCKET;
-import static org.mockserver.proxy.Proxy.PROXYING;
+import static org.mockserver.mockserver.MockServerHandler.PROXYING;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledDownstream;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledUpstream;
@@ -24,11 +27,15 @@ import static org.slf4j.event.Level.TRACE;
 
 @ChannelHandler.Sharable
 public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler<T> {
+
+    public static final AttributeKey<List<Future<Channel>>> HTTP_CONNECT_SOCKET = AttributeKey.valueOf("HTTP_CONNECT_SOCKET");
+    private final LifeCycle server;
     private final MockServerLogger mockServerLogger;
     private final String host;
     private final int port;
 
-    public RelayConnectHandler(MockServerLogger mockServerLogger, String host, int port) {
+    public RelayConnectHandler(LifeCycle server, MockServerLogger mockServerLogger, String host, int port) {
+        this.server = server;
         this.mockServerLogger = mockServerLogger;
         this.host = host;
         this.port = port;
@@ -107,10 +114,8 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
     private InetSocketAddress getDownstreamSocket(Channel channel) {
         if (channel.attr(REMOTE_SOCKET).get() != null) {
             return channel.attr(REMOTE_SOCKET).get();
-        } else if (channel.attr(HTTP_CONNECT_SOCKET).get() != null) {
-            return channel.attr(HTTP_CONNECT_SOCKET).get();
         } else {
-            throw new IllegalStateException("Trying to connect to remote socket but no remote socket has been set");
+            return new InetSocketAddress(server.getLocalPort());
         }
     }
 
