@@ -497,7 +497,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "}"),
             is(
                 "1 error:" + NEW_LINE +
-                    " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpResponseObjectCallback\" \"httpResponseClassCallback\" \"httpForward\" \"httpForwardTemplate\" \"httpForwardObjectCallback\" \"httpForwardClassCallback\" \"httpOverrideForwardedRequest\" \"httpError\" "
+                " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but 0 found"
             ));
     }
 
@@ -510,7 +510,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             is(
                 "2 errors:" + NEW_LINE +
                     " - object instance has properties which are not allowed by the schema: [\"invalidField\"]" + NEW_LINE +
-                    " - oneOf of the following must be specified \"httpResponse\" \"httpResponseTemplate\" \"httpResponseObjectCallback\" \"httpResponseClassCallback\" \"httpForward\" \"httpForwardTemplate\" \"httpForwardObjectCallback\" \"httpForwardClassCallback\" \"httpOverrideForwardedRequest\" \"httpError\" "
+                    " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but 0 found"
             ));
     }
 

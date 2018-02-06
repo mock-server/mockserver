@@ -16,6 +16,7 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.validator.Validator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.mockserver.character.Character.NEW_LINE;
@@ -209,11 +210,27 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     "   }");
             } else if (String.valueOf(processingMessage.asJson().get("keyword")).equals("\"oneOf\"")) {
                 StringBuilder oneOfErrorMessage = new StringBuilder("oneOf of the following must be specified ");
-                for (JsonNode jsonNode : processingMessage.asJson().get("reports")) {
-                    if (jsonNode.get(0) != null && jsonNode.get(0).get("required") != null && jsonNode.get(0).get("required").get(0) != null) {
-                        oneOfErrorMessage.append(String.valueOf(jsonNode.get(0).get("required").get(0))).append(" ");
+                if (fieldPointer.isEmpty()) {
+                    oneOfErrorMessage.append(Arrays.asList(
+                        "\"httpResponse\"",
+                        "\"httpResponseTemplate\"",
+                        "\"httpResponseObjectCallback\"",
+                        "\"httpResponseClassCallback\"",
+                        "\"httpForward\"",
+                        "\"httpForwardTemplate\"",
+                        "\"httpForwardObjectCallback\"",
+                        "\"httpForwardClassCallback\"",
+                        "\"httpOverrideForwardedRequest\"",
+                        "\"httpError\""
+                    ));
+                } else {
+                    for (JsonNode jsonNode : processingMessage.asJson().get("reports")) {
+                        if (jsonNode.get(0) != null && jsonNode.get(0).get("required") != null && jsonNode.get(0).get("required").get(0) != null) {
+                            oneOfErrorMessage.append(String.valueOf(jsonNode.get(0).get("required").get(0))).append(" ");
+                        }
                     }
                 }
+                oneOfErrorMessage.append(" but ").append(String.valueOf(processingMessage.asJson().get("matched"))).append(" found");
                 validationErrors.add(oneOfErrorMessage.toString() + (fieldPointer.isEmpty() ? "" : " for field \"" + fieldPointer + "\""));
             } else {
                 validationErrors.add(processingMessage.getMessage() + (fieldPointer.isEmpty() ? "" : " for field \"" + fieldPointer + "\""));
