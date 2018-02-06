@@ -5108,7 +5108,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             public HttpResponse call() throws Exception {
                 return httpClient.sendRequest(
                     request(addContextToPath(calculatePath("delayed")))
-                        .withHeader(HOST.toString(), "localhost:" + getMockServerPort())
+                        .withHeader(HOST.toString(), "localhost:" + getServerPort())
                 ).get(10, TimeUnit.SECONDS);
             }
         });

@@ -59,18 +59,20 @@ public abstract class AbstractMockingIntegrationTestBase {
         "version",
         "x-cors"
     );
-    protected static NettyHttpClient httpClient = new NettyHttpClient();
+    static NettyHttpClient httpClient = new NettyHttpClient();
 
     @BeforeClass
     public static void resetServletContext() {
         servletContext = "";
     }
 
-    public abstract int getMockServerPort();
+    public abstract int getServerPort();
 
-    public abstract int getMockServerSecurePort();
+    public int getServerSecurePort() {
+        return getServerPort();
+    }
 
-    public abstract int getTestServerPort();
+    public abstract int getEchoServerPort();
 
     @Before
     public void resetServer() {
@@ -81,7 +83,7 @@ public abstract class AbstractMockingIntegrationTestBase {
         return (!path.startsWith("/") ? "/" : "") + path;
     }
 
-    protected String addContextToPath(String path) {
+    String addContextToPath(String path) {
         String cleanedPath = path;
         if (!Strings.isNullOrEmpty(servletContext)) {
             cleanedPath =
@@ -108,7 +110,7 @@ public abstract class AbstractMockingIntegrationTestBase {
     protected HttpResponse makeRequest(HttpRequest httpRequest, Collection<String> headersToIgnore) {
         try {
             boolean isSsl = httpRequest.isSecure() != null && httpRequest.isSecure();
-            int port = (isSsl ? getMockServerSecurePort() : getMockServerPort());
+            int port = (isSsl ? getServerSecurePort() : getServerPort());
             httpRequest.withPath(addContextToPath(httpRequest.getPath().getValue()));
             httpRequest.withHeader(HOST.toString(), "localhost:" + port);
             boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;

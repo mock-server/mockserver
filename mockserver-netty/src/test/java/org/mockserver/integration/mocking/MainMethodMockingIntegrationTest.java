@@ -37,17 +37,12 @@ public class MainMethodMockingIntegrationTest extends AbstractBasicMockingIntegr
     }
 
     @Override
-    public int getMockServerPort() {
+    public int getServerPort() {
         return severHttpPort;
     }
 
     @Override
-    public int getMockServerSecurePort() {
-        return severHttpPort;
-    }
-
-    @Override
-    public int getTestServerPort() {
+    public int getEchoServerPort() {
         return echoServer.getPort();
     }
 }

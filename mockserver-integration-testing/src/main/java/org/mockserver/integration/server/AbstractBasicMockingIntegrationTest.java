@@ -52,7 +52,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(getTestServerPort())
+                    .withPort(getEchoServerPort())
             );
 
         // then
@@ -391,7 +391,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(getTestServerPort())
+                    .withPort(getEchoServerPort())
             );
         mockServerClient
             .when(
@@ -511,7 +511,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         new NettyHttpClient().sendRequest(
             request()
                 .withMethod("PUT")
-                .withHeader(HOST.toString(), "localhost:" + getMockServerPort())
+                .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
                 .withPath(addContextToPath("/expectation"))
                 .withBody("" +
                     "[" +
@@ -1664,7 +1664,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         HttpResponse httpResponse = new NettyHttpClient().sendRequest(
             request()
                 .withMethod("PUT")
-                .withHeader(HOST.toString(), "localhost:" + getMockServerPort())
+                .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
                 .withPath(addContextToPath("/expectation"))
                 .withBody("{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
@@ -1695,7 +1695,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         HttpResponse httpResponse = new NettyHttpClient().sendRequest(
             request()
                 .withMethod("PUT")
-                .withHeader(HOST.toString(), "localhost:" + getMockServerPort())
+                .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
                 .withPath(addContextToPath("/clear"))
                 .withBody("{" + NEW_LINE +
                     "    \"path\" : 500," + NEW_LINE +

@@ -36,17 +36,12 @@ public class ClientAndServerMockingIntegrationTest extends AbstractBasicMockingI
     }
 
     @Override
-    public int getMockServerPort() {
+    public int getServerPort() {
         return mockServerPort;
     }
 
     @Override
-    public int getMockServerSecurePort() {
-        return mockServerPort;
-    }
-
-    @Override
-    public int getTestServerPort() {
+    public int getEchoServerPort() {
         return echoServer.getPort();
     }
 }

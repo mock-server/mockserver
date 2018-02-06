@@ -38,17 +38,12 @@ public class JUnitRuleMockingIntegrationTest extends AbstractBasicMockingIntegra
     }
 
     @Override
-    public int getMockServerPort() {
+    public int getServerPort() {
         return mockServerRule.getPort();
     }
 
     @Override
-    public int getMockServerSecurePort() {
-        return mockServerRule.getPort();
-    }
-
-    @Override
-    public int getTestServerPort() {
+    public int getEchoServerPort() {
         return echoServer.getPort();
     }
 }

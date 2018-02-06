@@ -46,17 +46,12 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractBasicMoc
     }
 
     @Override
-    public int getMockServerPort() {
+    public int getServerPort() {
         return mockServer.getLocalPort();
     }
 
     @Override
-    public int getMockServerSecurePort() {
-        return mockServer.getLocalPort();
-    }
-
-    @Override
-    public int getTestServerPort() {
+    public int getEchoServerPort() {
         return echoServer.getPort();
     }
 }

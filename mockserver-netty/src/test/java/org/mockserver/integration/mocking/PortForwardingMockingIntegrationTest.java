@@ -55,17 +55,12 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
     }
 
     @Override
-    public int getMockServerPort() {
+    public int getServerPort() {
         return mockServerPort;
     }
 
     @Override
-    public int getMockServerSecurePort() {
-        return mockServerPort;
-    }
-
-    @Override
-    public int getTestServerPort() {
+    public int getEchoServerPort() {
         return echoServer.getPort();
     }
 
@@ -82,7 +77,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(getTestServerPort())
+                    .withPort(getEchoServerPort())
             );
         mockServerClient
             .when(

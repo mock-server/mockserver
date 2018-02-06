@@ -321,7 +321,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
-                    "  \"ports\" : [ " + getMockServerPort() + " ]" + NEW_LINE +
+                    "  \"ports\" : [ " + getServerPort() + " ]" + NEW_LINE +
                     "}"),
             makeRequest(
                 request()
@@ -355,7 +355,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
-                    "  \"ports\" : [ " + getMockServerPort() + ", " + firstNewPort + " ]" + NEW_LINE +
+                    "  \"ports\" : [ " + this.getServerPort() + ", " + firstNewPort + " ]" + NEW_LINE +
                     "}"),
             makeRequest(
                 request()
@@ -388,7 +388,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
-                    "  \"ports\" : [ " + getMockServerSecurePort() + ", " + firstNewPort + ", " + secondNewPort + " ]" + NEW_LINE +
+                    "  \"ports\" : [ " + getServerSecurePort() + ", " + firstNewPort + ", " + secondNewPort + " ]" + NEW_LINE +
                     "}"),
             makeRequest(
                 request()
@@ -609,7 +609,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         Socket socket = null;
         try {
             // given
-            socket = new Socket("localhost", getMockServerPort());
+            socket = new Socket("localhost", this.getServerPort());
             OutputStream output = socket.getOutputStream();
 
             // when
@@ -654,7 +654,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         // - in https
         SSLSocket sslSocket = null;
         try {
-            sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", getMockServerPort()));
+            sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", this.getServerPort()));
             OutputStream output = sslSocket.getOutputStream();
 
             // when
@@ -696,7 +696,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         Socket socket = null;
         try {
             // given
-            socket = new Socket("localhost", getMockServerPort());
+            socket = new Socket("localhost", this.getServerPort());
             OutputStream output = socket.getOutputStream();
 
             // when
@@ -719,7 +719,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         // - in https
         SSLSocket sslSocket = null;
         try {
-            sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", getMockServerPort()));
+            sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", this.getServerPort()));
             OutputStream output = sslSocket.getOutputStream();
 
             // when
@@ -756,7 +756,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         Socket socket = null;
         try {
             // given
-            socket = new Socket("localhost", getMockServerPort());
+            socket = new Socket("localhost", this.getServerPort());
             OutputStream output = socket.getOutputStream();
 
             // when

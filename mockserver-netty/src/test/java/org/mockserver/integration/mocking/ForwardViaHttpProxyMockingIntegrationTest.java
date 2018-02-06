@@ -61,18 +61,13 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
         }
     }
 
-    public int getMockServerPort() {
+    public int getServerPort() {
         return mockServer.getLocalPort();
     }
 
-    public int getMockServerSecurePort() {
-        return mockServer.getLocalPort();
-    }
-
-    public int getTestServerPort() {
+    public int getEchoServerPort() {
         return echoServer.getPort();
     }
-
 
     @Test
     public void shouldForwardRequestInHTTP() {
@@ -85,7 +80,7 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(getTestServerPort())
+                    .withPort(getEchoServerPort())
             );
 
         // then
@@ -259,7 +254,7 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(getTestServerPort())
+                    .withPort(getEchoServerPort())
             );
         mockServerClient
             .when(

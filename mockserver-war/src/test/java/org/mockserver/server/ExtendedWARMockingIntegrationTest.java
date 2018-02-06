@@ -78,17 +78,17 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
     }
 
     @Override
-    public int getMockServerPort() {
+    public int getServerPort() {
         return SERVER_HTTP_PORT;
     }
 
     @Override
-    public int getMockServerSecurePort() {
+    public int getServerSecurePort() {
         return SERVER_HTTPS_PORT;
     }
 
     @Override
-    public int getTestServerPort() {
+    public int getEchoServerPort() {
         return echoServer.getPort();
     }
 }

@@ -30,7 +30,7 @@ public class ClientAndServer extends MockServerClient {
         return new ClientAndServer(port);
     }
 
-    public static ClientAndServer startClientAndServer(Integer port, String remoteHost, Integer remotePort) {
+    public static ClientAndServer startClientAndServer(String remoteHost, Integer remotePort, Integer... port) {
         return new ClientAndServer(remoteHost, remotePort, port);
     }
 

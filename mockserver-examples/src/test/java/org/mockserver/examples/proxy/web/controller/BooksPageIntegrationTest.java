@@ -6,7 +6,6 @@ import org.mockserver.examples.proxy.model.Book;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Header;
 import org.mockserver.model.Parameter;
-import org.mockserver.socket.PortFactory;
 import org.mockserver.examples.proxy.web.controller.pageobjects.BookPage;
 import org.mockserver.examples.proxy.web.controller.pageobjects.BooksPage;
 import org.springframework.core.env.Environment;

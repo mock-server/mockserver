@@ -273,7 +273,7 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
-                    "  \"ports\" : [ " + getMockServerPort() + " ]" + NEW_LINE +
+                    "  \"ports\" : [ " + getServerPort() + " ]" + NEW_LINE +
                     "}"),
             makeRequest(
                 request()
@@ -288,7 +288,7 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
-                    "  \"ports\" : [ " + getMockServerSecurePort() + " ]" + NEW_LINE +
+                    "  \"ports\" : [ " + getServerSecurePort() + " ]" + NEW_LINE +
                     "}"),
             makeRequest(
                 request()

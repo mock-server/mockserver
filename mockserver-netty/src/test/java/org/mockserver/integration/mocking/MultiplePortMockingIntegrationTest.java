@@ -50,17 +50,12 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
     }
 
     @Override
-    public int getMockServerPort() {
+    public int getServerPort() {
         return severHttpPort[random.nextInt(severHttpPort.length)];
     }
 
     @Override
-    public int getMockServerSecurePort() {
-        return severHttpPort[random.nextInt(severHttpPort.length)];
-    }
-
-    @Override
-    public int getTestServerPort() {
+    public int getEchoServerPort() {
         return echoServer.getPort();
     }
 
