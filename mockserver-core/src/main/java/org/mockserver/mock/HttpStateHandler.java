@@ -212,11 +212,7 @@ public class HttpStateHandler {
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
         mockServerLogger.trace("received request:{}", request);
 
-        if ((enableCORSForAPI() || enableCORSForAllResponses()) && isPreflightRequest(request)) {
-
-            responseWriter.writeResponse(request, OK);
-
-        } else if (request.matches("PUT", "/expectation")) {
+        if (request.matches("PUT", "/expectation")) {
 
             for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString())) {
                 if (!warDeployment || validateSupportedFeatures(expectation, request, responseWriter)) {

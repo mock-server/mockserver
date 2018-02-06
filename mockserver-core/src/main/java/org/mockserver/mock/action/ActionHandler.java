@@ -22,7 +22,11 @@ import java.net.InetSocketAddress;
 import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
+import static org.mockserver.cors.CORSHeaders.isPreflightRequest;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.scheduler.Scheduler.schedule;
 import static org.mockserver.scheduler.Scheduler.submit;
@@ -229,6 +233,10 @@ public class ActionHandler {
                     break;
                 }
             }
+        } else if ((enableCORSForAPI() || enableCORSForAllResponses()) && isPreflightRequest(request)) {
+
+            responseWriter.writeResponse(request, OK);
+
         } else if (proxyThisRequest || !localAddresses.contains(request.getFirstHeader(HOST.toString()))) {
 
             final InetSocketAddress remoteAddress = ctx != null ? ctx.channel().attr(REMOTE_SOCKET).get() : null;
