@@ -58,7 +58,6 @@
         <boucycastle.verion>1.58</boucycastle.verion>
         <spring.version>4.3.12.RELEASE</spring.version>
         <skipTests>false</skipTests>
-        <nonReleaseBuild>true</nonReleaseBuild>
         <release.arguments/>
         <javadoc.additional.parameters/>
     </properties>
@@ -461,9 +460,6 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
-                        <configuration>
-                            <skipSource>${nonReleaseBuild}</skipSource>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -496,9 +492,6 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
-                        <configuration>
-                            <skip>${nonReleaseBuild}</skip>
-                        </configuration>
                     </execution>
                     <execution>
                         <id>aggregate</id>
