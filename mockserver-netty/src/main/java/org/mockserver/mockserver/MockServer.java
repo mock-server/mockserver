@@ -7,6 +7,7 @@ import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.lifecycle.LifeCycle;
+import org.mockserver.scheduler.Scheduler;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -95,6 +96,8 @@ public class MockServer extends LifeCycle<MockServer> {
 
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             public void run() {
+                Scheduler.shutdown();
+
                 // Shut down all event loops to terminate all threads.
                 bossGroup.shutdownGracefully();
                 workerGroup.shutdownGracefully();

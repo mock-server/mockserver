@@ -10,6 +10,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.scheduler.Scheduler;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ public abstract class LifeCycle<T extends LifeCycle> {
     }
 
     public Future<?> stop() {
-        stopped();
+        Scheduler.shutdown();
 
         // Shut down all event loops to terminate all threads.
         bossGroup.shutdownGracefully();
@@ -140,11 +141,8 @@ public abstract class LifeCycle<T extends LifeCycle> {
         return actualPortBindings;
     }
 
-    protected void started(Integer port) {
+    private void started(Integer port) {
         mockServerLogger.info("MockServer started on port: {}", port);
     }
 
-    protected void stopped() {
-
-    }
 }

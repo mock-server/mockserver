@@ -16,7 +16,21 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
  */
 public class Scheduler {
 
-    private static final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new ThreadPoolExecutor.CallerRunsPolicy());
+    private static ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new ThreadPoolExecutor.CallerRunsPolicy());
+
+    public synchronized static void shutdown() {
+        if (scheduler != null) {
+            scheduler.shutdown();
+            scheduler = null;
+        }
+    }
+
+    private synchronized static ScheduledExecutorService getScheduler() {
+        if (scheduler == null) {
+            scheduler = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new ThreadPoolExecutor.CallerRunsPolicy());
+        }
+        return scheduler;
+    }
 
     public static void schedule(Runnable command, Delay delay) {
         schedule(command, delay, false);
@@ -30,7 +44,7 @@ public class Scheduler {
             command.run();
         } else {
             if (delay != null) {
-                scheduler.schedule(command, delay.getValue(), delay.getTimeUnit());
+                getScheduler().schedule(command, delay.getValue(), delay.getTimeUnit());
             } else {
                 command.run();
             }
@@ -45,7 +59,7 @@ public class Scheduler {
         if (synchronous) {
             command.run();
         } else {
-            scheduler.schedule(command, 0, TimeUnit.NANOSECONDS);
+            getScheduler().schedule(command, 0, TimeUnit.NANOSECONDS);
         }
     }
 
@@ -61,7 +75,7 @@ public class Scheduler {
                 }
                 command.run();
             } else {
-                future.addListener(command, scheduler);
+                future.addListener(command, getScheduler());
             }
         }
     }
