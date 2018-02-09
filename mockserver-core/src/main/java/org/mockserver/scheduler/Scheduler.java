@@ -8,15 +8,16 @@ import org.mockserver.model.HttpResponse;
 
 import java.util.concurrent.*;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-
 /**
  * @author jamesdbloom
  */
 public class Scheduler {
 
-    private static ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new ThreadPoolExecutor.CallerRunsPolicy());
+    private static ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(poolSize(), new ThreadPoolExecutor.CallerRunsPolicy());
+
+    private static int poolSize() {
+        return Math.max(2, Runtime.getRuntime().availableProcessors() * 2);
+    }
 
     public synchronized static void shutdown() {
         if (scheduler != null) {
@@ -27,7 +28,7 @@ public class Scheduler {
 
     private synchronized static ScheduledExecutorService getScheduler() {
         if (scheduler == null) {
-            scheduler = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new ThreadPoolExecutor.CallerRunsPolicy());
+            scheduler = new ScheduledThreadPoolExecutor(poolSize(), new ThreadPoolExecutor.CallerRunsPolicy());
         }
         return scheduler;
     }
