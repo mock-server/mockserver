@@ -1395,7 +1395,18 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 " did not match expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
-                    "\t  \"path\" : \"/some_path.*\"" + NEW_LINE +
+                    "\t  \"httpRequest\" : {" + NEW_LINE +
+                    "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"times\" : {" + NEW_LINE +
+                    "\t    \"remainingTimes\" : 3" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"timeToLive\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"httpResponse\" : {" + NEW_LINE +
+                    "\t    \"body\" : \"some_body\"" + NEW_LINE +
+                    "\t  }" + NEW_LINE +
                     "\t}" + NEW_LINE +
                     NEW_LINE +
                     " because:" + NEW_LINE +
@@ -1478,7 +1489,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "\t  }" + NEW_LINE +
                     "\t}" + NEW_LINE
             },
-            "retrieving logs that match:" + NEW_LINE +
+            "retrieving logs in plain format that match:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"path\" : \"/.*\"" + NEW_LINE +
