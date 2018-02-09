@@ -9,6 +9,7 @@ import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.scheduler.Scheduler;
 
+import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
@@ -17,7 +18,6 @@ import static java.util.Collections.singletonList;
 import static org.mockserver.client.netty.proxy.ProxyConfiguration.proxyConfiguration;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.mockserver.MockServerHandler.PROXYING;
-import static org.mockserver.proxy.relay.RelayConnectHandler.HTTP_CONNECT_SOCKET;
 
 /**
  * @author jamesdbloom
@@ -48,11 +48,11 @@ public class MockServer extends LifeCycle<MockServer> {
     /**
      * Start the instance using the ports provided
      *
-     * @param localPorts the local port(s) to use
-     * @param remoteHost the hostname of the remote server to connect to
      * @param remotePort the port of the remote server to connect to
+     * @param remoteHost the hostname of the remote server to connect to (if null defaults to "localhost")
+     * @param localPorts the local port(s) to use
      */
-    public MockServer(final String remoteHost, final Integer remotePort, final Integer... localPorts) {
+    public MockServer(final Integer remotePort, @Nullable final String remoteHost, final Integer... localPorts) {
         this(proxyConfiguration(), remoteHost, remotePort, localPorts);
     }
 
@@ -60,19 +60,22 @@ public class MockServer extends LifeCycle<MockServer> {
      * Start the instance using the ports provided configuring forwarded or proxied requests to go via an additional proxy
      *
      * @param localPorts the local port(s) to use
-     * @param remoteHost the hostname of the remote server to connect to
+     * @param remoteHost the hostname of the remote server to connect to (if null defaults to "localhost")
      * @param remotePort the port of the remote server to connect to
      */
-    public MockServer(final ProxyConfiguration proxyConfiguration, final String remoteHost, final Integer remotePort, final Integer... localPorts) {
-        if (remoteHost == null) {
-            throw new IllegalArgumentException("You must specify a remote port");
-        }
+    public MockServer(final ProxyConfiguration proxyConfiguration, @Nullable String remoteHost, final Integer remotePort, final Integer... localPorts) {
         if (remotePort == null) {
             throw new IllegalArgumentException("You must specify a remote hostname");
+        }
+        if (remoteHost == null) {
+            remoteHost = "localhost";
         }
 
         remoteSocket = new InetSocketAddress(remoteHost, remotePort);
         createServerBootstrap(proxyConfiguration, localPorts);
+
+        // wait to start
+        getLocalPort();
     }
 
     private void createServerBootstrap(final ProxyConfiguration proxyConfiguration, final Integer... localPorts) {

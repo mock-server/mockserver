@@ -77,7 +77,7 @@ public class Main {
                     if (Strings.isNullOrEmpty(remoteHost)) {
                         remoteHost = "localhost";
                     }
-                    new MockServer(remoteHost, Integer.parseInt(parsedArguments.get(proxyRemotePort.name())), localPorts);
+                    new MockServer(Integer.parseInt(parsedArguments.get(proxyRemotePort.name())), remoteHost, localPorts);
                 } else {
                     new MockServer(localPorts);
                 }

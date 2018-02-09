@@ -37,7 +37,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
     @BeforeClass
     public static void startServer() {
         echoServer = new EchoServer(false);
-        mockServerPort = new MockServer("localhost", echoServer.getPort(), 0)
+        mockServerPort = new MockServer(echoServer.getPort(), "localhost", 0)
             .getLocalPort();
 
         mockServerClient = new MockServerClient("localhost", mockServerPort);
@@ -384,7 +384,18 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                 " did not match expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
-                    "\t  \"path\" : \"/some_path.*\"" + NEW_LINE +
+                    "\t  \"httpRequest\" : {" + NEW_LINE +
+                    "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"times\" : {" + NEW_LINE +
+                    "\t    \"remainingTimes\" : 3" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"timeToLive\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"httpResponse\" : {" + NEW_LINE +
+                    "\t    \"body\" : \"some_body\"" + NEW_LINE +
+                    "\t  }" + NEW_LINE +
                     "\t}" + NEW_LINE +
                     NEW_LINE +
                     " because:" + NEW_LINE +
@@ -466,7 +477,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     "\t  }" + NEW_LINE +
                     "\t}" + NEW_LINE
             },
-            "retrieving logs that match:" + NEW_LINE +
+            "retrieving logs in plain format that match:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"path\" : \"/.*\"" + NEW_LINE +

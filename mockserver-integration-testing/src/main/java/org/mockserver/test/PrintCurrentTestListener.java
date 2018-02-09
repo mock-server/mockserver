@@ -5,6 +5,31 @@ import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
+/**
+ * <pre>
+ *  &lt;plugin&gt;
+ *  &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+ *  &lt;artifactId&gt;maven-failsafe-plugin&lt;/artifactId&gt;
+ *  &lt;version&gt;2.20.1&lt;/version&gt;
+ *  &lt;configuration&gt;
+ *     &lt;properties&gt;;
+ *     &lt;property&gt;
+ *     &lt;name&gt;listener&lt;/name&gt;
+ *     &lt;value&gt;org.mockserver.test.PrintCurrentTestListener&lt;/value&gt;
+ *     &lt;/property&gt;
+ *     &lt;/properties&gt;
+ *     &lt;/configuration&gt;
+ *     &lt;executions&gt;
+ *     &lt;execution&gt;
+ *     &lt;goals&gt;
+ *     &lt;goal&gt;integration-test&lt;/goal&gt;
+ *     &lt;goal&gt;verify&lt;/goal&gt;
+ *     &lt;/goals&gt;
+ *     &lt;/execution&gt;
+ *     &lt;/executions&gt;
+ *  &lt;/plugin&gt;
+ * </pre>
+ */
 public class PrintCurrentTestListener extends RunListener {
 
     @Override

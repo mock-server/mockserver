@@ -116,8 +116,12 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         });
     }
 
-    public List<String> retrieveMessages(HttpRequest httpRequest) {
-        return retrieveLogEntries(httpRequest, messageLogPredicate, logEntryToMessage);
+    public List<MessageLogEntry> retrieveMessages(HttpRequest httpRequest) {
+        return retrieveLogEntries(httpRequest, messageLogPredicate, new Function<LogEntry, MessageLogEntry>() {
+            public MessageLogEntry apply(LogEntry input) {
+                return (MessageLogEntry) input;
+            }
+        });
     }
 
     public List<HttpRequest> retrieveRequests(HttpRequest httpRequest) {

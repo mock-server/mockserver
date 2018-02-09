@@ -1,6 +1,7 @@
 package org.mockserver.filters;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Before;
 import org.junit.Test;
@@ -106,7 +107,12 @@ public class LogFilterTest {
         assertThat(logFilter.retrieveLogEntries(null, expectationLogPredicate, logEntryToLogEntry), IsIterableContainingInOrder.<LogEntry>contains(
             new RequestResponseLogEntry(request("request_three"), response("response_three"))
         ));
-        assertThat(logFilter.retrieveMessages(null), contains(
+        List<String> logMessages = Lists.transform(logFilter.retrieveMessages(null), new Function<MessageLogEntry, String>() {
+            public String apply(MessageLogEntry input) {
+                return input.getMessage();
+            }
+        });
+        assertThat(logMessages, contains(
             containsString("message_two"),
             containsString("message_three"),
             containsString("message_four"),
@@ -241,7 +247,12 @@ public class LogFilterTest {
         logFilter.add(new MessageLogEntry(request("request_seven"), "message_seven"));
 
         // then
-        assertThat(logFilter.retrieveMessages(null), contains(
+        List<String> logMessages = Lists.transform(logFilter.retrieveMessages(null), new Function<MessageLogEntry, String>() {
+            public String apply(MessageLogEntry input) {
+                return input.getMessage();
+            }
+        });
+        assertThat(logMessages, contains(
             containsString("message_one"),
             containsString("message_two"),
             containsString("message_three"),

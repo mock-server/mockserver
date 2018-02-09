@@ -211,11 +211,11 @@ public class ProxyServletTest {
 
         // then
         assertThat(response.getStatus(), is(200));
-        String[] splitBody = new String(response.getContentAsByteArray(), UTF_8).split("------------------------------------\n");
+        String[] splitBody = new String(response.getContentAsByteArray(), UTF_8).split("\n------------------------------------\n");
         assertThat(splitBody.length, is(1));
         assertThat(
             splitBody[0],
-            is(endsWith("retrieving logs that match:" + NEW_LINE +
+            is(endsWith("retrieving logs in plain format that match:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"path\" : \"request_one\"" + NEW_LINE +

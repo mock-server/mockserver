@@ -220,7 +220,7 @@ public class MockServerHandlerTest {
         // then
         HttpResponse response = embeddedChannel.readOutbound();
         assertThat(response.getStatusCode(), is(200));
-        String[] splitBody = response.getBodyAsString().split("------------------------------------\n");
+        String[] splitBody = response.getBodyAsString().split("\n------------------------------------\n");
         assertThat(splitBody.length, is(2));
         assertThat(
             splitBody[0],
@@ -245,7 +245,7 @@ public class MockServerHandlerTest {
         );
         assertThat(
             splitBody[1],
-            is(endsWith("retrieving logs that match:" + NEW_LINE +
+            is(endsWith("retrieving logs in plain format that match:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"path\" : \"request_one\"" + NEW_LINE +

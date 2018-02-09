@@ -22,7 +22,7 @@ public class ClientAndServer extends MockServerClient {
 
     public ClientAndServer(String remoteHost, Integer remotePort, Integer... ports) {
         super(SettableFuture.<Integer>create());
-        mockServer = new MockServer(remoteHost, remotePort, ports);
+        mockServer = new MockServer(remotePort, remoteHost, ports);
         ((SettableFuture) portFuture).set(mockServer.getLocalPort());
     }
 

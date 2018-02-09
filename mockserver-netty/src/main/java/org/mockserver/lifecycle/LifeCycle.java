@@ -69,7 +69,7 @@ public abstract class LifeCycle<T extends LifeCycle> {
         List<Integer> ports = new ArrayList<>();
         for (Future<Channel> channelOpened : channelOpenedFutures) {
             try {
-                ports.add(((InetSocketAddress) channelOpened.get(2, TimeUnit.SECONDS).localAddress()).getPort());
+                ports.add(((InetSocketAddress) channelOpened.get(3, TimeUnit.SECONDS).localAddress()).getPort());
             } catch (Exception e) {
                 mockServerLogger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
             }

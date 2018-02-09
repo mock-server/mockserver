@@ -30,7 +30,7 @@ public class NettyPortForwardingSecureProxyIntegrationTest {
     public static void setupFixture() {
         echoServer = new EchoServer(true);
 
-        mockServer = new MockServer("127.0.0.1", echoServer.getPort());
+        mockServer = new MockServer(echoServer.getPort(), "127.0.0.1");
 
         mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort());
     }
