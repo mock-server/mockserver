@@ -16,8 +16,6 @@ import org.mockserver.logging.MockServerLogger;
 
 import java.net.InetSocketAddress;
 
-import static org.mockserver.client.netty.NettyHttpClient.REMOTE_SOCKET;
-import static org.mockserver.client.netty.NettyHttpClient.SECURE;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 import static org.slf4j.event.Level.TRACE;
 
@@ -28,9 +26,11 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
     private final HttpClientConnectionHandler httpClientConnectionHandler = new HttpClientConnectionHandler();
     private final HttpClientHandler httpClientHandler = new HttpClientHandler();
     private final ProxyConfiguration proxyConfiguration;
+    private final NettyHttpClient.ChannelPoolSelector channelPoolSelector;
 
-    public HttpClientInitializer(ProxyConfiguration proxyConfiguration) {
+    public HttpClientInitializer(ProxyConfiguration proxyConfiguration, NettyHttpClient.ChannelPoolSelector channelPoolSelector) {
         this.proxyConfiguration = proxyConfiguration;
+        this.channelPoolSelector = channelPoolSelector;
     }
 
     @Override
@@ -46,9 +46,8 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         }
         pipeline.addLast(httpClientConnectionHandler);
 
-        if (channel.attr(SECURE) != null && channel.attr(SECURE).get() != null && channel.attr(SECURE).get()) {
-            InetSocketAddress remoteAddress = channel.attr(REMOTE_SOCKET).get();
-            pipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
+        if (channelPoolSelector.isSecure) {
+            pipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(channel.alloc(), channelPoolSelector.remoteAddress.getHostName(), channelPoolSelector.remoteAddress.getPort()));
         }
 
         // add logging

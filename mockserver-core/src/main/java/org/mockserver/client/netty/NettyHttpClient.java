@@ -3,10 +3,16 @@ package org.mockserver.client.netty;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.pool.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.FutureListener;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
@@ -27,56 +33,71 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class NettyHttpClient {
 
     static final MockServerLogger mockServerLogger = new MockServerLogger(NettyHttpClient.class);
-    static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");
-    static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
     static final AttributeKey<SettableFuture<HttpResponse>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
+    static final AttributeKey<SimpleChannelPool> CHANNEL_POOL = AttributeKey.valueOf("CHANNEL_POOL");
     private static EventLoopGroup group = new NioEventLoopGroup();
     private final ProxyConfiguration proxyConfiguration;
+    private Bootstrap bootstrap = new Bootstrap()
+        .group(group)
+        .channel(NioSocketChannel.class)
+        .option(ChannelOption.AUTO_READ, true)
+        .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+        .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024));
+    private ChannelPoolMap<ChannelPoolSelector, SimpleChannelPool> poolMap;
 
     public NettyHttpClient() {
         this(null);
     }
 
-    public NettyHttpClient(ProxyConfiguration proxyConfiguration) {
+    public NettyHttpClient(final ProxyConfiguration proxyConfiguration) {
         this.proxyConfiguration = proxyConfiguration;
+        poolMap = new AbstractChannelPoolMap<ChannelPoolSelector, SimpleChannelPool>() {
+            @Override
+            protected SimpleChannelPool newPool(final ChannelPoolSelector channelPoolSelector) {
+                return new SimpleChannelPool(bootstrap.remoteAddress(channelPoolSelector.remoteAddress), new AbstractChannelPoolHandler() {
+                    @Override
+                    public void channelCreated(Channel channel) {
+                        channel.pipeline().addLast(new HttpClientInitializer(proxyConfiguration, channelPoolSelector));
+                    }
+                });
+            }
+        };
     }
 
     public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {
         return sendRequest(httpRequest, httpRequest.socketAddressFromHostHeader());
     }
 
-    public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) throws SocketConnectionException {
+    public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, final @Nullable InetSocketAddress remoteAddress) throws SocketConnectionException {
+        final InetSocketAddress connectAddress;
+
         if (proxyConfiguration != null && proxyConfiguration.getType() == ProxyConfiguration.Type.HTTP) {
-            remoteAddress = proxyConfiguration.getProxyAddress();
+            connectAddress = proxyConfiguration.getProxyAddress();
         } else if (remoteAddress == null) {
-            remoteAddress = httpRequest.socketAddressFromHostHeader();
+            connectAddress = httpRequest.socketAddressFromHostHeader();
+        } else {
+            connectAddress = remoteAddress;
         }
 
-        mockServerLogger.debug("Sending to: {}" + NEW_LINE + "request: {}", remoteAddress, httpRequest);
+         mockServerLogger.debug("Sending to: {}" + NEW_LINE + "request: {}", connectAddress, httpRequest);
 
         final SettableFuture<HttpResponse> httpResponseSettableFuture = SettableFuture.create();
-        new Bootstrap()
-            .group(group)
-            .channel(NioSocketChannel.class)
-            .option(ChannelOption.AUTO_READ, true)
-            .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-            .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-            .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
-            .attr(REMOTE_SOCKET, remoteAddress)
-            .attr(RESPONSE_FUTURE, httpResponseSettableFuture)
-            .handler(new HttpClientInitializer(proxyConfiguration))
-            .connect(remoteAddress)
-            .addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture future) {
-                    if (future.isSuccess()) {
-                        // send the HTTP request
-                        future.channel().writeAndFlush(httpRequest);
-                    } else {
-                        httpResponseSettableFuture.setException(future.cause());
-                    }
+
+        final SimpleChannelPool pool = poolMap.get(new ChannelPoolSelector(connectAddress, httpRequest.isSecure() != null && httpRequest.isSecure()));
+        pool.acquire().addListener(new FutureListener<Channel>() {
+            @Override
+            public void operationComplete(Future<Channel> acquireFuture) {
+                if (acquireFuture.isSuccess()) {
+                    Channel channel = acquireFuture.getNow();
+                    channel.attr(RESPONSE_FUTURE).set(httpResponseSettableFuture);
+                    channel.attr(CHANNEL_POOL).set(pool);
+                    // send the HTTP request
+                    channel.writeAndFlush(httpRequest);
+                } else {
+                    httpResponseSettableFuture.setException(acquireFuture.cause());
                 }
-            });
+            }
+        });
 
         return httpResponseSettableFuture;
     }
@@ -99,6 +120,16 @@ public class NettyHttpClient {
             } else {
                 throw new RuntimeException("Exception while sending request - " + ex.getMessage(), ex);
             }
+        }
+    }
+
+    public static class ChannelPoolSelector {
+        public final InetSocketAddress remoteAddress;
+        public final boolean isSecure;
+
+        public ChannelPoolSelector(InetSocketAddress remoteAddress, boolean isSecure) {
+            this.remoteAddress = remoteAddress;
+            this.isSecure = isSecure;
         }
     }
 }
