@@ -202,19 +202,6 @@ public class ConfigurationProperties {
         System.setProperty("mockserver.mockServerPort", INTEGER_STRING_LIST_PARSER.toString(port));
     }
 
-    public static Integer proxyPort() {
-        List<Integer> ports = readIntegerListProperty("mockserver.proxyPort", -1);
-        if (!ports.isEmpty()) {
-            return ports.get(0);
-        } else {
-            return -1;
-        }
-    }
-
-    public static void proxyPort(Integer... port) {
-        System.setProperty("mockserver.proxyPort", INTEGER_STRING_LIST_PARSER.toString(port));
-    }
-
     public static Level logLevel() {
         return Level.valueOf(System.getProperty("mockserver.logLevel", DEFAULT_LOG_LEVEL));
     }
