@@ -13,6 +13,7 @@ import io.netty.util.AttributeKey;
 import org.mockserver.filters.MockServerEventLog;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.scheduler.Scheduler;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -28,7 +29,8 @@ public class EchoServer {
     static final AttributeKey<NextResponse> NEXT_RESPONSE = AttributeKey.valueOf("NEXT_RESPONSE");
     static final AttributeKey<OnlyResponse> ONLY_RESPONSE = AttributeKey.valueOf("ONLY_RESPONSE");
 
-    private final MockServerEventLog logFilter = new MockServerEventLog(mockServerLogger);
+    private final Scheduler scheduler = new Scheduler();
+    private final MockServerEventLog logFilter = new MockServerEventLog(mockServerLogger, scheduler);
     private final NextResponse nextResponse = new NextResponse();
     private final OnlyResponse onlyResponse = new OnlyResponse();
     private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
@@ -78,6 +80,7 @@ public class EchoServer {
     }
 
     public void stop() {
+        scheduler.shutdown();
         eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
     }
 

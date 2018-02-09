@@ -14,6 +14,7 @@ import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.KeyAndCertificateFactory;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -36,10 +37,11 @@ import static org.mockserver.model.HttpResponse.response;
 public class HttpStateHandler {
 
     public static final String LOG_SEPARATOR = "\n------------------------------------\n";
+    private final MockServerEventLog mockServerLog;
+    private final Scheduler scheduler;
     // mockserver
+    private MockServerMatcher mockServerMatcher;
     private MockServerLogger mockServerLogger = new MockServerLogger(LoggerFactory.getLogger(this.getClass()), this);
-    private MockServerEventLog mockServerLog = new MockServerEventLog(mockServerLogger);
-    private MockServerMatcher mockServerMatcher = new MockServerMatcher(mockServerLogger);
     private WebSocketClientRegistry webSocketClientRegistry = new WebSocketClientRegistry();
     // serializers
     private LogEventJsonSerializer logEventJsonSerializer = new LogEventJsonSerializer(mockServerLogger);
@@ -49,6 +51,12 @@ public class HttpStateHandler {
     private ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer(mockServerLogger);
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
+
+    public HttpStateHandler(Scheduler scheduler) {
+        this.scheduler = scheduler;
+        mockServerLog = new MockServerEventLog(mockServerLogger, scheduler);
+        mockServerMatcher = new MockServerMatcher(mockServerLogger, scheduler);
+    }
 
     public MockServerLogger getMockServerLogger() {
         return mockServerLogger;
@@ -299,5 +307,9 @@ public class HttpStateHandler {
 
     public MockServerEventLog getMockServerLog() {
         return mockServerLog;
+    }
+
+    public Scheduler getScheduler() {
+        return scheduler;
     }
 }

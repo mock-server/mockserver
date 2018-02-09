@@ -18,8 +18,6 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static org.mockserver.proxy.relay.RelayConnectHandler.HTTP_CONNECT_SOCKET;
-
 /**
  * @author jamesdbloom
  */
@@ -35,34 +33,28 @@ public abstract class LifeCycle<T extends LifeCycle> {
     protected ServerBootstrap serverBootstrap;
     protected HttpStateHandler httpStateHandler;
     private List<Future<Channel>> channelOpenedFutures = new ArrayList<>();
-    private SettableFuture<String> stopping = SettableFuture.create();
+    //    private SettableFuture<String> stopping = SettableFuture.create();
+    private Scheduler scheduler = new Scheduler();
 
     protected LifeCycle() {
-        this.httpStateHandler = new HttpStateHandler();
+        this.httpStateHandler = new HttpStateHandler(scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
     }
 
-    public Future<?> stop() {
-        Scheduler.shutdown();
+    public void stop() {
+        scheduler.shutdown();
 
         // Shut down all event loops to terminate all threads.
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
 
         // Wait until all threads are terminated.
-        try {
-            bossGroup.terminationFuture().sync();
-            workerGroup.terminationFuture().sync();
-        } catch (InterruptedException e) {
-            // ignore interrupted exceptions
-        } finally {
-            stopping.set("stopped");
-        }
-        return stopping;
+        bossGroup.terminationFuture().syncUninterruptibly();
+        workerGroup.terminationFuture().syncUninterruptibly();
     }
 
     public boolean isRunning() {
-        return !bossGroup.isShuttingDown() || !workerGroup.isShuttingDown() || !stopping.isDone();
+        return !bossGroup.isShuttingDown() || !workerGroup.isShuttingDown();
     }
 
     public List<Integer> getLocalPorts() {

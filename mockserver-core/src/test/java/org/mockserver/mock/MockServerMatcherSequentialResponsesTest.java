@@ -7,6 +7,7 @@ import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.scheduler.Scheduler;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -22,6 +23,7 @@ public class MockServerMatcherSequentialResponsesTest {
     private HttpResponse[] httpResponse;
 
     private MockServerLogger mockLogFormatter;
+    private Scheduler scheduler;
 
     @Before
     public void prepareTestFixture() {
@@ -31,7 +33,8 @@ public class MockServerMatcherSequentialResponsesTest {
                 new HttpResponse()
         };
         mockLogFormatter = mock(MockServerLogger.class);
-        mockServerMatcher = new MockServerMatcher(mockLogFormatter);
+        scheduler = mock(Scheduler.class);
+        mockServerMatcher = new MockServerMatcher(mockLogFormatter, scheduler);
     }
 
     @Test

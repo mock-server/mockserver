@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.Attribute;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -19,6 +20,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
+import org.mockserver.scheduler.Scheduler;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
@@ -84,6 +86,7 @@ public class ActionHandlerTest {
     private HttpResponse response;
     private SettableFuture<HttpResponse> responseFuture;
     private Expectation expectation;
+    private static Scheduler scheduler = new Scheduler();
 
     @InjectMocks
     private ActionHandler actionHandler;
@@ -91,15 +94,17 @@ public class ActionHandlerTest {
     @Before
     public void setupMocks() {
         mockHttpStateHandler = mock(HttpStateHandler.class);
+        when(mockHttpStateHandler.getScheduler()).thenReturn(scheduler);
         actionHandler = new ActionHandler(mockHttpStateHandler, null);
+
         initMocks(this);
         request = request("some_path");
         response = response("some_body");
         responseFuture = SettableFuture.create();
         responseFuture.set(response);
         expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(response);
-        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
         when(mockHttpResponseActionHandler.handle(any(HttpResponse.class))).thenReturn(response);
         when(mockHttpResponseTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenReturn(response);
         when(mockHttpResponseClassCallbackActionHandler.handle(any(HttpClassCallback.class), any(HttpRequest.class))).thenReturn(response);
@@ -107,6 +112,11 @@ public class ActionHandlerTest {
         when(mockHttpForwardTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenReturn(responseFuture);
         when(mockHttpForwardClassCallbackActionHandler.handle(any(HttpClassCallback.class), any(HttpRequest.class))).thenReturn(responseFuture);
         when(mockHttpOverrideForwardedRequestActionHandler.handle(any(HttpOverrideForwardedRequest.class), any(HttpRequest.class))).thenReturn(responseFuture);
+    }
+
+    @AfterClass
+    public static void stopScheduler() {
+        scheduler.shutdown();
     }
 
     @Test

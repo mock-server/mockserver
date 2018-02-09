@@ -2,6 +2,7 @@ package org.mockserver.server;
 
 import com.google.common.collect.ImmutableSet;
 import io.netty.channel.ChannelHandlerContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -17,6 +18,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.RetrieveType;
+import org.mockserver.scheduler.Scheduler;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -48,6 +50,7 @@ public class MockServerServletTest {
 
     private HttpStateHandler httpStateHandler;
     private ActionHandler mockActionHandler;
+    private Scheduler scheduler;
 
     @InjectMocks
     private MockServerServlet mockServerServlet;
@@ -57,7 +60,8 @@ public class MockServerServletTest {
     @Before
     public void setupFixture() {
         mockActionHandler = mock(ActionHandler.class);
-        httpStateHandler = spy(new HttpStateHandler());
+        scheduler = mock(Scheduler.class);
+        httpStateHandler = spy(new HttpStateHandler(scheduler));
         response = new MockHttpServletResponse();
         mockServerServlet = new MockServerServlet();
 

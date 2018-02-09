@@ -10,22 +10,24 @@ import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
+import org.mockserver.scheduler.Scheduler;
 
 import java.util.UUID;
 
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.scheduler.Scheduler.submit;
 
 /**
  * @author jamesdbloom
  */
 public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
     private final MockServerLogger logFormatter;
+    private final Scheduler scheduler;
     private WebSocketClientRegistry webSocketClientRegistry;
 
     public HttpForwardObjectCallbackActionHandler(HttpStateHandler httpStateHandler, NettyHttpClient httpClient) {
         super(httpStateHandler.getMockServerLogger(), httpClient);
+        this.scheduler = httpStateHandler.getScheduler();
         this.webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();
         this.logFormatter = httpStateHandler.getMockServerLogger();
     }
@@ -37,7 +39,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
             @Override
             public void handle(final HttpRequest request) {
                 final SettableFuture<HttpResponse> responseFuture = sendRequest(request.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), null);
-                submit(responseFuture, new Runnable() {
+                scheduler.submit(responseFuture, new Runnable() {
                     public void run() {
                         try {
                             HttpResponse response = responseFuture.get();

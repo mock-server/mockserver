@@ -1,11 +1,15 @@
 package org.mockserver.filters;
 
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
 import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.verify.VerificationSequence;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -20,10 +24,17 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public class LogFilterMixedLogEntryVerificationSequenceTest {
 
+    private static Scheduler scheduler = new Scheduler();
+
+    @AfterClass
+    public static void stopScheduler() {
+        scheduler.shutdown();
+    }
+
     @Test
     public void shouldPassVerificationWithNullRequest() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
@@ -39,7 +50,7 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationSequenceWithNoRequest() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
 
         // when
         logFilter.add(new RequestLogEntry(request("one")));
@@ -61,7 +72,7 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationSequenceWithOneRequest() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
 
         // when
         logFilter.add(new RequestResponseLogEntry(request("one"), response("one")));
@@ -104,7 +115,7 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationSequenceWithTwoRequests() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
@@ -184,7 +195,7 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithOneRequest() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
 
         // when
         logFilter.add(new RequestResponseLogEntry(request("one"), response("one")));
@@ -218,7 +229,7 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithTwoRequestsWrongOrder() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
@@ -344,7 +355,7 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithTwoRequestsFirstIncorrect() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
 
         // when
         logFilter.add(new RequestLogEntry(request("one")));
@@ -425,7 +436,7 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithTwoRequestsSecondIncorrect() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
 
         // when
         logFilter.add(new RequestResponseLogEntry(request("one"), response("one")));
@@ -506,7 +517,7 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithThreeRequestsWrongOrder() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
 
         // when
         logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
@@ -623,7 +634,7 @@ public class LogFilterMixedLogEntryVerificationSequenceTest {
     @Test
     public void shouldFailVerificationSequenceWithThreeRequestsDuplicateMissing() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class));
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
 
         // when
         logFilter.add(new RequestLogEntry(request("one")));

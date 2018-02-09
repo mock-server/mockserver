@@ -18,6 +18,7 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.RetrieveType;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.server.ServletResponseWriter;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -50,6 +51,7 @@ public class ProxyServletTest {
     private HttpStateHandler httpStateHandler;
     private ActionHandler mockActionHandler;
     private MockServerLogger mockLogFormatter;
+    private Scheduler scheduler;
 
     @InjectMocks
     private ProxyServlet proxyServlet;
@@ -60,8 +62,9 @@ public class ProxyServletTest {
     public void setupFixture() {
         mockActionHandler = mock(ActionHandler.class);
         mockLogFormatter = mock(MockServerLogger.class);
+        scheduler = mock(Scheduler.class);
 
-        httpStateHandler = spy(new HttpStateHandler());
+        httpStateHandler = spy(new HttpStateHandler(scheduler));
         response = new MockHttpServletResponse();
         proxyServlet = new ProxyServlet();
 

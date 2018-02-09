@@ -13,31 +13,31 @@ import java.util.concurrent.*;
  */
 public class Scheduler {
 
-    private static ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(poolSize(), new ThreadPoolExecutor.CallerRunsPolicy());
+    private ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(poolSize(), new ThreadPoolExecutor.CallerRunsPolicy());
 
-    private static int poolSize() {
+    private int poolSize() {
         return Math.max(2, Runtime.getRuntime().availableProcessors() * 2);
     }
 
-    public synchronized static void shutdown() {
+    public synchronized void shutdown() {
         if (scheduler != null) {
             scheduler.shutdown();
             scheduler = null;
         }
     }
 
-    private synchronized static ScheduledExecutorService getScheduler() {
+    private synchronized ScheduledExecutorService getScheduler() {
         if (scheduler == null) {
             scheduler = new ScheduledThreadPoolExecutor(poolSize(), new ThreadPoolExecutor.CallerRunsPolicy());
         }
         return scheduler;
     }
 
-    public static void schedule(Runnable command, Delay delay) {
+    public void schedule(Runnable command, Delay delay) {
         schedule(command, delay, false);
     }
 
-    public static void schedule(Runnable command, Delay delay, boolean synchronous) {
+    public void schedule(Runnable command, Delay delay, boolean synchronous) {
         if (synchronous) {
             if (delay != null) {
                 delay.applyDelay();
@@ -52,11 +52,11 @@ public class Scheduler {
         }
     }
 
-    public static void submit(Runnable command) {
+    public void submit(Runnable command) {
         submit(command, false);
     }
 
-    public static void submit(Runnable command, boolean synchronous) {
+    public void submit(Runnable command, boolean synchronous) {
         if (synchronous) {
             command.run();
         } else {
@@ -64,7 +64,7 @@ public class Scheduler {
         }
     }
 
-    public static void submit(SettableFuture<HttpResponse> future, Runnable command, boolean synchronous) {
+    public void submit(SettableFuture<HttpResponse> future, Runnable command, boolean synchronous) {
         if (future != null) {
             if (synchronous) {
                 try {

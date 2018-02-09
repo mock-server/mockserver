@@ -7,6 +7,7 @@ import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.scheduler.Scheduler;
 
 import java.util.concurrent.TimeUnit;
 
@@ -15,6 +16,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
@@ -25,12 +27,14 @@ public class MockServerMatcherManageExpectationsTest {
     private MockServerMatcher mockServerMatcher;
     private HttpRequest httpRequest;
     private HttpResponse httpResponse;
+    private Scheduler scheduler;
 
     @Before
     public void prepareTestFixture() {
+        scheduler = mock(Scheduler.class);
         httpRequest = new HttpRequest();
         httpResponse = new HttpResponse();
-        mockServerMatcher = new MockServerMatcher(new MockServerLogger(this.getClass()));
+        mockServerMatcher = new MockServerMatcher(new MockServerLogger(this.getClass()), scheduler);
     }
 
     @Test

@@ -1,5 +1,7 @@
 package org.mockserver.mock;
 
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
@@ -8,6 +10,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.scheduler.Scheduler;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -23,6 +26,8 @@ public class MockServerMatcherOverlappingRequestsTest {
 
     private MockServerLogger mockLogFormatter;
 
+    private static Scheduler scheduler = new Scheduler();
+
     @Before
     public void prepareTestFixture() {
         httpResponse = new HttpResponse[]{
@@ -30,7 +35,13 @@ public class MockServerMatcherOverlappingRequestsTest {
                 new HttpResponse()
         };
         mockLogFormatter = mock(MockServerLogger.class);
-        mockServerMatcher = new MockServerMatcher(mockLogFormatter);
+        mockServerMatcher = new MockServerMatcher(mockLogFormatter, scheduler);
+    }
+
+
+    @AfterClass
+    public static void stopScheduler() {
+        scheduler.shutdown();
     }
 
     @Test

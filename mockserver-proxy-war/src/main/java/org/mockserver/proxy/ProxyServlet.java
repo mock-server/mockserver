@@ -9,6 +9,7 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.responsewriter.ResponseWriter;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.server.ServletResponseWriter;
 
 import javax.servlet.http.HttpServlet;
@@ -29,6 +30,7 @@ public class ProxyServlet extends HttpServlet {
     private MockServerLogger mockServerLogger;
     // generic handling
     private HttpStateHandler httpStateHandler;
+    private Scheduler scheduler = new Scheduler();
     // serializers
     private PortBindingSerializer portBindingSerializer;
     // mappers
@@ -37,10 +39,15 @@ public class ProxyServlet extends HttpServlet {
     private ActionHandler actionHandler;
 
     public ProxyServlet() {
-        this.httpStateHandler = new HttpStateHandler();
+        this.httpStateHandler = new HttpStateHandler(scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         portBindingSerializer = new PortBindingSerializer(mockServerLogger);
         this.actionHandler = new ActionHandler(httpStateHandler, null);
+    }
+
+    @Override
+    protected void finalize() {
+        scheduler.shutdown();
     }
 
     @Override

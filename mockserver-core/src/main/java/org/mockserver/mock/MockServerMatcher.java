@@ -4,6 +4,7 @@ import org.mockserver.collections.CircularLinkedList;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.ui.MockServerMatcherNotifier;
 import org.mockserver.model.HttpRequest;
 
@@ -21,7 +22,8 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     protected final List<HttpRequestMatcher> httpRequestMatchers = Collections.synchronizedList(new CircularLinkedList<HttpRequestMatcher>(maxExpectations()));
     private MatcherBuilder matcherBuilder;
 
-    MockServerMatcher(MockServerLogger logFormatter) {
+    MockServerMatcher(MockServerLogger logFormatter, Scheduler scheduler) {
+        super(scheduler);
         this.matcherBuilder = new MatcherBuilder(logFormatter);
     }
 

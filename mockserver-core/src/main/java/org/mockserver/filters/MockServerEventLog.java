@@ -11,6 +11,7 @@ import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.ui.MockServerEventLogNotifier;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -64,14 +65,10 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     private Queue<LogEntry> requestLog = Queues.synchronizedQueue(EvictingQueue.<LogEntry>create(100));
     private MatcherBuilder matcherBuilder;
     private HttpRequestSerializer httpRequestSerializer;
-    private Function<LogEntry, String> logEntryToMessage = new Function<LogEntry, String>() {
-        public String apply(LogEntry logEntry) {
-            MessageLogEntry messageLogEntry = (MessageLogEntry) logEntry;
-            return messageLogEntry.getTimeStamp() + " - " + messageLogEntry.getMessage();
-        }
-    };
 
-    public MockServerEventLog(MockServerLogger logFormatter) {
+
+    public MockServerEventLog(MockServerLogger logFormatter, Scheduler scheduler) {
+        super(scheduler);
         this.logFormatter = logFormatter;
         this.matcherBuilder = new MatcherBuilder(logFormatter);
         httpRequestSerializer = new HttpRequestSerializer(logFormatter);

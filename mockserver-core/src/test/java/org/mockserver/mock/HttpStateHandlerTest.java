@@ -20,6 +20,7 @@ import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.scheduler.Scheduler;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,6 +32,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -48,6 +50,7 @@ public class HttpStateHandlerTest {
     private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
     private ExpectationSerializer httpExpectationSerializer = new ExpectationSerializer(new MockServerLogger());
     private ExpectationToJavaSerializer httpExpectationToJavaSerializer = new ExpectationToJavaSerializer();
+    private Scheduler scheduler;
     @Mock
     private MockServerLogger mockLogFormatter;
     @InjectMocks
@@ -55,7 +58,8 @@ public class HttpStateHandlerTest {
 
     @Before
     public void prepareTestFixture() {
-        httpStateHandler = new HttpStateHandler();
+        scheduler = mock(Scheduler.class);
+        httpStateHandler = new HttpStateHandler(scheduler);
         initMocks(this);
     }
 

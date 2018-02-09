@@ -99,19 +99,7 @@ public class MockServer extends LifeCycle<MockServer> {
 
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             public void run() {
-                Scheduler.shutdown();
-
-                // Shut down all event loops to terminate all threads.
-                bossGroup.shutdownGracefully();
-                workerGroup.shutdownGracefully();
-
-                // Wait until all threads are terminated.
-                try {
-                    bossGroup.terminationFuture().sync();
-                    workerGroup.terminationFuture().sync();
-                } catch (InterruptedException e) {
-                    // ignore interrupted exceptions
-                }
+                MockServer.super.stop();
             }
         }));
     }

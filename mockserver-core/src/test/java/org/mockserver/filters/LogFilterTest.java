@@ -10,6 +10,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
+import org.mockserver.scheduler.Scheduler;
 
 import java.util.Arrays;
 import java.util.List;
@@ -34,11 +35,13 @@ public class LogFilterTest {
     };
     private MockServerEventLog logFilter;
     private MockServerLogger mockLogFormatter;
+    private Scheduler scheduler;
 
     @Before
     public void setupTestFixture() {
+        scheduler = mock(Scheduler.class);
         mockLogFormatter = mock(MockServerLogger.class);
-        logFilter = new MockServerEventLog(mockLogFormatter);
+        logFilter = new MockServerEventLog(mockLogFormatter, scheduler);
     }
 
     @Test

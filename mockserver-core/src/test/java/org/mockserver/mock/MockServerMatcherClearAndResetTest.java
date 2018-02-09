@@ -10,6 +10,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.scheduler.Scheduler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,11 +30,13 @@ public class MockServerMatcherClearAndResetTest {
 
     private MockServerMatcher mockServerMatcher;
     private MockServerLogger logFormatter;
+    private Scheduler scheduler;
 
     @Before
     public void prepareTestFixture() {
         logFormatter = mock(MockServerLogger.class);
-        mockServerMatcher = new MockServerMatcher(logFormatter);
+        scheduler = mock(Scheduler.class);
+        mockServerMatcher = new MockServerMatcher(logFormatter, scheduler);
     }
 
     @Test

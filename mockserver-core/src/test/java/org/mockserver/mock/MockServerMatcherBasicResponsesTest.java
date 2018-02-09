@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.mockserver.scheduler.Scheduler;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -18,13 +19,15 @@ public class MockServerMatcherBasicResponsesTest {
     private HttpRequest httpRequest;
     private HttpResponse httpResponse;
     private MockServerLogger mockLogFormatter;
+    private Scheduler scheduler;
 
     @Before
     public void prepareTestFixture() {
         httpRequest = new HttpRequest();
         httpResponse = new HttpResponse();
         mockLogFormatter = mock(MockServerLogger.class);
-        mockServerMatcher = new MockServerMatcher(mockLogFormatter);
+        scheduler = mock(Scheduler.class);
+        mockServerMatcher = new MockServerMatcher(mockLogFormatter, scheduler);
     }
 
     @Test

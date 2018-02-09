@@ -24,6 +24,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.responsewriter.NettyResponseWriter;
+import org.mockserver.scheduler.Scheduler;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -72,7 +73,7 @@ public class MockServerHandlerTest {
         server = mock(MockServer.class);
         mockActionHandler = mock(ActionHandler.class);
 
-        httpStateHandler = new HttpStateHandler();
+        httpStateHandler = new HttpStateHandler(mock(Scheduler.class));
         mockServerHandler = new MockServerHandler((MockServer) server, httpStateHandler, null);
 
         initMocks(this);
