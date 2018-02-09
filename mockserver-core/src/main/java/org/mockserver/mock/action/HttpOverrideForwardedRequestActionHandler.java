@@ -17,7 +17,7 @@ public class HttpOverrideForwardedRequestActionHandler extends HttpForwardAction
     }
 
     public SettableFuture<HttpResponse> handle(final HttpOverrideForwardedRequest httpOverrideForwardedRequest, final HttpRequest request) {
-        return sendRequest(request.update(httpOverrideForwardedRequest.getHttpRequest()), null);
+        return sendRequest(request.clone().update(httpOverrideForwardedRequest.getHttpRequest()), null);
     }
 
 }
