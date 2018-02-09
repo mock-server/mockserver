@@ -14,7 +14,7 @@ public class HttpClientConnectionHandler extends ChannelDuplexHandler {
 
     private void updatePromise(ChannelHandlerContext ctx, String action) {
         SettableFuture<HttpResponse> responseFuture = ctx.channel().attr(RESPONSE_FUTURE).get();
-        if (!responseFuture.isDone()) {
+        if (responseFuture != null && !responseFuture.isDone()) {
             responseFuture.setException(new SocketConnectionException("Channel " + action + " before valid response has been received"));
         }
     }
