@@ -78,7 +78,7 @@ public class HttpStateHandlerTest {
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
         // then - activity logged
         verify(mockLogFormatter).info(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).info((HttpRequest) null, "clearing expectations and request logs that match:{}", (Object) null);
+        verify(mockLogFormatter).info((HttpRequest) null, "clearing expectations and request logs that match:{}", "{}");
     }
 
     @Test
@@ -402,12 +402,12 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(
-                logEntryOne.getTimeStamp() + " - " + logEntryOne.getMessage() + "------------------------------------\n" +
-                    logEntryTwo.getTimeStamp() + " - " + logEntryTwo.getMessage() + "------------------------------------\n" +
+                logEntryOne.getTimeStamp() + " - " + logEntryOne.getMessage() + "\n------------------------------------\n" +
+                    logEntryTwo.getTimeStamp() + " - " + logEntryTwo.getMessage() + "\n------------------------------------\n" +
                     logEntryThree.getTimeStamp() + " - " + logEntryThree.getMessage() + "\n",
                 PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
-        verify(mockLogFormatter).info(request("request_one"), "retrieving logs that match:{}", request("request_one"));
+        verify(mockLogFormatter).info(request("request_one"), "retrieving logs in plain format that match:{}", request("request_one"));
     }
 
     @Test
