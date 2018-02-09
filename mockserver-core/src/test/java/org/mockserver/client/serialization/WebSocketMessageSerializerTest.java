@@ -4,7 +4,9 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.client.serialization.model.*;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.*;
+import org.mockserver.model.Cookies;
+import org.mockserver.model.Headers;
+import org.mockserver.model.Parameters;
 
 import java.io.IOException;
 
@@ -29,35 +31,20 @@ public class WebSocketMessageSerializerTest {
         String requestBytes = "{" + NEW_LINE +
             "  \"type\" : \"org.mockserver.model.HttpResponse\"," + NEW_LINE +
             "  \"value\" : \"{" + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "  \\\"statusCode\\\" : 123," + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "  \\\"headers\\\" : [ {" + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "    \\\"name\\\" : \\\"someHeaderName\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "    \\\"values\\\" : [ \\\"someHeaderValue\\\" ]" + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "  } ]," + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "  \\\"cookies\\\" : [ {" + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "    \\\"name\\\" : \\\"someCookieName\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "    \\\"value\\\" : \\\"someCookieValue\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "  } ]," + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "  \\\"body\\\" : \\\"somebody\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "  \\\"delay\\\" : {" + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "    \\\"timeUnit\\\" : \\\"SECONDS\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "    \\\"value\\\" : 5" + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "  }" + StringEscapeUtils.escapeJava(NEW_LINE) +
-
             "}\"" + NEW_LINE +
             "}";
 

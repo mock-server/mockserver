@@ -6,8 +6,11 @@ import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
@@ -32,7 +35,7 @@ public class HttpForwardObjectCallbackActionHandlerTest {
         new HttpForwardObjectCallbackActionHandler(mockHttpStateHandler, null).handle(httpObjectCallback, request, mockResponseWriter, true);
 
         // then
-        verify(mockWebSocketClientRegistry).registerCallbackHandler(eq("some_clientId"), any(WebSocketRequestCallback.class));
-        verify(mockWebSocketClientRegistry).sendClientMessage("some_clientId", request);
+        verify(mockWebSocketClientRegistry).registerCallbackHandler(any(String.class), any(WebSocketRequestCallback.class));
+        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class));
     }
 }

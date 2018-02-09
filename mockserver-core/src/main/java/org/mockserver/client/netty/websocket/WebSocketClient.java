@@ -17,8 +17,11 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 
 import java.net.InetSocketAddress;
+
+import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 
 /**
  * @author jamesdbloom
@@ -64,11 +67,17 @@ public class WebSocketClient {
         try {
             Object deserializedMessage = webSocketMessageSerializer.deserialize(textWebSocketFrame.text());
             if (deserializedMessage instanceof HttpRequest) {
+                HttpRequest httpRequest = (HttpRequest) deserializedMessage;
+                String webSocketCorrelationId = httpRequest.getFirstHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME);
                 if (expectationResponseCallback != null) {
-                    channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(expectationResponseCallback.handle((HttpRequest) deserializedMessage))));
+                    HttpResponse httpResponse = expectationResponseCallback.handle(httpRequest);
+                    httpResponse.withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId);
+                    channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(httpResponse)));
                 }
                 if (expectationForwardCallback != null) {
-                    channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(expectationForwardCallback.handle((HttpRequest) deserializedMessage))));
+                    HttpRequest forwardedHttpRequest = expectationForwardCallback.handle(httpRequest);
+                    forwardedHttpRequest.withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId);
+                    channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(forwardedHttpRequest)));
                 }
             } else if (!(deserializedMessage instanceof WebSocketClientIdDTO)) {
                 throw new WebSocketException("Unsupported web socket message " + deserializedMessage);

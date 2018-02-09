@@ -452,6 +452,16 @@ public class HttpRequest extends Not {
         return this.headers.containsEntry(name);
     }
 
+    public HttpRequest removeHeader(String name) {
+        headers.remove(name);
+        return this;
+    }
+
+    public HttpRequest removeHeader(NottableString name) {
+        headers.remove(name);
+        return this;
+    }
+
     public Cookies getCookies() {
         return this.cookies;
     }

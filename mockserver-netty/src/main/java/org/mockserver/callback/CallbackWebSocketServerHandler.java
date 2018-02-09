@@ -89,7 +89,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
         if (frame instanceof CloseWebSocketFrame) {
             handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
         } else if (frame instanceof TextWebSocketFrame) {
-            webSocketClientRegistry.receivedTextWebSocketFrame(ctx, ((TextWebSocketFrame) frame));
+            webSocketClientRegistry.receivedTextWebSocketFrame(((TextWebSocketFrame) frame));
         } else {
             throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
         }

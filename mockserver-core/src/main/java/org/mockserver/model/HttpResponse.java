@@ -264,6 +264,16 @@ public class HttpResponse extends Action {
         return this.headers.containsEntry(name);
     }
 
+    public HttpResponse removeHeader(String name) {
+        headers.remove(name);
+        return this;
+    }
+
+    public HttpResponse removeHeader(NottableString name) {
+        headers.remove(name);
+        return this;
+    }
+
     public Cookies getCookies() {
         return this.cookies;
     }

@@ -88,13 +88,27 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         return (K) this;
     }
 
+    public K remove(String name) {
+        for (NottableString key : new HashSet<>(this.listMultimap.keySet())) {
+            if (key.equalsIgnoreCase(name)) {
+                this.listMultimap.removeAll(key);
+            }
+        }
+        return (K) this;
+    }
+
+    public K remove(NottableString name) {
+        for (NottableString key : new HashSet<>(this.listMultimap.keySet())) {
+            if (key.equalsIgnoreCase(name)) {
+                this.listMultimap.removeAll(key);
+            }
+        }
+        return (K) this;
+    }
+
     public K replaceEntry(T entry) {
         if (entry != null) {
-            for (NottableString key : new HashSet<>(this.listMultimap.keySet())) {
-                if (key.equalsIgnoreCase(entry.getName())) {
-                    this.listMultimap.removeAll(key);
-                }
-            }
+            remove(entry.getName());
             this.listMultimap.putAll(entry.getName(), entry.getValues());
         }
         return (K) this;
@@ -102,11 +116,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     public K replaceEntry(String name, String... values) {
         if (ArrayUtils.isNotEmpty(values)) {
-            for (NottableString key : new HashSet<>(this.listMultimap.keySet())) {
-                if (key.equalsIgnoreCase(name)) {
-                    this.listMultimap.removeAll(key);
-                }
-            }
+            remove(name);
             this.listMultimap.replaceValues(string(name), deserializeNottableStrings(values));
         }
         return (K) this;

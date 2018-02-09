@@ -34,7 +34,7 @@ public class HttpResponseObjectCallbackActionHandlerTest {
         new HttpResponseObjectCallbackActionHandler(mockHttpStateHandler).handle(httpObjectCallback, request, mockResponseWriter);
 
         // then
-        verify(mockWebSocketClientRegistry).registerCallbackHandler(eq("some_clientId"), any(WebSocketResponseCallback.class));
-        verify(mockWebSocketClientRegistry).sendClientMessage("some_clientId", request);
+        verify(mockWebSocketClientRegistry).registerCallbackHandler(any(String.class), any(WebSocketResponseCallback.class));
+        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class));
     }
 }

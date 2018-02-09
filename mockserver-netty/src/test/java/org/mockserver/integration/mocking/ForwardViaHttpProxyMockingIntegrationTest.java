@@ -3,8 +3,8 @@ package org.mockserver.integration.mocking;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.AbstractMockingIntegrationTestBase;
 import org.mockserver.mockserver.MockServer;
@@ -28,7 +28,6 @@ import static org.mockserver.model.HttpTemplate.template;
 /**
  * @author jamesdbloom
  */
-//@Ignore
 public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIntegrationTestBase {
 
     private static MockServer mockServer;
@@ -39,7 +38,7 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
     public static void startServer() {
         proxy = new MockServer();
 
-        mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.HTTPS, "127.0.0.1:" + String.valueOf(proxy.getLocalPort())));
+        mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.HTTP, "127.0.0.1:" + String.valueOf(proxy.getLocalPort())));
 
         echoServer = new EchoServer(false);
 
@@ -89,7 +88,8 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body")
+                    header("x-test", "test_headers_and_body"),
+                    header("x-forwarded-by", "MockServer")
                 )
                 .withBody("an_example_body_http"),
             makeRequest(
@@ -97,6 +97,7 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
                     .withPath(calculatePath("echo"))
                     .withMethod("POST")
                     .withHeaders(
+                        header("Host", "127.0.0.1:" + echoServer.getPort()),
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
@@ -140,7 +141,8 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body")
+                    header("x-test", "test_headers_and_body"),
+                    header("x-forwarded-by", "MockServer")
                 )
                 .withBody("some_overridden_body"),
             makeRequest(
@@ -159,9 +161,6 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
 
     @Test
     public void shouldCallbackForForwardToSpecifiedClassWithPrecannedResponse() {
-        // given
-        EchoServer echoServer = new EchoServer(false);
-
         // when
         mockServerClient
             .when(
@@ -179,7 +178,8 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body")
+                    header("x-test", "test_headers_and_body"),
+                    header("x-forwarded-by", "MockServer")
                 )
                 .withBody("some_overridden_body"),
             makeRequest(
@@ -226,7 +226,8 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body")
+                    header("x-test", "test_headers_and_body"),
+                    header("x-forwarded-by", "MockServer")
                 )
                 .withBody("{'name': 'value'}"),
             makeRequest(
@@ -248,13 +249,15 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
         mockServerClient
             .when(
                 request()
-                    .withPath(calculatePath("echo")),
-                once()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
             )
             .forward(
-                forward()
-                    .withHost("127.0.0.1")
-                    .withPort(getEchoServerPort())
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "localhost:" + echoServer.getPort())
+                        .withBody("some_overridden_body")
+                ).withDelay(MILLISECONDS, 10)
             );
         mockServerClient
             .when(
@@ -274,9 +277,10 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body")
+                    header("x-test", "test_headers_and_body"),
+                    header("x-forwarded-by", "MockServer")
                 )
-                .withBody("an_example_body"),
+                .withBody("some_overridden_body"),
             makeRequest(
                 request()
                     .withPath(calculatePath("echo"))

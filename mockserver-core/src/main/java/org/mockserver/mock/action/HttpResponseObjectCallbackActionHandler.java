@@ -9,6 +9,9 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 
+import java.util.UUID;
+
+import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -25,14 +28,15 @@ public class HttpResponseObjectCallbackActionHandler {
 
     public void handle(final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter) {
         String clientId = httpObjectCallback.getClientId();
-        webSocketClientRegistry.registerCallbackHandler(clientId, new WebSocketResponseCallback() {
+        String webSocketCorrelationId = UUID.randomUUID().toString();
+        webSocketClientRegistry.registerCallbackHandler(webSocketCorrelationId, new WebSocketResponseCallback() {
             @Override
             public void handle(HttpResponse response) {
-                responseWriter.writeResponse(request, response, false);
+                responseWriter.writeResponse(request, response.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), false);
                 logFormatter.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for object callback action:{}", response, request, httpObjectCallback);
             }
         });
-        webSocketClientRegistry.sendClientMessage(clientId, request);
+        webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId));
     }
 
 }

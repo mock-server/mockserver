@@ -11,6 +11,9 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 
+import java.util.UUID;
+
+import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.scheduler.Scheduler.submit;
 
@@ -29,16 +32,17 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
 
     public void handle(final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous) {
         String clientId = httpObjectCallback.getClientId();
-        webSocketClientRegistry.registerCallbackHandler(clientId, new WebSocketRequestCallback() {
+        String webSocketCorrelationId = UUID.randomUUID().toString();
+        webSocketClientRegistry.registerCallbackHandler(webSocketCorrelationId, new WebSocketRequestCallback() {
             @Override
             public void handle(final HttpRequest request) {
-                final SettableFuture<HttpResponse> responseFuture = sendRequest(request, null);
+                final SettableFuture<HttpResponse> responseFuture = sendRequest(request.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), null);
                 submit(responseFuture, new Runnable() {
                     public void run() {
                         try {
                             HttpResponse response = responseFuture.get();
                             responseWriter.writeResponse(request, response, false);
-                            logFormatter.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for object callback action:{}", request, request, httpObjectCallback);
+                            logFormatter.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for object callback action:{}", response, request, httpObjectCallback);
                         } catch (Exception ex) {
                             logFormatter.error(request, ex, ex.getMessage());
                         }
@@ -46,7 +50,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 }, synchronous);
             }
         });
-        webSocketClientRegistry.sendClientMessage(clientId, request);
+        webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId));
     }
 
 }

@@ -15,19 +15,28 @@ import org.mockserver.model.HttpResponse;
  */
 public class WebSocketClientRegistry {
 
+    public static final String WEB_SOCKET_CORRELATION_ID_HEADER_NAME = "WebSocketCorrelationId";
     private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer(new MockServerLogger());
     private CircularHashMap<String, ChannelHandlerContext> clientRegistry = new CircularHashMap<>(100);
     private CircularHashMap<String, WebSocketResponseCallback> callbackResponseRegistry = new CircularHashMap<>(100);
     private CircularHashMap<String, WebSocketRequestCallback> callbackForwardRegistry = new CircularHashMap<>(100);
 
-    void receivedTextWebSocketFrame(ChannelHandlerContext ctx, TextWebSocketFrame textWebSocketFrame) {
+    void receivedTextWebSocketFrame(TextWebSocketFrame textWebSocketFrame) {
         try {
             Object deserializedMessage = webSocketMessageSerializer.deserialize(textWebSocketFrame.text());
-            String key = clientRegistry.findKey(ctx);
-            if (deserializedMessage instanceof HttpResponse && callbackResponseRegistry.containsKey(key)) {
-                callbackResponseRegistry.get(key).handle((HttpResponse) deserializedMessage);
-            } else if (deserializedMessage instanceof HttpRequest && callbackForwardRegistry.containsKey(key)) {
-                callbackForwardRegistry.get(key).handle((HttpRequest) deserializedMessage);
+            if (deserializedMessage instanceof HttpResponse) {
+                HttpResponse httpResponse = (HttpResponse) deserializedMessage;
+                String firstHeader = httpResponse.getFirstHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME);
+                WebSocketResponseCallback webSocketResponseCallback = callbackResponseRegistry.get(firstHeader);
+                if (webSocketResponseCallback != null) {
+                    webSocketResponseCallback.handle(httpResponse);
+                }
+            } else if (deserializedMessage instanceof HttpRequest) {
+                HttpRequest httpRequest = (HttpRequest) deserializedMessage;
+                WebSocketRequestCallback webSocketRequestCallback = callbackForwardRegistry.get(httpRequest.getFirstHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME));
+                if (webSocketRequestCallback != null) {
+                    webSocketRequestCallback.handle(httpRequest);
+                }
             } else {
                 throw new WebSocketException("Unsupported web socket message " + deserializedMessage);
             }
@@ -45,12 +54,12 @@ public class WebSocketClientRegistry {
         clientRegistry.put(clientId, ctx);
     }
 
-    public void registerCallbackHandler(String clientId, WebSocketResponseCallback expectationResponseCallback) {
-        callbackResponseRegistry.put(clientId, expectationResponseCallback);
+    public void registerCallbackHandler(String webSocketCorrelationId, WebSocketResponseCallback expectationResponseCallback) {
+        callbackResponseRegistry.put(webSocketCorrelationId, expectationResponseCallback);
     }
 
-    public void registerCallbackHandler(String clientId, WebSocketRequestCallback expectationForwardCallback) {
-        callbackForwardRegistry.put(clientId, expectationForwardCallback);
+    public void registerCallbackHandler(String webSocketCorrelationId, WebSocketRequestCallback expectationForwardCallback) {
+        callbackForwardRegistry.put(webSocketCorrelationId, expectationForwardCallback);
     }
 
     public void sendClientMessage(String clientId, HttpRequest httpRequest) {

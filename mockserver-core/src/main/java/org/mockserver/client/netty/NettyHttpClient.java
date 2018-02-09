@@ -31,12 +31,6 @@ public class NettyHttpClient {
     static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
     static final AttributeKey<SettableFuture<HttpResponse>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
     private static EventLoopGroup group = new NioEventLoopGroup();
-    private static Bootstrap bootstrap = new Bootstrap()
-        .group(group)
-        .channel(NioSocketChannel.class)
-        .option(ChannelOption.AUTO_READ, true)
-        .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-        .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024));
     private final ProxyConfiguration proxyConfiguration;
 
     public NettyHttpClient() {
@@ -45,7 +39,6 @@ public class NettyHttpClient {
 
     public NettyHttpClient(ProxyConfiguration proxyConfiguration) {
         this.proxyConfiguration = proxyConfiguration;
-        bootstrap.handler(new HttpClientInitializer(proxyConfiguration));
     }
 
     public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {
@@ -62,10 +55,16 @@ public class NettyHttpClient {
         mockServerLogger.debug("Sending to: {}" + NEW_LINE + "request: {}", remoteAddress, httpRequest);
 
         final SettableFuture<HttpResponse> httpResponseSettableFuture = SettableFuture.create();
-        bootstrap
+        new Bootstrap()
+            .group(group)
+            .channel(NioSocketChannel.class)
+            .option(ChannelOption.AUTO_READ, true)
+            .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+            .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
             .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
             .attr(REMOTE_SOCKET, remoteAddress)
             .attr(RESPONSE_FUTURE, httpResponseSettableFuture)
+            .handler(new HttpClientInitializer(proxyConfiguration))
             .connect(remoteAddress)
             .addListener(new ChannelFutureListener() {
                 @Override
