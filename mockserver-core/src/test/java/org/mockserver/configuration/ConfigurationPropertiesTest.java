@@ -385,29 +385,6 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadProxyPort() {
-        // given
-        System.clearProperty("mockserver.proxyPort");
-
-        // when
-        assertEquals(new Integer(-1), ConfigurationProperties.proxyPort());
-        ConfigurationProperties.proxyPort(10);
-
-        // then
-        assertEquals("10", System.getProperty("mockserver.proxyPort"));
-        assertEquals(new Integer(10), ConfigurationProperties.proxyPort());
-    }
-
-    @Test
-    public void shouldHandleInvalidProxyPort() {
-        // given
-        System.setProperty("mockserver.proxyPort", "invalid");
-
-        // then
-        assertEquals(new Integer(-1), ConfigurationProperties.proxyPort());
-    }
-
-    @Test
     public void shouldThrowIllegalArgumentExceptionForInvalidLogLevel() {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage(containsString("log level \"WRONG\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\""));
