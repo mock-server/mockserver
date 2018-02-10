@@ -27,37 +27,12 @@
         <appender-ref ref="FILE" />
     </appender>
 
-    <!-- application console log (for errors and warnings) -->
-    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
-        <target>System.err</target>
-        <encoder>
-            <pattern>%date %level %logger{20} %msg%n</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>WARN</level>
-        </filter>
-    </appender>
-
-    <!-- make console log (for errors and warnings) asynchronous -->
-    <appender name="ASYNC_STDERR" class="ch.qos.logback.classic.AsyncAppender">
-        <queueSize>128</queueSize>
-        <discardingThreshold>0</discardingThreshold>
-        <appender-ref ref="STDERR" />
-    </appender>
-
     <!-- application console log -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.out</target>
         <encoder>
             <pattern>%date %level %logger{20} %msg%n</pattern>
         </encoder>
-        <!--<filter class="ch.qos.logback.core.filter.EvaluatorFilter">-->
-            <!--<evaluator>-->
-                <!--<expression>level &gt;= INFO &amp;&amp; level &lt; WARN</expression>-->
-            <!--</evaluator>-->
-            <!--<OnMismatch>DENY</OnMismatch>-->
-            <!--<OnMatch>NEUTRAL</OnMatch>-->
-        <!--</filter>-->
     </appender>
 
     <!-- make console log asynchronous -->
@@ -67,33 +42,11 @@
         <appender-ref ref="STDOUT" />
     </appender>
 
-    <!-- request log configuration -->
-    <appender name="REQUEST_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${log.dir:-./}mockserver_request.log</file>
-
-        <encoder>
-            <pattern>%msg%n</pattern>
-        </encoder>
-
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${log.dir:-./}mockserver_request.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>100MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-            <maxHistory>3</maxHistory>
-        </rollingPolicy>
-    </appender>
-
-    <logger name="REQUEST" level="INFO" additivity="false">
-        <appender-ref ref="REQUEST_LOG"/>
-    </logger>
-
-    <logger name="org.mockserver" level="${mockserver.logLevel:-WARN}"/>
+    <logger name="org.mockserver" level="${mockserver.logLevel:-INFO}"/>
     <logger name="io.netty.handler.ssl.SslHandler" level="WARN"/>
 
     <root level="${root.logLevel:-WARN}">
         <appender-ref ref="ASYNC_FILE"/>
-        <appender-ref ref="ASYNC_STDERR"/>
         <appender-ref ref="ASYNC_STDOUT"/>
     </root>
 </configuration>
