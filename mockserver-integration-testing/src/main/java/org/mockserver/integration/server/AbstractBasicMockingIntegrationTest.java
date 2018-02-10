@@ -10,6 +10,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.verify.VerificationTimes;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -1314,7 +1315,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         String[] actualLogMessages = mockServerClient.retrieveLogMessagesArray(request().withPath(calculatePath(".*")));
 
         Object[] expectedLogMessages = new Object[]{
-            "resetting all expectations and request logs" + NEW_LINE,
+            "resetting all expectations and request logs" + NEW_LINE, //0
             "creating expectation:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
@@ -1330,13 +1331,13 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 "\t  \"httpResponse\" : {" + NEW_LINE +
                 "\t    \"body\" : \"some_body\"" + NEW_LINE +
                 "\t  }" + NEW_LINE +
-                "\t}" + NEW_LINE,
+                "\t}" + NEW_LINE, //1
             new String[]{
                 "request:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_one\",",
+                    "\t  \"path\" : \"/some_path_one\",", // 2-0
                 " matched expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -1352,7 +1353,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "\t  \"httpResponse\" : {" + NEW_LINE +
                     "\t    \"body\" : \"some_body\"" + NEW_LINE +
                     "\t  }" + NEW_LINE +
-                    "\t}"
+                    "\t}" // 2-1
             },
             new String[]{
                 "returning response:" + NEW_LINE +
@@ -1368,7 +1369,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_one\",",
+                    "\t  \"path\" : \"/some_path_one\",", // 3-0
                 " for expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -1384,14 +1385,14 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "\t  \"httpResponse\" : {" + NEW_LINE +
                     "\t    \"body\" : \"some_body\"" + NEW_LINE +
                     "\t  }" + NEW_LINE +
-                    "\t}" + NEW_LINE
+                    "\t}" + NEW_LINE // 3-1
             },
             new String[]{
                 "request:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/not_found\",",
+                    "\t  \"path\" : \"/not_found\",", // 4-0
                 " did not match expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -1418,7 +1419,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "\theaders match = true" + NEW_LINE +
                     "\tcookies match = true" + NEW_LINE +
                     "\tkeep-alive matches = true" + NEW_LINE +
-                    "\tssl matches = true"
+                    "\tssl matches = true" // 4-1
             },
             new String[]{
                 "no matching expectation - returning:" + NEW_LINE +
@@ -1432,14 +1433,14 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/not_found\","
+                    "\t  \"path\" : \"/not_found\"," // 5-0
             },
             new String[]{
                 "request:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_three\",",
+                    "\t  \"path\" : \"/some_path_three\",", // 6-0
                 " matched expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -1455,7 +1456,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "\t  \"httpResponse\" : {" + NEW_LINE +
                     "\t    \"body\" : \"some_body\"" + NEW_LINE +
                     "\t  }" + NEW_LINE +
-                    "\t}"
+                    "\t}" // 6-1
             },
             new String[]{
                 "returning response:" + NEW_LINE +
@@ -1471,7 +1472,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_three\",",
+                    "\t  \"path\" : \"/some_path_three\",", // 7-0
                 " for expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -1487,23 +1488,23 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "\t  \"httpResponse\" : {" + NEW_LINE +
                     "\t    \"body\" : \"some_body\"" + NEW_LINE +
                     "\t  }" + NEW_LINE +
-                    "\t}" + NEW_LINE
+                    "\t}" + NEW_LINE // 7-1
             },
             "retrieving logs in plain format that match:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"path\" : \"/.*\"" + NEW_LINE +
                 "\t}" + NEW_LINE +
-                NEW_LINE
+                NEW_LINE // 8-1
         };
 
         for (int i = 0; i < expectedLogMessages.length; i++) {
             if (expectedLogMessages[i] instanceof String) {
-                assertThat("matching log message " + i, actualLogMessages[i], endsWith((String) expectedLogMessages[i]));
+                assertThat("matching log message " + i + "\nActual:\n" + Arrays.toString(actualLogMessages), actualLogMessages[i], endsWith((String) expectedLogMessages[i]));
             } else if (expectedLogMessages[i] instanceof String[]) {
                 String[] expectedLogMessage = (String[]) expectedLogMessages[i];
                 for (int j = 0; j < expectedLogMessage.length; j++) {
-                    assertThat("matching log message " + i + "-" + j, actualLogMessages[i], containsString(expectedLogMessage[j]));
+                    assertThat("matching log message " + i + "-" + j + "\nActual:\n" + Arrays.toString(actualLogMessages), actualLogMessages[i], containsString(expectedLogMessage[j]));
                 }
             }
         }
