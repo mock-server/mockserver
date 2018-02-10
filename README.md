@@ -33,9 +33,9 @@ NPM Registry contains the following module:
 * [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js client for both the MockServer and the proxy 
     [![mockserver-client-node](https://nodei.co/npm/mockserver-client.png?downloads=true)](https://www.npmjs.org/package/mockserver-client)
 
-### Docker Index
+### Docker Hub
 
-Docker Index contains the following artifacts:
+Docker Hub contains the following artifacts:
 
 * [MockServer Docker Container](https://hub.docker.com/r/jamesdbloom/mockserver/) - a Docker container containing the Netty MockServer and proxy
 
