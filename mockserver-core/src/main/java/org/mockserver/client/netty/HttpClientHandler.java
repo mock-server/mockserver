@@ -1,6 +1,5 @@
 package org.mockserver.client.netty;
 
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -10,7 +9,6 @@ import org.mockserver.model.HttpResponse;
 
 import javax.net.ssl.SSLException;
 
-import static org.mockserver.client.netty.NettyHttpClient.CHANNEL_POOL;
 import static org.mockserver.client.netty.NettyHttpClient.RESPONSE_FUTURE;
 
 @ChannelHandler.Sharable
@@ -23,7 +21,7 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpResponse>
     @Override
     public void channelRead0(ChannelHandlerContext ctx, HttpResponse response) {
         ctx.channel().attr(RESPONSE_FUTURE).get().set(response);
-        releaseChannelToPool(ctx.channel());
+        ctx.close();
     }
 
     @Override
@@ -32,12 +30,7 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpResponse>
             cause.printStackTrace();
         }
         ctx.channel().attr(RESPONSE_FUTURE).get().setException(cause);
-        releaseChannelToPool(ctx.channel());
-
-    }
-
-    private void releaseChannelToPool(Channel channel) {
-        channel.attr(CHANNEL_POOL).get().release(channel);
+        ctx.close();
     }
 
     private boolean isNotSslException(Throwable cause) {
