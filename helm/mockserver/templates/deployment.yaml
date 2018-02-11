@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: {{ template "mockserver.name" . }}
-          image: {{ .Values.image.repository }}/mockserver:mockserver-{{ .Chart.Version }}
+          image: {{ .Values.image.repository }}/mockserver:mockserver-{{- if .Values.image.snapshot }}snapshot{{- else }}{{ .Chart.Version }}{{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: serviceport

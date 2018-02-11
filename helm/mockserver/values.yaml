@@ -2,7 +2,8 @@ replicaCount: 1
 
 image:
   repository: jamesdbloom
-  pullPolicy: IfNotPresent
+  snapshot: false
+  pullPolicy: Always
 
 service:
   annotations: {}
