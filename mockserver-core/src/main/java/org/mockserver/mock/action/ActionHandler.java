@@ -273,7 +273,7 @@ public class ActionHandler {
                     } catch (SocketCommunicationException sce) {
                         returnNotFound(responseWriter, request);
                     } catch (Exception ex) {
-                        if (ex.getCause() instanceof ConnectException || ex.getCause() instanceof SocketConnectionException) {
+                        if (exploratoryHttpProxy && (ex.getCause() instanceof ConnectException || ex.getCause() instanceof SocketConnectionException)) {
                             mockServerLogger.trace("Failed to connect to proxied socket due to exploratory HTTP proxy for: {}" + NEW_LINE + " falling back to no proxy: {}", request, ex.getCause());
                             returnNotFound(responseWriter, request);
                         } else {
