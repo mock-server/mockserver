@@ -9,7 +9,7 @@
 To install the chart with: 
 - **release name:** `mockserver` 
 - **namespace:** `mockserver`
-- **configuration:** `values` (see [helm_charts/vault](helm_charts/vault) for values definitions
+- **configuration:** `values` (see [values.yaml](values.yaml) for values definitions)
 
 ```bash
 helm upgrade --install --values helm/mockserver/values.yaml --namespace mockserver mockserver helm/mockserver
@@ -54,14 +54,14 @@ curl -v -X PUT http://$MOCKSERVER_HOST/status
 
 #### Inside Kubernetes Cluster
 
-If a [DNS server](https://kubernetes.io/docs/concepts/services-networking/service/#dns)) has been installed in the Kubernetes cluster the following DNS names should be available:
+If a [DNS server](https://kubernetes.io/docs/concepts/services-networking/service/#dns) has been installed in the Kubernetes cluster the following DNS names should be available:
 - **within `mockserver` namespace:** `mockserver`
 - **outside `mockserver` namespace:** `mockserver.mockserver`  
 - **DNS SRV query:** `_serviceport._tcp.mockserver.mockserver`
 
 ### Helm Delete
 
-To complete remove the chart:
+To completely remove the chart:
 
 ```bash
 helm delete mockserver --purge
