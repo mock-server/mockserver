@@ -1,0 +1,69 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "mockserver.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "mockserver.name" . }}
+    chart: {{ template "mockserver.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "mockserver.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+{{- if .Values.podAnnotations }}
+      # Allows custom annotations to be specified
+      annotations:
+{{ toYaml .Values.podAnnotations | indent 8 }}
+{{- end }}
+      name: {{ template "mockserver.name" . }}
+      labels:
+        app: {{ template "mockserver.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ template "mockserver.name" . }}
+          image: {{ .Values.image.repository }}/mockserver:mockserver-{{ .Chart.Version }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: serviceport
+              containerPort: 1080
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: serviceport
+            initialDelaySeconds: 2
+            periodSeconds: 2
+            successThreshold: 1
+            failureThreshold: 10
+          livenessProbe:
+            tcpSocket:
+              port: serviceport
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 10
+          env:
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: SERVER_PORT
+              value: "1080"
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

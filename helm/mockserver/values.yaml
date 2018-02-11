@@ -1,0 +1,32 @@
+replicaCount: 1
+
+image:
+  repository: jamesdbloom
+  pullPolicy: IfNotPresent
+
+service:
+  annotations: {}
+  clusterIP: ""
+  externalIPs: []
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  type: NodePort
+  port: 1080
+  nodePort: ""
+
+ingress:
+  enabled: false
+  annotations: {}
+  path: /
+  hosts:
+    - chart-example.local
+
+podAnnotations: {}
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

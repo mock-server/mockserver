@@ -1,0 +1,24 @@
+name: mockserver
+version: "5.3.0"
+description: Chart to deploy MockServer to Kubernetes.  MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby.  MockServer also includes a proxy that introspects all proxied traffic including encrypted SSL traffic and supports Port Forwarding, Web Proxying (i.e. HTTP proxy), HTTPS Tunneling Proxying (using HTTP CONNECT) and SOCKS Proxying (i.e. dynamic port forwarding).
+keywords:
+  - mocking
+  - mock-server
+  - http-mock
+  - http
+  - test
+  - test-server
+  - proxy
+  - http-proxy
+  - socks-proxy
+  - https-proxy
+home: "http://mock-server.com"
+sources:
+  - "https://github.com/jamesdbloom/mockserver"
+  - "https://hub.docker.com/r/jamesdbloom/mockserver"
+maintainers:
+  - name: James D Bloom
+    email: jamesdbloom+mockserver@gmail.com
+engine: gotpl
+icon: http://mock-server.com/apple-touch-icon.png
+appVersion: "1.0"
