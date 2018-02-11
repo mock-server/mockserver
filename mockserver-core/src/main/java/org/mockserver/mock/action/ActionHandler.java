@@ -24,7 +24,6 @@ import org.mockserver.scheduler.Scheduler;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.Set;
-import java.util.concurrent.TimeoutException;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
@@ -80,6 +79,7 @@ public class ActionHandler {
     public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyThisRequest, final boolean synchronous) {
         final Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
         if (request.getHeaders().containsEntry("x-forwarded-by", "MockServer")) {
+            mockServerLogger.trace("Received \"x-forwarded-by\" header caused by exploratory HTTP proxy - falling back to no proxy: {}", request);
             returnNotFound(responseWriter, request);
         } else if (expectation != null && expectation.getAction() != null) {
             Action action = expectation.getAction();
@@ -242,10 +242,10 @@ public class ActionHandler {
 
         } else if (proxyThisRequest || (!Strings.isNullOrEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString())))) {
 
-            final boolean probablyHttpProxy = !proxyThisRequest;
+            final boolean exploratoryHttpProxy = !proxyThisRequest;
             final InetSocketAddress remoteAddress = ctx != null ? ctx.channel().attr(REMOTE_SOCKET).get() : null;
             final HttpRequest clonedRequest = hopByHopHeaderFilter.onRequest(request);
-            if (probablyHttpProxy) {
+            if (exploratoryHttpProxy) {
                 clonedRequest.withHeader("x-forwarded-by", "MockServer");
             }
             final SettableFuture<HttpResponse> responseFuture = httpClient.sendRequest(clonedRequest, remoteAddress);
@@ -274,13 +274,14 @@ public class ActionHandler {
                         returnNotFound(responseWriter, request);
                     } catch (Exception ex) {
                         if (ex.getCause() instanceof ConnectException || ex.getCause() instanceof SocketConnectionException) {
+                            mockServerLogger.trace("Failed to connect to proxied socket due to exploratory HTTP proxy for: {}" + NEW_LINE + " falling back to no proxy: {}", request, ex.getCause());
                             returnNotFound(responseWriter, request);
                         } else {
                             mockServerLogger.error(request, ex, ex.getMessage());
                         }
                     }
                 }
-            }, probablyHttpProxy ? 2 : ConfigurationProperties.maxSocketTimeout(), synchronous);
+            }, exploratoryHttpProxy ? 2 : ConfigurationProperties.maxSocketTimeout(), synchronous);
 
         } else {
             returnNotFound(responseWriter, request);
