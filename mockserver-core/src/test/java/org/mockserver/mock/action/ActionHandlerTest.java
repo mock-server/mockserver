@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -304,14 +305,14 @@ public class ActionHandlerTest {
         when(mockChannel.attr(REMOTE_SOCKET)).thenReturn(inetSocketAddressAttribute);
 
         // and - netty http client
-        when(mockNettyHttpClient.sendRequest(request("request_one"), remoteAddress)).thenReturn(responseFuture);
+        when(mockNettyHttpClient.sendRequest(request("request_one"), remoteAddress, ConfigurationProperties.socketConnectionTimeout())).thenReturn(responseFuture);
 
         // when
         actionHandler.processAction(request("request_one"), mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), true, true);
 
         // then
         verify(mockHttpStateHandler).log(new RequestResponseLogEntry(request, response("some_body")));
-        verify(mockNettyHttpClient).sendRequest(request("request_one"), remoteAddress);
+        verify(mockNettyHttpClient).sendRequest(request("request_one"), remoteAddress, ConfigurationProperties.socketConnectionTimeout());
         verify(mockLogFormatter).info(
             request,
             "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " as curl:{}",

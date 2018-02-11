@@ -46,6 +46,10 @@ public class NettyHttpClient {
     }
 
     public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) throws SocketConnectionException {
+        return sendRequest(httpRequest, remoteAddress, ConfigurationProperties.socketConnectionTimeout());
+    }
+
+    public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress, Integer connectionTimeoutMillis) throws SocketConnectionException {
         if (proxyConfiguration != null && proxyConfiguration.getType() == ProxyConfiguration.Type.HTTP) {
             remoteAddress = proxyConfiguration.getProxyAddress();
         } else if (remoteAddress == null) {
@@ -61,6 +65,7 @@ public class NettyHttpClient {
             .option(ChannelOption.AUTO_READ, true)
             .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeoutMillis)
             .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
             .attr(REMOTE_SOCKET, remoteAddress)
             .attr(RESPONSE_FUTURE, httpResponseSettableFuture)

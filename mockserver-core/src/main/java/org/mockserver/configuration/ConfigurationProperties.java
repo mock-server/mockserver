@@ -28,6 +28,7 @@ public class ConfigurationProperties {
 
     public static final String DEFAULT_LOG_LEVEL = "INFO";
     private static final long DEFAULT_MAX_TIMEOUT = 20;
+    private static final int DEFAULT_CONNECT_TIMEOUT = 20000;
     private static final int DEFAULT_MAX_EXPECTATIONS = 1000;
     private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = Math.max(1, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors() * 5));
     private static final Properties PROPERTIES = readPropertyFile();
@@ -92,6 +93,14 @@ public class ConfigurationProperties {
 
     public static void maxSocketTimeout(long milliseconds) {
         System.setProperty("mockserver.maxSocketTimeout", "" + milliseconds);
+    }
+
+    public static int socketConnectionTimeout() {
+        return readIntegerProperty("mockserver.socketConnectionTimeout", DEFAULT_CONNECT_TIMEOUT);
+    }
+
+    public static void socketConnectionTimeout(int milliseconds) {
+        System.setProperty("mockserver.socketConnectionTimeout", "" + milliseconds);
     }
 
     public static String javaKeyStoreFilePath() {
@@ -326,5 +335,4 @@ public class ConfigurationProperties {
     private static String readPropertyHierarchically(String key, String defaultValue) {
         return System.getProperty(key, PROPERTIES != null ? PROPERTIES.getProperty(key, defaultValue) : defaultValue);
     }
-
 }

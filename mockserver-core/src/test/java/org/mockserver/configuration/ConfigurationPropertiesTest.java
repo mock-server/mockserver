@@ -163,6 +163,28 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadSocketConnectionTimeout() {
+        // given
+        System.clearProperty("mockserver.socketConnectionTimeout");
+
+        // when
+        assertEquals(TimeUnit.SECONDS.toMillis(20), ConfigurationProperties.socketConnectionTimeout());
+        ConfigurationProperties.socketConnectionTimeout(100);
+
+        // then
+        assertEquals(100, ConfigurationProperties.socketConnectionTimeout());
+    }
+
+    @Test
+    public void shouldHandleInvalidSocketConnectionTimeout() {
+        // given
+        System.setProperty("mockserver.socketConnectionTimeout", "invalid");
+
+        // then
+        assertEquals(TimeUnit.SECONDS.toMillis(20), ConfigurationProperties.socketConnectionTimeout());
+    }
+
+    @Test
     public void shouldSetAndReadJavaKeyStoreFilePath() {
         // given
         System.clearProperty("mockserver.javaKeyStoreFilePath");

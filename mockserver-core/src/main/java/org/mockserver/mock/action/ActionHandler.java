@@ -248,7 +248,7 @@ public class ActionHandler {
             if (exploratoryHttpProxy) {
                 clonedRequest.withHeader("x-forwarded-by", "MockServer");
             }
-            final SettableFuture<HttpResponse> responseFuture = httpClient.sendRequest(clonedRequest, remoteAddress);
+            final SettableFuture<HttpResponse> responseFuture = httpClient.sendRequest(clonedRequest, remoteAddress, exploratoryHttpProxy ? 1000 : ConfigurationProperties.socketConnectionTimeout());
             scheduler.submit(responseFuture, new Runnable() {
                 public void run() {
                     try {
@@ -281,7 +281,7 @@ public class ActionHandler {
                         }
                     }
                 }
-            }, exploratoryHttpProxy ? 2 : ConfigurationProperties.maxSocketTimeout(), synchronous);
+            }, synchronous);
 
         } else {
             returnNotFound(responseWriter, request);
