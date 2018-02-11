@@ -1,4 +1,4 @@
-## Installing Vault
+## Installing MockServer
 
 ### Prerequisites
 
