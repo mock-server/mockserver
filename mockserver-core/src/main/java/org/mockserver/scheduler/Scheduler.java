@@ -64,11 +64,11 @@ public class Scheduler {
         }
     }
 
-    public void submit(SettableFuture<HttpResponse> future, Runnable command, boolean synchronous) {
+    public void submit(SettableFuture<HttpResponse> future, Runnable command, long timeout, boolean synchronous) {
         if (future != null) {
             if (synchronous) {
                 try {
-                    future.get(ConfigurationProperties.maxSocketTimeout(), TimeUnit.MILLISECONDS);
+                    future.get(timeout, TimeUnit.MILLISECONDS);
                 } catch (TimeoutException e) {
                     future.setException(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
                 } catch (InterruptedException | ExecutionException ex) {
@@ -79,5 +79,9 @@ public class Scheduler {
                 future.addListener(command, getScheduler());
             }
         }
+    }
+
+    public void submit(SettableFuture<HttpResponse> future, Runnable command, boolean synchronous) {
+        submit(future, command, ConfigurationProperties.maxSocketTimeout(), synchronous);
     }
 }

@@ -8,6 +8,7 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
 import org.mockserver.log.model.RequestLogEntry;
@@ -241,9 +242,10 @@ public class ActionHandler {
 
         } else if (proxyThisRequest || (!Strings.isNullOrEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString())))) {
 
+            final boolean probablyHttpProxy = !proxyThisRequest;
             final InetSocketAddress remoteAddress = ctx != null ? ctx.channel().attr(REMOTE_SOCKET).get() : null;
             final HttpRequest clonedRequest = hopByHopHeaderFilter.onRequest(request);
-            if (!proxyThisRequest) {
+            if (probablyHttpProxy) {
                 clonedRequest.withHeader("x-forwarded-by", "MockServer");
             }
             final SettableFuture<HttpResponse> responseFuture = httpClient.sendRequest(clonedRequest, remoteAddress);
@@ -278,7 +280,7 @@ public class ActionHandler {
                         }
                     }
                 }
-            }, synchronous);
+            }, probablyHttpProxy ? 2 : ConfigurationProperties.maxSocketTimeout(), synchronous);
 
         } else {
             responseWriter.writeResponse(request, notFoundResponse(), false);
