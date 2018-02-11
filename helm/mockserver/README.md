@@ -15,7 +15,13 @@ To install the chart with:
 helm upgrade --install --values helm/mockserver/values.yaml --namespace mockserver mockserver helm/mockserver
 ```
 
-To check the status, run the following command and confirm the `mockserver` has the `Running` status:
+To wait until the deployment is complete run:
+
+```bash
+kubectl rollout status deployments mockserver -n mockserver
+```
+
+To check the status of the deployment without waiting, run the following command and confirm the `mockserver` has the `Running` status:
 
 ```bash 
 kubectl get po -l release=mockserver -n mockserver
@@ -58,5 +64,5 @@ If a [DNS server](https://kubernetes.io/docs/concepts/services-networking/servic
 To complete remove the chart:
 
 ```bash
-heml delete mockserver --purge
+helm delete mockserver --purge
 ```
