@@ -18,6 +18,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 
@@ -68,7 +69,22 @@ public class ProxyViaLoadBalanceIntegrationTest {
         assertThat(responseSettableFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
 
         // and - logs hide proxied request
-        assertThat(clientAndServer.retrieveLogMessagesArray(null)[2], containsString("no matching expectation"));
+        assertThat(clientAndServer.retrieveLogMessagesArray(null)[2], containsString("returning response:" + NEW_LINE +
+            NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"statusCode\" : 404," + NEW_LINE +
+            "\t  \"reasonPhrase\" : \"Not Found\"," + NEW_LINE +
+            "\t  \"headers\" : {" + NEW_LINE +
+            "\t    \"content-length\" : [ \"0\" ]," + NEW_LINE +
+            "\t    \"connection\" : [ \"keep-alive\" ]" + NEW_LINE +
+            "\t  }" + NEW_LINE +
+            "\t}" + NEW_LINE +
+            NEW_LINE +
+            " for request:" + NEW_LINE +
+            NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"method\" : \"GET\"," + NEW_LINE +
+            "\t  \"path\" : \"/some_path\""));
         assertThat(loadBalancerClient.retrieveLogMessagesArray(null).length, is(6));
     }
 

@@ -107,8 +107,6 @@ public abstract class LifeCycle<T extends LifeCycle> {
                                         public void operationComplete(ChannelFuture future) {
                                             if (future.isSuccess()) {
                                                 channelOpened.set(future.channel());
-//                                                serverBootstrap.childAttr(HTTP_CONNECT_SOCKET, new InetSocketAddress(((InetSocketAddress) future.channel().localAddress()).getPort()));
-//                                                future.channel().attr(HTTP_CONNECT_SOCKET).set(new InetSocketAddress(((InetSocketAddress) future.channel().localAddress()).getPort()));
                                             } else {
                                                 channelOpened.setException(future.cause());
                                             }

@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 import joptsimple.internal.Strings;
 import org.mockserver.client.netty.NettyHttpClient;
+import org.mockserver.client.netty.SocketCommunicationException;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
@@ -23,6 +24,7 @@ import org.mockserver.scheduler.Scheduler;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
@@ -78,9 +80,7 @@ public class ActionHandler {
     public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyThisRequest, final boolean synchronous) {
         final Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
         if (request.getHeaders().containsEntry("x-forwarded-by", "MockServer")) {
-            responseWriter.writeResponse(request, notFoundResponse().withHeader("x-forwarded-by", "MockServer"), false);
-            httpStateHandler.log(new RequestLogEntry(request));
-            mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
+            returnNotFound(responseWriter, request);
         } else if (expectation != null && expectation.getAction() != null) {
             Action action = expectation.getAction();
             switch (action.getType()) {
@@ -270,11 +270,11 @@ public class ActionHandler {
                                 httpRequestToCurlSerializer.toCurl(request, remoteAddress)
                             );
                         }
+                    } catch (SocketCommunicationException sce) {
+                        returnNotFound(responseWriter, request);
                     } catch (Exception ex) {
                         if (ex.getCause() instanceof ConnectException || ex.getCause() instanceof SocketConnectionException) {
-                            responseWriter.writeResponse(request, notFoundResponse(), false);
-                            httpStateHandler.log(new RequestLogEntry(request));
-                            mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
+                            returnNotFound(responseWriter, request);
                         } else {
                             mockServerLogger.error(request, ex, ex.getMessage());
                         }
@@ -283,10 +283,14 @@ public class ActionHandler {
             }, probablyHttpProxy ? 2 : ConfigurationProperties.maxSocketTimeout(), synchronous);
 
         } else {
-            responseWriter.writeResponse(request, notFoundResponse(), false);
-            httpStateHandler.log(new RequestLogEntry(request));
-            mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
+            returnNotFound(responseWriter, request);
         }
+    }
+
+    private void returnNotFound(ResponseWriter responseWriter, HttpRequest request) {
+        responseWriter.writeResponse(request, notFoundResponse().removeHeader("x-forwarded-by"), false);
+        httpStateHandler.log(new RequestLogEntry(request));
+        mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
     }
 
 }
