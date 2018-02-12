@@ -65,8 +65,8 @@ public class OverridePreFlightRequestIntegrationTest {
         assertThat(response.getStatusCode(), is(200));
         assertThat(response.getHeader("access-control-allow-origin"), containsInAnyOrder("*"));
         assertThat(response.getHeader("access-control-allow-methods"), containsInAnyOrder("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"));
-        assertThat(response.getHeader("access-control-allow-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
-        assertThat(response.getHeader("access-control-expose-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary"));
+        assertThat(response.getHeader("access-control-allow-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
+        assertThat(response.getHeader("access-control-expose-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
         assertThat(response.getHeader("access-control-max-age"), containsInAnyOrder("300"));
         assertThat(response.getHeader("x-cors"), containsInAnyOrder("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.enableCORSForAPI=false"));
         assertThat(response.getFirstHeader("version"), not(isEmptyString()));
@@ -84,8 +84,8 @@ public class OverridePreFlightRequestIntegrationTest {
                 response()
                     .withHeader("access-control-allow-origin", "*")
                     .withHeader("access-control-allow-methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE")
-                    .withHeader("access-control-allow-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
-                    .withHeader("access-control-expose-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
+                    .withHeader("access-control-allow-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization, Authorization")
+                    .withHeader("access-control-expose-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization, Authorization")
                     .withHeader("access-control-max-age", "300")
             );
 
@@ -106,8 +106,8 @@ public class OverridePreFlightRequestIntegrationTest {
         assertThat(response.getStatusCode(), is(200));
         assertThat(response.getHeader("access-control-allow-origin"), containsInAnyOrder("*"));
         assertThat(response.getHeader("access-control-allow-methods"), containsInAnyOrder("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"));
-        assertThat(response.getHeader("access-control-allow-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
-        assertThat(response.getHeader("access-control-expose-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
+        assertThat(response.getHeader("access-control-allow-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization, Authorization"));
+        assertThat(response.getHeader("access-control-expose-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization, Authorization"));
         assertThat(response.getHeader("access-control-max-age"), containsInAnyOrder("300"));
         assertThat(response.getFirstHeader("x-cors"), isEmptyString());
         assertThat(response.getFirstHeader("version"), isEmptyString());
