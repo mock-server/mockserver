@@ -3,38 +3,39 @@
 set -e
 
 function showUsage {
-    echo >&2 "   run_mockserver.sh -serverPort <port> [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>] [-logLevel <level>] [-jvmOptions <system parameters>]"
+    echo >&2 "   run_mockserver.sh [-logLevel <level>] [-serverPort <port>] [-proxyPort <port>] [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]"
     echo >&2 "                                                                                   "
     echo >&2 "     valid options are:                                                            "
-    echo >&2 "        -serverPort <port>                      The HTTP, HTTPS, SOCKS and HTTP CONNECT"
-    echo >&2 "                                                port(s) for both mocking and proxying"
-    echo >&2 "                                                requests.  Port unification is used to"
-    echo >&2 "                                                support all protocols for proxying and"
-    echo >&2 "                                                mocking on the same port(s). Supports"
-    echo >&2 "                                                comma separated list for binding to"
-    echo >&2 "                                                multiple ports."
+    echo >&2 "        -logLevel <level>                       OFF, ERROR, WARN, INFO, DEBUG, TRACE or ALL, as follows:"
+    echo >&2 "                                                WARN - exceptions and errors"
+    echo >&2 "                                                INFO - all interactions"
     echo >&2 "                                                "
-    echo >&2 "        -proxyRemotePort <port>                 Optionally enables port forwarding mode."
-    echo >&2 "                                                When specified all requests received will"
-    echo >&2 "                                                be forwarded to the specified port, unless"
-    echo >&2 "                                                they match an expectation"
+    echo >&2 "        -serverPort <port>                      Specifies the HTTP and HTTPS port(s) for the"
+    echo >&2 "                                                MockServer. Port unification is used to"
+    echo >&2 "                                                support HTTP and HTTPS on the same port(s)"
+    echo >&2 "                                                "
+    echo >&2 "        -proxyPort <port>                       Specifies the HTTP, HTTPS, SOCKS and HTTP"
+    echo >&2 "                                                CONNECT port for proxy. Port unification"
+    echo >&2 "                                                supports for all protocols on the same port"
+    echo >&2 "                                                "
+    echo >&2 "        -proxyRemotePort <port>                 Specifies the port to forward all proxy"
+    echo >&2 "                                                requests to (i.e. all requests received on"
+    echo >&2 "                                                portPort). This setting is used to enable"
+    echo >&2 "                                                the port forwarding mode therefore this"
+    echo >&2 "                                                option disables the HTTP, HTTPS, SOCKS and"
+    echo >&2 "                                                HTTP CONNECT support"
     echo >&2 "                                                "
     echo >&2 "        -proxyRemoteHost <hostname>             Specified the host to forward all proxy"
-    echo >&2 "                                                requests to when port forwarding mode has"
-    echo >&2 "                                                been enabled using the proxyRemotePort"
-    echo >&2 "                                                option.  This setting is ignored unless"
+    echo >&2 "                                                requests to (i.e. all requests received on"
+    echo >&2 "                                                portPort). This setting is ignored unless"
     echo >&2 "                                                proxyRemotePort has been specified. If no"
     echo >&2 "                                                value is provided for proxyRemoteHost when"
     echo >&2 "                                                proxyRemotePort has been specified,"
     echo >&2 "                                                proxyRemoteHost will default to \"localhost\"."
     echo >&2 "                                                "
-    echo >&2 "        -logLevel <level>                       Optionally specify log level as TRACE, DEBUG,"
-    echo >&2 "                                                INFO, WARN, ERROR or OFF. If not specified"
-    echo >&2 "                                                default is INFO"
-    echo >&2 "                                                "
-    echo >&2 "        -jvmOptions <system parameters>         Specified generic JVM options or system properties."
+    echo >&2 "        -genericJVMOptions <system parameters>  Specified generic JVM options or system properties."
     echo >&2 "                                                                                   "
-    echo >&2 "   i.e. /opt/mockserver/run_mockserver.sh -serverPort 1080,1081 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -logLevel DEBUG -jvmOptions \"-Dmockserver.enableCORSForAllResponses=true -Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'\""
+    echo >&2 "   i.e. /opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort 1080,1081 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -genericJVMOptions \"-Dmockserver.enableCORSForAllResponses=true -Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'\""
     echo >&2 "                                                                                   "
     exit 1
 }
@@ -46,68 +47,47 @@ function runCommand {
     eval $1
 }
 
+function validateArgument {
+    local validArgument=false
+    for validValue in $2
+    do
+        if [ "$1" = "$validValue" ];
+        then
+            validArgument=true
+        fi
+    done
+    if [ "$validArgument" = false ];
+    then
+        echo
+        echo "   Error: $3"
+        echo
+        showUsage
+    fi
+}
 
 while [ $# -gt 0 ]
 do
     case "$1" in
+        -logLevel) logLevel="$2"; shift;;
         -serverPort) serverPort="$2"; shift;;
+        -proxyPort) proxyPort="$2"; shift;;
         -proxyRemotePort) proxyRemotePort="$2"; shift;;
         -proxyRemoteHost) proxyRemoteHost="$2"; shift;;
-        -logLevel) logLevel="$2"; shift;;
-        -jvmOptions) jvmOptions="$2"; shift;;
+        -genericJVMOptions) genericJVMOptions="$2"; shift;;
         -*) notset="true"; break;;
         *) break;;
     esac
     shift
 done
 
-COMMAND_LINE_OPTS=""
-
-# serverPort
-if [ -z "$SERVER_PORT" ]
+if [ -z $serverPort ] && [ -z $proxyPort ]
 then
-    if [ -n "$serverPort" ]
-    then
-        SERVER_PORT="$serverPort"
-    fi
-fi
-if [ -n "$SERVER_PORT" ]
-then
-    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -serverPort $SERVER_PORT"
-else
     echo
-    echo "   Error: At least 'serverPort' must be provided"
+    echo "   Error: At least 'serverPort' or 'proxyPort' must be provided"
     echo
     showUsage
 fi
 
-# proxyRemotePort
-if [ -z "$PROXY_REMOTE_PORT" ]
-then
-    if [ -n "$proxyRemotePort" ]
-    then
-        PROXY_REMOTE_PORT="$proxyRemotePort"
-    fi
-fi
-if [ -n "$PROXY_REMOTE_PORT" ]
-then
-    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -proxyRemotePort $PROXY_REMOTE_PORT"
-fi
-
-# proxyRemoteHost
-if [ -z "$PROXY_REMOTE_HOST" ]
-then
-    if [ -n "$proxyRemoteHost" ]
-    then
-        PROXY_REMOTE_HOST="$proxyRemoteHost"
-    fi
-fi
-if [ -n "$PROXY_REMOTE_HOST" ]
-then
-    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -proxyRemoteHost $PROXY_REMOTE_HOST"
-fi
-
-# logLevel
 if [ -z "$LOG_LEVEL" ]
 then
     if [ -n "$logLevel" ]
@@ -117,17 +97,50 @@ then
         LOG_LEVEL="INFO"
     fi
 fi
-if [ -n "$LOG_LEVEL" ]
+
+validateArgument $LOG_LEVEL "OFF ERROR WARN INFO DEBUG TRACE ALL." "Invalid value '$LOG_LEVEL' for 'logLevel'"
+
+COMMAND_LINE_OPTS=""
+
+if [ -n "$serverPort" ]
 then
-    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -logLevel $LOG_LEVEL"
+    SERVER_PORT="$serverPort"
+fi
+if [ -n "$SERVER_PORT" ]
+then
+    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -serverPort $SERVER_PORT"
 fi
 
-if [ -z "$JVM_OPTIONS" ]
+if [ -n "$proxyPort" ]
 then
-    if [ -n "$jvmOptions" ]
-    then
-        JVM_OPTIONS="$jvmOptions"
-    fi
+    PROXY_PORT="$proxyPort"
+fi
+if [ -n "$PROXY_PORT" ]
+then
+    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -proxyPort $PROXY_PORT"
 fi
 
-runCommand "java $JVM_OPTIONS -Dfile.encoding=UTF-8 -jar /opt/mockserver/mockserver-netty-jar-with-dependencies.jar$COMMAND_LINE_OPTS"
+if [ -n "$proxyRemotePort" ]
+then
+    PROXY_REMOTE_PORT="$proxyRemotePort"
+fi
+if [ -n "$PROXY_REMOTE_PORT" ]
+then
+    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -proxyRemotePort $PROXY_REMOTE_PORT"
+fi
+
+if [ -n "$proxyRemoteHost" ]
+then
+    PROXY_REMOTE_HOST="$proxyRemoteHost"
+fi
+if [ -n "$PROXY_REMOTE_HOST" ]
+then
+    COMMAND_LINE_OPTS="$COMMAND_LINE_OPTS -proxyRemoteHost $PROXY_REMOTE_HOST"
+fi
+
+if [ -n "$genericJVMOptions" ]
+then
+    JVM_OPTIONS="$genericJVMOptions"
+fi
+
+runCommand "java $JVM_OPTIONS -Dfile.encoding=UTF-8 -Dmockserver.logLevel=$LOG_LEVEL -jar /opt/mockserver/mockserver-netty-jar-with-dependencies.jar$COMMAND_LINE_OPTS"
