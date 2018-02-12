@@ -99,14 +99,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
         }
 
         if (mockServerLogger.isEnabled(TRACE)) {
-            if (ctx.pipeline().get(LoggingHandler.class) != null) {
-                ctx.pipeline().remove(LoggingHandler.class);
-            }
-            if (ctx.pipeline().get(SslHandler.class) != null) {
-                ctx.pipeline().addAfter("SslHandler#0", "LoggingHandler#0", loggingHandler);
-            } else {
-                ctx.pipeline().addFirst(loggingHandler);
-            }
+            loggingHandler.addLoggingHandler(ctx);
         }
     }
 

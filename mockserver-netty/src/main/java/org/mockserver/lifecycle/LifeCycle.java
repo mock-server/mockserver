@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author jamesdbloom
  */
-public abstract class LifeCycle<T extends LifeCycle> {
+public abstract class LifeCycle {
 
     static {
         new MockServerLogger();
@@ -30,10 +30,11 @@ public abstract class LifeCycle<T extends LifeCycle> {
     protected final MockServerLogger mockServerLogger;
     protected EventLoopGroup bossGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
     protected EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
-    protected ServerBootstrap serverBootstrap;
     protected HttpStateHandler httpStateHandler;
-    private List<Future<Channel>> channelOpenedFutures = new ArrayList<>();
-    //    private SettableFuture<String> stopping = SettableFuture.create();
+    protected ServerBootstrap serverServerBootstrap;
+    protected ServerBootstrap dashboardServerBootstrap;
+    private List<Future<Channel>> serverChannelFutures = new ArrayList<>();
+    private List<Future<Channel>> dashboardChannelFutures = new ArrayList<>();
     private Scheduler scheduler = new Scheduler();
 
     protected LifeCycle() {
@@ -58,15 +59,7 @@ public abstract class LifeCycle<T extends LifeCycle> {
     }
 
     public List<Integer> getLocalPorts() {
-        List<Integer> ports = new ArrayList<>();
-        for (Future<Channel> channelOpened : channelOpenedFutures) {
-            try {
-                ports.add(((InetSocketAddress) channelOpened.get(3, TimeUnit.SECONDS).localAddress()).getPort());
-            } catch (Exception e) {
-                mockServerLogger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
-            }
-        }
-        return ports;
+        return getBoundPorts(serverChannelFutures);
     }
 
     /**
@@ -78,7 +71,19 @@ public abstract class LifeCycle<T extends LifeCycle> {
     }
 
     public int getLocalPort() {
-        for (Future<Channel> channelOpened : channelOpenedFutures) {
+        return getFirstBoundPort(serverChannelFutures);
+    }
+
+    public List<Integer> getDashboardPorts() {
+        return getBoundPorts(dashboardChannelFutures);
+    }
+
+    public Integer getDashboardPort() {
+        return getFirstBoundPort(dashboardChannelFutures);
+    }
+
+    private Integer getFirstBoundPort(List<Future<Channel>> channelFutures) {
+        for (Future<Channel> channelOpened : channelFutures) {
             try {
                 return ((InetSocketAddress) channelOpened.get(2, TimeUnit.SECONDS).localAddress()).getPort();
             } catch (Exception e) {
@@ -88,37 +93,52 @@ public abstract class LifeCycle<T extends LifeCycle> {
         return -1;
     }
 
-    public List<Integer> bindToPorts(final List<Integer> requestedPortBindings) {
+    private List<Integer> getBoundPorts(List<Future<Channel>> channelFutures) {
+        List<Integer> ports = new ArrayList<>();
+        for (Future<Channel> channelOpened : channelFutures) {
+            try {
+                ports.add(((InetSocketAddress) channelOpened.get(3, TimeUnit.SECONDS).localAddress()).getPort());
+            } catch (Exception e) {
+                mockServerLogger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
+            }
+        }
+        return ports;
+    }
+
+    public List<Integer> bindServerPorts(final List<Integer> requestedPortBindings) {
+        return bindPorts(serverServerBootstrap, requestedPortBindings, serverChannelFutures);
+    }
+
+    public List<Integer> bindDashboardPorts(final List<Integer> requestedPortBindings) {
+        return bindPorts(dashboardServerBootstrap, requestedPortBindings, dashboardChannelFutures);
+    }
+
+    private List<Integer> bindPorts(final ServerBootstrap serverBootstrap, List<Integer> requestedPortBindings, List<Future<Channel>> channelFutures) {
         List<Integer> actualPortBindings = new ArrayList<>();
         for (final Integer portToBind : requestedPortBindings) {
             try {
                 final SettableFuture<Channel> channelOpened = SettableFuture.create();
+                channelFutures.add(channelOpened);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        channelOpenedFutures.add(channelOpened);
                         try {
-
-                            Channel channel =
-                                serverBootstrap
-                                    .bind(portToBind)
-                                    .addListener(new ChannelFutureListener() {
-                                        @Override
-                                        public void operationComplete(ChannelFuture future) {
-                                            if (future.isSuccess()) {
-                                                channelOpened.set(future.channel());
-                                            } else {
-                                                channelOpened.setException(future.cause());
-                                            }
+                            serverBootstrap
+                                .bind(portToBind)
+                                .addListener(new ChannelFutureListener() {
+                                    @Override
+                                    public void operationComplete(ChannelFuture future) {
+                                        if (future.isSuccess()) {
+                                            channelOpened.set(future.channel());
+                                        } else {
+                                            channelOpened.setException(future.cause());
                                         }
-                                    })
-                                    .channel();
-
-                            started(((InetSocketAddress) channelOpened.get().localAddress()).getPort());
-                            channel.closeFuture().syncUninterruptibly();
+                                    }
+                                })
+                                .channel().closeFuture().syncUninterruptibly();
 
                         } catch (Exception e) {
-                            throw new RuntimeException("Exception while binding MockServer to port " + portToBind, e.getCause());
+                            throw new RuntimeException("Exception while binding MockServer to port " + portToBind, e);
                         }
                     }
                 }, "MockServer thread for port: " + portToBind).start();
@@ -131,8 +151,12 @@ public abstract class LifeCycle<T extends LifeCycle> {
         return actualPortBindings;
     }
 
-    private void started(Integer port) {
-        mockServerLogger.info("MockServer started on port: {}", port);
+    protected void startedServer(List<Integer> ports) {
+        mockServerLogger.info("MockServer started on port: {}", (ports.size() == 1 ? ports.get(0) : ports));
+    }
+
+    protected void startedDashboard(List<Integer> ports) {
+        mockServerLogger.info("MockServer started on port: {}", (ports.size() == 1 ? ports.get(0) : ports));
     }
 
 }

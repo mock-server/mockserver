@@ -148,7 +148,7 @@ public class MockServerHandlerTest {
     @Test
     public void shouldBindNewPorts() {
         // given
-        when(server.bindToPorts(anyListOf(Integer.class))).thenReturn(Arrays.asList(1080, 1090));
+        when(server.bindServerPorts(anyListOf(Integer.class))).thenReturn(Arrays.asList(1080, 1090));
         HttpRequest statusRequest = request("/bind")
             .withMethod("PUT")
             .withBody(portBindingSerializer.serialize(
@@ -159,7 +159,7 @@ public class MockServerHandlerTest {
         embeddedChannel.writeInbound(statusRequest);
 
         // then
-        verify(server).bindToPorts(Arrays.asList(1080, 1090));
+        verify(server).bindServerPorts(Arrays.asList(1080, 1090));
         assertResponse(200, portBindingSerializer.serialize(
             portBinding(1080, 1090)
         ));

@@ -36,7 +36,6 @@ public class NettyResponseWriter extends ResponseWriter {
     public void writeResponse(HttpRequest request, HttpResponseStatus responseStatus, String body, String contentType) {
         HttpResponse response = response()
             .withStatusCode(responseStatus.code())
-            .withReasonPhrase(responseStatus.reasonPhrase())
             .withBody(body);
         if (body != null && !body.isEmpty()) {
             response.replaceHeader(header(CONTENT_TYPE.toString(), contentType + "; charset=utf-8"));

@@ -6,8 +6,8 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
+import org.mockserver.dashboard.DashboardUnificationInitializer;
 import org.mockserver.lifecycle.LifeCycle;
-import org.mockserver.scheduler.Scheduler;
 
 import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
@@ -22,7 +22,7 @@ import static org.mockserver.mockserver.MockServerHandler.PROXYING;
 /**
  * @author jamesdbloom
  */
-public class MockServer extends LifeCycle<MockServer> {
+public class MockServer extends LifeCycle {
 
     private InetSocketAddress remoteSocket;
 
@@ -43,6 +43,10 @@ public class MockServer extends LifeCycle<MockServer> {
      */
     public MockServer(final ProxyConfiguration proxyConfiguration, final Integer... localPorts) {
         createServerBootstrap(proxyConfiguration, localPorts);
+        createDashboardBootstrap();
+
+        // wait to start
+        getLocalPort();
     }
 
     /**
@@ -73,6 +77,7 @@ public class MockServer extends LifeCycle<MockServer> {
 
         remoteSocket = new InetSocketAddress(remoteHost, remotePort);
         createServerBootstrap(proxyConfiguration, localPorts);
+        createDashboardBootstrap();
 
         // wait to start
         getLocalPort();
@@ -84,7 +89,7 @@ public class MockServer extends LifeCycle<MockServer> {
             portBindings = Arrays.asList(localPorts);
         }
 
-        serverBootstrap = new ServerBootstrap()
+        serverServerBootstrap = new ServerBootstrap()
             .group(bossGroup, workerGroup)
             .option(ChannelOption.SO_BACKLOG, 1024)
             .channel(NioServerSocketChannel.class)
@@ -95,13 +100,27 @@ public class MockServer extends LifeCycle<MockServer> {
             .childAttr(REMOTE_SOCKET, remoteSocket)
             .childAttr(PROXYING, remoteSocket != null);
 
-        bindToPorts(portBindings);
+        bindServerPorts(portBindings);
+        startedServer(getLocalPorts());
 
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             public void run() {
                 MockServer.super.stop();
             }
         }));
+    }
+
+    private void createDashboardBootstrap() {
+        dashboardServerBootstrap = new ServerBootstrap()
+            .group(bossGroup, workerGroup)
+            .option(ChannelOption.SO_BACKLOG, 1024)
+            .channel(NioServerSocketChannel.class)
+            .childOption(ChannelOption.AUTO_READ, true)
+            .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+            .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
+            .childHandler(new DashboardUnificationInitializer())
+            .childAttr(REMOTE_SOCKET, remoteSocket)
+            .childAttr(PROXYING, remoteSocket != null);
     }
 
     public InetSocketAddress getRemoteAddress() {

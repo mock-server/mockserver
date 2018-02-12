@@ -1,5 +1,6 @@
 package org.mockserver.mockserver;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.net.MediaType;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -20,12 +21,14 @@ import org.mockserver.socket.KeyAndCertificateFactory;
 
 import javax.annotation.Nullable;
 import java.net.BindException;
+import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.LOCATION;
+import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.model.HttpResponse.response;
@@ -87,8 +90,26 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                     PortBinding requestedPortBindings = portBindingSerializer.deserialize(request.getBodyAsString());
                     try {
-                        List<Integer> actualPortBindings = server.bindToPorts(requestedPortBindings.getPorts());
+                        List<Integer> actualPortBindings = server.bindServerPorts(requestedPortBindings.getPorts());
                         responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
+                    } catch (RuntimeException e) {
+                        if (e.getCause() instanceof BindException) {
+                            responseWriter.writeResponse(request, BAD_REQUEST, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());
+                        } else {
+                            throw e;
+                        }
+                    }
+
+                } else if (request.matches("PUT", "/dashboard")) {
+
+                    PortBinding requestedPortBindings = portBindingSerializer.deserialize(request.getBodyAsString());
+                    try {
+                        List<Integer> actualPortBindings = server.bindDashboardPorts(requestedPortBindings != null ? requestedPortBindings.getPorts() : ImmutableList.of(0));
+                        responseWriter.writeResponse(request, response()
+                            .withStatusCode(FOUND.code())
+                            .withHeader(LOCATION.toString(), "http://" + ((InetSocketAddress) ctx.channel().localAddress()).getHostName() + ":" + server.getDashboardPort())
+                            .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
+                            .withBody(portBindingSerializer.serialize(portBinding(actualPortBindings))), true);
                     } catch (RuntimeException e) {
                         if (e.getCause() instanceof BindException) {
                             responseWriter.writeResponse(request, BAD_REQUEST, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());

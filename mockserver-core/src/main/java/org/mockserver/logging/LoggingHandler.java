@@ -6,6 +6,7 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.ssl.SslHandshakeCompletionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +77,17 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
     public LoggingHandler(Logger logger) {
         this.logger = logger;
+    }
+
+    public void addLoggingHandler(ChannelHandlerContext ctx) {
+        if (ctx.pipeline().get(LoggingHandler.class) != null) {
+            ctx.pipeline().remove(LoggingHandler.class);
+        }
+        if (ctx.pipeline().get(SslHandler.class) != null) {
+            ctx.pipeline().addAfter("SslHandler#0", "LoggingHandler#0", this);
+        } else {
+            ctx.pipeline().addFirst(this);
+        }
     }
 
     @Override
