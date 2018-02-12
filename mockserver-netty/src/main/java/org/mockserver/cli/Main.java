@@ -23,10 +23,12 @@ public class Main {
         "                                                                                                                                                                 " + NEW_LINE +
         "     valid options are:                                                                                                                                          " + NEW_LINE +
         "        -serverPort <port>           The HTTP, HTTPS, SOCKS and HTTP CONNECT                                                                                     " + NEW_LINE +
-        "                                     port for the MockServer for both mocking                                                                                    " + NEW_LINE +
-        "                                     and proxying requests.  Port unification                                                                                    " + NEW_LINE +
-        "                                     is used to support all protocols for                                                                                        " + NEW_LINE +
-        "                                     proxying and mocking on the same port.                                                                                      " + NEW_LINE +
+        "                                     port(s) for both mocking and proxying                                                                                       " + NEW_LINE +
+        "                                     requests.  Port unification is used to                                                                                      " + NEW_LINE +
+        "                                     support all protocols for proxying and                                                                                      " + NEW_LINE +
+        "                                     mocking on the same port(s). Supports                                                                                       " + NEW_LINE +
+        "                                     comma separated list for binding to                                                                                         " + NEW_LINE +
+        "                                     multiple ports.                                                                                                             " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE +
         "        -proxyRemotePort <port>      Optionally enables port forwarding mode.                                                                                    " + NEW_LINE +
         "                                     When specified all requests received will                                                                                   " + NEW_LINE +
