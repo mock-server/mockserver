@@ -130,4 +130,4 @@ then
     fi
 fi
 
-runCommand "java $JVM_OPTIONS -Dfile.encoding=UTF-8 -Dlog.dir=/usr/local/var/log/mockserver/ -jar /usr/local/lib/mockserver/mockserver-netty-jar-with-dependencies.jar$COMMAND_LINE_OPTS"
+runCommand "java $JVM_OPTIONS -Dfile.encoding=UTF-8 -jar /usr/local/lib/mockserver/mockserver-netty-jar-with-dependencies.jar$COMMAND_LINE_OPTS"
