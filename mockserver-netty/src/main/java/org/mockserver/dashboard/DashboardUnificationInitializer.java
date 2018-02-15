@@ -11,6 +11,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslHandler;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.server.netty.codec.MockServerServerCodec;
 import org.mockserver.unification.HttpContentLengthRemover;
 import org.mockserver.unification.PortUnificationHandler;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
+import static org.mockserver.unification.PortUnificationHandler.isSslEnabledUpstream;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -27,7 +29,6 @@ import static org.slf4j.event.Level.TRACE;
 public class DashboardUnificationInitializer extends SimpleChannelInboundHandler<ByteBuf> {
     private final MockServerLogger mockServerLogger = new MockServerLogger(DashboardUnificationInitializer.class);
     private final LoggingHandler loggingHandler = new LoggingHandler(LoggerFactory.getLogger(PortUnificationHandler.class));
-    private final HttpContentLengthRemover httpContentLengthRemover = new HttpContentLengthRemover();
 
     public DashboardUnificationInitializer() {
         super(false);
@@ -90,13 +91,13 @@ public class DashboardUnificationInitializer extends SimpleChannelInboundHandler
 
         addLastIfNotPresent(pipeline, new HttpServerCodec(8192, 8192, 8192));
         addLastIfNotPresent(pipeline, new HttpContentDecompressor());
-        addLastIfNotPresent(pipeline, httpContentLengthRemover);
         addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));
+        addLastIfNotPresent(pipeline, new MockServerServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel())));
 
         if (mockServerLogger.isEnabled(TRACE)) {
             addLastIfNotPresent(pipeline, loggingHandler);
         }
-        pipeline.addLast(new DashboardHandler());
+        addLastIfNotPresent(pipeline, new DashboardHandler());
         pipeline.remove(this);
 
         // fire message back through pipeline
