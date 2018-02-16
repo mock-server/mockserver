@@ -1,22 +1,32 @@
 
-1. Get the application URL by running these commands:
+1. To wait until the deployment is complete run:
 
+   kubectl rollout status deployments {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+2. To check the status of the deployment without waiting, run the following command and confirm the `mockserver` has the `Running` status:
+
+   kubectl get po -l release={{ .Release.Name }} -n {{ .Release.Namespace }}
+
+3. Get the application URL by running these commands:
 {{- if .Values.ingress.enabled }}
    {{- range .Values.ingress.hosts }}
        http{{ if $.Values.ingress.tls }}s{{ end }}://{{ . }}{{ $.Values.ingress.path }}
    {{- end }}
 {{- else if contains "NodePort" .Values.service.type }}
+
    export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ template "mockserver.name" . }})
    export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
    export MOCKSERVER_HOST=$NODE_IP:$NODE_PORT
    echo http://$MOCKSERVER_HOST
 {{- else if contains "LoadBalancer" .Values.service.type }}
+
    NOTE: It may take a few minutes for the LoadBalancer IP to be available.
          You can watch the status of by running 'kubectl get svc -w {{ template "mockserver.name" . }}'
    export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ template "mockserver.name" . }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
    export MOCKSERVER_HOST=$SERVICE_IP:{{ .Values.service.port }}
    echo http://$MOCKSERVER_HOST
 {{- else if contains "ClusterIP" .Values.service.type }}
+
    export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app={{ template "mockserver.name" . }},release={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
    kubectl port-forward $POD_NAME {{ .Values.service.port }}:{{ .Values.service.port }} -n {{ .Release.Namespace }} &
    sleep 1 && export MOCKSERVER_HOST=127.0.0.1:{{ .Values.service.port }}

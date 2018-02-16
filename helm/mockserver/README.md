@@ -11,8 +11,16 @@ To install the chart with:
 - **namespace:** `mockserver`
 - **configuration:** `values` (see [values.yaml](values.yaml) for values definitions)
 
+With the helm chart source folder (i.e. you have the repository cloned)
+
 ```bash
 helm upgrade --install --values helm/mockserver/values.yaml --namespace mockserver mockserver helm/mockserver
+```
+
+Remotely using `www.mock-server.com` as chart repo
+
+```bash
+helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.3.0.tgz
 ```
 
 To wait until the deployment is complete run:
