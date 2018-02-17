@@ -96,7 +96,7 @@ public class HttpStateHandler {
     public void reset() {
         mockServerMatcher.reset();
         mockServerLog.reset();
-        mockServerLogger.info(request(), "resetting all expectations and request logs" + NEW_LINE);
+        mockServerLogger.info( "resetting all expectations and request logs" + NEW_LINE);
     }
 
     public void add(Expectation... expectations) {
@@ -109,7 +109,7 @@ public class HttpStateHandler {
 
     public Expectation firstMatchingExpectation(HttpRequest request) {
         if (mockServerMatcher.isEmpty()) {
-            mockServerLogger.info(request(), "no active expectations when receiving request:{}", request);
+            mockServerLogger.info(request, "no active expectations when receiving request:{}", request);
             return null;
         } else {
             return mockServerMatcher.firstMatchingExpectation(request);
