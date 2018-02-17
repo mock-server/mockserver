@@ -453,7 +453,9 @@ public class HttpStateHandlerTest {
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
         // then - activity logged
         verify(mockLogFormatter).info(request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).info(request(), "resetting all expectations and request logs" + NEW_LINE);
+        verify(mockLogFormatter).info((HttpRequest) null, "retrieving requests in json that match:{}", request());
+        verify(mockLogFormatter).info(request("request_one"), "no active expectations when receiving request:{}", request("request_one"));
+        verify(mockLogFormatter).info("resetting all expectations and request logs" + NEW_LINE);
     }
 
 }

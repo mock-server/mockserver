@@ -96,7 +96,7 @@ public class HttpStateHandler {
     public void reset() {
         mockServerMatcher.reset();
         mockServerLog.reset();
-        mockServerLogger.info( "resetting all expectations and request logs" + NEW_LINE);
+        mockServerLogger.info("resetting all expectations and request logs" + NEW_LINE);
     }
 
     public void add(Expectation... expectations) {
