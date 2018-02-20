@@ -29,6 +29,7 @@ public class NettyHttpClient {
     static final MockServerLogger mockServerLogger = new MockServerLogger(NettyHttpClient.class);
     static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");
     static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
+    static final AttributeKey<HttpRequest> REQUEST = AttributeKey.valueOf("REQUEST");
     static final AttributeKey<SettableFuture<HttpResponse>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
     private static EventLoopGroup group = new NioEventLoopGroup();
     private final ProxyConfiguration proxyConfiguration;
@@ -56,8 +57,6 @@ public class NettyHttpClient {
             remoteAddress = httpRequest.socketAddressFromHostHeader();
         }
 
-        mockServerLogger.debug("Sending to: {}" + NEW_LINE + "request: {}", remoteAddress, httpRequest);
-
         final SettableFuture<HttpResponse> httpResponseSettableFuture = SettableFuture.create();
         new Bootstrap()
             .group(group)
@@ -68,8 +67,9 @@ public class NettyHttpClient {
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeoutMillis)
             .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
             .attr(REMOTE_SOCKET, remoteAddress)
+            .attr(REQUEST, httpRequest)
             .attr(RESPONSE_FUTURE, httpResponseSettableFuture)
-            .handler(new HttpClientInitializer(proxyConfiguration))
+            .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger))
             .connect(remoteAddress)
             .addListener(new ChannelFutureListener() {
                 @Override

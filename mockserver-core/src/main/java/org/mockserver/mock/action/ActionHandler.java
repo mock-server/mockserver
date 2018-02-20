@@ -1,5 +1,6 @@
 package org.mockserver.mock.action;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
@@ -289,9 +290,14 @@ public class ActionHandler {
     }
 
     private void returnNotFound(ResponseWriter responseWriter, HttpRequest request) {
-        responseWriter.writeResponse(request, notFoundResponse().removeHeader("x-forwarded-by"), false);
-        httpStateHandler.log(new RequestLogEntry(request));
-        mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
+        HttpResponse response = notFoundResponse();
+        if (request.getHeaders().containsEntry("x-forwarded-by", "MockServer")) {
+            response.withHeader("x-forwarded-by", "MockServer");
+        } else {
+            httpStateHandler.log(new RequestLogEntry(request));
+            mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
+        }
+        responseWriter.writeResponse(request, response, false);
     }
 
 }

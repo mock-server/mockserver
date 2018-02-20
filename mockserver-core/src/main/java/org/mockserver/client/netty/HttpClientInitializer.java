@@ -24,13 +24,15 @@ import static org.slf4j.event.Level.TRACE;
 @ChannelHandler.Sharable
 public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
-    private final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
+    private final MockServerLogger mockServerLogger;
     private final HttpClientConnectionHandler httpClientConnectionHandler = new HttpClientConnectionHandler();
-    private final HttpClientHandler httpClientHandler = new HttpClientHandler();
+    private final HttpClientHandler httpClientHandler;
     private final ProxyConfiguration proxyConfiguration;
 
-    public HttpClientInitializer(ProxyConfiguration proxyConfiguration) {
+    public HttpClientInitializer(ProxyConfiguration proxyConfiguration, MockServerLogger mockServerLogger) {
         this.proxyConfiguration = proxyConfiguration;
+        this.mockServerLogger = mockServerLogger;
+        this.httpClientHandler = new HttpClientHandler(mockServerLogger);
     }
 
     @Override
