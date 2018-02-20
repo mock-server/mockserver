@@ -107,7 +107,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                         List<Integer> actualPortBindings = server.bindDashboardPorts(requestedPortBindings != null ? requestedPortBindings.getPorts() : ImmutableList.of(0));
                         responseWriter.writeResponse(request, response()
                             .withStatusCode(FOUND.code())
-                            .withHeader(LOCATION.toString(), "http://" + ((InetSocketAddress) ctx.channel().localAddress()).getHostName() + ":" + server.getDashboardPort())
+                            .withHeader(LOCATION.toString(), "http://" + ((InetSocketAddress) ctx.channel().localAddress()).getHostName() + ":" + server.getDashboardPort() + "?host=" + getLocalAddresses(ctx).iterator().next().split(":")[0] + "&port=" + server.getLocalPort())
                             .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                             .withBody(portBindingSerializer.serialize(portBinding(actualPortBindings))), true);
                     } catch (RuntimeException e) {
