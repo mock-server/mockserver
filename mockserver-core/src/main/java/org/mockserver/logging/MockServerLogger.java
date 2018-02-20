@@ -1,5 +1,6 @@
 package org.mockserver.logging;
 
+import com.google.common.collect.ImmutableList;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.mock.HttpStateHandler;
@@ -13,6 +14,7 @@ import java.util.List;
 
 import static org.mockserver.configuration.ConfigurationProperties.DEFAULT_LOG_LEVEL;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
+import static org.mockserver.model.HttpRequest.request;
 import static org.slf4j.event.Level.*;
 
 /**
@@ -21,8 +23,8 @@ import static org.slf4j.event.Level.*;
 public class MockServerLogger {
 
     public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger();
-    private final Logger logger;
-    private final HttpStateHandler httpStateHandler;
+    private final boolean auditEnabled = !ConfigurationProperties.disableRequestAudit();
+    private final boolean logEnabled = !ConfigurationProperties.disableSystemOut();
 
     static {
         setRootLogLevel("io.netty");
@@ -35,14 +37,8 @@ public class MockServerLogger {
         }
     }
 
-    public static void setRootLogLevel(String name) {
-        Logger logger = LoggerFactory.getLogger(name);
-        if (logger instanceof ch.qos.logback.classic.Logger) {
-            ((ch.qos.logback.classic.Logger) logger).setLevel(
-                ch.qos.logback.classic.Level.valueOf(System.getProperty("root.logLevel", "WARN"))
-            );
-        }
-    }
+    private final Logger logger;
+    private final HttpStateHandler httpStateHandler;
 
     public MockServerLogger() {
         this(MockServerLogger.class);
@@ -57,15 +53,26 @@ public class MockServerLogger {
         this.httpStateHandler = httpStateHandler;
     }
 
+    public static void setRootLogLevel(String name) {
+        Logger logger = LoggerFactory.getLogger(name);
+        if (logger instanceof ch.qos.logback.classic.Logger) {
+            ((ch.qos.logback.classic.Logger) logger).setLevel(
+                ch.qos.logback.classic.Level.valueOf(System.getProperty("root.logLevel", "WARN"))
+            );
+        }
+    }
+
     public void trace(final String message, final Object... arguments) {
         trace(null, message, arguments);
     }
 
     public void trace(final HttpRequest request, final String message, final Object... arguments) {
         if (isEnabled(TRACE)) {
+            addLogEvents(TRACE, request, message, arguments);
             final String logMessage = formatLogMessage(message, arguments);
-            logger.trace(logMessage);
-            addLogEvents(request, logMessage);
+            if (logEnabled) {
+                logger.trace(logMessage);
+            }
         }
     }
 
@@ -75,9 +82,11 @@ public class MockServerLogger {
 
     public void debug(final HttpRequest request, final String message, final Object... arguments) {
         if (isEnabled(DEBUG)) {
+            addLogEvents(DEBUG, request, message, arguments);
             final String logMessage = formatLogMessage(message, arguments);
-            logger.debug(logMessage);
-            addLogEvents(request, logMessage);
+            if (logEnabled) {
+                logger.debug(logMessage);
+            }
         }
     }
 
@@ -86,18 +95,16 @@ public class MockServerLogger {
     }
 
     public void info(final HttpRequest request, final String message, final Object... arguments) {
-        if (!ConfigurationProperties.disableRequestAudit()) {
-            final String logMessage = formatLogMessage(message, arguments);
-            logger.info(logMessage);
-            addLogEvents(request, logMessage);
-        }
+        info(ImmutableList.of(request != null ? request : request()), message, arguments);
     }
 
     public void info(final List<HttpRequest> requests, final String message, final Object... arguments) {
-        if (!ConfigurationProperties.disableRequestAudit()) {
+        if (isEnabled(INFO)) {
+            addLogEvents(INFO, requests, message, arguments);
             final String logMessage = formatLogMessage(message, arguments);
-            logger.info(logMessage);
-            addLogEvents(requests, logMessage);
+            if (logEnabled) {
+                logger.info(logMessage);
+            }
         }
     }
 
@@ -111,9 +118,11 @@ public class MockServerLogger {
 
     public void warn(final @Nullable HttpRequest request, final String message, final Object... arguments) {
         if (isEnabled(WARN)) {
+            addLogEvents(WARN, request, message, arguments);
             final String logMessage = formatLogMessage(message, arguments);
-            logger.error(logMessage);
-            addLogEvents(request, logMessage);
+            if (logEnabled) {
+                logger.error(logMessage);
+            }
         }
     }
 
@@ -126,32 +135,28 @@ public class MockServerLogger {
     }
 
     public void error(final @Nullable HttpRequest request, final Throwable throwable, final String message, final Object... arguments) {
-        if (isEnabled(ERROR)) {
-            final String logMessage = formatLogMessage(message, arguments);
-            logger.error(logMessage, throwable);
-            addLogEvents(request, logMessage);
-        }
+        error(ImmutableList.of(request != null ? request : request()), throwable, message, arguments);
     }
 
     public void error(final List<HttpRequest> requests, final Throwable throwable, final String message, final Object... arguments) {
         if (isEnabled(ERROR)) {
+            addLogEvents(ERROR, requests, message, arguments);
             final String logMessage = formatLogMessage(message, arguments);
-            logger.error(logMessage, throwable);
-            addLogEvents(requests, logMessage);
-        }
-    }
-
-    private void addLogEvents(final @Nullable HttpRequest request, final String logMessage) {
-        if (httpStateHandler != null) {
-            httpStateHandler.log(new MessageLogEntry(request, logMessage));
-        }
-    }
-
-    private void addLogEvents(final List<HttpRequest> requests, final String logMessage) {
-        if (httpStateHandler != null) {
-            for (HttpRequest httpRequest : requests) {
-                httpStateHandler.log(new MessageLogEntry(httpRequest, logMessage));
+            if (logEnabled) {
+                logger.error(logMessage, throwable);
             }
+        }
+    }
+
+    private void addLogEvents(final Level logLeveL, final @Nullable HttpRequest request, final String message, final Object... arguments) {
+        if (auditEnabled && httpStateHandler != null) {
+            httpStateHandler.log(new MessageLogEntry(logLeveL, request, message, arguments));
+        }
+    }
+
+    private void addLogEvents(final Level logLeveL, final List<HttpRequest> requests, final String message, final Object... arguments) {
+        if (auditEnabled && httpStateHandler != null) {
+            httpStateHandler.log(new MessageLogEntry(logLeveL, requests, message, arguments));
         }
     }
 

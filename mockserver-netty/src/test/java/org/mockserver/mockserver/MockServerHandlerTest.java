@@ -204,7 +204,7 @@ public class MockServerHandlerTest {
     }
 
     @Test
-    public void shouldRetrieveLogMessages() {
+    public void shouldRetrieveLogMessages() throws InterruptedException {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         httpStateHandler.add(expectationOne);

@@ -381,7 +381,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
                     "\t  \"path\" : \"/not_found\",",
-                " did not match expectation:" + NEW_LINE +
+                " didn't match expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"httpRequest\" : {" + NEW_LINE +
@@ -400,14 +400,14 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     NEW_LINE +
                     " because:" + NEW_LINE +
                     NEW_LINE +
-                    "\tmethod matches = true" + NEW_LINE +
-                    "\tpath matches = false" + NEW_LINE +
-                    "\tquery string parameters match = true" + NEW_LINE +
-                    "\tbody matches = true" + NEW_LINE +
-                    "\theaders match = true" + NEW_LINE +
-                    "\tcookies match = true" + NEW_LINE +
-                    "\tkeep-alive matches = true" + NEW_LINE +
-                    "\tssl matches = true"
+                    "\tmethod matched," + NEW_LINE +
+                    "\tpath didn't match," + NEW_LINE +
+                    "\tquery matched," + NEW_LINE +
+                    "\tbody matched," + NEW_LINE +
+                    "\theaders matched," + NEW_LINE +
+                    "\tcookies matched," + NEW_LINE +
+                    "\tkeep-alive matched," + NEW_LINE +
+                    "\tssl matched" + NEW_LINE // 4-1
             },
             new String[]{
                 "returning response:" + NEW_LINE +

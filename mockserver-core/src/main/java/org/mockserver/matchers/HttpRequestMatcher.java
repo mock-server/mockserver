@@ -189,26 +189,26 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     if (logMatchResults) {
                         if (!totalResultAfterNotOperatorApplied) {
                             StringBuilder becauseBuilder = new StringBuilder();
-                            becauseBuilder.append("method matches = ").append(methodMatches);
-                            becauseBuilder.append(NEW_LINE).append("path matches = ").append(pathMatches);
-                            becauseBuilder.append(NEW_LINE).append("query string parameters match = ").append(queryStringParametersMatches);
-                            becauseBuilder.append(NEW_LINE).append("body matches = ").append(bodyMatches);
-                            becauseBuilder.append(NEW_LINE).append("headers match = ").append(headersMatch);
-                            becauseBuilder.append(NEW_LINE).append("cookies match = ").append(cookiesMatch);
-                            becauseBuilder.append(NEW_LINE).append("keep-alive matches = ").append(keepAliveMatches);
-                            becauseBuilder.append(NEW_LINE).append("ssl matches = ").append(sslMatches);
+                            becauseBuilder.append("method ").append((methodMatches ? "matched" : "didn't match"));
+                            becauseBuilder.append(",").append(NEW_LINE).append("path ").append((pathMatches ? "matched" : "didn't match"));
+                            becauseBuilder.append(",").append(NEW_LINE).append("query ").append((queryStringParametersMatches ? "matched" : "didn't match"));
+                            becauseBuilder.append(",").append(NEW_LINE).append("body ").append((bodyMatches ? "matched" : "didn't match"));
+                            becauseBuilder.append(",").append(NEW_LINE).append("headers ").append((headersMatch ? "matched" : "didn't match"));
+                            becauseBuilder.append(",").append(NEW_LINE).append("cookies ").append((cookiesMatch ? "matched" : "didn't match"));
+                            becauseBuilder.append(",").append(NEW_LINE).append("keep-alive ").append((keepAliveMatches ? "matched" : "didn't match"));
+                            becauseBuilder.append(",").append(NEW_LINE).append("ssl ").append((sslMatches ? "matched" : "didn't match"));
                             if (request.isNot()) {
-                                becauseBuilder.append(NEW_LINE).append("request \'not\' operator is enabled");
+                                becauseBuilder.append(",").append(NEW_LINE).append("request \'not\' operator is enabled");
                             }
                             if (this.httpRequest.isNot()) {
-                                becauseBuilder.append(NEW_LINE).append("expectation's request \'not\' operator is enabled");
+                                becauseBuilder.append(",").append(NEW_LINE).append("expectation's request \'not\' operator is enabled");
                             }
                             if (not) {
-                                becauseBuilder.append(NEW_LINE).append("expectation's request matcher \'not\' operator is enabled");
+                                becauseBuilder.append(",").append(NEW_LINE).append("expectation's request matcher \'not\' operator is enabled");
                             }
-                            mockServerLogger.info(request, "request:{}" + NEW_LINE + " did" + (totalResult ? "" : " not") + " match " + (this.expectation == null ? "request" : "expectation") + ":{}" + NEW_LINE + " because:{}", request, (this.expectation == null ? this : this.expectation), becauseBuilder.toString());
+                            mockServerLogger.info(request, "request:{}" + NEW_LINE + (totalResult ? " matched " : " didn't match ") + (this.expectation == null ? "request" : "expectation") + ":{}" + NEW_LINE + " because:{}", request, (this.expectation == null ? this : this.expectation.clone()), becauseBuilder.toString());
                         } else {
-                            mockServerLogger.info(request, "request:{}" + NEW_LINE + " matched " + (this.expectation == null ? "request" : "expectation") + ":{}", request, (this.expectation == null ? this : this.expectation));
+                            mockServerLogger.info(request, "request:{}" + NEW_LINE + " matched " + (this.expectation == null ? "request" : "expectation") + ":{}", request, (this.expectation == null ? this : this.expectation.clone()));
                         }
                     }
                     matches = totalResultAfterNotOperatorApplied;

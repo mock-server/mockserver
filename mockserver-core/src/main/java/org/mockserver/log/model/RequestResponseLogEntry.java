@@ -7,6 +7,8 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
+import java.util.List;
+
 /**
  * @author jamesdbloom
  */
@@ -25,7 +27,7 @@ public class RequestResponseLogEntry extends LogEntry implements ExpectationLogE
 
     @JsonIgnore
     public Expectation getExpectation() {
-        return new Expectation(getHttpRequest(), Times.once(), TimeToLive.unlimited()).thenRespond(httpResponse);
+        return new Expectation(getHttpRequests().get(0), Times.once(), TimeToLive.unlimited()).thenRespond(httpResponse);
     }
 
 }

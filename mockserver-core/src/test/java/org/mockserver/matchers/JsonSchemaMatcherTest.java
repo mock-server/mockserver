@@ -1,9 +1,12 @@
 package org.mockserver.matchers;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.validator.jsonschema.JsonSchemaValidator;
 import org.slf4j.Logger;
@@ -19,6 +22,19 @@ import static org.mockserver.configuration.ConfigurationProperties.logLevel;
  * @author jamesdbloom
  */
 public class JsonSchemaMatcherTest {
+
+    private static boolean disableSystemOut;
+
+    @BeforeClass
+    public static void recordeSystemProperties() {
+        disableSystemOut = ConfigurationProperties.disableSystemOut();
+        ConfigurationProperties.disableSystemOut(false);
+    }
+
+    @AfterClass
+    public static void resetSystemProperties() {
+        ConfigurationProperties.disableSystemOut(disableSystemOut);
+    }
 
     public static final String JSON_SCHEMA = "{" + NEW_LINE +
         "    \"type\": \"object\"," + NEW_LINE +

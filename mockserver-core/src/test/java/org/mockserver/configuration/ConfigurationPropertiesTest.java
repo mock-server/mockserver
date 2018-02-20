@@ -441,4 +441,18 @@ public class ConfigurationPropertiesTest {
         assertEquals(false, ConfigurationProperties.disableRequestAudit());
         assertEquals("false", System.getProperty("mockserver.disableRequestAudit"));
     }
+
+    @Test
+    public void shouldSetAndReadDisableSystemOut() {
+        // given
+        System.clearProperty("mockserver.disableSystemOut");
+
+        // when
+        assertEquals(false, ConfigurationProperties.disableSystemOut());
+        ConfigurationProperties.disableSystemOut(false);
+
+        // then
+        assertEquals(false, ConfigurationProperties.disableSystemOut());
+        assertEquals("false", System.getProperty("mockserver.disableSystemOut"));
+    }
 }

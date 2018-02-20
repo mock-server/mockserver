@@ -393,11 +393,11 @@ public class HttpStateHandlerTest {
             .withQueryStringParameter("type", "logs")
             .withBody(httpRequestSerializer.serialize(request("request_one")));
         // given - some log messages
-        MessageLogEntry logEntryOne = new MessageLogEntry(request("request_one"), "message_one");
+        MessageLogEntry logEntryOne = new MessageLogEntry(null, request("request_one"), "message_one");
         httpStateHandler.log(logEntryOne);
-        MessageLogEntry logEntryTwo = new MessageLogEntry(request("request_one"), "message_two");
+        MessageLogEntry logEntryTwo = new MessageLogEntry(null, request("request_one"), "message_two");
         httpStateHandler.log(logEntryTwo);
-        MessageLogEntry logEntryThree = new MessageLogEntry(request("request_one"), "message_three");
+        MessageLogEntry logEntryThree = new MessageLogEntry(null, request("request_one"), "message_three");
         httpStateHandler.log(logEntryThree);
 
         // when

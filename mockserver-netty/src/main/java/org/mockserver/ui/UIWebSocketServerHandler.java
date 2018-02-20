@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.LogEventJsonSerializer;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.collections.CircularHashMap;
 import org.mockserver.filters.MockServerEventLog;
@@ -49,6 +50,7 @@ public class UIWebSocketServerHandler extends ChannelInboundHandlerAdapter imple
             return new ValueWithKey(input);
         }
     };
+    private LogEventJsonSerializer logEventJsonSerializer;
 
     public UIWebSocketServerHandler(HttpStateHandler httpStateHandler) {
         mockServerMatcher = httpStateHandler.getMockServerMatcher();
@@ -57,6 +59,7 @@ public class UIWebSocketServerHandler extends ChannelInboundHandlerAdapter imple
         mockServerLog.registerListener(this);
         mockServerLogger = httpStateHandler.getMockServerLogger();
         httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
+        logEventJsonSerializer = new LogEventJsonSerializer(mockServerLogger);
     }
 
     @Override
@@ -166,7 +169,7 @@ public class UIWebSocketServerHandler extends ChannelInboundHandlerAdapter imple
                 "recordedRequests", Lists.transform(mockServerLog.retrieveRequestLogEntries(httpRequest), wrapValueWithKey),
                 "logMessages", Lists.transform(mockServerLog.retrieveMessageLogEntries(httpRequest), new Function<MessageLogEntry, Object>() {
                     public ValueWithKey apply(MessageLogEntry input) {
-                        return new ValueWithKey(input.getTimeStamp() + " - " + input.getMessage(), input.key());
+                        return new ValueWithKey(logEventJsonSerializer.serialize(input), input.key());
                     }
                 })
             ));

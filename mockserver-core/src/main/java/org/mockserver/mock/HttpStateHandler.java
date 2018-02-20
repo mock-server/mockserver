@@ -103,7 +103,7 @@ public class HttpStateHandler {
         for (Expectation expectation : expectations) {
             KeyAndCertificateFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
             mockServerMatcher.add(expectation);
-            mockServerLogger.info(expectation.getHttpRequest(), "creating expectation:{}", expectation);
+            mockServerLogger.info(expectation.getHttpRequest(), "creating expectation:{}", expectation.clone());
         }
     }
 
@@ -227,7 +227,7 @@ public class HttpStateHandler {
     }
 
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
-        mockServerLogger.trace("received request:{}", request);
+        mockServerLogger.trace(request, "received request:{}", request);
 
         if (request.matches("PUT", "/expectation")) {
 
@@ -261,7 +261,7 @@ public class HttpStateHandler {
             } else {
                 responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
             }
-            mockServerLogger.info(request, "verifying requests that match:{}", verification);
+            mockServerLogger.info(verification.getHttpRequest(), "verifying requests that match:{}", verification);
 
         } else if (request.matches("PUT", "/verifySequence")) {
 
@@ -272,7 +272,7 @@ public class HttpStateHandler {
             } else {
                 responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
             }
-            mockServerLogger.info(request, "verifying sequence that match:{}", verificationSequence);
+            mockServerLogger.info(verificationSequence.getHttpRequests(), "verifying sequence that match:{}", verificationSequence);
 
         } else {
             return false;

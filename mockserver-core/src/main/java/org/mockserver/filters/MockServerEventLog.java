@@ -51,9 +51,9 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             return EXPECTATION_LOG_TYPES.contains(input.getClass());
         }
     };
-    private static Function<LogEntry, HttpRequest> logEntryToRequest = new Function<LogEntry, HttpRequest>() {
-        public HttpRequest apply(LogEntry logEntry) {
-            return logEntry.getHttpRequest();
+    private static Function<LogEntry, List<HttpRequest>> logEntryToRequest = new Function<LogEntry, List<HttpRequest>>() {
+        public List<HttpRequest> apply(LogEntry logEntry) {
+            return logEntry.getHttpRequests();
         }
     };
     private static Function<LogEntry, Expectation> logEntryToExpectation = new Function<LogEntry, Expectation>() {
@@ -84,11 +84,18 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         notifyListeners(this);
     }
 
-    public void clear(HttpRequest request) {
-        if (request != null) {
-            HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(request);
+    public void clear(HttpRequest httpRequest) {
+        if (httpRequest != null) {
+            HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (LogEntry logEntry : new LinkedList<>(requestLog)) {
-                if (requestMatcher.matches(logEntry.getHttpRequest())) {
+                List<HttpRequest> requests = logEntry.getHttpRequests();
+                boolean matches = false;
+                for (HttpRequest request : requests) {
+                    if (requestMatcher.matches(request)) {
+                        matches = true;
+                    }
+                }
+                if (matches) {
                     requestLog.remove(logEntry);
                 }
             }
@@ -123,7 +130,11 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public List<HttpRequest> retrieveRequests(HttpRequest httpRequest) {
-        return retrieveLogEntries(httpRequest, requestLogPredicate, logEntryToRequest);
+        List<HttpRequest> result = new ArrayList<>();
+        for (List<HttpRequest> httpRequests : retrieveLogEntries(httpRequest, requestLogPredicate, logEntryToRequest)) {
+            result.addAll(httpRequests);
+        }
+        return result;
     }
 
     public List<Expectation> retrieveExpectations(HttpRequest httpRequest) {
@@ -134,7 +145,14 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         List<T> matchingLogEntries = new ArrayList<>();
         HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
         for (LogEntry logEntry : new LinkedList<>(this.requestLog)) {
-            if (logEntryPredicate.apply(logEntry) && httpRequestMatcher.matches(logEntry.getHttpRequest())) {
+            List<HttpRequest> requests = logEntry.getHttpRequests();
+            boolean matched = false;
+            for (HttpRequest request : requests) {
+                if (logEntryPredicate.apply(logEntry) && httpRequestMatcher.matches(request)) {
+                    matched = true;
+                }
+            }
+            if (matched) {
                 matchingLogEntries.add(logEntryToTypeFunction.apply(logEntry));
             }
         }
@@ -161,8 +179,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 List<HttpRequest> allRequestsArray = retrieveRequests(null);
                 String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verification.getHttpRequest());
                 String serializedAllRequestInLog = allRequestsArray.size() == 1 ? httpRequestSerializer.serialize(true, allRequestsArray.get(0)) : httpRequestSerializer.serialize(true, allRequestsArray);
-                logFormatter.info(verification.getHttpRequest(), "request not found " + verification.getTimes() + ", expected:{}" + NEW_LINE + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
                 failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                logFormatter.info(verification.getHttpRequest(), "request not found " + verification.getTimes() + ", expected:{}" + NEW_LINE + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
             }
         }
 
@@ -184,9 +202,12 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                     boolean foundRequest = false;
                     for (; !foundRequest && requestLogCounter < requestLog.size(); requestLogCounter++) {
                         LogEntry logEntry = requestLog.get(requestLogCounter);
-                        if (!(logEntry instanceof MessageLogEntry) && httpRequestMatcher.matches(logEntry.getHttpRequest())) {
-                            // move on to next request
-                            foundRequest = true;
+                        List<HttpRequest> requests = logEntry.getHttpRequests();
+                        for (HttpRequest request : requests) {
+                            if (!(logEntry instanceof MessageLogEntry) && httpRequestMatcher.matches(request)) {
+                                // move on to next request
+                                foundRequest = true;
+                            }
                         }
                     }
                     if (!foundRequest) {

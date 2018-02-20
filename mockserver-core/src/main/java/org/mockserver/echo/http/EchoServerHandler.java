@@ -39,7 +39,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
 
-        mockServerLogger.trace("received request:{}", request);
+        mockServerLogger.trace(request, "received request:{}", request);
 
         logFilter.add(new RequestLogEntry(request));
 

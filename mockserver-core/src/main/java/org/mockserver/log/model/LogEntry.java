@@ -1,7 +1,11 @@
 package org.mockserver.log.model;
 
+import com.google.common.collect.ImmutableList;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithJsonToString;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.mockserver.model.HttpRequest.request;
 
@@ -10,17 +14,21 @@ import static org.mockserver.model.HttpRequest.request;
  */
 public abstract class LogEntry extends ObjectWithJsonToString {
 
-    private final HttpRequest httpRequest;
+    private final List<HttpRequest> httpRequest;
 
-    LogEntry(HttpRequest httpRequest) {
-        if (httpRequest != null) {
-            this.httpRequest = httpRequest;
+    LogEntry(List<HttpRequest> httpRequests) {
+        if (httpRequests != null) {
+            this.httpRequest = httpRequests;
         } else {
-            this.httpRequest = request();
+            this.httpRequest = ImmutableList.of(request());
         }
     }
 
-    public HttpRequest getHttpRequest() {
+    LogEntry(HttpRequest httpRequest) {
+        this(ImmutableList.of(httpRequest != null ? httpRequest : request()));
+    }
+
+    public List<HttpRequest> getHttpRequests() {
         return httpRequest;
     }
 

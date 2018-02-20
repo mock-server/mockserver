@@ -235,6 +235,14 @@ public class ConfigurationProperties {
         System.setProperty("mockserver.disableRequestAudit", "" + disableRequestAudit);
     }
 
+    public static boolean disableSystemOut() {
+        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.disableSystemOut", "" + false));
+    }
+
+    public static void disableSystemOut(boolean disableSystemOut) {
+        System.setProperty("mockserver.disableSystemOut", "" + disableSystemOut);
+    }
+
     public static InetSocketAddress httpProxy() {
         return readInetSocketAddressProperty("mockserver.httpProxy");
     }
@@ -300,17 +308,25 @@ public class ConfigurationProperties {
                     properties.load(inputStream);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    MockServerLogger.MOCK_SERVER_LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
+                    if (MockServerLogger.MOCK_SERVER_LOGGER != null) {
+                        MockServerLogger.MOCK_SERVER_LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
+                    }
                 }
             } else {
-                MockServerLogger.MOCK_SERVER_LOGGER.debug("Property file not found on classpath using path [" + propertyFile() + "]");
+                if (MockServerLogger.MOCK_SERVER_LOGGER != null) {
+                    MockServerLogger.MOCK_SERVER_LOGGER.debug("Property file not found on classpath using path [" + propertyFile() + "]");
+                }
                 try {
                     properties.load(new FileInputStream(propertyFile()));
                 } catch (FileNotFoundException e) {
-                    MockServerLogger.MOCK_SERVER_LOGGER.debug("Property file not found using path [" + propertyFile() + "]");
+                    if (MockServerLogger.MOCK_SERVER_LOGGER != null) {
+                        MockServerLogger.MOCK_SERVER_LOGGER.debug("Property file not found using path [" + propertyFile() + "]");
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    MockServerLogger.MOCK_SERVER_LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
+                    if (MockServerLogger.MOCK_SERVER_LOGGER != null) {
+                        MockServerLogger.MOCK_SERVER_LOGGER.error("Exception loading property file [" + propertyFile() + "]", e);
+                    }
                 }
             }
         } catch (IOException ioe) {
@@ -326,7 +342,9 @@ public class ConfigurationProperties {
                 String propertyName = String.valueOf(propertyNames.nextElement());
                 propertiesLogDump.append("\t").append(propertyName).append(" = ").append(properties.getProperty(propertyName)).append(NEW_LINE);
             }
-            MockServerLogger.MOCK_SERVER_LOGGER.info(propertiesLogDump.toString());
+            if (MockServerLogger.MOCK_SERVER_LOGGER != null) {
+                MockServerLogger.MOCK_SERVER_LOGGER.info(propertiesLogDump.toString());
+            }
         }
 
         return properties;
