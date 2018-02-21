@@ -44,7 +44,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <ul>
 	<li><strong>serverPort</strong> 1080</li>
-	<li><strong>proxyPort</strong> 9090</li>
+	<li><strong>proxyPort</strong> 1090</li>
 </ul>
 
 <p>To specify which ports (on the host machine) should be mapped to the MockServer docker container use the <strong>-p</strong> <span class="command_line_argument_placeholder">&lt;host port&gt;</span><strong>:</strong><span class="command_line_argument_placeholder">&lt;container port&gt;</span> option, as follows:</p>
@@ -87,13 +87,14 @@ In addition it is possible to <a href="#docker_container_customization">customis
                                                 WARN - exceptions and errors
                                                 INFO - all interactions
 
-        -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>                      Specifies the HTTP, HTTPS, SOCKS and HTTP
-                                                CONNECT port for proxy. Port unification
-                                                supports for all protocols on the same port
-
-        -proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>                       Specifies the HTTP and HTTPS port for the
+        -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>                      Specifies the HTTP and HTTPS port for the
                                                 MockServer. Port unification is used to
                                                 support HTTP and HTTPS on the same port
+
+
+        -proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>                       Specifies the HTTP, HTTPS, SOCKS and HTTP
+                                                CONNECT port for proxy. Port unification
+                                                supports for all protocols on the same port
 
         -proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>                 Specifies the port to forward all proxy
                                                 requests to (i.e. all requests received on
