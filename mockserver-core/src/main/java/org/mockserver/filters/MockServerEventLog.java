@@ -180,7 +180,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verification.getHttpRequest());
                 String serializedAllRequestInLog = allRequestsArray.size() == 1 ? httpRequestSerializer.serialize(true, allRequestsArray.get(0)) : httpRequestSerializer.serialize(true, allRequestsArray);
                 failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
-                logFormatter.info(verification.getHttpRequest(), "request not found " + verification.getTimes() + ", expected:{}" + NEW_LINE + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
+                logFormatter.info(verification.getHttpRequest(), "request not found " + verification.getTimes() + ", expected:{}" + NEW_LINE + " but was:{}", verification.getHttpRequest(), allRequestsArray.size() == 1 ? allRequestsArray.get(0) : allRequestsArray);
             }
         }
 
@@ -215,7 +215,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                         String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verificationSequence.getHttpRequests());
                         String serializedAllRequestInLog = allRequestsArray.size() == 1 ? httpRequestSerializer.serialize(true, allRequestsArray.get(0)) : httpRequestSerializer.serialize(true, allRequestsArray);
                         failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
-                        logFormatter.info(verificationSequence.getHttpRequests(), "request sequence not found, expected:{}" + NEW_LINE + " but was:{}", serializedRequestToBeVerified, serializedAllRequestInLog);
+                        logFormatter.info(verificationSequence.getHttpRequests(), "request sequence not found, expected:{}" + NEW_LINE + " but was:{}", verificationSequence.getHttpRequests(), allRequestsArray.size() == 1 ? allRequestsArray.get(0) : allRequestsArray);
                         break;
                     }
                 }
