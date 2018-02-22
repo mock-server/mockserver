@@ -2,6 +2,7 @@ package org.mockserver.model;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimaps;
 import org.apache.commons.lang3.ArrayUtils;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 
@@ -14,7 +15,7 @@ import static org.mockserver.model.NottableString.*;
  */
 public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends KeysToMultiValues> extends ObjectWithJsonToString {
 
-    private ListMultimap<NottableString, NottableString> listMultimap = LinkedListMultimap.create();
+    private ListMultimap<NottableString, NottableString> listMultimap = Multimaps.synchronizedListMultimap(LinkedListMultimap.<NottableString, NottableString>create());
 
     public CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(List<T> entries) {
         CaseInsensitiveRegexMultiMap caseInsensitiveRegexMultiMap = new CaseInsensitiveRegexMultiMap();
@@ -31,7 +32,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     public abstract T build(NottableString name, List<NottableString> values);
 
     public K withEntries(Map<String, List<String>> entries) {
-        this.listMultimap.clear();
+        listMultimap.clear();
         for (String name : entries.keySet()) {
             for (String value : entries.get(name)) {
                 withEntry(name, value);
@@ -41,7 +42,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public K withEntries(List<T> entries) {
-        this.listMultimap.clear();
+        listMultimap.clear();
         if (entries != null) {
             for (T entry : entries) {
                 withEntry(entry);
@@ -60,23 +61,23 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     public K withEntry(T entry) {
         if (entry.getValues().isEmpty()) {
-            this.listMultimap.put(entry.getName(), null);
+            listMultimap.put(entry.getName(), null);
         } else {
-            this.listMultimap.putAll(entry.getName(), entry.getValues());
+            listMultimap.putAll(entry.getName(), entry.getValues());
         }
         return (K) this;
     }
 
     public K withEntry(String name, String... values) {
         if (ArrayUtils.isNotEmpty(values)) {
-            this.listMultimap.putAll(string(name), deserializeNottableStrings(values));
+            listMultimap.putAll(string(name), deserializeNottableStrings(values));
         }
         return (K) this;
     }
 
     public K withEntry(NottableString name, List<NottableString> values) {
         if (values != null) {
-            this.listMultimap.putAll(name, values);
+            listMultimap.putAll(name, values);
         }
         return (K) this;
     }
@@ -89,18 +90,18 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public K remove(String name) {
-        for (NottableString key : new HashSet<>(this.listMultimap.keySet())) {
+        for (NottableString key : new ArrayList<>(listMultimap.keySet())) {
             if (key.equalsIgnoreCase(name)) {
-                this.listMultimap.removeAll(key);
+                listMultimap.removeAll(key);
             }
         }
         return (K) this;
     }
 
     public K remove(NottableString name) {
-        for (NottableString key : new HashSet<>(this.listMultimap.keySet())) {
+        for (NottableString key : new ArrayList<>(listMultimap.keySet())) {
             if (key.equalsIgnoreCase(name)) {
-                this.listMultimap.removeAll(key);
+                listMultimap.removeAll(key);
             }
         }
         return (K) this;
@@ -109,7 +110,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     public K replaceEntry(T entry) {
         if (entry != null) {
             remove(entry.getName());
-            this.listMultimap.putAll(entry.getName(), entry.getValues());
+            listMultimap.putAll(entry.getName(), entry.getValues());
         }
         return (K) this;
     }
@@ -117,22 +118,22 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     public K replaceEntry(String name, String... values) {
         if (ArrayUtils.isNotEmpty(values)) {
             remove(name);
-            this.listMultimap.replaceValues(string(name), deserializeNottableStrings(values));
+            listMultimap.putAll(string(name), deserializeNottableStrings(values));
         }
         return (K) this;
     }
 
     public List<T> getEntries() {
         ArrayList<T> headers = new ArrayList<>();
-        for (NottableString nottableString : this.listMultimap.asMap().keySet()) {
-            headers.add(build(nottableString, this.listMultimap.get(nottableString)));
+        for (NottableString nottableString : new ArrayList<>(listMultimap.keySet())) {
+            headers.add(build(nottableString, listMultimap.get(nottableString)));
         }
         return headers;
     }
 
     public List<String> getValues(String name) {
         List<String> values = new ArrayList<>();
-        for (NottableString key : listMultimap.keySet()) {
+        for (NottableString key : new ArrayList<>(listMultimap.keySet())) {
             if (key != null &&
                 name != null &&
                 key.equalsIgnoreCase(name)) {
@@ -163,14 +164,17 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     public boolean containsEntry(NottableString name, NottableString value) {
-        for (Map.Entry<NottableString, NottableString> entry : listMultimap.entries()) {
-            if (entry.getKey() != null &&
+        for (NottableString entryKey : new ArrayList<>(listMultimap.keySet())) {
+            if (entryKey != null &&
                 name != null &&
-                entry.getKey().equalsIgnoreCase(name)) {
-                if (entry.getValue() != null &&
-                    value != null &&
-                    value.equalsIgnoreCase(entry.getValue())) {
-                    return true;
+                entryKey.equalsIgnoreCase(name)) {
+                if (listMultimap.get(entryKey) != null &&
+                    value != null) {
+                    for (NottableString entryValue : new ArrayList<>(listMultimap.get(entryKey))) {
+                        if (value.equalsIgnoreCase(entryValue)) {
+                            return true;
+                        }
+                    }
                 }
             }
         }
