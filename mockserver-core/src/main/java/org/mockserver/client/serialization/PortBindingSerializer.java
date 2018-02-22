@@ -32,7 +32,7 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
             try {
                 portBinding = objectMapper.readValue(jsonPortBinding, PortBinding.class);
             } catch (Exception e) {
-                mockServerLogger.info("Exception while parsing PortBinding for [" + jsonPortBinding + "]", e);
+                mockServerLogger.error("Exception while parsing PortBinding for [" + jsonPortBinding + "]", e);
                 throw new RuntimeException("Exception while parsing PortBinding for [" + jsonPortBinding + "]", e);
             }
         }

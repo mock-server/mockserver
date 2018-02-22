@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXPECTATION_RESPONSE;
 
 /**
  * @author jamesdbloom
@@ -33,7 +34,7 @@ public class HttpResponseObjectCallbackActionHandler {
             @Override
             public void handle(HttpResponse response) {
                 responseWriter.writeResponse(request, response.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), false);
-                logFormatter.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for object callback action:{}", response, request, httpObjectCallback);
+                logFormatter.info(EXPECTATION_RESPONSE, request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for object callback action:{}", response, request, httpObjectCallback);
             }
         });
         webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId));

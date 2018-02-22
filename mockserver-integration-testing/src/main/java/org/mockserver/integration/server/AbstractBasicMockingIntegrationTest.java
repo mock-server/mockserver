@@ -1490,7 +1490,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "\t  }" + NEW_LINE +
                     "\t}" + NEW_LINE // 7-1
             },
-            "retrieving logs in plain format that match:" + NEW_LINE +
+            "retrieving logs that match:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"path\" : \"/.*\"" + NEW_LINE +

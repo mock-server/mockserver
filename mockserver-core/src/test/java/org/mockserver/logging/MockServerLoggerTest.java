@@ -23,6 +23,7 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.mockito.Mockito.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.logLevel;
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.TRACE;
 import static org.mockserver.model.HttpRequest.request;
 
 public class MockServerLoggerTest {
@@ -54,6 +55,7 @@ public class MockServerLoggerTest {
 
             // when
             logFormatter.info(
+                TRACE,
                 request,
                 "some random message with {} and {}",
                 "some" + NEW_LINE + "multi-line" + NEW_LINE + "object",
@@ -111,6 +113,7 @@ public class MockServerLoggerTest {
 
             // when
             logFormatter.info(
+                TRACE,
                 Arrays.asList(request, request),
                 "some random message with {} and {}",
                 "some" + NEW_LINE + "multi-line" + NEW_LINE + "object",

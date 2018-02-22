@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import org.mockserver.callback.WebSocketRequestCallback;
 import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.client.netty.NettyHttpClient;
+import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpObjectCallback;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXPECTATION_RESPONSE;
 
 /**
  * @author jamesdbloom
@@ -44,7 +46,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         try {
                             HttpResponse response = responseFuture.get();
                             responseWriter.writeResponse(request, response, false);
-                            logFormatter.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for object callback action:{}", response, request, httpObjectCallback);
+                            logFormatter.info(EXPECTATION_RESPONSE, request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for object callback action:{}", response, request, httpObjectCallback);
                         } catch (Exception ex) {
                             logFormatter.error(request, ex, ex.getMessage());
                         }

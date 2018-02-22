@@ -13,6 +13,7 @@ import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
+import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -32,6 +33,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.cors.CORSHeaders.isPreflightRequest;
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 
 /**
@@ -92,7 +94,7 @@ public class ActionHandler {
                         public void run() {
                             HttpResponse response = httpResponseActionHandler.handle(httpResponse);
                             responseWriter.writeResponse(request, response, false);
-                            mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
+                            mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
                         }
                     }, httpResponse.getDelay(), synchronous);
                     break;
@@ -104,7 +106,7 @@ public class ActionHandler {
                         public void run() {
                             HttpResponse response = httpResponseTemplateActionHandler.handle(httpTemplate, request);
                             responseWriter.writeResponse(request, response, false);
-                            mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
+                            mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
                         }
                     }, httpTemplate.getDelay(), synchronous);
                     break;
@@ -116,7 +118,7 @@ public class ActionHandler {
                         public void run() {
                             HttpResponse response = httpResponseClassCallbackActionHandler.handle(classCallback, request);
                             responseWriter.writeResponse(request, response, false);
-                            mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
+                            mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
                         }
                     }, synchronous);
                     break;
@@ -142,7 +144,7 @@ public class ActionHandler {
                                         HttpResponse response = responseFuture.get();
                                         responseWriter.writeResponse(request, response, false);
                                         httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                                        mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
+                                        mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
                                     } catch (Exception ex) {
                                         mockServerLogger.error(request, ex, ex.getMessage());
                                     }
@@ -163,7 +165,7 @@ public class ActionHandler {
                                         HttpResponse response = responseFuture.get();
                                         responseWriter.writeResponse(request, response, false);
                                         httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                                        mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
+                                        mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
                                     } catch (Exception ex) {
                                         mockServerLogger.error(request, ex, ex.getMessage());
                                     }
@@ -184,7 +186,7 @@ public class ActionHandler {
                                     try {
                                         HttpResponse response = responseFuture.get();
                                         responseWriter.writeResponse(request, response, false);
-                                        mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
+                                        mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
                                     } catch (Exception ex) {
                                         mockServerLogger.error(request, ex, ex.getMessage());
                                     }
@@ -215,7 +217,7 @@ public class ActionHandler {
                                     try {
                                         HttpResponse response = responseFuture.get();
                                         responseWriter.writeResponse(request, response, false);
-                                        mockServerLogger.info(request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
+                                        mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", response, request, expectation.clone());
                                     } catch (Exception ex) {
                                         mockServerLogger.error(request, ex, ex.getMessage());
                                     }
@@ -231,7 +233,7 @@ public class ActionHandler {
                     scheduler.schedule(new Runnable() {
                         public void run() {
                             httpErrorActionHandler.handle(httpError, ctx);
-                            mockServerLogger.info(request, "returning error:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", httpError, request, expectation.clone());
+                            mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning error:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for expectation:{}", httpError, request, expectation.clone());
                         }
                     }, httpError.getDelay(), synchronous);
                     break;
@@ -260,10 +262,10 @@ public class ActionHandler {
                         responseWriter.writeResponse(request, response, false);
                         if (response.containsHeader("x-forwarded-by", "MockServer")) {
                             httpStateHandler.log(new RequestLogEntry(request));
-                            mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
+                            mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
                         } else {
                             httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                            mockServerLogger.info(
+                            mockServerLogger.info(FORWARDED_REQUEST,
                                 request,
                                 "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " as curl:{}",
                                 response,
@@ -295,7 +297,7 @@ public class ActionHandler {
             response.withHeader("x-forwarded-by", "MockServer");
         } else {
             httpStateHandler.log(new RequestLogEntry(request));
-            mockServerLogger.info(request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
+            mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "no matching expectation - returning:{}" + NEW_LINE + " for request:{}", notFoundResponse(), request);
         }
         responseWriter.writeResponse(request, response, false);
     }

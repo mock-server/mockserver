@@ -5,11 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import org.mockserver.client.serialization.ObjectMapperFactory;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXPECTATION_MATCHED;
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
 import static org.mockserver.model.NottableString.string;
 
 import java.nio.charset.StandardCharsets;
@@ -206,9 +209,9 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                             if (not) {
                                 becauseBuilder.append(",").append(NEW_LINE).append("expectation's request matcher \'not\' operator is enabled");
                             }
-                            mockServerLogger.info(request, "request:{}" + NEW_LINE + (totalResult ? " matched " : " didn't match ") + (this.expectation == null ? "request" : "expectation") + ":{}" + NEW_LINE + " because:{}", request, (this.expectation == null ? this : this.expectation.clone()), becauseBuilder.toString());
+                            mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "request:{}" + NEW_LINE + (totalResult ? " matched " : " didn't match ") + (this.expectation == null ? "request" : "expectation") + ":{}" + NEW_LINE + " because:{}", request, (this.expectation == null ? this : this.expectation.clone()), becauseBuilder.toString());
                         } else {
-                            mockServerLogger.info(request, "request:{}" + NEW_LINE + " matched " + (this.expectation == null ? "request" : "expectation") + ":{}", request, (this.expectation == null ? this : this.expectation.clone()));
+                            mockServerLogger.info(EXPECTATION_MATCHED, request, "request:{}" + NEW_LINE + " matched " + (this.expectation == null ? "request" : "expectation") + ":{}", request, (this.expectation == null ? this : this.expectation.clone()));
                         }
                     }
                     matches = totalResultAfterNotOperatorApplied;

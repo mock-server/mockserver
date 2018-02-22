@@ -477,7 +477,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     "\t  }" + NEW_LINE +
                     "\t}" + NEW_LINE
             },
-            "retrieving logs in plain format that match:" + NEW_LINE +
+            "retrieving logs that match:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"path\" : \"/.*\"" + NEW_LINE +

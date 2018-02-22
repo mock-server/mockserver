@@ -18,21 +18,24 @@ import static org.mockserver.formatting.StringFormatter.formatLogMessage;
  */
 public class MessageLogEntry extends LogEntry {
     private final static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private final LogMessageType type;
     private final String messageFormat;
     private final Level logLevel;
     private final Object[] arguments;
     protected Date timeStamp = new Date();
     private String message;
 
-    public MessageLogEntry(final Level logLevel, final @Nullable HttpRequest httpRequest, final String messageFormat, final Object... arguments) {
+    public MessageLogEntry(final MessageLogEntry.LogMessageType type, final Level logLevel, final @Nullable HttpRequest httpRequest, final String messageFormat, final Object... arguments) {
         super(httpRequest);
+        this.type = type;
         this.messageFormat = messageFormat;
         this.logLevel = logLevel;
         this.arguments = arguments;
     }
 
-    public MessageLogEntry(final Level logLevel, final @Nullable List<HttpRequest> httpRequests, final String messageFormat, final Object... arguments) {
+    public MessageLogEntry(final MessageLogEntry.LogMessageType type, final Level logLevel, final @Nullable List<HttpRequest> httpRequests, final String messageFormat, final Object... arguments) {
         super(httpRequests);
+        this.type = type;
         this.messageFormat = messageFormat;
         this.logLevel = logLevel;
         this.arguments = arguments;
@@ -54,11 +57,32 @@ public class MessageLogEntry extends LogEntry {
         return logLevel;
     }
 
+    public LogMessageType getType() {
+        return type;
+    }
+
     public Object[] getArguments() {
         return arguments;
     }
 
     public String getTimeStamp() {
         return dateFormat.format(timeStamp);
+    }
+
+    public static enum LogMessageType {
+        TRACE,
+        CLEARED,
+        RETRIEVED,
+        CREATED_EXPECTATION,
+        EXPECTATION_RESPONSE,
+        EXPECTATION_MATCHED,
+        EXPECTATION_NOT_MATCHED,
+        VERIFICATION,
+        VERIFICATION_FAILED,
+        FORWARDED_REQUEST,
+        TEMPLATE_GENERATED,
+        SERVER_CONFIGURATION,
+        WARN,
+        EXCEPTION,
     }
 }

@@ -218,7 +218,7 @@ public class ProxyServletTest {
         assertThat(splitBody.length, is(1));
         assertThat(
             splitBody[0],
-            is(endsWith("retrieving logs in plain format that match:" + NEW_LINE +
+            is(endsWith("retrieving logs that match:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"path\" : \"request_one\"" + NEW_LINE +

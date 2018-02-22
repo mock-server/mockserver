@@ -67,7 +67,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                     try {
                         type = Body.Type.valueOf(jsonParser.getText());
                     } catch (IllegalArgumentException iae) {
-                        mockServerLogger.debug("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.trace("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "xml", "xmlSchema", "base64Bytes") && type != Body.Type.PARAMETERS) {
@@ -89,7 +89,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                     try {
                         matchType = MatchType.valueOf(jsonParser.getText());
                     } catch (IllegalArgumentException iae) {
-                        mockServerLogger.warn("Ignoring incorrect JsonBodyMatchType with value \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.trace("Ignoring incorrect JsonBodyMatchType with value \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("contentType")) {
@@ -97,7 +97,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                     try {
                         contentType = MediaType.parse(jsonParser.getText());
                     } catch (IllegalArgumentException uce) {
-                        mockServerLogger.warn("Ignoring unsupported MediaType with value \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.trace("Ignoring unsupported MediaType with value \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && jsonParser.getText().equalsIgnoreCase("charset")) {
@@ -105,9 +105,9 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                     try {
                         charset = Charset.forName(jsonParser.getText());
                     } catch (UnsupportedCharsetException uce) {
-                        mockServerLogger.warn("Ignoring unsupported Charset with value \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.trace("Ignoring unsupported Charset with value \"" + jsonParser.getText() + "\"");
                     } catch (IllegalCharsetNameException icne) {
-                        mockServerLogger.warn("Ignoring invalid Charset with value \"" + jsonParser.getText() + "\"");
+                        mockServerLogger.trace("Ignoring invalid Charset with value \"" + jsonParser.getText() + "\"");
                     }
                 }
                 if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "parameters", "value")) {

@@ -80,7 +80,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 }
                 return expectation;
             } else {
-                mockServerLogger.info("Validation failed:{}" + NEW_LINE + " Expectation:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonExpectation, expectationValidator.getSchema());
+                mockServerLogger.error("Validation failed:{}" + NEW_LINE + " Expectation:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonExpectation, expectationValidator.getSchema());
                 throw new IllegalArgumentException(validationErrors);
             }
         }

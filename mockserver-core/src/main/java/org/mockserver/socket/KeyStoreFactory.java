@@ -16,6 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.socket.KeyAndCertificateFactory.keyAndCertificateFactory;
 
 /**
@@ -131,7 +132,7 @@ public class KeyStoreFactory {
 
     private SSLContext getSSLContextInstance() throws NoSuchAlgorithmException {
         try {
-            MOCK_SERVER_LOGGER.debug("Using protocol {}", SSL_CONTEXT_PROTOCOL);
+            MOCK_SERVER_LOGGER.debug(SERVER_CONFIGURATION, "Using protocol {}", SSL_CONTEXT_PROTOCOL);
             return SSLContext.getInstance(SSL_CONTEXT_PROTOCOL);
         } catch (NoSuchAlgorithmException e) {
             MOCK_SERVER_LOGGER.warn("Protocol {} not available, falling back to {}", SSL_CONTEXT_PROTOCOL, SSL_CONTEXT_FALLBACK_PROTOCOL);

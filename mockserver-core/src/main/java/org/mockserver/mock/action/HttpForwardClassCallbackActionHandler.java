@@ -30,7 +30,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
                 Constructor<? extends ExpectationForwardCallback> constructor = expectationResponseCallbackClass.getConstructor();
                 return constructor.newInstance();
             } else {
-                mockServerLogger.error(null, httpClassCallback.getCallbackClass() + " does not implement " + ExpectationForwardCallback.class.getCanonicalName() + " which required for forwarded requests generated from a class callback");
+                mockServerLogger.error(httpClassCallback.getCallbackClass() + " does not implement " + ExpectationForwardCallback.class.getCanonicalName() + " which required for forwarded requests generated from a class callback");
             }
         } catch (ClassNotFoundException e) {
             mockServerLogger.error("ClassNotFoundException - while trying to instantiate ExpectationResponseCallback class \"" + httpClassCallback.getCallbackClass() + "\"", e);

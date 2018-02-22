@@ -36,7 +36,7 @@ public class XPathStringMatcher extends BodyMatcher<String> {
         boolean result = false;
 
         if (xpathExpression == null) {
-            mockServerLogger.debug(context, "Attempting match against null XPath Expression for [" + matched + "]" + new RuntimeException("Attempting match against null XPath Expression for [" + matched + "]"));
+            mockServerLogger.error(context, "Attempting match against null XPath Expression for [" + matched + "]" + new RuntimeException("Attempting match against null XPath Expression for [" + matched + "]"));
         } else if (matcher.equals(matched)) {
             result = true;
         } else if (matched != null) {
@@ -45,7 +45,7 @@ public class XPathStringMatcher extends BodyMatcher<String> {
                 result = (Boolean) xpathExpression.evaluate(stringToXmlDocumentParser.buildDocument(matched, new StringToXmlDocumentParser.ErrorLogger() {
                     @Override
                     public void logError(final String matched, final Exception exception) {
-                        mockServerLogger.debug(context, "SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
+                        mockServerLogger.warn(context, "SAXParseException while performing match between [" + matcher + "] and [" + matched + "]", exception);
                     }
                 }), XPathConstants.BOOLEAN);
             } catch (Exception e) {

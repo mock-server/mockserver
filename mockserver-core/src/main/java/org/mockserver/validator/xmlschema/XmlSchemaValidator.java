@@ -53,7 +53,7 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
                 errorMessage = e.getMessage();
             }
         } catch (Exception e) {
-            mockServerLogger.info("Exception validating JSON", e);
+            mockServerLogger.error("Exception validating JSON", e);
             return e.getClass().getSimpleName() + " - " + e.getMessage();
         }
         return errorMessage;

@@ -54,7 +54,7 @@ public class LogEventJsonSerializer implements Serializer<MessageLogEntry> {
             try {
                 messageLogEntry = objectMapper.readValue(jsonMessageLogEntry, MessageLogEntry.class);
             } catch (Exception e) {
-                mockServerLogger.info("Exception while parsing MessageLogEntry for [" + jsonMessageLogEntry + "]", e);
+                mockServerLogger.error("Exception while parsing MessageLogEntry for [" + jsonMessageLogEntry + "]", e);
                 throw new RuntimeException("Exception while parsing MessageLogEntry for [" + jsonMessageLogEntry + "]", e);
             }
         }

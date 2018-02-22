@@ -105,9 +105,9 @@ public class ContentTypeMapper {
                 try {
                     charset = Charset.forName(charsetName);
                 } catch (UnsupportedCharsetException uce) {
-                    MOCK_SERVER_LOGGER.info("Unsupported character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
+                    MOCK_SERVER_LOGGER.warn("Unsupported character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
                 } catch (IllegalCharsetNameException icne) {
-                    MOCK_SERVER_LOGGER.info("Illegal character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
+                    MOCK_SERVER_LOGGER.warn("Illegal character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
                 }
             } else if (UTF_8_CONTENT_TYPES.contains(contentType)) {
                 charset = CharsetUtil.UTF_8;

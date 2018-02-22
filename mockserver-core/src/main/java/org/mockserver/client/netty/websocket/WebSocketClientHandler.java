@@ -54,7 +54,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        mockServerLogger.debug("web socket client disconnected");
+        mockServerLogger.trace("web socket client disconnected");
     }
 
     @Override
@@ -65,7 +65,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             if (httpResponse.headers().contains(UPGRADE, WEBSOCKET, true) && !handshaker.isHandshakeComplete()) {
                 handshaker.finishHandshake(ch, httpResponse);
                 webSocketClient.registrationFuture().set(httpResponse.headers().get("X-CLIENT-REGISTRATION-ID"));
-                mockServerLogger.debug("web socket client " + webSocketClient.registrationFuture().get() + " connected!");
+                mockServerLogger.trace("web socket client " + webSocketClient.registrationFuture().get() + " connected!");
             } else if (httpResponse.status().equals(HttpResponseStatus.NOT_IMPLEMENTED)) {
                 String message = readRequestBody(httpResponse);
                 webSocketClient.registrationFuture().setException(new WebSocketException(message));
@@ -78,7 +78,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             if (frame instanceof TextWebSocketFrame) {
                 webSocketClient.receivedTextWebSocketFrame((TextWebSocketFrame) frame);
             } else if (frame instanceof CloseWebSocketFrame) {
-                mockServerLogger.debug("web socket client received request to close");
+                mockServerLogger.trace("web socket client received request to close");
                 ch.close();
             }
         }

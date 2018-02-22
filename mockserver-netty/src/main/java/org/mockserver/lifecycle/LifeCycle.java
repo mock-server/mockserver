@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
+
 /**
  * @author jamesdbloom
  */
@@ -152,11 +154,11 @@ public abstract class LifeCycle {
     }
 
     protected void startedServer(List<Integer> ports) {
-        mockServerLogger.info("MockServer started on port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports));
+        mockServerLogger.info(SERVER_CONFIGURATION, "MockServer started on port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports));
     }
 
     protected void startedDashboard(List<Integer> ports) {
-        mockServerLogger.info("Dashboard bound to port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports));
+        mockServerLogger.info(SERVER_CONFIGURATION, "Dashboard bound to port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports));
     }
 
 }

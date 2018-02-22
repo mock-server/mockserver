@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
 
 /**
  * @author jamesdbloom
@@ -314,13 +315,13 @@ public class ConfigurationProperties {
                 }
             } else {
                 if (MockServerLogger.MOCK_SERVER_LOGGER != null) {
-                    MockServerLogger.MOCK_SERVER_LOGGER.debug("Property file not found on classpath using path [" + propertyFile() + "]");
+                    MockServerLogger.MOCK_SERVER_LOGGER.debug(SERVER_CONFIGURATION, "Property file not found on classpath using path [" + propertyFile() + "]");
                 }
                 try {
                     properties.load(new FileInputStream(propertyFile()));
                 } catch (FileNotFoundException e) {
                     if (MockServerLogger.MOCK_SERVER_LOGGER != null) {
-                        MockServerLogger.MOCK_SERVER_LOGGER.debug("Property file not found using path [" + propertyFile() + "]");
+                        MockServerLogger.MOCK_SERVER_LOGGER.debug(SERVER_CONFIGURATION, "Property file not found using path [" + propertyFile() + "]");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -343,7 +344,7 @@ public class ConfigurationProperties {
                 propertiesLogDump.append("\t").append(propertyName).append(" = ").append(properties.getProperty(propertyName)).append(NEW_LINE);
             }
             if (MockServerLogger.MOCK_SERVER_LOGGER != null) {
-                MockServerLogger.MOCK_SERVER_LOGGER.info(propertiesLogDump.toString());
+                MockServerLogger.MOCK_SERVER_LOGGER.info(SERVER_CONFIGURATION, propertiesLogDump.toString());
             }
         }
 

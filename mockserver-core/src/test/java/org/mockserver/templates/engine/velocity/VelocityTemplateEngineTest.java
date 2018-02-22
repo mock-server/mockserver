@@ -21,6 +21,8 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.TEMPLATE_GENERATED;
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.TRACE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -68,7 +70,7 @@ public class VelocityTemplateEngineTest {
                 .withStatusCode(200)
                 .withBody("{'name': 'value'}")
         ));
-        verify(logFormatter).info(eq(request), startsWith("Generated output:"), anyVararg());
+        verify(logFormatter).info(eq(TEMPLATE_GENERATED), eq(request), startsWith("Generated output:"), anyVararg());
     }
 
     @Test
@@ -98,7 +100,7 @@ public class VelocityTemplateEngineTest {
                 .withStatusCode(406)
                 .withBody("some_body")
         ));
-        verify(logFormatter).info(eq(request), startsWith("Generated output:"), anyVararg());
+        verify(logFormatter).info(eq(TEMPLATE_GENERATED), eq(request), startsWith("Generated output:"), anyVararg());
     }
 
     @Test
@@ -136,7 +138,7 @@ public class VelocityTemplateEngineTest {
                 .withSecure(true)
                 .withBody("some_body")
         ));
-        verify(logFormatter).info(eq(request), startsWith("Generated output:"), anyVararg());
+        verify(logFormatter).info(eq(TEMPLATE_GENERATED), eq(request), startsWith("Generated output:"), anyVararg());
     }
 
     @Test
@@ -171,7 +173,7 @@ public class VelocityTemplateEngineTest {
                 .withQueryStringParameter("queryParameter", "someValue")
                 .withBody("{'name': 'value'}")
         ));
-        verify(logFormatter).info(eq(request), startsWith("Generated output:"), anyVararg());
+        verify(logFormatter).info(eq(TEMPLATE_GENERATED), eq(request), startsWith("Generated output:"), anyVararg());
     }
 
     @Test

@@ -8,6 +8,7 @@ import org.mockserver.validator.jsonschema.JsonSchemaVerificationValidator;
 import org.mockserver.verify.Verification;
 
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.VERIFICATION_FAILED;
 
 /**
  * @author jamesdbloom
@@ -51,7 +52,7 @@ public class VerificationSerializer implements Serializer<Verification> {
                 }
                 return verification;
             } else {
-                mockServerLogger.info("Validation failed:{}" + NEW_LINE + " Verification:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonVerification, verificationValidator.getSchema());
+                mockServerLogger.info(VERIFICATION_FAILED, "Validation failed:{}" + NEW_LINE + " Verification:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonVerification, verificationValidator.getSchema());
                 throw new IllegalArgumentException(validationErrors);
             }
         }

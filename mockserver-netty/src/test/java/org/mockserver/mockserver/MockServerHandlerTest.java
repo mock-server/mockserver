@@ -246,7 +246,7 @@ public class MockServerHandlerTest {
         );
         assertThat(
             splitBody[1],
-            is(endsWith("retrieving logs in plain format that match:" + NEW_LINE +
+            is(endsWith("retrieving logs that match:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"path\" : \"request_one\"" + NEW_LINE +

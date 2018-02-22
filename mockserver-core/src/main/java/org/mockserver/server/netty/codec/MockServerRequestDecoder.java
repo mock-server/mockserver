@@ -69,7 +69,7 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         try {
             parameters.withEntries(queryStringDecoder.parameters());
         } catch (IllegalArgumentException iae) {
-            mockServerLogger.debug(httpRequest, "Exception while parsing query string", iae);
+            mockServerLogger.error(httpRequest, "Exception while parsing query string", iae);
         }
         httpRequest.withQueryStringParameters(parameters);
     }

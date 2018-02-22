@@ -2,6 +2,7 @@ package org.mockserver.templates.engine.velocity;
 
 import org.apache.velocity.script.VelocityScriptEngineFactory;
 import org.mockserver.client.serialization.model.DTO;
+import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.templates.engine.TemplateEngine;
@@ -16,6 +17,7 @@ import java.io.Writer;
 
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.TEMPLATE_GENERATED;
 
 /**
  * @author jamesdbloom
@@ -46,7 +48,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
             context.setWriter(writer);
             context.setAttribute("request", new HttpRequestTemplateObject(request), ScriptContext.ENGINE_SCOPE);
             engine.eval(template);
-            logFormatter.info(request, "Generated output:{}" + NEW_LINE + " from template:{}" + NEW_LINE + " for request:{}", writer.toString(), template, request);
+            logFormatter.info(TEMPLATE_GENERATED, request, "Generated output:{}" + NEW_LINE + " from template:{}" + NEW_LINE + " for request:{}", writer.toString(), template, request);
             result = httpTemplateOutputDeserializer.deserializer(request, writer.toString(), dtoClass);
         } catch (Exception e) {
             throw new RuntimeException(formatLogMessage("Exception transforming template:{}" + NEW_LINE + " for request:{}", template, request), e);
