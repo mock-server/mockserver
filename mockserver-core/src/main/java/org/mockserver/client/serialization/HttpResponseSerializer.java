@@ -6,6 +6,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import org.mockserver.client.serialization.model.HttpResponseDTO;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
 
@@ -87,13 +88,13 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                         httpResponse = httpResponseDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
+                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for HttpResponse", jsonHttpResponse);
                     throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
                 }
                 return httpResponse;
             } else {
 
-                mockServerLogger.error("Validation failed:{}" + NEW_LINE + " HttpResponse:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonHttpResponse, httpResponseValidator.getSchema());
+                mockServerLogger.error("validation failed:{}HttpResponse:{}", validationErrors, jsonHttpResponse);
                 throw new IllegalArgumentException(validationErrors);
             }
         }

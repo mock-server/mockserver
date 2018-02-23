@@ -6,6 +6,7 @@ import com.google.common.base.Strings;
 import org.mockserver.client.serialization.model.ExpectationDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.util.ArrayList;
@@ -75,12 +76,12 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                         expectation = expectationDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error("Exception while parsing [" + jsonExpectation + "] for Expectation", e);
+                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for Expectation", jsonExpectation);
                     throw new RuntimeException("Exception while parsing [" + jsonExpectation + "] for Expectation", e);
                 }
                 return expectation;
             } else {
-                mockServerLogger.error("Validation failed:{}" + NEW_LINE + " Expectation:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonExpectation, expectationValidator.getSchema());
+                mockServerLogger.error("validation failed:{}Expectation:{}", validationErrors, jsonExpectation);
                 throw new IllegalArgumentException(validationErrors);
             }
         }

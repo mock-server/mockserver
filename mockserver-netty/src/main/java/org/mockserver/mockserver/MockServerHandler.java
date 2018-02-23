@@ -146,11 +146,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 }
             }
         } catch (IllegalArgumentException iae) {
-            mockServerLogger.error(request, "Exception processing " + request + "\n" + iae.getMessage());
+            mockServerLogger.error(request, "exception processing: {} error: {}", request, iae.getMessage());
             // send request without API CORS headers
             responseWriter.writeResponse(request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
-            mockServerLogger.error(request, e, "Exception processing " + request);
+            mockServerLogger.error(request, e, "exception processing " + request);
             responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()), true);
         }
     }

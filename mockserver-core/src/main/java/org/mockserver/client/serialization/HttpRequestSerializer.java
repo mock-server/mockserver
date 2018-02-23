@@ -116,12 +116,12 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                         httpRequest = httpRequestDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
+                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for HttpRequest", jsonHttpRequest);
                     throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
                 }
                 return httpRequest;
             } else {
-                mockServerLogger.error("Validation failed:{}" + NEW_LINE + " HttpRequest:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonHttpRequest, httpRequestValidator.getSchema());
+                mockServerLogger.error("validation failed:{}HttpRequest:{}", validationErrors, jsonHttpRequest);
                 throw new IllegalArgumentException(validationErrors);
             }
         }

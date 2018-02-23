@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import org.mockserver.client.serialization.model.VerificationDTO;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.jsonschema.JsonSchemaVerificationValidator;
 import org.mockserver.verify.Verification;
 
@@ -47,12 +48,12 @@ public class VerificationSerializer implements Serializer<Verification> {
                         verification = verificationDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error("Exception while parsing [" + jsonVerification + "] for Verification", e);
+                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for Verification", jsonVerification);
                     throw new RuntimeException("Exception while parsing [" + jsonVerification + "] for Verification", e);
                 }
                 return verification;
             } else {
-                mockServerLogger.info(VERIFICATION_FAILED, "Validation failed:{}" + NEW_LINE + " Verification:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonVerification, verificationValidator.getSchema());
+                mockServerLogger.info(VERIFICATION_FAILED, "validation failed:{}Verification:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonVerification, verificationValidator.getSchema());
                 throw new IllegalArgumentException(validationErrors);
             }
         }

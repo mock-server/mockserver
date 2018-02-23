@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import org.mockserver.client.serialization.model.VerificationSequenceDTO;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.jsonschema.JsonSchemaVerificationSequenceValidator;
 import org.mockserver.verify.VerificationSequence;
 
@@ -46,13 +47,13 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                     if (verificationDTO != null) {
                         verificationSequence = verificationDTO.buildObject();
                     }
-                } catch (Exception ioe) {
-                    mockServerLogger.error("Exception while parsing [" + jsonVerificationSequence + "] for VerificationSequence", ioe);
-                    throw new RuntimeException("Exception while parsing [" + jsonVerificationSequence + "] for VerificationSequence", ioe);
+                } catch (Exception e) {
+                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for VerificationSequence", jsonVerificationSequence);
+                    throw new RuntimeException("Exception while parsing [" + jsonVerificationSequence + "] for VerificationSequence", e);
                 }
                 return verificationSequence;
             } else {
-                mockServerLogger.info(VERIFICATION_FAILED, "Validation failed:{}" + NEW_LINE + " VerificationSequence:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonVerificationSequence, verificationSequenceValidator.getSchema());
+                mockServerLogger.info(VERIFICATION_FAILED, "validation failed:{}VerificationSequence:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonVerificationSequence, verificationSequenceValidator.getSchema());
                 throw new IllegalArgumentException(validationErrors);
             }
         }
