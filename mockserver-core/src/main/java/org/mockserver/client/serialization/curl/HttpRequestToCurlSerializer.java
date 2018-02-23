@@ -57,6 +57,9 @@ public class HttpRequestToCurlSerializer {
                     }
                 }
                 curlString.append(getCookieHeader(request));
+                if (!Strings.isNullOrEmpty(request.getBodyAsString())){
+                    curlString.append(" --data '").append(request.getBodyAsString().replace("\'", "\\'")).append("'");
+                }
             } else {
                 curlString.append("no host header or remote address specified");
             }
