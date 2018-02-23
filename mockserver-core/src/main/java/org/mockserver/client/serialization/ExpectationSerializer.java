@@ -81,7 +81,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 }
                 return expectation;
             } else {
-                mockServerLogger.error("validation failed:{}Expectation:{}", validationErrors, jsonExpectation);
+                mockServerLogger.error("validation failed:{}expectation:{}", validationErrors, jsonExpectation);
                 throw new IllegalArgumentException(validationErrors);
             }
         }

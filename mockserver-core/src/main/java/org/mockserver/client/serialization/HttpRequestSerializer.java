@@ -121,7 +121,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                 }
                 return httpRequest;
             } else {
-                mockServerLogger.error("validation failed:{}HttpRequest:{}", validationErrors, jsonHttpRequest);
+                mockServerLogger.error("validation failed:{}request:{}", validationErrors, jsonHttpRequest);
                 throw new IllegalArgumentException(validationErrors);
             }
         }

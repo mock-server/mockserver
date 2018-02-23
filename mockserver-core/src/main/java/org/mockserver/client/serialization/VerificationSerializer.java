@@ -53,7 +53,7 @@ public class VerificationSerializer implements Serializer<Verification> {
                 }
                 return verification;
             } else {
-                mockServerLogger.info(VERIFICATION_FAILED, "validation failed:{}Verification:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonVerification, verificationValidator.getSchema());
+                mockServerLogger.info(VERIFICATION_FAILED, "validation failed:{}verification:{}", validationErrors, jsonVerification);
                 throw new IllegalArgumentException(validationErrors);
             }
         }

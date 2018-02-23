@@ -41,7 +41,7 @@ public class HttpTemplateOutputDeserializer {
             if (StringUtils.isEmpty(validationErrors)) {
                 result = objectMapper.readValue(json, dtoClass).buildObject();
             } else {
-                mockServerLogger.error(request, "validation failed:{}for:{}", validationErrors, json);
+                mockServerLogger.error(request, "validation failed:{}" + StringUtils.uncapitalize(dtoClass.getSimpleName()) + ":{}", validationErrors, json);
             }
         } catch (Exception e) {
             mockServerLogger.error(request, e, "Exception transforming json:{}", json);

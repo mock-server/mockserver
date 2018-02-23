@@ -94,7 +94,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                 return httpResponse;
             } else {
 
-                mockServerLogger.error("validation failed:{}HttpResponse:{}", validationErrors, jsonHttpResponse);
+                mockServerLogger.error("validation failed:{}response:{}", validationErrors, jsonHttpResponse);
                 throw new IllegalArgumentException(validationErrors);
             }
         }
