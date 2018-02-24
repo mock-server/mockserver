@@ -288,8 +288,8 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(httpExpectationSerializer.serialize(Arrays.asList(
-                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one")),
-                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("request_three"))
+                new Expectation(request("request_one"), Times.once(), null).thenRespond(response("response_one")),
+                new Expectation(request("request_one"), Times.once(), null).thenRespond(response("request_three"))
             )), JSON_UTF_8).withStatusCode(200))
         );
         verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving recorded_expectations in json that match:{}", request("request_one"));
@@ -313,8 +313,8 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(httpExpectationToJavaSerializer.serialize(Arrays.asList(
-                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one")),
-                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("request_three"))
+                new Expectation(request("request_one"), Times.once(), null).thenRespond(response("response_one")),
+                new Expectation(request("request_one"), Times.once(), null).thenRespond(response("request_three"))
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
         );
         verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving recorded_expectations in java that match:{}", request("request_one"));

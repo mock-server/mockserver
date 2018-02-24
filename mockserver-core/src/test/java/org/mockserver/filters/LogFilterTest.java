@@ -106,7 +106,7 @@ public class LogFilterTest {
             new ExpectationMatchLogEntry(request("request_four"), new Expectation(request("request_four")).thenRespond(response("response_four")))
         ));
         assertThat(logFilter.retrieveExpectations(null), contains(
-            new Expectation(request("request_three"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_three"))
+            new Expectation(request("request_three"), Times.once(), null).thenRespond(response("response_three"))
         ));
         assertThat(logFilter.retrieveLogEntries(null, expectationLogPredicate, logEntryToLogEntry), IsIterableContainingInOrder.<LogEntry>contains(
             new RequestResponseLogEntry(request("request_three"), response("response_three"))
@@ -224,8 +224,8 @@ public class LogFilterTest {
 
         // then
         assertThat(logFilter.retrieveExpectations(null), contains(
-            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one")),
-            new Expectation(request("request_three"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_three"))
+            new Expectation(request("request_one"), Times.once(), null).thenRespond(response("response_one")),
+            new Expectation(request("request_three"), Times.once(), null).thenRespond(response("response_three"))
         ));
         assertThat(logFilter.retrieveLogEntries(null, expectationLogPredicate, logEntryToLogEntry), IsIterableContainingInOrder.<LogEntry>contains(
             new RequestResponseLogEntry(request("request_one"), response("response_one")),

@@ -37,7 +37,8 @@ public class ExpectationToJavaSerializerTest {
                 "new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
                 ".when(" + NEW_LINE +
                 "        request()" + NEW_LINE +
-                "                .withPath(\"somePathOne\")" + NEW_LINE +
+                "                .withPath(\"somePathOne\"),\n" +
+                "        Times.once()" + NEW_LINE +
                 ")" + NEW_LINE +
                 ".respond(" + NEW_LINE +
                 "        response()" + NEW_LINE +

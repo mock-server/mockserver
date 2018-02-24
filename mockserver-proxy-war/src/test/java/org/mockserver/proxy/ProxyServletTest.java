@@ -195,7 +195,7 @@ public class ProxyServletTest {
 
         // then
         assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
-            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one"))
+            new Expectation(request("request_one"), Times.once(), null).thenRespond(response("response_one"))
         )));
     }
 

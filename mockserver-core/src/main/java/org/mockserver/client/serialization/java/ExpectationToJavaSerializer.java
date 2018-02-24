@@ -31,7 +31,7 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("new MockServerClient(\"localhost\", 1080)");
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".when(");
             output.append(new HttpRequestToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpRequest()));
-            if (expectation.getTimeToLive() != null) {
+            if (expectation.getTimes() != null) {
                 output.append(",").append(new TimesToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getTimes()));
             }
             if (expectation.getTimeToLive() != null) {
