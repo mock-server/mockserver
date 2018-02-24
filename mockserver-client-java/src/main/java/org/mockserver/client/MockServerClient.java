@@ -122,7 +122,7 @@ public class MockServerClient implements java.io.Closeable {
     }
 
     private String calculatePath(String path) {
-        String cleanedPath = path;
+        String cleanedPath = "/mockserver/" + path;
         if (!Strings.isNullOrEmpty(contextPath)) {
             cleanedPath =
                 (!contextPath.startsWith("/") ? "/" : "") +

@@ -34,9 +34,7 @@ public abstract class LifeCycle {
     protected EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
     protected HttpStateHandler httpStateHandler;
     protected ServerBootstrap serverServerBootstrap;
-    protected ServerBootstrap dashboardServerBootstrap;
     private List<Future<Channel>> serverChannelFutures = new ArrayList<>();
-    private List<Future<Channel>> dashboardChannelFutures = new ArrayList<>();
     private Scheduler scheduler = new Scheduler();
 
     protected LifeCycle() {
@@ -76,14 +74,6 @@ public abstract class LifeCycle {
         return getFirstBoundPort(serverChannelFutures);
     }
 
-    public List<Integer> getDashboardPorts() {
-        return getBoundPorts(dashboardChannelFutures);
-    }
-
-    public Integer getDashboardPort() {
-        return getFirstBoundPort(dashboardChannelFutures);
-    }
-
     private Integer getFirstBoundPort(List<Future<Channel>> channelFutures) {
         for (Future<Channel> channelOpened : channelFutures) {
             try {
@@ -109,10 +99,6 @@ public abstract class LifeCycle {
 
     public List<Integer> bindServerPorts(final List<Integer> requestedPortBindings) {
         return bindPorts(serverServerBootstrap, requestedPortBindings, serverChannelFutures);
-    }
-
-    public List<Integer> bindDashboardPorts(final List<Integer> requestedPortBindings) {
-        return bindPorts(dashboardServerBootstrap, requestedPortBindings, dashboardChannelFutures);
     }
 
     private List<Integer> bindPorts(final ServerBootstrap serverBootstrap, List<Integer> requestedPortBindings, List<Future<Channel>> channelFutures) {

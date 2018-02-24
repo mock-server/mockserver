@@ -8,6 +8,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.client.serialization.PortBindingSerializer;
+import org.mockserver.dashboard.DashboardHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
@@ -31,6 +32,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.LOCATION;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
+import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
 import static org.mockserver.unification.PortUnificationHandler.enabledSslUpstreamAndDownstream;
@@ -48,6 +50,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private PortBindingSerializer portBindingSerializer;
     private LifeCycle server;
     private ActionHandler actionHandler;
+    private DashboardHandler dashboardHandler = new DashboardHandler();
 
     public MockServerHandler(LifeCycle server, HttpStateHandler httpStateHandler, @Nullable ProxyConfiguration proxyConfiguration) {
         super(false);
@@ -82,11 +85,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             if (!httpStateHandler.handle(request, responseWriter, false)) {
 
-                if (request.matches("PUT", "/status")) {
+                if (request.matches("PUT", PATH_PREFIX + "/status")) {
 
                     responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(server.getLocalPorts())), "application/json");
 
-                } else if (request.matches("PUT", "/bind")) {
+                } else if (request.matches("PUT", PATH_PREFIX + "/bind")) {
 
                     PortBinding requestedPortBindings = portBindingSerializer.deserialize(request.getBodyAsString());
                     try {
@@ -100,25 +103,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                         }
                     }
 
-                } else if (request.matches("PUT", "/dashboard")) {
+                } else if (request.getMethod().getValue().equals("GET") && request.getPath().getValue().startsWith(PATH_PREFIX + "/dashboard")) {
 
-                    PortBinding requestedPortBindings = portBindingSerializer.deserialize(request.getBodyAsString());
-                    try {
-                        List<Integer> actualPortBindings = server.bindDashboardPorts(requestedPortBindings != null ? requestedPortBindings.getPorts() : ImmutableList.of(0));
-                        responseWriter.writeResponse(request, response()
-                            .withStatusCode(FOUND.code())
-                            .withHeader(LOCATION.toString(), "http://" + ((InetSocketAddress) ctx.channel().localAddress()).getHostName() + ":" + server.getDashboardPort() + "?host=" + getLocalAddresses(ctx).iterator().next().split(":")[0] + "&port=" + server.getLocalPort())
-                            .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                            .withBody(portBindingSerializer.serialize(portBinding(actualPortBindings))), true);
-                    } catch (RuntimeException e) {
-                        if (e.getCause() instanceof BindException) {
-                            responseWriter.writeResponse(request, BAD_REQUEST, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());
-                        } else {
-                            throw e;
-                        }
-                    }
+                    dashboardHandler.renderDashboard(ctx, request);
 
-                } else if (request.matches("PUT", "/stop")) {
+                } else if (request.matches("PUT", PATH_PREFIX + "/stop")) {
 
                     ctx.writeAndFlush(response().withStatusCode(OK.code()));
                     new Thread(new Runnable() {

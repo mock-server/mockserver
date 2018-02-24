@@ -842,7 +842,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())
-                .withPath(addContextToPath("/clear"))
+                .withPath(addContextToPath("mockserver/clear"))
                 .withBody("{" + NEW_LINE +
                     "    \"path\" : 500," + NEW_LINE +
                     "    \"method\" : true," + NEW_LINE +
@@ -865,7 +865,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())
-                .withPath(addContextToPath("/verify"))
+                .withPath(addContextToPath("mockserver/verify"))
                 .withBody("{" + NEW_LINE +
                     "    \"httpRequest\": {" + NEW_LINE +
                     "        \"path\": \"/simple\"" + NEW_LINE +
@@ -887,7 +887,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())
-                .withPath(addContextToPath("/verifySequence"))
+                .withPath(addContextToPath("mockserver/verifySequence"))
                 .withBody("{" + NEW_LINE +
                     "    \"httpRequest\": {" + NEW_LINE +
                     "        \"path\": false" + NEW_LINE +

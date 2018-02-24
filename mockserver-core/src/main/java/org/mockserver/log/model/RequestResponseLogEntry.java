@@ -27,7 +27,7 @@ public class RequestResponseLogEntry extends LogEntry implements ExpectationLogE
 
     @JsonIgnore
     public Expectation getExpectation() {
-        return new Expectation(getHttpRequests().get(0), Times.once(), TimeToLive.unlimited()).thenRespond(httpResponse);
+        return new Expectation(getHttpRequests().get(0), Times.once(), null).thenRespond(httpResponse);
     }
 
 }

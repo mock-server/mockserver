@@ -74,7 +74,7 @@ public class MockServerHandlerTest {
         mockActionHandler = mock(ActionHandler.class);
 
         httpStateHandler = new HttpStateHandler(mock(Scheduler.class));
-        mockServerHandler = new MockServerHandler((MockServer) server, httpStateHandler, null);
+        mockServerHandler = new MockServerHandler(server, httpStateHandler, null);
 
         initMocks(this);
 
@@ -91,7 +91,7 @@ public class MockServerHandlerTest {
     public void shouldRetrieveRequests() {
         // given
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
-        HttpRequest expectationRetrieveRequestsRequest = request("/retrieve")
+        HttpRequest expectationRetrieveRequestsRequest = request("/mockserver/retrieve")
             .withMethod("PUT")
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
@@ -111,7 +111,7 @@ public class MockServerHandlerTest {
         // given
         httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
-        HttpRequest clearRequest = request("/clear")
+        HttpRequest clearRequest = request("/mockserver/clear")
             .withMethod("PUT")
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
@@ -123,7 +123,7 @@ public class MockServerHandlerTest {
         // then
         assertResponse(200, "");
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(nullValue()));
-        assertThat(httpStateHandler.retrieve(request("/retrieve")
+        assertThat(httpStateHandler.retrieve(request("/mockserver/retrieve")
             .withMethod("PUT")
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
@@ -134,7 +134,7 @@ public class MockServerHandlerTest {
     public void shouldReturnStatus() {
         // given
         when(server.getLocalPorts()).thenReturn(Arrays.asList(1080, 1090));
-        HttpRequest statusRequest = request("/status").withMethod("PUT");
+        HttpRequest statusRequest = request("/mockserver/status").withMethod("PUT");
 
         // when
         embeddedChannel.writeInbound(statusRequest);
@@ -149,7 +149,7 @@ public class MockServerHandlerTest {
     public void shouldBindNewPorts() {
         // given
         when(server.bindServerPorts(anyListOf(Integer.class))).thenReturn(Arrays.asList(1080, 1090));
-        HttpRequest statusRequest = request("/bind")
+        HttpRequest statusRequest = request("/mockserver/bind")
             .withMethod("PUT")
             .withBody(portBindingSerializer.serialize(
                 portBinding(1080, 1090)
@@ -168,7 +168,7 @@ public class MockServerHandlerTest {
     @Test
     public void shouldStop() throws InterruptedException {
         // given
-        HttpRequest statusRequest = request("/stop")
+        HttpRequest statusRequest = request("/mockserver/stop")
             .withMethod("PUT");
 
         // when
@@ -187,7 +187,7 @@ public class MockServerHandlerTest {
             request("request_one"),
             response("response_one")
         ));
-        HttpRequest expectationRetrieveExpectationsRequest = request("/retrieve")
+        HttpRequest expectationRetrieveExpectationsRequest = request("/mockserver/retrieve")
             .withMethod("PUT")
             .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
             .withBody(
@@ -208,7 +208,7 @@ public class MockServerHandlerTest {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         httpStateHandler.add(expectationOne);
-        HttpRequest retrieveLogRequest = request("/retrieve")
+        HttpRequest retrieveLogRequest = request("/mockserver/retrieve")
             .withMethod("PUT")
             .withQueryStringParameter("type", RetrieveType.LOGS.name())
             .withBody(
@@ -258,7 +258,7 @@ public class MockServerHandlerTest {
     public void shouldAddExpectation() {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        HttpRequest request = request("/expectation").withMethod("PUT").withBody(
+        HttpRequest request = request("/mockserver/expectation").withMethod("PUT").withBody(
             expectationSerializer.serialize(expectationOne)
         );
 
@@ -275,7 +275,7 @@ public class MockServerHandlerTest {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         httpStateHandler.add(expectationOne);
-        HttpRequest expectationRetrieveExpectationsRequest = request("/retrieve")
+        HttpRequest expectationRetrieveExpectationsRequest = request("/mockserver/retrieve")
             .withMethod("PUT")
             .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
             .withBody(

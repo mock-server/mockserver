@@ -513,7 +513,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
-                .withPath(addContextToPath("/expectation"))
+                .withPath(addContextToPath("mockserver/expectation"))
                 .withBody("" +
                     "[" +
                     new ExpectationSerializer(new MockServerLogger())
@@ -1677,7 +1677,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
-                .withPath(addContextToPath("/expectation"))
+                .withPath(addContextToPath("mockserver/expectation"))
                 .withBody("{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"/path_one\"" + NEW_LINE +
@@ -1708,7 +1708,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
-                .withPath(addContextToPath("/clear"))
+                .withPath(addContextToPath("mockserver/clear"))
                 .withBody("{" + NEW_LINE +
                     "    \"path\" : 500," + NEW_LINE +
                     "    \"method\" : true," + NEW_LINE +

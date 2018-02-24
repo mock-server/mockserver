@@ -277,7 +277,7 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                     "}"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("status"))
+                    .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
                 headersToIgnore)
         );
@@ -293,7 +293,7 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
             makeRequest(
                 request()
                     .withSecure(true)
-                    .withPath(calculatePath("status"))
+                    .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
                 headersToIgnore)
         );

@@ -87,7 +87,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/expectation")
+                .withPath("/mockserver/expectation")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -143,7 +143,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/expectation")
+                .withPath("/mockserver/expectation")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -197,7 +197,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/expectation")
+                .withPath("/mockserver/expectation")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -250,7 +250,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/expectation")
+                .withPath("/mockserver/expectation")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -305,7 +305,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/expectation")
+                .withPath("/mockserver/expectation")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -360,7 +360,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/expectation")
+                .withPath("/mockserver/expectation")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -414,7 +414,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/expectation")
+                .withPath("/mockserver/expectation")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -467,7 +467,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/expectation")
+                .withPath("/mockserver/expectation")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -523,7 +523,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/expectation")
+                .withPath("/mockserver/expectation")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -582,7 +582,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/expectation")
+                .withPath("/mockserver/expectation")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -638,7 +638,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/expectation")
+                .withPath("/mockserver/expectation")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -684,7 +684,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verificationSequence().withRequests(
             request()
                 .withMethod("PUT")
-                .withPath("/stop")
+                .withPath("/mockserver/stop")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -695,7 +695,7 @@ public class MockServerClientIntegrationTest {
                 .withKeepAlive(true),
             request()
                 .withMethod("PUT")
-                .withPath("/status")
+                .withPath("/mockserver/status")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -724,7 +724,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/status")
+                .withPath("/mockserver/status")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -756,7 +756,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/status")
+                .withPath("/mockserver/status")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -784,7 +784,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/reset")
+                .withPath("/mockserver/reset")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -817,7 +817,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/clear")
+                .withPath("/mockserver/clear")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -856,7 +856,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/clear")
+                .withPath("/mockserver/clear")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -889,7 +889,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/clear")
+                .withPath("/mockserver/clear")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -933,7 +933,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
@@ -978,7 +978,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
@@ -1023,7 +1023,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
@@ -1071,7 +1071,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", Format.JAVA.name())
                 .withHeaders(
@@ -1120,7 +1120,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
@@ -1165,7 +1165,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
@@ -1210,7 +1210,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
@@ -1258,7 +1258,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JAVA.name())
                 .withHeaders(
@@ -1307,7 +1307,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
@@ -1352,7 +1352,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
@@ -1397,7 +1397,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
@@ -1445,7 +1445,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JAVA.name())
                 .withHeaders(
@@ -1486,7 +1486,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/verifySequence")
+                .withPath("/mockserver/verifySequence")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -1531,7 +1531,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/verifySequence")
+                .withPath("/mockserver/verifySequence")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
@@ -1577,7 +1577,7 @@ public class MockServerClientIntegrationTest {
         String result = logFilter.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
-                .withPath("/verify")
+                .withPath("/mockserver/verify")
                 .withHeaders(
                     new Header("host", "localhost:" + echoServer.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),

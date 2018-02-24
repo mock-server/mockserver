@@ -815,7 +815,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/stop"),
+                .withPath("/mockserver/stop"),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -831,7 +831,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/stop"),
+                .withPath("/mockserver/stop"),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -851,7 +851,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/status"),
+                .withPath("/mockserver/status"),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -872,7 +872,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/status"),
+                .withPath("/mockserver/status"),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -888,7 +888,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/reset"),
+                .withPath("/mockserver/reset"),
             20000,
             TimeUnit.MILLISECONDS
         );
@@ -910,7 +910,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/clear")
+                .withPath("/mockserver/clear")
                 .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
@@ -933,7 +933,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/clear")
+                .withPath("/mockserver/clear")
                 .withQueryStringParameter("type", "log")
                 .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
             20000,
@@ -952,7 +952,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/clear")
+                .withPath("/mockserver/clear")
                 .withBody("", StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
@@ -982,7 +982,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
@@ -1006,7 +1006,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody("", StandardCharsets.UTF_8),
@@ -1039,7 +1039,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
@@ -1064,7 +1064,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody("", StandardCharsets.UTF_8),
@@ -1097,7 +1097,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
@@ -1122,7 +1122,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/retrieve")
+                .withPath("/mockserver/retrieve")
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withBody("", StandardCharsets.UTF_8),
@@ -1152,7 +1152,7 @@ public class MockServerClientTest {
                 request()
                     .withHeader(HOST.toString(), "localhost:" + 1080)
                     .withMethod("PUT")
-                    .withPath("/verifySequence")
+                    .withPath("/mockserver/verifySequence")
                     .withBody("verification_json", StandardCharsets.UTF_8),
                 20000,
                 TimeUnit.MILLISECONDS
@@ -1181,7 +1181,7 @@ public class MockServerClientTest {
                 request()
                     .withHeader(HOST.toString(), "localhost:" + 1080)
                     .withMethod("PUT")
-                    .withPath("/verifySequence")
+                    .withPath("/mockserver/verifySequence")
                     .withBody("verification_json", StandardCharsets.UTF_8),
                 20000,
                 TimeUnit.MILLISECONDS
@@ -1213,7 +1213,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/verifySequence")
+                .withPath("/mockserver/verifySequence")
                 .withBody("verification_json", StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
@@ -1243,7 +1243,7 @@ public class MockServerClientTest {
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)
                 .withMethod("PUT")
-                .withPath("/verify")
+                .withPath("/mockserver/verify")
                 .withBody("verification_json", StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS
@@ -1270,7 +1270,7 @@ public class MockServerClientTest {
                 request()
                     .withHeader(HOST.toString(), "localhost:" + 1080)
                     .withMethod("PUT")
-                    .withPath("/verify")
+                    .withPath("/mockserver/verify")
                     .withBody("verification_json", StandardCharsets.UTF_8),
                 20000,
                 TimeUnit.MILLISECONDS

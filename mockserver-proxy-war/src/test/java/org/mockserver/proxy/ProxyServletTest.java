@@ -88,7 +88,7 @@ public class ProxyServletTest {
         // given
         MockHttpServletRequest expectationRetrieveRequestsRequest = buildHttpServletRequest(
             "PUT",
-            "/retrieve",
+            "/mockserver/retrieve",
             httpRequestSerializer.serialize(request("request_one"))
         );
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
@@ -109,7 +109,7 @@ public class ProxyServletTest {
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
         MockHttpServletRequest clearRequest = buildHttpServletRequest(
             "PUT",
-            "/clear",
+            "/mockserver/clear",
             httpRequestSerializer.serialize(request("request_one"))
         );
 
@@ -185,7 +185,7 @@ public class ProxyServletTest {
         ));
         MockHttpServletRequest expectationRetrieveExpectationsRequest = buildHttpServletRequest(
             "PUT",
-            "/retrieve",
+            "/mockserver/retrieve",
             httpRequestSerializer.serialize(request("request_one"))
         );
         expectationRetrieveExpectationsRequest.setQueryString("type=" + RetrieveType.RECORDED_EXPECTATIONS.name());
@@ -204,7 +204,7 @@ public class ProxyServletTest {
         // given
         MockHttpServletRequest retrieveLogRequest = buildHttpServletRequest(
             "PUT",
-            "/retrieve",
+            "/mockserver/retrieve",
             httpRequestSerializer.serialize(request("request_one"))
         );
         retrieveLogRequest.setQueryString("type=" + RetrieveType.LOGS.name());

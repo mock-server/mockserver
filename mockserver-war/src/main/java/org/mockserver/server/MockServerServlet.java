@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
 
@@ -61,15 +62,15 @@ public class MockServerServlet extends HttpServlet {
 
                     responseWriter.writeResponse(request, NOT_IMPLEMENTED, "ExpectationResponseCallback and ExpectationForwardCallback is not supported by MockServer deployed as a WAR", "text/plain");
 
-                } else if (request.matches("PUT", "/status")) {
+                } else if (request.matches("PUT", PATH_PREFIX + "/status")) {
 
                     responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())), "application/json");
 
-                } else if (request.matches("PUT", "/bind")) {
+                } else if (request.matches("PUT", PATH_PREFIX + "/bind")) {
 
                     responseWriter.writeResponse(request, NOT_IMPLEMENTED);
 
-                } else if (request.matches("PUT", "/stop")) {
+                } else if (request.matches("PUT", PATH_PREFIX + "/stop")) {
 
                     responseWriter.writeResponse(request, NOT_IMPLEMENTED);
 

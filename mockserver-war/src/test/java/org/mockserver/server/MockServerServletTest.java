@@ -85,7 +85,7 @@ public class MockServerServletTest {
         // given
         MockHttpServletRequest expectationRetrieveRequestsRequest = buildHttpServletRequest(
             "PUT",
-            "/retrieve",
+            "/mockserver/retrieve",
             httpRequestSerializer.serialize(request("request_one"))
         );
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
@@ -106,7 +106,7 @@ public class MockServerServletTest {
         httpStateHandler.log(new RequestLogEntry(request("request_one")));
         MockHttpServletRequest clearRequest = buildHttpServletRequest(
             "PUT",
-            "/clear",
+            "/mockserver/clear",
             httpRequestSerializer.serialize(request("request_one"))
         );
 
@@ -128,7 +128,7 @@ public class MockServerServletTest {
         // given
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
             "PUT",
-            "/status",
+            "/mockserver/status",
             ""
         );
 
@@ -146,7 +146,7 @@ public class MockServerServletTest {
         // given
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
             "PUT",
-            "/bind", portBindingSerializer.serialize(
+            "/mockserver/bind", portBindingSerializer.serialize(
                 portBinding(1080, 1090)
             ));
 
@@ -162,7 +162,7 @@ public class MockServerServletTest {
         // given
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
             "PUT",
-            "/stop",
+            "/mockserver/stop",
             ""
         );
 
@@ -182,7 +182,7 @@ public class MockServerServletTest {
         ));
         MockHttpServletRequest expectationRetrieveExpectationsRequest = buildHttpServletRequest(
             "PUT",
-            "/retrieve",
+            "/mockserver/retrieve",
             httpRequestSerializer.serialize(request("request_one"))
         );
         expectationRetrieveExpectationsRequest.setQueryString("type=" + RetrieveType.RECORDED_EXPECTATIONS.name());
@@ -202,7 +202,7 @@ public class MockServerServletTest {
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         MockHttpServletRequest request = buildHttpServletRequest(
             "PUT",
-            "/expectation",
+            "/mockserver/expectation",
             expectationSerializer.serialize(expectationOne)
         );
 
@@ -221,7 +221,7 @@ public class MockServerServletTest {
         httpStateHandler.add(expectationOne);
         MockHttpServletRequest expectationRetrieveExpectationsRequest = buildHttpServletRequest(
             "PUT",
-            "/retrieve",
+            "/mockserver/retrieve",
             httpRequestSerializer.serialize(request("request_one"))
         );
         expectationRetrieveExpectationsRequest.setQueryString("type=" + RetrieveType.ACTIVE_EXPECTATIONS.name());
@@ -242,7 +242,7 @@ public class MockServerServletTest {
         httpStateHandler.add(expectationOne);
         MockHttpServletRequest retrieveLogRequest = buildHttpServletRequest(
             "PUT",
-            "/retrieve",
+            "/mockserver/retrieve",
             httpRequestSerializer.serialize(request("request_one"))
         );
         retrieveLogRequest.setQueryString("type=" + RetrieveType.LOGS.name());

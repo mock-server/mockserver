@@ -73,7 +73,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                     "}"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("status"))
+                    .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
                 headersToIgnore)
         );
@@ -89,7 +89,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
             makeRequest(
                 request()
                     .withSecure(true)
-                    .withPath(calculatePath("status"))
+                    .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
                 headersToIgnore)
         );
@@ -113,7 +113,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                     "}"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("bind"))
+                    .withPath(calculatePath("mockserver/bind"))
                     .withMethod("PUT")
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
@@ -130,7 +130,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                     "}"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("status"))
+                    .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
                 headersToIgnore)
         );
@@ -146,7 +146,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
             makeRequest(
                 request()
                     .withSecure(true)
-                    .withPath(calculatePath("bind"))
+                    .withPath(calculatePath("mockserver/bind"))
                     .withMethod("PUT")
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
@@ -164,7 +164,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
             makeRequest(
                 request()
                     .withSecure(true)
-                    .withPath(calculatePath("status"))
+                    .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT")
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +

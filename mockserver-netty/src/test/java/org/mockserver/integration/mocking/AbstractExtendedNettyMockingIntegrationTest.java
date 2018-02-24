@@ -325,7 +325,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     "}"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("status"))
+                    .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
                 headersToIgnore)
         );
@@ -342,7 +342,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     "}"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("bind"))
+                    .withPath(calculatePath("mockserver/bind"))
                     .withMethod("PUT")
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
@@ -359,7 +359,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     "}"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("status"))
+                    .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT"),
                 headersToIgnore)
         );
@@ -375,7 +375,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withSecure(true)
-                    .withPath(calculatePath("bind"))
+                    .withPath(calculatePath("mockserver/bind"))
                     .withMethod("PUT")
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
@@ -393,7 +393,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             makeRequest(
                 request()
                     .withSecure(true)
-                    .withPath(calculatePath("status"))
+                    .withPath(calculatePath("mockserver/status"))
                     .withMethod("PUT")
                     .withBody("{" + NEW_LINE +
                         "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
@@ -421,7 +421,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withBody("Exception while binding MockServer to port " + newPort + " port already in use"),
                 makeRequest(
                     request()
-                        .withPath(calculatePath("bind"))
+                        .withPath(calculatePath("mockserver/bind"))
                         .withMethod("PUT")
                         .withBody("{" + NEW_LINE +
                             "  \"ports\" : [ " + newPort + " ]" + NEW_LINE +
