@@ -1,10 +1,9 @@
 package org.mockserver.mock.action;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
-import joptsimple.internal.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketCommunicationException;
 import org.mockserver.client.netty.SocketConnectionException;
@@ -13,7 +12,6 @@ import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
-import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.log.model.RequestLogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -243,7 +241,7 @@ public class ActionHandler {
 
             responseWriter.writeResponse(request, OK);
 
-        } else if (proxyThisRequest || (!Strings.isNullOrEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString())))) {
+        } else if (proxyThisRequest || (!StringUtils.isEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString())))) {
 
             final boolean exploratoryHttpProxy = !proxyThisRequest;
             final InetSocketAddress remoteAddress = ctx != null ? ctx.channel().attr(REMOTE_SOCKET).get() : null;

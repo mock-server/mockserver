@@ -22,8 +22,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.mockserver.character.Character.NEW_LINE;
-
 public class NettyHttpClient {
 
     static final MockServerLogger mockServerLogger = new MockServerLogger(NettyHttpClient.class);
