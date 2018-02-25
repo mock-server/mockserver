@@ -513,7 +513,7 @@ public class MockServerClient implements java.io.Closeable {
     void sendExpectation(Expectation expectation) {
         HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", StandardCharsets.UTF_8));
         if (httpResponse != null && httpResponse.getStatusCode() != 201) {
-            throw new ClientException(formatLogMessage("error:{}" + NEW_LINE + "while submitted expectation:{}", httpResponse.getBody(), expectation));
+            throw new ClientException(formatLogMessage("error:{}while submitted expectation:{}", httpResponse.getBody(), expectation));
         }
     }
 

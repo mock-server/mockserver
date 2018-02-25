@@ -209,9 +209,9 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                             if (not) {
                                 becauseBuilder.append(",").append(NEW_LINE).append("expectation's request matcher \'not\' operator is enabled");
                             }
-                            mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "request:{}" + NEW_LINE + (totalResult ? " matched " : " didn't match ") + (this.expectation == null ? "request" : "expectation") + ":{}" + NEW_LINE + " because:{}", request, (this.expectation == null ? this : this.expectation.clone()), becauseBuilder.toString());
+                            mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "request:{}" + (totalResult ? "matched " : "didn't match ") + (this.expectation == null ? "request" : "expectation") + ":{}because:{}", request, (this.expectation == null ? this : this.expectation.clone()), becauseBuilder.toString());
                         } else {
-                            mockServerLogger.info(EXPECTATION_MATCHED, request, "request:{}" + NEW_LINE + " matched " + (this.expectation == null ? "request" : "expectation") + ":{}", request, (this.expectation == null ? this : this.expectation.clone()));
+                            mockServerLogger.info(EXPECTATION_MATCHED, request, "request:{}matched " + (this.expectation == null ? "request" : "expectation") + ":{}", request, (this.expectation == null ? this : this.expectation.clone()));
                         }
                     }
                     matches = totalResultAfterNotOperatorApplied;

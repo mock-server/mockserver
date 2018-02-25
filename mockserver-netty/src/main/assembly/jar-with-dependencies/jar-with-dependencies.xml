@@ -24,7 +24,7 @@
     <files>
         <file>
             <source>${basedir}/src/main/assembly/jar-with-dependencies/logback.xml</source>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory>${file.separator}</outputDirectory>
         </file>
     </files>
 </assembly>

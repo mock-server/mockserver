@@ -70,7 +70,7 @@ public class VelocityTemplateEngineTest {
                 .withStatusCode(200)
                 .withBody("{'name': 'value'}")
         ));
-        verify(logFormatter).info(eq(TEMPLATE_GENERATED), eq(request), startsWith("Generated output:"), anyVararg());
+        verify(logFormatter).info(eq(TEMPLATE_GENERATED), eq(request), startsWith("generated output:"), anyVararg());
     }
 
     @Test
@@ -100,7 +100,7 @@ public class VelocityTemplateEngineTest {
                 .withStatusCode(406)
                 .withBody("some_body")
         ));
-        verify(logFormatter).info(eq(TEMPLATE_GENERATED), eq(request), startsWith("Generated output:"), anyVararg());
+        verify(logFormatter).info(eq(TEMPLATE_GENERATED), eq(request), startsWith("generated output:"), anyVararg());
     }
 
     @Test
@@ -138,7 +138,7 @@ public class VelocityTemplateEngineTest {
                 .withSecure(true)
                 .withBody("some_body")
         ));
-        verify(logFormatter).info(eq(TEMPLATE_GENERATED), eq(request), startsWith("Generated output:"), anyVararg());
+        verify(logFormatter).info(eq(TEMPLATE_GENERATED), eq(request), startsWith("generated output:"), anyVararg());
     }
 
     @Test
@@ -173,7 +173,7 @@ public class VelocityTemplateEngineTest {
                 .withQueryStringParameter("queryParameter", "someValue")
                 .withBody("{'name': 'value'}")
         ));
-        verify(logFormatter).info(eq(TEMPLATE_GENERATED), eq(request), startsWith("Generated output:"), anyVararg());
+        verify(logFormatter).info(eq(TEMPLATE_GENERATED), eq(request), startsWith("generated output:"), anyVararg());
     }
 
     @Test

@@ -1,7 +1,5 @@
 package org.mockserver.logging;
 
-import com.google.common.collect.ImmutableList;
-import org.hamcrest.collection.IsArrayContaining;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -64,12 +62,13 @@ public class MockServerLoggerTest {
 
             // then
             String message = "some random message with " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tsome" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE +
+                NEW_LINE +
                 " and " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tanother" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE;
@@ -80,12 +79,13 @@ public class MockServerLoggerTest {
             MessageLogEntry messageLogEntry = captor.getValue();
             assertThat(messageLogEntry.getHttpRequests(), is(Collections.singletonList(request)));
             assertThat(messageLogEntry.getMessage(), containsString("some random message with " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tsome" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE +
+                NEW_LINE +
                 " and " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tanother" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE));
@@ -122,12 +122,13 @@ public class MockServerLoggerTest {
 
             // then
             String message = "some random message with " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tsome" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE +
+                NEW_LINE +
                 " and " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tanother" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE;
@@ -138,12 +139,13 @@ public class MockServerLoggerTest {
             for (MessageLogEntry messageLogEntry : captor.getAllValues()) {
                 assertThat(messageLogEntry.getHttpRequests(), is(Arrays.asList(request, request)));
                 assertThat(messageLogEntry.getMessage(), containsString("some random message with " + NEW_LINE +
-                   NEW_LINE +
+                    NEW_LINE +
                     "\tsome" + NEW_LINE +
                     "\tmulti-line" + NEW_LINE +
                     "\tobject" + NEW_LINE +
+                    NEW_LINE +
                     " and " + NEW_LINE +
-                   NEW_LINE +
+                    NEW_LINE +
                     "\tanother" + NEW_LINE +
                     "\tmulti-line" + NEW_LINE +
                     "\tobject" + NEW_LINE));
@@ -180,12 +182,13 @@ public class MockServerLoggerTest {
 
             // then
             String message = "some random message with " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tsome" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE +
+                NEW_LINE +
                 " and " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tanother" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE;
@@ -197,12 +200,13 @@ public class MockServerLoggerTest {
             MessageLogEntry messageLogEntry = captor.getValue();
             assertThat(messageLogEntry.getHttpRequests(), is(Collections.singletonList(request)));
             assertThat(messageLogEntry.getMessage(), containsString("some random message with " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tsome" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE +
+                NEW_LINE +
                 " and " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tanother" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE));
@@ -240,12 +244,13 @@ public class MockServerLoggerTest {
 
             // then
             String message = "some random message with " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tsome" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE +
+                NEW_LINE +
                 " and " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tanother" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE;
@@ -256,13 +261,14 @@ public class MockServerLoggerTest {
 
             MessageLogEntry messageLogEntry = captor.getValue();
             assertThat(messageLogEntry.getHttpRequests(), is(Collections.singletonList(request)));
-            assertThat(messageLogEntry.getMessage(), containsString("some random message with " + NEW_LINE +
-               NEW_LINE +
+            assertThat(messageLogEntry.getMessage(), is("some random message with " + NEW_LINE +
+                NEW_LINE +
                 "\tsome" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE +
+                NEW_LINE +
                 " and " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tanother" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE));
@@ -300,12 +306,13 @@ public class MockServerLoggerTest {
 
             // then
             String message = "some random message with " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tsome" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE +
+                NEW_LINE +
                 " and " + NEW_LINE +
-               NEW_LINE +
+                NEW_LINE +
                 "\tanother" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE;
@@ -317,12 +324,13 @@ public class MockServerLoggerTest {
             for (MessageLogEntry messageLogEntry : captor.getAllValues()) {
                 assertThat(messageLogEntry.getHttpRequests(), is(Arrays.asList(request, request)));
                 assertThat(messageLogEntry.getMessage(), containsString("some random message with " + NEW_LINE +
-                   NEW_LINE +
+                    NEW_LINE +
                     "\tsome" + NEW_LINE +
                     "\tmulti-line" + NEW_LINE +
                     "\tobject" + NEW_LINE +
+                    NEW_LINE +
                     " and " + NEW_LINE +
-                   NEW_LINE +
+                    NEW_LINE +
                     "\tanother" + NEW_LINE +
                     "\tmulti-line" + NEW_LINE +
                     "\tobject" + NEW_LINE));

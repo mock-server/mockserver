@@ -140,11 +140,7 @@ public abstract class LifeCycle {
     }
 
     protected void startedServer(List<Integer> ports) {
-        mockServerLogger.info(SERVER_CONFIGURATION, "MockServer started on port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports));
-    }
-
-    protected void startedDashboard(List<Integer> ports) {
-        mockServerLogger.info(SERVER_CONFIGURATION, "Dashboard bound to port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports));
+        mockServerLogger.info(SERVER_CONFIGURATION, "started on port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports));
     }
 
 }

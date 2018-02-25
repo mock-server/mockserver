@@ -2,6 +2,7 @@ package org.mockserver.client.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.PortBinding;
 
 /**
@@ -32,7 +33,7 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
             try {
                 portBinding = objectMapper.readValue(jsonPortBinding, PortBinding.class);
             } catch (Exception e) {
-                mockServerLogger.error("Exception while parsing PortBinding for [" + jsonPortBinding + "]", e);
+                mockServerLogger.error((HttpRequest) null, e, "exception while parsing {}for PortBinding", jsonPortBinding);
                 throw new RuntimeException("Exception while parsing PortBinding for [" + jsonPortBinding + "]", e);
             }
         }

@@ -46,7 +46,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         try {
                             HttpResponse response = responseFuture.get();
                             responseWriter.writeResponse(request, response, false);
-                            logFormatter.info(EXPECTATION_RESPONSE, request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for object callback action:{}", response, request, httpObjectCallback);
+                            logFormatter.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, httpObjectCallback);
                         } catch (Exception ex) {
                             logFormatter.error(request, ex, ex.getMessage());
                         }

@@ -39,14 +39,14 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 engine.eval(script + " function serialise(request) { return JSON.stringify(handle(JSON.parse(request)), null, 2); }");
                 // HttpResponse handle(HttpRequest httpRequest) - ES5
                 Object stringifiedResponse = ((Invocable) engine).invokeFunction("serialise", new HttpRequestTemplateObject(request));
-                logFormatter.info(TEMPLATE_GENERATED, request, "Generated output:{}" + NEW_LINE + " from template:{}" + NEW_LINE + " for request:{}", stringifiedResponse, script, request);
+                logFormatter.info(TEMPLATE_GENERATED, request, "generated output:{}from template:{}for request:{}", stringifiedResponse, script, request);
                 result = httpTemplateOutputDeserializer.deserializer(request, (String) stringifiedResponse, dtoClass);
             } else {
                 logFormatter.error(request, "JavaScript based templating is only available in a JVM with the \"nashorn\" JavaScript engine, " +
                     "please use a JVM with the \"nashorn\" JavaScript engine, such as Oracle Java 8+", new RuntimeException("\"nashorn\" JavaScript engine not available"));
             }
         } catch (Exception e) {
-            throw new RuntimeException(formatLogMessage("Exception transforming template:{}" + NEW_LINE + " for request:{}", script, request), e);
+            throw new RuntimeException(formatLogMessage("Exception transforming template:{}for request:{}", script, request), e);
         }
         return result;
     }

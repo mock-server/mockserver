@@ -48,12 +48,12 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                         verificationSequence = verificationDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for VerificationSequence", jsonVerificationSequence);
+                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {}for VerificationSequence", jsonVerificationSequence);
                     throw new RuntimeException("Exception while parsing [" + jsonVerificationSequence + "] for VerificationSequence", e);
                 }
                 return verificationSequence;
             } else {
-                mockServerLogger.info(VERIFICATION_FAILED, "validation failed:{}VerificationSequence:{}" + NEW_LINE + " Schema:{}", validationErrors, jsonVerificationSequence, verificationSequenceValidator.getSchema());
+                mockServerLogger.info(VERIFICATION_FAILED, "validation failed:{}verification sequence:{}", validationErrors, jsonVerificationSequence);
                 throw new IllegalArgumentException(validationErrors);
             }
         }

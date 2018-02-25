@@ -48,10 +48,10 @@ public class VelocityTemplateEngine implements TemplateEngine {
             context.setWriter(writer);
             context.setAttribute("request", new HttpRequestTemplateObject(request), ScriptContext.ENGINE_SCOPE);
             engine.eval(template);
-            logFormatter.info(TEMPLATE_GENERATED, request, "Generated output:{}" + NEW_LINE + " from template:{}" + NEW_LINE + " for request:{}", writer.toString(), template, request);
+            logFormatter.info(TEMPLATE_GENERATED, request, "generated output:{}from template:{}for request:{}", writer.toString(), template, request);
             result = httpTemplateOutputDeserializer.deserializer(request, writer.toString(), dtoClass);
         } catch (Exception e) {
-            throw new RuntimeException(formatLogMessage("Exception transforming template:{}" + NEW_LINE + " for request:{}", template, request), e);
+            throw new RuntimeException(formatLogMessage("Exception transforming template:{}for request:{}", template, request), e);
         }
         return result;
     }

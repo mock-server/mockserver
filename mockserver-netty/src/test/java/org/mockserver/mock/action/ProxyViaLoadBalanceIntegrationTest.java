@@ -69,18 +69,17 @@ public class ProxyViaLoadBalanceIntegrationTest {
         assertThat(responseSettableFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
 
         // and - logs hide proxied request
-        assertThat(clientAndServer.retrieveLogMessagesArray(null)[2], containsString("no matching expectation - returning:" + NEW_LINE +
-            NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"statusCode\" : 404," + NEW_LINE +
-            "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
-            "\t}" + NEW_LINE +
-            NEW_LINE +
-            " for request:" + NEW_LINE +
-            NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"method\" : \"GET\"," + NEW_LINE +
-            "\t  \"path\" : \"/some_path\""));
+        assertThat(clientAndServer.retrieveLogMessagesArray(null)[2], containsString("no expectation for:" + NEW_LINE  +
+            NEW_LINE  +
+            "\t{" + NEW_LINE  +
+            "\t  \"method\" : \"GET\"," + NEW_LINE  +
+            "\t  \"path\" : \"/some_path\","));
+        assertThat(clientAndServer.retrieveLogMessagesArray(null)[2], containsString(" returning response:" + NEW_LINE  +
+            NEW_LINE  +
+            "\t{" + NEW_LINE  +
+            "\t  \"statusCode\" : 404," + NEW_LINE  +
+            "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE  +
+            "\t}" + NEW_LINE ));
         assertThat(loadBalancerClient.retrieveLogMessagesArray(null).length, is(5));
     }
 

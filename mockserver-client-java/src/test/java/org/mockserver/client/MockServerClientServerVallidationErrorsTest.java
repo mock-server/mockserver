@@ -9,6 +9,7 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -110,12 +111,12 @@ public class MockServerClientServerVallidationErrorsTest {
 
         // then
         exception.expect(ClientException.class);
-        exception.expectMessage(containsString("error:" + NEW_LINE +
+        exception.expectMessage(is("error:" + NEW_LINE +
             NEW_LINE +
             "\t" + responseBody + NEW_LINE +
             NEW_LINE +
-            "while submitted expectation:" + NEW_LINE +
-            "" + NEW_LINE +
+            " while submitted expectation:" + NEW_LINE +
+            NEW_LINE +
             "\t{" + NEW_LINE +
             "\t  \"httpRequest\" : { }," + NEW_LINE +
             "\t  \"times\" : {" + NEW_LINE +

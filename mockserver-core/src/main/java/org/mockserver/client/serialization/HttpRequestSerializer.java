@@ -103,7 +103,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                         jsonHttpRequest = jsonNode.get("httpRequest").toString();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
+                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {}for HttpRequest", jsonHttpRequest);
                     throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
                 }
             }
@@ -116,7 +116,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                         httpRequest = httpRequestDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for HttpRequest", jsonHttpRequest);
+                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {}for HttpRequest", jsonHttpRequest);
                     throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
                 }
                 return httpRequest;

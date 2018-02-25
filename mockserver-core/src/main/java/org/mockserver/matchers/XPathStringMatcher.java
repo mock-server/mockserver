@@ -36,7 +36,7 @@ public class XPathStringMatcher extends BodyMatcher<String> {
         boolean result = false;
 
         if (xpathExpression == null) {
-            mockServerLogger.error(context, "Attempting match against null XPath Expression for [" + matched + "]" + new RuntimeException("Attempting match against null XPath Expression for [" + matched + "]"));
+            mockServerLogger.trace(context, "Attempting match against null XPath Expression for [" + matched + "]" + new RuntimeException("Attempting match against null XPath Expression for [" + matched + "]"));
         } else if (matcher.equals(matched)) {
             result = true;
         } else if (matched != null) {

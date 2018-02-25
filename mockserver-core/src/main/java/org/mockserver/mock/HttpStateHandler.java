@@ -98,7 +98,7 @@ public class HttpStateHandler {
     public void reset() {
         mockServerMatcher.reset();
         mockServerLog.reset();
-        mockServerLogger.info(CLEARED, "resetting all expectations and request logs" + NEW_LINE);
+        mockServerLogger.info(CLEARED, "resetting all expectations and request logs");
     }
 
     public void add(Expectation... expectations) {
@@ -111,7 +111,7 @@ public class HttpStateHandler {
 
     public Expectation firstMatchingExpectation(HttpRequest request) {
         if (mockServerMatcher.isEmpty()) {
-            mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "no active expectations when receiving request:{}", request);
+            mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "no active expectations");
             return null;
         } else {
             return mockServerMatcher.firstMatchingExpectation(request);
@@ -248,24 +248,24 @@ public class HttpStateHandler {
         } else if (request.matches("PUT", PATH_PREFIX + "/verify")) {
 
             Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
+            mockServerLogger.info(VERIFICATION, verification.getHttpRequest(), "verifying requests that match:{}", verification);
             String result = verify(verification);
             if (StringUtils.isEmpty(result)) {
                 responseWriter.writeResponse(request, ACCEPTED);
             } else {
                 responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
             }
-            mockServerLogger.info(VERIFICATION, verification.getHttpRequest(), "verifying requests that match:{}", verification);
 
         } else if (request.matches("PUT", PATH_PREFIX + "/verifySequence")) {
 
             VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
+            mockServerLogger.info(VERIFICATION, verificationSequence.getHttpRequests(), "verifying sequence that match:{}", verificationSequence);
             String result = verify(verificationSequence);
             if (StringUtils.isEmpty(result)) {
                 responseWriter.writeResponse(request, ACCEPTED);
             } else {
                 responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
             }
-            mockServerLogger.info(VERIFICATION, verificationSequence.getHttpRequests(), "verifying sequence that match:{}", verificationSequence);
 
         } else {
             return false;

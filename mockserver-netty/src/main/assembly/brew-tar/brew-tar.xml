@@ -10,12 +10,12 @@
     <files>
         <file>
             <source>${basedir}/target/mockserver-netty-${version}-jar-with-dependencies.jar</source>
-            <outputDirectory>/lib</outputDirectory>
+            <outputDirectory>lib</outputDirectory>
             <destName>mockserver-netty-jar-with-dependencies.jar</destName>
         </file>
         <file>
             <source>${basedir}/src/main/assembly/brew-tar/run_mockserver.sh</source>
-            <outputDirectory>/bin</outputDirectory>
+            <outputDirectory>bin</outputDirectory>
         </file>
     </files>
 </assembly>

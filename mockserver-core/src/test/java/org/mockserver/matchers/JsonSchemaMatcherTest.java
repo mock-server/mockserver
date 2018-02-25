@@ -117,7 +117,7 @@ public class JsonSchemaMatcherTest {
                 NEW_LINE +
                 "\tsome_json" + NEW_LINE +
                 NEW_LINE +
-                "with schema: " + NEW_LINE +
+                " with schema: " + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t    \"type\": \"object\"," + NEW_LINE +
@@ -157,7 +157,7 @@ public class JsonSchemaMatcherTest {
                 "\t    \"required\": [ \"enumField\", \"arrayField\" ]" + NEW_LINE +
                 "\t}" + NEW_LINE +
                 NEW_LINE +
-                "because: " + NEW_LINE +
+                " because: " + NEW_LINE +
                 NEW_LINE +
                 "\tvalidator_error" + NEW_LINE);
         } finally {
@@ -182,7 +182,7 @@ public class JsonSchemaMatcherTest {
                 NEW_LINE +
                 "\tsome_json" + NEW_LINE +
                 NEW_LINE +
-                "with schema: " + NEW_LINE +
+                " with schema: " + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t    \"type\": \"object\"," + NEW_LINE +
@@ -222,7 +222,7 @@ public class JsonSchemaMatcherTest {
                 "\t    \"required\": [ \"enumField\", \"arrayField\" ]" + NEW_LINE +
                 "\t}" + NEW_LINE +
                 NEW_LINE +
-                "because: " + NEW_LINE +
+                " because: " + NEW_LINE +
                 NEW_LINE +
                 "\tTEST_EXCEPTION" + NEW_LINE);
         } finally {

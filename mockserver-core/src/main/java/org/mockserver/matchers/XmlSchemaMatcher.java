@@ -35,10 +35,10 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
             result = validation.isEmpty();
 
             if (!result) {
-                mockServerLogger.trace(context, "Failed to match XML: {}" + NEW_LINE + "with schema: {}" + NEW_LINE + "because: {}", matched, this.schema, validation);
+                mockServerLogger.trace(context, "Failed to match XML: {}with schema: {}because: {}", matched, this.schema, validation);
             }
         } catch (Exception e) {
-            mockServerLogger.trace(context, "Failed to match XML: {}" + NEW_LINE + "with schema: {}" + NEW_LINE + "because: {}", matched, this.schema, e.getMessage());
+            mockServerLogger.trace(context, "Failed to match XML: {}with schema: {}because: {}", matched, this.schema, e.getMessage());
         }
 
         return not != result;

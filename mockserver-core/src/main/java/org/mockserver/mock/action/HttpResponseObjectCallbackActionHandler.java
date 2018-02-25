@@ -34,7 +34,7 @@ public class HttpResponseObjectCallbackActionHandler {
             @Override
             public void handle(HttpResponse response) {
                 responseWriter.writeResponse(request, response.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), false);
-                logFormatter.info(EXPECTATION_RESPONSE, request, "returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for object callback action:{}", response, request, httpObjectCallback);
+                logFormatter.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, httpObjectCallback);
             }
         });
         webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId));

@@ -10,6 +10,8 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mockserver.MockServer;
 import org.mockserver.model.HttpStatusCode;
 
+import java.util.Arrays;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
@@ -303,7 +305,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
         String[] actualLogMessages = mockServerClient.retrieveLogMessagesArray(request().withPath(calculatePath(".*")));
 
         Object[] expectedLogMessages = new Object[]{
-            "resetting all expectations and request logs" + NEW_LINE,
+            "resetting all expectations and request logs", //0
             "creating expectation:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
@@ -319,13 +321,13 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                 "\t  \"httpResponse\" : {" + NEW_LINE +
                 "\t    \"body\" : \"some_body\"" + NEW_LINE +
                 "\t  }" + NEW_LINE +
-                "\t}" + NEW_LINE,
+                "\t}" + NEW_LINE, //1
             new String[]{
                 "request:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_one\",",
+                    "\t  \"path\" : \"/some_path_one\",", // 2-0
                 " matched expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -341,7 +343,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     "\t  \"httpResponse\" : {" + NEW_LINE +
                     "\t    \"body\" : \"some_body\"" + NEW_LINE +
                     "\t  }" + NEW_LINE +
-                    "\t}"
+                    "\t}" // 2-1
             },
             new String[]{
                 "returning response:" + NEW_LINE +
@@ -357,30 +359,19 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_one\",",
-                " for expectation:" + NEW_LINE +
+                    "\t  \"path\" : \"/some_path_one\",", // 3-0
+                " for action:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
-                    "\t  \"httpRequest\" : {" + NEW_LINE +
-                    "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"times\" : {" + NEW_LINE +
-                    "\t    \"remainingTimes\" : 3" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"timeToLive\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"httpResponse\" : {" + NEW_LINE +
-                    "\t    \"body\" : \"some_body\"" + NEW_LINE +
-                    "\t  }" + NEW_LINE +
-                    "\t}" + NEW_LINE
+                    "\t  \"body\" : \"some_body\"" + NEW_LINE +
+                    "\t}" + NEW_LINE // 3-1
             },
             new String[]{
                 "request:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/not_found\",",
+                    "\t  \"path\" : \"/not_found\",", // 4-0
                 " didn't match expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -411,23 +402,23 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
             },
             new String[]{
                 "returning response:" + NEW_LINE +
-                    "" + NEW_LINE +
+                    NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"statusCode\" : 404," + NEW_LINE +
                     "\t  \"reasonPhrase\" : \"Not Found\"," + NEW_LINE +
-                    "\t  \"headers\" : {",
-                "for request:" + NEW_LINE +
+                    "\t  \"headers\" : {", // 5-0
+                " for request:" + NEW_LINE +
                     "" + NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/not_found\""
+                    "\t  \"path\" : \"/not_found\"" // 5-1
             },
             new String[]{
                 "request:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_three\",",
+                    "\t  \"path\" : \"/some_path_three\",", // 6-0
                 " matched expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -443,7 +434,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     "\t  \"httpResponse\" : {" + NEW_LINE +
                     "\t    \"body\" : \"some_body\"" + NEW_LINE +
                     "\t  }" + NEW_LINE +
-                    "\t}"
+                    "\t}" // 6-1
             },
             new String[]{
                 "returning response:" + NEW_LINE +
@@ -459,39 +450,28 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_three\",",
-                " for expectation:" + NEW_LINE +
+                    "\t  \"path\" : \"/some_path_three\",", // 7-0
+                " for action:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
-                    "\t  \"httpRequest\" : {" + NEW_LINE +
-                    "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"times\" : {" + NEW_LINE +
-                    "\t    \"remainingTimes\" : 2" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"timeToLive\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"httpResponse\" : {" + NEW_LINE +
-                    "\t    \"body\" : \"some_body\"" + NEW_LINE +
-                    "\t  }" + NEW_LINE +
-                    "\t}" + NEW_LINE
+                    "\t  \"body\" : \"some_body\"" + NEW_LINE +
+                    "\t}" + NEW_LINE // 7-1
             },
             "retrieving logs that match:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"path\" : \"/.*\"" + NEW_LINE +
                 "\t}" + NEW_LINE +
-                NEW_LINE
+                NEW_LINE // 8-1
         };
 
         for (int i = 0; i < expectedLogMessages.length; i++) {
             if (expectedLogMessages[i] instanceof String) {
-                assertThat("matching log message " + i, actualLogMessages[i], endsWith((String) expectedLogMessages[i]));
+                assertThat("matching log message " + i + "\nActual:\n" + Arrays.toString(actualLogMessages), actualLogMessages[i], endsWith((String) expectedLogMessages[i]));
             } else if (expectedLogMessages[i] instanceof String[]) {
                 String[] expectedLogMessage = (String[]) expectedLogMessages[i];
                 for (int j = 0; j < expectedLogMessage.length; j++) {
-                    assertThat("matching log message " + i + "-" + j, actualLogMessages[i], containsString(expectedLogMessage[j]));
+                    assertThat("matching log message " + i + "-" + j + "\nActual:\n" + Arrays.toString(actualLogMessages), actualLogMessages[i], containsString(expectedLogMessage[j]));
                 }
             }
         }

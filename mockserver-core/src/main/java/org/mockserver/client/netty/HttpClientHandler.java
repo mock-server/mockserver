@@ -30,7 +30,7 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpResponse>
         ctx.close();
 
         if (!response.containsHeader("x-forwarded-by", "MockServer")) {
-            mockServerLogger.debug(FORWARDED_REQUEST, "Sent request to: {}" + NEW_LINE + "request: {}" + NEW_LINE + " and received response: {}",
+            mockServerLogger.debug(FORWARDED_REQUEST, "Sent request to: {}request: {}and received response: {}",
                 ctx.channel().attr(REMOTE_SOCKET).get(),
                 ctx.channel().attr(REQUEST).get(),
                 response);

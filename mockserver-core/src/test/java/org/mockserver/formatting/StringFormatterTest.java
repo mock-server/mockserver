@@ -17,7 +17,7 @@ public class StringFormatterTest {
     @Test
     public void shouldFormatLogMessageWithMultipleParameters() {
         // when
-        String logMessage = StringFormatter.formatLogMessage("returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response("response_body"), request("request_path"), forward());
+        String logMessage = StringFormatter.formatLogMessage("returning response:{}for request:{}for action:{}", response("response_body"), request("request_path"), forward());
 
         // then
         assertThat(logMessage, is(
@@ -81,7 +81,7 @@ public class StringFormatterTest {
     @Test
     public void shouldIgnoreTooFewParameters() {
         // when
-        String logMessage = StringFormatter.formatLogMessage("returning response:{}" + NEW_LINE + " for request:{}" + NEW_LINE + " for action:{}", response("response_body"));
+        String logMessage = StringFormatter.formatLogMessage("returning response:{}for request:{}for action:{}", response("response_body"));
 
         // then
         assertThat(logMessage, is(

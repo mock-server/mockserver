@@ -1315,7 +1315,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         String[] actualLogMessages = mockServerClient.retrieveLogMessagesArray(request().withPath(calculatePath(".*")));
 
         Object[] expectedLogMessages = new Object[]{
-            "resetting all expectations and request logs" + NEW_LINE, //0
+            "resetting all expectations and request logs", //0
             "creating expectation:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
@@ -1370,21 +1370,10 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
                     "\t  \"path\" : \"/some_path_one\",", // 3-0
-                " for expectation:" + NEW_LINE +
+                " for action:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
-                    "\t  \"httpRequest\" : {" + NEW_LINE +
-                    "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"times\" : {" + NEW_LINE +
-                    "\t    \"remainingTimes\" : 3" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"timeToLive\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"httpResponse\" : {" + NEW_LINE +
-                    "\t    \"body\" : \"some_body\"" + NEW_LINE +
-                    "\t  }" + NEW_LINE +
+                    "\t  \"body\" : \"some_body\"" + NEW_LINE +
                     "\t}" + NEW_LINE // 3-1
             },
             new String[]{
@@ -1422,18 +1411,19 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "\tssl matched" + NEW_LINE // 4-1
             },
             new String[]{
-                "no matching expectation - returning:" + NEW_LINE +
+                "no expectation for:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"method\" : \"GET\"," + NEW_LINE +
+                    "\t  \"path\" : \"/not_found\"," +
+                    NEW_LINE, // 5-0
+                " returning response:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"statusCode\" : 404," + NEW_LINE +
                     "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
-                    "\t}" + NEW_LINE +
-                    NEW_LINE +
-                    " for request:" + NEW_LINE +
-                    NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/not_found\"," // 5-0
+                    "\t}" + NEW_LINE // 5-1
+
             },
             new String[]{
                 "request:" + NEW_LINE +
@@ -1473,21 +1463,10 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
                     "\t  \"path\" : \"/some_path_three\",", // 7-0
-                " for expectation:" + NEW_LINE +
+                " for action:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
-                    "\t  \"httpRequest\" : {" + NEW_LINE +
-                    "\t    \"path\" : \"/some_path.*\"" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"times\" : {" + NEW_LINE +
-                    "\t    \"remainingTimes\" : 2" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"timeToLive\" : {" + NEW_LINE +
-                    "\t    \"unlimited\" : true" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
-                    "\t  \"httpResponse\" : {" + NEW_LINE +
-                    "\t    \"body\" : \"some_body\"" + NEW_LINE +
-                    "\t  }" + NEW_LINE +
+                    "\t  \"body\" : \"some_body\"" + NEW_LINE +
                     "\t}" + NEW_LINE // 7-1
             },
             "retrieving logs that match:" + NEW_LINE +

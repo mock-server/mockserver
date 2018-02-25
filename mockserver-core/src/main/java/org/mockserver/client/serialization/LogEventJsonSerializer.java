@@ -3,6 +3,7 @@ package org.mockserver.client.serialization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 
 import java.util.Arrays;
 import java.util.List;
@@ -54,7 +55,7 @@ public class LogEventJsonSerializer implements Serializer<MessageLogEntry> {
             try {
                 messageLogEntry = objectMapper.readValue(jsonMessageLogEntry, MessageLogEntry.class);
             } catch (Exception e) {
-                mockServerLogger.error("Exception while parsing MessageLogEntry for [" + jsonMessageLogEntry + "]", e);
+                mockServerLogger.error((HttpRequest) null, e, "exception while parsing {}for MessageLogEntry", jsonMessageLogEntry);
                 throw new RuntimeException("Exception while parsing MessageLogEntry for [" + jsonMessageLogEntry + "]", e);
             }
         }

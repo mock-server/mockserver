@@ -29,6 +29,12 @@ public class StringFormatter {
                 formattedArguments.length > messagePartIndex) {
                 logMessage.append(formattedArguments[messagePartIndex]);
             }
+            if (messagePartIndex < messageParts.length - 1) {
+                logMessage.append(NEW_LINE);
+                if (!messageParts[messagePartIndex + 1].startsWith(" ")) {
+                    logMessage.append(" ");
+                }
+            }
         }
         return logMessage.toString();
     }

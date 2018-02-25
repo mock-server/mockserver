@@ -33,10 +33,10 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
             result = validation.isEmpty();
 
             if (!result) {
-                mockServerLogger.trace(context, "Failed to match JSON: {}" + NEW_LINE + "with schema: {}" + NEW_LINE + "because: {}", matched, this.schema, validation);
+                mockServerLogger.trace(context, "Failed to match JSON: {}with schema: {}because: {}", matched, this.schema, validation);
             }
         } catch (Exception e) {
-            mockServerLogger.trace(context, "Failed to match JSON: {}" + NEW_LINE + "with schema: {}" + NEW_LINE + "because: {}", matched, this.schema, e.getMessage());
+            mockServerLogger.trace(context, "Failed to match JSON: {}with schema: {}because: {}", matched, this.schema, e.getMessage());
         }
 
         return not != result;

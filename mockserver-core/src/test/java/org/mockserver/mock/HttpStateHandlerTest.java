@@ -455,8 +455,8 @@ public class HttpStateHandlerTest {
         // then - activity logged
         verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationOne);
         verify(mockLogFormatter).info(RETRIEVED, (HttpRequest) null, "retrieving requests in json that match:{}", request());
-        verify(mockLogFormatter).info(EXPECTATION_NOT_MATCHED, request("request_one"), "no active expectations when receiving request:{}", request("request_one"));
-        verify(mockLogFormatter).info(CLEARED, "resetting all expectations and request logs" + NEW_LINE);
+        verify(mockLogFormatter).info(EXPECTATION_NOT_MATCHED, request("request_one"), "no active expectations");
+        verify(mockLogFormatter).info(CLEARED, "resetting all expectations and request logs");
     }
 
 }
