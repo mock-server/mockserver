@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
+import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -57,6 +58,11 @@ public class ServletResponseWriter extends ResponseWriter {
         }
         if (apiResponse) {
             response.withHeader("version", org.mockserver.Version.getVersion());
+            final String path = request.getPath().getValue();
+            if (!path.startsWith(PATH_PREFIX)) {
+                response.withHeader("deprecated",
+                    "\"" + path + "\" is deprecated use \"" + PATH_PREFIX + path + "\" instead");
+            }
         }
 
         addConnectionHeader(request, response);
