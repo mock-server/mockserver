@@ -85,11 +85,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
             if (!httpStateHandler.handle(request, responseWriter, false)) {
 
-                if (request.matches("PUT", PATH_PREFIX + "/status")) {
+                if (request.matches("PUT", PATH_PREFIX + "/status", "/status")) {
 
                     responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(server.getLocalPorts())), "application/json");
 
-                } else if (request.matches("PUT", PATH_PREFIX + "/bind")) {
+                } else if (request.matches("PUT", PATH_PREFIX + "/bind", "/bind")) {
 
                     PortBinding requestedPortBindings = portBindingSerializer.deserialize(request.getBodyAsString());
                     try {
@@ -107,7 +107,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                     dashboardHandler.renderDashboard(ctx, request);
 
-                } else if (request.matches("PUT", PATH_PREFIX + "/stop")) {
+                } else if (request.matches("PUT", PATH_PREFIX + "/stop", "/stop")) {
 
                     ctx.writeAndFlush(response().withStatusCode(OK.code()));
                     new Thread(new Runnable() {

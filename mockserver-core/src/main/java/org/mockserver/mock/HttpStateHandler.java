@@ -222,7 +222,7 @@ public class HttpStateHandler {
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
         mockServerLogger.trace(request, "received request:{}", request);
 
-        if (request.matches("PUT", PATH_PREFIX + "/expectation")) {
+        if (request.matches("PUT", PATH_PREFIX + "/expectation", "/expectation")) {
 
             for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString())) {
                 if (!warDeployment || validateSupportedFeatures(expectation, request, responseWriter)) {
@@ -231,21 +231,21 @@ public class HttpStateHandler {
             }
             responseWriter.writeResponse(request, CREATED);
 
-        } else if (request.matches("PUT", PATH_PREFIX + "/clear")) {
+        } else if (request.matches("PUT", PATH_PREFIX + "/clear", "/clear")) {
 
             clear(request);
             responseWriter.writeResponse(request, OK);
 
-        } else if (request.matches("PUT", PATH_PREFIX + "/reset")) {
+        } else if (request.matches("PUT", PATH_PREFIX + "/reset", "/reset")) {
 
             reset();
             responseWriter.writeResponse(request, OK);
 
-        } else if (request.matches("PUT", PATH_PREFIX + "/retrieve")) {
+        } else if (request.matches("PUT", PATH_PREFIX + "/retrieve", "/retrieve")) {
 
             responseWriter.writeResponse(request, retrieve(request), true);
 
-        } else if (request.matches("PUT", PATH_PREFIX + "/verify")) {
+        } else if (request.matches("PUT", PATH_PREFIX + "/verify", "/verify")) {
 
             Verification verification = verificationSerializer.deserialize(request.getBodyAsString());
             mockServerLogger.info(VERIFICATION, verification.getHttpRequest(), "verifying requests that match:{}", verification);
@@ -256,7 +256,7 @@ public class HttpStateHandler {
                 responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
             }
 
-        } else if (request.matches("PUT", PATH_PREFIX + "/verifySequence")) {
+        } else if (request.matches("PUT", PATH_PREFIX + "/verifySequence", "/verifySequence")) {
 
             VerificationSequence verificationSequence = verificationSequenceSerializer.deserialize(request.getBodyAsString());
             mockServerLogger.info(VERIFICATION, verificationSequence.getHttpRequests(), "verifying sequence that match:{}", verificationSequence);

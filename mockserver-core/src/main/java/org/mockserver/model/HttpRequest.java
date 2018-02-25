@@ -123,8 +123,15 @@ public class HttpRequest extends Not {
         return path;
     }
 
-    public boolean matches(String method, String path) {
-        return this.method.getValue().equals(method) && this.path.getValue().equals(path);
+    public boolean matches(String method, String... paths) {
+        boolean matches = false;
+        for (String path : paths) {
+            matches = this.method.getValue().equals(method) && this.path.getValue().equals(path);
+            if (matches) {
+                break;
+            }
+        }
+        return matches;
     }
 
     public Parameters getQueryStringParameters() {

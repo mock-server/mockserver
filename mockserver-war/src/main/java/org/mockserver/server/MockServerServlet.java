@@ -62,15 +62,15 @@ public class MockServerServlet extends HttpServlet {
 
                     responseWriter.writeResponse(request, NOT_IMPLEMENTED, "ExpectationResponseCallback and ExpectationForwardCallback is not supported by MockServer deployed as a WAR", "text/plain");
 
-                } else if (request.matches("PUT", PATH_PREFIX + "/status")) {
+                } else if (request.matches("PUT", PATH_PREFIX + "/status", "/status")) {
 
                     responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())), "application/json");
 
-                } else if (request.matches("PUT", PATH_PREFIX + "/bind")) {
+                } else if (request.matches("PUT", PATH_PREFIX + "/bind", "/bind")) {
 
                     responseWriter.writeResponse(request, NOT_IMPLEMENTED);
 
-                } else if (request.matches("PUT", PATH_PREFIX + "/stop")) {
+                } else if (request.matches("PUT", PATH_PREFIX + "/stop", "/stop")) {
 
                     responseWriter.writeResponse(request, NOT_IMPLEMENTED);
 
