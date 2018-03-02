@@ -103,7 +103,13 @@ public class HttpStateHandler {
 
     public void add(Expectation... expectations) {
         for (Expectation expectation : expectations) {
-            KeyAndCertificateFactory.addSubjectAlternativeName(expectation.getHttpRequest().getFirstHeader(HOST.toString()));
+            final String hostHeader = expectation.getHttpRequest().getFirstHeader(HOST.toString());
+            scheduler.submit(new Runnable() {
+                @Override
+                public void run() {
+                    KeyAndCertificateFactory.addSubjectAlternativeName(hostHeader);
+                }
+            });
             mockServerMatcher.add(expectation);
             mockServerLogger.info(CREATED_EXPECTATION, expectation.getHttpRequest(), "creating expectation:{}", expectation.clone());
         }
