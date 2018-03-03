@@ -54,6 +54,10 @@ public abstract class LifeCycle {
         workerGroup.terminationFuture().syncUninterruptibly();
     }
 
+    public Scheduler getScheduler() {
+        return scheduler;
+    }
+
     public boolean isRunning() {
         return !bossGroup.isShuttingDown() || !workerGroup.isShuttingDown();
     }

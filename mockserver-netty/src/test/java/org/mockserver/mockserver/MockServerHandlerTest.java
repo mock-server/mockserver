@@ -71,6 +71,7 @@ public class MockServerHandlerTest {
     @Before
     public void setupFixture() {
         server = mock(MockServer.class);
+        when(server.getScheduler()).thenReturn(mock(Scheduler.class));
         mockActionHandler = mock(ActionHandler.class);
 
         httpStateHandler = new HttpStateHandler(mock(Scheduler.class));

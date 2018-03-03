@@ -24,6 +24,7 @@ import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.slf4j.event.Level.TRACE;
 
 public class HttpProxyUnificationInitializerSOCKSErrorTest {
@@ -32,8 +33,9 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
     public void shouldHandleErrorsDuringSOCKSConnection() {
         // given - embedded channel
         short localPort = 1234;
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpStateHandler(mock(Scheduler.class)), null));
-//        embeddedChannel.attr(HTTP_CONNECT_SOCKET).set(new InetSocketAddress(localPort));
+        final LifeCycle lifeCycle = mock(LifeCycle.class);
+        when(lifeCycle.getScheduler()).thenReturn(mock(Scheduler.class));
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(lifeCycle, new HttpStateHandler(mock(Scheduler.class)), null));
 
         // and - no SOCKS handlers
         assertThat(embeddedChannel.pipeline().get(SocksProxyHandler.class), is(nullValue()));

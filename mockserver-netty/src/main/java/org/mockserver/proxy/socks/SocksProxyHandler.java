@@ -7,7 +7,9 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.*;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.socket.KeyAndCertificateFactory;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mockserver.MockServerHandler.PROXYING;
 import static org.mockserver.socket.KeyAndCertificateFactory.addSubjectAlternativeName;
@@ -44,7 +46,7 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
 
             case CMD:
 
-                SocksCmdRequest req = (SocksCmdRequest) socksRequest;
+                final SocksCmdRequest req = (SocksCmdRequest) socksRequest;
                 if (req.cmdType() == SocksCmdType.CONNECT) {
 
                     Channel channel = ctx.channel();
@@ -56,7 +58,12 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
                     }
 
                     // add Subject Alternative Name for SSL certificate
-                    addSubjectAlternativeName(req.host());
+                    server.getScheduler().submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            KeyAndCertificateFactory.addSubjectAlternativeName(req.host());
+                        }
+                    });
 
                     ctx.pipeline().addAfter(getClass().getSimpleName() + "#0", SocksConnectHandler.class.getSimpleName() + "#0", new SocksConnectHandler(server, mockServerLogger, req.host(), req.port()));
                     ctx.pipeline().remove(this);

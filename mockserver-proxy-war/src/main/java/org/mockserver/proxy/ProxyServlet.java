@@ -11,11 +11,13 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.server.ServletResponseWriter;
+import org.mockserver.socket.KeyAndCertificateFactory;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.rtsp.RtspResponseStatuses.NOT_IMPLEMENTED;
@@ -58,6 +60,14 @@ public class ProxyServlet extends HttpServlet {
         try {
 
             request = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
+            final String hostHeader = request.getFirstHeader(HOST.toString());
+            scheduler.submit(new Runnable() {
+                @Override
+                public void run() {
+                    KeyAndCertificateFactory.addSubjectAlternativeName(hostHeader);
+                }
+            });
+
             if (!httpStateHandler.handle(request, responseWriter, true)) {
 
                 if (request.matches("PUT", "/status")) {

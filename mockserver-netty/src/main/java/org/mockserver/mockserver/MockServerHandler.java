@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpHeaderNames.LOCATION;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
@@ -83,6 +84,14 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         ResponseWriter responseWriter = new NettyResponseWriter(ctx);
         try {
 
+            server.getScheduler().submit(new Runnable() {
+                @Override
+                public void run() {
+                    final String hostHeader = request.getFirstHeader(HOST.toString());
+                    KeyAndCertificateFactory.addSubjectAlternativeName(hostHeader);
+                }
+            });
+
             if (!httpStateHandler.handle(request, responseWriter, false)) {
 
                 if (request.matches("PUT", PATH_PREFIX + "/status", "/status")) {
@@ -123,7 +132,12 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     // assume SSL for CONNECT request
                     enabledSslUpstreamAndDownstream(ctx.channel());
                     // add Subject Alternative Name for SSL certificate
-                    KeyAndCertificateFactory.addSubjectAlternativeName(request.getPath().getValue());
+                    server.getScheduler().submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            KeyAndCertificateFactory.addSubjectAlternativeName(request.getPath().getValue());
+                        }
+                    });
                     ctx.pipeline().addLast(new HttpConnectHandler(server, mockServerLogger, request.getPath().getValue(), -1));
                     ctx.pipeline().remove(this);
                     ctx.fireChannelRead(request);

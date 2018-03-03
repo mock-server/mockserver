@@ -10,11 +10,13 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.socket.KeyAndCertificateFactory;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
@@ -56,6 +58,14 @@ public class MockServerServlet extends HttpServlet {
         try {
 
             request = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
+            final String hostHeader = request.getFirstHeader(HOST.toString());
+            scheduler.submit(new Runnable() {
+                @Override
+                public void run() {
+                    KeyAndCertificateFactory.addSubjectAlternativeName(hostHeader);
+                }
+            });
+
             if (!httpStateHandler.handle(request, responseWriter, true)) {
 
                 if (request.getPath().getValue().equals("/_mockserver_callback_websocket")) {
