@@ -8,7 +8,7 @@ import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.server.netty.codec.MockServerServerCodec;
-import org.mockserver.ui.UIWebSocketServerHandler;
+import org.mockserver.dashboard.DashboardWebSocketServerHandler;
 import org.mockserver.unification.PortUnificationHandler;
 
 /**
@@ -18,13 +18,13 @@ import org.mockserver.unification.PortUnificationHandler;
 public class MockServerUnificationInitializer extends PortUnificationHandler {
 
     private CallbackWebSocketServerHandler callbackWebSocketServerHandler;
-    private UIWebSocketServerHandler uiWebSocketServerHandler;
+    private DashboardWebSocketServerHandler uiWebSocketServerHandler;
     private MockServerHandler mockServerHandler;
 
     public MockServerUnificationInitializer(LifeCycle server, HttpStateHandler httpStateHandler, ProxyConfiguration proxyConfiguration) {
         super(server, httpStateHandler.getMockServerLogger());
         callbackWebSocketServerHandler = new CallbackWebSocketServerHandler(httpStateHandler);
-        uiWebSocketServerHandler = new UIWebSocketServerHandler(httpStateHandler);
+        uiWebSocketServerHandler = new DashboardWebSocketServerHandler(httpStateHandler);
         mockServerHandler = new MockServerHandler(server, httpStateHandler, proxyConfiguration);
     }
 

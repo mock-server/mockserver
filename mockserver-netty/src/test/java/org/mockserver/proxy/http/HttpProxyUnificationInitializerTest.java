@@ -112,7 +112,7 @@ public class HttpProxyUnificationInitializerTest {
             "HttpContentLengthRemover#0",
             "HttpObjectAggregator#0",
             "CallbackWebSocketServerHandler#0",
-            "UIWebSocketServerHandler#0",
+            "DashboardWebSocketServerHandler#0",
             "MockServerServerCodec#0",
             "MockServerHandler#0",
             "DefaultChannelPipeline$TailContext#0"

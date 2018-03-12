@@ -1,4 +1,4 @@
-package org.mockserver.ui;
+package org.mockserver.dashboard;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +22,8 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
+import org.mockserver.ui.MockServerLogListener;
+import org.mockserver.ui.MockServerMatcherListener;
 import org.mockserver.ui.model.ValueWithKey;
 
 import java.util.Map;
@@ -34,7 +36,7 @@ import static org.mockserver.model.HttpRequest.request;
  * @author jamesdbloom
  */
 @ChannelHandler.Sharable
-public class UIWebSocketServerHandler extends ChannelInboundHandlerAdapter implements MockServerLogListener, MockServerMatcherListener {
+public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapter implements MockServerLogListener, MockServerMatcherListener {
 
     private static final AttributeKey<Boolean> CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET = AttributeKey.valueOf("CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET");
     private static final String UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI = "/_mockserver_ui_websocket";
@@ -52,7 +54,7 @@ public class UIWebSocketServerHandler extends ChannelInboundHandlerAdapter imple
     };
     private LogEventJsonSerializer logEventJsonSerializer;
 
-    public UIWebSocketServerHandler(HttpStateHandler httpStateHandler) {
+    public DashboardWebSocketServerHandler(HttpStateHandler httpStateHandler) {
         mockServerMatcher = httpStateHandler.getMockServerMatcher();
         mockServerMatcher.registerListener(this);
         mockServerLog = httpStateHandler.getMockServerLog();
@@ -128,6 +130,8 @@ public class UIWebSocketServerHandler extends ChannelInboundHandlerAdapter imple
             } catch (IllegalArgumentException iae) {
                 sendMessage(ctx, ImmutableMap.<String, Object>of("error", iae.getMessage()));
             }
+        } else if (frame instanceof PingWebSocketFrame) {
+            ctx.write(new PongWebSocketFrame(frame.content().retain()));
         } else {
             throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
         }

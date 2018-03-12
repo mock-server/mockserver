@@ -46,7 +46,6 @@ public class HttpStateHandler {
     private MockServerLogger mockServerLogger = new MockServerLogger(LoggerFactory.getLogger(this.getClass()), this);
     private WebSocketClientRegistry webSocketClientRegistry = new WebSocketClientRegistry();
     // serializers
-    private LogEventJsonSerializer logEventJsonSerializer = new LogEventJsonSerializer(mockServerLogger);
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer(mockServerLogger);
     private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
