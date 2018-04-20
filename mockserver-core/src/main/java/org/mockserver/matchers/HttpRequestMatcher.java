@@ -227,6 +227,10 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                             if (not) {
                                 becauseBuilder.append(NEW_LINE).append("expectation's request matcher \'not\' operator is enabled");
                             }
+                            if(!bodyMatches && bodyMatcher instanceof XmlStringMatcher) {
+                                final XmlStringMatcher xmlStringMatcher = (XmlStringMatcher) bodyMatcher;
+                                becauseBuilder.append(NEW_LINE).append(NEW_LINE).append("differences in XML body: ").append(NEW_LINE).append(NEW_LINE).append(xmlStringMatcher.explainDifference(bodyAsString));
+                            }
                             logFormatter.infoLog(request, "request:{}" + NEW_LINE + " did" + (totalResult ? "" : " not") + " match expectation:{}" + NEW_LINE + " because:{}", request, this, becauseBuilder.toString());
                         } else {
                             logFormatter.infoLog(request, "request:{}" + NEW_LINE + " matched expectation:{}", request, this);

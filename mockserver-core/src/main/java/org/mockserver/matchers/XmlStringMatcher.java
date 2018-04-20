@@ -9,6 +9,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.builder.Input;
+import org.xmlunit.diff.Diff;
+
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -56,10 +60,14 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
     public boolean matches(NottableString matched) {
         boolean result = false;
 
+        Diff xmlDiff = null;
         try {
-            if (ExactStringMatcher.matches(matcher.getValue(), normaliseXmlString(matched.getValue()), false)) {
-                result = true;
-            }
+
+            // previously we used an ExactStringMatcher, but now use XMLDiff library instead.
+            final String actual = normaliseXmlString(matched.getValue());
+            xmlDiff = differenceOf(actual);
+            result = !xmlDiff.hasDifferences();
+
         } catch (Exception e) {
             logger.trace("Error while matching xml string [" + matcher + "] against xml string [" + matched + "] assuming no match - " + e.getMessage());
         }
@@ -68,6 +76,25 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
             logger.trace("Failed to match [{}] with [{}]", matched, this.matcher);
         }
 
-        return matcher.isNot() != reverseResultIfNot(result);
+        final boolean matches = matcher.isNot() != reverseResultIfNot(result);
+        if(!matches && xmlDiff != null) {
+            logger.info(xmlDiff.toString());
+        }
+        return matches;
+    }
+
+    private Diff differenceOf(final String actual) {
+        final String expected = matcher.getValue();
+        return DiffBuilder.compare(Input.fromString(expected))
+                .withTest(Input.fromString(actual))
+                .ignoreComments()
+                .ignoreWhitespace()
+                .checkForSimilar()
+                .build();
+    }
+
+    public String explainDifference(final String actual) {
+        final String s = differenceOf(actual).toString();
+        return s;
     }
 }

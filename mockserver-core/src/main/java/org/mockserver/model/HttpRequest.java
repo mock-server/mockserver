@@ -220,12 +220,30 @@ public class HttpRequest extends Not {
     }
 
     /**
-     * The exact string body to match on such as "this is an exact string body"
+     * The exact string body to match on such as "this is an exact string body".
+     *
+     * As a small convenience, if the string is recognised being XML (either XML pragma or a SOAP message), then
+     * delegates instead to {@link #withXmlBody(String)}.
      *
      * @param body the body on such as "this is an exact string body"
      */
     public HttpRequest withBody(String body) {
+        if(looksLikeXml(body)) {
+            return withXmlBody(body);
+        }
         this.body = new StringBody(body);
+        return this;
+    }
+
+    private boolean looksLikeXml(final String body) {
+        if (body == null) {
+            return false;
+        }
+        return body.startsWith("<?xml version=") || body.startsWith("<soap:Envelope");
+    }
+
+    public HttpRequest withXmlBody(String body) {
+        this.body = new XmlBody(body);
         return this;
     }
 
