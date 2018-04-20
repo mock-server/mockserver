@@ -1,11 +1,11 @@
 package org.mockserver.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Strings;
-
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Strings;
 
 import static org.mockserver.model.NottableString.string;
 
@@ -228,7 +228,7 @@ public class HttpRequest extends Not {
      * @param body the body on such as "this is an exact string body"
      */
     public HttpRequest withBody(String body) {
-        if(looksLikeXml(body)) {
+        if (looksLikeXml(body)) {
             return withXmlBody(body);
         }
         this.body = new StringBody(body);

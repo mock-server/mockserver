@@ -1,16 +1,42 @@
 package org.mockserver.matchers;
 
+import java.io.IOException;
+import java.util.ArrayList;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+
 import org.mockserver.client.serialization.ObjectMapperFactory;
-import org.mockserver.client.serialization.model.*;
+import org.mockserver.client.serialization.model.BinaryBodyDTO;
+import org.mockserver.client.serialization.model.BodyDTO;
+import org.mockserver.client.serialization.model.JsonBodyDTO;
+import org.mockserver.client.serialization.model.JsonSchemaBodyDTO;
+import org.mockserver.client.serialization.model.ParameterBodyDTO;
+import org.mockserver.client.serialization.model.RegexBodyDTO;
+import org.mockserver.client.serialization.model.StringBodyDTO;
+import org.mockserver.client.serialization.model.XPathBodyDTO;
+import org.mockserver.client.serialization.model.XmlBodyDTO;
+import org.mockserver.client.serialization.model.XmlSchemaBodyDTO;
 import org.mockserver.logging.LoggingFormatter;
 import org.mockserver.mock.Expectation;
-import org.mockserver.model.*;
-
-import java.io.IOException;
-import java.util.ArrayList;
+import org.mockserver.model.BinaryBody;
+import org.mockserver.model.Body;
+import org.mockserver.model.Cookies;
+import org.mockserver.model.Headers;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.JsonBody;
+import org.mockserver.model.JsonSchemaBody;
+import org.mockserver.model.KeyAndValue;
+import org.mockserver.model.KeyToMultiValue;
+import org.mockserver.model.NottableString;
+import org.mockserver.model.ParameterBody;
+import org.mockserver.model.Parameters;
+import org.mockserver.model.RegexBody;
+import org.mockserver.model.StringBody;
+import org.mockserver.model.XPathBody;
+import org.mockserver.model.XmlBody;
+import org.mockserver.model.XmlSchemaBody;
 
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.NottableString.string;
@@ -227,7 +253,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                             if (not) {
                                 becauseBuilder.append(NEW_LINE).append("expectation's request matcher \'not\' operator is enabled");
                             }
-                            if(!bodyMatches && bodyMatcher instanceof XmlStringMatcher) {
+                            if (!bodyMatches && bodyMatcher instanceof XmlStringMatcher) {
                                 final XmlStringMatcher xmlStringMatcher = (XmlStringMatcher) bodyMatcher;
                                 becauseBuilder.append(NEW_LINE).append(NEW_LINE).append("differences in XML body: ").append(NEW_LINE).append(NEW_LINE).append(xmlStringMatcher.explainDifference(bodyAsString));
                             }

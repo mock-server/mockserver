@@ -1,14 +1,14 @@
 package org.mockserver.matchers;
 
+import java.io.IOException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+
 import org.mockserver.model.NottableString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import java.io.IOException;
-
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.builder.Input;
 import org.xmlunit.diff.Diff;
@@ -77,7 +77,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
         }
 
         final boolean matches = matcher.isNot() != reverseResultIfNot(result);
-        if(!matches && xmlDiff != null) {
+        if (!matches && xmlDiff != null) {
             logger.info(xmlDiff.toString());
         }
         return matches;
