@@ -1,13 +1,12 @@
 package org.mockserver.junit.jupiter;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.*;
 import org.junit.platform.commons.support.AnnotationSupport;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.socket.PortFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,7 +16,7 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return parameterContext.getParameter().getType().equals(ClientAndServer.class);
+        return parameterContext.getParameter().getType().equals(MockServerClient.class);
     }
 
     @Override
@@ -32,11 +31,8 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
         if (mockServerSettingsOptional.isPresent()) {
             MockServerSettings mockServerSettings = mockServerSettingsOptional.get();
             perTestSuite = mockServerSettings.perTestSuite();
-            int[] portsSettings = mockServerSettings.ports();
-            if (portsSettings.length > 0) {
-                for (int port : portsSettings) {
-                    ports.add(port);
-                }
+            for (int port : mockServerSettings.ports()) {
+                ports.add(port);
             }
         }
         if (ports.isEmpty()) {
