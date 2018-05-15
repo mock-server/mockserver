@@ -2,24 +2,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <artifactId>mockserver</artifactId>
         <groupId>org.mock-server</groupId>
         <version>5.3.1-SNAPSHOT</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
 
-    <name>MockServer JUnit5 Integration</name>
+    <name>MockServer JUnit Jupiter Integration</name>
     <description>A JUnit5 Extension for MockServer</description>
     <url>http://www.mock-server.com</url>
 
-    <artifactId>mockserver-junit5</artifactId>
+    <artifactId>mockserver-junit-jupiter</artifactId>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <junit-platform.version>1.1.0</junit-platform.version>
         <junit-jupiter.version>5.1.0</junit-jupiter.version>
+        <mockito.version>2.18.3</mockito.version>
     </properties>
 
     <dependencies>
@@ -33,15 +35,22 @@
             <version>${junit-jupiter.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-surefire-provider</artifactId>
-            <version>${junit-platform.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

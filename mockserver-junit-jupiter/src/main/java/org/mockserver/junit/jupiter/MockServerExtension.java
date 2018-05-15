@@ -1,5 +1,6 @@
 package org.mockserver.junit.jupiter;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.junit.jupiter.api.extension.*;
 import org.junit.platform.commons.support.AnnotationSupport;
 import org.mockserver.client.MockServerClient;
@@ -11,8 +12,18 @@ import java.util.List;
 import java.util.Optional;
 
 public class MockServerExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback {
+    private static ClientAndServer perTestSuiteClient;
+    private final ClientAndServerFactory clientAndServerFactory;
     private ClientAndServer client;
     private boolean perTestSuite;
+
+    public MockServerExtension() {
+        clientAndServerFactory = new ClientAndServerFactory();
+    }
+
+    public MockServerExtension(ClientAndServerFactory clientAndServerFactory) {
+        this.clientAndServerFactory = clientAndServerFactory;
+    }
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
@@ -38,13 +49,23 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
         if (ports.isEmpty()) {
             ports.add(PortFactory.findFreePort());
         }
+        client = instantiateClient(ports);
+    }
 
-        this.client = ClientAndServer.startClientAndServer(ports.toArray(new Integer[0]));
+    private ClientAndServer instantiateClient(List<Integer> ports) {
+        if (perTestSuite) {
+            if (perTestSuiteClient == null) {
+                perTestSuiteClient = clientAndServerFactory.newClientAndServer(ports);
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> perTestSuiteClient.stop()));
+            }
+            return perTestSuiteClient;
+        }
+        return clientAndServerFactory.newClientAndServer(ports);
     }
 
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
-        if (client.isRunning()) {
+        if (!perTestSuite && client.isRunning()) {
             client.stop();
         }
     }
