@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockserver.client.MockServerClient;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
@@ -25,7 +26,7 @@ class MockServerExtensionSinglePortTest {
     }
 
     @Test
-    public void usesNonZeroPort() {
-        assertThat(client.remoteAddress().getPort(), is(not(nullValue())));
+    public void usesRequestedPort() {
+        assertThat(client.remoteAddress().getPort(), is(equalTo(8989)));
     }
 }
