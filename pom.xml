@@ -76,7 +76,7 @@
         <module>mockserver-war</module>
         <module>mockserver-proxy-war</module>
         <module>mockserver-examples</module>
-        <module>mockserver-junit5</module>
+        <module>mockserver-junit-jupiter</module>
     </modules>
 
     <dependencyManagement>
