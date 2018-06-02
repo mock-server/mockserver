@@ -5,10 +5,7 @@ import com.google.common.collect.ListMultimap;
 import org.apache.commons.lang3.ArrayUtils;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.mockserver.model.NottableString.*;
 
@@ -98,14 +95,48 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
 
     public K replaceEntry(T entry) {
         if (entry != null) {
-            this.listMultimap.replaceValues(entry.getName(), entry.getValues());
+            NottableString nameCaseSensitive = null;
+            for (Map.Entry<NottableString, NottableString> searchEntry : listMultimap.entries()) {
+                if (searchEntry.getKey() != null &&
+                    searchEntry != null &&
+                    searchEntry.getKey().equalsIgnoreCase(entry.getName())) {
+                    nameCaseSensitive = searchEntry.getKey();
+                    break;
+                }
+            }
+
+            this.listMultimap.replaceValues(nameCaseSensitive, entry.getValues());
         }
         return (K) this;
     }
 
     public K replaceEntry(String name, String... values) {
         if (ArrayUtils.isNotEmpty(values)) {
-            this.listMultimap.replaceValues(string(name), deserializeNottableStrings(values));
+            NottableString nameCaseSensitive = null;
+            for (Map.Entry<NottableString, NottableString> entry : listMultimap.entries()) {
+                if (entry.getKey() != null &&
+                    name != null &&
+                    entry.getKey().equalsIgnoreCase(name)) {
+                    nameCaseSensitive = entry.getKey();
+                    break;
+                }
+            }
+
+            this.listMultimap.replaceValues(nameCaseSensitive, deserializeNottableStrings(values));
+        }
+        return (K) this;
+    }
+
+    public K removeEntry(String name) {
+        listMultimap.removeAll(string(name));
+        Iterator<NottableString> i = listMultimap.keySet().iterator();
+        while (i.hasNext()) {
+            NottableString entryName = i.next();
+            if (entryName != null &&
+                name != null &&
+                entryName.equalsIgnoreCase(name)) {
+                i.remove();
+            }
         }
         return (K) this;
     }

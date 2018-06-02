@@ -1,3 +1,4 @@
+
 package org.mockserver.model;
 
 import org.junit.Test;
@@ -119,6 +120,18 @@ public class HttpResponseTest {
         assertThat(new HttpResponse().withHeader(new Header("name", "valueOne")).replaceHeader(new Header("name", "valueTwo")).getHeaderList(), containsInAnyOrder(new Header("name", "valueTwo")));
         assertThat(new HttpResponse().withHeader(new Header("name", "valueOne")).replaceHeader("name", "valueTwo").getHeaderList(), containsInAnyOrder(new Header("name", "valueTwo")));
     }
+
+    @Test
+    public void updatesExistingHeaderIgnoringCase() {
+        assertThat(new HttpResponse().withHeader(new Header("NaMe", "valueOne")).replaceHeader(new Header("name", "valueTwo")).getHeaderList(), containsInAnyOrder(new Header("NaMe", "valueTwo")));
+        assertThat(new HttpResponse().withHeader(new Header("NaMe", "valueOne")).replaceHeader("name", "valueTwo").getHeaderList(), containsInAnyOrder(new Header("NaMe", "valueTwo")));
+    }
+
+    @Test
+    public void removeExistingHeaderIgnoringCase() {
+        assertThat(new HttpResponse().withHeader(new Header("NaMe", "valueOne")).removeHeader("name").getHeader("NaMe"), hasSize(0));
+    }
+
 
     @Test
     public void returnsCookies() {

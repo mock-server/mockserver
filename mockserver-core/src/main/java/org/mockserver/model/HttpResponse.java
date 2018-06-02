@@ -242,6 +242,11 @@ public class HttpResponse extends Action {
         return this;
     }
 
+    public HttpResponse removeHeader(String name) {
+        this.headers.removeEntry(name);
+        return this;
+    }
+
     public List<Header> getHeaderList() {
         return this.headers.getEntries();
     }
