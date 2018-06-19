@@ -42,7 +42,7 @@ public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues>
             JsonToken token = jsonParser.nextToken();
             switch (token) {
                 case FIELD_NAME:
-                    key = ctxt.readValue(jsonParser, NottableString.class);
+                    key = string(jsonParser.getText());
                     break;
                 case START_ARRAY:
                     enteries.withEntry(key, ctxt.readValue(jsonParser, NottableString[].class));
