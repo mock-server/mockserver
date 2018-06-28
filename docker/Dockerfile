@@ -6,7 +6,7 @@
 #
 
 # pull base image
-FROM openjdk:alpine
+FROM openjdk:8-jdk-alpine
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"

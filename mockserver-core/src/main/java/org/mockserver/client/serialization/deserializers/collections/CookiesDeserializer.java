@@ -33,33 +33,33 @@ public class CookiesDeserializer extends StdDeserializer<Cookies> {
         }
     }
 
-    private Cookies deserializeObject(JsonParser p, DeserializationContext ctxt, JsonNodeFactory nodeFactory) throws IOException {
+    private Cookies deserializeObject(JsonParser jsonParser, DeserializationContext ctxt, JsonNodeFactory nodeFactory) throws IOException {
         Cookies cookies = new Cookies();
         NottableString key = string("");
         while (true) {
-            JsonToken t = p.nextToken();
+            JsonToken t = jsonParser.nextToken();
             switch (t.id()) {
                 case JsonTokenId.ID_FIELD_NAME:
-                    key = string(ctxt.readValue(p, String.class));
+                    key = string(jsonParser.getText());
                     break;
                 case JsonTokenId.ID_STRING:
-                    cookies.withEntry(key, string(ctxt.readValue(p, String.class)));
+                    cookies.withEntry(key, string(ctxt.readValue(jsonParser, String.class)));
                     break;
                 case JsonTokenId.ID_END_OBJECT:
                     return cookies;
                 default:
-                    throw new RuntimeException("Unexpected token: \"" + t + "\" id: \"" + t.id() + "\" text: \"" + p.getText());
+                    throw new RuntimeException("Unexpected token: \"" + t + "\" id: \"" + t.id() + "\" text: \"" + jsonParser.getText());
             }
         }
     }
 
-    private Cookies deserializeArray(JsonParser p, DeserializationContext ctxt, JsonNodeFactory nodeFactory) throws IOException {
+    private Cookies deserializeArray(JsonParser jsonParser, DeserializationContext ctxt, JsonNodeFactory nodeFactory) throws IOException {
         Cookies headers = new Cookies();
         NottableString key = null;
         NottableString value = null;
         String fieldName = null;
         while (true) {
-            JsonToken t = p.nextToken();
+            JsonToken t = jsonParser.nextToken();
             switch (t.id()) {
                 case JsonTokenId.ID_END_ARRAY:
                     return headers;
@@ -68,20 +68,20 @@ public class CookiesDeserializer extends StdDeserializer<Cookies> {
                     value = null;
                     break;
                 case JsonTokenId.ID_FIELD_NAME:
-                    fieldName = ctxt.readValue(p, String.class);
+                    fieldName = jsonParser.getText();
                     break;
                 case JsonTokenId.ID_STRING:
                     if ("name".equals(fieldName)) {
-                        key = string(ctxt.readValue(p, String.class));
+                        key = string(ctxt.readValue(jsonParser, String.class));
                     } else if ("value".equals(fieldName)) {
-                        value = string(ctxt.readValue(p, String.class));
+                        value = string(ctxt.readValue(jsonParser, String.class));
                     }
                     break;
                 case JsonTokenId.ID_END_OBJECT:
                     headers.withEntry(key, value);
                     break;
                 default:
-                    throw new RuntimeException("Unexpected token: \"" + t + "\" id: \"" + t.id() + "\" text: \"" + p.getText());
+                    throw new RuntimeException("Unexpected token: \"" + t + "\" id: \"" + t.id() + "\" text: \"" + jsonParser.getText());
             }
         }
     }
