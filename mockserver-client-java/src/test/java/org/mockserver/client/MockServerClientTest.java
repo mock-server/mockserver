@@ -893,7 +893,7 @@ public class MockServerClientTest {
             TimeUnit.MILLISECONDS
         );
     }
-
+    
     @Test
     public void shouldSendClearRequest() {
         // given
@@ -1317,5 +1317,31 @@ public class MockServerClientTest {
 
         // when
         mockServerClient.verify();
+    }
+    
+    @Test
+    public void shoudStopWebSocketClientWhenResetAndGivenWebsocketClient() {
+    	// given
+    	WebSocketClient webSocketClient = mock(WebSocketClient.class);
+		mockServerClient.when(request()).setWebSocketClient(webSocketClient);
+		
+		// when
+		mockServerClient.reset();
+		
+		// then
+		verify(webSocketClient).stopClient();
+    }
+    
+    @Test
+    public void shoudStopWebSocketClientWhenStopAndGivenWebsocketClient() {
+    	// given
+    	WebSocketClient webSocketClient = mock(WebSocketClient.class);
+		mockServerClient.when(request()).setWebSocketClient(webSocketClient);
+		
+		// when
+		mockServerClient.stop();
+		
+		// then
+		verify(webSocketClient).stopClient();
     }
 }
