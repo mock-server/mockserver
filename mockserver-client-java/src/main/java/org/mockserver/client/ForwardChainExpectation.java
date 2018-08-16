@@ -1,6 +1,9 @@
 package org.mockserver.client;
 
 import com.google.common.annotations.VisibleForTesting;
+
+import org.mockserver.client.MockServerEventBus.MockServerEvent;
+import org.mockserver.client.MockServerEventBus.MockServerEventSubscriber;
 import org.mockserver.client.netty.websocket.WebSocketClient;
 import org.mockserver.client.netty.websocket.WebSocketException;
 import org.mockserver.mock.Expectation;
@@ -20,6 +23,15 @@ public class ForwardChainExpectation {
     public ForwardChainExpectation(MockServerClient mockServerClient, Expectation expectation) {
         this.mockServerClient = mockServerClient;
         this.expectation = expectation;
+        
+        MockServerEventBus.getInstance().subscribe(new MockServerEventSubscriber() {
+			@Override
+			public void handle() {
+				if (webSocketClient != null) {
+					webSocketClient.stopClient();
+				}
+			}
+		}, MockServerEvent.STOP, MockServerEvent.RESET);
     }
 
     /**

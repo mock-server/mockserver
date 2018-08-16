@@ -88,14 +88,15 @@ public class WebSocketClient {
     }
 
     public void stopClient() {
+    	group.shutdownGracefully();
         try {
             if (channel != null) {
-                channel.closeFuture().sync();
+                channel.close().sync();
+                channel = null;
             }
         } catch (InterruptedException e) {
             throw new WebSocketException("Exception while closing client", e);
         }
-        group.shutdownGracefully();
     }
 
     public WebSocketClient registerExpectationCallback(ExpectationResponseCallback expectationResponseCallback) {
