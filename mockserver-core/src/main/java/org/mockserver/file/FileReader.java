@@ -11,8 +11,8 @@ import java.nio.charset.StandardCharsets;
 public class FileReader {
 
     public static String readFileFromClassPathOrPath(String filePath) {
-        try {
-            return IOUtils.toString(openStreamToFileFromClassPathOrPath(filePath), StandardCharsets.UTF_8.name());
+        try (InputStream inputStream = openStreamToFileFromClassPathOrPath(filePath)) {
+            return IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
         } catch (IOException ioe) {
             throw new RuntimeException("Exception while loading \"" + filePath + "\"", ioe);
         }
