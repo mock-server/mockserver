@@ -35,7 +35,8 @@ public class EchoServer {
     private final OnlyResponse onlyResponse = new OnlyResponse();
     private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
     private final SettableFuture<Integer> boundPort = SettableFuture.create();
-
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
 
     public EchoServer(final boolean secure) {
         this(secure, null);
@@ -45,8 +46,8 @@ public class EchoServer {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-                EventLoopGroup workerGroup = new NioEventLoopGroup();
+                bossGroup = new NioEventLoopGroup(1);
+                workerGroup = new NioEventLoopGroup();
                 new ServerBootstrap().group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 100)
@@ -81,6 +82,8 @@ public class EchoServer {
 
     public void stop() {
         scheduler.shutdown();
+        bossGroup.shutdownGracefully();
+        workerGroup.shutdownGracefully();
         eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
     }
 
