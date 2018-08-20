@@ -198,7 +198,7 @@ public class MockServerClient implements java.io.Closeable {
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
     public MockServerClient stop() {
-    	MockServerEventBus.getInstance().publish(MockServerEvent.STOP);
+        MockServerEventBus.getInstance().publish(MockServerEvent.STOP);
         return stop(false);
     }
 
@@ -230,7 +230,7 @@ public class MockServerClient implements java.io.Closeable {
      * Reset MockServer by clearing all expectations
      */
     public MockServerClient reset() {
-    	MockServerEventBus.getInstance().publish(MockServerEvent.RESET);
+        MockServerEventBus.getInstance().publish(MockServerEvent.RESET);
         sendRequest(request().withMethod("PUT").withPath(calculatePath("reset")));
         return clientClass.cast(this);
     }

@@ -88,9 +88,11 @@ public class WebSocketClient {
     }
 
     public void stopClient() {
-    	group.shutdownGracefully();
+        if (!group.isShuttingDown() || group.isShutdown()) {
+            group.shutdownGracefully();
+        }
         try {
-            if (channel != null) {
+            if (channel != null && channel.isOpen()) {
                 channel.close().sync();
                 channel = null;
             }
