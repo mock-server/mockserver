@@ -1,5 +1,34 @@
 package org.mockserver.client;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.verify.Verification.verification;
+import static org.mockserver.verify.VerificationTimes.atLeast;
+import static org.mockserver.verify.VerificationTimes.once;
+
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -14,36 +43,36 @@ import org.mockserver.client.serialization.ExpectationSerializer;
 import org.mockserver.client.serialization.HttpRequestSerializer;
 import org.mockserver.client.serialization.VerificationSequenceSerializer;
 import org.mockserver.client.serialization.VerificationSerializer;
-import org.mockserver.client.serialization.model.*;
+import org.mockserver.client.serialization.model.ExpectationDTO;
+import org.mockserver.client.serialization.model.HttpClassCallbackDTO;
+import org.mockserver.client.serialization.model.HttpErrorDTO;
+import org.mockserver.client.serialization.model.HttpForwardDTO;
+import org.mockserver.client.serialization.model.HttpObjectCallbackDTO;
+import org.mockserver.client.serialization.model.HttpOverrideForwardedRequestDTO;
+import org.mockserver.client.serialization.model.HttpRequestDTO;
+import org.mockserver.client.serialization.model.HttpResponseDTO;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
-import org.mockserver.model.*;
+import org.mockserver.model.Action;
+import org.mockserver.model.ClearType;
+import org.mockserver.model.Format;
+import org.mockserver.model.Header;
+import org.mockserver.model.HttpClassCallback;
+import org.mockserver.model.HttpError;
+import org.mockserver.model.HttpForward;
+import org.mockserver.model.HttpObjectCallback;
+import org.mockserver.model.HttpOverrideForwardedRequest;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.model.HttpStatusCode;
+import org.mockserver.model.HttpTemplate;
+import org.mockserver.model.RetrieveType;
+import org.mockserver.model.StringBody;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
-
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.verify.Verification.verification;
-import static org.mockserver.verify.VerificationTimes.atLeast;
-import static org.mockserver.verify.VerificationTimes.once;
 
 /**
  * @author jamesdbloom

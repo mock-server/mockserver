@@ -25,13 +25,13 @@ public class ForwardChainExpectation {
         this.expectation = expectation;
         
         MockServerEventBus.getInstance().subscribe(new MockServerEventSubscriber() {
-			@Override
-			public void handle() {
-				if (webSocketClient != null) {
-					webSocketClient.stopClient();
-				}
-			}
-		}, MockServerEvent.STOP, MockServerEvent.RESET);
+            @Override
+            public void handle() {
+                if (webSocketClient != null) {
+                    webSocketClient.stopClient();
+                }
+            }
+        }, MockServerEvent.STOP, MockServerEvent.RESET);
     }
 
     /**
