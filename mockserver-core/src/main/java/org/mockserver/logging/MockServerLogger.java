@@ -29,10 +29,14 @@ public class MockServerLogger {
         setRootLogLevel("io.netty");
         setRootLogLevel("org.apache.velocity");
         Logger mockServerLogger = LoggerFactory.getLogger("org.mockserver");
-        if (mockServerLogger instanceof ch.qos.logback.classic.Logger) {
-            ((ch.qos.logback.classic.Logger) mockServerLogger).setLevel(
-                ch.qos.logback.classic.Level.valueOf(System.getProperty("mockserver.logLevel", DEFAULT_LOG_LEVEL))
-            );
+        try {
+            Class.forName("ch.qos.logback.classic.Logger");
+            if (mockServerLogger instanceof ch.qos.logback.classic.Logger) {
+                ((ch.qos.logback.classic.Logger) mockServerLogger).setLevel(
+                    ch.qos.logback.classic.Level.valueOf(System.getProperty("mockserver.logLevel", DEFAULT_LOG_LEVEL))
+                );
+            }
+        } catch (ClassNotFoundException ignore) {
         }
     }
 
@@ -56,10 +60,14 @@ public class MockServerLogger {
 
     public static void setRootLogLevel(String name) {
         Logger logger = LoggerFactory.getLogger(name);
-        if (logger instanceof ch.qos.logback.classic.Logger) {
-            ((ch.qos.logback.classic.Logger) logger).setLevel(
-                ch.qos.logback.classic.Level.valueOf(System.getProperty("root.logLevel", "WARN"))
-            );
+        try {
+            Class.forName("ch.qos.logback.classic.Logger");
+            if (logger instanceof ch.qos.logback.classic.Logger) {
+                ((ch.qos.logback.classic.Logger) logger).setLevel(
+                    ch.qos.logback.classic.Level.valueOf(System.getProperty("root.logLevel", "WARN"))
+                );
+            }
+        } catch (ClassNotFoundException ignore) {
         }
     }
 
