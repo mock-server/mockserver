@@ -11,6 +11,8 @@ import io.netty.handler.codec.socks.SocksMessageEncoder;
 import io.netty.handler.codec.socks.SocksProtocolVersion;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
+import org.apache.commons.collections4.KeyValue;
+import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
@@ -20,9 +22,13 @@ import org.slf4j.LoggerFactory;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+import static java.util.Collections.unmodifiableSet;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mockserver.MockServerHandler.LOCAL_HOST_HEADERS;
@@ -43,6 +49,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     private final SocksProxyHandler socksProxyHandler;
     private final SocksMessageEncoder socksMessageEncoder = new SocksMessageEncoder();
     private final HttpContentLengthRemover httpContentLengthRemover = new HttpContentLengthRemover();
+    private final Map<KeyValue<InetSocketAddress, String>, Set<String>> localAddressesCache = new ConcurrentHashMap<>();
 
     public PortUnificationHandler(LifeCycle server, MockServerLogger mockServerLogger) {
         super(false);
@@ -185,22 +192,42 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     }
 
     private Set<String> getLocalAddresses(ChannelHandlerContext ctx) {
-        Set<String> localAddresses = new HashSet<>();
         SocketAddress localAddress = ctx.channel().localAddress();
+        Set<String> localAddresses = null;
         if (localAddress instanceof InetSocketAddress) {
             InetSocketAddress inetSocketAddress = (InetSocketAddress) localAddress;
-            String portExtension = "";
-            if (!(inetSocketAddress.getPort() == 443 && isSslEnabledUpstream(ctx.channel()) || inetSocketAddress.getPort() == 80)) {
-                portExtension = ":" + inetSocketAddress.getPort();
+            String portExtension = calculatePortExtension(inetSocketAddress, isSslEnabledUpstream(ctx.channel()));
+            DefaultKeyValue<InetSocketAddress, String> cacheKey = new DefaultKeyValue<>(inetSocketAddress, portExtension);
+            localAddresses = localAddressesCache.get(cacheKey);
+            if (localAddresses == null) {
+                localAddresses = calculateLocalAddresses(inetSocketAddress, portExtension);
+                localAddressesCache.put(cacheKey, localAddresses);
             }
-            InetAddress socketAddress = inetSocketAddress.getAddress();
-            localAddresses.add(socketAddress.getHostAddress() + portExtension);
-            localAddresses.add(socketAddress.getCanonicalHostName() + portExtension);
-            localAddresses.add(socketAddress.getHostName() + portExtension);
-            localAddresses.add("localhost" + portExtension);
-            localAddresses.add("127.0.0.1" + portExtension);
         }
-        return localAddresses;
+        return (localAddresses == null) ? Collections.<String>emptySet() : localAddresses;
+    }
+
+    private String calculatePortExtension(InetSocketAddress inetSocketAddress, boolean sslEnabledUpstream) {
+        String portExtension;
+        if (((inetSocketAddress.getPort() == 443) && sslEnabledUpstream)
+            || ((inetSocketAddress.getPort() == 80) && !sslEnabledUpstream)) {
+
+            portExtension = "";
+        } else {
+            portExtension = ":" + inetSocketAddress.getPort();
+        }
+        return portExtension;
+    }
+
+    private Set<String> calculateLocalAddresses(InetSocketAddress localAddress, String portExtension) {
+        InetAddress socketAddress = localAddress.getAddress();
+        Set<String> localAddresses = new HashSet<>();
+        localAddresses.add(socketAddress.getHostAddress() + portExtension);
+        localAddresses.add(socketAddress.getCanonicalHostName() + portExtension);
+        localAddresses.add(socketAddress.getHostName() + portExtension);
+        localAddresses.add("localhost" + portExtension);
+        localAddresses.add("127.0.0.1" + portExtension);
+        return unmodifiableSet(localAddresses);
     }
 
     private void addLastIfNotPresent(ChannelPipeline pipeline, ChannelHandler channelHandler) {
