@@ -10,6 +10,7 @@ import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -408,7 +409,7 @@ public class HttpRequest extends Not {
      * @param values the header values which can be a varags of strings or regular expressions
      */
     public HttpRequest withHeader(String name, String... values) {
-        this.headers.withEntry(name, values);
+        this.headers.withEntry(header(name, values));
         return this;
     }
 
@@ -422,7 +423,7 @@ public class HttpRequest extends Not {
      * @param values the header values which can be a varags of NottableStrings
      */
     public HttpRequest withHeader(NottableString name, NottableString... values) {
-        this.headers.withEntry(name, values);
+        this.headers.withEntry(header(name, values));
         return this;
     }
 
