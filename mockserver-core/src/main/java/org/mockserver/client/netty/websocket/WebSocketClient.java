@@ -11,6 +11,9 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslProvider;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.client.serialization.WebSocketMessageSerializer;
 import org.mockserver.client.serialization.model.WebSocketClientIdDTO;
 import org.mockserver.logging.MockServerLogger;
@@ -22,6 +25,8 @@ import org.mockserver.model.HttpResponse;
 import java.net.InetSocketAddress;
 
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
+
+import javax.net.ssl.SSLException;
 
 /**
  * @author jamesdbloom
@@ -36,7 +41,7 @@ public class WebSocketClient {
     private ExpectationResponseCallback expectationResponseCallback;
     private ExpectationForwardCallback expectationForwardCallback;
 
-    public WebSocketClient(InetSocketAddress serverAddress, String contextPath) {
+    public WebSocketClient(final InetSocketAddress serverAddress, String contextPath, final boolean isSecure) {
         try {
             final WebSocketClientHandler webSocketClientHandler = new WebSocketClientHandler(serverAddress, contextPath, this);
 
@@ -45,6 +50,21 @@ public class WebSocketClient {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
+                        if (isSecure) {
+                            try {
+                                ch.pipeline().addLast(
+                                    SslContextBuilder
+                                        .forClient()
+                                        .sslProvider(SslProvider.JDK)
+                                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                                        .build()
+                                        .newHandler(ch.alloc(), serverAddress.getHostName(), serverAddress.getPort())
+                                );
+                            } catch (SSLException e) {
+                                throw new WebSocketException("Exception when configuring SSL Handler", e);
+                            }
+                        }
+
                         ch.pipeline()
                             .addLast(
                                 new HttpClientCodec(),

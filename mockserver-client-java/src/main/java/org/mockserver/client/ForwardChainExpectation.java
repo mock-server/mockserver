@@ -78,9 +78,8 @@ public class ForwardChainExpectation {
      * @param expectationResponseCallback object to call locally or remotely to generate response
      */
     public void respond(ExpectationResponseCallback expectationResponseCallback) {
-        if (webSocketClient == null) {
-            webSocketClient = new WebSocketClient(mockServerClient.remoteAddress(), mockServerClient.contextPath());
-        }
+        initWebSocketClient();
+
         try {
             expectation.thenRespond(new HttpObjectCallback()
                 .withClientId(
@@ -139,9 +138,8 @@ public class ForwardChainExpectation {
      * @param expectationForwardCallback object to call locally or remotely to generate request
      */
     public void forward(ExpectationForwardCallback expectationForwardCallback) {
-        if (webSocketClient == null) {
-            webSocketClient = new WebSocketClient(mockServerClient.remoteAddress(), mockServerClient.contextPath());
-        }
+        initWebSocketClient();
+
         try {
             expectation.thenForward(new HttpObjectCallback()
                 .withClientId(
@@ -175,6 +173,16 @@ public class ForwardChainExpectation {
     public void error(HttpError httpError) {
         expectation.thenError(httpError);
         mockServerClient.sendExpectation(expectation);
+    }
+
+    private void initWebSocketClient() {
+        if (webSocketClient == null) {
+            webSocketClient = new WebSocketClient(
+                mockServerClient.remoteAddress(),
+                mockServerClient.contextPath(),
+                mockServerClient.isSecure()
+            );
+        }
     }
 
     @VisibleForTesting

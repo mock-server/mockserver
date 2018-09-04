@@ -14,6 +14,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -33,6 +34,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.Version;
@@ -922,7 +924,7 @@ public class MockServerClientTest {
             TimeUnit.MILLISECONDS
         );
     }
-    
+
     @Test
     public void shouldSendClearRequest() {
         // given
@@ -1347,30 +1349,91 @@ public class MockServerClientTest {
         // when
         mockServerClient.verify();
     }
-    
+
+    @Test
+    public void shouldHandleExplicitUnsecuredConnectionsToMockServer() {
+        // given
+        mockServerClient.withSecure(false);
+
+        HttpRequest httpRequest =
+            new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
+
+        HttpResponse httpResponse =
+            new HttpResponse()
+                .withBody("some_response_body")
+                .withHeaders(new Header("responseName", "responseValue"));
+
+        // when
+        ForwardChainExpectation forwardChainExpectation = mockServerClient.when(httpRequest);
+        forwardChainExpectation.respond(httpResponse);
+
+        // then
+        Expectation expectation = forwardChainExpectation.getExpectation();
+        assertTrue(expectation.isActive());
+        assertSame(httpResponse, expectation.getHttpResponse());
+        assertEquals(Times.unlimited(), expectation.getTimes());
+
+        ArgumentCaptor<HttpRequest> configRequestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(mockHttpClient).sendRequest(configRequestCaptor.capture(), anyInt(), any(TimeUnit.class));
+        assertFalse(configRequestCaptor.getValue().isSecure());
+    }
+
+    @Test
+    public void shouldHandleExplicitSecuredConnectionsToMockServer() {
+        // given
+        mockServerClient.withSecure(true);
+
+        HttpRequest httpRequest =
+            new HttpRequest()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"));
+
+        HttpResponse httpResponse =
+            new HttpResponse()
+                .withBody("some_response_body")
+                .withHeaders(new Header("responseName", "responseValue"));
+
+        // when
+        ForwardChainExpectation forwardChainExpectation = mockServerClient.when(httpRequest);
+        forwardChainExpectation.respond(httpResponse);
+
+        // then
+        Expectation expectation = forwardChainExpectation.getExpectation();
+        assertTrue(expectation.isActive());
+        assertSame(httpResponse, expectation.getHttpResponse());
+        assertEquals(Times.unlimited(), expectation.getTimes());
+
+        ArgumentCaptor<HttpRequest> configRequestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(mockHttpClient).sendRequest(configRequestCaptor.capture(), anyInt(), any(TimeUnit.class));
+        assertTrue(configRequestCaptor.getValue().isSecure());
+    }
+
     @Test
     public void shoudStopWebSocketClientWhenResetAndGivenWebsocketClient() {
-    	// given
-    	WebSocketClient webSocketClient = mock(WebSocketClient.class);
-		mockServerClient.when(request()).setWebSocketClient(webSocketClient);
-		
-		// when
-		mockServerClient.reset();
-		
-		// then
-		verify(webSocketClient).stopClient();
+        // given
+        WebSocketClient webSocketClient = mock(WebSocketClient.class);
+        mockServerClient.when(request()).setWebSocketClient(webSocketClient);
+
+        // when
+        mockServerClient.reset();
+
+        // then
+        verify(webSocketClient).stopClient();
     }
-    
+
     @Test
     public void shoudStopWebSocketClientWhenStopAndGivenWebsocketClient() {
-    	// given
-    	WebSocketClient webSocketClient = mock(WebSocketClient.class);
-		mockServerClient.when(request()).setWebSocketClient(webSocketClient);
-		
-		// when
-		mockServerClient.stop();
-		
-		// then
-		verify(webSocketClient).stopClient();
+        // given
+        WebSocketClient webSocketClient = mock(WebSocketClient.class);
+        mockServerClient.when(request()).setWebSocketClient(webSocketClient);
+
+        // when
+        mockServerClient.stop();
+
+        // then
+        verify(webSocketClient).stopClient();
     }
+
 }
