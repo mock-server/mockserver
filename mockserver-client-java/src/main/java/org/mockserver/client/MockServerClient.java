@@ -1,7 +1,6 @@
 package org.mockserver.client;
 
 import com.google.common.base.Strings;
-import com.google.common.util.concurrent.SettableFuture;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.Version;
 import org.mockserver.client.MockServerEventBus.MockServerEvent;
@@ -9,7 +8,6 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.serialization.*;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.formatting.StringFormatter;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
@@ -27,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.mock.HttpStateHandler.LOG_SEPARATOR;
 import static org.mockserver.model.HttpRequest.request;
@@ -44,6 +41,7 @@ public class MockServerClient implements java.io.Closeable {
     protected Future<Integer> portFuture;
     private final String host;
     private final String contextPath;
+    private Boolean secure;
     private final Class<MockServerClient> clientClass;
     private Integer port;
     private NettyHttpClient nettyHttpClient = new NettyHttpClient();
@@ -103,6 +101,15 @@ public class MockServerClient implements java.io.Closeable {
         this.contextPath = contextPath;
     }
 
+    public boolean isSecure() {
+        return secure != null ? secure : false;
+    }
+
+    public MockServerClient withSecure(boolean secure) {
+        this.secure = secure;
+        return this;
+    }
+
     private int port() {
         if (this.port == null) {
             try {
@@ -135,11 +142,16 @@ public class MockServerClient implements java.io.Closeable {
     }
 
     private HttpResponse sendRequest(HttpRequest request) {
+        if (secure != null) {
+            request.withSecure(secure);
+        }
+
         HttpResponse response = nettyHttpClient.sendRequest(
             request.withHeader(HOST.toString(), this.host + ":" + port()),
             ConfigurationProperties.maxSocketTimeout(),
             TimeUnit.MILLISECONDS
         );
+
         if (response != null) {
             if (response.getStatusCode() != null &&
                 response.getStatusCode() == BAD_REQUEST.code()) {
@@ -153,6 +165,7 @@ public class MockServerClient implements java.io.Closeable {
                 throw new ClientException("Client version \"" + clientVersion + "\" does not match server version \"" + serverVersion + "\"");
             }
         }
+
         return response;
     }
 
