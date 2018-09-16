@@ -16,7 +16,7 @@ import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mockserver.MockServerUnificationInitializer;
-import org.mockserver.proxy.socks.SocksProxyHandler;
+import org.mockserver.proxy.socks.Socks5ProxyHandler;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.unification.PortUnificationHandler;
 
@@ -54,13 +54,13 @@ public class DirectProxyUnificationHandlerTest {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "SslHandler#0",
                 "LoggingHandler#0",
-                "MockServerUnificationInitializer#0",
+                "MockServerUnificationInitializerDelegate#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "SslHandler#0",
-                "MockServerUnificationInitializer#0",
+                "MockServerUnificationInitializerDelegate#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         }
@@ -74,7 +74,7 @@ public class DirectProxyUnificationHandlerTest {
 //        embeddedChannel.attr(HTTP_CONNECT_SOCKET).set(new InetSocketAddress(localPort));
 
         // and - no SOCKS handlers
-        assertThat(embeddedChannel.pipeline().get(SocksProxyHandler.class), is(nullValue()));
+        assertThat(embeddedChannel.pipeline().get(Socks5ProxyHandler.class), is(nullValue()));
         assertThat(embeddedChannel.pipeline().get(SocksMessageEncoder.class), is(nullValue()));
         assertThat(embeddedChannel.pipeline().get(SocksInitRequestDecoder.class), is(nullValue()));
 
@@ -97,18 +97,18 @@ public class DirectProxyUnificationHandlerTest {
         if (new MockServerLogger().isEnabled(TRACE)) {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "LoggingHandler#0",
-                "SocksCmdRequestDecoder#0",
-                "SocksMessageEncoder#0",
-                "SocksProxyHandler#0",
-                "MockServerUnificationInitializer#0",
+                "Socks5CommandRequestDecoder#0",
+                "Socks5ServerEncoder#0",
+                "Socks5ProxyHandler#0",
+                "MockServerUnificationInitializerDelegate#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
-                "SocksCmdRequestDecoder#0",
-                "SocksMessageEncoder#0",
-                "SocksProxyHandler#0",
-                "MockServerUnificationInitializer#0",
+                "Socks5CommandRequestDecoder#0",
+                "Socks5ServerEncoder#0",
+                "Socks5ProxyHandler#0",
+                "MockServerUnificationInitializerDelegate#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         }

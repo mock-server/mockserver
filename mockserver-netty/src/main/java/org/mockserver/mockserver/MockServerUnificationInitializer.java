@@ -1,39 +1,26 @@
 package org.mockserver.mockserver;
 
 import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPipeline;
-import org.mockserver.callback.CallbackWebSocketServerHandler;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.server.netty.codec.MockServerServerCodec;
-import org.mockserver.dashboard.DashboardWebSocketServerHandler;
-import org.mockserver.unification.PortUnificationHandler;
 
-/**
- * @author jamesdbloom
- */
 @ChannelHandler.Sharable
-public class MockServerUnificationInitializer extends PortUnificationHandler {
-
-    private CallbackWebSocketServerHandler callbackWebSocketServerHandler;
-    private DashboardWebSocketServerHandler uiWebSocketServerHandler;
-    private MockServerHandler mockServerHandler;
+public class MockServerUnificationInitializer extends ChannelHandlerAdapter {
+    private final LifeCycle server;
+    private final HttpStateHandler httpStateHandler;
+    private final ProxyConfiguration proxyConfiguration;
 
     public MockServerUnificationInitializer(LifeCycle server, HttpStateHandler httpStateHandler, ProxyConfiguration proxyConfiguration) {
-        super(server, httpStateHandler.getMockServerLogger());
-        callbackWebSocketServerHandler = new CallbackWebSocketServerHandler(httpStateHandler);
-        uiWebSocketServerHandler = new DashboardWebSocketServerHandler(httpStateHandler);
-        mockServerHandler = new MockServerHandler(server, httpStateHandler, proxyConfiguration);
+        this.server = server;
+        this.httpStateHandler = httpStateHandler;
+        this.proxyConfiguration = proxyConfiguration;
     }
 
     @Override
-    protected void configurePipeline(ChannelHandlerContext ctx, ChannelPipeline pipeline) {
-        pipeline.addLast(callbackWebSocketServerHandler);
-        pipeline.addLast(uiWebSocketServerHandler);
-        pipeline.addLast(new MockServerServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel())));
-        pipeline.addLast(mockServerHandler);
+    public void handlerAdded(ChannelHandlerContext ctx) {
+        ctx.pipeline().replace(this, null, new MockServerUnificationInitializerDelegate(server, httpStateHandler, proxyConfiguration));
     }
-
 }

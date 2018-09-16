@@ -40,7 +40,7 @@ import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
-import static org.mockserver.unification.PortUnificationHandler.enabledSslUpstreamAndDownstream;
+import static org.mockserver.unification.PortUnificationHandler.enableSslUpstreamAndDownstream;
 
 /**
  * @author jamesdbloom
@@ -146,7 +146,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     } else {
                         ctx.channel().attr(PROXYING).set(Boolean.TRUE);
                         // assume SSL for CONNECT request
-                        enabledSslUpstreamAndDownstream(ctx.channel());
+                        enableSslUpstreamAndDownstream(ctx.channel());
                         // add Subject Alternative Name for SSL certificate
                         server.getScheduler().submit(new Runnable() {
                             @Override

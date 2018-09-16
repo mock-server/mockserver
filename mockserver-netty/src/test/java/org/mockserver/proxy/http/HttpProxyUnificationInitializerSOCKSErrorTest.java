@@ -15,7 +15,7 @@ import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mockserver.MockServerUnificationInitializer;
-import org.mockserver.proxy.socks.SocksProxyHandler;
+import org.mockserver.proxy.socks.Socks5ProxyHandler;
 import org.mockserver.scheduler.Scheduler;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -38,7 +38,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
         EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(lifeCycle, new HttpStateHandler(mock(Scheduler.class)), null));
 
         // and - no SOCKS handlers
-        assertThat(embeddedChannel.pipeline().get(SocksProxyHandler.class), is(nullValue()));
+        assertThat(embeddedChannel.pipeline().get(Socks5ProxyHandler.class), is(nullValue()));
         assertThat(embeddedChannel.pipeline().get(SocksMessageEncoder.class), is(nullValue()));
         assertThat(embeddedChannel.pipeline().get(SocksInitRequestDecoder.class), is(nullValue()));
 
@@ -61,18 +61,18 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
         if (new MockServerLogger().isEnabled(TRACE)) {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "LoggingHandler#0",
-                "SocksCmdRequestDecoder#0",
-                "SocksMessageEncoder#0",
-                "SocksProxyHandler#0",
-                "MockServerUnificationInitializer#0",
+                "Socks5CommandRequestDecoder#0",
+                "Socks5ServerEncoder#0",
+                "Socks5ProxyHandler#0",
+                "MockServerUnificationInitializerDelegate#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
-                "SocksCmdRequestDecoder#0",
-                "SocksMessageEncoder#0",
-                "SocksProxyHandler#0",
-                "MockServerUnificationInitializer#0",
+                "Socks5CommandRequestDecoder#0",
+                "Socks5ServerEncoder#0",
+                "Socks5ProxyHandler#0",
+                "MockServerUnificationInitializerDelegate#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         }
@@ -89,12 +89,12 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
 
         // then - CONNECT response
         assertThat(ByteBufUtil.hexDump((ByteBuf) embeddedChannel.readOutbound()), is(Hex.encodeHexString(new byte[]{
-            (byte) 0x05,                                        // SOCKS5
-            (byte) 0x01,                                        // general failure (caused by connection failure)
-            (byte) 0x00,                                        // reserved (must be 0x00)
-            (byte) 0x01,                                        // address type IPv4
-            (byte) 0x7f, (byte) 0x00, (byte) 0x00, (byte) 0x01, // ip address
-            (byte) (localPort & 0xFF00), (byte) localPort       // port
+            (byte) 0x05,             // SOCKS5
+            (byte) 0x01,             // general failure (caused by connection failure)
+            (byte) 0x00,             // reserved (must be 0x00)
+            (byte) 0x03,             // address type domain
+            (byte) 0x00,             // domain of length 0
+            (byte) 0x00, (byte) 0x00 // port 0
         })));
 
         // then - channel is closed after error

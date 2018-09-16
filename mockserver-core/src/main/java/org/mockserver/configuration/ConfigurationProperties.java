@@ -180,8 +180,8 @@ public class ConfigurationProperties {
 
     public static void addSslSubjectAlternativeNameIps(String... newSubjectAlternativeNameIps) {
         boolean subjectAlternativeIpsModified = false;
-        for (String subjectAlternativeDomain : newSubjectAlternativeNameIps) {
-            if (ALL_SUBJECT_ALTERNATIVE_IPS.add(subjectAlternativeDomain.trim())) {
+        for (String subjectAlternativeIp : newSubjectAlternativeNameIps) {
+            if (ALL_SUBJECT_ALTERNATIVE_IPS.add(subjectAlternativeIp.trim())) {
                 subjectAlternativeIpsModified = true;
             }
         }
@@ -278,6 +278,22 @@ public class ConfigurationProperties {
 
     public static void httpProxyServerPassword(String httpProxyServerPassword) {
         System.setProperty("mockserver.httpProxyServerPassword", httpProxyServerPassword);
+    }
+
+    public static String socksProxyServerUsername() {
+        return readPropertyHierarchically("mockserver.socksProxyServerUsername", "");
+    }
+
+    public static void socksProxyServerUsername(String socksProxyServerUsername) {
+        System.setProperty("mockserver.socksProxyServerUsername", socksProxyServerUsername);
+    }
+
+    public static String socksProxyServerPassword() {
+        return readPropertyHierarchically("mockserver.socksProxyServerPassword", "");
+    }
+
+    public static void socksProxyServerPassword(String socksProxyServerPassword) {
+        System.setProperty("mockserver.socksProxyServerPassword", socksProxyServerPassword);
     }
 
     private static InetSocketAddress readInetSocketAddressProperty(String s) {
