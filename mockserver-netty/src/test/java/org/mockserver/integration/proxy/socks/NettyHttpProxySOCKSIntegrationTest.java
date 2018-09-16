@@ -36,8 +36,13 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
 import static org.mockserver.test.Assert.assertContains;
@@ -95,6 +100,12 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
     @Test
     public void shouldProxyRequestsUsingHttpClientViaSOCKSConfiguredForJVM() throws Exception {
+        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
+            startsWith("1.7."), equalTo("1.7"),
+            startsWith("7."), equalTo("7"),
+            startsWith("1.8."), equalTo("1.8"),
+            startsWith("8."), equalTo("8"))));
+
         ProxySelector defaultProxySelector = ProxySelector.getDefault();
         try {
             // given - SOCKS proxy JVM settings
@@ -135,6 +146,12 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
     @Test
     public void shouldProxyRequestsUsingHttpClientViaSOCKSConfiguredForJVMToSecureServerPort() throws Exception {
+        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
+            startsWith("1.7."), equalTo("1.7"),
+            startsWith("7."), equalTo("7"),
+            startsWith("1.8."), equalTo("1.8"),
+            startsWith("8."), equalTo("8"))));
+
         ProxySelector defaultProxySelector = ProxySelector.getDefault();
         try {
             // given - SOCKS proxy JVM settings
@@ -175,6 +192,12 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
     @Test
     public void shouldProxyRequestsUsingHttpClientViaSOCKS() throws Exception {
+        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
+            startsWith("1.7."), equalTo("1.7"),
+            startsWith("7."), equalTo("7"),
+            startsWith("1.8."), equalTo("1.8"),
+            startsWith("8."), equalTo("8"))));
+
         // given
         Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
             .register("http", new ConnectionSocketFactory() {
@@ -247,6 +270,12 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
     @Test
     public void shouldProxyRequestsUsingHttpClientViaSOCKSToSecureServerPort() throws Exception {
+        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
+            startsWith("1.7."), equalTo("1.7"),
+            startsWith("7."), equalTo("7"),
+            startsWith("1.8."), equalTo("1.8"),
+            startsWith("8."), equalTo("8"))));
+
         // given
         Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
             .register("https", new ConnectionSocketFactory() {
@@ -320,6 +349,12 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
     @Test
     public void shouldProxyRequestsUsingRawSecureSocketViaSOCKSToSecureServerPort() throws Exception {
+        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
+            startsWith("1.7."), equalTo("1.7"),
+            startsWith("7."), equalTo("7"),
+            startsWith("1.8."), equalTo("1.8"),
+            startsWith("8."), equalTo("8"))));
+
         proxyRequestsUsingRawSocketViaSOCKS(true);
     }
 

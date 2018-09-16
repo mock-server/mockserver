@@ -1,14 +1,18 @@
 package org.mockserver.unification;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.codec.ReplayingDecoder;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
-import io.netty.handler.codec.socks.SocksAuthScheme;
-import io.netty.handler.codec.socks.SocksInitRequestDecoder;
-import io.netty.handler.codec.socks.SocksMessageEncoder;
-import io.netty.handler.codec.socks.SocksProtocolVersion;
+import io.netty.handler.codec.socksx.v4.Socks4ServerDecoder;
+import io.netty.handler.codec.socksx.v4.Socks4ServerEncoder;
+import io.netty.handler.codec.socksx.v5.Socks5InitialRequestDecoder;
+import io.netty.handler.codec.socksx.v5.Socks5ServerEncoder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import org.apache.commons.collections4.KeyValue;
@@ -16,14 +20,18 @@ import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.proxy.socks.SocksProxyHandler;
+import org.mockserver.proxy.socks.Socks4ProxyHandler;
+import org.mockserver.proxy.socks.Socks5ProxyHandler;
+import org.mockserver.proxy.socks.SocksDetector;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,26 +46,25 @@ import static org.slf4j.event.Level.TRACE;
 /**
  * @author jamesdbloom
  */
-@ChannelHandler.Sharable
-public abstract class PortUnificationHandler extends SimpleChannelInboundHandler<ByteBuf> {
+public abstract class PortUnificationHandler extends ReplayingDecoder<Void> {
 
     private static final AttributeKey<Boolean> SSL_ENABLED_UPSTREAM = AttributeKey.valueOf("PROXY_SSL_ENABLED_UPSTREAM");
     private static final AttributeKey<Boolean> SSL_ENABLED_DOWNSTREAM = AttributeKey.valueOf("SSL_ENABLED_DOWNSTREAM");
+    private static final Map<KeyValue<InetSocketAddress, String>, Set<String>> localAddressesCache = new ConcurrentHashMap<>();
 
     protected final MockServerLogger mockServerLogger;
     private final LoggingHandler loggingHandler = new LoggingHandler(LoggerFactory.getLogger(PortUnificationHandler.class));
-    private final SocksProxyHandler socksProxyHandler;
-    private final SocksMessageEncoder socksMessageEncoder = new SocksMessageEncoder();
+    private final Socks4ProxyHandler socks4ProxyHandler;
+    private final Socks5ProxyHandler socks5ProxyHandler;
     private final HttpContentLengthRemover httpContentLengthRemover = new HttpContentLengthRemover();
-    private final Map<KeyValue<InetSocketAddress, String>, Set<String>> localAddressesCache = new ConcurrentHashMap<>();
 
     public PortUnificationHandler(LifeCycle server, MockServerLogger mockServerLogger) {
-        super(false);
         this.mockServerLogger = mockServerLogger;
-        this.socksProxyHandler = new SocksProxyHandler(server, mockServerLogger);
+        this.socks4ProxyHandler = new Socks4ProxyHandler(server, mockServerLogger);
+        this.socks5ProxyHandler = new Socks5ProxyHandler(server, mockServerLogger);
     }
 
-    public static void enabledSslUpstreamAndDownstream(Channel channel) {
+    public static void enableSslUpstreamAndDownstream(Channel channel) {
         channel.attr(SSL_ENABLED_UPSTREAM).set(Boolean.TRUE);
         channel.attr(SSL_ENABLED_DOWNSTREAM).set(Boolean.TRUE);
     }
@@ -70,7 +77,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
         }
     }
 
-    public static void enabledSslDownstream(Channel channel) {
+    public static void enableSslDownstream(Channel channel) {
         channel.attr(SSL_ENABLED_DOWNSTREAM).set(Boolean.TRUE);
     }
 
@@ -87,88 +94,73 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
-        // Will use the first five bytes to detect a protocol.
-        if (msg.readableBytes() < 3) {
-            return;
-        }
-
-        if (isSsl(msg)) {
+    protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) {
+        if (SocksDetector.isSocks4(msg, actualReadableBytes())) {
+            enableSocks4(ctx, msg);
+        } else if (SocksDetector.isSocks5(msg, actualReadableBytes())) {
+            enableSocks5(ctx, msg);
+        } else if (isSsl(msg)) {
             enableSsl(ctx, msg);
-        } else if (isSocks(msg)) {
-            enableSocks(ctx, msg);
         } else if (isHttp(msg)) {
             switchToHttp(ctx, msg);
         } else {
             // Unknown protocol; discard everything and close the connection.
             msg.clear();
+            ctx.flush();
             ctx.close();
         }
 
+        addLoggingHandler(ctx);
+    }
+
+    private void addLoggingHandler(ChannelHandlerContext ctx) {
         if (mockServerLogger.isEnabled(TRACE)) {
             loggingHandler.addLoggingHandler(ctx);
         }
     }
 
     private boolean isSsl(ByteBuf buf) {
-        return buf.readableBytes() >= 5 && SslHandler.isEncrypted(buf);
-    }
-
-    private boolean isSocks(ByteBuf msg) {
-        switch (SocksProtocolVersion.valueOf(msg.getByte(msg.readerIndex()))) {
-            case SOCKS5:
-            case SOCKS4a:
-                break;
-            default:
-                return false;
-        }
-
-        byte numberOfAuthenticationMethods = msg.getByte(msg.readerIndex() + 1);
-        for (int i = 0; i < numberOfAuthenticationMethods; i++) {
-            switch (SocksAuthScheme.valueOf(msg.getByte(msg.readerIndex() + 1 + i))) {
-                case NO_AUTH:
-                case AUTH_PASSWORD:
-                case AUTH_GSSAPI:
-                    break;
-                default:
-                    return false;
-            }
-        }
-        return true;
+        return SslHandler.isEncrypted(buf);
     }
 
     private boolean isHttp(ByteBuf msg) {
-        int letterOne = (int) msg.getUnsignedByte(msg.readerIndex());
-        int letterTwo = (int) msg.getUnsignedByte(msg.readerIndex() + 1);
-        int letterThree = (int) msg.getUnsignedByte(msg.readerIndex() + 2);
-        return letterOne == 'G' && letterTwo == 'E' && letterThree == 'T' ||  // GET
-            letterOne == 'P' && letterTwo == 'O' && letterThree == 'S' || // POST
-            letterOne == 'P' && letterTwo == 'U' && letterThree == 'T' || // PUT
-            letterOne == 'H' && letterTwo == 'E' && letterThree == 'A' || // HEAD
-            letterOne == 'O' && letterTwo == 'P' && letterThree == 'T' || // OPTIONS
-            letterOne == 'P' && letterTwo == 'A' && letterThree == 'T' || // PATCH
-            letterOne == 'D' && letterTwo == 'E' && letterThree == 'L' || // DELETE
-            letterOne == 'T' && letterTwo == 'R' && letterThree == 'A' || // TRACE
-            letterOne == 'C' && letterTwo == 'O' && letterThree == 'N';   // CONNECT
+        String method = msg.toString(msg.readerIndex(), 8, StandardCharsets.US_ASCII);
+        return method.startsWith("GET ") ||
+            method.startsWith("POST ") ||
+            method.startsWith("PUT ") ||
+            method.startsWith("HEAD ") ||
+            method.startsWith("OPTIONS ") ||
+            method.startsWith("PATCH ") ||
+            method.startsWith("DELETE ") ||
+            method.startsWith("TRACE ") ||
+            method.startsWith("CONNECT ");
+    }
+
+    private void enableSocks4(ChannelHandlerContext ctx, ByteBuf msg) {
+        enableSocks(ctx, msg, socks4ProxyHandler, Socks4ServerEncoder.INSTANCE, new Socks4ServerDecoder());
+    }
+
+    private void enableSocks5(ChannelHandlerContext ctx, ByteBuf msg) {
+        enableSocks(ctx, msg, socks5ProxyHandler, Socks5ServerEncoder.DEFAULT, new Socks5InitialRequestDecoder());
+    }
+
+    private void enableSocks(ChannelHandlerContext ctx, ByteBuf msg, ChannelHandler... channelHandlers) {
+        ChannelPipeline pipeline = ctx.pipeline();
+        for (ChannelHandler channelHandler : channelHandlers) {
+            pipeline.addFirst(channelHandler);
+        }
+
+        // re-unify (with SOCKS5 enabled)
+        ctx.pipeline().fireChannelRead(msg.readBytes(actualReadableBytes()));
     }
 
     private void enableSsl(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
         pipeline.addFirst(nettySslContextFactory().createServerSslContext().newHandler(ctx.alloc()));
-        PortUnificationHandler.enabledSslUpstreamAndDownstream(ctx.channel());
+        PortUnificationHandler.enableSslUpstreamAndDownstream(ctx.channel());
 
         // re-unify (with SSL enabled)
-        ctx.pipeline().fireChannelRead(msg);
-    }
-
-    private void enableSocks(ChannelHandlerContext ctx, ByteBuf msg) {
-        ChannelPipeline pipeline = ctx.pipeline();
-        pipeline.addFirst(socksProxyHandler);
-        pipeline.addFirst(socksMessageEncoder);
-        pipeline.addFirst(new SocksInitRequestDecoder());
-
-        // re-unify (with SOCKS enabled)
-        ctx.pipeline().fireChannelRead(msg);
+        ctx.pipeline().fireChannelRead(msg.readBytes(actualReadableBytes()));
     }
 
     private void switchToHttp(ChannelHandlerContext ctx, ByteBuf msg) {
@@ -188,7 +180,7 @@ public abstract class PortUnificationHandler extends SimpleChannelInboundHandler
         ctx.channel().attr(LOCAL_HOST_HEADERS).set(getLocalAddresses(ctx));
 
         // fire message back through pipeline
-        ctx.fireChannelRead(msg);
+        ctx.fireChannelRead(msg.readBytes(actualReadableBytes()));
     }
 
     private Set<String> getLocalAddresses(ChannelHandlerContext ctx) {

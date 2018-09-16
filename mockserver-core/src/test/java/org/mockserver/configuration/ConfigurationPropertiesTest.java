@@ -497,4 +497,32 @@ public class ConfigurationPropertiesTest {
         assertEquals("p@ssw0rd", ConfigurationProperties.httpProxyServerPassword());
         assertEquals("p@ssw0rd", System.getProperty("mockserver.httpProxyServerPassword"));
     }
+
+    @Test
+    public void shouldSetAndReadSocksProxyServerUsername() {
+        // given
+        System.clearProperty("mockserver.socksProxyServerUsername");
+
+        // when
+        assertEquals("", ConfigurationProperties.socksProxyServerUsername());
+        ConfigurationProperties.socksProxyServerUsername("john.doe");
+
+        // then
+        assertEquals("john.doe", ConfigurationProperties.socksProxyServerUsername());
+        assertEquals("john.doe", System.getProperty("mockserver.socksProxyServerUsername"));
+    }
+
+    @Test
+    public void shouldSetAndReadSocksProxyServerPassword() {
+        // given
+        System.clearProperty("mockserver.socksProxyServerPassword");
+
+        // when
+        assertEquals("", ConfigurationProperties.socksProxyServerPassword());
+        ConfigurationProperties.socksProxyServerPassword("p@ssw0rd");
+
+        // then
+        assertEquals("p@ssw0rd", ConfigurationProperties.socksProxyServerPassword());
+        assertEquals("p@ssw0rd", System.getProperty("mockserver.socksProxyServerPassword"));
+    }
 }

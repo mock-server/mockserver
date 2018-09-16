@@ -17,6 +17,11 @@ import org.springframework.web.context.WebApplicationContext;
 
 import javax.annotation.Resource;
 
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assume.assumeThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -57,6 +62,12 @@ public abstract class BooksPageEndToEndIntegrationTest {
 
     @Test
     public void shouldLoadListOfBooks() throws Exception {
+        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
+            startsWith("1.7."), equalTo("1.7"),
+            startsWith("7."), equalTo("7"),
+            startsWith("1.8."), equalTo("1.8"),
+            startsWith("8."), equalTo("8"))));
+
         // when
         MvcResult response = mockMvc.perform(get("/books").accept(MediaType.TEXT_HTML))
             .andExpect(status().isOk())
@@ -75,6 +86,12 @@ public abstract class BooksPageEndToEndIntegrationTest {
 
     @Test
     public void shouldLoadSingleBook() throws Exception {
+        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
+            startsWith("1.7."), equalTo("1.7"),
+            startsWith("7."), equalTo("7"),
+            startsWith("1.8."), equalTo("1.8"),
+            startsWith("8."), equalTo("8"))));
+
         // when
         MvcResult response = mockMvc.perform(get("/book/1").accept(MediaType.TEXT_HTML))
             .andExpect(status().isOk())

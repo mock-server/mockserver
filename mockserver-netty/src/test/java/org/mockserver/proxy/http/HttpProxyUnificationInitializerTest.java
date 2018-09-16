@@ -15,7 +15,7 @@ import org.junit.Test;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mockserver.MockServerUnificationInitializer;
-import org.mockserver.proxy.socks.SocksProxyHandler;
+import org.mockserver.proxy.socks.Socks5ProxyHandler;
 import org.mockserver.scheduler.Scheduler;
 
 import java.io.IOException;
@@ -49,7 +49,7 @@ public class HttpProxyUnificationInitializerTest {
         // then - should add SSL handlers first
         assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
             "SslHandler#0",
-            "MockServerUnificationInitializer#0",
+            "MockServerUnificationInitializerDelegate#0",
             "DefaultChannelPipeline$TailContext#0"
         ));
     }
@@ -62,7 +62,7 @@ public class HttpProxyUnificationInitializerTest {
 //        embeddedChannel.attr(HTTP_CONNECT_SOCKET).set(new InetSocketAddress(localPort));
 
         // and - no SOCKS handlers
-        assertThat(embeddedChannel.pipeline().get(SocksProxyHandler.class), is(nullValue()));
+        assertThat(embeddedChannel.pipeline().get(Socks5ProxyHandler.class), is(nullValue()));
         assertThat(embeddedChannel.pipeline().get(SocksMessageEncoder.class), is(nullValue()));
         assertThat(embeddedChannel.pipeline().get(SocksInitRequestDecoder.class), is(nullValue()));
 
@@ -83,10 +83,10 @@ public class HttpProxyUnificationInitializerTest {
 
         // and then - should add SOCKS handlers first
         assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
-            "SocksCmdRequestDecoder#0",
-            "SocksMessageEncoder#0",
-            "SocksProxyHandler#0",
-            "MockServerUnificationInitializer#0",
+            "Socks5CommandRequestDecoder#0",
+            "Socks5ServerEncoder#0",
+            "Socks5ProxyHandler#0",
+            "MockServerUnificationInitializerDelegate#0",
             "DefaultChannelPipeline$TailContext#0"
         ));
     }

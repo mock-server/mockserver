@@ -4,23 +4,20 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.socks.*;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.KeyAndCertificateFactory;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mockserver.MockServerHandler.PROXYING;
-import static org.mockserver.socket.KeyAndCertificateFactory.addSubjectAlternativeName;
 import static org.mockserver.unification.PortUnificationHandler.disableSslDownstream;
-import static org.mockserver.unification.PortUnificationHandler.enabledSslDownstream;
+import static org.mockserver.unification.PortUnificationHandler.enableSslDownstream;
 
 @ChannelHandler.Sharable
-public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest> {
+public abstract class SocksProxyHandler<T> extends SimpleChannelInboundHandler<T> {
 
-    private final LifeCycle server;
-    private final MockServerLogger mockServerLogger;
+    protected final LifeCycle server;
+    protected final MockServerLogger mockServerLogger;
 
     public SocksProxyHandler(LifeCycle server, MockServerLogger mockServerLogger) {
         super(false);
@@ -28,64 +25,28 @@ public class SocksProxyHandler extends SimpleChannelInboundHandler<SocksRequest>
         this.mockServerLogger = mockServerLogger;
     }
 
-    @Override
-    protected void channelRead0(final ChannelHandlerContext ctx, SocksRequest socksRequest) {
-        switch (socksRequest.requestType()) {
-
-            case INIT:
-
-                ctx.pipeline().addFirst(new SocksCmdRequestDecoder());
-                ctx.write(new SocksInitResponse(SocksAuthScheme.NO_AUTH));
-                break;
-
-            case AUTH:
-
-                ctx.pipeline().addFirst(new SocksCmdRequestDecoder());
-                ctx.write(new SocksAuthResponse(SocksAuthStatus.SUCCESS));
-                break;
-
-            case CMD:
-
-                final SocksCmdRequest req = (SocksCmdRequest) socksRequest;
-                if (req.cmdType() == SocksCmdType.CONNECT) {
-
-                    Channel channel = ctx.channel();
-                    channel.attr(PROXYING).set(Boolean.TRUE);
-                    if (String.valueOf(req.port()).endsWith("80")) {
-                        disableSslDownstream(channel);
-                    } else if (String.valueOf(req.port()).endsWith("443")) {
-                        enabledSslDownstream(channel);
-                    }
-
-                    // add Subject Alternative Name for SSL certificate
-                    server.getScheduler().submit(new Runnable() {
-                        @Override
-                        public void run() {
-                            KeyAndCertificateFactory.addSubjectAlternativeName(req.host());
-                        }
-                    });
-
-                    ctx.pipeline().addAfter(getClass().getSimpleName() + "#0", SocksConnectHandler.class.getSimpleName() + "#0", new SocksConnectHandler(server, mockServerLogger, req.host(), req.port()));
-                    ctx.pipeline().remove(this);
-                    ctx.fireChannelRead(socksRequest);
-
-                } else {
-
-                    ctx.close();
-
-                }
-                break;
-
-            case UNKNOWN:
-
-                ctx.close();
-                break;
-
+    protected void forwardConnection(final ChannelHandlerContext ctx, ChannelHandler forwarder, final String addr, int port) {
+        Channel channel = ctx.channel();
+        channel.attr(PROXYING).set(Boolean.TRUE);
+        if (String.valueOf(port).endsWith("80")) {
+            disableSslDownstream(channel);
+        } else if (String.valueOf(port).endsWith("443")) {
+            enableSslDownstream(channel);
         }
+
+        // add Subject Alternative Name for SSL certificate
+        server.getScheduler().submit(new Runnable() {
+            @Override
+            public void run() {
+                KeyAndCertificateFactory.addSubjectAlternativeName(addr);
+            }
+        });
+
+        ctx.pipeline().replace(this, null, forwarder);
     }
 
     @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+    public void channelReadComplete(ChannelHandlerContext ctx) {
         ctx.flush();
     }
 
