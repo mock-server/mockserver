@@ -589,22 +589,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "path": "/some/path"
     },
     "httpResponseTemplate": {
-        "template": "return {\n" +
-        "     'statusCode': 200,\n" +
-        "     'cookies': {\n" +
-        "          'session' : request.headers['Session-Id'][0]\n" +
-        "     },\n" +
-        "     'headers': {\n" +
-        "          'Date' : Date()\n" +
-        "     },\n" +
-        "     'body': JSON.stringify(\n" +
-        "               {\n" +
-        "                    method: request.method," +
-        "                    path: request.path," +
-        "                    body: request.body" +
-        "               }\n" +
-        "          )\n" +
-        "};",
+        "template": "return { statusCode: 200, cookies: { session: request.headers[\"Session-Id\"] && request.headers[\"Session-Id\"][0] }, headers: { Date: [ Date() ] }, body: JSON.stringify({method: request.method, path: request.path, body: request.body}) };",
         "templateType": "JAVASCRIPT"
     }
 }).then(
@@ -623,22 +608,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "path": "/some/path"
     },
     "httpResponseTemplate": {
-        "template": "return {\n" +
-        "     'statusCode': 200,\n" +
-        "     'cookies': {\n" +
-        "          'session' : request.headers['Session-Id'][0]\n" +
-        "     },\n" +
-        "     'headers': {\n" +
-        "          'Date' : Date()\n" +
-        "     },\n" +
-        "     'body': JSON.stringify(\n" +
-        "               {\n" +
-        "                    method: request.method," +
-        "                    path: request.path," +
-        "                    body: request.body" +
-        "               }\n" +
-        "          )\n" +
-        "};",
+        "template": "return { statusCode: 200, cookies: { session: request.headers[\"Session-Id\"] && request.headers[\"Session-Id\"][0] }, headers: { Date: [ Date() ] }, body: JSON.stringify({method: request.method, path: request.path, body: request.body}) };",
         "templateType": "JAVASCRIPT"
     }
 }'</code></pre>
@@ -678,17 +648,7 @@ new MockServerClient("localhost", 1080)
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {"path": "/some/path"},
     "httpResponseTemplate": {
-        "template": "if (request.method === 'POST' && request.path === '/somePath') {\n" +
-        "    return {\n" +
-        "        'statusCode': 200,\n" +
-        "        'body': JSON.stringify({name: 'value'})\n" +
-        "    };\n" +
-        "} else {\n" +
-        "    return {\n" +
-        "        'statusCode': 406,\n" +
-        "        'body': request.body\n" +
-        "    };\n" +
-        "}",
+        "template": "if (request.method === \"POST\" && request.path === \"/some/path\") { return { statusCode: 200, body: JSON.stringify({name: \"value\"}) }; } else { return { statusCode: 406, body: request.body }; }",
         "templateType": "JAVASCRIPT",
         "delay": {"timeUnit": "MINUTES", "value": 2}
     }
@@ -706,17 +666,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
     "httpRequest": {"path": "/some/path"},
     "httpResponseTemplate": {
-        "template": "if (request.method === 'POST' && request.path === '/somePath') {\n" +
-        "    return {\n" +
-        "        'statusCode': 200,\n" +
-        "        'body': JSON.stringify({name: 'value'})\n" +
-        "    };\n" +
-        "} else {\n" +
-        "    return {\n" +
-        "        'statusCode': 406,\n" +
-        "        'body': request.body\n" +
-        "    };\n" +
-        "}",
+        "template": "if (request.method === \"POST\" && request.path === \"/some/path\") { return { statusCode: 200, body: JSON.stringify({name: \"value\"}) }; } else { return { statusCode: 406, body: request.body }; }",
         "templateType": "JAVASCRIPT",
         "delay": {"timeUnit": "MINUTES", "value": 2}
     }
@@ -756,18 +706,11 @@ new MockServerClient("localhost", 1080)
 // $!request.headers['Session-Id'] and $!request.headers['User-Agent'] both returns an
 // array of values because headers and queryStringParameters have multiple values
 mockServerClient("localhost", 1080).mockAnyResponse({
-    "httpRequest": {"path": "/some/path"},
+    "httpRequest": {
+        "path": "/some/path"
+    },
     "httpResponseTemplate": {
-        "template": "{\n" +
-        "     \"statusCode\": 200,\n" +
-        "     \"cookies\": {\n" +
-        "           \"session\": \"$!request.headers['Session-Id'][0]\"\n" +
-        "      },\n" +
-        "     \"headers\": {\n" +
-        "           \"Client-User-Agent\": [ \"$!request.headers['User-Agent'][0]\" ]\n" +
-        "      },\n" +
-        "     \"body\": $!request.body\n" +
-        "}",
+        "template": "{ \"statusCode\": 200, \"cookies\": { \"session\": \"$!request.headers[\"Session-Id\"][0]\" }, \"headers\": { \"Client-User-Agent\": [ \"$!request.headers[\"User-Agent\"][0]\" ] }, \"body\": \"$!request.body\" }",
         "templateType": "VELOCITY"
     }
 }).then(
@@ -782,18 +725,11 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
-    "httpRequest": {"path": "/some/path"},
+    "httpRequest": {
+        "path": "/some/path"
+    },
     "httpResponseTemplate": {
-        "template": "{\n" +
-        "     \"statusCode\": 200,\n" +
-        "     \"cookies\": {\n" +
-        "           \"session\": \"$!request.headers['Session-Id'][0]\"\n" +
-        "      },\n" +
-        "     \"headers\": {\n" +
-        "           \"Client-User-Agent\": [ \"$!request.headers['User-Agent'][0]\" ]\n" +
-        "      },\n" +
-        "     \"body\": $!request.body\n" +
-        "}",
+        "template": "{ \"statusCode\": 200, \"cookies\": { \"session\": \"$!request.headers[\"Session-Id\"][0]\" }, \"headers\": { \"Client-User-Agent\": [ \"$!request.headers[\"User-Agent\"][0]\" ] }, \"body\": \"$!request.body\" }",
         "templateType": "VELOCITY"
     }
 }'</code></pre>
