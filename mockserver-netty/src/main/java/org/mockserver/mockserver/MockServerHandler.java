@@ -1,6 +1,5 @@
 package org.mockserver.mockserver;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.net.MediaType;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -22,15 +21,13 @@ import org.mockserver.socket.KeyAndCertificateFactory;
 
 import javax.annotation.Nullable;
 import java.net.BindException;
-import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static io.netty.handler.codec.http.HttpHeaderNames.LOCATION;
-import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
