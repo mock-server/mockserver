@@ -6,7 +6,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
+import org.mockserver.client.serialization.Base64Converter;
 import org.mockserver.client.serialization.PortBindingSerializer;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.dashboard.DashboardHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
@@ -26,8 +28,13 @@ import java.util.List;
 import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.netty.handler.codec.http.HttpHeaderNames.PROXY_AUTHENTICATE;
+import static io.netty.handler.codec.http.HttpHeaderNames.PROXY_AUTHORIZATION;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Locale.US;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
@@ -125,19 +132,32 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 } else if (request.getMethod().getValue().equals("CONNECT")) {
 
-                    ctx.channel().attr(PROXYING).set(Boolean.TRUE);
-                    // assume SSL for CONNECT request
-                    enabledSslUpstreamAndDownstream(ctx.channel());
-                    // add Subject Alternative Name for SSL certificate
-                    server.getScheduler().submit(new Runnable() {
-                        @Override
-                        public void run() {
-                            KeyAndCertificateFactory.addSubjectAlternativeName(request.getPath().getValue());
-                        }
-                    });
-                    ctx.pipeline().addLast(new HttpConnectHandler(server, mockServerLogger, request.getPath().getValue(), -1));
-                    ctx.pipeline().remove(this);
-                    ctx.fireChannelRead(request);
+                    String username = ConfigurationProperties.httpProxyServerUsername();
+                    String password = ConfigurationProperties.httpProxyServerPassword();
+                    if ((!username.isEmpty() && !password.isEmpty())
+                        && (!request.containsHeader(PROXY_AUTHORIZATION.toString())
+                            || !request.getFirstHeader(PROXY_AUTHORIZATION.toString()).toLowerCase(US).startsWith("basic ")
+                            || !request.getFirstHeader(PROXY_AUTHORIZATION.toString()).substring(6).equals(
+                                new Base64Converter().bytesToBase64String((username + ":" + password).getBytes(UTF_8))))) {
+
+                        ctx.writeAndFlush(response()
+                            .withStatusCode(PROXY_AUTHENTICATION_REQUIRED.code())
+                            .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + ConfigurationProperties.httpProxyServerRealm().replace("\"", "\\\"") + "\""));
+                    } else {
+                        ctx.channel().attr(PROXYING).set(Boolean.TRUE);
+                        // assume SSL for CONNECT request
+                        enabledSslUpstreamAndDownstream(ctx.channel());
+                        // add Subject Alternative Name for SSL certificate
+                        server.getScheduler().submit(new Runnable() {
+                            @Override
+                            public void run() {
+                                KeyAndCertificateFactory.addSubjectAlternativeName(request.getPath().getValue());
+                            }
+                        });
+                        ctx.pipeline().addLast(new HttpConnectHandler(server, mockServerLogger, request.getPath().getValue(), -1));
+                        ctx.pipeline().remove(this);
+                        ctx.fireChannelRead(request);
+                    }
 
                 } else {
 

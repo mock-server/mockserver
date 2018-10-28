@@ -256,6 +256,30 @@ public class ConfigurationProperties {
         return readInetSocketAddressProperty("mockserver.socksProxy");
     }
 
+    public static String httpProxyServerRealm() {
+        return readPropertyHierarchically("mockserver.httpProxyServerRealm", "MockServer HTTP Proxy");
+    }
+
+    public static void httpProxyServerRealm(String httpProxyServerRealm) {
+        System.setProperty("mockserver.httpProxyServerRealm", httpProxyServerRealm);
+    }
+
+    public static String httpProxyServerUsername() {
+        return readPropertyHierarchically("mockserver.httpProxyServerUsername", "");
+    }
+
+    public static void httpProxyServerUsername(String httpProxyServerUsername) {
+        System.setProperty("mockserver.httpProxyServerUsername", httpProxyServerUsername);
+    }
+
+    public static String httpProxyServerPassword() {
+        return readPropertyHierarchically("mockserver.httpProxyServerPassword", "");
+    }
+
+    public static void httpProxyServerPassword(String httpProxyServerPassword) {
+        System.setProperty("mockserver.httpProxyServerPassword", httpProxyServerPassword);
+    }
+
     private static InetSocketAddress readInetSocketAddressProperty(String s) {
         InetSocketAddress inetSocketAddress = null;
         String proxy = readPropertyHierarchically(s, null);
