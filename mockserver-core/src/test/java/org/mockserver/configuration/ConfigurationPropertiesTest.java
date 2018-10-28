@@ -455,4 +455,46 @@ public class ConfigurationPropertiesTest {
         assertEquals(false, ConfigurationProperties.disableSystemOut());
         assertEquals("false", System.getProperty("mockserver.disableSystemOut"));
     }
+
+    @Test
+    public void shouldSetAndReadHttpProxyServerRealm() {
+        // given
+        System.clearProperty("mockserver.httpProxyServerRealm");
+
+        // when
+        assertEquals("MockServer HTTP Proxy", ConfigurationProperties.httpProxyServerRealm());
+        ConfigurationProperties.httpProxyServerRealm("my realm");
+
+        // then
+        assertEquals("my realm", ConfigurationProperties.httpProxyServerRealm());
+        assertEquals("my realm", System.getProperty("mockserver.httpProxyServerRealm"));
+    }
+
+    @Test
+    public void shouldSetAndReadHttpProxyServerUsername() {
+        // given
+        System.clearProperty("mockserver.httpProxyServerUsername");
+
+        // when
+        assertEquals("", ConfigurationProperties.httpProxyServerUsername());
+        ConfigurationProperties.httpProxyServerUsername("john.doe");
+
+        // then
+        assertEquals("john.doe", ConfigurationProperties.httpProxyServerUsername());
+        assertEquals("john.doe", System.getProperty("mockserver.httpProxyServerUsername"));
+    }
+
+    @Test
+    public void shouldSetAndReadHttpProxyServerPassword() {
+        // given
+        System.clearProperty("mockserver.httpProxyServerPassword");
+
+        // when
+        assertEquals("", ConfigurationProperties.httpProxyServerPassword());
+        ConfigurationProperties.httpProxyServerPassword("p@ssw0rd");
+
+        // then
+        assertEquals("p@ssw0rd", ConfigurationProperties.httpProxyServerPassword());
+        assertEquals("p@ssw0rd", System.getProperty("mockserver.httpProxyServerPassword"));
+    }
 }
