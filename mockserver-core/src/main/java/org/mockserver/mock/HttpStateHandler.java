@@ -5,7 +5,10 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.callback.WebSocketClientRegistry;
-import org.mockserver.client.serialization.*;
+import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.client.serialization.VerificationSequenceSerializer;
+import org.mockserver.client.serialization.VerificationSerializer;
 import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.filters.MockServerEventLog;
@@ -15,7 +18,6 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.socket.KeyAndCertificateFactory;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.LoggerFactory;
@@ -27,10 +29,10 @@ import static com.google.common.net.MediaType.*;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.socket.KeyAndCertificateFactory.addSubjectAlternativeName;
 
 /**
  * @author jamesdbloom
@@ -103,12 +105,14 @@ public class HttpStateHandler {
     public void add(Expectation... expectations) {
         for (Expectation expectation : expectations) {
             final String hostHeader = expectation.getHttpRequest().getFirstHeader(HOST.toString());
-            scheduler.submit(new Runnable() {
-                @Override
-                public void run() {
-                    KeyAndCertificateFactory.addSubjectAlternativeName(hostHeader);
-                }
-            });
+            if (!Strings.isNullOrEmpty(hostHeader)) {
+                scheduler.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        addSubjectAlternativeName(hostHeader);
+                    }
+                });
+            }
             mockServerMatcher.add(expectation);
             mockServerLogger.info(CREATED_EXPECTATION, expectation.getHttpRequest(), "creating expectation:{}", expectation.clone());
         }
