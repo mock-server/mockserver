@@ -33,10 +33,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * @author jamesdbloom, ganskef
@@ -76,6 +73,10 @@ public class KeyAndCertificateFactory {
     static {
         Security.addProvider(new BouncyCastleProvider());
     }
+
+    private String mockServerCertificatePEMFile;
+    private String mockServerPublicKeyPEMFile;
+    private String mockServerPrivateKeyPEMFile;
 
     private KeyAndCertificateFactory() {
 
@@ -255,9 +256,10 @@ public class KeyAndCertificateFactory {
                 ConfigurationProperties.sslSubjectAlternativeNameDomains(),
                 ConfigurationProperties.sslSubjectAlternativeNameIps()
             );
-            saveCertificateAsPEMFile(mockServerCert, "MockServerCertificate.pem", true);
-            saveCertificateAsPEMFile(mockServerPublicKey, "MockServerPublicKey.pem", true);
-            saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey.pem", true);
+            String randomUUID = UUID.randomUUID().toString();
+            mockServerCertificatePEMFile = saveCertificateAsPEMFile(mockServerCert, "MockServerCertificate" + randomUUID + ".pem", true);
+            mockServerPublicKeyPEMFile = saveCertificateAsPEMFile(mockServerPublicKey, "MockServerPublicKey" + randomUUID + ".pem", true);
+            mockServerPrivateKeyPEMFile = saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey" + randomUUID + ".pem", true);
         } catch (Exception e) {
             MOCK_SERVER_LOGGER.error("Error while refreshing certificates", e);
         }
@@ -267,8 +269,8 @@ public class KeyAndCertificateFactory {
     /**
      * Saves X509Certificate as Base-64 encoded PEM file.
      */
-    private void saveCertificateAsPEMFile(Object x509Certificate, String filename, boolean deleteOnExit) throws IOException {
-        File pemFile = new File(filename);
+    private String saveCertificateAsPEMFile(Object x509Certificate, String filename, boolean deleteOnExit) throws IOException {
+        File pemFile = File.createTempFile(filename, null);
         try (FileWriter pemfileWriter = new FileWriter(pemFile)) {
             try (JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(pemfileWriter)) {
                 jcaPEMWriter.writeObject(x509Certificate);
@@ -277,14 +279,15 @@ public class KeyAndCertificateFactory {
         if (deleteOnExit) {
             pemFile.deleteOnExit();
         }
+        return pemFile.getAbsolutePath();
     }
 
     public PrivateKey mockServerPrivateKey() {
-        return loadPrivateKeyFromPEMFile("MockServerPrivateKey.pem");
+        return loadPrivateKeyFromPEMFile(mockServerPrivateKeyPEMFile);
     }
 
     public X509Certificate mockServerX509Certificate() {
-        return loadX509FromPEMFile("MockServerCertificate.pem");
+        return loadX509FromPEMFile(mockServerCertificatePEMFile);
     }
 
     public X509Certificate mockServerCertificateAuthorityX509Certificate() {
