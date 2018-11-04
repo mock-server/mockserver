@@ -581,7 +581,7 @@ mockServerClient("localhost", 1080)
 
 <h3>Logging with Maven Plugin</h3>
 
-<p>The mockserver-maven-plugin provides a logLevel settings that can be used to define the log level for all MockServer and MockServer Proxy classes, as follows:</p>
+<p>The mockserver-maven-plugin provides a logLevel settings that can be used to define the log level for all MockServer classes, as follows:</p>
 
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
@@ -589,7 +589,6 @@ mockServerClient("localhost", 1080)
      &lt;<span class="element">version</span>&gt;<span class="element_value">5.4.1</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
-        &lt;<span class="element">proxyPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">proxyPort</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
      &lt;/<span class="element">configuration</span>&gt;
      &lt;<span class="element">executions</span>&gt;

@@ -104,7 +104,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
    i.e. /opt/mockserver/run_mockserver.sh -serverPort 1080,1081 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -jvmOptions -logLevel INFO "-Dmockserver.enableCORSForAllResponses=true -Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'"</code></pre>
 
-<p>Then the appropriate options can be specified, for example, to setup a direct proxy (from <strong>0.0.0.0:1080</strong> to <strong>www.mock-server.com:80</strong>) using the following command:</p>
+<p>Then the appropriate options can be specified, for example, to setup a port forwarding proxy (from <strong>0.0.0.0:1080</strong> to <strong>www.mock-server.com:80</strong>) using the following command:</p>
 
 <pre><code class="code">docker run -d -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver /opt/mockserver/run_mockserver.sh -serverPort <span class="numeric_literal">1080</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
 

@@ -15,23 +15,16 @@
 <pre><code class="code">var mockserver = require(<span class="string_literal">'mockserver-node'</span>);
 mockserver.start_mockserver({
                 serverPort: <span class="numeric_literal">1080</span>,
-                proxyPort: <span class="numeric_literal">1080</span>,
-                verbose: <span class="keyword">true</span>
+                trace: <span class="keyword">true</span>
             });
 
 <span class="comment">// do something</span>
 
-mockserver.stop_mockserver();</code></pre>
+mockserver.stop_mockserver({
+                serverPort: <span class="numeric_literal">1080</span>
+            });</code></pre>
 
-<p>If you are only using the MockServer then only specify the MockServer port as follows:</p>
-
-<pre><code class="code">mockserver.start_mockserver({serverPort: <span class="numeric_literal">1080</span>});
-
-<span class="comment">// do something</span>
-
-mockserver.stop_mockserver();</code></pre>
-
-<p>The MockServer and the MockServer proxy use port unification to support HTTP and HTTPS on the same port. A client can then connect to the single port with both HTTP and HTTPS as the socket will automatically detected SSL traffic and decrypt it when required.</p>
+<p>The MockServer uses port unification to support HTTP, HTTPS, SOCKS, HTTP CONNECT, Port Forwarding Proxying on the same port. A client can then connect to the single port with both HTTP and HTTPS as the socket will automatically detected SSL traffic and decrypt it when required.</p>
 
 <p><strong>Grunt Plugin</strong></p>
 
@@ -46,18 +39,24 @@ mockserver.stop_mockserver();</code></pre>
         start: {
             options: {
                 serverPort: <span class="numeric_literal">1080</span>,
-                proxyPort: <span class="numeric_literal">1080</span>
+                trace: <span class="keyword">true</span>
             }
         }
     },
     stop_mockserver: {
         stop: {
-
+            options: {
+                serverPort: <span class="numeric_literal">1080</span>
+            }
         }
     }
 });
 
 grunt.loadNpmTasks(<span class="string_literal">'mockserver-node'</span>);</code></pre>
+
+<p><strong>Request Log</strong></p>
+
+The request log will only be captured in MockServer if the log level is <span class="inline_code">INFO</span> (or more verbose, i.e. <span class="inline_code">DEBUG</span> or <span class="inline_code">TRACE</span>) therefore to capture the request log and use the <span class="inline_code">/retrieve</span> endpoint ensure either the option <span class="inline_code">trace: <span class="keyword">true</span></span> or the command line switch <span class="inline_code">--verbose</span> is set.
 
 <p><strong>Grunt Plugin & NPM Module Options</strong></p>
 
@@ -65,13 +64,31 @@ grunt.loadNpmTasks(<span class="string_literal">'mockserver-node'</span>);</code
 
 <p><strong>Type:</strong> Integer <strong>Default:</strong> undefined</p>
 
-<p>This value specifies the HTTP and HTTPS port for the MockServer port unification is used to support HTTP and HTTPS on the same port. The MockServer will only be started if a port is provided, if this value is left undefined the MockServer will not be started.</p>
+<p>The HTTP, HTTPS, SOCKS and HTTP CONNECT port(s) for both mocking and proxying requests. Port unification is used to support all protocols for proxying and mocking on the same port(s). Supports comma separated list for binding to multiple ports.</p>
 
-<p><span class="inline_code"><strong>options.proxyPort</strong></span></p>
+<p><span class="inline_code"><strong>options.proxyRemotePort</strong></span></p>
 
 <p><strong>Type:</strong> Integer <strong>Default:</strong> undefined</p>
 
-<p>This value specifies the HTTP, HTTPS, SOCKS and HTTP CONNECT port for proxy, port unification is used to support all protocols on the same port. The proxy will only be started if a port is provided, if this value is left undefined the proxy will not be started.</p>
+<p>Optionally enables port forwarding mode. When specified all requests received will be forwarded to the specified port, unless they match an expectation.</p>
+
+<p><span class="inline_code"><strong>options.proxyRemoteHost</strong></span></p>
+
+<p><strong>Type:</strong> String <strong>Default:</strong> undefined</p>
+
+<p>Specified the host to forward all proxy requests to when port forwarding mode has been enabled using the <span class="inline_code">proxyRemotePort</span> option. This setting is ignored unless <span class="inline_code">proxyRemotePort</span> has been specified. If no value is provided for <span class="inline_code">proxyRemoteHost</span> when <span class="inline_code">proxyRemotePort</span> has been specified, <span class="inline_code">proxyRemoteHost</span> will default to <span class="inline_code"><span class="string_literal">"localhost"</span></span>.</p>
+
+<p><span class="inline_code"><strong>options.artifactoryHost</strong></span></p>
+
+<p><strong>Type:</strong> String <strong>Default:</strong> oss.sonatype.org</p>
+
+<p>This value specifies the name of the artifact repository host.</p>
+
+<p><span class="inline_code"><strong>options.artifactoryPath</strong></span></p>
+
+<p><strong>Type:</strong> String <strong>Default:</strong> /content/repositories/releases/org/mock-server/mockserver-netty/</p>
+
+<p>This value specifies the path to the artifactory leading to the mockserver-netty jar with dependencies.</p>
 
 <p><span class="inline_code"><strong>options.verbose</strong></span></p>
 
@@ -96,3 +113,16 @@ grunt.loadNpmTasks(<span class="string_literal">'mockserver-node'</span>);</code
 <pre><code class="code"><span class="string_literal">"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address="</span> + javaDebugPort</code></pre>
 
 <p><strong>Note:</strong> <span class="inline_code">suspend=y</span> is used so the MockServer will pause until the debugger is attached. The grunt task will wait 50 seconds for the debugger to be attached before it exits with a failure status.</p>
+
+<p><span class="inline_code"><strong>options.jvmOptions</strong></span></p>
+
+<p><strong>Type:</strong> String <strong>Default:</strong> undefined</p>
+
+<p>This value allows any system properties to be passed to the JVM that runs MockServer, for example:</p>
+
+<pre><code class="code">start_mockserver: {
+    options: {
+        serverPort: <span class="numeric_literal">1080</span>,
+        jvmOptions: <span class="string_literal">"-Dmockserver.enableCORSForAllResponses=true"</span>
+    }
+}</code></pre>

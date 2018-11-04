@@ -10,7 +10,6 @@
     &lt;<span class="element">version</span>&gt;<span class="element_value">5.4.1</span>&lt;/<span class="element">version</span>&gt;
     &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
-        &lt;<span class="element">proxyPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">proxyPort</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
         &lt;<span class="element">initializationClass</span>&gt;<span class="element_value">org.mockserver.maven.ExampleInitializationClass</span>&lt;/<span class="element">initializationClass</span>&gt;
     &lt;/<span class="element">configuration</span>&gt;
@@ -45,7 +44,6 @@
      &lt;<span class="element">version</span>&gt;<span class="element_value">5.4.1</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
-        &lt;<span class="element">proxyPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">proxyPort</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
         &lt;<span class="element">initializationClass</span>&gt;<span class="element_value">org.mockserver.maven.ExampleInitializationClass</span>&lt;/<span class="element">initializationClass</span>&gt;
      &lt;/<span class="element">configuration</span>&gt;
@@ -130,10 +128,10 @@
 
 <ul>
 	<li>
-		<strong>serverPort</strong> - The port the MockServer listens for incoming request.  Port unification is used to support both HTTP and HTTPS on the same port (required: false - but at least one of the two ports (serverPort or proxyPort) must be specified)
+		<strong>serverPort</strong> - The port the MockServer listens for incoming request.  Port unification is used to support both HTTP and HTTPS on the same port (required: false)
 	</li>
 	<li>
-		<strong>proxyRemotePort</strong> - The port the proxy listens to incoming requests. Port unification is used to support all protocols on the same port (required: false - but at least one of the two ports (serverPort or proxyPort) must be specified)
+		<strong>proxyRemotePort</strong> - The port the proxy listens to incoming requests. Port unification is used to support all protocols on the same port (required: false)
 	</li>proxyRemoteHost
 	<li>
 		<strong>timeout</strong> - How long to block waiting for MockServer, after the timeout the plugin will shutdown MockServer, used by <strong>run</strong> goal, 0 means wait indefinitely (required: false, default: 0)
@@ -420,10 +418,7 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <ul>
 	<li>
-		<strong>mockserver.serverPort</strong> - The port the MockServer listens for incoming request. Port unification is used to support both HTTP and HTTPS on the same port (required: false - but at least one of the two ports (serverPort or proxyPort) must be specified)
-	</li>
-	<li>
-		<strong>mockserver.proxyPort</strong> - The port the proxy listens to incoming requests. Port unification is used to support all protocols on the same port (required: false - but at least one of the two ports (serverPort or proxyPort) must be specified)
+		<strong>mockserver.serverPort</strong> - The port the MockServer listens for incoming request. Port unification is used to support both HTTP and HTTPS and proxying on the same port (required: false)
 	</li>
 	<li>
 		<strong>mockserver.logLevel</strong> - The logging level (required: false, default: WARN)

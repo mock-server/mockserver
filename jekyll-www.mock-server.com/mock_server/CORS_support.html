@@ -52,7 +52,6 @@ X-CORS: "MockServer CORS support enabled by default, to disable ConfigurationPro
         <pre class="prettyprint lang-javascript code"><code class="code">var mockserver = require('mockserver-node');
 mockserver.start_mockserver({
     serverPort: 1080,
-    proxyPort: 1080,
     verbose: true,
     systemProperties: "-Dmockserver.enableCORSForAPI=false"
 });

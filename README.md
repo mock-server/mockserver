@@ -52,7 +52,8 @@ Docker Hub contains the following artifacts:
 ### API Versions
 Date       | Version | Java API                                                              | REST API
 :--------- |:------- |:--------------------------------------------------------------------- |:-----------
-25-Dec-17  | 5.4.1	 | [Java API](http://mock-server.com/versions/5.4.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
+20-Jun-18  | 5.4.1	 | [Java API](http://mock-server.com/versions/5.4.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
+25-Dec-17  | 5.3.0	 | [Java API](http://mock-server.com/versions/5.3.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
 17-Dec-17  | 5.2.3	 | [Java API](http://mock-server.com/versions/5.2.3/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
 12-Dec-17  | 5.2.2	 | [Java API](http://mock-server.com/versions/5.2.2/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
 11-Dec-17  | 5.2.1	 | [Java API](http://mock-server.com/versions/5.2.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
