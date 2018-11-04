@@ -942,7 +942,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .when(
         request()
-            .withBody("starts_with_.*")
+            .withBody(regex("starts_with_.*"))
     )
     .respond(
         response()
@@ -954,6 +954,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
+        "type": "REGEX",
         "body": "starts_with_.*"
     },
     "httpResponse": {
@@ -972,6 +973,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
   "httpRequest" : {
+    "type": "REGEX",
     "body" : "starts_with_.*"
   },
   "httpResponse" : {

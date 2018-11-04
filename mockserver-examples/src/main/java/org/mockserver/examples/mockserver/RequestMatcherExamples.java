@@ -20,6 +20,7 @@ import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
+import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.StringBody.subString;
 import static org.mockserver.model.XPathBody.xpath;
@@ -270,7 +271,7 @@ public class RequestMatcherExamples {
         new MockServerClient("localhost", 1080)
             .when(
                 request()
-                    .withBody("starts_with_.*")
+                    .withBody(regex("starts_with_.*"))
             )
             .respond(
                 response()
