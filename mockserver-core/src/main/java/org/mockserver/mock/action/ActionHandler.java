@@ -80,9 +80,12 @@ public class ActionHandler {
     public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyThisRequest, final boolean synchronous) {
         final Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
         if (request.getHeaders().containsEntry("x-forwarded-by", "MockServer")) {
+
             mockServerLogger.trace("Received \"x-forwarded-by\" header caused by exploratory HTTP proxy - falling back to no proxy: {}", request);
             returnNotFound(responseWriter, request);
+
         } else if (expectation != null && expectation.getAction() != null) {
+
             final Action action = expectation.getAction();
             switch (action.getType()) {
                 case RESPONSE: {
@@ -237,6 +240,7 @@ public class ActionHandler {
                     break;
                 }
             }
+
         } else if ((enableCORSForAPI() || enableCORSForAllResponses()) && isPreflightRequest(request)) {
 
             responseWriter.writeResponse(request, OK);
@@ -285,7 +289,9 @@ public class ActionHandler {
             }, synchronous);
 
         } else {
+
             returnNotFound(responseWriter, request);
+
         }
     }
 

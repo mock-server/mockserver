@@ -40,22 +40,17 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <h3>Configure Port Mapping</h3>
 
-<p>This MockServer docker container exports the following ports:</p>
+<p>This MockServer docker container exports the following port:</p>
 
 <ul>
 	<li><strong>serverPort</strong> 1080</li>
-	<li><strong>proxyPort</strong> 1090</li>
 </ul>
 
 <p>To specify which ports (on the host machine) should be mapped to the MockServer docker container use the <strong>-p</strong> <span class="command_line_argument_placeholder">&lt;host port&gt;</span><strong>:</strong><span class="command_line_argument_placeholder">&lt;container port&gt;</span> option, as follows:</p>
 
-<pre><code class="code">docker run -d -p <span class="command_line_argument_placeholder">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span> -p <span class="command_line_argument_placeholder">&lt;proxyPort&gt;</span>:<span class="numeric_literal">1090</span> jamesdbloom/mockserver</code></pre>
+<pre><code class="code">docker run -d -p <span class="command_line_argument_placeholder">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver</code></pre>
 
 <p>For example:</p>
-
-<pre><code class="code">docker run -d -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> -p <span class="numeric_literal">1090</span>:<span class="numeric_literal">1090</span> jamesdbloom/mockserver</code></pre>
-
-<p>Only specify the required ports, for example, if you are not using the proxy there is no need to provide port mapping options for the proxy ports, as follows:</p>
 
 <pre><code class="code">docker run -d -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver</code></pre>
 
@@ -63,67 +58,60 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <p>By default when the MockServer container runs it executes a bash script passing three command line options, as follows</p>
 
-<pre><code class="code">/opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort <span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></code></pre>
+<pre><code class="code">/opt/mockserver/run_mockserver.sh -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</code></pre>
 
 <p>It is possible to pass an alternative command line to the container, by pre-pending the command to the end of the run command, as follows:</p>
 
-<pre><code class="code">docker run -d -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> -p <span class="numeric_literal">1090</span>:<span class="numeric_literal">1090</span> jamesdbloom/mockserver <em>/opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort
-	<span class="numeric_literal">1080</span> -proxyPort <span class="numeric_literal">1090</span></em></code></pre>
+<pre><code class="code">docker run -d -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver <em>/opt/mockserver/run_mockserver.sh -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</em></code></pre>
 
 <p>For following command can be used to view the available command line switches:</p>
 
 <pre><code class="code"><strong>docker run jamesdbloom/mockserver /opt/mockserver/run_mockserver.sh</strong>
 
-   Error: At least 'serverPort' or 'proxyPort' must be provided
+   Error: At least 'serverPort' must be provided
 
-   run_mockserver.sh [-logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>] \
-                     [-serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] \
-                     [-proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] \
-                     [-proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] \
-                     [-proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>]
+   run_mockserver.sh -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span> [-proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>] [-proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>] [-logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>] [-jvmOptions <span class="command_line_argument_placeholder">&lt;system parameters&gt;</span>]
 
      valid options are:
-        -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>                       OFF, ERROR, WARN, INFO, DEBUG, TRACE or ALL, as follows:
-                                                WARN - exceptions and errors
-                                                INFO - all interactions
 
-        -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>                      Specifies the HTTP and HTTPS port for the
-                                                MockServer. Port unification is used to
-                                                support HTTP and HTTPS on the same port
+        -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>                      The HTTP, HTTPS, SOCKS and HTTP CONNECT
+                                                port(s) for both mocking and proxying
+                                                requests.  Port unification is used to
+                                                support all protocols for proxying and
+                                                mocking on the same port(s). Supports
+                                                comma separated list for binding to
+                                                multiple ports.
 
-
-        -proxyPort <span class="command_line_argument_placeholder">&lt;port&gt;</span>                       Specifies the HTTP, HTTPS, SOCKS and HTTP
-                                                CONNECT port for proxy. Port unification
-                                                supports for all protocols on the same port
-
-        -proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>                 Specifies the port to forward all proxy
-                                                requests to (i.e. all requests received on
-                                                portPort). This setting is used to enable
-                                                the port forwarding mode therefore this
-                                                option disables the HTTP, HTTPS, SOCKS and
-                                                HTTP CONNECT support
+        -proxyRemotePort <span class="command_line_argument_placeholder">&lt;port&gt;</span>                 Optionally enables port forwarding mode.
+                                                When specified all requests received will
+                                                be forwarded to the specified port, unless
+                                                they match an expectation.
 
         -proxyRemoteHost <span class="command_line_argument_placeholder">&lt;hostname&gt;</span>             Specified the host to forward all proxy
-                                                requests to (i.e. all requests received on
-                                                portPort). This setting is ignored unless
+                                                requests to when port forwarding mode has
+                                                been enabled using the proxyRemotePort
+                                                option.  This setting is ignored unless
                                                 proxyRemotePort has been specified. If no
                                                 value is provided for proxyRemoteHost when
                                                 proxyRemotePort has been specified,
-                                                proxyRemoteHost will default to "localhost".
+                                                proxyRemoteHost will default to \"localhost\".
 
-        -genericJVMOptions <span class="command_line_argument_placeholder">&lt;system parameters&gt;</span>  Specified generic JVM options or system properties.
+        -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>                       Optionally specify log level as TRACE, DEBUG,
+                                                INFO, WARN, ERROR or OFF. If not specified
+                                                default is INFO
 
-   i.e. /opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -genericJVMOptions "-Dmockserver.enableCORSForAllResponses=true -Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'"</code></pre>
+        -jvmOptions <span class="command_line_argument_placeholder">&lt;system parameters&gt;</span>  Specified generic JVM options or system properties.
 
-<p>Then the appropriate options can be specified, for example, to setup a direct proxy (from <strong>0.0.0.0:1090</strong> to <strong>www.mock-server.com:80</strong>) using the following command:</p>
+   i.e. /opt/mockserver/run_mockserver.sh -serverPort 1080,1081 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -jvmOptions -logLevel INFO "-Dmockserver.enableCORSForAllResponses=true -Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'"</code></pre>
 
-<pre><code class="code">docker run -d -p <span class="numeric_literal">1090</span>:<span class="numeric_literal">1090</span> jamesdbloom/mockserver /opt/mockserver/run_mockserver.sh -proxyPort <span class="numeric_literal">1090</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
+<p>Then the appropriate options can be specified, for example, to setup a direct proxy (from <strong>0.0.0.0:1080</strong> to <strong>www.mock-server.com:80</strong>) using the following command:</p>
+
+<pre><code class="code">docker run -d -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver /opt/mockserver/run_mockserver.sh -serverPort <span class="numeric_literal">1080</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
 
 <h3>Interactive Shell</h3>
 
 <p>It is possible to launch the container with an interactive bash shell as follows:</p>
 
-<pre><code class="code">docker run -it -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> -p <span class="numeric_literal">1090</span>:<span class="numeric_literal">1090</span> jamesdbloom/mockserver <em>/bin/bash</em></code></pre>
+<pre><code class="code">docker run -it -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver <em>/bin/bash</em></code></pre>
 
-<p><strong>Note:</strong> in this example above the <strong>-d</strong> flag (for daemon) has been replaced with <strong>-i</strong> (to stdin open) and <strong>-t</strong> (for pseudo-tty) to ensure docker creates the container in the foreground with an attached stdin, see the
-	<a href="https://docs.docker.com/reference/run/">docker documentation</a> for more details.</p>
+<p><strong>Note:</strong> in this example above the <strong>-d</strong> flag (for daemon) has been replaced with <strong>-i</strong> (to stdin open) and <strong>-t</strong> (for pseudo-tty) to ensure docker creates the container in the foreground with an attached stdin, see the <a href="https://docs.docker.com/reference/run/">docker documentation</a> for more details.</p>

@@ -22,13 +22,13 @@ docker pull jamesdbloom/mockserver
 * **EITHER** run the container with no log output (i.e. in daemon mode)
  
 ```bash
-docker run -d --name mockserver -p <serverPort>:1080 -p <proxyPort>:1090 jamesdbloom/mockserver
+docker run -d --name mockserver -p <serverPort>:1080 jamesdbloom/mockserver
 ```
 
 * **OR** run the container with log output to console (i.e. in the foreground)
  
 ```bash
-docker run --name mockserver -p <serverPort>:1080 -p <proxyPort>:1090 jamesdbloom/mockserver
+docker run --name mockserver -p <serverPort>:1080 jamesdbloom/mockserver
 ```
 
 * **THEN** when your finished stop the container
@@ -40,52 +40,49 @@ docker stop mockserver && docker rm mockserver
 * **DEBUG** any issues or change the command line options you can run the container with a shell prompt
 
 ```bash
-docker run -i -t --name mockserver -p 1080:1080 -p 1090:1090 jamesdbloom/mockserver /bin/bash
+docker run -i -t --name mockserver -p 1080:1080 jamesdbloom/mockserver /bin/bash
 ```
 
 The default command executed when the container runs is:
  
 ```bash
-/opt/mockserver/run_mockserver.sh -logLevel INFO -serverPort 1080 -proxyPort 1090
+/opt/mockserver/run_mockserver.sh -serverPort 1080 -logLevel INFO
 ```
 
 This can be modified to change the command line options passed to the `/opt/mockserver/run_mockserver.sh` script, which supports the following options:
 
 ```
-run_mockserver.sh [-logLevel <level>] [-serverPort <port>] [-proxyPort <port>] \ 
-                  [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>]
+run_mockserver.sh -serverPort <port> [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>] [-logLevel <level>] 
 
  valid options are:
-    -logLevel <level>            OFF, ERROR, WARN, INFO, DEBUG, TRACE or ALL
-                                 as follows:
-                                 WARN - exceptions and errors
-                                 INFO - all interactions
 
-    -serverPort <port>           Specifies the HTTP, HTTPS, SOCKS and HTTP
-                                 CONNECT port(s) for proxy. Port unification
-                                 supports for all protocols on the same port(s)
-
-    -proxyPort <port>            Specifies the HTTP and HTTPS port for the
-                                 MockServer. Port unification is used to
-                                 support HTTP and HTTPS on the same port
-
-    -proxyRemotePort <port>      Specifies the port to forward all proxy
-                                 requests to (i.e. all requests received on
-                                 portPort). This setting is used to enable
-                                 the port forwarding mode therefore this
-                                 option disables the HTTP, HTTPS, SOCKS and
-                                 HTTP CONNECT support
-
-    -proxyRemoteHost <hostname>  Specified the host to forward all proxy
-                                 requests to (i.e. all requests received on
-                                 portPort). This setting is ignored unless
-                                 proxyRemotePort has been specified. If no
-                                 value is provided for proxyRemoteHost when
-                                 proxyRemotePort has been specified,
-                                 proxyRemoteHost will default to "localhost".
-
-i.e. run_mockserver.sh -logLevel INFO -serverPort 1080,1081 -proxyPort 1090 \ 
-                       -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com
+    -serverPort <port>           The HTTP, HTTPS, SOCKS and HTTP CONNECT       
+                                 port(s) for both mocking and proxying         
+                                 requests.  Port unification is used to        
+                                 support all protocols for proxying and        
+                                 mocking on the same port(s). Supports         
+                                 comma separated list for binding to           
+                                 multiple ports.                               
+        
+    -proxyRemotePort <port>      Optionally enables port forwarding mode.      
+                                 When specified all requests received will     
+                                 be forwarded to the specified port, unless    
+                                 they match an expectation.                    
+        
+    -proxyRemoteHost <hostname>  Specified the host to forward all proxy       
+                                 requests to when port forwarding mode has     
+                                 been enabled using the proxyRemotePort        
+                                 option.  This setting is ignored unless       
+                                 proxyRemotePort has been specified. If no     
+                                 value is provided for proxyRemoteHost when    
+                                 proxyRemotePort has been specified,           
+                                 proxyRemoteHost will default to \"localhost\".
+        
+    -logLevel <level>            Optionally specify log level as TRACE, DEBUG, 
+                                 INFO, WARN, ERROR or OFF. If not specified    
+                                 default is INFO                               
+        
+i.e. run_mockserver.sh -logLevel INFO -serverPort 1080,1081 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com
 ```
 
 The `logLevel` can also be modified by passing environment variable through docker-compose.yml file. The following is a sample docker-compose.yml file for changing logLevel:
@@ -112,10 +109,9 @@ MockServer supports:
 * recording requests and responses to analyse how a system behaves ([learn more](http://www.mock-server.com/#what-is-mockserver))
 * verifying which requests and responses have been sent as part of a test ([learn more](http://www.mock-server.com/#what-is-mockserver))
 
-This docker container will run an instance of the MockServer on the following ports:
+This docker container will run an instance of the MockServer on the following port:
 
 * serverPort **1080**
-* proxyPort **1090**
 
 For information on how to use the MockServer please see http://www.mock-server.com
 

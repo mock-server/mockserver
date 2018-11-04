@@ -17,7 +17,7 @@ function showUsage {
     echo >&2 "        -proxyRemotePort <port>                 Optionally enables port forwarding mode."
     echo >&2 "                                                When specified all requests received will"
     echo >&2 "                                                be forwarded to the specified port, unless"
-    echo >&2 "                                                they match an expectation"
+    echo >&2 "                                                they match an expectation."
     echo >&2 "                                                "
     echo >&2 "        -proxyRemoteHost <hostname>             Specified the host to forward all proxy"
     echo >&2 "                                                requests to when port forwarding mode has"

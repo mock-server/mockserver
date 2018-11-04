@@ -10,15 +10,15 @@
     <div class="panel">
         <button class="accordion inner">Java</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new ProxyClient("localhost", 1090)
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
     .retrieveRecordedRequests(
         request()
     );</code></pre>
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
-proxyClient("localhost", 1090)
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
     .retrieveRecordedRequests({})
     .then(
         function (recordedRequests) {
@@ -31,14 +31,14 @@ proxyClient("localhost", 1090)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=REQUESTS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_recorded_reqs_using_request_matcher" class="accordion">retrieve recorded requests using request matcher</button>
     <div class="panel">
         <button class="accordion inner">Java</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new ProxyClient("localhost", 1090)
+            <pre class="prettyprint lang-java code"><code class="code">HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
     .retrieveRecordedRequests(
         request()
             .withPath("/some/path")
@@ -47,8 +47,8 @@ proxyClient("localhost", 1090)
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
-proxyClient("localhost", 1090).retrieveRecordedRequests({
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedRequests({
     "path": "/some/path",
     "method": "POST"
 }).then(
@@ -62,7 +62,7 @@ proxyClient("localhost", 1090).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=REQUESTS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -72,7 +72,7 @@ proxyClient("localhost", 1090).retrieveRecordedRequests({
     <div class="panel">
         <button class="accordion inner">Java</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">String recordedRequests = new ProxyClient("localhost", 1090)
+            <pre class="prettyprint lang-java code"><code class="code">String recordedRequests = new MockServerClient("localhost", 1080)
     .retrieveRecordedRequests(
         request()
             .withPath("/some/path")
@@ -82,7 +82,7 @@ proxyClient("localhost", 1090).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=REQUESTS&format=JAVA" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS&format=JAVA" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -91,7 +91,7 @@ proxyClient("localhost", 1090).retrieveRecordedRequests({
     <div class="panel">
         <button class="accordion inner">Java</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">String recordedRequests = new ProxyClient("localhost", 1090)
+            <pre class="prettyprint lang-java code"><code class="code">String recordedRequests = new MockServerClient("localhost", 1080)
     .retrieveRecordedRequests(
         request()
             .withPath("/some/path")
@@ -101,8 +101,8 @@ proxyClient("localhost", 1090).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
-proxyClient("localhost", 1090).retrieveRecordedRequests({
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedRequests({
     "path": "/some/path",
     "method": "POST"
 }).then(
@@ -116,7 +116,7 @@ proxyClient("localhost", 1090).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=REQUESTS&format=JSON" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS&format=JSON" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -135,15 +135,15 @@ proxyClient("localhost", 1090).retrieveRecordedRequests({
     <div class="panel">
         <button class="accordion inner">Java</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new ProxyClient("localhost", 1090)
+            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new MockServerClient("localhost", 1080)
     .retrieveRecordedExpectations(
         request()
     );</code></pre>
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
-proxyClient("localhost", 1090)
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080)
     .retrieveRecordedExpectations({})
     .then(
         function (recordedExpectations) {
@@ -156,14 +156,14 @@ proxyClient("localhost", 1090)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=RECORDED_EXPECTATIONS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_recorded_expectations_using_request_matcher" class="accordion">retrieve recorded expectations using request matcher</button>
     <div class="panel">
         <button class="accordion inner">Java</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new ProxyClient("localhost", 1090)
+            <pre class="prettyprint lang-java code"><code class="code">Expectation[] recordedExpectations = new MockServerClient("localhost", 1080)
     .retrieveRecordedExpectations(
         request()
             .withPath("/some/path")
@@ -172,8 +172,8 @@ proxyClient("localhost", 1090)
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
-proxyClient("localhost", 1090).retrieveRecordedExpectations({
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedExpectations({
     "path": "/some/path",
     "method": "POST"
 }).then(
@@ -187,7 +187,7 @@ proxyClient("localhost", 1090).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=RECORDED_EXPECTATIONS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -197,7 +197,7 @@ proxyClient("localhost", 1090).retrieveRecordedExpectations({
     <div class="panel">
         <button class="accordion inner">Java</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">String recordedExpectations = new ProxyClient("localhost", 1090)
+            <pre class="prettyprint lang-java code"><code class="code">String recordedExpectations = new MockServerClient("localhost", 1080)
     .retrieveRecordedExpectations(
         request()
             .withPath("/some/path")
@@ -207,7 +207,7 @@ proxyClient("localhost", 1090).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=RECORDED_EXPECTATIONS&format=JAVA" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS&format=JAVA" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -216,7 +216,7 @@ proxyClient("localhost", 1090).retrieveRecordedExpectations({
     <div class="panel">
         <button class="accordion inner">Java</button>
         <div class="panel">
-            <pre class="prettyprint lang-java code"><code class="code">String recordedExpectations = new ProxyClient("localhost", 1090)
+            <pre class="prettyprint lang-java code"><code class="code">String recordedExpectations = new MockServerClient("localhost", 1080)
     .retrieveRecordedExpectations(
         request()
             .withPath("/some/path")
@@ -226,8 +226,8 @@ proxyClient("localhost", 1090).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">JavaScript</button>
         <div class="panel">
-            <pre class="prettyprint lang-javascript code"><code class="code">var proxyClient = require('mockserver-client').proxyClient;
-proxyClient("localhost", 1090).retrieveRecordedExpectations({
+            <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).retrieveRecordedExpectations({
     "path": "/some/path",
     "method": "POST"
 }).then(
@@ -241,7 +241,7 @@ proxyClient("localhost", 1090).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1090/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>

@@ -42,15 +42,13 @@ sitemap:
 
 <p><strong>Start MockServer Proxy</strong></p>
 
-<p>If the proxy is being started programmatically from within the same JVM using <span class="annotation">org.mockserver.proxy.ProxyRunner</span> or <span class="annotation">org.mockserver.integration.ClientAndProxy</span> then the environment variables <strong>"http.proxyHost"</strong> and <strong>"http.proxyPort"</strong> will be set automatically.</p>
-
-<p>If the proxy is being started as separate JVM, for example using <a href="/proxy/running_mock_server_proxy.html#running_from_command_line">the command line</a>, then the system being analysed needs the following command line options to set the correct environment variables.</p>
+<p>After started MockServer, for example using <a href="/proxy/running_mock_server_proxy.html#running_from_command_line">the command line</a>, then the system being analysed needs the following command line options to set the correct environment variables.</p>
 
 <pre><code class="code">-Dhttp.proxyHost=&lt;proxy hostname&gt; -Dhttp.proxyPort=&lt;proxy port&gt;</code></pre>
 
 <p>For example:</p>
 
-<pre><code class="code">-DproxySet=true -Dhttp.proxyHost=localhost -Dhttp.proxyPort=1090</code></pre>
+<pre><code class="code">-DproxySet=true -Dhttp.proxyHost=localhost -Dhttp.proxyPort=1080</code></pre>
 
 <a name="configure_clients" class="anchor" href="#configure_clients">&nbsp;</a>
 
