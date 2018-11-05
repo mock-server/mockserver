@@ -11,8 +11,11 @@ import org.mockserver.client.serialization.deserializers.body.BodyWithContentTyp
 import org.mockserver.client.serialization.deserializers.collections.CookiesDeserializer;
 import org.mockserver.client.serialization.deserializers.collections.HeadersDeserializer;
 import org.mockserver.client.serialization.deserializers.collections.ParametersDeserializer;
+import org.mockserver.client.serialization.deserializers.condition.VerificationTimesDTODeserializer;
 import org.mockserver.client.serialization.deserializers.string.NottableStringDeserializer;
 import org.mockserver.client.serialization.model.*;
+import org.mockserver.client.serialization.serializers.condition.VerificationTimesDTOSerializer;
+import org.mockserver.client.serialization.serializers.condition.VerificationTimesSerializer;
 import org.mockserver.client.serialization.serializers.response.TimesDTOSerializer;
 import org.mockserver.client.serialization.serializers.response.TimesSerializer;
 import org.mockserver.client.serialization.serializers.body.*;
@@ -25,6 +28,7 @@ import org.mockserver.client.serialization.serializers.response.HttpResponseSeri
 import org.mockserver.client.serialization.serializers.string.NottableStringSerializer;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
+import org.mockserver.verify.VerificationTimes;
 
 /**
  * @author jamesdbloom
@@ -98,6 +102,10 @@ public class ObjectMapperFactory {
             addSerializer(XPathBodyDTO.class, new XPathBodyDTOSerializer());
             addSerializer(XmlSchemaBody.class, new XmlSchemaBodySerializer());
             addSerializer(XmlSchemaBodyDTO.class, new XmlSchemaBodyDTOSerializer());
+            // condition
+            addDeserializer(VerificationTimesDTO.class, new VerificationTimesDTODeserializer());
+            addSerializer(VerificationTimesDTO.class, new VerificationTimesDTOSerializer());
+            addSerializer(VerificationTimes.class, new VerificationTimesSerializer());
             // nottable string
             addSerializer(NottableString.class, new NottableStringSerializer());
             addDeserializer(NottableString.class, new NottableStringDeserializer());

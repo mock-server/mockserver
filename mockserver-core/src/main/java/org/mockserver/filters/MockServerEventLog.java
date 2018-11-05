@@ -164,19 +164,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         String failureMessage = "";
 
         if (verification != null) {
-            List<HttpRequest> matchingRequests = retrieveRequests(verification.getHttpRequest());
-
-            boolean verified = true;
-
-            if (verification.getTimes().getCount() != 0 && matchingRequests.isEmpty()) {
-                verified = false;
-            } else if (verification.getTimes().isExact() && matchingRequests.size() != verification.getTimes().getCount()) {
-                verified = false;
-            } else if (matchingRequests.size() < verification.getTimes().getCount()) {
-                verified = false;
-            }
-
-            if (!verified) {
+            if (!verification.getTimes().matches(retrieveRequests(verification.getHttpRequest()).size())) {
                 List<HttpRequest> allRequestsArray = retrieveRequests(null);
                 String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verification.getHttpRequest());
                 String serializedAllRequestInLog = allRequestsArray.size() == 1 ? httpRequestSerializer.serialize(true, allRequestsArray.get(0)) : httpRequestSerializer.serialize(true, allRequestsArray);

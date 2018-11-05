@@ -3,11 +3,11 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-        "count": {
+        "atLeast": {
             "type": "integer"
         },
-        "exact": {
-            "type": "boolean"
+        "atMost": {
+            "type": "integer"
         }
     }
 }

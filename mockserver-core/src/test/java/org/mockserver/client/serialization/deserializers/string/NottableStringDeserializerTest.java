@@ -21,7 +21,7 @@ import static org.mockserver.model.NottableString.string;
 public class NottableStringDeserializerTest {
 
     @Test
-    public void shouldSerializeNottableString() throws IOException {
+    public void shouldDeserializeNottableString() throws IOException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("\"some_string\"", NottableString.class),
             is(string("some_string")));
 
@@ -30,7 +30,7 @@ public class NottableStringDeserializerTest {
     }
 
     @Test
-    public void shouldSerializeNotNottableString() throws IOException {
+    public void shouldDeserializeNotNottableString() throws IOException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("\"!some_string\"", NottableString.class),
             is(NottableString.not("some_string")));
 
@@ -39,14 +39,14 @@ public class NottableStringDeserializerTest {
     }
 
     @Test
-    public void shouldSerializeNottableStringWithExclamationMark() throws IOException {
+    public void shouldDeserializeNottableStringWithExclamationMark() throws IOException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":false,\"value\":\"!some_string\"}", NottableString.class),
             is(string("!some_string")));
     }
 
 
     @Test
-    public void shouldSerializeNottableStringWithNot() throws IOException {
+    public void shouldDeserializeNottableStringWithNot() throws IOException {
         assertThat(ObjectMapperFactory.createObjectMapper().readValue("{\"not\":true,\"value\":\"some_string\"}", NottableString.class),
             is(NottableString.not("some_string")));
     }

@@ -52,9 +52,9 @@
         <slf4j.version>1.7.25</slf4j.version>
         <tomcat.version>8.0.47</tomcat.version>
         <jackson.version>2.9.6</jackson.version>
-        <netty.version>4.1.21.Final</netty.version>
+        <netty.version>4.1.31.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
-        <boucycastle.verion>1.58</boucycastle.verion>
+        <boucycastle.verion>1.60</boucycastle.verion>
         <spring.version>4.3.12.RELEASE</spring.version>
         <skipTests>false</skipTests>
         <release.arguments />

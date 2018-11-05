@@ -8,32 +8,26 @@ import org.mockserver.verify.VerificationTimes;
  */
 public class VerificationTimesDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<VerificationTimes> {
 
-    private int count;
-    private boolean exact;
+    private int atLeast;
+    private int atMost;
 
     public VerificationTimesDTO(VerificationTimes times) {
-        count = times.getCount();
-        exact = times.isExact();
+        atLeast = times.getAtLeast();
+        atMost = times.getAtMost();
     }
 
     public VerificationTimesDTO() {
     }
 
     public VerificationTimes buildObject() {
-        if (!exact) {
-            return VerificationTimes.atLeast(count);
-        } else if (count == 1) {
-            return VerificationTimes.once();
-        } else {
-            return VerificationTimes.exactly(count);
-        }
+        return VerificationTimes.between(atLeast, atMost);
     }
 
-    public int getCount() {
-        return count;
+    public int getAtLeast() {
+        return atLeast;
     }
 
-    public boolean isExact() {
-        return exact;
+    public int getAtMost() {
+        return atMost;
     }
 }

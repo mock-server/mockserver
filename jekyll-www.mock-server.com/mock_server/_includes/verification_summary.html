@@ -45,8 +45,7 @@ mockServerClient("localhost", 1080)
         "path": "/simple"
     },
     "times": {
-        "count": 2,
-        "exact": false
+        "atLeast": 2
     }
 }'</code></pre>
     </div>
@@ -72,7 +71,7 @@ mockServerClient("localhost", 1080)
     }, 1, true)
   .then(
     function () {
-      console.log("request found exactly 2 times");
+      console.log("request found exactly 1 times");
     },
     function (error) {
       console.log(error);
@@ -86,8 +85,8 @@ mockServerClient("localhost", 1080)
         "path": "/simple"
     },
     "times": {
-        "count": 1,
-        "exact": true
+        "atLeast": 1,
+        "atMost": 1
     }
 }'</code></pre>
     </div>
@@ -113,7 +112,7 @@ mockServerClient("localhost", 1080)
     }, 0, true)
   .then(
     function () {
-      console.log("request found exactly 2 times");
+      console.log("request found zero times");
     },
     function (error) {
       console.log(error);
@@ -127,8 +126,7 @@ mockServerClient("localhost", 1080)
         "path": "/simple"
     },
     "times": {
-        "count": 0,
-        "exact": true
+        "atMost": 0
     }
 }'</code></pre>
     </div>

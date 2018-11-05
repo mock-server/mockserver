@@ -29,8 +29,7 @@ public class HttpRequestDTOSerializerTest {
         assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
             new HttpRequestDTO(
                 request()
-            )
-            ),
+            )),
             is("{ }"));
     }
 

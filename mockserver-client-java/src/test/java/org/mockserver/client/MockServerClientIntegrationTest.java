@@ -1593,8 +1593,8 @@ public class MockServerClientIntegrationTest {
                     "    \"body\" : \"some_request_body\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"count\" : 1," + NEW_LINE +
-                    "    \"exact\" : true" + NEW_LINE +
+                    "    \"atLeast\" : 1," + NEW_LINE +
+                    "    \"atMost\" : 1" + NEW_LINE +
                     "  }" + NEW_LINE +
                     "}"))
         ));
