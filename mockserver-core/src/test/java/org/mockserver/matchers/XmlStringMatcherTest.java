@@ -28,6 +28,36 @@ public class XmlStringMatcherTest {
     }
 
     @Test
+    public void shouldMatchMatchingXMLWithDifferentNamespaceOrders() {
+        String matched = "" +
+            "<?xml version=\"1.0\"?>\n" +
+            "\n" +
+            "<soap:Envelope\n" +
+            "xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\"\n" +
+            "soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\">\n" +
+            "\n" +
+            "<soap:Body xmlns:m=\"http://www.example.org/stock\">\n" +
+            "  <m:GetStockPriceResponse>\n" +
+            "    <m:Price>34.5</m:Price>\n" +
+            "  </m:GetStockPriceResponse>\n" +
+            "</soap:Body>\n" +
+            "\n" +
+            "</soap:Envelope>";
+        assertTrue(new XmlStringMatcher(new MockServerLogger(), "" +
+            "<?xml version=\"1.0\"?>\n" +
+            "<soap:Envelope\n" +
+            "soap:encodingStyle=\"http://www.w3.org/2003/05/soap-encoding\"\n" +
+            "xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope/\"\n" +
+            "xmlns:m=\"http://www.example.org/stock\">\n" +
+            "<soap:Body>\n" +
+            "  <m:GetStockPriceResponse>\n" +
+            "    <m:Price>34.5</m:Price>\n" +
+            "  </m:GetStockPriceResponse>\n" +
+            "</soap:Body>\n" +
+            "</soap:Envelope>").matches(matched));
+    }
+
+    @Test
     public void shouldNotMatchMatchingXMLWithNot() {
         String matched = "" +
                 "<element>" +

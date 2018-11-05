@@ -295,6 +295,11 @@
                 <artifactId>jaxb-api</artifactId>
                 <version>2.3.0</version>
             </dependency>
+            <dependency>
+                <groupId>org.xmlunit</groupId>
+                <artifactId>xmlunit-core</artifactId>
+                <version>2.6.2</version>
+            </dependency>
 
             <!-- commons & guava -->
             <dependency>
