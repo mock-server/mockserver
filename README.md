@@ -49,29 +49,29 @@ Docker Hub contains the following artifacts:
 * [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client for both the MockServer and the proxy 
 * [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.4.1/mockServerClient.js) client for both the MockServer and the proxy
 
-### API Versions
-Date       | Version | Java API                                                              | REST API
-:--------- |:------- |:--------------------------------------------------------------------- |:-----------
-**NOT YET RELEASED**  | 5.5.0	 | [Java API](http://mock-server.com/versions/5.5.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.5.x)
-20-Jun-18  | 5.4.1	 | [Java API](http://mock-server.com/versions/5.4.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.4.x)
-25-Dec-17  | 5.3.0	 | [Java API](http://mock-server.com/versions/5.3.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
-17-Dec-17  | 5.2.3	 | [Java API](http://mock-server.com/versions/5.2.3/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
-12-Dec-17  | 5.2.2	 | [Java API](http://mock-server.com/versions/5.2.2/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
-11-Dec-17  | 5.2.1	 | [Java API](http://mock-server.com/versions/5.2.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
-10-Dec-17  | 5.2.0	 | [Java API](http://mock-server.com/versions/5.2.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
-06-Dec-17  | 5.1.1	 | [Java API](http://mock-server.com/versions/5.1.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.1.x)
-05-Dec-17  | 5.1.0	 | [Java API](http://mock-server.com/versions/5.1.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.1.x)
-05-Dec-17  | 5.0.1	 | [Java API](http://mock-server.com/versions/5.0.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.0.x)
-04-Dec-17  | 5.0.0	 | [Java API](http://mock-server.com/versions/5.0.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.0.x)
-30-Nov-17  | 4.1.0	 | [Java API](http://mock-server.com/versions/4.1.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/4.x.x)
-28-Nov-17  | 4.0.0	 | [Java API](http://mock-server.com/versions/4.0.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/4.x.x)
-16-Nov-17  | 3.12	 | [Java API](http://mock-server.com/versions/3.12/apidocs/index.html)   | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
-10-Sep-17  | 3.11	 | [Java API](http://mock-server.com/versions/3.11/apidocs/index.html)   | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
-22-Jun-17  | 3.10.8	 | [Java API](http://mock-server.com/versions/3.10.8/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
-02-May-17  | 3.10.7	 | [Java API](http://mock-server.com/versions/3.10.7/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
-27-Apr-17  | 3.10.6	 | [Java API](http://mock-server.com/versions/3.10.6/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
-25-Apr-17  | 3.10.5	 | [Java API](http://mock-server.com/versions/3.10.5/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
-06-Mar-16  | 3.10.4	 |  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+### Document
+Date       | Version | Documentation                                  | Java API                                                              | REST API
+:--------- |:------- |:---------------------------------------------- |:--------------------------------------------------------------------- |:-----------
+**NOT Y**  | 5.5.0	 | [Documentation](http://mock-server.com)	      | [Java API](http://mock-server.com/versions/5.5.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.5.x)
+20-Jun-18  | 5.4.1	 | [Documentation](https://5-4.mock-server.com)   | [Java API](http://mock-server.com/versions/5.4.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.4.x)
+25-Dec-17  | 5.3.0	 | [Documentation](https://5-3.mock-server.com)   | [Java API](http://mock-server.com/versions/5.3.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
+17-Dec-17  | 5.2.3	 | [Documentation](https://5-2.mock-server.com)   | [Java API](http://mock-server.com/versions/5.2.3/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
+12-Dec-17  | 5.2.2	 | [Documentation](https://5-2.mock-server.com)   | [Java API](http://mock-server.com/versions/5.2.2/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
+11-Dec-17  | 5.2.1	 | [Documentation](https://5-2.mock-server.com)   | [Java API](http://mock-server.com/versions/5.2.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
+10-Dec-17  | 5.2.0	 | [Documentation](https://5-2.mock-server.com)   | [Java API](http://mock-server.com/versions/5.2.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x)
+06-Dec-17  | 5.1.1	 | [Documentation](https://5-1.mock-server.com)   | [Java API](http://mock-server.com/versions/5.1.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.1.x)
+05-Dec-17  | 5.1.0	 | [Documentation](https://5-1.mock-server.com)   | [Java API](http://mock-server.com/versions/5.1.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.1.x)
+05-Dec-17  | 5.0.1	 | [Documentation](https://5-0.mock-server.com)   | [Java API](http://mock-server.com/versions/5.0.1/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.0.x)
+04-Dec-17  | 5.0.0	 | [Documentation](https://5-0.mock-server.com)   | [Java API](http://mock-server.com/versions/5.0.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.0.x)
+30-Nov-17  | 4.1.0	 |  | [Java API](http://mock-server.com/versions/4.1.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/4.x.x)
+28-Nov-17  | 4.0.0	 |  | [Java API](http://mock-server.com/versions/4.0.0/apidocs/index.html)  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/4.x.x)
+16-Nov-17  | 3.12	 |  | [Java API](http://mock-server.com/versions/3.12/apidocs/index.html)   | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+10-Sep-17  | 3.11	 |  | [Java API](http://mock-server.com/versions/3.11/apidocs/index.html)   | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+22-Jun-17  | 3.10.8	 |  | [Java API](http://mock-server.com/versions/3.10.8/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+02-May-17  | 3.10.7	 |  | [Java API](http://mock-server.com/versions/3.10.7/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+27-Apr-17  | 3.10.6	 |  | [Java API](http://mock-server.com/versions/3.10.6/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+25-Apr-17  | 3.10.5	 |  | [Java API](http://mock-server.com/versions/3.10.5/apidocs/index.html) | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
+06-Mar-16  | 3.10.4	 |  |  | [REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server_api/3.x.x)
 
 # Issues
 
