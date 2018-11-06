@@ -8,6 +8,7 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
+    private long timestamp = 0;
     private NottableString method = string("");
     private NottableString path = string("");
     private Parameters queryStringParameters = new Parameters();
@@ -36,6 +37,7 @@ public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
             body = BodyDTO.createDTO(httpRequest.getBody());
             keepAlive = httpRequest.isKeepAlive();
             secure = httpRequest.isSecure();
+            timestamp = httpRequest.getTimestamp();
         }
     }
 
@@ -48,7 +50,9 @@ public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
             .withHeaders(headers)
             .withCookies(cookies)
             .withSecure(secure)
-            .withKeepAlive(keepAlive);
+            .withKeepAlive(keepAlive)
+            .withTimestamp(timestamp);
+
     }
 
     public NottableString getMethod() {
@@ -122,4 +126,9 @@ public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
         this.secure = secure;
         return this;
     }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
 }

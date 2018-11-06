@@ -17,6 +17,7 @@ import static org.mockserver.model.NottableString.string;
  * @author jamesdbloom
  */
 public class HttpRequest extends Not {
+    private long timestamp = 0;
     private NottableString method = string("");
     private NottableString path = string("");
     private Parameters queryStringParameters = new Parameters();
@@ -524,6 +525,16 @@ public class HttpRequest extends Not {
         return this;
     }
 
+    public HttpRequest withTimestamp(long value) {
+        this.timestamp = value;
+        return this;
+    }
+
+    public long getTimestamp() {
+        return this.timestamp;
+    }
+
+
     /**
      * Adds one cookie to match on or to not match on using the NottableString, each NottableString can either be a positive matching value,
      * such as string("match"), or a value to not match on, such as not("do not match"), the string values passed to the NottableString
@@ -561,7 +572,8 @@ public class HttpRequest extends Not {
             .withHeaders(getHeaders().clone())
             .withCookies(getCookies().clone())
             .withKeepAlive(keepAlive)
-            .withSecure(secure);
+            .withSecure(secure)
+            .withTimestamp(timestamp);
     }
 
     public HttpRequest update(HttpRequest replaceRequest) {
@@ -589,6 +601,11 @@ public class HttpRequest extends Not {
         if (replaceRequest.isKeepAlive() != null) {
             withKeepAlive(replaceRequest.isKeepAlive());
         }
+
+        if (replaceRequest.getTimestamp() != 0) {
+            withTimestamp(replaceRequest.getTimestamp());
+        }
+
         return this;
     }
 }

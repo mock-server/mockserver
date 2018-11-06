@@ -314,14 +314,14 @@ public class ActionHandlerTest {
         actionHandler.processAction(request("request_one"), mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), true, true);
 
         // then
-        verify(mockHttpStateHandler).log(new RequestResponseLogEntry(request, response("some_body")));
+        verify(mockHttpStateHandler).log(new RequestResponseLogEntry(request, response("some_body"),System.currentTimeMillis() / 1000L));
         verify(mockNettyHttpClient).sendRequest(request("request_one"), remoteAddress, ConfigurationProperties.socketConnectionTimeout());
         verify(mockLogFormatter).info(
             FORWARDED_REQUEST,
             request,
             "returning response:{}for request:{}as curl:{}",
             response("some_body"),
-            request,
+            request.withTimestamp(System.currentTimeMillis() / 1000L),
             new HttpRequestToCurlSerializer().toCurl(request, remoteAddress)
         );
     }

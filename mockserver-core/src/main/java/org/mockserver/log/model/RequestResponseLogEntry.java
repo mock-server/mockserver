@@ -16,6 +16,11 @@ public class RequestResponseLogEntry extends LogEntry implements ExpectationLogE
 
     private final HttpResponse httpResponse;
 
+    public RequestResponseLogEntry(HttpRequest httpRequest, HttpResponse httpResponse, long timestamp) {
+        super(httpRequest.withTimestamp(timestamp));
+        this.httpResponse = httpResponse;
+    }
+
     public RequestResponseLogEntry(HttpRequest httpRequest, HttpResponse httpResponse) {
         super(httpRequest);
         this.httpResponse = httpResponse;

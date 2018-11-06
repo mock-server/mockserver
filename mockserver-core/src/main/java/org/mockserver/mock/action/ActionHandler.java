@@ -144,7 +144,7 @@ public class ActionHandler {
                                     try {
                                         HttpResponse response = responseFuture.get();
                                         responseWriter.writeResponse(request, response, false);
-                                        httpStateHandler.log(new RequestResponseLogEntry(request, response));
+                                        httpStateHandler.log(new RequestResponseLogEntry(request, response, System.currentTimeMillis() / 1000L));
                                         mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
                                     } catch (Exception ex) {
                                         mockServerLogger.error(request, ex, ex.getMessage());
@@ -165,7 +165,7 @@ public class ActionHandler {
                                     try {
                                         HttpResponse response = responseFuture.get();
                                         responseWriter.writeResponse(request, response, false);
-                                        httpStateHandler.log(new RequestResponseLogEntry(request, response));
+                                        httpStateHandler.log(new RequestResponseLogEntry(request, response, System.currentTimeMillis() / 1000L));
                                         mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
                                     } catch (Exception ex) {
                                         mockServerLogger.error(request, ex, ex.getMessage());
@@ -266,7 +266,7 @@ public class ActionHandler {
                             httpStateHandler.log(new RequestLogEntry(request));
                             mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "no expectation for:{}returning response:{}", request, notFoundResponse());
                         } else {
-                            httpStateHandler.log(new RequestResponseLogEntry(request, response));
+                            httpStateHandler.log(new RequestResponseLogEntry(request, response, System.currentTimeMillis() / 1000L));
                             mockServerLogger.info(FORWARDED_REQUEST,
                                 request,
                                 "returning response:{}for request:{}as curl:{}",
