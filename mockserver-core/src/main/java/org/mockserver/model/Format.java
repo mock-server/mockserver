@@ -5,5 +5,6 @@ package org.mockserver.model;
  */
 public enum Format {
     JAVA,
-    JSON
+    JSON,
+    LOG_ENTRIES
 }

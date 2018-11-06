@@ -2,7 +2,7 @@ package org.mockserver.integration.server;
 
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.client.serialization.ExpectationSerializer;
+import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;

@@ -1,6 +1,6 @@
 package org.mockserver.templates.engine.javascript;
 
-import org.mockserver.client.serialization.model.DTO;
+import org.mockserver.serialization.model.DTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.templates.engine.TemplateEngine;
@@ -11,7 +11,6 @@ import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.formatting.StringFormatter.indentAndToString;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.TEMPLATE_GENERATED;

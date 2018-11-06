@@ -1,6 +1,6 @@
 package org.mockserver.model;
 
-import org.mockserver.client.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.ObjectMapperFactory;
 
 /**
  * @author jamesdbloom

@@ -2,7 +2,7 @@ package org.mockserver.server;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.net.MediaType;
-import org.mockserver.client.serialization.PortBindingSerializer;
+import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mock.HttpStateHandler;

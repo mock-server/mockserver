@@ -1,7 +1,7 @@
 package org.mockserver.matchers;
 
 import org.junit.Test;
-import org.mockserver.client.serialization.model.*;
+import org.mockserver.serialization.model.*;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;

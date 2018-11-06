@@ -2,11 +2,10 @@ package org.mockserver.client;
 
 import org.junit.*;
 import org.junit.rules.ExpectedException;
-import org.mockserver.client.MockServerClient;
-import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
-import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
+import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.java.ExpectationToJavaSerializer;
+import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.filters.MockServerEventLog;
 import org.mockserver.logging.MockServerLogger;

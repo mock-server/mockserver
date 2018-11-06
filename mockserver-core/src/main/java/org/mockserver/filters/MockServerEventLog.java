@@ -2,7 +2,7 @@ package org.mockserver.filters;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.collections.BoundedConcurrentLinkedQueue;
 import org.mockserver.log.model.*;
 import org.mockserver.logging.MockServerLogger;
@@ -17,7 +17,6 @@ import org.mockserver.verify.VerificationSequence;
 
 import java.util.*;
 
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.maxExpectations;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.VERIFICATION_FAILED;
 

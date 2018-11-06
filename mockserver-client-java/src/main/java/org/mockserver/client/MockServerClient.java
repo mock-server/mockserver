@@ -6,7 +6,7 @@ import org.mockserver.Version;
 import org.mockserver.client.MockServerEventBus.MockServerEvent;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
-import org.mockserver.client.serialization.*;
+import org.mockserver.serialization.*;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;

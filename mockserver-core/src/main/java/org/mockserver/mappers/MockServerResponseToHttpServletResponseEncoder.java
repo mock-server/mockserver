@@ -3,7 +3,7 @@ package org.mockserver.mappers;
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
-import org.mockserver.client.serialization.Base64Converter;
+import org.mockserver.serialization.Base64Converter;
 import org.mockserver.model.*;
 import org.mockserver.streams.IOStreamUtils;
 

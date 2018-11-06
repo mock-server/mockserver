@@ -8,7 +8,7 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketCommunicationException;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
-import org.mockserver.client.serialization.curl.HttpRequestToCurlSerializer;
+import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
@@ -27,7 +27,6 @@ import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.cors.CORSHeaders.isPreflightRequest;

@@ -1,6 +1,6 @@
 package org.mockserver.mock.action;
 
-import org.mockserver.client.serialization.model.HttpResponseDTO;
+import org.mockserver.serialization.model.HttpResponseDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;

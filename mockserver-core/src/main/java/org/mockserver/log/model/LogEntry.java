@@ -2,12 +2,12 @@ package org.mockserver.log.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import org.apache.commons.collections4.ListUtils;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithJsonToString;
 
-import java.util.Arrays;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import static org.mockserver.model.HttpRequest.request;
@@ -17,7 +17,10 @@ import static org.mockserver.model.HttpRequest.request;
  */
 public abstract class LogEntry extends ObjectWithJsonToString {
 
+    private static final String[] excludedFields = {"timestamp"};
+    private final static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private final List<HttpRequest> httpRequest;
+    private final Date timestamp = new Date();
 
     LogEntry(List<HttpRequest> httpRequests) {
         if (httpRequests != null && !httpRequests.isEmpty()) {
@@ -40,4 +43,13 @@ public abstract class LogEntry extends ObjectWithJsonToString {
         return httpRequest.get(0);
     }
 
+    public String getTimestamp() {
+        return dateFormat.format(timestamp);
+    }
+
+    @Override
+    @JsonIgnore
+    public String[] fieldsExcludedFromEqualsAndHashCode() {
+        return excludedFields;
+    }
 }

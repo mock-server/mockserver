@@ -41,18 +41,18 @@ import org.mockserver.Version;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.netty.websocket.WebSocketClient;
-import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationSequenceSerializer;
-import org.mockserver.client.serialization.VerificationSerializer;
-import org.mockserver.client.serialization.model.ExpectationDTO;
-import org.mockserver.client.serialization.model.HttpClassCallbackDTO;
-import org.mockserver.client.serialization.model.HttpErrorDTO;
-import org.mockserver.client.serialization.model.HttpForwardDTO;
-import org.mockserver.client.serialization.model.HttpObjectCallbackDTO;
-import org.mockserver.client.serialization.model.HttpOverrideForwardedRequestDTO;
-import org.mockserver.client.serialization.model.HttpRequestDTO;
-import org.mockserver.client.serialization.model.HttpResponseDTO;
+import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.VerificationSequenceSerializer;
+import org.mockserver.serialization.VerificationSerializer;
+import org.mockserver.serialization.model.ExpectationDTO;
+import org.mockserver.serialization.model.HttpClassCallbackDTO;
+import org.mockserver.serialization.model.HttpErrorDTO;
+import org.mockserver.serialization.model.HttpForwardDTO;
+import org.mockserver.serialization.model.HttpObjectCallbackDTO;
+import org.mockserver.serialization.model.HttpOverrideForwardedRequestDTO;
+import org.mockserver.serialization.model.HttpRequestDTO;
+import org.mockserver.serialization.model.HttpResponseDTO;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.action.ExpectationForwardCallback;
@@ -476,7 +476,7 @@ public class MockServerClientTest {
                 .setHttpResponse(new HttpResponseDTO(new HttpResponse()
                     .withBody("some_response_body")
                     .withHeaders(new Header("responseName", "responseValue"))))
-                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -506,7 +506,7 @@ public class MockServerClientTest {
                 .setHttpResponse(new HttpResponseDTO(new HttpResponse()
                     .withBody("some_response_body")
                     .withHeaders(new Header("responseName", "responseValue"))))
-                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -538,7 +538,7 @@ public class MockServerClientTest {
                             .withCallbackClass("some_class")
                     )
                 )
-                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -585,7 +585,7 @@ public class MockServerClientTest {
                             .withClientId("some_client_id")
                     )
                 )
-                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -621,7 +621,7 @@ public class MockServerClientTest {
                             .withScheme(HttpForward.Scheme.HTTPS)
                     )
                 )
-                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -657,7 +657,7 @@ public class MockServerClientTest {
                             .withScheme(HttpForward.Scheme.HTTPS)
                     )
                 )
-                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -689,7 +689,7 @@ public class MockServerClientTest {
                             .withCallbackClass("some_class")
                     )
                 )
-                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -736,7 +736,7 @@ public class MockServerClientTest {
                             .withClientId("some_client_id")
                     )
                 )
-                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -768,7 +768,7 @@ public class MockServerClientTest {
                             )
                     )
                 )
-                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -802,7 +802,7 @@ public class MockServerClientTest {
                             .withResponseBytes("random_bytes".getBytes(UTF_8))
                     )
                 )
-                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.exactly(3)))
+                .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
                 .buildObject()
         );
     }
@@ -831,7 +831,7 @@ public class MockServerClientTest {
                 .setHttpResponse(new HttpResponseDTO(new HttpResponse()
                     .withBody("some_response_body")
                     .withHeaders(new Header("responseName", "responseValue"))))
-                .setTimes(new org.mockserver.client.serialization.model.TimesDTO(Times.unlimited()))
+                .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.unlimited()))
                 .buildObject()
         );
     }

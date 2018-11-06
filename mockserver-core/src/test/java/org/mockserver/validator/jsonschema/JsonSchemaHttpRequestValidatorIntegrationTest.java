@@ -1,7 +1,7 @@
 package org.mockserver.validator.jsonschema;
 
 import org.junit.Test;
-import org.mockserver.client.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.logging.MockServerLogger;
 
 import static java.nio.charset.StandardCharsets.UTF_8;

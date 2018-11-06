@@ -1,5 +1,8 @@
 package org.mockserver.mock;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.net.MediaType;
 import org.junit.Before;
 import org.junit.Rule;
@@ -7,16 +10,14 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
-import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
-import org.mockserver.log.model.ExpectationMatchLogEntry;
-import org.mockserver.log.model.MessageLogEntry;
-import org.mockserver.log.model.RequestLogEntry;
-import org.mockserver.log.model.RequestResponseLogEntry;
+import org.mockserver.log.model.*;
+import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.LogEntrySerializer;
+import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.java.ExpectationToJavaSerializer;
+import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -25,6 +26,7 @@ import org.mockserver.scheduler.Scheduler;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -35,7 +37,6 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -48,6 +49,7 @@ public class HttpStateHandlerTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
+    private LogEntrySerializer logEntrySerializer = new LogEntrySerializer(new MockServerLogger());
     private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
     private ExpectationSerializer httpExpectationSerializer = new ExpectationSerializer(new MockServerLogger());
     private ExpectationToJavaSerializer httpExpectationToJavaSerializer = new ExpectationToJavaSerializer();
@@ -241,6 +243,41 @@ public class HttpStateHandlerTest {
     }
 
     @Test
+    public void shouldRetrieveRecordedRequestsAsLogEntries() throws JsonProcessingException {
+        // given - a request
+        HttpRequest request = request()
+            .withQueryStringParameter("format", "log_entries")
+            .withBody(httpRequestSerializer.serialize(request("request_one")));
+        // given - some existing expectations
+        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+        httpStateHandler.add(expectationOne);
+        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
+        httpStateHandler.add(expectationTwo);
+        // given - some log entries
+        final RequestLogEntry logEntryOne = new RequestLogEntry(request("request_one"));
+        httpStateHandler.log(logEntryOne);
+        final RequestLogEntry logEntryTwo = new RequestLogEntry(request("request_two"));
+        httpStateHandler.log(logEntryTwo);
+        final RequestLogEntry logEntryThree = new RequestLogEntry(request("request_one"));
+        httpStateHandler.log(logEntryThree);
+        ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter();
+
+        // when
+        HttpResponse response = httpStateHandler.retrieve(request);
+
+        // then
+        assertThat(response,
+            is(response().withBody(objectWriter.writeValueAsString(Arrays.asList(
+                of("httpRequest", logEntryOne.getHttpRequest(), "timestamp", logEntryOne.getTimestamp()),
+                of("httpRequest", logEntryThree.getHttpRequest(), "timestamp", logEntryThree.getTimestamp())
+            )), JSON_UTF_8).withStatusCode(200))
+        );
+        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationOne);
+        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_two"), "creating expectation:{}", expectationTwo);
+        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving requests in log_entries that match:{}", request("request_one"));
+    }
+
+    @Test
     public void shouldRetrieveRecordedRequestsAsJava() {
         // given - a request
         HttpRequest request = request()
@@ -407,9 +444,9 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(
-                logEntryOne.getTimeStamp() + " - " + logEntryOne.getMessage() + "\n------------------------------------\n" +
-                    logEntryTwo.getTimeStamp() + " - " + logEntryTwo.getMessage() + "\n------------------------------------\n" +
-                    logEntryThree.getTimeStamp() + " - " + logEntryThree.getMessage() + "\n",
+                logEntryOne.getTimestamp() + " - " + logEntryOne.getMessage() + "\n------------------------------------\n" +
+                    logEntryTwo.getTimestamp() + " - " + logEntryTwo.getMessage() + "\n------------------------------------\n" +
+                    logEntryThree.getTimestamp() + " - " + logEntryThree.getMessage() + "\n",
                 PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
         verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving logs that match:{}", request("request_one"));
@@ -429,7 +466,7 @@ public class HttpStateHandlerTest {
     public void shouldThrowExceptionForInvalidRetrieveFormat() {
         // given
         exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("\"invalid\" is not a valid value for \"format\" parameter, only the following values are supported [java, json]"));
+        exception.expectMessage(containsString("\"invalid\" is not a valid value for \"format\" parameter, only the following values are supported [java, json, log_entries]"));
 
         // when
         httpStateHandler.retrieve(request().withQueryStringParameter("format", "invalid"));

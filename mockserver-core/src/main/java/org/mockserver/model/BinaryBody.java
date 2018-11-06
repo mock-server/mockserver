@@ -1,7 +1,7 @@
 package org.mockserver.model;
 
 import com.google.common.net.MediaType;
-import org.mockserver.client.serialization.Base64Converter;
+import org.mockserver.serialization.Base64Converter;
 
 /**
  * @author jamesdbloom

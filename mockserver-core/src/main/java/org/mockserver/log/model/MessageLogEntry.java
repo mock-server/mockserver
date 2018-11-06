@@ -17,12 +17,11 @@ import static org.mockserver.formatting.StringFormatter.formatLogMessage;
  * @author jamesdbloom
  */
 public class MessageLogEntry extends LogEntry {
-    private final static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
     private final LogMessageType type;
     private final String messageFormat;
     private final Level logLevel;
     private final Object[] arguments;
-    protected Date timeStamp = new Date();
     private String message;
 
     public MessageLogEntry(final MessageLogEntry.LogMessageType type, final Level logLevel, final @Nullable HttpRequest httpRequest, final String messageFormat, final Object... arguments) {
@@ -63,10 +62,6 @@ public class MessageLogEntry extends LogEntry {
 
     public Object[] getArguments() {
         return arguments;
-    }
-
-    public String getTimeStamp() {
-        return dateFormat.format(timeStamp);
     }
 
     public static enum LogMessageType {

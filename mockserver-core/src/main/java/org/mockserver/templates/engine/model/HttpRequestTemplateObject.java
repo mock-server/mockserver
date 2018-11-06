@@ -2,7 +2,7 @@ package org.mockserver.templates.engine.model;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import org.mockserver.client.serialization.model.BodyDTO;
+import org.mockserver.serialization.model.BodyDTO;
 import org.mockserver.model.*;
 
 import java.util.HashMap;

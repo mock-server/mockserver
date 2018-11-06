@@ -2,7 +2,7 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.net.MediaType;
-import org.mockserver.client.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatchType;
 

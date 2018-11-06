@@ -1,7 +1,7 @@
 package org.mockserver.model;
 
 import org.junit.Test;
-import org.mockserver.client.serialization.Base64Converter;
+import org.mockserver.serialization.Base64Converter;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;

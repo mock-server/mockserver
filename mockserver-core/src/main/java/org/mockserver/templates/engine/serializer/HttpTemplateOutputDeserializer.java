@@ -2,10 +2,10 @@ package org.mockserver.templates.engine.serializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.client.serialization.ObjectMapperFactory;
-import org.mockserver.client.serialization.model.DTO;
-import org.mockserver.client.serialization.model.HttpRequestDTO;
-import org.mockserver.client.serialization.model.HttpResponseDTO;
+import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.model.DTO;
+import org.mockserver.serialization.model.HttpRequestDTO;
+import org.mockserver.serialization.model.HttpResponseDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;

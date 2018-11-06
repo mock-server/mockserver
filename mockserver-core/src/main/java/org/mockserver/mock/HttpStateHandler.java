@@ -1,16 +1,15 @@
 package org.mockserver.mock;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.callback.WebSocketClientRegistry;
-import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.VerificationSequenceSerializer;
-import org.mockserver.client.serialization.VerificationSerializer;
-import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
-import org.mockserver.client.serialization.java.HttpRequestToJavaSerializer;
+import org.mockserver.log.model.RequestLogEntry;
+import org.mockserver.serialization.*;
+import org.mockserver.serialization.java.ExpectationToJavaSerializer;
+import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.filters.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.log.model.MessageLogEntry;
@@ -22,6 +21,7 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -54,6 +54,7 @@ public class HttpStateHandler {
     private ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
     private VerificationSerializer verificationSerializer = new VerificationSerializer(mockServerLogger);
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
+    private LogEntrySerializer logEntrySerializer = new LogEntrySerializer(mockServerLogger);
 
     public HttpStateHandler(Scheduler scheduler) {
         this.scheduler = scheduler;
@@ -150,7 +151,7 @@ public class HttpStateHandler {
                     for (int i = 0; i < retrievedMessages.size(); i++) {
                         MessageLogEntry messageLogEntry = retrievedMessages.get(i);
                         stringBuffer
-                            .append(messageLogEntry.getTimeStamp())
+                            .append(messageLogEntry.getTimestamp())
                             .append(" - ")
                             .append(messageLogEntry.getMessage());
                         if (i < retrievedMessages.size() - 1) {
@@ -171,6 +172,9 @@ public class HttpStateHandler {
                         case JSON:
                             response.withBody(httpRequestSerializer.serialize(httpRequests), JSON_UTF_8);
                             break;
+                        case LOG_ENTRIES:
+                            response.withBody(logEntrySerializer.serialize(mockServerLog.retrieveRequestLogEntries(httpRequest)), JSON_UTF_8);
+                            break;
                     }
                     break;
                 }
@@ -182,6 +186,7 @@ public class HttpStateHandler {
                             response.withBody(expectationToJavaSerializer.serialize(expectations), create("application", "java").withCharset(UTF_8));
                             break;
                         case JSON:
+                        case LOG_ENTRIES:
                             response.withBody(expectationSerializer.serialize(expectations), JSON_UTF_8);
                             break;
                     }
@@ -195,6 +200,7 @@ public class HttpStateHandler {
                             response.withBody(expectationToJavaSerializer.serialize(expectations), create("application", "java").withCharset(UTF_8));
                             break;
                         case JSON:
+                        case LOG_ENTRIES:
                             response.withBody(expectationSerializer.serialize(expectations), JSON_UTF_8);
                             break;
                     }

@@ -2,7 +2,7 @@ package org.mockserver.model;
 
 import com.google.common.net.MediaType;
 import org.junit.Test;
-import org.mockserver.client.serialization.Base64Converter;
+import org.mockserver.serialization.Base64Converter;
 
 import java.nio.charset.StandardCharsets;
 

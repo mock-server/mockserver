@@ -1,24 +1,26 @@
 package org.mockserver.integration.server;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.MediaType;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
-import org.mockserver.client.serialization.ExpectationSerializer;
-import org.mockserver.client.serialization.HttpRequestSerializer;
-import org.mockserver.client.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.JsonArraySerializer;
+import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.verify.VerificationTimes;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 import java.util.concurrent.*;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
@@ -4350,6 +4352,68 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             request(calculatePath("not_found")),
             request(calculatePath("some_path_three"))
         );
+    }
+
+    @Test
+    public void shouldRetrieveRecordedRequestsAsLogEntries() throws IOException {
+        // when
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request().withPath(calculatePath("some_path_one")),
+                headersToIgnore)
+        );
+        assertEquals(
+            notFoundResponse(),
+            makeRequest(
+                request().withPath(calculatePath("not_found")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response("some_body"),
+            makeRequest(
+                request().withPath(calculatePath("some_path_three")),
+                headersToIgnore)
+        );
+        final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+        final JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
+
+        // then
+        List<String> logEntries = jsonArraySerializer.returnJSONObjects(mockServerClient.retrieveRecordedRequests(request().withPath(calculatePath("some_path.*")), Format.LOG_ENTRIES));
+        assertThat(logEntries.size(), is(2));
+        HashMap itemOne = objectMapper.readValue(logEntries.get(0), HashMap.class);
+        assertThat(new ArrayList<String>(itemOne.keySet()), containsInAnyOrder("httpRequest", "timestamp", "expectation"));
+        assertThat(String.valueOf(((LinkedHashMap) itemOne.get("httpRequest")).get("path")), is(calculatePath("some_path_one")));
+        HashMap itemTwo = objectMapper.readValue(logEntries.get(1), HashMap.class);
+        assertThat(new ArrayList<String>(itemTwo.keySet()), containsInAnyOrder("httpRequest", "timestamp", "expectation"));
+        assertThat(String.valueOf(((LinkedHashMap) itemTwo.get("httpRequest")).get("path")), is(calculatePath("some_path_three")));
+
+        logEntries = jsonArraySerializer.returnJSONObjects(mockServerClient.retrieveRecordedRequests(request(), Format.LOG_ENTRIES));
+        assertThat(logEntries.size(), is(3));
+        itemOne = objectMapper.readValue(logEntries.get(0), HashMap.class);
+        assertThat(new ArrayList<String>(itemOne.keySet()), containsInAnyOrder("httpRequest", "timestamp", "expectation"));
+        assertThat(String.valueOf(((LinkedHashMap) itemOne.get("httpRequest")).get("path")), is(calculatePath("some_path_one")));
+        itemTwo = objectMapper.readValue(logEntries.get(1), HashMap.class);
+        assertThat(itemTwo.containsKey("expectation"), is(false));
+        assertThat(new ArrayList<String>(itemTwo.keySet()), containsInAnyOrder("httpRequest", "timestamp"));
+        assertThat(String.valueOf(((LinkedHashMap) itemTwo.get("httpRequest")).get("path")), is(calculatePath("not_found")));
+        HashMap itemThree = objectMapper.readValue(logEntries.get(2), HashMap.class);
+        assertThat(new ArrayList<String>(itemThree.keySet()), containsInAnyOrder("httpRequest", "timestamp", "expectation"));
+        assertThat(String.valueOf(((LinkedHashMap) itemThree.get("httpRequest")).get("path")), is(calculatePath("some_path_three")));
+
+        logEntries = jsonArraySerializer.returnJSONObjects(mockServerClient.retrieveRecordedRequests(null, Format.LOG_ENTRIES));
+        assertThat(logEntries.size(), is(3));
+        itemOne = objectMapper.readValue(logEntries.get(0), HashMap.class);
+        assertThat(new ArrayList<String>(itemOne.keySet()), containsInAnyOrder("httpRequest", "timestamp", "expectation"));
+        assertThat(String.valueOf(((LinkedHashMap) itemOne.get("httpRequest")).get("path")), is(calculatePath("some_path_one")));
+        itemTwo = objectMapper.readValue(logEntries.get(1), HashMap.class);
+        assertThat(itemTwo.containsKey("expectation"), is(false));
+        assertThat(new ArrayList<String>(itemTwo.keySet()), containsInAnyOrder("httpRequest", "timestamp"));
+        assertThat(String.valueOf(((LinkedHashMap) itemTwo.get("httpRequest")).get("path")), is(calculatePath("not_found")));
+        itemThree = objectMapper.readValue(logEntries.get(2), HashMap.class);
+        assertThat(new ArrayList<String>(itemThree.keySet()), containsInAnyOrder("httpRequest", "timestamp", "expectation"));
+        assertThat(String.valueOf(((LinkedHashMap) itemThree.get("httpRequest")).get("path")), is(calculatePath("some_path_three")));
     }
 
     @Test

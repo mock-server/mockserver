@@ -82,8 +82,8 @@ paths:
           name: format
           schema:
             type: string
-            enum: ["java", "json"]
-          description: changes response format, default if not specificed is "json", supported values are "java", "json"
+            enum: ["java", "json", "log_entries"]
+          description: changes response format, default if not specificed is "json", supported values are "java", "json", "log_entries"
         - in: query
           name: type
           schema:

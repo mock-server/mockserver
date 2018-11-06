@@ -1,6 +1,6 @@
 package org.mockserver.templates.engine;
 
-import org.mockserver.client.serialization.model.DTO;
+import org.mockserver.serialization.model.DTO;
 import org.mockserver.model.HttpRequest;
 
 /**

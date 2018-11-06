@@ -80,15 +80,18 @@ public class LogFilterTest {
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_one"), "message_one"));
         logFilter.add(new RequestLogEntry(request("request_one")));
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_two"), "message_two"));
-        logFilter.add(new RequestLogEntry(request("request_two")));
+        final RequestLogEntry requestLogEntry = new RequestLogEntry(request("request_two"));
+        logFilter.add(requestLogEntry);
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_three"), "message_three"));
         logFilter.add(new RequestResponseLogEntry(request("request_one"), response("response_one")));
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_four"), "message_four"));
-        logFilter.add(new RequestResponseLogEntry(request("request_three"), response("response_three")));
+        final RequestResponseLogEntry requestResponseLogEntry = new RequestResponseLogEntry(request("request_three"), response("response_three"));
+        logFilter.add(requestResponseLogEntry);
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_five"), "message_five"));
         logFilter.add(new ExpectationMatchLogEntry(request("request_one"), new Expectation(request("request_one")).thenRespond(response("response_two"))));
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_six"), "message_six"));
-        logFilter.add(new ExpectationMatchLogEntry(request("request_four"), new Expectation(request("request_four")).thenRespond(response("response_four"))));
+        final ExpectationMatchLogEntry expectationMatchLogEntry = new ExpectationMatchLogEntry(request("request_four"), new Expectation(request("request_four")).thenRespond(response("response_four")));
+        logFilter.add(expectationMatchLogEntry);
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_seven"), "message_seven"));
 
         // when
@@ -101,15 +104,15 @@ public class LogFilterTest {
             request("request_four")
         ));
         assertThat(logFilter.retrieveLogEntries(null, requestLogPredicate, logEntryToLogEntry), contains(
-            new RequestLogEntry(request("request_two")),
-            new RequestResponseLogEntry(request("request_three"), response("response_three")),
-            new ExpectationMatchLogEntry(request("request_four"), new Expectation(request("request_four")).thenRespond(response("response_four")))
+            requestLogEntry,
+            requestResponseLogEntry,
+            expectationMatchLogEntry
         ));
         assertThat(logFilter.retrieveExpectations(null), contains(
             new Expectation(request("request_three"), Times.once(), null).thenRespond(response("response_three"))
         ));
         assertThat(logFilter.retrieveLogEntries(null, expectationLogPredicate, logEntryToLogEntry), IsIterableContainingInOrder.<LogEntry>contains(
-            new RequestResponseLogEntry(request("request_three"), response("response_three"))
+            requestResponseLogEntry
         ));
         List<String> logMessages = Lists.transform(logFilter.retrieveMessages(null), new Function<MessageLogEntry, String>() {
             public String apply(MessageLogEntry input) {
@@ -173,17 +176,23 @@ public class LogFilterTest {
     public void shouldRetrieveRecordedRequests() {
         // when
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_one"), "message_one"));
-        logFilter.add(new RequestLogEntry(request("request_one")));
+        final RequestLogEntry requestLogEntryOne = new RequestLogEntry(request("request_one"));
+        logFilter.add(requestLogEntryOne);
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_two"), "message_two"));
-        logFilter.add(new RequestLogEntry(request("request_two")));
+        final RequestLogEntry requestLogEntryTwo = new RequestLogEntry(request("request_two"));
+        logFilter.add(requestLogEntryTwo);
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_three"), "message_three"));
-        logFilter.add(new RequestResponseLogEntry(request("request_one"), response("response_one")));
+        final RequestResponseLogEntry requestResponseLogEntryOne = new RequestResponseLogEntry(request("request_one"), response("response_one"));
+        logFilter.add(requestResponseLogEntryOne);
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_four"), "message_four"));
-        logFilter.add(new RequestResponseLogEntry(request("request_three"), response("response_three")));
+        final RequestResponseLogEntry requestResponseLogEntryTwo = new RequestResponseLogEntry(request("request_three"), response("response_three"));
+        logFilter.add(requestResponseLogEntryTwo);
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_five"), "message_five"));
-        logFilter.add(new ExpectationMatchLogEntry(request("request_one"), new Expectation(request("request_one")).thenRespond(response("response_two"))));
+        final ExpectationMatchLogEntry expectationMatchLogEntryOne = new ExpectationMatchLogEntry(request("request_one"), new Expectation(request("request_one")).thenRespond(response("response_two")));
+        logFilter.add(expectationMatchLogEntryOne);
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_six"), "message_six"));
-        logFilter.add(new ExpectationMatchLogEntry(request("request_four"), new Expectation(request("request_four")).thenRespond(response("response_four"))));
+        final ExpectationMatchLogEntry expectationMatchLogEntryTwo = new ExpectationMatchLogEntry(request("request_four"), new Expectation(request("request_four")).thenRespond(response("response_four")));
+        logFilter.add(expectationMatchLogEntryTwo);
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_seven"), "message_seven"));
 
         // then
@@ -196,12 +205,12 @@ public class LogFilterTest {
             request("request_four")
         ));
         assertThat(logFilter.retrieveLogEntries(null, requestLogPredicate, logEntryToLogEntry), contains(
-            new RequestLogEntry(request("request_one")),
-            new RequestLogEntry(request("request_two")),
-            new RequestResponseLogEntry(request("request_one"), response("response_one")),
-            new RequestResponseLogEntry(request("request_three"), response("response_three")),
-            new ExpectationMatchLogEntry(request("request_one"), new Expectation(request("request_one")).thenRespond(response("response_two"))),
-            new ExpectationMatchLogEntry(request("request_four"), new Expectation(request("request_four")).thenRespond(response("response_four")))
+            requestLogEntryOne,
+            requestLogEntryTwo,
+            requestResponseLogEntryOne,
+            requestResponseLogEntryTwo,
+            expectationMatchLogEntryOne,
+            expectationMatchLogEntryTwo
         ));
     }
 
@@ -213,9 +222,11 @@ public class LogFilterTest {
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_two"), "message_two"));
         logFilter.add(new RequestLogEntry(request("request_two")));
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_three"), "message_three"));
-        logFilter.add(new RequestResponseLogEntry(request("request_one"), response("response_one")));
+        final RequestResponseLogEntry requestResponseLogEntryOne = new RequestResponseLogEntry(request("request_one"), response("response_one"));
+        logFilter.add(requestResponseLogEntryOne);
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_four"), "message_four"));
-        logFilter.add(new RequestResponseLogEntry(request("request_three"), response("response_three")));
+        final RequestResponseLogEntry requestResponseLogEntryTwo = new RequestResponseLogEntry(request("request_three"), response("response_three"));
+        logFilter.add(requestResponseLogEntryTwo);
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_five"), "message_five"));
         logFilter.add(new ExpectationMatchLogEntry(request("request_one"), new Expectation(request("request_one")).thenRespond(response("response_two"))));
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_six"), "message_six"));
@@ -228,8 +239,8 @@ public class LogFilterTest {
             new Expectation(request("request_three"), Times.once(), null).thenRespond(response("response_three"))
         ));
         assertThat(logFilter.retrieveLogEntries(null, expectationLogPredicate, logEntryToLogEntry), IsIterableContainingInOrder.<LogEntry>contains(
-            new RequestResponseLogEntry(request("request_one"), response("response_one")),
-            new RequestResponseLogEntry(request("request_three"), response("response_three"))
+            requestResponseLogEntryOne,
+            requestResponseLogEntryTwo
         ));
     }
 

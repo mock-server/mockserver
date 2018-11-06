@@ -2,7 +2,6 @@ package org.mockserver.model;
 
 import com.google.common.net.MediaType;
 import org.junit.Test;
-import org.mockserver.client.serialization.model.StringBodyDTO;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;

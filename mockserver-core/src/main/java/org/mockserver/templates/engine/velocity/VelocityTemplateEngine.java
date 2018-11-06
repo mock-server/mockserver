@@ -1,8 +1,7 @@
 package org.mockserver.templates.engine.velocity;
 
 import org.apache.velocity.script.VelocityScriptEngineFactory;
-import org.mockserver.client.serialization.model.DTO;
-import org.mockserver.log.model.MessageLogEntry;
+import org.mockserver.serialization.model.DTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.templates.engine.TemplateEngine;
@@ -15,7 +14,6 @@ import javax.script.ScriptEngineManager;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.TEMPLATE_GENERATED;
 

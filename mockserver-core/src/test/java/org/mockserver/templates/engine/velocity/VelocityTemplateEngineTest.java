@@ -5,8 +5,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
-import org.mockserver.client.serialization.model.HttpRequestDTO;
-import org.mockserver.client.serialization.model.HttpResponseDTO;
+import org.mockserver.serialization.model.HttpRequestDTO;
+import org.mockserver.serialization.model.HttpResponseDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -22,7 +22,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.TEMPLATE_GENERATED;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.TRACE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
