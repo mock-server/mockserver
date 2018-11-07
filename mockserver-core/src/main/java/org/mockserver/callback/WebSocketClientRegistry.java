@@ -17,9 +17,9 @@ public class WebSocketClientRegistry {
 
     public static final String WEB_SOCKET_CORRELATION_ID_HEADER_NAME = "WebSocketCorrelationId";
     private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer(new MockServerLogger());
-    private CircularHashMap<String, ChannelHandlerContext> clientRegistry = new CircularHashMap<>(100);
-    private CircularHashMap<String, WebSocketResponseCallback> callbackResponseRegistry = new CircularHashMap<>(100);
-    private CircularHashMap<String, WebSocketRequestCallback> callbackForwardRegistry = new CircularHashMap<>(100);
+    private CircularHashMap<String, ChannelHandlerContext> clientRegistry = new CircularHashMap<>(1000);
+    private CircularHashMap<String, WebSocketResponseCallback> callbackResponseRegistry = new CircularHashMap<>(1000);
+    private CircularHashMap<String, WebSocketRequestCallback> callbackForwardRegistry = new CircularHashMap<>(1000);
 
     void receivedTextWebSocketFrame(TextWebSocketFrame textWebSocketFrame) {
         try {
