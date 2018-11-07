@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.unification.PortUnificationHandler;
 
 @ChannelHandler.Sharable
 public class MockServerUnificationInitializer extends ChannelHandlerAdapter {
@@ -21,6 +22,6 @@ public class MockServerUnificationInitializer extends ChannelHandlerAdapter {
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) {
-        ctx.pipeline().replace(this, null, new MockServerUnificationInitializerDelegate(server, httpStateHandler, proxyConfiguration));
+        ctx.pipeline().replace(this, null, new PortUnificationHandler(server, httpStateHandler, proxyConfiguration));
     }
 }

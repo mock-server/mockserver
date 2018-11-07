@@ -17,12 +17,18 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
+import org.mockserver.callback.CallbackWebSocketServerHandler;
+import org.mockserver.client.netty.proxy.ProxyConfiguration;
+import org.mockserver.dashboard.DashboardWebSocketServerHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mockserver.MockServerHandler;
 import org.mockserver.proxy.socks.Socks4ProxyHandler;
 import org.mockserver.proxy.socks.Socks5ProxyHandler;
 import org.mockserver.proxy.socks.SocksDetector;
+import org.mockserver.server.netty.codec.MockServerServerCodec;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
@@ -46,7 +52,7 @@ import static org.slf4j.event.Level.TRACE;
 /**
  * @author jamesdbloom
  */
-public abstract class PortUnificationHandler extends ReplayingDecoder<Void> {
+public class PortUnificationHandler extends ReplayingDecoder<Void> {
 
     private static final AttributeKey<Boolean> SSL_ENABLED_UPSTREAM = AttributeKey.valueOf("PROXY_SSL_ENABLED_UPSTREAM");
     private static final AttributeKey<Boolean> SSL_ENABLED_DOWNSTREAM = AttributeKey.valueOf("SSL_ENABLED_DOWNSTREAM");
@@ -54,14 +60,16 @@ public abstract class PortUnificationHandler extends ReplayingDecoder<Void> {
 
     protected final MockServerLogger mockServerLogger;
     private final LoggingHandler loggingHandler = new LoggingHandler(LoggerFactory.getLogger(PortUnificationHandler.class));
-    private final Socks4ProxyHandler socks4ProxyHandler;
-    private final Socks5ProxyHandler socks5ProxyHandler;
     private final HttpContentLengthRemover httpContentLengthRemover = new HttpContentLengthRemover();
+    private final LifeCycle server;
+    private final HttpStateHandler httpStateHandler;
+    private final ProxyConfiguration proxyConfiguration;
 
-    public PortUnificationHandler(LifeCycle server, MockServerLogger mockServerLogger) {
-        this.mockServerLogger = mockServerLogger;
-        this.socks4ProxyHandler = new Socks4ProxyHandler(server, mockServerLogger);
-        this.socks5ProxyHandler = new Socks5ProxyHandler(server, mockServerLogger);
+    public PortUnificationHandler(LifeCycle server, HttpStateHandler httpStateHandler, ProxyConfiguration proxyConfiguration) {
+        this.server = server;
+        this.mockServerLogger = httpStateHandler.getMockServerLogger();
+        this.httpStateHandler = httpStateHandler;
+        this.proxyConfiguration = proxyConfiguration;
     }
 
     public static void enableSslUpstreamAndDownstream(Channel channel) {
@@ -137,11 +145,11 @@ public abstract class PortUnificationHandler extends ReplayingDecoder<Void> {
     }
 
     private void enableSocks4(ChannelHandlerContext ctx, ByteBuf msg) {
-        enableSocks(ctx, msg, socks4ProxyHandler, Socks4ServerEncoder.INSTANCE, new Socks4ServerDecoder());
+        enableSocks(ctx, msg, new Socks4ProxyHandler(server, mockServerLogger), Socks4ServerEncoder.INSTANCE, new Socks4ServerDecoder());
     }
 
     private void enableSocks5(ChannelHandlerContext ctx, ByteBuf msg) {
-        enableSocks(ctx, msg, socks5ProxyHandler, Socks5ServerEncoder.DEFAULT, new Socks5InitialRequestDecoder());
+        enableSocks(ctx, msg, new Socks5ProxyHandler(server, mockServerLogger), Socks5ServerEncoder.DEFAULT, new Socks5InitialRequestDecoder());
     }
 
     private void enableSocks(ChannelHandlerContext ctx, ByteBuf msg, ChannelHandler... channelHandlers) {
@@ -157,7 +165,7 @@ public abstract class PortUnificationHandler extends ReplayingDecoder<Void> {
     private void enableSsl(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
         pipeline.addFirst(nettySslContextFactory().createServerSslContext().newHandler(ctx.alloc()));
-        PortUnificationHandler.enableSslUpstreamAndDownstream(ctx.channel());
+        enableSslUpstreamAndDownstream(ctx.channel());
 
         // re-unify (with SSL enabled)
         ctx.pipeline().fireChannelRead(msg.readBytes(actualReadableBytes()));
@@ -170,11 +178,13 @@ public abstract class PortUnificationHandler extends ReplayingDecoder<Void> {
         addLastIfNotPresent(pipeline, new HttpContentDecompressor());
         addLastIfNotPresent(pipeline, httpContentLengthRemover);
         addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));
-
         if (mockServerLogger.isEnabled(TRACE)) {
             addLastIfNotPresent(pipeline, loggingHandler);
         }
-        configurePipeline(ctx, pipeline);
+        addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpStateHandler));
+        addLastIfNotPresent(pipeline, new DashboardWebSocketServerHandler(httpStateHandler));
+        addLastIfNotPresent(pipeline, new MockServerServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel())));
+        addLastIfNotPresent(pipeline, new MockServerHandler(server, httpStateHandler, proxyConfiguration));
         pipeline.remove(this);
 
         ctx.channel().attr(LOCAL_HOST_HEADERS).set(getLocalAddresses(ctx));
@@ -227,8 +237,6 @@ public abstract class PortUnificationHandler extends ReplayingDecoder<Void> {
             pipeline.addLast(channelHandler);
         }
     }
-
-    protected abstract void configurePipeline(ChannelHandlerContext ctx, ChannelPipeline pipeline);
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {

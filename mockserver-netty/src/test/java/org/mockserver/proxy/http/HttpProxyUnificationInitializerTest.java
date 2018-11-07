@@ -49,7 +49,7 @@ public class HttpProxyUnificationInitializerTest {
         // then - should add SSL handlers first
         assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
             "SslHandler#0",
-            "MockServerUnificationInitializerDelegate#0",
+            "PortUnificationHandler#0",
             "DefaultChannelPipeline$TailContext#0"
         ));
     }
@@ -86,7 +86,7 @@ public class HttpProxyUnificationInitializerTest {
             "Socks5CommandRequestDecoder#0",
             "Socks5ServerEncoder#0",
             "Socks5ProxyHandler#0",
-            "MockServerUnificationInitializerDelegate#0",
+            "PortUnificationHandler#0",
             "DefaultChannelPipeline$TailContext#0"
         ));
     }

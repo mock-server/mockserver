@@ -64,7 +64,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
                 "Socks5CommandRequestDecoder#0",
                 "Socks5ServerEncoder#0",
                 "Socks5ProxyHandler#0",
-                "MockServerUnificationInitializerDelegate#0",
+                "PortUnificationHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
@@ -72,7 +72,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
                 "Socks5CommandRequestDecoder#0",
                 "Socks5ServerEncoder#0",
                 "Socks5ProxyHandler#0",
-                "MockServerUnificationInitializerDelegate#0",
+                "PortUnificationHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         }

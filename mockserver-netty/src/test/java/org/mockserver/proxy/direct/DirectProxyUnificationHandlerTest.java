@@ -54,13 +54,13 @@ public class DirectProxyUnificationHandlerTest {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "SslHandler#0",
                 "LoggingHandler#0",
-                "MockServerUnificationInitializerDelegate#0",
+                "PortUnificationHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "SslHandler#0",
-                "MockServerUnificationInitializerDelegate#0",
+                "PortUnificationHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         }
@@ -100,7 +100,7 @@ public class DirectProxyUnificationHandlerTest {
                 "Socks5CommandRequestDecoder#0",
                 "Socks5ServerEncoder#0",
                 "Socks5ProxyHandler#0",
-                "MockServerUnificationInitializerDelegate#0",
+                "PortUnificationHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
@@ -108,7 +108,7 @@ public class DirectProxyUnificationHandlerTest {
                 "Socks5CommandRequestDecoder#0",
                 "Socks5ServerEncoder#0",
                 "Socks5ProxyHandler#0",
-                "MockServerUnificationInitializerDelegate#0",
+                "PortUnificationHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         }
