@@ -99,13 +99,13 @@ public class KeyStoreFactory {
             keyStore.setCertificateEntry(KEY_STORE_CA_ALIAS, caCert);
 
             // save as JKS file
-            File keyStoreFile = new File(keyStoreFileName);
-            try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFile)) {
+            String keyStoreFileAbsolutePath = new File(keyStoreFileName).getAbsolutePath();
+            try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFileAbsolutePath)) {
                 keyStore.store(fileOutputStream, keyStorePassword);
-                MOCK_SERVER_LOGGER.trace("Saving key store to file [" + keyStoreFileName + "]");
+                MOCK_SERVER_LOGGER.trace("Saving key store to file [" + keyStoreFileAbsolutePath + "]");
             }
             if (deleteOnExit) {
-                keyStoreFile.deleteOnExit();
+                new File(keyStoreFileAbsolutePath).deleteOnExit();
             }
             return keyStore;
         } catch (Exception e) {
@@ -141,9 +141,12 @@ public class KeyStoreFactory {
     }
 
     public KeyStore loadOrCreateKeyStore() {
+        System.out.println("loadOrCreateKeyStore");
         KeyStore keystore = null;
         File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
+        System.out.println("keyStoreFile.getAbsolutePath() = " + keyStoreFile.getAbsolutePath());
         if (keyStoreFile.exists()) {
+            System.out.println("keyStoreFile.exists() = " + keyStoreFile.exists());
             try (FileInputStream fileInputStream = new FileInputStream(keyStoreFile)) {
                 keystore = KeyStore.getInstance(KeyStore.getDefaultType());
                 keystore.load(fileInputStream, ConfigurationProperties.javaKeyStorePassword().toCharArray());

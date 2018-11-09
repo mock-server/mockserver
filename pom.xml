@@ -568,7 +568,7 @@
                 <version>2.20.1</version>
                 <configuration>
                     <!-- allow debugging tests -->
-                    <forkCount>0</forkCount>
+                    <!--<forkCount>0</forkCount>-->
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
@@ -588,7 +588,7 @@
                 <version>2.20.1</version>
                 <configuration>
                     <!-- allow debugging tests -->
-                    <forkCount>0</forkCount>
+                    <!--<forkCount>0</forkCount>-->
                     <includes>
                         <include>**/*IntegrationTest.java</include>
                     </includes>
