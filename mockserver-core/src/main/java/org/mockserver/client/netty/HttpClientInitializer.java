@@ -32,7 +32,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
     public HttpClientInitializer(ProxyConfiguration proxyConfiguration, MockServerLogger mockServerLogger) {
         this.proxyConfiguration = proxyConfiguration;
         this.mockServerLogger = mockServerLogger;
-        this.httpClientHandler = new HttpClientHandler(mockServerLogger);
+        this.httpClientHandler = new HttpClientHandler();
     }
 
     @Override

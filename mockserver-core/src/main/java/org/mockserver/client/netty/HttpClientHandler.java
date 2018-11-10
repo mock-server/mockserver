@@ -5,36 +5,23 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.ssl.NotSslRecordException;
-import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 
 import javax.net.ssl.SSLException;
 
-import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.client.netty.NettyHttpClient.*;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.FORWARDED_REQUEST;
+import static org.mockserver.client.netty.NettyHttpClient.RESPONSE_FUTURE;
 
 @ChannelHandler.Sharable
 public class HttpClientHandler extends SimpleChannelInboundHandler<HttpResponse> {
 
-    private final MockServerLogger mockServerLogger;
-
-    public HttpClientHandler(MockServerLogger mockServerLogger) {
+    public HttpClientHandler() {
         super(false);
-        this.mockServerLogger = mockServerLogger;
     }
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, HttpResponse response) {
         ctx.channel().attr(RESPONSE_FUTURE).get().set(response);
         ctx.close();
-
-        if (!response.containsHeader("x-forwarded-by", "MockServer")) {
-            mockServerLogger.debug(FORWARDED_REQUEST, "Sent request to: {}request: {}and received response: {}",
-                ctx.channel().attr(REMOTE_SOCKET).get(),
-                ctx.channel().attr(REQUEST).get(),
-                response);
-        }
     }
 
     @Override

@@ -7,7 +7,6 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketCommunicationException;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
-import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
@@ -19,6 +18,7 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
 
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
@@ -213,13 +213,7 @@ public class ActionHandler {
                             mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "no expectation for:{}returning response:{}", request, notFoundResponse());
                         } else {
                             httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                            mockServerLogger.info(FORWARDED_REQUEST,
-                                request,
-                                "returning response:{}for request:{}as curl:{}",
-                                response,
-                                request,
-                                httpRequestToCurlSerializer.toCurl(request, remoteAddress)
-                            );
+                            mockServerLogger.info(FORWARDED_REQUEST, request, "returning response:{}for request:{}as curl:{}", response, request, httpRequestToCurlSerializer.toCurl(request, remoteAddress));
                         }
                     } catch (SocketCommunicationException sce) {
                         returnNotFound(responseWriter, request);
@@ -253,6 +247,7 @@ public class ActionHandler {
                     HttpResponse response = responseFuture.getHttpResponse().get();
                     responseWriter.writeResponse(request, response, false);
                     httpStateHandler.log(new RequestResponseLogEntry(request, response));
+                    mockServerLogger.info(FORWARDED_REQUEST, request, "returning response:{}for request:{}as curl:{}", response, request, httpRequestToCurlSerializer.toCurl(request));
                     mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
                 } catch (Exception ex) {
                     mockServerLogger.error(request, ex, ex.getMessage());
