@@ -25,7 +25,7 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
         velocityTemplateEngine = new VelocityTemplateEngine(logFormatter);
     }
 
-    public SettableFuture<HttpResponse> handle(HttpTemplate httpTemplate, HttpRequest originalRequest) {
+    public HttpForwardActionResult handle(HttpTemplate httpTemplate, HttpRequest originalRequest) {
         TemplateEngine templateEngine = null;
         switch (httpTemplate.getTemplateType()) {
             case VELOCITY:
@@ -44,6 +44,6 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
             }
         }
 
-        return notFoundFuture();
+        return notFoundFuture(originalRequest);
     }
 }

@@ -26,18 +26,18 @@ public abstract class HttpForwardAction {
         this.httpClient = httpClient;
     }
 
-    protected SettableFuture<HttpResponse> sendRequest(HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) {
+    protected HttpForwardActionResult sendRequest(HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) {
         try {
-            return httpClient.sendRequest(hopByHopHeaderFilter.onRequest(httpRequest), remoteAddress);
+            return new HttpForwardActionResult(httpRequest, httpClient.sendRequest(hopByHopHeaderFilter.onRequest(httpRequest), remoteAddress));
         } catch (Exception e) {
             mockServerLogger.error(httpRequest, e, "Exception forwarding request " + httpRequest);
         }
-        return notFoundFuture();
+        return notFoundFuture(httpRequest);
     }
 
-    SettableFuture<HttpResponse> notFoundFuture() {
+    HttpForwardActionResult notFoundFuture(HttpRequest httpRequest) {
         SettableFuture<HttpResponse> notFoundFuture = SettableFuture.create();
         notFoundFuture.set(notFoundResponse());
-        return notFoundFuture;
+        return new HttpForwardActionResult(httpRequest, notFoundFuture);
     }
 }

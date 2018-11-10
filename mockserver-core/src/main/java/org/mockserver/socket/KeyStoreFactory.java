@@ -141,12 +141,9 @@ public class KeyStoreFactory {
     }
 
     public KeyStore loadOrCreateKeyStore() {
-        System.out.println("loadOrCreateKeyStore");
         KeyStore keystore = null;
         File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
-        System.out.println("keyStoreFile.getAbsolutePath() = " + keyStoreFile.getAbsolutePath());
         if (keyStoreFile.exists()) {
-            System.out.println("keyStoreFile.exists() = " + keyStoreFile.exists());
             try (FileInputStream fileInputStream = new FileInputStream(keyStoreFile)) {
                 keystore = KeyStore.getInstance(KeyStore.getDefaultType());
                 keystore.load(fileInputStream, ConfigurationProperties.javaKeyStorePassword().toCharArray());

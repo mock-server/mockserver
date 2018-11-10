@@ -56,7 +56,7 @@ public class HttpForwardTemplateActionHandlerTest {
                 .withPath("/somePath")
                 .withMethod("POST")
                 .withBody("some_body")
-        );
+        ).getHttpResponse();
 
         // then
         if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
@@ -80,7 +80,7 @@ public class HttpForwardTemplateActionHandlerTest {
         when(mockHttpClient.sendRequest(httpRequest, null)).thenReturn(httpResponse);
 
         // when
-        SettableFuture<HttpResponse> actualHttpResponse = httpForwardTemplateActionHandler.handle(template, httpRequest);
+        SettableFuture<HttpResponse> actualHttpResponse = httpForwardTemplateActionHandler.handle(template, httpRequest).getHttpResponse();
 
         // then
         verify(mockHttpClient).sendRequest(httpRequest, null);

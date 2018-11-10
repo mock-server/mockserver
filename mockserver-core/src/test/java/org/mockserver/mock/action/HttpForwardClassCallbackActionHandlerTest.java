@@ -50,7 +50,7 @@ public class HttpForwardClassCallbackActionHandlerTest {
         HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.FooBar");
 
         // when
-        SettableFuture<HttpResponse> actualHttpRequest = httpForwardClassCallbackActionHandler.handle(httpClassCallback, request().withBody("some_body"));
+        SettableFuture<HttpResponse> actualHttpRequest = httpForwardClassCallbackActionHandler.handle(httpClassCallback, request().withBody("some_body")).getHttpResponse();
 
         // then
         assertThat(actualHttpRequest.get(), is(notFoundResponse()));
@@ -67,7 +67,7 @@ public class HttpForwardClassCallbackActionHandlerTest {
         HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.HttpForwardClassCallbackActionHandlerTest$TestCallback");
 
         // when
-        SettableFuture<HttpResponse> actualHttpRequest = httpForwardClassCallbackActionHandler.handle(httpClassCallback, request().withBody("some_body"));
+        SettableFuture<HttpResponse> actualHttpRequest = httpForwardClassCallbackActionHandler.handle(httpClassCallback, request().withBody("some_body")).getHttpResponse();
 
         // then
         assertThat(actualHttpRequest.get(), is(httpResponse.get()));

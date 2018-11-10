@@ -18,7 +18,7 @@ public class HttpForwardActionHandler extends HttpForwardAction {
         super(logFormatter, httpClient);
     }
 
-    public SettableFuture<HttpResponse> handle(HttpForward httpForward, HttpRequest httpRequest) {
+    public HttpForwardActionResult handle(HttpForward httpForward, HttpRequest httpRequest) {
         if (httpForward.getScheme().equals(HttpForward.Scheme.HTTPS)) {
             httpRequest.withSecure(true);
         } else {

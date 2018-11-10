@@ -19,7 +19,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
         super(mockServerLogger, httpClient);
     }
 
-    public SettableFuture<HttpResponse> handle(HttpClassCallback httpClassCallback, HttpRequest request) {
+    public HttpForwardActionResult handle(HttpClassCallback httpClassCallback, HttpRequest request) {
         return invokeCallbackMethod(httpClassCallback, request);
     }
 
@@ -42,16 +42,16 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
         return null;
     }
 
-    private SettableFuture<HttpResponse> invokeCallbackMethod(HttpClassCallback httpClassCallback, HttpRequest httpRequest) {
+    private HttpForwardActionResult invokeCallbackMethod(HttpClassCallback httpClassCallback, HttpRequest httpRequest) {
         if (httpRequest != null) {
             ExpectationForwardCallback expectationForwardCallback = instantiateCallback(httpClassCallback);
             if (expectationForwardCallback != null) {
                 return sendRequest(expectationForwardCallback.handle(httpRequest), null);
             } else {
-                return notFoundFuture();
+                return notFoundFuture(httpRequest);
             }
         } else {
-            return notFoundFuture();
+            return notFoundFuture(httpRequest);
         }
     }
 }

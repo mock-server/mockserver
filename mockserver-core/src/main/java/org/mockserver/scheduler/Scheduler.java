@@ -1,10 +1,9 @@
 package org.mockserver.scheduler;
 
-import com.google.common.util.concurrent.SettableFuture;
 import org.mockserver.client.netty.SocketCommunicationException;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.mock.action.HttpForwardActionResult;
 import org.mockserver.model.Delay;
-import org.mockserver.model.HttpResponse;
 
 import java.util.concurrent.*;
 
@@ -64,19 +63,19 @@ public class Scheduler {
         }
     }
 
-    public void submit(SettableFuture<HttpResponse> future, Runnable command, boolean synchronous) {
+    public void submit(HttpForwardActionResult future, Runnable command, boolean synchronous) {
         if (future != null) {
             if (synchronous) {
                 try {
-                    future.get(ConfigurationProperties.maxSocketTimeout(), TimeUnit.MILLISECONDS);
+                    future.getHttpResponse().get(ConfigurationProperties.maxSocketTimeout(), TimeUnit.MILLISECONDS);
                 } catch (TimeoutException e) {
-                    future.setException(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
+                    future.getHttpResponse().setException(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
                 } catch (InterruptedException | ExecutionException ex) {
-                    future.setException(ex);
+                    future.getHttpResponse().setException(ex);
                 }
                 command.run();
             } else {
-                future.addListener(command, getScheduler());
+                future.getHttpResponse().addListener(command, getScheduler());
             }
         }
     }

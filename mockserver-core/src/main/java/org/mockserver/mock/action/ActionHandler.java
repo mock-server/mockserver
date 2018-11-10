@@ -1,6 +1,5 @@
 package org.mockserver.mock.action;
 
-import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.StringUtils;
@@ -86,49 +85,43 @@ public class ActionHandler {
         } else if (expectation != null && expectation.getAction() != null) {
 
             final Action action = expectation.getAction();
+            httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
             switch (action.getType()) {
                 case RESPONSE: {
                     final HttpResponse httpResponse = (HttpResponse) action;
-                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     scheduler.schedule(new Runnable() {
                         public void run() {
                             HttpResponse response = httpResponseActionHandler.handle(httpResponse);
-                            responseWriter.writeResponse(request, response, false);
-                            mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
+                            writeResponseActionResponse(response, responseWriter, request, action);
                         }
                     }, httpResponse.getDelay(), synchronous);
                     break;
                 }
                 case RESPONSE_TEMPLATE: {
                     final HttpTemplate httpTemplate = (HttpTemplate) action;
-                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     scheduler.schedule(new Runnable() {
                         public void run() {
                             HttpResponse response = httpResponseTemplateActionHandler.handle(httpTemplate, request);
-                            responseWriter.writeResponse(request, response, false);
-                            mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
+                            writeResponseActionResponse(response, responseWriter, request, action);
                         }
                     }, httpTemplate.getDelay(), synchronous);
                     break;
                 }
                 case RESPONSE_CLASS_CALLBACK: {
-                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     final HttpClassCallback classCallback = (HttpClassCallback) action;
                     scheduler.submit(new Runnable() {
                         public void run() {
                             HttpResponse response = httpResponseClassCallbackActionHandler.handle(classCallback, request);
-                            responseWriter.writeResponse(request, response, false);
-                            mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
+                            writeResponseActionResponse(response, responseWriter, request, action);
                         }
                     }, synchronous);
                     break;
                 }
                 case RESPONSE_OBJECT_CALLBACK: {
-                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     final HttpObjectCallback objectCallback = (HttpObjectCallback) action;
                     scheduler.submit(new Runnable() {
                         public void run() {
-                            httpResponseObjectCallbackActionHandler.handle(objectCallback, request, responseWriter);
+                            httpResponseObjectCallbackActionHandler.handle(ActionHandler.this, objectCallback, request, responseWriter);
                         }
                     }, synchronous);
                     break;
@@ -137,19 +130,8 @@ public class ActionHandler {
                     final HttpForward httpForward = (HttpForward) action;
                     scheduler.schedule(new Runnable() {
                         public void run() {
-                            final SettableFuture<HttpResponse> responseFuture = httpForwardActionHandler.handle(httpForward, request);
-                            scheduler.submit(responseFuture, new Runnable() {
-                                public void run() {
-                                    try {
-                                        HttpResponse response = responseFuture.get();
-                                        responseWriter.writeResponse(request, response, false);
-                                        httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                                        mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
-                                    } catch (Exception ex) {
-                                        mockServerLogger.error(request, ex, ex.getMessage());
-                                    }
-                                }
-                            }, synchronous);
+                            final HttpForwardActionResult responseFuture = httpForwardActionHandler.handle(httpForward, request);
+                            writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
                         }
                     }, httpForward.getDelay(), synchronous);
                     break;
@@ -158,78 +140,43 @@ public class ActionHandler {
                     final HttpTemplate httpTemplate = (HttpTemplate) action;
                     scheduler.schedule(new Runnable() {
                         public void run() {
-                            final SettableFuture<HttpResponse> responseFuture = httpForwardTemplateActionHandler.handle(httpTemplate, request);
-                            scheduler.submit(responseFuture, new Runnable() {
-                                public void run() {
-                                    try {
-                                        HttpResponse response = responseFuture.get();
-                                        responseWriter.writeResponse(request, response, false);
-                                        httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                                        mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
-                                    } catch (Exception ex) {
-                                        mockServerLogger.error(request, ex, ex.getMessage());
-                                    }
-                                }
-                            }, synchronous);
+                            final HttpForwardActionResult responseFuture = httpForwardTemplateActionHandler.handle(httpTemplate, request);
+                            writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
                         }
                     }, httpTemplate.getDelay(), synchronous);
                     break;
                 }
                 case FORWARD_CLASS_CALLBACK: {
-                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     final HttpClassCallback classCallback = (HttpClassCallback) action;
                     scheduler.submit(new Runnable() {
                         public void run() {
-                            final SettableFuture<HttpResponse> responseFuture = httpForwardClassCallbackActionHandler.handle(classCallback, request);
-                            scheduler.submit(responseFuture, new Runnable() {
-                                public void run() {
-                                    try {
-                                        HttpResponse response = responseFuture.get();
-                                        responseWriter.writeResponse(request, response, false);
-                                        mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
-                                    } catch (Exception ex) {
-                                        mockServerLogger.error(request, ex, ex.getMessage());
-                                    }
-                                }
-                            }, synchronous);
+                            final HttpForwardActionResult responseFuture = httpForwardClassCallbackActionHandler.handle(classCallback, request);
+                            writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
                         }
                     }, synchronous);
                     break;
                 }
                 case FORWARD_OBJECT_CALLBACK: {
-                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     final HttpObjectCallback objectCallback = (HttpObjectCallback) action;
                     scheduler.submit(new Runnable() {
                         public void run() {
-                            httpForwardObjectCallbackActionHandler.handle(objectCallback, request, responseWriter, synchronous);
+                            httpForwardObjectCallbackActionHandler.handle(ActionHandler.this, objectCallback, request, responseWriter, synchronous);
                         }
                     }, synchronous);
                     break;
                 }
                 case FORWARD_REPLACE: {
-                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     final HttpOverrideForwardedRequest httpOverrideForwardedRequest = (HttpOverrideForwardedRequest) action;
                     scheduler.schedule(new Runnable() {
                         public void run() {
-                            final SettableFuture<HttpResponse> responseFuture = httpOverrideForwardedRequestCallbackActionHandler.handle(httpOverrideForwardedRequest, request);
-                            scheduler.submit(responseFuture, new Runnable() {
-                                public void run() {
-                                    try {
-                                        HttpResponse response = responseFuture.get();
-                                        responseWriter.writeResponse(request, response, false);
-                                        mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
-                                    } catch (Exception ex) {
-                                        mockServerLogger.error(request, ex, ex.getMessage());
-                                    }
-                                }
-                            }, synchronous);
+                            final HttpForwardActionResult responseFuture = httpOverrideForwardedRequestCallbackActionHandler.handle(httpOverrideForwardedRequest, request);
+                            writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
                         }
                     }, httpOverrideForwardedRequest.getDelay(), synchronous);
                     break;
                 }
                 case ERROR: {
                     final HttpError httpError = (HttpError) action;
-                    httpStateHandler.log(new ExpectationMatchLogEntry(request, expectation));
                     scheduler.schedule(new Runnable() {
                         public void run() {
                             httpErrorActionHandler.handle(httpError, ctx);
@@ -252,11 +199,11 @@ public class ActionHandler {
             if (exploratoryHttpProxy) {
                 clonedRequest.withHeader("x-forwarded-by", "MockServer");
             }
-            final SettableFuture<HttpResponse> responseFuture = httpClient.sendRequest(clonedRequest, remoteAddress, exploratoryHttpProxy ? 1000 : ConfigurationProperties.socketConnectionTimeout());
+            final HttpForwardActionResult responseFuture = new HttpForwardActionResult(clonedRequest, httpClient.sendRequest(clonedRequest, remoteAddress, exploratoryHttpProxy ? 1000 : ConfigurationProperties.socketConnectionTimeout()));
             scheduler.submit(responseFuture, new Runnable() {
                 public void run() {
                     try {
-                        HttpResponse response = responseFuture.get();
+                        HttpResponse response = responseFuture.getHttpResponse().get();
                         if (response == null) {
                             response = notFoundResponse();
                         }
@@ -292,6 +239,26 @@ public class ActionHandler {
             returnNotFound(responseWriter, request);
 
         }
+    }
+
+    void writeResponseActionResponse(HttpResponse response, ResponseWriter responseWriter, HttpRequest request, Action action) {
+        responseWriter.writeResponse(request, response, false);
+        mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
+    }
+
+    void writeForwardActionResponse(final HttpForwardActionResult responseFuture, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous) {
+        scheduler.submit(responseFuture, new Runnable() {
+            public void run() {
+                try {
+                    HttpResponse response = responseFuture.getHttpResponse().get();
+                    responseWriter.writeResponse(request, response, false);
+                    httpStateHandler.log(new RequestResponseLogEntry(request, response));
+                    mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
+                } catch (Exception ex) {
+                    mockServerLogger.error(request, ex, ex.getMessage());
+                }
+            }
+        }, synchronous);
     }
 
     private void returnNotFound(ResponseWriter responseWriter, HttpRequest request) {

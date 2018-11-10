@@ -49,7 +49,7 @@ public class HttpForwardActionHandlerTest {
         when(mockHttpClient.sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()))).thenReturn(responseFuture);
 
         // when
-        SettableFuture<HttpResponse> actualHttpResponse = httpForwardActionHandler.handle(httpForward, httpRequest);
+        SettableFuture<HttpResponse> actualHttpResponse = httpForwardActionHandler.handle(httpForward, httpRequest).getHttpResponse();
 
         // then
         assertThat(actualHttpResponse, is(sameInstance(responseFuture)));
@@ -68,7 +68,7 @@ public class HttpForwardActionHandlerTest {
         when(mockHttpClient.sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()))).thenReturn(httpResponse);
 
         // when
-        SettableFuture<HttpResponse> actualHttpResponse = httpForwardActionHandler.handle(httpForward, httpRequest);
+        SettableFuture<HttpResponse> actualHttpResponse = httpForwardActionHandler.handle(httpForward, httpRequest).getHttpResponse();
 
         // then
         assertThat(actualHttpResponse, is(sameInstance(httpResponse)));

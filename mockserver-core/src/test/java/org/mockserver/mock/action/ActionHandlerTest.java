@@ -87,6 +87,7 @@ public class ActionHandlerTest {
     private HttpRequest request;
     private HttpResponse response;
     private SettableFuture<HttpResponse> responseFuture;
+    private HttpForwardActionResult httpForwardActionResult;
     private Expectation expectation;
     private static Scheduler scheduler = new Scheduler();
 
@@ -104,16 +105,17 @@ public class ActionHandlerTest {
         response = response("some_body");
         responseFuture = SettableFuture.create();
         responseFuture.set(response);
+        httpForwardActionResult = new HttpForwardActionResult(mock(HttpRequest.class), responseFuture);
         expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(response);
 
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
         when(mockHttpResponseActionHandler.handle(any(HttpResponse.class))).thenReturn(response);
         when(mockHttpResponseTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenReturn(response);
         when(mockHttpResponseClassCallbackActionHandler.handle(any(HttpClassCallback.class), any(HttpRequest.class))).thenReturn(response);
-        when(mockHttpForwardActionHandler.handle(any(HttpForward.class), any(HttpRequest.class))).thenReturn(responseFuture);
-        when(mockHttpForwardTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenReturn(responseFuture);
-        when(mockHttpForwardClassCallbackActionHandler.handle(any(HttpClassCallback.class), any(HttpRequest.class))).thenReturn(responseFuture);
-        when(mockHttpOverrideForwardedRequestActionHandler.handle(any(HttpOverrideForwardedRequest.class), any(HttpRequest.class))).thenReturn(responseFuture);
+        when(mockHttpForwardActionHandler.handle(any(HttpForward.class), any(HttpRequest.class))).thenReturn(httpForwardActionResult);
+        when(mockHttpForwardTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenReturn(httpForwardActionResult);
+        when(mockHttpForwardClassCallbackActionHandler.handle(any(HttpClassCallback.class), any(HttpRequest.class))).thenReturn(httpForwardActionResult);
+        when(mockHttpOverrideForwardedRequestActionHandler.handle(any(HttpOverrideForwardedRequest.class), any(HttpRequest.class))).thenReturn(httpForwardActionResult);
     }
 
     @AfterClass
@@ -185,7 +187,7 @@ public class ActionHandlerTest {
 
         // then
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockHttpResponseObjectCallbackActionHandler).handle(callback, request, mockResponseWriter);
+        verify(mockHttpResponseObjectCallbackActionHandler).handle(any(ActionHandler.class), same(callback), same(request), same(mockResponseWriter));
     }
 
     @Test
@@ -203,7 +205,7 @@ public class ActionHandlerTest {
         // then
         verify(mockHttpForwardActionHandler).handle(forward, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
-        verify(mockHttpStateHandler, times(1)).log(new RequestResponseLogEntry(request, response));
+        verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
         verify(mockLogFormatter).info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, forward);
     }
 
@@ -220,7 +222,7 @@ public class ActionHandlerTest {
         // then
         verify(mockHttpForwardTemplateActionHandler).handle(template, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
-        verify(mockHttpStateHandler, times(1)).log(new RequestResponseLogEntry(request, response));
+        verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
         verify(mockLogFormatter).info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, template);
     }
 
@@ -254,7 +256,7 @@ public class ActionHandlerTest {
 
         // then
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockHttpForwardObjectCallbackActionHandler).handle(callback, request, mockResponseWriter, true);
+        verify(mockHttpForwardObjectCallbackActionHandler).handle(any(ActionHandler.class), same(callback), same(request), same(mockResponseWriter), eq(true));
     }
 
     @Test

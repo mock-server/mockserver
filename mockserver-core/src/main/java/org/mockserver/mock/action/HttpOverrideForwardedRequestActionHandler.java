@@ -1,11 +1,9 @@
 package org.mockserver.mock.action;
 
-import com.google.common.util.concurrent.SettableFuture;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpOverrideForwardedRequest;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 
 /**
  * @author jamesdbloom
@@ -16,7 +14,7 @@ public class HttpOverrideForwardedRequestActionHandler extends HttpForwardAction
         super(logFormatter, httpClient);
     }
 
-    public SettableFuture<HttpResponse> handle(final HttpOverrideForwardedRequest httpOverrideForwardedRequest, final HttpRequest request) {
+    public HttpForwardActionResult handle(final HttpOverrideForwardedRequest httpOverrideForwardedRequest, final HttpRequest request) {
         return sendRequest(request.clone().update(httpOverrideForwardedRequest.getHttpRequest()), null);
     }
 
