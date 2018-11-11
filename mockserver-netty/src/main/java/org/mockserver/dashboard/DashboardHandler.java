@@ -42,6 +42,8 @@ public class DashboardHandler {
         MIME_MAP.put("json", "application/json; charset=UTF-8");
         MIME_MAP.put("html", "text/html; charset=utf-8");
         MIME_MAP.put("ico", "image/x-icon");
+        MIME_MAP.put("woff2", "application/font-woff2");
+        MIME_MAP.put("ttf", "application/octet-stream");
         MIME_MAP.put("png", "image/png");
     }
 
