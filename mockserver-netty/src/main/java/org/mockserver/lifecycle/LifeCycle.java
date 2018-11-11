@@ -16,8 +16,8 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
 
 /**
@@ -52,6 +52,14 @@ public abstract class LifeCycle {
         // Wait until all threads are terminated.
         bossGroup.terminationFuture().syncUninterruptibly();
         workerGroup.terminationFuture().syncUninterruptibly();
+
+        try {
+            // ensure that shutdown has actually completed and won't
+            // cause class loader error if JVM starts unloading classes
+            SECONDS.sleep(3);
+        } catch (InterruptedException ignore) {
+            // ignore
+        }
     }
 
     public Scheduler getScheduler() {
@@ -81,7 +89,7 @@ public abstract class LifeCycle {
     private Integer getFirstBoundPort(List<Future<Channel>> channelFutures) {
         for (Future<Channel> channelOpened : channelFutures) {
             try {
-                return ((InetSocketAddress) channelOpened.get(2, TimeUnit.SECONDS).localAddress()).getPort();
+                return ((InetSocketAddress) channelOpened.get(2, SECONDS).localAddress()).getPort();
             } catch (Exception e) {
                 mockServerLogger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
             }
@@ -93,7 +101,7 @@ public abstract class LifeCycle {
         List<Integer> ports = new ArrayList<>();
         for (Future<Channel> channelOpened : channelFutures) {
             try {
-                ports.add(((InetSocketAddress) channelOpened.get(3, TimeUnit.SECONDS).localAddress()).getPort());
+                ports.add(((InetSocketAddress) channelOpened.get(3, SECONDS).localAddress()).getPort());
             } catch (Exception e) {
                 mockServerLogger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
             }
