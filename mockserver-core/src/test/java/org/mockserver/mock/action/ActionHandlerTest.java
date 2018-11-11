@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -80,6 +81,9 @@ public class ActionHandlerTest {
     @Mock
     private MockServerLogger mockLogFormatter;
 
+    @Spy
+    private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+
     @Mock
     private NettyHttpClient mockNettyHttpClient;
 
@@ -87,6 +91,7 @@ public class ActionHandlerTest {
     private HttpRequest request;
     private HttpResponse response;
     private SettableFuture<HttpResponse> responseFuture;
+    private HttpRequest forwardedHttpRequest;
     private HttpForwardActionResult httpForwardActionResult;
     private Expectation expectation;
     private static Scheduler scheduler = new Scheduler();
@@ -105,7 +110,8 @@ public class ActionHandlerTest {
         response = response("some_body");
         responseFuture = SettableFuture.create();
         responseFuture.set(response);
-        httpForwardActionResult = new HttpForwardActionResult(mock(HttpRequest.class), responseFuture);
+        forwardedHttpRequest = mock(HttpRequest.class);
+        httpForwardActionResult = new HttpForwardActionResult(forwardedHttpRequest, responseFuture);
         expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(response);
 
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
@@ -206,7 +212,8 @@ public class ActionHandlerTest {
         verify(mockHttpForwardActionHandler).handle(forward, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockLogFormatter).info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, forward);
+        verify(mockLogFormatter).info(same(FORWARDED_REQUEST), same(request), eq("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}"), same(response), same(forwardedHttpRequest), any(String.class));
+        verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest);
     }
 
     @Test
@@ -223,7 +230,8 @@ public class ActionHandlerTest {
         verify(mockHttpForwardTemplateActionHandler).handle(template, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockLogFormatter).info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, template);
+        verify(mockLogFormatter).info(same(FORWARDED_REQUEST), same(request), eq("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}"), same(response), same(forwardedHttpRequest), any(String.class));
+        verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest);
     }
 
     @Test
@@ -240,7 +248,8 @@ public class ActionHandlerTest {
         verify(mockHttpForwardClassCallbackActionHandler).handle(callback, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
         verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockLogFormatter).info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, callback);
+        verify(mockLogFormatter).info(same(FORWARDED_REQUEST), same(request), eq("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}"), same(response), same(forwardedHttpRequest), any(String.class));
+        verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest);
     }
 
     @Test
@@ -319,10 +328,10 @@ public class ActionHandlerTest {
         verify(mockLogFormatter).info(
             FORWARDED_REQUEST,
             request,
-            "returning response:{}for request:{}as curl:{}",
+            "returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}",
             response("some_body"),
             request,
-            new HttpRequestToCurlSerializer().toCurl(request, remoteAddress)
+            httpRequestToCurlSerializer.toCurl(request, remoteAddress)
         );
     }
 }

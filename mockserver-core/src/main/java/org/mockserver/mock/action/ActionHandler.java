@@ -213,7 +213,7 @@ public class ActionHandler {
                             mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "no expectation for:{}returning response:{}", request, notFoundResponse());
                         } else {
                             httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                            mockServerLogger.info(FORWARDED_REQUEST, request, "returning response:{}for request:{}as curl:{}", response, request, httpRequestToCurlSerializer.toCurl(request, remoteAddress));
+                            mockServerLogger.info(FORWARDED_REQUEST, request, "returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}", response, request, httpRequestToCurlSerializer.toCurl(request, remoteAddress));
                         }
                     } catch (SocketCommunicationException sce) {
                         returnNotFound(responseWriter, request);
@@ -247,8 +247,7 @@ public class ActionHandler {
                     HttpResponse response = responseFuture.getHttpResponse().get();
                     responseWriter.writeResponse(request, response, false);
                     httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                    mockServerLogger.info(FORWARDED_REQUEST, request, "returning response:{}for request:{}as curl:{}", response, request, httpRequestToCurlSerializer.toCurl(request));
-                    mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
+                    mockServerLogger.info(FORWARDED_REQUEST, request, "returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}", response, responseFuture.getHttpRequest(), httpRequestToCurlSerializer.toCurl(responseFuture.getHttpRequest()));
                 } catch (Exception ex) {
                     mockServerLogger.error(request, ex, ex.getMessage());
                 }
