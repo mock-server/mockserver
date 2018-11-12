@@ -2,7 +2,6 @@ package org.mockserver.filters;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.collections.BoundedConcurrentLinkedQueue;
 import org.mockserver.log.model.*;
 import org.mockserver.logging.MockServerLogger;
@@ -11,6 +10,7 @@ import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.ui.MockServerEventLogNotifier;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -62,7 +62,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         }
     };
     private MockServerLogger logFormatter;
-    private Queue<LogEntry> requestLog = new BoundedConcurrentLinkedQueue<>(maxExpectations());
+    private Queue<LogEntry> requestLog = new BoundedConcurrentLinkedQueue<>(maxExpectations() * 2);
     private MatcherBuilder matcherBuilder;
     private HttpRequestSerializer httpRequestSerializer;
 
