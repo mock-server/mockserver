@@ -5,12 +5,14 @@
             "additionalProperties": false,
             "items": {
                 "type": "object",
+                "additionalProperties": false,
                 "properties": {
                     "name": {
                         "type": "string"
                     },
                     "values": {
                         "type": "array",
+                        "additionalProperties": false,
                         "items": {
                             "type": "string"
                         }
@@ -24,6 +26,7 @@
             "patternProperties": {
                 "^\\S+$": {
                     "type": "array",
+                    "additionalProperties": false,
                     "items": {
                         "type": "string"
                     }
