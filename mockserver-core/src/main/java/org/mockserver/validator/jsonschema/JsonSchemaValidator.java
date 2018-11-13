@@ -9,10 +9,10 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.github.fge.jsonschema.main.JsonValidator;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
+import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.validator.Validator;
 
 import java.util.ArrayList;
@@ -28,8 +28,8 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
 
     private final String schema;
     private final JsonValidator validator = JsonSchemaFactory.byDefault().getValidator();
-    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private final MockServerLogger mockServerLogger;
+    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     public JsonSchemaValidator(MockServerLogger mockServerLogger, String schema) {
         this.mockServerLogger = mockServerLogger;
@@ -57,7 +57,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
             JsonNode jsonSchema = objectMapper.readTree(FileReader.readFileFromClassPathOrPath(routePath + mainSchemeFile + ".json"));
             JsonNode definitions = jsonSchema.get("definitions");
-            if (definitions != null && definitions instanceof ObjectNode) {
+            if (definitions instanceof ObjectNode) {
                 for (String definitionName : referenceFiles) {
                     ((ObjectNode) definitions).set(
                         definitionName,

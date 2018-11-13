@@ -26,6 +26,7 @@ import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
 import static org.mockserver.cors.CORSHeaders.isPreflightRequest;
@@ -213,7 +214,7 @@ public class ActionHandler {
                             mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "no expectation for:{}returning response:{}", request, notFoundResponse());
                         } else {
                             httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                            mockServerLogger.info(FORWARDED_REQUEST, request, "returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}", response, request, httpRequestToCurlSerializer.toCurl(request, remoteAddress));
+                            mockServerLogger.info(FORWARDED_REQUEST, request, "returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}", response, request, httpRequestToCurlSerializer.toCurl(request, remoteAddress));
                         }
                     } catch (SocketCommunicationException sce) {
                         returnNotFound(responseWriter, request);

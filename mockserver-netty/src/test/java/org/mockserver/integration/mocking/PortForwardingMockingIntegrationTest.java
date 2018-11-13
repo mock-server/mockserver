@@ -470,11 +470,11 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
 
         for (int i = 0; i < expectedLogMessages.length; i++) {
             if (expectedLogMessages[i] instanceof String) {
-                assertThat("matching log message " + i + "\nActual:\n" + Arrays.toString(actualLogMessages), actualLogMessages[i], endsWith((String) expectedLogMessages[i]));
+                assertThat("matching log message " + i + "\nActual:" + NEW_LINE + Arrays.toString(actualLogMessages), actualLogMessages[i], endsWith((String) expectedLogMessages[i]));
             } else if (expectedLogMessages[i] instanceof String[]) {
                 String[] expectedLogMessage = (String[]) expectedLogMessages[i];
                 for (int j = 0; j < expectedLogMessage.length; j++) {
-                    assertThat("matching log message " + i + "-" + j + "\nActual:\n" + Arrays.toString(actualLogMessages), actualLogMessages[i], containsString(expectedLogMessage[j]));
+                    assertThat("matching log message " + i + "-" + j + "\nActual:" + NEW_LINE + Arrays.toString(actualLogMessages), actualLogMessages[i], containsString(expectedLogMessage[j]));
                 }
             }
         }

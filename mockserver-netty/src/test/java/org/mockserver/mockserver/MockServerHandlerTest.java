@@ -221,7 +221,7 @@ public class MockServerHandlerTest {
         // then
         HttpResponse response = embeddedChannel.readOutbound();
         assertThat(response.getStatusCode(), is(200));
-        String[] splitBody = response.getBodyAsString().split("\n------------------------------------\n");
+        String[] splitBody = response.getBodyAsString().split(NEW_LINE + "------------------------------------" + NEW_LINE);
         assertThat(splitBody.length, is(2));
         assertThat(
             splitBody[0],

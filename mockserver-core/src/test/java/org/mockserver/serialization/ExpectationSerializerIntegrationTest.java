@@ -30,7 +30,6 @@ import static org.mockserver.model.StringBody.exact;
  */
 public class ExpectationSerializerIntegrationTest {
 
-    private final Base64Converter base64Converter = new Base64Converter();
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 

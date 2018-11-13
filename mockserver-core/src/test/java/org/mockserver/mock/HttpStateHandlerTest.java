@@ -1,7 +1,6 @@
 package org.mockserver.mock;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.net.MediaType;
 import org.junit.Before;
@@ -10,18 +9,21 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.log.model.*;
+import org.mockserver.log.model.ExpectationMatchLogEntry;
+import org.mockserver.log.model.MessageLogEntry;
+import org.mockserver.log.model.RequestLogEntry;
+import org.mockserver.log.model.RequestResponseLogEntry;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.Times;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.LogEntrySerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
-import org.mockserver.logging.MockServerLogger;
-import org.mockserver.matchers.Times;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.scheduler.Scheduler;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -37,6 +39,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -444,9 +447,9 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(
-                logEntryOne.getTimestamp() + " - " + logEntryOne.getMessage() + "\n------------------------------------\n" +
-                    logEntryTwo.getTimestamp() + " - " + logEntryTwo.getMessage() + "\n------------------------------------\n" +
-                    logEntryThree.getTimestamp() + " - " + logEntryThree.getMessage() + "\n",
+                logEntryOne.getTimestamp() + " - " + logEntryOne.getMessage() + NEW_LINE + "------------------------------------" + NEW_LINE +
+                    logEntryTwo.getTimestamp() + " - " + logEntryTwo.getMessage() + NEW_LINE + "------------------------------------" + NEW_LINE +
+                    logEntryThree.getTimestamp() + " - " + logEntryThree.getMessage() + NEW_LINE,
                 PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
         verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving logs that match:{}", request("request_one"));

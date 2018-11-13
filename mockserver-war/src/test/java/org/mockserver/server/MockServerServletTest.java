@@ -250,7 +250,7 @@ public class MockServerServletTest {
 
         // then
         assertThat(response.getStatus(), is(200));
-        String[] splitBody = new String(response.getContentAsByteArray(), UTF_8).split("\n------------------------------------\n");
+        String[] splitBody = new String(response.getContentAsByteArray(), UTF_8).split(NEW_LINE + "------------------------------------" + NEW_LINE);
         assertThat(splitBody.length, is(2));
         assertThat(
             splitBody[0],

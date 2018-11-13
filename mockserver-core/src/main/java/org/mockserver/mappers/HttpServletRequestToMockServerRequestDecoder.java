@@ -91,7 +91,7 @@ public class HttpServletRequestToMockServerRequestDecoder {
 
     public boolean isKeepAlive(HttpServletRequest httpServletRequest) {
         CharSequence connection = httpServletRequest.getHeader(HttpHeaderNames.CONNECTION.toString());
-        if (connection != null && HttpHeaderValues.CLOSE.contentEqualsIgnoreCase(connection)) {
+        if (HttpHeaderValues.CLOSE.contentEqualsIgnoreCase(connection)) {
             return false;
         }
 

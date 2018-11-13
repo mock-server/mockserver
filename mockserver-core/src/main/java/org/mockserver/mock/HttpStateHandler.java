@@ -29,6 +29,7 @@ import static com.google.common.net.MediaType.*;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -39,7 +40,7 @@ import static org.mockserver.socket.KeyAndCertificateFactory.addSubjectAlternati
  */
 public class HttpStateHandler {
 
-    public static final String LOG_SEPARATOR = "\n------------------------------------\n";
+    public static final String LOG_SEPARATOR = NEW_LINE + "------------------------------------" + NEW_LINE;
     public static final String PATH_PREFIX = "/mockserver";
     private final MockServerEventLog mockServerLog;
     private final Scheduler scheduler;
@@ -158,7 +159,7 @@ public class HttpStateHandler {
                             stringBuffer.append(LOG_SEPARATOR);
                         }
                     }
-                    stringBuffer.append("\n");
+                    stringBuffer.append(NEW_LINE);
                     response.withBody(stringBuffer.toString(), PLAIN_TEXT_UTF_8);
                     break;
                 }
