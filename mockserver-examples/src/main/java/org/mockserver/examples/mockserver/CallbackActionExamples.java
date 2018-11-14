@@ -2,6 +2,7 @@ package org.mockserver.examples.mockserver;
 
 import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -20,7 +21,7 @@ import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
  */
 public class CallbackActionExamples {
 
-    public void classCallback() {
+    public void responseClassCallback() {
         new ClientAndServer(1080)
             .when(
                 request()
@@ -32,7 +33,19 @@ public class CallbackActionExamples {
             );
     }
 
-    public void objectCallback() {
+    public void forwardClassCallback() {
+        new ClientAndServer(1080)
+            .when(
+                request()
+                    .withPath("/some.*")
+            )
+            .forward(
+                callback()
+                    .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationForwardCallback")
+            );
+    }
+
+    public void responseObjectCallback() {
         new MockServerClient("localhost", 1080)
             .when(
                 request()
@@ -41,8 +54,8 @@ public class CallbackActionExamples {
             .respond(
                 new ExpectationResponseCallback() {
                     @Override
-                    public HttpResponse handle(HttpRequest request) {
-                        if (request.getMethod().getValue().equals("POST")) {
+                    public HttpResponse handle(HttpRequest httpRequest) {
+                        if (httpRequest.getMethod().getValue().equals("POST")) {
                             return response()
                                 .withStatusCode(ACCEPTED_202.code())
                                 .withHeaders(
@@ -55,6 +68,31 @@ public class CallbackActionExamples {
                     }
                 }
             );
+
+    }
+
+    public void forwardObjectCallback() {
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        new ExpectationForwardCallback() {
+            @Override
+            public HttpRequest handle(HttpRequest httpRequest) {
+                return request()
+                    .withPath(httpRequest.getPath())
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-callback", "test_callback_header"),
+                        header("Content-Length", "a_callback_request".getBytes(UTF_8).length),
+                        header("Connection", "keep-alive")
+                    )
+                    .withBody("a_callback_request");
+            }
+        }
+    );
 
     }
 
@@ -74,6 +112,22 @@ public class CallbackActionExamples {
             } else {
                 return notFoundResponse();
             }
+        }
+    }
+
+    public static class TestExpectationForwardCallback implements ExpectationForwardCallback {
+
+        @Override
+        public HttpRequest handle(HttpRequest httpRequest) {
+            return request()
+                .withPath(httpRequest.getPath())
+                .withMethod("POST")
+                .withHeaders(
+                    header("x-callback", "test_callback_header"),
+                    header("Content-Length", "a_callback_request".getBytes(UTF_8).length),
+                    header("Connection", "keep-alive")
+                )
+                .withBody("a_callback_request");
         }
     }
 }

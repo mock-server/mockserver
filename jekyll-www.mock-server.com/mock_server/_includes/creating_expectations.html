@@ -92,9 +92,22 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 
 <p>Actions can be one of the following types:</p>
 <ul>
-    <li><strong><a href="#response_action">response</a></strong> - returns a response, either as a <a href="#button_response_literal_body_only">response literal</a>, or using a response template (in <a href="#button_javascript_templated_response">javascript</a> or <a href="#button_javascript_velocity_templated_response">velocity</a>)</li>
-    <li><strong><a href="#forward_action">forward</a></strong> - forwards requests, either <a href="#button_forward_exactly">exactly</a> as it receives them, or using a forward template (in <a href="#button_javascript_templated_forward">javascript</a> or <a href="#button_javascript_velocity_templated_forward">velocity</a>)</li>
-    <li><strong><a href="#callback_action">callback</a></strong> - dynamically generate a response based on the request by calling a predefined <a href="#button_class_callback">java class</a> or a <a href="#button_method_or_closure_callback">closure</a></li>
+    <li><strong><a href="#response_action">response</a></strong> - returns a response defined by using
+        <ul>
+            <li>a <strong><a href="#button_response_literal_body_only">literal</a></strong></li>
+            <li>a <strong><a href="#button_javascript_templated_response">javascript template</a></strong></li>
+            <li>a <strong><a href="#button_javascript_velocity_templated_response">velocity template</a></strong></li>
+            <li>a <strong><a href="#button_response_class_callback">server side callback</a></strong> (via classpath)</li>
+            <li>a <strong><a href="#button_response_method_or_closure_callback">client side callback</a></strong> (via WebSocket)</li>
+        </ul></li>
+    <li><strong><a href="#forward_action">forward</a></strong> - forwards requests defined by using
+        <ul>
+            <li>the <strong><a href="#button_forward_exactly">exact request received</a></strong></li>
+            <li>a <strong><a href="#button_javascript_templated_forward">javascript template</a></strong></li>
+            <li>a <strong><a href="#button_javascript_velocity_templated_forward">velocity template</a></strong></li>
+            <li>a <strong><a href="#button_forward_class_callback">server side callback</a></strong> (via classpath)</li>
+            <li>a <strong><a href="#button_forward_method_or_closure_callback">client side callback</a></strong> (via WebSocket)</li>
+        </ul></li>
     <li><strong><a href="#error_action">error</a></strong> - returns an invalid response as a sequence of bytes or closes the connection</li>
 </ul>
 
@@ -116,7 +129,18 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         </ul>
     </li>
     <li>
-        <p>or a templated response using <strong><a href="#button_javascript_templated_response">javascript</a></strong> or <strong><a href="#button_javascript_velocity_templated_response">velocity</a></strong> with a <strong><a href="#button_javascript_templated_response_with_delay">delay</a></strong></p>
+        <p>or a <strong>templated</strong> response using <strong><a href="#button_javascript_templated_response">javascript</a></strong> or <strong><a href="#button_javascript_velocity_templated_response">velocity</a></strong> with a <strong><a href="#button_javascript_templated_response_with_delay">delay</a></strong></p>
+    </li>
+    <li>
+        <p>or a <strong>callback</strong> used to dynamically generate a response based on the request:</p>
+        <ul>
+            <li>
+                <p>as a <strong>server side callback</strong> implemented as a <a href="#button_response_class_callback">java class</a> that has a default constructor, implements <span class="annotation">org.mockserver.mock.action.ExpectationResponseCallback</span> and is available on the classpath</p>
+            </li>
+            <li>
+                <p>as a <strong>client side callback</strong> implemented as a <a href="#button_response_method_or_closure_callback">closure</a> using the java or javascript clients</p>
+            </li>
+        </ul>
     </li>
 </ul>
 
@@ -141,31 +165,22 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li>
         <p>or a templated forwarder using <strong><a href="#button_javascript_templated_forward">javascript</a></strong> or <strong><a href="#button_javascript_velocity_templated_forward">velocity</a></strong>, with a <strong><a href="#button_javascript_templated_forward_with_delay">delay</a></strong>, that allows requests to be modified or completely re-written before they are forwarded</p>
     </li>
+    <li>
+        <p>or a <strong>callback</strong> used to dynamically generate the request to forward based on the request received by MockServer:</p>
+        <ul>
+            <li>
+                <p>as a <strong>server side callback</strong> implemented as a <a href="#button_forward_class_callback">java class</a> that has a default constructor, implements <span class="annotation">org.mockserver.mock.action.ExpectationForwardCallback</span> and is available on the classpath</p>
+            </li>
+            <li>
+                <p>as a <strong>client side callback</strong> implemented as a <a href="#button_forward_method_or_closure_callback">closure</a> using the java or javascript clients</p>
+            </li>
+        </ul>
+    </li>
 </ul>
 
 <button id="button_forward" class="accordion title"><strong>Forward Action Code Examples</strong></button>
 <div class="panel title">
     {% include_subpage _includes/forward_action_code_examples.html %}
-</div>
-
-<a name="callback_action" class="anchor" href="#callback_action">&nbsp;</a>
-
-<p>A <strong>callback action</strong> can be used to dynamically generate a response based on the request:</p>
-
-<ul>
-    <li>
-        <p>call a <a href="#button_class_callback">java class</a> that has a default constructor, implements <strong>org.mockserver.mock.action.ExpectationResponseCallback</strong> and is available on the classpath</p>
-    </li>
-    <li>
-        <p>call a <a href="#button_method_or_closure_callback">closure</a> using the java or javascript clients</p>
-    </li>
-</ul>
-
-
-
-<button id="button_callback" class="accordion title"><strong>Callback Action Code Examples</strong></button>
-<div class="panel title">
-    {% include_subpage _includes/callback_action_code_examples.html %}
 </div>
 
 <a name="error_action" class="anchor" href="#error_action">&nbsp;</a>
