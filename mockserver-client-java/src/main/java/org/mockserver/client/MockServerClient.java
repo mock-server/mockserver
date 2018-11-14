@@ -6,13 +6,13 @@ import org.mockserver.Version;
 import org.mockserver.client.MockServerEventBus.MockServerEvent;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
-import org.mockserver.serialization.*;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+import org.mockserver.serialization.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
@@ -38,11 +38,11 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 public class MockServerClient implements java.io.Closeable {
 
     protected final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
-    protected Future<Integer> portFuture;
     private final String host;
     private final String contextPath;
-    private Boolean secure;
     private final Class<MockServerClient> clientClass;
+    protected Future<Integer> portFuture;
+    private Boolean secure;
     private Integer port;
     private NettyHttpClient nettyHttpClient = new NettyHttpClient();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
