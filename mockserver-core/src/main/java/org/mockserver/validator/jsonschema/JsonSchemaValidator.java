@@ -232,6 +232,8 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 }
                 oneOfErrorMessage.append(" but ").append(String.valueOf(processingMessage.asJson().get("matched"))).append(" found");
                 validationErrors.add(oneOfErrorMessage.toString() + (fieldPointer.isEmpty() ? "" : " for field \"" + fieldPointer + "\""));
+            } else if (fieldPointer.endsWith("/times") && processingMessage.toString().contains("has properties which are not allowed by the schema") && String.valueOf(processingMessage.asJson().get("schema")).contains("verificationTimes")) {
+                validationErrors.add(processingMessage.getMessage() + " for field \"" + fieldPointer + "\", allowed fields are [\"atLeast\", \"atMost\"]");
             } else {
                 validationErrors.add(processingMessage.getMessage() + (fieldPointer.isEmpty() ? "" : " for field \"" + fieldPointer + "\""));
             }
