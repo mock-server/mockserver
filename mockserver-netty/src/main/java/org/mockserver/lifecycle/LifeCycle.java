@@ -56,7 +56,7 @@ public abstract class LifeCycle {
         try {
             // ensure that shutdown has actually completed and won't
             // cause class loader error if JVM starts unloading classes
-            SECONDS.sleep(3);
+            SECONDS.sleep(2);
         } catch (InterruptedException ignore) {
             // ignore
         }
