@@ -1,5 +1,7 @@
 package org.mockserver.serialization.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.net.MediaType;
 import org.mockserver.model.*;
 
 /**
@@ -42,5 +44,10 @@ public abstract class BodyWithContentTypeDTO extends BodyDTO {
     }
 
     public abstract BodyWithContentType buildObject();
+
+    @JsonIgnore
+    MediaType getMediaType() {
+        return contentType != null ? MediaType.parse(contentType) : null;
+    }
 
 }

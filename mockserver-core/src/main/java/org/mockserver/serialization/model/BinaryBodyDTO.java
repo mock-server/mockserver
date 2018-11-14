@@ -28,6 +28,6 @@ public class BinaryBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public BinaryBody buildObject() {
-        return new BinaryBody(DatatypeConverter.parseBase64Binary(value), (contentType != null ? MediaType.parse(contentType) : null));
+        return new BinaryBody(DatatypeConverter.parseBase64Binary(value), getMediaType());
     }
 }

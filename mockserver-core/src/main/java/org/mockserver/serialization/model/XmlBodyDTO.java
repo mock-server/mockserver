@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import com.google.common.net.MediaType;
 import org.mockserver.model.Body;
 import org.mockserver.model.XmlBody;
 
@@ -24,6 +25,6 @@ public class XmlBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public XmlBody buildObject() {
-        return new XmlBody(getXml());
+        return new XmlBody(getXml(), getMediaType());
     }
 }

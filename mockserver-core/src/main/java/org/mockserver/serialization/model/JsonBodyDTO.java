@@ -32,6 +32,6 @@ public class JsonBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public JsonBody buildObject() {
-        return new JsonBody(getJson(), (contentType != null ? MediaType.parse(contentType) : null), matchType);
+        return new JsonBody(getJson(), getMediaType(), matchType);
     }
 }

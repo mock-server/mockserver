@@ -30,6 +30,6 @@ public class StringBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public StringBody buildObject() {
-        return new StringBody(string, subString, (contentType != null ? MediaType.parse(contentType) : null));
+        return new StringBody(string, subString, getMediaType());
     }
 }
