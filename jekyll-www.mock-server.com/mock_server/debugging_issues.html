@@ -65,7 +65,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_recorded_reqs_using_request_matcher" class="accordion">retrieve recorded requests using request matcher</button>
@@ -96,7 +96,7 @@ mockServerClient("localhost", 1080).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -116,7 +116,7 @@ mockServerClient("localhost", 1080).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS&format=JAVA" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JAVA" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -150,7 +150,7 @@ mockServerClient("localhost", 1080).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS&format=JSON" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JSON" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -192,7 +192,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_active_expectations_using_request_matcher" class="accordion">retrieve active expectations using request matcher</button>
@@ -223,7 +223,7 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -243,7 +243,7 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS&format=JAVA" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS&format=JAVA" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -277,7 +277,7 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS&format=JSON" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS&format=JSON" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -321,7 +321,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_recorded_expectations_using_request_matcher" class="accordion">retrieve recorded expectations using request matcher</button>
@@ -352,7 +352,7 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -372,7 +372,7 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS&format=JAVA" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JAVA" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -406,7 +406,7 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -459,7 +459,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_recorded_log_messages_using_request_matcher" class="accordion">retrieve recorded log messages using request matcher</button>
@@ -493,7 +493,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>

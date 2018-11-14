@@ -6,7 +6,9 @@ import org.mockserver.model.HttpTemplate;
 
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.model.HttpForward.forward;
+import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpTemplate.template;
 
@@ -40,6 +42,36 @@ public class ForwardActionExamples {
                     .withPort(443)
                     .withScheme(HttpForward.Scheme.HTTPS)
             );
+    }
+
+    public void forwardOverridden() {
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        forwardOverriddenRequest(
+            request()
+                .withPath("/some/other/path")
+                .withHeader("Host", "target.host.com")
+        )
+    );
+    }
+
+    public void forwardOverriddenWithDelay() {
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        forwardOverriddenRequest(
+            request()
+                .withHeader("Host", "target.host.com")
+                .withBody("some_overridden_body")
+        ).withDelay(MILLISECONDS, 10)
+    );
     }
 
     public void javascriptTemplatedForward() {

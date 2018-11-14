@@ -40,7 +40,7 @@ mockServerClient("localhost", 1080)
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/verify" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
     "httpRequest": {
         "path": "/simple"
     },
@@ -80,7 +80,7 @@ mockServerClient("localhost", 1080)
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/verify" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
     "httpRequest": {
         "path": "/simple"
     },
@@ -121,7 +121,7 @@ mockServerClient("localhost", 1080)
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/verify" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
     "httpRequest": {
         "path": "/simple"
     },
@@ -181,7 +181,7 @@ mockServerClient("localhost", 1080)
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/verifySequence" -d '[
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verifySequence" -d '[
     {
       "path": "/some/path/one"
     },

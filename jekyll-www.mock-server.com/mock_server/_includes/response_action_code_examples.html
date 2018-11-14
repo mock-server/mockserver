@@ -33,7 +33,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code"># if no request matcher is specified then every request matched
-curl -v -X PUT "http://localhost:1080/expectation" -d '{
+curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpResponse": {
         "body": "some_response_body"
     }
@@ -84,7 +84,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code"># if no request matcher is specified then every request matched
-curl -v -X PUT "http://localhost:1080/expectation" -d '{
+curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpResponse": {
         "headers": {
             "content-type": ["text/plain; charset=utf-16"]
@@ -136,7 +136,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "method": "POST",
         "path": "/some/path"
@@ -197,7 +197,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/ws/rest/user/[0-9]+/icon/[0-9]+\\.png"
     },
@@ -255,7 +255,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path"
     },
@@ -350,7 +350,7 @@ client.mockAnyResponse({
         <pre class="prettyprint code"><code class="code"># respond once with 200, then respond twice with 204, then
 # respond with 404 as no remaining active expectations
 
-curl -v -X PUT "http://localhost:1080/expectation" -d '{
+curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path"
     },
@@ -363,7 +363,7 @@ curl -v -X PUT "http://localhost:1080/expectation" -d '{
     }
 }'
 
-curl -v -X PUT "http://localhost:1080/expectation" -d '{
+curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path"
     },
@@ -421,7 +421,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest" : {
         "path" : "/some/path"
     },
@@ -479,7 +479,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest" : {
         "path" : "/some/path"
     },
@@ -535,7 +535,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest" : {
         "path" : "/some/path"
     },
@@ -603,7 +603,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path"
     },
@@ -663,7 +663,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {"path": "/some/path"},
     "httpResponseTemplate": {
         "template": "if (request.method === \"POST\" && request.path === \"/some/path\") { return { statusCode: 200, body: JSON.stringify({name: \"value\"}) }; } else { return { statusCode: 406, body: request.body }; }",
@@ -724,7 +724,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path"
     },
@@ -795,7 +795,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest" : {
         "path" : "/some.*"
     },

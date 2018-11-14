@@ -126,7 +126,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -190,7 +190,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -247,7 +247,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -311,7 +311,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/verify" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verify" -d '{
     "httpRequest": {
         "path": "/simple"
     },
@@ -400,7 +400,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/verifySequence" -d '[
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verifySequence" -d '[
     {
       "path": "/some/path/one"
     },
@@ -459,7 +459,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/clear" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/clear" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -511,7 +511,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/clear?type=LOGS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/clear?type=LOGS" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -554,7 +554,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/reset</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/reset</code></pre>
         </div>
     </div>
     <button id="button_client_bind_to_additional_free_port" class="accordion">bind to additional free port</button>
@@ -567,7 +567,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/bind -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/bind -d '{
     "ports": [
         0,
         0
@@ -585,7 +585,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/bind -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/bind -d '{
     "ports": [
         1081,
         1082
