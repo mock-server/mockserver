@@ -3,7 +3,7 @@ package org.mockserver.client;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.Version;
-import org.mockserver.client.MockServerEventBus.MockServerEvent;
+import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -211,7 +211,7 @@ public class MockServerClient implements java.io.Closeable {
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
     public MockServerClient stop() {
-        MockServerEventBus.getInstance().publish(MockServerEvent.STOP);
+        MockServerEventBus.getInstance().publish(EventType.STOP);
         return stop(false);
     }
 
@@ -243,7 +243,7 @@ public class MockServerClient implements java.io.Closeable {
      * Reset MockServer by clearing all expectations
      */
     public MockServerClient reset() {
-        MockServerEventBus.getInstance().publish(MockServerEvent.RESET);
+        MockServerEventBus.getInstance().publish(EventType.RESET);
         sendRequest(request().withMethod("PUT").withPath(calculatePath("reset")));
         return clientClass.cast(this);
     }

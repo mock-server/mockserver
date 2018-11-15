@@ -30,6 +30,14 @@ import static org.mockserver.model.HttpTemplate.template;
 @Ignore("ignored due to issue with classpath during maven build")
 public class CompileGeneratedJavaCodeTest {
 
+    private static final String commonImports = "" +
+        "import org.mockserver.client.MockServerClient;" + NEW_LINE +
+        "import org.mockserver.matchers.Times;" + NEW_LINE +
+        "import org.mockserver.matchers.TimeToLive;" + NEW_LINE +
+        "import org.mockserver.mock.Expectation;" + NEW_LINE +
+        "import org.mockserver.model.*;" + NEW_LINE +
+        "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE;
+
     @Test
     public void shouldCompileExpectationWithHttpResponse() throws URISyntaxException {
 
@@ -71,12 +79,7 @@ public class CompileGeneratedJavaCodeTest {
                         )
         );
 
-        assertTrue(compileJavaCode("" +
-                "import org.mockserver.client.server.MockServerClient;" + NEW_LINE +
-                "import org.mockserver.matchers.Times;" + NEW_LINE +
-                "import org.mockserver.mock.Expectation;" + NEW_LINE +
-                "import org.mockserver.model.*;" + NEW_LINE +
-                "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE +
+        assertTrue(compileJavaCode(commonImports +
                 "import static org.mockserver.model.HttpResponse.response;" + NEW_LINE + NEW_LINE +
                 "class TestClass {" + NEW_LINE +
                 "   static {" +
@@ -118,12 +121,7 @@ public class CompileGeneratedJavaCodeTest {
                         )
         );
 
-        assertTrue(compileJavaCode("" +
-                "import org.mockserver.client.server.MockServerClient;" + NEW_LINE +
-                "import org.mockserver.matchers.Times;" + NEW_LINE +
-                "import org.mockserver.mock.Expectation;" + NEW_LINE +
-                "import org.mockserver.model.*;" + NEW_LINE +
-                "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE +
+        assertTrue(compileJavaCode(commonImports +
                 "import static org.mockserver.model.HttpTemplate.template;" + NEW_LINE + NEW_LINE +
                 "class TestClass {" + NEW_LINE +
                 "   static {" +
@@ -167,18 +165,13 @@ public class CompileGeneratedJavaCodeTest {
                         )
         );
 
-        assertTrue(compileJavaCode("" +
-                "import org.mockserver.client.server.MockServerClient;" + NEW_LINE +
-                "import org.mockserver.matchers.Times;" + NEW_LINE +
-                "import org.mockserver.mock.Expectation;" + NEW_LINE +
-                "import org.mockserver.model.*;" + NEW_LINE +
-                "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE +
-                "import static org.mockserver.model.HttpForward.forward;" + NEW_LINE + NEW_LINE +
-                "class TestClass {" + NEW_LINE +
-                "   static {" +
-                "      " + expectationAsJavaCode + "" + NEW_LINE +
-                "   }" + NEW_LINE +
-                "}")
+        assertTrue(compileJavaCode(commonImports +
+            "import static org.mockserver.model.HttpForward.forward;" + NEW_LINE + NEW_LINE +
+            "class TestClass {" + NEW_LINE +
+            "   static {" +
+            "      " + expectationAsJavaCode + "" + NEW_LINE +
+            "   }" + NEW_LINE +
+            "}")
         );
     }
 
@@ -214,12 +207,7 @@ public class CompileGeneratedJavaCodeTest {
                         )
         );
 
-        assertTrue(compileJavaCode("" +
-                "import org.mockserver.client.server.MockServerClient;" + NEW_LINE +
-                "import org.mockserver.matchers.Times;" + NEW_LINE +
-                "import org.mockserver.mock.Expectation;" + NEW_LINE +
-                "import org.mockserver.model.*;" + NEW_LINE +
-                "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE +
+        assertTrue(compileJavaCode(commonImports +
                 "import static org.mockserver.model.HttpClassCallback.callback;" + NEW_LINE + NEW_LINE +
                 "class TestClass {" + NEW_LINE +
                 "   static {" +
@@ -262,8 +250,9 @@ public class CompileGeneratedJavaCodeTest {
         );
 
         assertTrue(compileJavaCode("" +
-                "import org.mockserver.client.server.MockServerClient;" + NEW_LINE +
+                "import org.mockserver.client.MockServerClient;" + NEW_LINE +
                 "import org.mockserver.matchers.Times;" + NEW_LINE +
+                "import org.mockserver.matchers.TimeToLive;" + NEW_LINE +
                 "import org.mockserver.mock.Expectation;" + NEW_LINE +
                 "import org.mockserver.model.*;" + NEW_LINE +
                 "import static org.mockserver.model.HttpRequest.request;" + NEW_LINE + NEW_LINE +
