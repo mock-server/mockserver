@@ -7,8 +7,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author jamesdbloom
  */
-public class HttpError extends Action {
-    private Delay delay;
+public class HttpError extends Action<HttpError> {
     private Boolean dropConnection;
     private byte[] responseBytes;
 
@@ -42,31 +41,6 @@ public class HttpError extends Action {
 
     public byte[] getResponseBytes() {
         return responseBytes;
-    }
-
-    /**
-     * The delay before responding with this request as a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
-     *
-     * @param delay a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
-     */
-    public HttpError withDelay(Delay delay) {
-        this.delay = delay;
-        return this;
-    }
-
-    /**
-     * The delay before responding with this request as a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
-     *
-     * @param timeUnit a the time unit, for example TimeUnit.SECONDS
-     * @param value    a the number of time units to delay the response
-     */
-    public HttpError withDelay(TimeUnit timeUnit, long value) {
-        this.delay = new Delay(timeUnit, value);
-        return this;
-    }
-
-    public Delay getDelay() {
-        return delay;
     }
 
     @Override
