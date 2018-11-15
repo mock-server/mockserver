@@ -3,11 +3,11 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-        "httpRequest": {
-            "$ref": "#/definitions/httpRequest"
-        },
         "delay": {
             "$ref": "#/definitions/delay"
+        },
+        "httpRequest": {
+            "$ref": "#/definitions/httpRequest"
         }
     },
     "definitions": {
