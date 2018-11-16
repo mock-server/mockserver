@@ -66,10 +66,7 @@ curl -v -X PUT http://$MOCKSERVER_HOST/status
 
 #### Inside Kubernetes Cluster
 
-If a [DNS server](https://kubernetes.io/docs/concepts/services-networking/service/#dns) has been installed in the Kubernetes cluster the following DNS names should be available:
-- **within `mockserver` namespace:** `mockserver`
-- **outside `mockserver` namespace:** `mockserver.mockserver`  
-- **DNS SRV query:** `_serviceport._tcp.mockserver.mockserver`
+If a [DNS server](https://kubernetes.io/docs/concepts/services-networking/service/#dns) has been installed in the Kubernetes cluster the following DNS name should be available `mockserver.<namespace>.svc.cluster.local`, i.e. `mockserver.mockserver.svc.cluster.local`
 
 ### Helm Delete
 
