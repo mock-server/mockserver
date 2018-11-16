@@ -47,7 +47,7 @@ Docker Hub contains the following artifacts:
 
 * [mockserver-client-ruby ![mockserver-client](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - Ruby client for both the MockServer and the proxy 
 * [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client for both the MockServer and the proxy 
-* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.4.1/mockServerClient.js) client for both the MockServer and the proxy
+* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.5.0/mockServerClient.js) client for both the MockServer and the proxy
 
 ### Document
 Date       | Version | Documentation                                  | Java API                                                              | REST API
