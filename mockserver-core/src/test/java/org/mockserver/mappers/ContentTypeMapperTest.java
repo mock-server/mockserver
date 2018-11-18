@@ -147,6 +147,15 @@ public class ContentTypeMapperTest {
     }
 
     @Test
+    public void shouldDetermineCharsetWithQuotes() {
+        // when
+        Charset charset = ContentTypeMapper.getCharsetFromContentTypeHeader("text/html; charset=\"utf-8\"");
+
+        // then
+        assertThat(charset, is(Charset.forName("utf-8")));
+    }
+
+    @Test
     public void shouldDetermineCharsetWhenUnsupportedCharset() {
         // when
         Charset charset = ContentTypeMapper.getCharsetFromContentTypeHeader("text/plain; charset=some_rubbish");

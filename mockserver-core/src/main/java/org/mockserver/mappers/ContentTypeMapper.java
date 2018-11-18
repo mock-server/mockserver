@@ -100,7 +100,7 @@ public class ContentTypeMapper {
     public static Charset getCharsetFromContentTypeHeader(String contentType) {
         Charset charset = DEFAULT_HTTP_CHARACTER_SET;
         if (contentType != null) {
-            String charsetName = StringUtils.substringAfterLast(contentType, CHARSET.toString() + (char) HttpConstants.EQUALS);
+            String charsetName = StringUtils.substringAfterLast(contentType, CHARSET.toString() + (char) HttpConstants.EQUALS).replaceAll("\"", "");
             if (!Strings.isNullOrEmpty(charsetName)) {
                 try {
                     charset = Charset.forName(charsetName);
