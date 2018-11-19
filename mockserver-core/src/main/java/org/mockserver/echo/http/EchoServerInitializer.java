@@ -11,7 +11,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.server.netty.codec.MockServerServerCodec;
 
 import static org.mockserver.echo.http.EchoServer.*;
-import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
+import static org.mockserver.socket.tls.NettySslContextFactory.nettySslContextFactory;
 import static org.slf4j.event.Level.TRACE;
 
 /**

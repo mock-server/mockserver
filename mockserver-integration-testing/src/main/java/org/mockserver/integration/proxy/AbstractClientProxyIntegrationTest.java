@@ -22,7 +22,7 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.socket.KeyStoreFactory;
+import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import java.io.IOException;

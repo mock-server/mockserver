@@ -19,7 +19,7 @@ import org.mockserver.model.PortBinding;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
-import org.mockserver.socket.KeyAndCertificateFactory;
+import org.mockserver.socket.tls.KeyAndCertificateFactory;
 
 import javax.annotation.Nullable;
 import java.net.BindException;
@@ -105,14 +105,16 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 } else if (request.matches("PUT", PATH_PREFIX + "/bind", "/bind")) {
 
                     PortBinding requestedPortBindings = portBindingSerializer.deserialize(request.getBodyAsString());
-                    try {
-                        List<Integer> actualPortBindings = server.bindServerPorts(requestedPortBindings.getPorts());
-                        responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
-                    } catch (RuntimeException e) {
-                        if (e.getCause() instanceof BindException) {
-                            responseWriter.writeResponse(request, BAD_REQUEST, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());
-                        } else {
-                            throw e;
+                    if (requestedPortBindings != null) {
+                        try {
+                            List<Integer> actualPortBindings = server.bindServerPorts(requestedPortBindings.getPorts());
+                            responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
+                        } catch (RuntimeException e) {
+                            if (e.getCause() instanceof BindException) {
+                                responseWriter.writeResponse(request, BAD_REQUEST, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());
+                            } else {
+                                throw e;
+                            }
                         }
                     }
 

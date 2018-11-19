@@ -11,7 +11,7 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.AbstractBasicMockingIntegrationTest;
 import org.mockserver.socket.PortFactory;
-import org.mockserver.socket.KeyStoreFactory;
+import org.mockserver.socket.tls.KeyStoreFactory;
 
 import java.io.File;
 

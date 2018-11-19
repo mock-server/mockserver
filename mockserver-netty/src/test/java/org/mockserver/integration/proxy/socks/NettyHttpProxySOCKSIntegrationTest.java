@@ -25,7 +25,7 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mockserver.MockServer;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.socket.KeyStoreFactory;
+import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import java.io.IOException;
@@ -44,7 +44,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
+import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.exactly;
 

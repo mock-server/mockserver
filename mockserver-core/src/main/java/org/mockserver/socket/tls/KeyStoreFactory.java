@@ -1,4 +1,4 @@
-package org.mockserver.socket;
+package org.mockserver.socket.tls;
 
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -17,7 +17,7 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
-import static org.mockserver.socket.KeyAndCertificateFactory.keyAndCertificateFactory;
+import static org.mockserver.socket.tls.KeyAndCertificateFactory.keyAndCertificateFactory;
 
 /**
  * @author jamesdbloom, ganskef

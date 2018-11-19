@@ -6,7 +6,7 @@ import com.google.common.collect.Sets;
 import io.netty.util.NettyRuntime;
 import io.netty.util.internal.SystemPropertyUtil;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.KeyStoreFactory;
+import org.mockserver.socket.tls.KeyStoreFactory;
 import org.slf4j.event.Level;
 
 import java.io.FileInputStream;

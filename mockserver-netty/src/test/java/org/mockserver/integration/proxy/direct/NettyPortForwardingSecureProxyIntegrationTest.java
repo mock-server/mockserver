@@ -13,7 +13,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
+import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.exactly;
 

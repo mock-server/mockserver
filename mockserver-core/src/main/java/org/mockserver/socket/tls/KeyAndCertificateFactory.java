@@ -1,4 +1,4 @@
-package org.mockserver.socket;
+package org.mockserver.socket.tls;
 
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.*;

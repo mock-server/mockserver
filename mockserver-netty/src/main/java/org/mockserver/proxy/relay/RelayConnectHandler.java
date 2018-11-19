@@ -20,7 +20,7 @@ import java.util.concurrent.Future;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.mockserver.MockServerHandler.PROXYING;
-import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
+import static org.mockserver.socket.tls.NettySslContextFactory.nettySslContextFactory;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledDownstream;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledUpstream;
 import static org.slf4j.event.Level.TRACE;

@@ -10,7 +10,7 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.socket.KeyAndCertificateFactory;
+import org.mockserver.socket.tls.KeyAndCertificateFactory;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;

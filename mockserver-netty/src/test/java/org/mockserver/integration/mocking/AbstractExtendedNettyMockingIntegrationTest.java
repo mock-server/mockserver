@@ -46,7 +46,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.*;
-import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
+import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
 
 /**
  * @author jamesdbloom

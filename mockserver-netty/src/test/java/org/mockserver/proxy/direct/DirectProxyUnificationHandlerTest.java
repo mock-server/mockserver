@@ -52,14 +52,14 @@ public class DirectProxyUnificationHandlerTest {
         // then - should add SSL handlers first
         if (new MockServerLogger(PortUnificationHandler.class).isEnabled(TRACE)) {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
-                "SslHandler#0",
+                "SniHandler#0",
                 "LoggingHandler#0",
                 "PortUnificationHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));
         } else {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
-                "SslHandler#0",
+                "SniHandler#0",
                 "PortUnificationHandler#0",
                 "DefaultChannelPipeline$TailContext#0"
             ));

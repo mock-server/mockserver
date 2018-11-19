@@ -1,4 +1,4 @@
-package org.mockserver.socket;
+package org.mockserver.socket.tls;
 
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -8,7 +8,7 @@ import org.mockserver.configuration.ConfigurationProperties;
 import javax.net.ssl.SSLException;
 import java.security.cert.X509Certificate;
 
-import static org.mockserver.socket.KeyAndCertificateFactory.keyAndCertificateFactory;
+import static org.mockserver.socket.tls.KeyAndCertificateFactory.keyAndCertificateFactory;
 
 /**
  * @author jamesdbloom
