@@ -1,28 +1,20 @@
 package org.mockserver.dashboard;
 
-import io.netty.buffer.Unpooled;
+import com.google.common.collect.ImmutableList;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.*;
-import io.netty.util.CharsetUtil;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
-import java.io.File;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
-import java.util.Locale;
+import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
-import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -34,6 +26,13 @@ import static org.mockserver.model.HttpResponse.response;
 public class DashboardHandler {
 
     private static final Map<String, String> MIME_MAP = new HashMap<>();
+    private static final List<String> IS_TEST = ImmutableList.of(
+        "css",
+        "js",
+        "map",
+        "json",
+        "html"
+    );
 
     public DashboardHandler() {
         MIME_MAP.put("css", "text/css; charset=utf-8");
@@ -56,13 +55,22 @@ public class DashboardHandler {
             }
             InputStream contentStream = DashboardHandler.class.getResourceAsStream("/org/mockserver/dashboard" + path);
             if (contentStream != null) {
-                String content = IOUtils.toString(contentStream, UTF_8.name());
-                response =
-                    response()
-                        .withHeader(HttpHeaderNames.CONTENT_TYPE.toString(), MIME_MAP.get(StringUtils.substringAfterLast(path, ".")))
-                        .withHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(content.length()))
-                        .withBody(content);
-
+                final String extension = StringUtils.substringAfterLast(path, ".");
+                if (IS_TEST.contains(extension)) {
+                    final String content = IOUtils.toString(contentStream, UTF_8.name());
+                    response =
+                        response()
+                            .withHeader(HttpHeaderNames.CONTENT_TYPE.toString(), MIME_MAP.get(extension))
+                            .withHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(content.length()))
+                            .withBody(content);
+                } else {
+                    final byte[] bytes = IOUtils.toByteArray(contentStream);
+                    response =
+                        response()
+                            .withHeader(HttpHeaderNames.CONTENT_TYPE.toString(), MIME_MAP.get(extension))
+                            .withHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(bytes.length))
+                            .withBody(bytes);
+                }
                 if (request.isKeepAlive()) {
                     response.withHeader(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString());
                 }
