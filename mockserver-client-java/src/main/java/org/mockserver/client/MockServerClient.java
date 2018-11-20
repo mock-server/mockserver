@@ -1,6 +1,8 @@
 package org.mockserver.client;
 
 import com.google.common.base.Strings;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.Version;
 import org.mockserver.client.MockServerEventBus.EventType;
@@ -38,19 +40,19 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 public class MockServerClient implements java.io.Closeable {
 
     protected final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
+    private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
     private final String host;
     private final String contextPath;
     private final Class<MockServerClient> clientClass;
     protected Future<Integer> portFuture;
     private Boolean secure;
     private Integer port;
-    private NettyHttpClient nettyHttpClient = new NettyHttpClient();
+    private NettyHttpClient nettyHttpClient = new NettyHttpClient(eventLoopGroup, null);
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(mockServerLogger);
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer(mockServerLogger);
     private VerificationSerializer verificationSerializer = new VerificationSerializer(mockServerLogger);
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
-
 
     /**
      * Start the client communicating to a MockServer on localhost at the port
@@ -101,6 +103,10 @@ public class MockServerClient implements java.io.Closeable {
         this.contextPath = contextPath;
     }
 
+    EventLoopGroup getEventLoopGroup() {
+        return eventLoopGroup;
+    }
+
     public boolean isSecure() {
         return secure != null ? secure : false;
     }
@@ -142,31 +148,39 @@ public class MockServerClient implements java.io.Closeable {
     }
 
     private HttpResponse sendRequest(HttpRequest request) {
-        if (secure != null) {
-            request.withSecure(secure);
-        }
-
-        HttpResponse response = nettyHttpClient.sendRequest(
-            request.withHeader(HOST.toString(), this.host + ":" + port()),
-            ConfigurationProperties.maxSocketTimeout(),
-            TimeUnit.MILLISECONDS
-        );
-
-        if (response != null) {
-            if (response.getStatusCode() != null &&
-                response.getStatusCode() == BAD_REQUEST.code()) {
-                throw new IllegalArgumentException(response.getBodyAsString());
+        try {
+            if (secure != null) {
+                request.withSecure(secure);
             }
-            String serverVersion = response.getFirstHeader("version");
-            String clientVersion = Version.getVersion();
-            if (!Strings.isNullOrEmpty(serverVersion) &&
-                !Strings.isNullOrEmpty(clientVersion) &&
-                !clientVersion.equals(serverVersion)) {
-                throw new ClientException("Client version \"" + clientVersion + "\" does not match server version \"" + serverVersion + "\"");
+
+            HttpResponse response = nettyHttpClient.sendRequest(
+                request.withHeader(HOST.toString(), this.host + ":" + port()),
+                ConfigurationProperties.maxSocketTimeout(),
+                TimeUnit.MILLISECONDS
+            );
+
+            if (response != null) {
+                if (response.getStatusCode() != null &&
+                    response.getStatusCode() == BAD_REQUEST.code()) {
+                    throw new IllegalArgumentException(response.getBodyAsString());
+                }
+                String serverVersion = response.getFirstHeader("version");
+                String clientVersion = Version.getVersion();
+                if (!Strings.isNullOrEmpty(serverVersion) &&
+                    !Strings.isNullOrEmpty(clientVersion) &&
+                    !clientVersion.equals(serverVersion)) {
+                    throw new ClientException("Client version \"" + clientVersion + "\" does not match server version \"" + serverVersion + "\"");
+                }
+            }
+
+            return response;
+        } catch (RuntimeException rex) {
+            if (!Strings.isNullOrEmpty(rex.getMessage()) && rex.getMessage().contains("executor not accepting a task")) {
+                throw new IllegalStateException(this.getClass().getSimpleName() + " has already been closed, please create new " + this.getClass().getSimpleName() + " instance");
+            } else {
+                throw rex;
             }
         }
-
-        return response;
     }
 
     /**
@@ -211,7 +225,6 @@ public class MockServerClient implements java.io.Closeable {
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
     public MockServerClient stop() {
-        MockServerEventBus.getInstance().publish(EventType.STOP);
         return stop(false);
     }
 
@@ -219,6 +232,7 @@ public class MockServerClient implements java.io.Closeable {
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
     public MockServerClient stop(boolean ignoreFailure) {
+        MockServerEventBus.getInstance().publish(EventType.STOP);
         try {
             sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
             if (isRunning()) {
@@ -230,6 +244,9 @@ public class MockServerClient implements java.io.Closeable {
             if (!ignoreFailure) {
                 mockServerLogger.warn("Failed to send stop request to MockServer " + e.getMessage());
             }
+        }
+        if (!eventLoopGroup.isShuttingDown()) {
+            eventLoopGroup.shutdownGracefully();
         }
         return clientClass.cast(this);
     }

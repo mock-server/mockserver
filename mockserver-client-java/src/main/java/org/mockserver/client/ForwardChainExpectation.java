@@ -20,7 +20,7 @@ public class ForwardChainExpectation {
     private final Expectation expectation;
     private WebSocketClient webSocketClient;
 
-    public ForwardChainExpectation(MockServerClient mockServerClient, Expectation expectation) {
+    ForwardChainExpectation(MockServerClient mockServerClient, Expectation expectation) {
         this.mockServerClient = mockServerClient;
         this.expectation = expectation;
         
@@ -178,6 +178,7 @@ public class ForwardChainExpectation {
     private void initWebSocketClient() {
         if (webSocketClient == null) {
             webSocketClient = new WebSocketClient(
+                mockServerClient.getEventLoopGroup(),
                 mockServerClient.remoteAddress(),
                 mockServerClient.contextPath(),
                 mockServerClient.isSecure()

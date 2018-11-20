@@ -50,7 +50,6 @@ public class MockServerClientIntegrationTest {
     public static void startEchoServer() {
         echoServer = new EchoServer(false);
         logFilter = echoServer.requestLogFilter();
-        mockServerClient = new MockServerClient("localhost", echoServer.getPort());
     }
 
     @AfterClass
@@ -59,8 +58,20 @@ public class MockServerClientIntegrationTest {
     }
 
     @Before
+    public void createClient() {
+        mockServerClient = new MockServerClient("localhost", echoServer.getPort());
+    }
+
+    @Before
     public void clearRequestLog() {
         logFilter.reset();
+    }
+
+    @After
+    public void stopClient() {
+        if (mockServerClient != null) {
+            mockServerClient.stop();
+        }
     }
 
     @Test

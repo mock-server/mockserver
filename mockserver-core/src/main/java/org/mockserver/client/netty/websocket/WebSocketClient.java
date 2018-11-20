@@ -34,18 +34,17 @@ import javax.net.ssl.SSLException;
 public class WebSocketClient {
 
     private Channel channel;
-    private EventLoopGroup group = new NioEventLoopGroup();
     private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer(new MockServerLogger());
     private SettableFuture<String> registrationFuture = SettableFuture.create();
 
     private ExpectationResponseCallback expectationResponseCallback;
     private ExpectationForwardCallback expectationForwardCallback;
 
-    public WebSocketClient(final InetSocketAddress serverAddress, String contextPath, final boolean isSecure) {
+    public WebSocketClient(final EventLoopGroup eventLoopGroup, final InetSocketAddress serverAddress, String contextPath, final boolean isSecure) {
         try {
             final WebSocketClientHandler webSocketClientHandler = new WebSocketClientHandler(serverAddress, contextPath, this);
 
-            channel = new Bootstrap().group(group)
+            channel = new Bootstrap().group(eventLoopGroup)
                 .channel(NioSocketChannel.class)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
@@ -108,9 +107,6 @@ public class WebSocketClient {
     }
 
     public void stopClient() {
-        if (!group.isShuttingDown() || group.isShutdown()) {
-            group.shutdownGracefully();
-        }
         try {
             if (channel != null && channel.isOpen()) {
                 channel.close().sync();

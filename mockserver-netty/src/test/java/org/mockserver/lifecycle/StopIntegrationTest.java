@@ -1,6 +1,9 @@
 package org.mockserver.lifecycle;
 
+import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.mockserver.MockServer;
 import org.mockserver.socket.PortFactory;
@@ -21,6 +24,26 @@ public class StopIntegrationTest {
 
     private final static int MOCK_SERVER_PORT = PortFactory.findFreePort();
 
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
+
+    @Test
+    public void returnsExceptionWhenAlreadyStopped() {
+        // given
+        exception.expect(IllegalStateException.class);
+        exception.expectMessage(Matchers.containsString("MockServerClient has already been closed, please create new MockServerClient instance"));
+
+        // when - server started
+        new MockServer(MOCK_SERVER_PORT);
+
+        // and - start client
+        MockServerClient mockServerClient = new MockServerClient("localhost", MOCK_SERVER_PORT);
+        mockServerClient.stop();
+
+        // then
+        assertFalse(mockServerClient.isRunning());
+    }
+
     @Test
     public void canStartAndStopMultipleTimesViaClient() {
         // start server
@@ -32,6 +55,7 @@ public class StopIntegrationTest {
         for (int i = 0; i < 2; i++) {
             // when
             mockServerClient.stop();
+            mockServerClient = new MockServerClient("localhost", MOCK_SERVER_PORT);
 
             // then
             assertFalse(mockServerClient.isRunning());
@@ -41,6 +65,7 @@ public class StopIntegrationTest {
 
         assertTrue(mockServerClient.isRunning());
         mockServerClient.stop();
+        mockServerClient = new MockServerClient("localhost", MOCK_SERVER_PORT);
         assertFalse(mockServerClient.isRunning());
     }
 
@@ -82,7 +107,7 @@ public class StopIntegrationTest {
     }
 
     @Test
-    public void freesPortBeforeStopMethodReturns() {
+    public void freesPortBeforeStopMethodReturns() throws IOException {
         // start server
         MockServer mockServer = new MockServer(MOCK_SERVER_PORT);
 
@@ -90,11 +115,16 @@ public class StopIntegrationTest {
         mockServer.stop();
 
         // then
+        ServerSocket serverSocket = null;
         try {
-            final ServerSocket serverSocket = new ServerSocket(MOCK_SERVER_PORT);
+            serverSocket = new ServerSocket(MOCK_SERVER_PORT);
             assertThat(serverSocket.isBound(), is(true));
         } catch (IOException ioe) {
             fail("port should be freed");
+        } finally {
+            if (serverSocket != null) {
+                serverSocket.close();
+            }
         }
     }
 }

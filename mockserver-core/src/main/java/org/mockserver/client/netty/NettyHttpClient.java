@@ -24,20 +24,26 @@ import java.util.concurrent.TimeoutException;
 
 public class NettyHttpClient {
 
-    static final MockServerLogger mockServerLogger = new MockServerLogger(NettyHttpClient.class);
     static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");
     static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
     static final AttributeKey<HttpRequest> REQUEST = AttributeKey.valueOf("REQUEST");
     static final AttributeKey<SettableFuture<HttpResponse>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
-    private static EventLoopGroup group = new NioEventLoopGroup();
+    private static final MockServerLogger mockServerLogger = new MockServerLogger(NettyHttpClient.class);
+    private static final EventLoopGroup defaultEventLoopGroup = new NioEventLoopGroup();
+    private final EventLoopGroup eventLoopGroup;
     private final ProxyConfiguration proxyConfiguration;
+
+    public NettyHttpClient(EventLoopGroup eventLoopGroup, ProxyConfiguration proxyConfiguration) {
+        this.eventLoopGroup = eventLoopGroup;
+        this.proxyConfiguration = proxyConfiguration;
+    }
 
     public NettyHttpClient() {
         this(null);
     }
 
     public NettyHttpClient(ProxyConfiguration proxyConfiguration) {
-        this.proxyConfiguration = proxyConfiguration;
+        this(defaultEventLoopGroup, proxyConfiguration);
     }
 
     public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {
@@ -57,7 +63,7 @@ public class NettyHttpClient {
 
         final SettableFuture<HttpResponse> httpResponseSettableFuture = SettableFuture.create();
         new Bootstrap()
-            .group(group)
+            .group(eventLoopGroup)
             .channel(NioSocketChannel.class)
             .option(ChannelOption.AUTO_READ, true)
             .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
