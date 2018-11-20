@@ -3,6 +3,7 @@ package org.mockserver.configuration;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
+import com.google.common.net.InetAddresses;
 import io.netty.util.NettyRuntime;
 import io.netty.util.internal.SystemPropertyUtil;
 import org.mockserver.logging.MockServerLogger;
@@ -292,6 +293,14 @@ public class ConfigurationProperties {
         return readInetSocketAddressProperty("mockserver.socksProxy");
     }
 
+    public static String localBoundIP() {
+        return readPropertyHierarchically("mockserver.localBoundIP", "");
+    }
+
+    public static void localBoundIP(String localBoundIP) {
+        System.setProperty("mockserver.localBoundIP", InetAddresses.forString(localBoundIP).getHostAddress());
+    }
+
     public static String httpProxyServerRealm() {
         return readPropertyHierarchically("mockserver.httpProxyServerRealm", "MockServer HTTP Proxy");
     }
@@ -332,9 +341,9 @@ public class ConfigurationProperties {
         System.setProperty("mockserver.socksProxyServerPassword", socksProxyServerPassword);
     }
 
-    private static InetSocketAddress readInetSocketAddressProperty(String s) {
+    private static InetSocketAddress readInetSocketAddressProperty(String key) {
         InetSocketAddress inetSocketAddress = null;
-        String proxy = readPropertyHierarchically(s, null);
+        String proxy = readPropertyHierarchically(key, null);
         if (!Strings.isNullOrEmpty(proxy)) {
             String[] proxyParts = proxy.split(":");
             if (proxyParts.length > 1) {

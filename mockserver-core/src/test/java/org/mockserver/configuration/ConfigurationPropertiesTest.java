@@ -545,6 +545,28 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadLocalBoundIP() {
+        // given
+        System.clearProperty("mockserver.localBoundIP");
+
+        // when
+        assertEquals("", ConfigurationProperties.localBoundIP());
+        ConfigurationProperties.localBoundIP("127.0.0.1");
+
+        // then
+        assertEquals("127.0.0.1", ConfigurationProperties.localBoundIP());
+        assertEquals("127.0.0.1", System.getProperty("mockserver.localBoundIP"));
+    }
+
+    @Test
+    public void shouldThrowIllegalArgumentExceptionForInvalidLocalBoundIP() {
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("'abc.def' is not an IP string literal"));
+
+        ConfigurationProperties.localBoundIP("abc.def");
+    }
+
+    @Test
     public void shouldSetAndReadHttpProxyServerRealm() {
         // given
         System.clearProperty("mockserver.httpProxyServerRealm");

@@ -1,5 +1,6 @@
 package org.mockserver.lifecycle;
 
+import com.google.common.base.Strings;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -7,6 +8,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.internal.SocketUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
@@ -115,6 +117,7 @@ public abstract class LifeCycle {
 
     private List<Integer> bindPorts(final ServerBootstrap serverBootstrap, List<Integer> requestedPortBindings, List<Future<Channel>> channelFutures) {
         List<Integer> actualPortBindings = new ArrayList<>();
+        final String localBoundIP = ConfigurationProperties.localBoundIP();
         for (final Integer portToBind : requestedPortBindings) {
             try {
                 final SettableFuture<Channel> channelOpened = SettableFuture.create();
@@ -123,8 +126,14 @@ public abstract class LifeCycle {
                     @Override
                     public void run() {
                         try {
+                            InetSocketAddress inetSocketAddress;
+                            if (Strings.isNullOrEmpty(localBoundIP)) {
+                                inetSocketAddress = new InetSocketAddress(portToBind);
+                            } else {
+                                inetSocketAddress = new InetSocketAddress(localBoundIP, portToBind);
+                            }
                             serverBootstrap
-                                .bind(portToBind)
+                                .bind(inetSocketAddress)
                                 .addListener(new ChannelFutureListener() {
                                     @Override
                                     public void operationComplete(ChannelFuture future) {
