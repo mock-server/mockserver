@@ -3,12 +3,15 @@ package org.mockserver.callback;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.mockserver.client.netty.websocket.WebSocketException;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.serialization.WebSocketMessageSerializer;
 import org.mockserver.serialization.model.WebSocketClientIdDTO;
 import org.mockserver.collections.CircularHashMap;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+
+import static org.mockserver.configuration.ConfigurationProperties.maxWebSocketExpectations;
 
 /**
  * @author jamesdbloom
@@ -17,9 +20,9 @@ public class WebSocketClientRegistry {
 
     public static final String WEB_SOCKET_CORRELATION_ID_HEADER_NAME = "WebSocketCorrelationId";
     private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer(new MockServerLogger());
-    private CircularHashMap<String, ChannelHandlerContext> clientRegistry = new CircularHashMap<>(1000);
-    private CircularHashMap<String, WebSocketResponseCallback> callbackResponseRegistry = new CircularHashMap<>(1000);
-    private CircularHashMap<String, WebSocketRequestCallback> callbackForwardRegistry = new CircularHashMap<>(1000);
+    private CircularHashMap<String, ChannelHandlerContext> clientRegistry = new CircularHashMap<>(maxWebSocketExpectations());
+    private CircularHashMap<String, WebSocketResponseCallback> callbackResponseRegistry = new CircularHashMap<>(maxWebSocketExpectations());
+    private CircularHashMap<String, WebSocketRequestCallback> callbackForwardRegistry = new CircularHashMap<>(maxWebSocketExpectations());
 
     void receivedTextWebSocketFrame(TextWebSocketFrame textWebSocketFrame) {
         try {

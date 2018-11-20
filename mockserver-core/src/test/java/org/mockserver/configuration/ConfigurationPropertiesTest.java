@@ -141,6 +141,94 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadMaxWebSocketExpectations() {
+        // given
+        System.clearProperty("mockserver.maxWebSocketExpectations");
+
+        // when
+        assertEquals(1000, ConfigurationProperties.maxWebSocketExpectations());
+        ConfigurationProperties.maxWebSocketExpectations(100);
+
+        // then
+        assertEquals(100, ConfigurationProperties.maxWebSocketExpectations());
+    }
+
+    @Test
+    public void shouldHandleInvalidMaxWebSocketExpectations() {
+        // given
+        System.setProperty("mockserver.maxWebSocketExpectations", "invalid");
+
+        // then
+        assertEquals(1000, ConfigurationProperties.maxWebSocketExpectations());
+    }
+
+    @Test
+    public void shouldSetAndReadMaxInitialLineLength() {
+        // given
+        System.clearProperty("mockserver.maxInitialLineLength");
+
+        // when
+        assertEquals(4096, ConfigurationProperties.maxInitialLineLength());
+        ConfigurationProperties.maxInitialLineLength(100);
+
+        // then
+        assertEquals(100, ConfigurationProperties.maxInitialLineLength());
+    }
+
+    @Test
+    public void shouldHandleInvalidMaxInitialLineLength() {
+        // given
+        System.setProperty("mockserver.maxInitialLineLength", "invalid");
+
+        // then
+        assertEquals(4096, ConfigurationProperties.maxInitialLineLength());
+    }
+
+    @Test
+    public void shouldSetAndReadMaxHeaderSize() {
+        // given
+        System.clearProperty("mockserver.maxHeaderSize");
+
+        // when
+        assertEquals(8192, ConfigurationProperties.maxHeaderSize());
+        ConfigurationProperties.maxHeaderSize(100);
+
+        // then
+        assertEquals(100, ConfigurationProperties.maxHeaderSize());
+    }
+
+    @Test
+    public void shouldHandleInvalidMaxHeaderSize() {
+        // given
+        System.setProperty("mockserver.maxHeaderSize", "invalid");
+
+        // then
+        assertEquals(8192, ConfigurationProperties.maxHeaderSize());
+    }
+
+    @Test
+    public void shouldSetAndReadMaxChunkSize() {
+        // given
+        System.clearProperty("mockserver.maxChunkSize");
+
+        // when
+        assertEquals(8192, ConfigurationProperties.maxChunkSize());
+        ConfigurationProperties.maxChunkSize(100);
+
+        // then
+        assertEquals(100, ConfigurationProperties.maxChunkSize());
+    }
+
+    @Test
+    public void shouldHandleInvalidMaxChunkSize() {
+        // given
+        System.setProperty("mockserver.maxChunkSize", "invalid");
+
+        // then
+        assertEquals(8192, ConfigurationProperties.maxChunkSize());
+    }
+
+    @Test
     public void shouldSetAndReadMaxSocketTimeout() {
         // given
         System.clearProperty("mockserver.maxSocketTimeout");

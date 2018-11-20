@@ -19,6 +19,7 @@ import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.mockserver.callback.CallbackWebSocketServerHandler;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.dashboard.DashboardWebSocketServerHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.LoggingHandler;
@@ -170,7 +171,11 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private void switchToHttp(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
 
-        addLastIfNotPresent(pipeline, new HttpServerCodec(8192, 8192, 8192));
+        addLastIfNotPresent(pipeline, new HttpServerCodec(
+            ConfigurationProperties.maxInitialLineLength(),
+            ConfigurationProperties.maxHeaderSize(),
+            ConfigurationProperties.maxChunkSize()
+        ));
         addLastIfNotPresent(pipeline, new HttpContentDecompressor());
         addLastIfNotPresent(pipeline, httpContentLengthRemover);
         addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));

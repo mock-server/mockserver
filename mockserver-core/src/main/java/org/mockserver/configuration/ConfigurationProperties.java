@@ -31,6 +31,10 @@ public class ConfigurationProperties {
     private static final long DEFAULT_MAX_TIMEOUT = 20;
     private static final int DEFAULT_CONNECT_TIMEOUT = 20000;
     private static final int DEFAULT_MAX_EXPECTATIONS = 1000;
+    private static final int DEFAULT_MAX_WEB_SOCKET_EXPECTATIONS = 1000;
+    private static final int DEFAULT_MAX_INITIAL_LINE_LENGTH = 4096;
+    private static final int DEFAULT_MAX_HEADER_SIZE = 8192;
+    private static final int DEFAULT_MAX_CHUNK_SIZE = 8192;
     private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = Math.max(1, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors() * 5));
     private static final Properties PROPERTIES = readPropertyFile();
 
@@ -78,6 +82,38 @@ public class ConfigurationProperties {
 
     public static void maxExpectations(int count) {
         System.setProperty("mockserver.maxExpectations", "" + count);
+    }
+
+    public static int maxWebSocketExpectations() {
+        return readIntegerProperty("mockserver.maxWebSocketExpectations", DEFAULT_MAX_WEB_SOCKET_EXPECTATIONS);
+    }
+
+    public static void maxWebSocketExpectations(int count) {
+        System.setProperty("mockserver.maxWebSocketExpectations", "" + count);
+    }
+
+    public static int maxInitialLineLength() {
+        return readIntegerProperty("mockserver.maxInitialLineLength", DEFAULT_MAX_INITIAL_LINE_LENGTH);
+    }
+
+    public static void maxInitialLineLength(int count) {
+        System.setProperty("mockserver.maxInitialLineLength", "" + count);
+    }
+
+    public static int maxHeaderSize() {
+        return readIntegerProperty("mockserver.maxHeaderSize", DEFAULT_MAX_HEADER_SIZE);
+    }
+
+    public static void maxHeaderSize(int count) {
+        System.setProperty("mockserver.maxHeaderSize", "" + count);
+    }
+
+    public static int maxChunkSize() {
+        return readIntegerProperty("mockserver.maxChunkSize", DEFAULT_MAX_CHUNK_SIZE);
+    }
+
+    public static void maxChunkSize(int count) {
+        System.setProperty("mockserver.maxChunkSize", "" + count);
     }
 
     public static int nioEventLoopThreadCount() {
