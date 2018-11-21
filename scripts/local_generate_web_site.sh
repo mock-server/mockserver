@@ -16,4 +16,4 @@ cp mock_server/debugging_issues.html .
 cp mock_server/creating_expectations_request_matchers.html .
 cp mock_server/creating_expectations.html .
 cp mock_server/creating_expectations_java_example_code.html .
-zip -r mockserver_site.zip .
+#zip -r mockserver_site.zip .
