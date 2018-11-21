@@ -12,7 +12,7 @@ import org.slf4j.event.Level;
 import javax.annotation.Nullable;
 import java.util.List;
 
-import static org.mockserver.configuration.ConfigurationProperties.DEFAULT_LOG_LEVEL;
+import static org.mockserver.configuration.ConfigurationProperties.logLevel;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXCEPTION;
 import static org.mockserver.model.HttpRequest.request;
@@ -33,7 +33,7 @@ public class MockServerLogger {
             Class.forName("ch.qos.logback.classic.Logger");
             if (mockServerLogger instanceof ch.qos.logback.classic.Logger) {
                 ((ch.qos.logback.classic.Logger) mockServerLogger).setLevel(
-                    ch.qos.logback.classic.Level.valueOf(System.getProperty("mockserver.logLevel", DEFAULT_LOG_LEVEL))
+                    ch.qos.logback.classic.Level.valueOf(System.getProperty("mockserver.logLevel", logLevel().name()))
                 );
             }
         } catch (ClassNotFoundException ignore) {
@@ -174,6 +174,6 @@ public class MockServerLogger {
     }
 
     public boolean isEnabled(final Level level) {
-        return level.toInt() >= ConfigurationProperties.logLevel().toInt();
+        return level.toInt() >= logLevel().toInt();
     }
 }

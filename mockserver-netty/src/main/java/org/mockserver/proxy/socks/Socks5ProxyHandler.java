@@ -43,8 +43,8 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
     }
 
     private void handleInitialRequest(ChannelHandlerContext ctx, Socks5InitialRequest initialRequest) {
-        String username = ConfigurationProperties.socksProxyServerUsername();
-        String password = ConfigurationProperties.socksProxyServerPassword();
+        String username = ConfigurationProperties.proxyAuthenticationUsername();
+        String password = ConfigurationProperties.proxyAuthenticationPassword();
         Socks5AuthMethod requiredAuthMethod;
         ChannelHandler nextRequestDecoder;
         if (!username.isEmpty() && !password.isEmpty()) {
@@ -70,8 +70,8 @@ public class Socks5ProxyHandler extends SocksProxyHandler<Socks5Message> {
     }
 
     private void handlePasswordAuthRequest(ChannelHandlerContext ctx, Socks5PasswordAuthRequest passwordAuthRequest) {
-        String username = ConfigurationProperties.socksProxyServerUsername();
-        String password = ConfigurationProperties.socksProxyServerPassword();
+        String username = ConfigurationProperties.proxyAuthenticationUsername();
+        String password = ConfigurationProperties.proxyAuthenticationPassword();
         // we need the null-check again here, in case the properties got unset between init and auth request
         if (!username.isEmpty() && !password.isEmpty()
             && username.equals(passwordAuthRequest.username()) && password.equals(passwordAuthRequest.password())) {

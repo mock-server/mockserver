@@ -15,6 +15,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.KeyStore;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +30,7 @@ import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CON
  */
 public class ConfigurationProperties {
 
-    public static final String DEFAULT_LOG_LEVEL = "INFO";
+    private static final String DEFAULT_LOG_LEVEL = "INFO";
     private static final long DEFAULT_MAX_TIMEOUT = 20;
     private static final int DEFAULT_CONNECT_TIMEOUT = 20000;
     private static final int DEFAULT_MAX_EXPECTATIONS = 1000;
@@ -37,152 +39,180 @@ public class ConfigurationProperties {
     private static final int DEFAULT_MAX_HEADER_SIZE = 8192;
     private static final int DEFAULT_MAX_CHUNK_SIZE = 8192;
     private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = Math.max(1, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors() * 5));
-    private static final Properties PROPERTIES = readPropertyFile();
 
+    private static final String MOCKSERVER_PROPERTY_FILE = "mockserver.propertyFile";
+    private static final String MOCKSERVER_ENABLE_CORSFOR_API = "mockserver.enableCORSForAPI";
+    private static final String MOCKSERVER_ENABLE_CORSFOR_ALL_RESPONSES = "mockserver.enableCORSForAllResponses";
+    private static final String MOCKSERVER_MAX_EXPECTATIONS = "mockserver.maxExpectations";
+    private static final String MOCKSERVER_MAX_WEB_SOCKET_EXPECTATIONS = "mockserver.maxWebSocketExpectations";
+    private static final String MOCKSERVER_MAX_INITIAL_LINE_LENGTH = "mockserver.maxInitialLineLength";
+    private static final String MOCKSERVER_MAX_HEADER_SIZE = "mockserver.maxHeaderSize";
+    private static final String MOCKSERVER_MAX_CHUNK_SIZE = "mockserver.maxChunkSize";
+    private static final String MOCKSERVER_NIO_EVENT_LOOP_THREAD_COUNT = "mockserver.nioEventLoopThreadCount";
+    private static final String MOCKSERVER_MAX_SOCKET_TIMEOUT = "mockserver.maxSocketTimeout";
+    private static final String MOCKSERVER_SOCKET_CONNECTION_TIMEOUT = "mockserver.socketConnectionTimeout";
+    private static final String MOCKSERVER_JAVA_KEY_STORE_FILE_PATH = "mockserver.javaKeyStoreFilePath";
+    private static final String MOCKSERVER_JAVA_KEY_STORE_PASSWORD = "mockserver.javaKeyStorePassword";
+    private static final String MOCKSERVER_JAVA_KEY_STORE_TYPE = "mockserver.javaKeyStoreType";
+    private static final String MOCKSERVER_DELETE_GENERATED_KEY_STORE_ON_EXIT = "mockserver.deleteGeneratedKeyStoreOnExit";
+    private static final String MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME = "mockserver.sslCertificateDomainName";
+    private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS = "mockserver.sslSubjectAlternativeNameDomains";
+    private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS = "mockserver.sslSubjectAlternativeNameIps";
+    private static final String MOCKSERVER_LOG_LEVEL = "mockserver.logLevel";
+    private static final String MOCKSERVER_DISABLE_REQUEST_AUDIT = "mockserver.disableRequestAudit";
+    private static final String MOCKSERVER_DISABLE_SYSTEM_OUT = "mockserver.disableSystemOut";
+    private static final String MOCKSERVER_HTTP_PROXY = "mockserver.httpProxy";
+    private static final String MOCKSERVER_HTTPS_PROXY = "mockserver.httpsProxy";
+    private static final String MOCKSERVER_SOCKS_PROXY = "mockserver.socksProxy";
+    private static final String MOCKSERVER_LOCAL_BOUND_IP = "mockserver.localBoundIP";
+    private static final String MOCKSERVER_HTTP_PROXY_SERVER_REALM = "mockserver.proxyAuthenticationRealm";
+    private static final String MOCKSERVER_PROXY_AUTHENTICATION_USERNAME = "mockserver.proxyAuthenticationUsername";
+    private static final String MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD = "mockserver.proxyAuthenticationPassword";
+
+    private static final Properties PROPERTIES = readPropertyFile();
     private static final Set<String> ALL_SUBJECT_ALTERNATIVE_DOMAINS = Sets.newConcurrentHashSet();
     private static final Set<String> ALL_SUBJECT_ALTERNATIVE_IPS = Sets.newConcurrentHashSet();
     private static final AtomicBoolean REBUILD_KEY_STORE = new AtomicBoolean(false);
-
     private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
 
     static {
-        addSslSubjectAlternativeNameDomains(readPropertyHierarchically("mockserver.sslSubjectAlternativeNameDomains", "localhost").split(","));
-        addSslSubjectAlternativeNameIps(readPropertyHierarchically("mockserver.sslSubjectAlternativeNameIps", "127.0.0.1,0.0.0.0").split(","));
+        addSslSubjectAlternativeNameDomains(readPropertyHierarchically(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, "localhost").split(","));
+        addSslSubjectAlternativeNameIps(readPropertyHierarchically(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, "127.0.0.1,0.0.0.0").split(","));
     }
 
     private static String propertyFile() {
-        return System.getProperty("mockserver.propertyFile", "mockserver.properties");
+        return System.getProperty(MOCKSERVER_PROPERTY_FILE, "mockserver.properties");
     }
 
     public static boolean enableCORSForAPI() {
-        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.enableCORSForAPI", "" + true));
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ENABLE_CORSFOR_API, "" + true));
     }
 
     public static boolean enableCORSForAPIHasBeenSetExplicitly() {
         return (
-            System.getProperty("mockserver.enableCORSForAPI") != null ||
-                PROPERTIES.getProperty("mockserver.enableCORSForAPI") != null
+            System.getProperty(MOCKSERVER_ENABLE_CORSFOR_API) != null ||
+                PROPERTIES.getProperty(MOCKSERVER_ENABLE_CORSFOR_API) != null
         );
     }
 
     public static void enableCORSForAPI(boolean enableCORSForAPI) {
-        System.setProperty("mockserver.enableCORSForAPI", "" + enableCORSForAPI);
+        System.setProperty(MOCKSERVER_ENABLE_CORSFOR_API, "" + enableCORSForAPI);
     }
 
     public static boolean enableCORSForAllResponses() {
-        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.enableCORSForAllResponses", "" + false));
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ENABLE_CORSFOR_ALL_RESPONSES, "" + false));
     }
 
-    public static void enableCORSForAllResponses(boolean enableCORSForAPI) {
-        System.setProperty("mockserver.enableCORSForAllResponses", "" + enableCORSForAPI);
+    public static void enableCORSForAllResponses(boolean enableCORSForAllResponses) {
+        System.setProperty(MOCKSERVER_ENABLE_CORSFOR_ALL_RESPONSES, "" + enableCORSForAllResponses);
     }
 
     public static int maxExpectations() {
-        return readIntegerProperty("mockserver.maxExpectations", DEFAULT_MAX_EXPECTATIONS);
+        return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, DEFAULT_MAX_EXPECTATIONS);
     }
 
     public static void maxExpectations(int count) {
-        System.setProperty("mockserver.maxExpectations", "" + count);
+        System.setProperty(MOCKSERVER_MAX_EXPECTATIONS, "" + count);
     }
 
     public static int maxWebSocketExpectations() {
-        return readIntegerProperty("mockserver.maxWebSocketExpectations", DEFAULT_MAX_WEB_SOCKET_EXPECTATIONS);
+        return readIntegerProperty(MOCKSERVER_MAX_WEB_SOCKET_EXPECTATIONS, DEFAULT_MAX_WEB_SOCKET_EXPECTATIONS);
     }
 
     public static void maxWebSocketExpectations(int count) {
-        System.setProperty("mockserver.maxWebSocketExpectations", "" + count);
+        System.setProperty(MOCKSERVER_MAX_WEB_SOCKET_EXPECTATIONS, "" + count);
     }
 
     public static int maxInitialLineLength() {
-        return readIntegerProperty("mockserver.maxInitialLineLength", DEFAULT_MAX_INITIAL_LINE_LENGTH);
+        return readIntegerProperty(MOCKSERVER_MAX_INITIAL_LINE_LENGTH, DEFAULT_MAX_INITIAL_LINE_LENGTH);
     }
 
-    public static void maxInitialLineLength(int count) {
-        System.setProperty("mockserver.maxInitialLineLength", "" + count);
+    public static void maxInitialLineLength(int length) {
+        System.setProperty(MOCKSERVER_MAX_INITIAL_LINE_LENGTH, "" + length);
     }
 
     public static int maxHeaderSize() {
-        return readIntegerProperty("mockserver.maxHeaderSize", DEFAULT_MAX_HEADER_SIZE);
+        return readIntegerProperty(MOCKSERVER_MAX_HEADER_SIZE, DEFAULT_MAX_HEADER_SIZE);
     }
 
-    public static void maxHeaderSize(int count) {
-        System.setProperty("mockserver.maxHeaderSize", "" + count);
+    public static void maxHeaderSize(int size) {
+        System.setProperty(MOCKSERVER_MAX_HEADER_SIZE, "" + size);
     }
 
     public static int maxChunkSize() {
-        return readIntegerProperty("mockserver.maxChunkSize", DEFAULT_MAX_CHUNK_SIZE);
+        return readIntegerProperty(MOCKSERVER_MAX_CHUNK_SIZE, DEFAULT_MAX_CHUNK_SIZE);
     }
 
-    public static void maxChunkSize(int count) {
-        System.setProperty("mockserver.maxChunkSize", "" + count);
+    public static void maxChunkSize(int size) {
+        System.setProperty(MOCKSERVER_MAX_CHUNK_SIZE, "" + size);
     }
 
     public static int nioEventLoopThreadCount() {
-        return readIntegerProperty("mockserver.nioEventLoopThreadCount", DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT);
+        return readIntegerProperty(MOCKSERVER_NIO_EVENT_LOOP_THREAD_COUNT, DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT);
     }
 
     public static void nioEventLoopThreadCount(int count) {
-        System.setProperty("mockserver.nioEventLoopThreadCount", "" + count);
+        System.setProperty(MOCKSERVER_NIO_EVENT_LOOP_THREAD_COUNT, "" + count);
     }
 
     public static long maxSocketTimeout() {
-        return readLongProperty("mockserver.maxSocketTimeout", TimeUnit.SECONDS.toMillis(DEFAULT_MAX_TIMEOUT));
+        return readLongProperty(MOCKSERVER_MAX_SOCKET_TIMEOUT, TimeUnit.SECONDS.toMillis(DEFAULT_MAX_TIMEOUT));
     }
 
     public static void maxSocketTimeout(long milliseconds) {
-        System.setProperty("mockserver.maxSocketTimeout", "" + milliseconds);
+        System.setProperty(MOCKSERVER_MAX_SOCKET_TIMEOUT, "" + milliseconds);
     }
 
     public static int socketConnectionTimeout() {
-        return readIntegerProperty("mockserver.socketConnectionTimeout", DEFAULT_CONNECT_TIMEOUT);
+        return readIntegerProperty(MOCKSERVER_SOCKET_CONNECTION_TIMEOUT, DEFAULT_CONNECT_TIMEOUT);
     }
 
     public static void socketConnectionTimeout(int milliseconds) {
-        System.setProperty("mockserver.socketConnectionTimeout", "" + milliseconds);
+        System.setProperty(MOCKSERVER_SOCKET_CONNECTION_TIMEOUT, "" + milliseconds);
     }
 
     public static String javaKeyStoreFilePath() {
-        return readPropertyHierarchically("mockserver.javaKeyStoreFilePath", KeyStoreFactory.defaultKeyStoreFileName());
+        return readPropertyHierarchically(MOCKSERVER_JAVA_KEY_STORE_FILE_PATH, KeyStoreFactory.defaultKeyStoreFileName());
     }
 
     public static void javaKeyStoreFilePath(String keyStoreFilePath) {
-        System.setProperty("mockserver.javaKeyStoreFilePath", keyStoreFilePath);
+        System.setProperty(MOCKSERVER_JAVA_KEY_STORE_FILE_PATH, keyStoreFilePath);
         rebuildKeyStore(true);
     }
 
     public static String javaKeyStorePassword() {
-        return readPropertyHierarchically("mockserver.javaKeyStorePassword", KeyStoreFactory.KEY_STORE_PASSWORD);
+        return readPropertyHierarchically(MOCKSERVER_JAVA_KEY_STORE_PASSWORD, KeyStoreFactory.KEY_STORE_PASSWORD);
     }
 
     public static void javaKeyStorePassword(String keyStorePassword) {
-        System.setProperty("mockserver.javaKeyStorePassword", keyStorePassword);
+        System.setProperty(MOCKSERVER_JAVA_KEY_STORE_PASSWORD, keyStorePassword);
         rebuildKeyStore(true);
     }
 
     public static String javaKeyStoreType() {
-        return readPropertyHierarchically("mockserver.javaKeyStoreType", KeyStore.getDefaultType());
+        return readPropertyHierarchically(MOCKSERVER_JAVA_KEY_STORE_TYPE, KeyStore.getDefaultType());
     }
 
     public static void javaKeyStoreType(String keyStoreType) {
-        System.setProperty("mockserver.javaKeyStoreType", keyStoreType);
+        System.setProperty(MOCKSERVER_JAVA_KEY_STORE_TYPE, keyStoreType);
         rebuildKeyStore(true);
     }
 
     public static boolean deleteGeneratedKeyStoreOnExit() {
-        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.deleteGeneratedKeyStoreOnExit", "" + true));
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DELETE_GENERATED_KEY_STORE_ON_EXIT, "" + true));
     }
 
     public static void deleteGeneratedKeyStoreOnExit(boolean deleteGeneratedKeyStoreOnExit) {
-        System.setProperty("mockserver.deleteGeneratedKeyStoreOnExit", "" + deleteGeneratedKeyStoreOnExit);
+        System.setProperty(MOCKSERVER_DELETE_GENERATED_KEY_STORE_ON_EXIT, "" + deleteGeneratedKeyStoreOnExit);
         rebuildKeyStore(true);
     }
 
     public static String sslCertificateDomainName() {
-        return readPropertyHierarchically("mockserver.sslCertificateDomainName", KeyStoreFactory.CERTIFICATE_DOMAIN);
+        return readPropertyHierarchically(MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME, KeyStoreFactory.CERTIFICATE_DOMAIN);
     }
 
     public static void sslCertificateDomainName(String domainName) {
-        System.setProperty("mockserver.sslCertificateDomainName", domainName);
+        System.setProperty(MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME, domainName);
         rebuildKeyStore(true);
     }
 
@@ -190,15 +220,15 @@ public class ConfigurationProperties {
         return ALL_SUBJECT_ALTERNATIVE_DOMAINS.toArray(new String[ALL_SUBJECT_ALTERNATIVE_DOMAINS.size()]);
     }
 
-    public static void addSslSubjectAlternativeNameDomains(String... newSubjectAlternativeNameDomains) {
+    public static void addSslSubjectAlternativeNameDomains(String... additionalSubjectAlternativeNameDomains) {
         boolean subjectAlternativeDomainsModified = false;
-        for (String subjectAlternativeDomain : newSubjectAlternativeNameDomains) {
+        for (String subjectAlternativeDomain : additionalSubjectAlternativeNameDomains) {
             if (ALL_SUBJECT_ALTERNATIVE_DOMAINS.add(subjectAlternativeDomain.trim())) {
                 subjectAlternativeDomainsModified = true;
             }
         }
         if (subjectAlternativeDomainsModified) {
-            System.setProperty("mockserver.sslSubjectAlternativeNameDomains", Joiner.on(",").join(new TreeSet<>(ALL_SUBJECT_ALTERNATIVE_DOMAINS)));
+            System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, Joiner.on(",").join(new TreeSet<>(ALL_SUBJECT_ALTERNATIVE_DOMAINS)));
             rebuildKeyStore(true);
         }
     }
@@ -215,22 +245,22 @@ public class ConfigurationProperties {
         return ALL_SUBJECT_ALTERNATIVE_IPS.toArray(new String[ALL_SUBJECT_ALTERNATIVE_IPS.size()]);
     }
 
-    public static void addSslSubjectAlternativeNameIps(String... newSubjectAlternativeNameIps) {
+    public static void addSslSubjectAlternativeNameIps(String... additionalSubjectAlternativeNameIps) {
         boolean subjectAlternativeIpsModified = false;
-        for (String subjectAlternativeIp : newSubjectAlternativeNameIps) {
+        for (String subjectAlternativeIp : additionalSubjectAlternativeNameIps) {
             if (ALL_SUBJECT_ALTERNATIVE_IPS.add(subjectAlternativeIp.trim())) {
                 subjectAlternativeIpsModified = true;
             }
         }
         if (subjectAlternativeIpsModified) {
-            System.setProperty("mockserver.sslSubjectAlternativeNameIps", Joiner.on(",").join(new TreeSet<>(ALL_SUBJECT_ALTERNATIVE_IPS)));
+            System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, Joiner.on(",").join(new TreeSet<>(ALL_SUBJECT_ALTERNATIVE_IPS)));
             rebuildKeyStore(true);
         }
     }
 
     public static void clearSslSubjectAlternativeNameIps() {
         ALL_SUBJECT_ALTERNATIVE_IPS.clear();
-        addSslSubjectAlternativeNameIps(readPropertyHierarchically("mockserver.sslSubjectAlternativeNameIps", "127.0.0.1,0.0.0.0").split(","));
+        addSslSubjectAlternativeNameIps(readPropertyHierarchically(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, "127.0.0.1,0.0.0.0").split(","));
     }
 
     public static boolean rebuildKeyStore() {
@@ -241,20 +271,12 @@ public class ConfigurationProperties {
         ConfigurationProperties.REBUILD_KEY_STORE.set(rebuildKeyStore);
     }
 
-    public static List<Integer> mockServerPort() {
-        return readIntegerListProperty("mockserver.mockServerPort", -1);
-    }
-
-    public static void mockServerPort(Integer... port) {
-        System.setProperty("mockserver.mockServerPort", INTEGER_STRING_LIST_PARSER.toString(port));
-    }
-
     public static Level logLevel() {
-        return Level.valueOf(System.getProperty("mockserver.logLevel", DEFAULT_LOG_LEVEL));
+        return Level.valueOf(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL));
     }
 
     /**
-     * Override the debug WARN logging level
+     * Override the default logging level of INFO
      *
      * @param level the log level, which can be TRACE, DEBUG, INFO, WARN, ERROR, OFF
      */
@@ -262,83 +284,93 @@ public class ConfigurationProperties {
         if (!Arrays.asList("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF").contains(level)) {
             throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
         }
-        System.setProperty("mockserver.logLevel", level);
+        System.setProperty(MOCKSERVER_LOG_LEVEL, level);
     }
 
     public static boolean disableRequestAudit() {
-        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.disableRequestAudit", "" + false));
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_REQUEST_AUDIT, "" + false));
     }
 
     public static void disableRequestAudit(boolean disableRequestAudit) {
-        System.setProperty("mockserver.disableRequestAudit", "" + disableRequestAudit);
+        System.setProperty(MOCKSERVER_DISABLE_REQUEST_AUDIT, "" + disableRequestAudit);
     }
 
     public static boolean disableSystemOut() {
-        return Boolean.parseBoolean(readPropertyHierarchically("mockserver.disableSystemOut", "" + false));
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_SYSTEM_OUT, "" + false));
     }
 
     public static void disableSystemOut(boolean disableSystemOut) {
-        System.setProperty("mockserver.disableSystemOut", "" + disableSystemOut);
+        System.setProperty(MOCKSERVER_DISABLE_SYSTEM_OUT, "" + disableSystemOut);
     }
 
     public static InetSocketAddress httpProxy() {
-        return readInetSocketAddressProperty("mockserver.httpProxy");
+        return readInetSocketAddressProperty(MOCKSERVER_HTTP_PROXY);
+    }
+
+    public static void httpProxy(String hostAndPort) {
+        validateHostAndPort(hostAndPort, "httpProxy", MOCKSERVER_HTTP_PROXY);
     }
 
     public static InetSocketAddress httpsProxy() {
-        return readInetSocketAddressProperty("mockserver.httpsProxy");
+        return readInetSocketAddressProperty(MOCKSERVER_HTTPS_PROXY);
+    }
+
+    public static void httpsProxy(String hostAndPort) {
+        validateHostAndPort(hostAndPort, "httpsProxy", MOCKSERVER_HTTPS_PROXY);
     }
 
     public static InetSocketAddress socksProxy() {
-        return readInetSocketAddressProperty("mockserver.socksProxy");
+        return readInetSocketAddressProperty(MOCKSERVER_SOCKS_PROXY);
+    }
+
+    public static void socksProxy(String hostAndPort) {
+        validateHostAndPort(hostAndPort, "socksProxy", MOCKSERVER_SOCKS_PROXY);
     }
 
     public static String localBoundIP() {
-        return readPropertyHierarchically("mockserver.localBoundIP", "");
+        return readPropertyHierarchically(MOCKSERVER_LOCAL_BOUND_IP, "");
     }
 
     public static void localBoundIP(String localBoundIP) {
-        System.setProperty("mockserver.localBoundIP", InetAddresses.forString(localBoundIP).getHostAddress());
+        System.setProperty(MOCKSERVER_LOCAL_BOUND_IP, InetAddresses.forString(localBoundIP).getHostAddress());
     }
 
-    public static String httpProxyServerRealm() {
-        return readPropertyHierarchically("mockserver.httpProxyServerRealm", "MockServer HTTP Proxy");
+    public static String proxyAuthenticationRealm() {
+        return readPropertyHierarchically(MOCKSERVER_HTTP_PROXY_SERVER_REALM, "MockServer HTTP Proxy");
     }
 
-    public static void httpProxyServerRealm(String httpProxyServerRealm) {
-        System.setProperty("mockserver.httpProxyServerRealm", httpProxyServerRealm);
+    public static void proxyAuthenticationRealm(String proxyAuthenticationRealm) {
+        System.setProperty(MOCKSERVER_HTTP_PROXY_SERVER_REALM, proxyAuthenticationRealm);
     }
 
-    public static String httpProxyServerUsername() {
-        return readPropertyHierarchically("mockserver.httpProxyServerUsername", "");
+    public static String proxyAuthenticationUsername() {
+        return readPropertyHierarchically(MOCKSERVER_PROXY_AUTHENTICATION_USERNAME, "");
     }
 
-    public static void httpProxyServerUsername(String httpProxyServerUsername) {
-        System.setProperty("mockserver.httpProxyServerUsername", httpProxyServerUsername);
+    public static void proxyAuthenticationUsername(String proxyAuthenticationUsername) {
+        System.setProperty(MOCKSERVER_PROXY_AUTHENTICATION_USERNAME, proxyAuthenticationUsername);
     }
 
-    public static String httpProxyServerPassword() {
-        return readPropertyHierarchically("mockserver.httpProxyServerPassword", "");
+    public static String proxyAuthenticationPassword() {
+        return readPropertyHierarchically(MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD, "");
     }
 
-    public static void httpProxyServerPassword(String httpProxyServerPassword) {
-        System.setProperty("mockserver.httpProxyServerPassword", httpProxyServerPassword);
+    public static void proxyAuthenticationPassword(String proxyAuthenticationPassword) {
+        System.setProperty(MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD, proxyAuthenticationPassword);
     }
 
-    public static String socksProxyServerUsername() {
-        return readPropertyHierarchically("mockserver.socksProxyServerUsername", "");
-    }
-
-    public static void socksProxyServerUsername(String socksProxyServerUsername) {
-        System.setProperty("mockserver.socksProxyServerUsername", socksProxyServerUsername);
-    }
-
-    public static String socksProxyServerPassword() {
-        return readPropertyHierarchically("mockserver.socksProxyServerPassword", "");
-    }
-
-    public static void socksProxyServerPassword(String socksProxyServerPassword) {
-        System.setProperty("mockserver.socksProxyServerPassword", socksProxyServerPassword);
+    private static void validateHostAndPort(String hostAndPort, String propertyName, String mockserverSocksProxy) {
+        String errorMessage = "Invalid " + propertyName + " property must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\"";
+        try {
+            URI uri = new URI("http://" + hostAndPort);
+            if (uri.getHost() == null || uri.getPort() == -1) {
+                throw new IllegalArgumentException(errorMessage);
+            } else {
+                System.setProperty(mockserverSocksProxy, hostAndPort);
+            }
+        } catch (URISyntaxException ex) {
+            throw new IllegalArgumentException(errorMessage);
+        }
     }
 
     private static InetSocketAddress readInetSocketAddressProperty(String key) {

@@ -134,17 +134,16 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 } else if (request.getMethod().getValue().equals("CONNECT")) {
 
-                    String username = ConfigurationProperties.httpProxyServerUsername();
-                    String password = ConfigurationProperties.httpProxyServerPassword();
+                    String username = ConfigurationProperties.proxyAuthenticationUsername();
+                    String password = ConfigurationProperties.proxyAuthenticationPassword();
                     if ((!username.isEmpty() && !password.isEmpty())
                         && (!request.containsHeader(PROXY_AUTHORIZATION.toString())
                             || !request.getFirstHeader(PROXY_AUTHORIZATION.toString()).toLowerCase(US).startsWith("basic ")
                             || !request.getFirstHeader(PROXY_AUTHORIZATION.toString()).substring(6).equals(
                                 new Base64Converter().bytesToBase64String((username + ":" + password).getBytes(UTF_8))))) {
-
                         ctx.writeAndFlush(response()
                             .withStatusCode(PROXY_AUTHENTICATION_REQUIRED.code())
-                            .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + ConfigurationProperties.httpProxyServerRealm().replace("\"", "\\\"") + "\""));
+                            .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + ConfigurationProperties.proxyAuthenticationRealm().replace("\"", "\\\"") + "\""));
                     } else {
                         ctx.channel().attr(PROXYING).set(Boolean.TRUE);
                         // assume SSL for CONNECT request
