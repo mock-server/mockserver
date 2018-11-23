@@ -1,6 +1,5 @@
 package org.mockserver.serialization.model;
 
-import com.google.common.net.MediaType;
 import org.mockserver.model.BinaryBody;
 
 import javax.xml.bind.DatatypeConverter;
@@ -28,6 +27,6 @@ public class BinaryBodyDTO extends BodyWithContentTypeDTO {
     }
 
     public BinaryBody buildObject() {
-        return new BinaryBody(DatatypeConverter.parseBase64Binary(value), getMediaType());
+        return new BinaryBody(DatatypeConverter.parseBase64Binary(value == null ? "" : value), getMediaType());
     }
 }

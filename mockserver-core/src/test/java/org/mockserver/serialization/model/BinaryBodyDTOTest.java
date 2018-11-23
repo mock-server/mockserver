@@ -27,7 +27,6 @@ public class BinaryBodyDTOTest {
         assertThat(binaryBody.getType(), is(Body.Type.BINARY));
     }
 
-
     @Test
     public void shouldBuildCorrectObject() {
         // given
@@ -38,6 +37,32 @@ public class BinaryBodyDTOTest {
 
         // then
         assertThat(binaryBody.getValue(), is(body));
+        assertThat(binaryBody.getType(), is(Body.Type.BINARY));
+    }
+
+    @Test
+    public void shouldHandleNull() {
+        // given
+        byte[] body = null;
+
+        // when
+        BinaryBody binaryBody = new BinaryBodyDTO(new BinaryBody(body)).buildObject();
+
+        // then
+        assertThat(binaryBody.getValue(), is(new byte[0]));
+        assertThat(binaryBody.getType(), is(Body.Type.BINARY));
+    }
+
+    @Test
+    public void shouldHandleEmptyByteArray() {
+        // given
+        byte[] body = new byte[0];
+
+        // when
+        BinaryBody binaryBody = new BinaryBodyDTO(new BinaryBody(body)).buildObject();
+
+        // then
+        assertThat(binaryBody.getValue(), is(new byte[0]));
         assertThat(binaryBody.getType(), is(Body.Type.BINARY));
     }
 }

@@ -1,8 +1,10 @@
 package org.mockserver.serialization.model;
 
 import com.google.common.net.MediaType;
+import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.mockserver.model.Body;
+import org.mockserver.model.JsonBody;
 import org.mockserver.model.JsonBody;
 
 import java.nio.charset.StandardCharsets;
@@ -100,5 +102,31 @@ public class JsonBodyDTOTest {
         assertThat(jsonBody.getType(), is(Body.Type.JSON));
         assertThat(jsonBody.getMatchType(), is(STRICT));
         assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
+    }
+
+    @Test
+    public void shouldHandleNull() {
+        // given
+        String body = null;
+
+        // when
+        JsonBody jsonBody = new JsonBodyDTO(new JsonBody(body)).buildObject();
+
+        // then
+        assertThat(jsonBody.getValue(), CoreMatchers.nullValue());
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
+    }
+
+    @Test
+    public void shouldHandleEmptyByteArray() {
+        // given
+        String body = "";
+
+        // when
+        JsonBody jsonBody = new JsonBodyDTO(new JsonBody(body)).buildObject();
+
+        // then
+        assertThat(jsonBody.getValue(), is(""));
+        assertThat(jsonBody.getType(), is(Body.Type.JSON));
     }
 }
