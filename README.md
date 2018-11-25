@@ -2,11 +2,6 @@ MockServer &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [![Tweet
 [![GitHub license](https://img.shields.io/github/license/jamesdbloom/mockserver.svg)](https://github.com/jamesdbloom/mockserver/blob/master/LICENSE.md)&nbsp; 
 [![GitHub stars](https://img.shields.io/github/stars/jamesdbloom/mockserver.svg)](https://github.com/jamesdbloom/mockserver/stargazers)
 
-
-========== 
-
-
-
 # Documentation
 
 For usage guide please see: [www.mock-server.com](http://www.mock-server.com/)
