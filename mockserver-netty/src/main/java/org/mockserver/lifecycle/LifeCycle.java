@@ -8,7 +8,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.util.internal.SocketUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
@@ -54,14 +53,10 @@ public abstract class LifeCycle {
         // Wait until all threads are terminated.
         bossGroup.terminationFuture().syncUninterruptibly();
         workerGroup.terminationFuture().syncUninterruptibly();
+    }
 
-        try {
-            // ensure that shutdown has actually completed and won't
-            // cause class loader error if JVM starts unloading classes
-            SECONDS.sleep(2);
-        } catch (InterruptedException ignore) {
-            // ignore
-        }
+    public EventLoopGroup getEventLoopGroup() {
+        return workerGroup;
     }
 
     public Scheduler getScheduler() {

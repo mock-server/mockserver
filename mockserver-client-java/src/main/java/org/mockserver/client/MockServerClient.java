@@ -23,6 +23,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -175,7 +176,7 @@ public class MockServerClient implements java.io.Closeable {
 
             return response;
         } catch (RuntimeException rex) {
-            if (!Strings.isNullOrEmpty(rex.getMessage()) && rex.getMessage().contains("executor not accepting a task")) {
+            if (!Strings.isNullOrEmpty(rex.getMessage()) && (rex.getMessage().contains("executor not accepting a task") || rex.getMessage().contains("loop shut down"))) {
                 throw new IllegalStateException(this.getClass().getSimpleName() + " has already been closed, please create new " + this.getClass().getSimpleName() + " instance");
             } else {
                 throw rex;
@@ -225,7 +226,7 @@ public class MockServerClient implements java.io.Closeable {
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
     public MockServerClient stop() {
-        return stop(false);
+        return stop(true);
     }
 
     /**
@@ -240,6 +241,8 @@ public class MockServerClient implements java.io.Closeable {
                     TimeUnit.MILLISECONDS.sleep(5);
                 }
             }
+        } catch (RejectedExecutionException ree) {
+            mockServerLogger.trace("Request rejected because closing down but logging at trace level for information just in case due to some other actual error " + ree);
         } catch (Exception e) {
             if (!ignoreFailure) {
                 mockServerLogger.warn("Failed to send stop request to MockServer " + e.getMessage());

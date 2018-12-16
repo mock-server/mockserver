@@ -26,24 +26,14 @@ public class NettyHttpClient {
 
     static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");
     static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
-    static final AttributeKey<HttpRequest> REQUEST = AttributeKey.valueOf("REQUEST");
     static final AttributeKey<SettableFuture<HttpResponse>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
     private static final MockServerLogger mockServerLogger = new MockServerLogger(NettyHttpClient.class);
-    private static final EventLoopGroup defaultEventLoopGroup = new NioEventLoopGroup();
     private final EventLoopGroup eventLoopGroup;
     private final ProxyConfiguration proxyConfiguration;
 
     public NettyHttpClient(EventLoopGroup eventLoopGroup, ProxyConfiguration proxyConfiguration) {
         this.eventLoopGroup = eventLoopGroup;
         this.proxyConfiguration = proxyConfiguration;
-    }
-
-    public NettyHttpClient() {
-        this(null);
-    }
-
-    public NettyHttpClient(ProxyConfiguration proxyConfiguration) {
-        this(defaultEventLoopGroup, proxyConfiguration);
     }
 
     public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {
@@ -55,39 +45,42 @@ public class NettyHttpClient {
     }
 
     public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress, Integer connectionTimeoutMillis) throws SocketConnectionException {
-        if (proxyConfiguration != null && proxyConfiguration.getType() == ProxyConfiguration.Type.HTTP) {
-            remoteAddress = proxyConfiguration.getProxyAddress();
-        } else if (remoteAddress == null) {
-            remoteAddress = httpRequest.socketAddressFromHostHeader();
-        }
+        if (!eventLoopGroup.isShuttingDown()) {
+            if (proxyConfiguration != null && proxyConfiguration.getType() == ProxyConfiguration.Type.HTTP) {
+                remoteAddress = proxyConfiguration.getProxyAddress();
+            } else if (remoteAddress == null) {
+                remoteAddress = httpRequest.socketAddressFromHostHeader();
+            }
 
-        final SettableFuture<HttpResponse> httpResponseSettableFuture = SettableFuture.create();
-        new Bootstrap()
-            .group(eventLoopGroup)
-            .channel(NioSocketChannel.class)
-            .option(ChannelOption.AUTO_READ, true)
-            .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-            .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeoutMillis)
-            .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
-            .attr(REMOTE_SOCKET, remoteAddress)
-            .attr(REQUEST, httpRequest)
-            .attr(RESPONSE_FUTURE, httpResponseSettableFuture)
-            .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger))
-            .connect(remoteAddress)
-            .addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture future) {
-                    if (future.isSuccess()) {
-                        // send the HTTP request
-                        future.channel().writeAndFlush(httpRequest);
-                    } else {
-                        httpResponseSettableFuture.setException(future.cause());
+            final SettableFuture<HttpResponse> httpResponseSettableFuture = SettableFuture.create();
+            new Bootstrap()
+                .group(eventLoopGroup)
+                .channel(NioSocketChannel.class)
+                .option(ChannelOption.AUTO_READ, true)
+                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeoutMillis)
+                .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
+                .attr(REMOTE_SOCKET, remoteAddress)
+                .attr(RESPONSE_FUTURE, httpResponseSettableFuture)
+                .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger))
+                .connect(remoteAddress)
+                .addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture future) {
+                        if (future.isSuccess()) {
+                            // send the HTTP request
+                            future.channel().writeAndFlush(httpRequest);
+                        } else {
+                            httpResponseSettableFuture.setException(future.cause());
+                        }
                     }
-                }
-            });
+                });
 
-        return httpResponseSettableFuture;
+            return httpResponseSettableFuture;
+        } else {
+            throw new IllegalStateException("Request sent after client has been stopped - the event loop has been shutdown so it is not possible to send a request");
+        }
     }
 
     public HttpResponse sendRequest(HttpRequest httpRequest, long timeout, TimeUnit unit) {

@@ -1,6 +1,8 @@
 package org.mockserver.integration.proxy;
 
 import com.google.common.base.Strings;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -16,7 +18,9 @@ import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.hamcrest.core.Is;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.MockServerClient;
@@ -34,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
@@ -56,7 +61,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     protected static String servletContext = "";
 
-    protected HttpClient createHttpClient() {
+    private HttpClient createHttpClient() {
         return HttpClients
             .custom()
             .setSSLSocketFactory(new SSLConnectionSocketFactory(KeyStoreFactory.keyStoreFactory().sslContext(), NoopHostnameVerifier.INSTANCE))
@@ -78,7 +83,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         return (!path.startsWith("/") ? "/" : "") + path;
     }
 
-    protected String addContextToPath(String path) {
+    private String addContextToPath(String path) {
         String cleanedPath = path;
         if (!Strings.isNullOrEmpty(servletContext)) {
             cleanedPath =
@@ -88,6 +93,18 @@ public abstract class AbstractClientProxyIntegrationTest {
                     (cleanedPath.startsWith("/") ? cleanedPath.substring(1) : cleanedPath);
         }
         return (!cleanedPath.startsWith("/") ? "/" : "") + cleanedPath;
+    }
+
+    private static EventLoopGroup clientEventLoopGroup;
+
+    @BeforeClass
+    public static void createClientAndEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup();
+    }
+
+    @AfterClass
+    public static void stopEventLoopGroup() {
+        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
     }
 
     @Before
@@ -838,7 +855,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToClear() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())
@@ -861,7 +878,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToVerify() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())
@@ -883,7 +900,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToVerifySequence() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())

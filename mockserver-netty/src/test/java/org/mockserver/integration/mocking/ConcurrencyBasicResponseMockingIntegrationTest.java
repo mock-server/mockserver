@@ -1,5 +1,7 @@
 package org.mockserver.integration.mocking;
 
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.*;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.*;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -21,6 +24,8 @@ public class ConcurrencyBasicResponseMockingIntegrationTest {
 
     private ClientAndServer server;
     private NettyHttpClient httpClient;
+
+    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
 
     @Before
     public void setUp() {
@@ -32,7 +37,12 @@ public class ConcurrencyBasicResponseMockingIntegrationTest {
             )
             .respond(callback()
                 .withCallbackClass("org.mockserver.integration.mocking.ConcurrencyBasicResponseMockingIntegrationTest$ClassCallback"));
-        httpClient = new NettyHttpClient();
+        httpClient = new NettyHttpClient(clientEventLoopGroup, null);
+    }
+
+    @AfterClass
+    public static void stopEventLoopGroup() {
+        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
     }
 
     @After

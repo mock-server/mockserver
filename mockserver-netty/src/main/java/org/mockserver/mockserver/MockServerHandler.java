@@ -63,7 +63,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         this.httpStateHandler = httpStateHandler;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.actionHandler = new ActionHandler(httpStateHandler, proxyConfiguration);
+        this.actionHandler = new ActionHandler(server.getEventLoopGroup(), httpStateHandler, proxyConfiguration);
     }
 
     private static boolean isProxyingRequest(ChannelHandlerContext ctx) {

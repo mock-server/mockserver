@@ -31,7 +31,7 @@ public class StopIntegrationTest {
     public void returnsExceptionWhenAlreadyStopped() {
         // given
         exception.expect(IllegalStateException.class);
-        exception.expectMessage(Matchers.containsString("MockServerClient has already been closed, please create new MockServerClient instance"));
+        exception.expectMessage(Matchers.containsString("Request sent after client has been stopped - the event loop has been shutdown so it is not possible to send a request"));
 
         // when - server started
         new MockServer(MOCK_SERVER_PORT);

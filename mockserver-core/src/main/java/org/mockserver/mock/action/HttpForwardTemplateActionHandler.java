@@ -1,11 +1,9 @@
 package org.mockserver.mock.action;
 
-import com.google.common.util.concurrent.SettableFuture;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.javascript.JavaScriptTemplateEngine;
@@ -19,20 +17,18 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
     private JavaScriptTemplateEngine javaScriptTemplateEngine;
     private VelocityTemplateEngine velocityTemplateEngine;
 
-    public HttpForwardTemplateActionHandler(MockServerLogger logFormatter, NettyHttpClient httpClient) {
-        super(logFormatter, httpClient);
-        javaScriptTemplateEngine = new JavaScriptTemplateEngine(logFormatter);
-        velocityTemplateEngine = new VelocityTemplateEngine(logFormatter);
+    public HttpForwardTemplateActionHandler(MockServerLogger mockServerLogger, NettyHttpClient httpClient) {
+        super(mockServerLogger, httpClient);
     }
 
     public HttpForwardActionResult handle(HttpTemplate httpTemplate, HttpRequest originalRequest) {
         TemplateEngine templateEngine = null;
         switch (httpTemplate.getTemplateType()) {
             case VELOCITY:
-                templateEngine = velocityTemplateEngine;
+                templateEngine = getVelocityTemplateEngine();
                 break;
             case JAVASCRIPT:
-                templateEngine = javaScriptTemplateEngine;
+                templateEngine = getJavaScriptTemplateEngine();
                 break;
             default:
                 throw new RuntimeException("Unknown no template engine available for " + httpTemplate.getTemplateType());
@@ -45,5 +41,19 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
         }
 
         return notFoundFuture(originalRequest);
+    }
+
+    private JavaScriptTemplateEngine getJavaScriptTemplateEngine() {
+        if (javaScriptTemplateEngine == null) {
+            javaScriptTemplateEngine = new JavaScriptTemplateEngine(mockServerLogger);
+        }
+        return javaScriptTemplateEngine;
+    }
+
+    private VelocityTemplateEngine getVelocityTemplateEngine() {
+        if (velocityTemplateEngine == null) {
+            velocityTemplateEngine = new VelocityTemplateEngine(mockServerLogger);
+        }
+        return velocityTemplateEngine;
     }
 }

@@ -2,7 +2,9 @@ package org.mockserver.server;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.net.MediaType;
-import org.mockserver.serialization.PortBindingSerializer;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mock.HttpStateHandler;
@@ -10,14 +12,18 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
 
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -25,7 +31,7 @@ import static org.mockserver.model.PortBinding.portBinding;
 /**
  * @author jamesdbloom
  */
-public class MockServerServlet extends HttpServlet {
+public class MockServerServlet extends HttpServlet implements ServletContextListener {
 
     private MockServerLogger mockServerLogger;
     // generic handling
@@ -37,17 +43,24 @@ public class MockServerServlet extends HttpServlet {
     private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder();
     // mockserver
     private ActionHandler actionHandler;
+    private EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
 
     public MockServerServlet() {
         this.httpStateHandler = new HttpStateHandler(scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.actionHandler = new ActionHandler(httpStateHandler, null);
+        this.actionHandler = new ActionHandler(workerGroup, httpStateHandler, null);
     }
 
     @Override
-    protected void finalize() {
-        scheduler.shutdown();
+    public void contextInitialized(ServletContextEvent sce) {
+
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        this.scheduler.shutdown();
+        this.workerGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
     }
 
     @Override

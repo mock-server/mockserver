@@ -21,14 +21,14 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
     private final static int PROXY_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
     private static Tomcat tomcat;
-    private static MockServerClient proxyClient;
+    private static MockServerClient mockServerClient;
 
     @BeforeClass
     public static void setupFixture() throws Exception {
         servletContext = "";
 
         // start server
-        echoServer = new EchoServer( false);
+        echoServer = new EchoServer(false);
 
         // wait for server to start up
         TimeUnit.MILLISECONDS.sleep(500);
@@ -44,22 +44,32 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
         Context ctx = tomcat.addContext("/" + servletContext, new File(".").getAbsolutePath());
         tomcat.addServlet("/" + servletContext, "mockServerServlet", new ProxyServlet());
         ctx.addServletMappingDecoded("/*", "mockServerServlet");
+        ctx.addApplicationListener(ProxyServlet.class.getName());
 
         // start server
         tomcat.start();
 
         // start client
-        proxyClient = new MockServerClient("localhost", PROXY_PORT, servletContext);
+        mockServerClient = new MockServerClient("localhost", PROXY_PORT, servletContext);
     }
 
     @AfterClass
     public static void stopFixture() throws Exception {
-        // stop server
-        echoServer.stop();
+        // stop client
+        if (mockServerClient != null) {
+            mockServerClient.stop();
+        }
 
-        // stop proxy
-        tomcat.stop();
-        tomcat.getServer().await();
+        // stop test server
+        if (echoServer != null) {
+            echoServer.stop();
+        }
+
+        // stop mock server
+        if (tomcat != null) {
+            tomcat.stop();
+            tomcat.getServer().await();
+        }
 
         // wait for server to shutdown
         TimeUnit.MILLISECONDS.sleep(500);
@@ -67,7 +77,7 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
 
     @Before
     public void resetProxy() {
-        proxyClient.reset();
+        mockServerClient.reset();
     }
 
     @Override
@@ -77,7 +87,7 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
 
     @Override
     public MockServerClient getMockServerClient() {
-        return proxyClient;
+        return mockServerClient;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package org.mockserver.mock.action;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.EventLoopGroup;
 import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.netty.NettyHttpClient;
@@ -26,6 +27,7 @@ import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
@@ -59,11 +61,11 @@ public class ActionHandler {
     private HopByHopHeaderFilter hopByHopHeaderFilter = new HopByHopHeaderFilter();
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
-    public ActionHandler(HttpStateHandler httpStateHandler, ProxyConfiguration proxyConfiguration) {
+    public ActionHandler(EventLoopGroup eventLoopGroup, HttpStateHandler httpStateHandler, ProxyConfiguration proxyConfiguration) {
         this.httpStateHandler = httpStateHandler;
         this.scheduler = httpStateHandler.getScheduler();
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
-        this.httpClient = new NettyHttpClient(proxyConfiguration);
+        this.httpClient = new NettyHttpClient(eventLoopGroup, proxyConfiguration);
         this.httpResponseActionHandler = new HttpResponseActionHandler();
         this.httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(mockServerLogger);
         this.httpResponseClassCallbackActionHandler = new HttpResponseClassCallbackActionHandler(mockServerLogger);
@@ -260,5 +262,4 @@ public class ActionHandler {
         }
         responseWriter.writeResponse(request, response, false);
     }
-
 }

@@ -1,5 +1,7 @@
 package org.mockserver.mock.action;
 
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -15,6 +17,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
@@ -27,11 +30,18 @@ public class ProxyToInvalidSocketIntegrationTest {
 
     private static ClientAndServer clientAndServer;
 
-    private static NettyHttpClient httpClient = new NettyHttpClient();
+    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
+
+    private static NettyHttpClient httpClient = new NettyHttpClient(clientEventLoopGroup, null);
 
     @BeforeClass
     public static void startServer() {
         clientAndServer = startClientAndServer();
+    }
+
+    @AfterClass
+    public static void stopEventLoopGroup() {
+        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
     }
 
     @AfterClass

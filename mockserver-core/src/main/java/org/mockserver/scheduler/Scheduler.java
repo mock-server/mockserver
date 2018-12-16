@@ -24,6 +24,11 @@ public class Scheduler {
     public synchronized void shutdown() {
         if (scheduler != null) {
             scheduler.shutdown();
+            try {
+                scheduler.awaitTermination(500, MILLISECONDS);
+            } catch (InterruptedException ignore) {
+                // ignore interrupted exception
+            }
             scheduler = null;
         }
     }

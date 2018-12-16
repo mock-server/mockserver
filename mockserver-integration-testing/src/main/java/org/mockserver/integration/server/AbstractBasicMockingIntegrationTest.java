@@ -509,7 +509,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldSupportBatchedExpectations() throws Exception {
         // when
-        new NettyHttpClient().sendRequest(
+        new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
@@ -1652,7 +1652,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldReturnErrorForInvalidExpectation() throws Exception {
         // when
-        HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+        HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
@@ -1683,7 +1683,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldReturnErrorForInvalidRequest() throws Exception {
         // when
-        HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+        HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())

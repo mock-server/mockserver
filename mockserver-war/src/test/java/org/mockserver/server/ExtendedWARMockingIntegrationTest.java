@@ -13,6 +13,7 @@ import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author jamesdbloom
@@ -56,6 +57,7 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
         Context ctx = tomcat.addContext("/" + servletContext, new File(".").getAbsolutePath());
         tomcat.addServlet("/" + servletContext, "mockServerServlet", new MockServerServlet());
         ctx.addServletMappingDecoded("/*", "mockServerServlet");
+        ctx.addApplicationListener(MockServerServlet.class.getName());
 
         // start server
         tomcat.start();
@@ -69,12 +71,24 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
 
     @AfterClass
     public static void stopServer() throws Exception {
-        // stop mock server
-        tomcat.stop();
-        tomcat.getServer().await();
+        // stop client
+        if (mockServerClient != null) {
+            mockServerClient.stop();
+        }
 
         // stop test server
-        echoServer.stop();
+        if (echoServer != null) {
+            echoServer.stop();
+        }
+
+        // stop mock server
+        if (tomcat != null) {
+            tomcat.stop();
+            tomcat.getServer().await();
+        }
+
+        // wait for server to shutdown
+        TimeUnit.MILLISECONDS.sleep(500);
     }
 
     @Override

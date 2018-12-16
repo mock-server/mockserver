@@ -35,7 +35,6 @@ import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXPECTATIO
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.FORWARDED_REQUEST;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.Delay.milliseconds;
-import static org.mockserver.model.Delay.minutes;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpForward.forward;
@@ -87,7 +86,6 @@ public class ActionHandlerTest {
     @Spy
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
 
-
     @Mock
     private NettyHttpClient mockNettyHttpClient;
 
@@ -108,7 +106,7 @@ public class ActionHandlerTest {
         mockHttpStateHandler = mock(HttpStateHandler.class);
         scheduler = spy(new Scheduler());
         when(mockHttpStateHandler.getScheduler()).thenReturn(scheduler);
-        actionHandler = new ActionHandler(mockHttpStateHandler, null);
+        actionHandler = new ActionHandler(null, mockHttpStateHandler, null);
 
         initMocks(this);
         request = request("some_path");

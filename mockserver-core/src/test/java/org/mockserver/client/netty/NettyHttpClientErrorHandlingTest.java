@@ -1,5 +1,8 @@
 package org.mockserver.client.netty;
 
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -14,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
@@ -27,6 +31,12 @@ public class NettyHttpClientErrorHandlingTest {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
+    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
+
+    @AfterClass
+    public static void stopEventLoopGroup() {
+        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+    }
 
     @Test
     public void shouldThrowSocketCommunicationExceptionForConnectException() throws Exception {
@@ -39,7 +49,7 @@ public class NettyHttpClientErrorHandlingTest {
         ));
 
         // when
-        new NettyHttpClient().sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort))
+        new NettyHttpClient(clientEventLoopGroup, null).sendRequest(request().withHeader(HOST.toString(), "127.0.0.1:" + freePort))
             .get(10, TimeUnit.SECONDS);
     }
 
@@ -54,7 +64,7 @@ public class NettyHttpClientErrorHandlingTest {
             exception.expectMessage(containsString("Exception caught before valid response has been received"));
 
             // when
-            new NettyHttpClient().sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + echoServer.getPort()))
+            new NettyHttpClient(clientEventLoopGroup, null).sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + echoServer.getPort()))
                 .get(10, TimeUnit.SECONDS);
         } finally {
             echoServer.stop();
@@ -69,7 +79,7 @@ public class NettyHttpClientErrorHandlingTest {
         try {
             // when
             InetSocketAddress socket = new InetSocketAddress("127.0.0.1", echoServer.getPort());
-            HttpResponse httpResponse = new NettyHttpClient().sendRequest(request().withBody(exact("this is an example body")).withSecure(true), socket)
+            HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(request().withBody(exact("this is an example body")).withSecure(true), socket)
                 .get(10, TimeUnit.SECONDS);
 
             // then
