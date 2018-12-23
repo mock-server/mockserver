@@ -611,10 +611,51 @@ mockServerClient("localhost", 1080)
 
 <a name="logging-with-node" class="anchor" href="#logging-with-node">&nbsp;</a>
 
-<h3>Logging with npm module or Grunt plugin</h3>
+<h3>Logging with npm module</h3>
 
-<p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver_node"><strong>mockserver-node</strong></a> Grunt plugin and Node.js (npm) module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the
-	<span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging. In addition the <span class="inline_code">--verbose</span> command line flag can be used for Grunt builds to enable the <strong>mockserver-node</strong> verbose option dynamically.</p>
+<p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver_node"><strong>mockserver-node</strong></a> Grunt plugin and Node.js (npm) module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the <span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging.</p>
+
+<p>It is generally recommended to enable <span class="inline_code">verbose</span> which should provide the correct amount of information, <span class="inline_code">trace</span> is only required for very low level debugging.</p>
+
+<pre class="prettyprint lang-java code"><code class="code">var mockserver = require('mockserver-node');
+
+mockserver
+    .start_mockserver({
+        serverPort: 1080,
+        verbose: true,
+        trace: true
+    })
+    .then(
+        function () {
+            console.log("started MockServer");
+        },
+        function (error) {
+            console.log(JSON.stringify(error));
+        }
+    );</code></pre>
+
+<h3>Logging with Grunt plugin</h3>
+
+<p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver_node"><strong>mockserver-node</strong></a> as a Grunt plugin module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the <span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging.  The <span class="inline_code">--verbose</span> command line flag can also be used to enable the <strong>mockserver-node</strong> verbose option from the command line.</p>
+
+<p>It is generally recommended to enable <span class="inline_code">verbose</span> which should provide the correct amount of information, <span class="inline_code">trace</span> is only required for very low level debugging.</p>
+
+<pre class="prettyprint lang-java code"><code class="code">grunt.initConfig({
+        start_mockserver: {
+            options: {
+                serverPort: 1080,
+                verbose: true,
+                trace: true
+            }
+        },
+        stop_mockserver: {
+            options: {
+                serverPort: 1080
+            }
+        }
+});
+
+grunt.loadNpmTasks('mockserver-node');</code></pre>
 
 <a name="disabling-logging" class="anchor" href="#disabling-logging">&nbsp;</a>
 
