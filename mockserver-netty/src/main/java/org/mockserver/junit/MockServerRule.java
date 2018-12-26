@@ -25,7 +25,7 @@ public class MockServerRule implements TestRule {
      * Start the MockServer prior to test execution and stop the MockServer after the tests have completed.
      * This constructor dynamically allocates a free port for the MockServer to use.
      *
-     * If the test class contains a MockServerClient field that that field is set with a client configured for the created MockServer.
+     * If the test class contains a MockServerClient field it is set with a client configured for the created MockServer.
      *
      * @param target an instance of the test being executed
      */
@@ -37,7 +37,7 @@ public class MockServerRule implements TestRule {
      * Start the MockServer prior to test execution and stop the MockServer after the tests have completed.
      * This constructor dynamically allocates a free port for the MockServer to use.
      *
-     * If the test class contains a MockServerClient field that that field is set with a client configured for the created MockServer.
+     * If the test class contains a MockServerClient field it is set with a client configured for the created MockServer.
      *
      * @param target       an instance of the test being executed
      * @param perTestSuite indicates how many instances of MockServer are created
@@ -52,7 +52,7 @@ public class MockServerRule implements TestRule {
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
      * This constructor dynamically create a MockServer that accepts HTTP(s) requests on the specified port
      *
-     * If the test class contains a MockServerClient field that that field is set with a client configured for the created MockServer.
+     * If the test class contains a MockServerClient field it is set with a client configured for the created MockServer.
      *
      * @param target an instance of the test being executed
      * @param ports  the HTTP(S) port for the proxy
@@ -105,22 +105,16 @@ public class MockServerRule implements TestRule {
                 if (perTestSuite) {
                     if (perTestSuiteClientAndServer == null) {
                         perTestSuiteClientAndServer = clientAndServerFactory.newClientAndServer();
-                        Runtime.getRuntime().addShutdownHook(new Thread() {
-                            @Override
-                            public void run() {
-                                perTestSuiteClientAndServer.stop();
-                            }
-                        });
+                    } else {
+                        perTestSuiteClientAndServer.reset();
                     }
                     clientAndServer = perTestSuiteClientAndServer;
                     setMockServerClient(target, perTestSuiteClientAndServer);
-                    perTestSuiteClientAndServer.reset();
                     base.evaluate();
                 } else {
                     clientAndServer = clientAndServerFactory.newClientAndServer();
                     setMockServerClient(target, clientAndServer);
                     try {
-                        clientAndServer.reset();
                         base.evaluate();
                     } finally {
                         clientAndServer.stop();
