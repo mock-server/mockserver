@@ -33,15 +33,12 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
 
     private static MockServer mockServer;
     private static MockServer proxy;
-    private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() {
         proxy = new MockServer();
 
         mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.HTTPS, "127.0.0.1:" + String.valueOf(proxy.getLocalPort())));
-
-        echoServer = new EchoServer(true);
 
         mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort(), servletContext);
     }
@@ -55,10 +52,6 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
         if (mockServer != null) {
             mockServer.stop();
         }
-
-        if (echoServer != null) {
-            echoServer.stop();
-        }
     }
 
     @Override
@@ -68,7 +61,7 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
 
     @Override
     public int getEchoServerPort() {
-        return echoServer.getPort();
+        return secureEchoServer.getPort();
     }
 
     @Test
@@ -102,7 +95,7 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
                     .withPath(calculatePath("echo"))
                     .withMethod("POST")
                     .withHeaders(
-                        header("Host", "127.0.0.1:" + echoServer.getPort()),
+                        header("Host", "127.0.0.1:" + getEchoServerPort()),
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
@@ -122,7 +115,7 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
             .forward(
                 forwardOverriddenRequest(
                     request()
-                        .withHeader("Host", "localhost:" + echoServer.getPort())
+                        .withHeader("Host", "localhost:" + getEchoServerPort())
                         .withBody("some_overridden_body")
                 ).withDelay(MILLISECONDS, 10)
             );
@@ -182,7 +175,7 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
                     .withMethod("POST")
                     .withHeaders(
                         header("x-test", "test_headers_and_body"),
-                        header("x-echo-server-port", echoServer.getPort())
+                        header("x-echo-server-port", getEchoServerPort())
                     )
                     .withBody("an_example_body_http"),
                 headersToIgnore
@@ -205,7 +198,7 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
                         "    'secure' : true," + NEW_LINE +
                         "    'headers' : [ {" + NEW_LINE +
                         "        'name' : \"Host\"," + NEW_LINE +
-                        "        'values' : [ \"127.0.0.1:" + echoServer.getPort() + "\" ]" + NEW_LINE +
+                        "        'values' : [ \"127.0.0.1:" + getEchoServerPort() + "\" ]" + NEW_LINE +
                         "    }, {" + NEW_LINE +
                         "        'name' : \"x-test\"," + NEW_LINE +
                         "        'values' : [ \"$!request.headers['x-test'][0]\" ]" + NEW_LINE +
@@ -250,7 +243,7 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
             .forward(
                 forwardOverriddenRequest(
                     request()
-                        .withHeader("Host", "localhost:" + echoServer.getPort())
+                        .withHeader("Host", "localhost:" + getEchoServerPort())
                         .withBody("some_overridden_body")
                 ).withDelay(MILLISECONDS, 10)
             );

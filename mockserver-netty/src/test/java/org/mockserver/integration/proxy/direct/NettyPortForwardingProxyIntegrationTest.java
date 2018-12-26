@@ -30,12 +30,12 @@ public class NettyPortForwardingProxyIntegrationTest {
 
     @AfterClass
     public static void shutdownFixture() {
-        if (echoServer != null) {
-            echoServer.stop();
-        }
-
         if (mockServer != null) {
             mockServer.stop();
+        }
+
+        if (echoServer != null) {
+            echoServer.stop();
         }
     }
 

@@ -5,7 +5,6 @@ import com.google.common.net.MediaType;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
-import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
@@ -4523,73 +4522,68 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     @Test
     public void shouldRetrieveRecordedExpectationsAsJson() {
         // when
-        EchoServer secureEchoServer = new EchoServer(false);
-        try {
-            mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).forward(
-                forward()
-                    .withHost("127.0.0.1")
-                    .withPort(secureEchoServer.getPort())
-            );
-            assertEquals(
-                response("some_body_one"),
-                makeRequest(
-                    request().withPath(calculatePath("some_path_one")).withBody("some_body_one"),
-                    headersToIgnore
-                )
-            );
-            assertEquals(
-                response("some_body_three"),
-                makeRequest(
-                    request().withPath(calculatePath("some_path_three")).withBody("some_body_three"),
-                    headersToIgnore
-                )
-            );
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).forward(
+            forward()
+                .withHost("127.0.0.1")
+                .withPort(insecureEchoServer.getPort())
+        );
+        assertEquals(
+            response("some_body_one"),
+            makeRequest(
+                request().withPath(calculatePath("some_path_one")).withBody("some_body_one"),
+                headersToIgnore
+            )
+        );
+        assertEquals(
+            response("some_body_three"),
+            makeRequest(
+                request().withPath(calculatePath("some_path_three")).withBody("some_body_three"),
+                headersToIgnore
+            )
+        );
 
-            // then
-            Expectation[] recordedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(
-                mockServerClient.retrieveRecordedExpectations(request().withPath(calculatePath("some_path_one")), Format.JSON)
-            );
-            assertThat(recordedExpectations.length, is(1));
-            verifyRequestsMatches(
-                new HttpRequest[]{
-                    recordedExpectations[0].getHttpRequest()
-                },
-                request(calculatePath("some_path_one")).withBody("some_body_one")
-            );
-            assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
-            // and
-            recordedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(
-                mockServerClient.retrieveRecordedExpectations(request(), Format.JSON)
-            );
-            assertThat(recordedExpectations.length, is(2));
-            verifyRequestsMatches(
-                new HttpRequest[]{
-                    recordedExpectations[0].getHttpRequest(),
-                    recordedExpectations[1].getHttpRequest()
-                },
-                request(calculatePath("some_path_one")).withBody("some_body_one"),
-                request(calculatePath("some_path_three")).withBody("some_body_three")
-            );
-            assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
-            assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
-            // and
-            recordedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(
-                mockServerClient.retrieveRecordedExpectations(null, Format.JSON)
-            );
-            assertThat(recordedExpectations.length, is(2));
-            verifyRequestsMatches(
-                new HttpRequest[]{
-                    recordedExpectations[0].getHttpRequest(),
-                    recordedExpectations[1].getHttpRequest()
-                },
-                request(calculatePath("some_path_one")).withBody("some_body_one"),
-                request(calculatePath("some_path_three")).withBody("some_body_three")
-            );
-            assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
-            assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
-        } finally {
-            secureEchoServer.stop();
-        }
+        // then
+        Expectation[] recordedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(
+            mockServerClient.retrieveRecordedExpectations(request().withPath(calculatePath("some_path_one")), Format.JSON)
+        );
+        assertThat(recordedExpectations.length, is(1));
+        verifyRequestsMatches(
+            new HttpRequest[]{
+                recordedExpectations[0].getHttpRequest()
+            },
+            request(calculatePath("some_path_one")).withBody("some_body_one")
+        );
+        assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
+        // and
+        recordedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(
+            mockServerClient.retrieveRecordedExpectations(request(), Format.JSON)
+        );
+        assertThat(recordedExpectations.length, is(2));
+        verifyRequestsMatches(
+            new HttpRequest[]{
+                recordedExpectations[0].getHttpRequest(),
+                recordedExpectations[1].getHttpRequest()
+            },
+            request(calculatePath("some_path_one")).withBody("some_body_one"),
+            request(calculatePath("some_path_three")).withBody("some_body_three")
+        );
+        assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
+        assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
+        // and
+        recordedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(
+            mockServerClient.retrieveRecordedExpectations(null, Format.JSON)
+        );
+        assertThat(recordedExpectations.length, is(2));
+        verifyRequestsMatches(
+            new HttpRequest[]{
+                recordedExpectations[0].getHttpRequest(),
+                recordedExpectations[1].getHttpRequest()
+            },
+            request(calculatePath("some_path_one")).withBody("some_body_one"),
+            request(calculatePath("some_path_three")).withBody("some_body_three")
+        );
+        assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
+        assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
     }
 
     @Test

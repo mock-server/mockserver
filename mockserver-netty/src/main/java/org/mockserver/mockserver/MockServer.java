@@ -23,6 +23,11 @@ import static org.mockserver.mockserver.MockServerHandler.PROXYING;
  */
 public class MockServer extends LifeCycle {
 
+    private final Thread shutdownHook = new Thread(new Runnable() {
+        public void run() {
+            MockServer.super.stop();
+        }
+    });
     private InetSocketAddress remoteSocket;
 
     /**
@@ -100,15 +105,20 @@ public class MockServer extends LifeCycle {
         bindServerPorts(portBindings);
         startedServer(getLocalPorts());
 
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            public void run() {
-                MockServer.super.stop();
-            }
-        }));
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
     }
 
     public InetSocketAddress getRemoteAddress() {
         return remoteSocket;
+    }
+
+    public void stop() {
+        super.stop();
+        try {
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        } catch (IllegalStateException ignore) {
+            // ignore error due to shutdown already in progress
+        }
     }
 
 }

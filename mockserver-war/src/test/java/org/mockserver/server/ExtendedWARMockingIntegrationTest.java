@@ -8,7 +8,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.echo.http.EchoServer;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 
@@ -23,7 +22,6 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static Tomcat tomcat;
-    private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() throws Exception {
@@ -62,9 +60,6 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
         // start server
         tomcat.start();
 
-        // start test server
-        echoServer = new EchoServer( false);
-
         // start client
         mockServerClient = new MockServerClient("localhost", SERVER_HTTP_PORT, servletContext);
     }
@@ -74,11 +69,6 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
         // stop client
         if (mockServerClient != null) {
             mockServerClient.stop();
-        }
-
-        // stop test server
-        if (echoServer != null) {
-            echoServer.stop();
         }
 
         // stop mock server
@@ -103,6 +93,6 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
 
     @Override
     public int getEchoServerPort() {
-        return echoServer.getPort();
+        return insecureEchoServer.getPort();
     }
 }

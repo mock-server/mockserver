@@ -8,7 +8,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.AbstractBasicMockingIntegrationTest;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
@@ -24,7 +23,6 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasic
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static Tomcat tomcat;
-    private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() throws Exception {
@@ -63,9 +61,6 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasic
         // start server
         tomcat.start();
 
-        // start test server
-        echoServer = new EchoServer( false);
-
         // start client
         mockServerClient = new MockServerClient("localhost", SERVER_HTTP_PORT, servletContext);
     }
@@ -75,11 +70,6 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasic
         // stop client
         if (mockServerClient != null) {
             mockServerClient.stop();
-        }
-
-        // stop test server
-        if (echoServer != null) {
-            echoServer.stop();
         }
 
         // stop mock server
@@ -104,6 +94,6 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasic
 
     @Override
     public int getEchoServerPort() {
-        return echoServer.getPort();
+        return insecureEchoServer.getPort();
     }
 }

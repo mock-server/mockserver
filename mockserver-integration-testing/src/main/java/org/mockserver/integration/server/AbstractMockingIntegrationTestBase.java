@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.model.*;
@@ -63,6 +64,29 @@ public abstract class AbstractMockingIntegrationTestBase {
         "version",
         "x-cors"
     );
+
+    protected static EchoServer insecureEchoServer;
+    protected static EchoServer secureEchoServer;
+
+    @BeforeClass
+    public static void startEchoServer() {
+        if (insecureEchoServer == null) {
+            insecureEchoServer = new EchoServer(false);
+        }
+        if (secureEchoServer == null) {
+            secureEchoServer = new EchoServer(true);
+        }
+    }
+
+//    @AfterClass
+//    public static void stopEchoServer() {
+//        if (echoServer != null) {
+//            echoServer.stop();
+//        }
+//        if (secureEchoServer != null) {
+//            secureEchoServer.stop();
+//        }
+//    }
 
     @BeforeClass
     public static void resetServletContext() {

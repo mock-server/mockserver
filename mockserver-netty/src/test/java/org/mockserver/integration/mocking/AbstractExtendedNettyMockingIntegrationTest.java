@@ -3,7 +3,6 @@ package org.mockserver.integration.mocking;
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
-import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.AbstractExtendedSameJVMMockingIntegrationTest;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
@@ -28,8 +27,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
@@ -240,74 +239,66 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
     @Test
     public void shouldForwardByObjectCallback() {
-        // given
-        final EchoServer echoServer = new EchoServer(false);
-        final EchoServer secureEchoServer = new EchoServer(true);
-
-        try {
-            // when
-            mockServerClient
-                .when(
-                    request()
-                        .withPath(calculatePath("echo"))
-                )
-                .forward(
-                    new ExpectationForwardCallback() {
-                        @Override
-                        public HttpRequest handle(HttpRequest httpRequest) {
-                            return request()
-                                .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : echoServer.getPort()))
-                                .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
-                                .withBody("some_overridden_body")
-                                .withSecure(httpRequest.isSecure());
-                        }
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                new ExpectationForwardCallback() {
+                    @Override
+                    public HttpRequest handle(HttpRequest httpRequest) {
+                        return request()
+                            .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
+                            .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                            .withBody("some_overridden_body")
+                            .withSecure(httpRequest.isSecure());
                     }
-                );
+                }
+            );
 
-            // then
-            // - in http
-            assertEquals(
-                response()
-                    .withStatusCode(OK_200.code())
-                    .withReasonPhrase(OK_200.reasonPhrase())
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
                     .withHeaders(
                         header("x-test", "test_headers_and_body")
                     )
-                    .withBody("some_overridden_body"),
-                makeRequest(
-                    request()
-                        .withPath(calculatePath("echo"))
-                        .withMethod("POST")
-                        .withHeaders(
-                            header("x-test", "test_headers_and_body")
-                        )
-                        .withBody("an_example_body_http"),
-                    headersToIgnore
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body_https")
                 )
-            );
-            // - in https
-            assertEquals(
-                response()
-                    .withStatusCode(OK_200.code())
-                    .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
                     .withHeaders(
                         header("x-test", "test_headers_and_body_https")
                     )
-                    .withBody("some_overridden_body"),
-                makeRequest(
-                    request()
-                        .withSecure(true)
-                        .withPath(calculatePath("echo"))
-                        .withMethod("POST")
-                        .withHeaders(
-                            header("x-test", "test_headers_and_body_https")
-                        )
-                        .withBody("an_example_body_https"),
-                    headersToIgnore)
-            );
-        } finally {
-            echoServer.stop();
-        }
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
     }
 
     @Test

@@ -14,6 +14,7 @@ import java.util.Arrays;
 
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -51,6 +52,7 @@ public class MockServerRuleTestWithMocks {
     public void setupFixture() {
         httpPort = PortFactory.findFreePort();
 
+        MockServerRule.perTestSuiteClientAndServer = null;
         mockServerRuleDynamicPorts = new MockServerRule(this);
         mockServerRuleSinglePort = new MockServerRule(this, false, httpPort);
         mockServerRuleMultiplePorts = new MockServerRule(this, false, httpPort, httpPort + 1);
@@ -70,10 +72,11 @@ public class MockServerRuleTestWithMocks {
         mockServerRuleDynamicPorts.apply(mockStatement, Description.EMPTY).evaluate();
 
         // then
-        assertThat((ClientAndServer) mockServerClient, is(mockClientAndServer));
+        assertThat(mockServerClient, instanceOf(ClientAndServer.class));
         assertThat(mockServerRuleDynamicPorts.getPorts(), is(new Integer[]{httpPort + 1, httpPort + 2}));
         verify(mockStatement).evaluate();
-        verify(mockClientAndServer).stop();
+        verify(clientAndServerFactory, times(1)).newClientAndServer();
+        verify(mockClientAndServer, times(0)).stop();
     }
 
     @Test
@@ -108,7 +111,8 @@ public class MockServerRuleTestWithMocks {
         mockServerRulePerSuite.apply(mockStatement, Description.EMPTY).evaluate();
 
         // then
-        assertThat((ClientAndServer) mockServerClient, is(mockClientAndServer));
+        MockServerClient firstMockServerClient = mockServerClient;
+        assertThat(mockServerClient, instanceOf(ClientAndServer.class));
         assertThat(mockServerRulePerSuite.getPort(), is(httpPort));
         assertThat(mockServerRulePerSuite.getPorts(), is(new Integer[]{httpPort + 1, httpPort + 2}));
         verify(mockStatement).evaluate();
@@ -121,7 +125,7 @@ public class MockServerRuleTestWithMocks {
         mockServerRulePerSuiteDuplicate.apply(mockStatement, Description.EMPTY).evaluate();
 
         // then
-        assertThat((ClientAndServer) mockServerClient, is(mockClientAndServer));
+        assertThat(mockServerClient, sameInstance(firstMockServerClient));
         assertThat(mockServerRulePerSuiteDuplicate.getPort(), is(httpPort));
         assertThat(mockServerRulePerSuiteDuplicate.getPorts(), is(new Integer[]{httpPort + 1, httpPort + 2}));
         verify(mockStatement).evaluate();

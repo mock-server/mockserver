@@ -4,7 +4,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.AbstractBasicMockingIntegrationTest;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mockserver.MockServer;
@@ -34,12 +33,10 @@ import static org.mockserver.model.StringBody.exact;
 public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIntegrationTest {
 
     private static int mockServerPort;
-    private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() {
-        echoServer = new EchoServer(false);
-        mockServerPort = new MockServer(echoServer.getPort(), "localhost", 0)
+        mockServerPort = new MockServer(insecureEchoServer.getPort(), "localhost", 0)
             .getLocalPort();
 
         mockServerClient = new MockServerClient("localhost", mockServerPort);
@@ -50,10 +47,6 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
         if (mockServerClient != null) {
             mockServerClient.stop();
         }
-
-        if (echoServer != null) {
-            echoServer.stop();
-        }
     }
 
     @Override
@@ -63,7 +56,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
 
     @Override
     public int getEchoServerPort() {
-        return echoServer.getPort();
+        return insecureEchoServer.getPort();
     }
 
     @Test
