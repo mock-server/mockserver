@@ -48,9 +48,9 @@
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
-        <jetty.version>8.2.0.v20160908</jetty.version>
+        <jetty.version>9.2.26.v20180806</jetty.version>
         <slf4j.version>1.7.25</slf4j.version>
-        <tomcat.version>8.0.47</tomcat.version>
+        <tomcat.version>8.0.53</tomcat.version>
         <jackson.version>2.9.7</jackson.version>
         <netty.version>4.1.32.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
