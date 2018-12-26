@@ -6,6 +6,8 @@ import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import io.netty.util.NettyRuntime;
 import io.netty.util.internal.SystemPropertyUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.mockserver.initializer.ExpectationInitializer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.slf4j.event.Level;
@@ -14,6 +16,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -22,6 +25,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
 
@@ -68,6 +72,8 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_HTTP_PROXY_SERVER_REALM = "mockserver.proxyAuthenticationRealm";
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_USERNAME = "mockserver.proxyAuthenticationUsername";
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD = "mockserver.proxyAuthenticationPassword";
+    private static final String MOCKSERVER_INITIALIZATION_CLASS = "mockserver.initializationClass";
+    private static final String MOCKSERVER_INITIALIZATION_JSON_PATH = "mockserver.initializationJsonPath";
 
     private static final Properties PROPERTIES = readPropertyFile();
     private static final Set<String> ALL_SUBJECT_ALTERNATIVE_DOMAINS = Sets.newConcurrentHashSet();
@@ -357,6 +363,22 @@ public class ConfigurationProperties {
 
     public static void proxyAuthenticationPassword(String proxyAuthenticationPassword) {
         System.setProperty(MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD, proxyAuthenticationPassword);
+    }
+
+    public static String initializationClass() {
+        return readPropertyHierarchically(MOCKSERVER_INITIALIZATION_CLASS, "");
+    }
+
+    public static void initializationClass(String initializationClass) {
+        System.setProperty(MOCKSERVER_INITIALIZATION_CLASS, initializationClass);
+    }
+
+    public static String initializationJsonPath() {
+        return readPropertyHierarchically(MOCKSERVER_INITIALIZATION_JSON_PATH, "");
+    }
+
+    public static void initializationJsonPath(String initializationJsonPath) {
+        System.setProperty(MOCKSERVER_INITIALIZATION_JSON_PATH, initializationJsonPath);
     }
 
     private static void validateHostAndPort(String hostAndPort, String propertyName, String mockserverSocksProxy) {

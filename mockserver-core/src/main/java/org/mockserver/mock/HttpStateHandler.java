@@ -5,16 +5,17 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.callback.WebSocketClientRegistry;
-import org.mockserver.serialization.*;
-import org.mockserver.serialization.java.ExpectationToJavaSerializer;
-import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.filters.MockServerEventLog;
+import org.mockserver.initializer.ExpectationInitializerLoader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.serialization.*;
+import org.mockserver.serialization.java.ExpectationToJavaSerializer;
+import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.LoggerFactory;
@@ -58,6 +59,13 @@ public class HttpStateHandler {
         this.scheduler = scheduler;
         mockServerLog = new MockServerEventLog(mockServerLogger, scheduler);
         mockServerMatcher = new MockServerMatcher(mockServerLogger, scheduler);
+        addExpectationsFromInitializer();
+    }
+
+    private void addExpectationsFromInitializer() {
+        for (Expectation expectation : ExpectationInitializerLoader.loadExpectations()) {
+            mockServerMatcher.add(expectation);
+        }
     }
 
     public MockServerLogger getMockServerLogger() {
