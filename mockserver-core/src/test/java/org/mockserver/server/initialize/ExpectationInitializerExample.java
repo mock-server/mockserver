@@ -1,4 +1,4 @@
-package org.mockserver.initializer;
+package org.mockserver.server.initialize;
 
 import org.mockserver.mock.Expectation;
 

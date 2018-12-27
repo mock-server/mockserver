@@ -80,3 +80,4 @@ function locationHashChanged(e) {
 }
 
 window.onhashchange = locationHashChanged;
+window.onload = locationHashChanged;

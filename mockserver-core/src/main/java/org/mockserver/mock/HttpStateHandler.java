@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.filters.MockServerEventLog;
-import org.mockserver.initializer.ExpectationInitializerLoader;
+import org.mockserver.server.initialize.ExpectationInitializerLoader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.logging.MockServerLogger;

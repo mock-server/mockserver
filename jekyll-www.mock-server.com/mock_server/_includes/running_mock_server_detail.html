@@ -127,11 +127,14 @@
 
 <ul>
 	<li>
-		<strong>serverPort</strong> - The port the MockServer listens for incoming request.  Port unification is used to support both HTTP and HTTPS on the same port (required: false)
+		<strong>serverPort</strong> - The port the MockServer listens for incoming request.  Port unification is used to support both HTTP and HTTPS on the same port (required: true)
 	</li>
 	<li>
-		<strong>proxyRemotePort</strong> - The port the proxy listens to incoming requests. Port unification is used to support all protocols on the same port (required: false)
-	</li>proxyRemoteHost
+		<strong>proxyRemotePort</strong> - The port the proxy forwards to incoming requests to (required: false)
+	</li>
+	<li>
+		<strong>proxyRemoteHost</strong> - The port the proxy forwards to incoming requests to (required: false)
+	</li>
 	<li>
 		<strong>timeout</strong> - How long to block waiting for MockServer, after the timeout the plugin will shutdown MockServer, used by <strong>run</strong> goal, 0 means wait indefinitely (required: false, default: 0)
 	</li>
@@ -142,8 +145,8 @@
 		<strong>skip</strong> - Prevent the plugin from running (required: false, default: false)
 	</li>
 	<li>
-		<strong>initializationClass</strong> - To enable the creation of default expectations a class can be specified to initialize expectations in MockServer, this class must implement <span class="inline_code">org.mockserver.initialize.ExpectationInitializer</span> interface. The
-		<span class="inline_code">initializeExpectations(MockServerClient mockServerClient)</span> method will be called once MockServer has been started (but ONLY if <strong>serverPort</strong> has been set). Note: that the plugin must be started during the
+		<strong>initializationClass</strong> - To enable the creation of default expectations a class can be specified to initialize expectations in MockServer, this class must implement <span class="inline_code">org.mockserver.client.initialize.ExpectationInitializer</span> interface. The
+		<span class="inline_code">initializeExpectations(MockServerClient mockServerClient)</span> method will be called once MockServer has been started. Note: that the plugin must be started during the
 		<strong>process-test-classes</strong> to ensure that the initialization class has been compiled from either <strong>src/main/java</strong> or <strong>src/test/java</strong> locations. In addition the initializer can only be used with <strong>start</strong> and
 		<strong>run</strong> goals, it will not work with the <strong>runForked</strong> goal as a JVM is forked with a separate classpath. (required: false, default: false)
 	</li>

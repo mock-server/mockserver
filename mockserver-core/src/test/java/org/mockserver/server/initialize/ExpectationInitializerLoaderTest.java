@@ -1,4 +1,4 @@
-package org.mockserver.initializer;
+package org.mockserver.server.initialize;
 
 import org.junit.Test;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -19,7 +19,7 @@ public class ExpectationInitializerLoaderTest {
         // given
         String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
         try {
-            ConfigurationProperties.initializationJsonPath("org/mockserver/initializer/initializerJson.json");
+            ConfigurationProperties.initializationJsonPath("org/mockserver/server/initialize/initializerJson.json");
 
             // when
             final Expectation[] expectations = ExpectationInitializerLoader.loadExpectations();

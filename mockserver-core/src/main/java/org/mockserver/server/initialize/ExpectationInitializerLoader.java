@@ -1,4 +1,4 @@
-package org.mockserver.initializer;
+package org.mockserver.server.initialize;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
