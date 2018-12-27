@@ -3,7 +3,6 @@ package org.mockserver.examples.proxy.service.jettyclient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpProxy;
-import org.eclipse.jetty.client.api.ContentResponse;
 import org.mockserver.examples.proxy.model.Book;
 import org.mockserver.examples.proxy.service.BookService;
 import org.springframework.core.env.Environment;
@@ -14,6 +13,7 @@ import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 
 import static org.mockserver.examples.proxy.json.ObjectMapperFactory.createObjectMapper;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom

@@ -31,6 +31,7 @@ import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverridde
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationSequence.verificationSequence;
 
@@ -54,7 +55,7 @@ public class MockServerClientIntegrationTest {
 
     @AfterClass
     public static void stopEchoServer() {
-        echoServer.stop();
+        stopQuietly(echoServer);
     }
 
     @Before
@@ -69,9 +70,7 @@ public class MockServerClientIntegrationTest {
 
     @After
     public void stopClient() {
-        if (mockServerClient != null) {
-            mockServerClient.stop();
-        }
+        stopQuietly(mockServerClient);
     }
 
     @Test

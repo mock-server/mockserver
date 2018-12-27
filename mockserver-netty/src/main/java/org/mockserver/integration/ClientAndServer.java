@@ -39,9 +39,9 @@ public class ClientAndServer extends MockServerClient {
     }
 
     @Override
-    public MockServerClient stop() {
+    public void stop() {
         mockServer.stop();
-        return stop(true);
+        stop(true);
     }
 
     /**

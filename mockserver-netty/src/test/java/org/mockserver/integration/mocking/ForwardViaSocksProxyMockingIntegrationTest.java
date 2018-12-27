@@ -26,6 +26,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -38,7 +39,6 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
     @BeforeClass
     public static void startServer() {
         proxy = new MockServer();
-
         mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.SOCKS5, "127.0.0.1:" + String.valueOf(proxy.getLocalPort())));
 
         mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort(), servletContext);
@@ -46,23 +46,14 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
 
     @AfterClass
     public static void stopServer() {
-        if (proxy != null) {
-            proxy.stop();
-        }
-
-        if (mockServer != null) {
-            mockServer.stop();
-        }
+        stopQuietly(proxy);
+        stopQuietly(mockServer);
+        stopQuietly(mockServerClient);
     }
 
     @Override
     public int getServerPort() {
         return mockServer.getLocalPort();
-    }
-
-    @Override
-    public int getEchoServerPort() {
-        return secureEchoServer.getPort();
     }
 
     @Test
@@ -76,7 +67,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(getEchoServerPort())
+                    .withPort(secureEchoServer.getPort())
                     .withScheme(HttpForward.Scheme.HTTPS)
             );
 
@@ -96,7 +87,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
                     .withPath(calculatePath("echo"))
                     .withMethod("POST")
                     .withHeaders(
-                        header("Host", "127.0.0.1:" + getEchoServerPort()),
+                        header("Host", "127.0.0.1:" + secureEchoServer.getPort()),
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
@@ -116,7 +107,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
             .forward(
                 forwardOverriddenRequest(
                     request()
-                        .withHeader("Host", "localhost:" + getEchoServerPort())
+                        .withHeader("Host", "localhost:" + secureEchoServer.getPort())
                         .withBody("some_overridden_body")
                 ).withDelay(MILLISECONDS, 10)
             );
@@ -176,7 +167,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
                     .withMethod("POST")
                     .withHeaders(
                         header("x-test", "test_headers_and_body"),
-                        header("x-echo-server-port", getEchoServerPort())
+                        header("x-echo-server-port", secureEchoServer.getPort())
                     )
                     .withBody("an_example_body_http"),
                 headersToIgnore
@@ -199,7 +190,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
                         "    'secure' : true," + NEW_LINE +
                         "    'headers' : [ {" + NEW_LINE +
                         "        'name' : \"Host\"," + NEW_LINE +
-                        "        'values' : [ \"127.0.0.1:" + getEchoServerPort() + "\" ]" + NEW_LINE +
+                        "        'values' : [ \"127.0.0.1:" + secureEchoServer.getPort() + "\" ]" + NEW_LINE +
                         "    }, {" + NEW_LINE +
                         "        'name' : \"x-test\"," + NEW_LINE +
                         "        'values' : [ \"$!request.headers['x-test'][0]\" ]" + NEW_LINE +
@@ -244,7 +235,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
             .forward(
                 forwardOverriddenRequest(
                     request()
-                        .withHeader("Host", "localhost:" + getEchoServerPort())
+                        .withHeader("Host", "localhost:" + secureEchoServer.getPort())
                         .withBody("some_overridden_body")
                 ).withDelay(MILLISECONDS, 10)
             );

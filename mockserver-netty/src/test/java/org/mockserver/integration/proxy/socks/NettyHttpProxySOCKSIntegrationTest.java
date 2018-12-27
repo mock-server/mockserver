@@ -45,6 +45,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
+import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
@@ -76,19 +77,13 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
     @AfterClass
     public static void shutdownFixture() {
-        if (insecureEchoServer != null) {
-            insecureEchoServer.stop();
-        }
-        if (secureEchoServer != null) {
-            secureEchoServer.stop();
-        }
+        stopQuietly(insecureEchoServer);
+        stopQuietly(secureEchoServer);
 
         System.clearProperty("http.proxyHost");
         System.clearProperty("http.proxyPort");
 
-        if (mockServerClient != null) {
-            mockServerClient.stop();
-        }
+        stopQuietly(mockServerClient);
     }
 
     @Before

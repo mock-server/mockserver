@@ -14,6 +14,8 @@ import org.mockserver.socket.tls.KeyStoreFactory;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.stop.Stop.stopQuietly;
+
 /**
  * @author jamesdbloom
  */
@@ -67,9 +69,7 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
     @AfterClass
     public static void stopServer() throws Exception {
         // stop client
-        if (mockServerClient != null) {
-            mockServerClient.stop();
-        }
+        stopQuietly(mockServerClient);
 
         // stop mock server
         if (tomcat != null) {
@@ -91,8 +91,4 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
         return SERVER_HTTPS_PORT;
     }
 
-    @Override
-    public int getEchoServerPort() {
-        return insecureEchoServer.getPort();
-    }
 }

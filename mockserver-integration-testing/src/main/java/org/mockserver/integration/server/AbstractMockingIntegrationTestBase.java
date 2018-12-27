@@ -78,16 +78,6 @@ public abstract class AbstractMockingIntegrationTestBase {
         }
     }
 
-//    @AfterClass
-//    public static void stopEchoServer() {
-//        if (echoServer != null) {
-//            echoServer.stop();
-//        }
-//        if (secureEchoServer != null) {
-//            secureEchoServer.stop();
-//        }
-//    }
-
     @BeforeClass
     public static void resetServletContext() {
         servletContext = "";
@@ -99,8 +89,6 @@ public abstract class AbstractMockingIntegrationTestBase {
         return getServerPort();
     }
 
-    public abstract int getEchoServerPort();
-
     @Before
     public void resetServer() {
         mockServerClient.reset();
@@ -110,7 +98,7 @@ public abstract class AbstractMockingIntegrationTestBase {
         return (!path.startsWith("/") ? "/" : "") + path;
     }
 
-    static EventLoopGroup clientEventLoopGroup;
+    private static EventLoopGroup clientEventLoopGroup;
     static NettyHttpClient httpClient;
 
     @BeforeClass

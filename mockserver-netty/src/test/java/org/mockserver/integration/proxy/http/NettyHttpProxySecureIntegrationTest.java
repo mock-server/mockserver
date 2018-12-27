@@ -8,6 +8,8 @@ import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.proxy.AbstractClientSecureProxyIntegrationTest;
 import org.mockserver.mockserver.MockServer;
 
+import static org.mockserver.stop.Stop.stopQuietly;
+
 /**
  * @author jamesdbloom
  */
@@ -30,16 +32,12 @@ public class NettyHttpProxySecureIntegrationTest extends AbstractClientSecurePro
 
     @AfterClass
     public static void stopServer() {
-        if (echoServer != null) {
-            echoServer.stop();
-        }
+        stopQuietly(echoServer);
 
         System.clearProperty("http.proxyHost");
         System.clearProperty("http.proxyPort");
 
-        if (mockServerClient != null) {
-            mockServerClient.stop();
-        }
+        stopQuietly(mockServerClient);
     }
 
     @Before

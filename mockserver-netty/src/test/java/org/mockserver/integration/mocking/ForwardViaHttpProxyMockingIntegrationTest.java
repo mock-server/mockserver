@@ -23,6 +23,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -35,7 +36,6 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
     @BeforeClass
     public static void startServer() {
         proxy = new MockServer();
-
         mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.HTTP, "127.0.0.1:" + String.valueOf(proxy.getLocalPort())));
 
         mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort());
@@ -43,21 +43,13 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
 
     @AfterClass
     public static void stopServer() {
-        if (proxy != null) {
-            proxy.stop();
-        }
-
-        if (mockServer != null) {
-            mockServer.stop();
-        }
+        stopQuietly(proxy);
+        stopQuietly(mockServer);
+        stopQuietly(mockServerClient);
     }
 
     public int getServerPort() {
         return mockServer.getLocalPort();
-    }
-
-    public int getEchoServerPort() {
-        return insecureEchoServer.getPort();
     }
 
     @Test
@@ -71,7 +63,7 @@ public class ForwardViaHttpProxyMockingIntegrationTest extends AbstractMockingIn
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(getEchoServerPort())
+                    .withPort(insecureEchoServer.getPort())
             );
 
         // then

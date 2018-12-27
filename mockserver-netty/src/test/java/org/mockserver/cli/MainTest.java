@@ -25,6 +25,7 @@ import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -57,7 +58,7 @@ public class MainTest {
             assertThat(ConfigurationProperties.logLevel().toString(), is("DEBUG"));
         } finally {
             ConfigurationProperties.logLevel(originalLogLevel.toString());
-            mockServerClient.stop();
+            stopQuietly(mockServerClient);
         }
     }
 
@@ -88,7 +89,7 @@ public class MainTest {
             assertThat(mockServerClient.isRunning(), is(true));
             assertThat(response.getBodyAsString(), is("port_forwarded_response"));
         } finally {
-            mockServerClient.stop();
+            stopQuietly(mockServerClient);
         }
     }
 
@@ -118,7 +119,7 @@ public class MainTest {
             assertThat(mockServerClient.isRunning(), is(true));
             assertThat(response.getBodyAsString(), is("port_forwarded_response"));
         } finally {
-            mockServerClient.stop();
+            stopQuietly(mockServerClient);
         }
     }
 

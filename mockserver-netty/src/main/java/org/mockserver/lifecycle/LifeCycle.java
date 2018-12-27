@@ -13,6 +13,7 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.stop.Stoppable;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CON
 /**
  * @author jamesdbloom
  */
-public abstract class LifeCycle {
+public abstract class LifeCycle implements Stoppable {
 
     static {
         new MockServerLogger();
@@ -60,6 +61,11 @@ public abstract class LifeCycle {
         } catch (InterruptedException ignore) {
             // ignore interruption
         }
+    }
+
+    @Override
+    public void close() {
+        stop();
     }
 
     public EventLoopGroup getEventLoopGroup() {

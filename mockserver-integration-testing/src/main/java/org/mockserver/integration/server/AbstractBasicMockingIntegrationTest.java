@@ -1,7 +1,6 @@
 package org.mockserver.integration.server;
 
 import org.junit.Test;
-import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
@@ -52,7 +51,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(getEchoServerPort())
+                    .withPort(insecureEchoServer.getPort())
             );
 
         // then
@@ -367,7 +366,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(getEchoServerPort())
+                    .withPort(insecureEchoServer.getPort())
             );
         mockServerClient
             .when(
@@ -484,7 +483,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldSupportBatchedExpectations() throws Exception {
         // when
-        new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
+        httpClient.sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
@@ -1621,7 +1620,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldReturnErrorForInvalidExpectation() throws Exception {
         // when
-        HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
+        HttpResponse httpResponse = httpClient.sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
@@ -1652,7 +1651,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldReturnErrorForInvalidRequest() throws Exception {
         // when
-        HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
+        HttpResponse httpResponse = httpClient.sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())

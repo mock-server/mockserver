@@ -19,18 +19,19 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 public class ConcurrencyBasicResponseMockingIntegrationTest {
 
-    private ClientAndServer server;
+    private ClientAndServer clientAndServer;
     private NettyHttpClient httpClient;
 
     private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
 
     @Before
     public void setUp() {
-        server = ClientAndServer.startClientAndServer();
-        server
+        clientAndServer = ClientAndServer.startClientAndServer();
+        clientAndServer
             .when(
                 request()
                     .withPath("/my/echo")
@@ -47,7 +48,7 @@ public class ConcurrencyBasicResponseMockingIntegrationTest {
 
     @After
     public void tearDown() {
-        server.stop();
+        stopQuietly(clientAndServer);
     }
 
     @Test
@@ -81,7 +82,7 @@ public class ConcurrencyBasicResponseMockingIntegrationTest {
                     .withMethod("POST")
                     .withPath("/my/echo")
                     .withBody(requestBody),
-                new InetSocketAddress("localhost", server.getLocalPort())
+                new InetSocketAddress("localhost", clientAndServer.getLocalPort())
             ).get(20, TimeUnit.MINUTES);
             Assert.assertEquals(requestBody, httpResponse.getBodyAsString());
         } catch (Exception ex) {

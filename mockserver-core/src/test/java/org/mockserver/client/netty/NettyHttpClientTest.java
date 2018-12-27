@@ -24,6 +24,7 @@ import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 public class NettyHttpClientTest {
 
@@ -44,7 +45,7 @@ public class NettyHttpClientTest {
 
     @AfterClass
     public static void stopEchoServer() {
-        echoServer.stop();
+        stopQuietly(echoServer);
     }
 
     @Test

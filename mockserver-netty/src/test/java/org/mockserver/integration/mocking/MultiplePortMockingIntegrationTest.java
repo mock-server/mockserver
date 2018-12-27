@@ -18,6 +18,7 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -36,19 +37,12 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
 
     @AfterClass
     public static void stopServer() {
-        if (mockServerClient != null) {
-            mockServerClient.stop();
-        }
+        stopQuietly(mockServerClient);
     }
 
     @Override
     public int getServerPort() {
         return severHttpPort[random.nextInt(severHttpPort.length)];
-    }
-
-    @Override
-    public int getEchoServerPort() {
-        return insecureEchoServer.getPort();
     }
 
     @Test

@@ -27,8 +27,4 @@ public class JUnitClassRuleIntegrationTest extends AbstractBasicMockingIntegrati
         return mockServerRule.getPort();
     }
 
-    @Override
-    public int getEchoServerPort() {
-        return insecureEchoServer.getPort();
-    }
 }

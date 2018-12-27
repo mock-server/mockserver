@@ -14,6 +14,7 @@ import org.mockserver.filters.MockServerEventLog;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.stop.Stoppable;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -22,7 +23,7 @@ import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
 
-public class EchoServer {
+public class EchoServer implements Stoppable {
 
     static final MockServerLogger mockServerLogger = new MockServerLogger(EchoServer.class);
     static final AttributeKey<MockServerEventLog> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
@@ -85,6 +86,11 @@ public class EchoServer {
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
         eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public void close() {
+        stop();
     }
 
     public Integer getPort() {

@@ -6,6 +6,7 @@ import org.mockserver.integration.server.AbstractBasicMockingIntegrationTest;
 import org.mockserver.socket.PortFactory;
 
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -21,9 +22,7 @@ public class PreAllocatedPortMockingIntegrationTest extends AbstractBasicMocking
 
     @AfterClass
     public static void stopServer() {
-        if (mockServerClient != null) {
-            mockServerClient.stop();
-        }
+        stopQuietly(mockServerClient);
     }
 
     @Override
@@ -31,8 +30,4 @@ public class PreAllocatedPortMockingIntegrationTest extends AbstractBasicMocking
         return severHttpPort;
     }
 
-    @Override
-    public int getEchoServerPort() {
-        return insecureEchoServer.getPort();
-    }
 }

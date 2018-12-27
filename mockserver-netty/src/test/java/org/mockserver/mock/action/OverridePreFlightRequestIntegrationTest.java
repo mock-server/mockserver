@@ -22,6 +22,7 @@ import static org.hamcrest.core.Is.is;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -46,9 +47,7 @@ public class OverridePreFlightRequestIntegrationTest {
 
     @AfterClass
     public static void stopServer() {
-        if (clientAndServer != null) {
-            clientAndServer.stop();
-        }
+        stopQuietly(clientAndServer);
     }
 
     @Before

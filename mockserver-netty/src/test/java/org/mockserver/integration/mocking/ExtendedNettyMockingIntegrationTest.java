@@ -11,6 +11,7 @@ import org.mockserver.mockserver.MockServer;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -27,19 +28,12 @@ public class ExtendedNettyMockingIntegrationTest extends AbstractExtendedNettyMo
 
     @AfterClass
     public static void stopServer() {
-        if (mockServerClient != null) {
-            mockServerClient.stop();
-        }
+        stopQuietly(mockServerClient);
     }
 
     @Override
     public int getServerPort() {
         return mockServerPort;
-    }
-
-    @Override
-    public int getEchoServerPort() {
-        return insecureEchoServer.getPort();
     }
 
     @Rule

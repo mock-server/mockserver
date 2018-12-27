@@ -26,6 +26,7 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -44,19 +45,12 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
 
     @AfterClass
     public static void stopServer() {
-        if (mockServerClient != null) {
-            mockServerClient.stop();
-        }
+        stopQuietly(mockServerClient);
     }
 
     @Override
     public int getServerPort() {
         return mockServerPort;
-    }
-
-    @Override
-    public int getEchoServerPort() {
-        return insecureEchoServer.getPort();
     }
 
     @Test
@@ -72,7 +66,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(getEchoServerPort())
+                    .withPort(insecureEchoServer.getPort())
             );
         mockServerClient
             .when(

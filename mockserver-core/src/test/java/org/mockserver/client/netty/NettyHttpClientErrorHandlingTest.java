@@ -26,6 +26,7 @@ import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 public class NettyHttpClientErrorHandlingTest {
 
@@ -67,7 +68,7 @@ public class NettyHttpClientErrorHandlingTest {
             new NettyHttpClient(clientEventLoopGroup, null).sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + echoServer.getPort()))
                 .get(10, TimeUnit.SECONDS);
         } finally {
-            echoServer.stop();
+            stopQuietly(echoServer);
         }
     }
 
@@ -93,7 +94,7 @@ public class NettyHttpClientErrorHandlingTest {
                     .withBody(exact("this is an "))
             ));
         } finally {
-            echoServer.stop();
+            stopQuietly(echoServer);
         }
     }
 

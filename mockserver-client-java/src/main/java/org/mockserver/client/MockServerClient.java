@@ -15,6 +15,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.*;
+import org.mockserver.stop.Stoppable;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
@@ -38,7 +39,7 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 /**
  * @author jamesdbloom
  */
-public class MockServerClient implements java.io.Closeable {
+public class MockServerClient implements Stoppable {
 
     protected final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
     private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
@@ -225,8 +226,8 @@ public class MockServerClient implements java.io.Closeable {
     /**
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
-    public MockServerClient stop() {
-        return stop(true);
+    public void stop() {
+        stop(true);
     }
 
     /**

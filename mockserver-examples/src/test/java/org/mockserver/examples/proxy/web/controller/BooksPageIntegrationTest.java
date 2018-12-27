@@ -22,6 +22,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -54,7 +55,7 @@ public abstract class BooksPageIntegrationTest {
 
     @AfterClass
     public static void stopProxy() {
-        proxy.stop();
+        stopQuietly(proxy);
         System.clearProperty("http.proxyHost");
         System.clearProperty("http.proxyPort");
     }
@@ -72,7 +73,7 @@ public abstract class BooksPageIntegrationTest {
 
     @After
     public void stopMockServer() {
-        mockServer.stop();
+        stopQuietly(mockServer);
     }
 
     @Test

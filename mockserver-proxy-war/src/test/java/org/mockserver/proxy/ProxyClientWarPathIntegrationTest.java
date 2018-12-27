@@ -13,6 +13,8 @@ import org.mockserver.socket.PortFactory;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.stop.Stop.stopQuietly;
+
 /**
  * @author jamesdbloom
  */
@@ -56,14 +58,10 @@ public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegr
     @AfterClass
     public static void stopFixture() throws Exception {
         // stop client
-        if (mockServerClient != null) {
-            mockServerClient.stop();
-        }
+        stopQuietly(mockServerClient);
 
         // stop test server
-        if (echoServer != null) {
-            echoServer.stop();
-        }
+        stopQuietly(echoServer);
 
         // stop mock server
         if (tomcat != null) {
