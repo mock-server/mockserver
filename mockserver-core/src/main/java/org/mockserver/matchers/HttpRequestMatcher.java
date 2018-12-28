@@ -109,7 +109,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                 case XPATH:
                     XPathBody xPathBody = (XPathBody) body;
                     bodyDTOMatcher = new XPathBodyDTO(xPathBody);
-                    this.bodyMatcher = new XPathStringMatcher(mockServerLogger, xPathBody.getValue());
+                    this.bodyMatcher = new XPathMatcher(mockServerLogger, xPathBody.getValue());
                     break;
                 case XML:
                     XmlBody xmlBody = (XmlBody) body;
@@ -125,6 +125,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) body;
                     bodyDTOMatcher = new JsonSchemaBodyDTO(jsonSchemaBody);
                     this.bodyMatcher = new JsonSchemaMatcher(mockServerLogger, jsonSchemaBody.getValue());
+                    break;
+                case JSON_PATH:
+                    JsonPathBody jsonPathBody = (JsonPathBody) body;
+                    bodyDTOMatcher = new JsonPathBodyDTO(jsonPathBody);
+                    this.bodyMatcher = new JsonPathMatcher(mockServerLogger, jsonPathBody.getValue());
                     break;
                 case XML_SCHEMA:
                     XmlSchemaBody xmlSchemaBody = (XmlSchemaBody) body;

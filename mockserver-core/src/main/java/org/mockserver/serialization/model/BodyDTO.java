@@ -26,6 +26,9 @@ public abstract class BodyDTO extends NotDTO implements DTO<Body> {
         } else if (body instanceof JsonSchemaBody) {
             JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) body;
             result = new JsonSchemaBodyDTO(jsonSchemaBody, jsonSchemaBody.getNot());
+        } else if (body instanceof JsonPathBody) {
+            JsonPathBody jsonPathBody = (JsonPathBody) body;
+            result = new JsonPathBodyDTO(jsonPathBody, jsonPathBody.getNot());
         } else if (body instanceof ParameterBody) {
             ParameterBody parameterBody = (ParameterBody) body;
             result = new ParameterBodyDTO(parameterBody, parameterBody.getNot());

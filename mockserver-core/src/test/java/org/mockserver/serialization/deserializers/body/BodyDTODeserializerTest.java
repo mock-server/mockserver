@@ -1028,6 +1028,74 @@ public class BodyDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJsonWithJsonPathBodyWithoutType() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"jsonPath\" : \"\\\\some\\\\path\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new JsonPathBodyDTO(new JsonPathBody("\\some\\path")))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithJsonPathBodyWithNot() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"not\" : true," + NEW_LINE +
+            "            \"jsonPath\" : \"\\\\some\\\\path\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new JsonPathBodyDTO(new JsonPathBody("\\some\\path"), true))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithJsonPathBodyUsingXpathProperty() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\" : {" + NEW_LINE +
+            "            \"type\" : \"JSON_PATH\"," + NEW_LINE +
+            "            \"jsonPath\" : \"\\\\some\\\\path\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new JsonPathBodyDTO(new JsonPathBody("\\some\\path")))
+            ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJsonWithXmlSchemaBodyWithNot() throws IOException {
         // given
         String xmlSchema = "{" + NEW_LINE +

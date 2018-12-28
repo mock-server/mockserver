@@ -5,12 +5,12 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.net.MediaType;
-import org.mockserver.serialization.Base64Converter;
-import org.mockserver.serialization.ObjectMapperFactory;
-import org.mockserver.serialization.model.*;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.model.*;
+import org.mockserver.serialization.Base64Converter;
+import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.model.*;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -33,13 +33,9 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
     static {
         fieldNameToType.put("base64Bytes".toLowerCase(), Body.Type.BINARY);
         fieldNameToType.put("json".toLowerCase(), Body.Type.JSON);
-        fieldNameToType.put("jsonSchema".toLowerCase(), Body.Type.JSON_SCHEMA);
         fieldNameToType.put("parameters".toLowerCase(), Body.Type.PARAMETERS);
-        fieldNameToType.put("regex".toLowerCase(), Body.Type.REGEX);
         fieldNameToType.put("string".toLowerCase(), Body.Type.STRING);
         fieldNameToType.put("xml".toLowerCase(), Body.Type.XML);
-        fieldNameToType.put("xmlSchema".toLowerCase(), Body.Type.XML_SCHEMA);
-        fieldNameToType.put("xpath".toLowerCase(), Body.Type.XPATH);
     }
 
     private final MockServerLogger mockServerLogger = new MockServerLogger(ObjectMapperFactory.class);
@@ -70,7 +66,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         mockServerLogger.trace("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
                     }
                 }
-                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "xml", "xmlSchema", "base64Bytes") && type != Body.Type.PARAMETERS) {
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "json", "xml", "base64Bytes") && type != Body.Type.PARAMETERS) {
                     String fieldName = jsonParser.getText().toLowerCase();
                     if (fieldNameToType.containsKey(fieldName)) {
                         type = fieldNameToType.get(fieldName);

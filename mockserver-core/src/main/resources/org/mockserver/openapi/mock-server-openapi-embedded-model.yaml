@@ -499,6 +499,16 @@ components:
             type: boolean
           type:
             enum:
+            - JSON_PATH
+          jsonPath:
+            type: string
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
             - PARAMETERS
           parameters:
             $ref: "#/components/schemas/KeyToMultiValue"

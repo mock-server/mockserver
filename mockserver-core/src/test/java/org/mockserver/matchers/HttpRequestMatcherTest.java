@@ -1,10 +1,10 @@
 package org.mockserver.matchers;
 
 import org.junit.Test;
-import org.mockserver.serialization.model.*;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
+import org.mockserver.serialization.model.*;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
@@ -19,6 +19,7 @@ import static org.mockserver.matchers.NotMatcher.not;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.JsonPathBody.jsonPath;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
@@ -883,6 +884,106 @@ public class HttpRequestMatcherTest {
             "    }," + NEW_LINE +
             "    \"required\": [\"id\", \"name\", \"price\"]" + NEW_LINE +
             "}")), mockServerLogger).matches(null, new HttpRequest().withBody(matched)));
+    }
+
+    @Test
+    public void matchesMatchingBodyJsonPath() {
+        String matched = "" +
+            "{\n" +
+            "    \"store\": {\n" +
+            "        \"book\": [\n" +
+            "            {\n" +
+            "                \"category\": \"reference\",\n" +
+            "                \"author\": \"Nigel Rees\",\n" +
+            "                \"title\": \"Sayings of the Century\",\n" +
+            "                \"price\": 8.95\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"category\": \"fiction\",\n" +
+            "                \"author\": \"Herman Melville\",\n" +
+            "                \"title\": \"Moby Dick\",\n" +
+            "                \"isbn\": \"0-553-21311-3\",\n" +
+            "                \"price\": 8.99\n" +
+            "            }\n" +
+            "        ],\n" +
+            "        \"bicycle\": {\n" +
+            "            \"color\": \"red\",\n" +
+            "            \"price\": 19.95\n" +
+            "        }\n" +
+            "    },\n" +
+            "    \"expensive\": 10\n" +
+            "}";
+        assertTrue(
+            new HttpRequestMatcher(
+                new HttpRequest()
+                    .withBody(jsonPath("$..book[?(@.price <= $['expensive'])]")),
+                mockServerLogger
+            )
+                .matches(
+                    null, new HttpRequest()
+                        .withBody(matched)
+                        .withMethod("PUT")
+                )
+        );
+    }
+
+    @Test
+    public void matchesMatchingBodyJsonPathBodyDTO() {
+        assertTrue(new HttpRequestMatcher(
+                new HttpRequest()
+                    .withBody(jsonPath("$..book[?(@.price > $['expensive'])]")),
+                mockServerLogger
+            )
+                .matches(
+                    null, new HttpRequest()
+                        .withBody(new JsonPathBodyDTO(jsonPath("$..book[?(@.price > $['expensive'])]")).toString())
+                        .withMethod("PUT")
+                )
+        );
+    }
+
+    @Test
+    public void doesNotMatchIncorrectBodyJsonPath() {
+        String matched = "" +
+            "{\n" +
+            "    \"store\": {\n" +
+            "        \"book\": [\n" +
+            "            {\n" +
+            "                \"category\": \"reference\",\n" +
+            "                \"author\": \"Nigel Rees\",\n" +
+            "                \"title\": \"Sayings of the Century\",\n" +
+            "                \"price\": 8.95\n" +
+            "            },\n" +
+            "            {\n" +
+            "                \"category\": \"fiction\",\n" +
+            "                \"author\": \"Herman Melville\",\n" +
+            "                \"title\": \"Moby Dick\",\n" +
+            "                \"isbn\": \"0-553-21311-3\",\n" +
+            "                \"price\": 8.99\n" +
+            "            }\n" +
+            "        ],\n" +
+            "        \"bicycle\": {\n" +
+            "            \"color\": \"red\",\n" +
+            "            \"price\": 19.95\n" +
+            "        }\n" +
+            "    },\n" +
+            "    \"expensive\": 10\n" +
+            "}";
+        assertFalse(new HttpRequestMatcher(new HttpRequest().withBody(jsonPath("$..book[?(@.price > $['expensive'])]")), mockServerLogger).matches(null, new HttpRequest().withBody(matched)));
+    }
+
+    @Test
+    public void doesNotMatchIncorrectBodyJsonPathBodyDTO() {
+        assertFalse(new HttpRequestMatcher(
+                new HttpRequest().withBody(
+                    xpath("$..book[?(@.price > $['expensive'])]")
+                )
+                , mockServerLogger).matches(
+            null, new HttpRequest().withBody(
+                new JsonPathBodyDTO(jsonPath("$..book[?(@.price <= $['expensive'])]")).toString()
+            )
+            )
+        );
     }
 
     @Test

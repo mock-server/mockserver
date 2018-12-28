@@ -92,6 +92,8 @@ public class ObjectMapperFactory {
             addSerializer(JsonBodyDTO.class, new JsonBodyDTOSerializer());
             addSerializer(JsonSchemaBody.class, new JsonSchemaBodySerializer());
             addSerializer(JsonSchemaBodyDTO.class, new JsonSchemaBodyDTOSerializer());
+            addSerializer(JsonPathBody.class, new JsonPathBodySerializer());
+            addSerializer(JsonPathBodyDTO.class, new JsonPathBodyDTOSerializer());
             addSerializer(ParameterBody.class, new ParameterBodySerializer());
             addSerializer(ParameterBodyDTO.class, new ParameterBodyDTOSerializer());
             addSerializer(RegexBody.class, new RegexBodySerializer());
@@ -100,10 +102,10 @@ public class ObjectMapperFactory {
             addSerializer(StringBodyDTO.class, new StringBodyDTOSerializer());
             addSerializer(XmlBody.class, new XmlBodySerializer());
             addSerializer(XmlBodyDTO.class, new XmlBodyDTOSerializer());
-            addSerializer(XPathBody.class, new XPathBodySerializer());
-            addSerializer(XPathBodyDTO.class, new XPathBodyDTOSerializer());
             addSerializer(XmlSchemaBody.class, new XmlSchemaBodySerializer());
             addSerializer(XmlSchemaBodyDTO.class, new XmlSchemaBodyDTOSerializer());
+            addSerializer(XPathBody.class, new XPathBodySerializer());
+            addSerializer(XPathBodyDTO.class, new XPathBodyDTOSerializer());
             // condition
             addDeserializer(VerificationTimesDTO.class, new VerificationTimesDTODeserializer());
             addSerializer(VerificationTimesDTO.class, new VerificationTimesDTOSerializer());

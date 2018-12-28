@@ -58,7 +58,7 @@ public class MockServerClientServerVallidationErrorsTest {
                 "   {" + NEW_LINE +
                 "     \"not\": false," + NEW_LINE +
                 "     \"type\": \"PARAMETERS\"," + NEW_LINE +
-                "     \"parameters\": \"TO DO\"" + NEW_LINE +
+                "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
                 "   }," + NEW_LINE +
                 "   {" + NEW_LINE +
                 "     \"not\": false," + NEW_LINE +

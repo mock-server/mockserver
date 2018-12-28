@@ -47,6 +47,7 @@ public abstract class Body<T> extends Not {
         BINARY,
         JSON,
         JSON_SCHEMA,
+        JSON_PATH,
         PARAMETERS,
         REGEX,
         STRING,
