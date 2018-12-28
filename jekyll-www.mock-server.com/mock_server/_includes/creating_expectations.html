@@ -68,13 +68,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li><strong>cookies</strong> - key to value as a <a href="#button_match_request_by_cookies_and_query_parameters">plain text</a>, regular expression or negated matcher</li>
     <li><strong>body</strong>
         <ul>
-            <li><strong><a href="#button_match_request_by_body_with_xpath">XPath</a></strong></li>
+            <li><strong><a href="#button_match_request_by_body_in_utf16">plain text</a></strong> (i.e. exact match)</li>
+            <li><strong><a href="#button_match_request_by_regex_body">regular expression</a></strong></li>
+            <li><strong><a href="#button_match_request_by_body_with_json_exactly">JSON</a></strong> - supports both <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request matcher</li>
+            <li><strong><a href="#button_match_request_by_body_with_json_schema">JSON Schema</a></strong></li>
+            <li><strong><a href="#button_match_request_by_body_with_json_path">JsonPath</a></strong> - matches if at least one value returned by expression</li>
             <li><strong><a href="#button_match_request_by_body_with_xml">XML</a></strong></li>
             <li><strong><a href="#button_match_request_by_body_with_xml_schema">XML Schema</a></strong></li>
-            <li><strong><a href="#button_match_request_by_body_with_json_exactly">JSON</a></strong> - supports two match types <strong>STRICT</strong> and <strong>ONLY_MATCHING_FIELDS</strong>.  <strong>STRICT</strong> match type matches all fields and the order of arrays.  In <strong>STRICT</strong> match type extra fields will cause the matcher to fail. <strong>ONLY_MATCHING_FIELDS</strong> match type only matches fields provided in the request matcher.</li>
-            <li><strong><a href="#button_match_request_by_body_with_json_schema">JSON Schema</a></strong></li>
-            <li><strong><a href="#button_match_request_by_regex_body">regular expression</a></strong></li>
-            <li><strong><a href="#button_match_request_by_body_in_utf16">plain text</a></strong> (i.e. exact match)</li>
+            <li><strong><a href="#button_match_request_by_body_with_xpath">XPath</a></strong> - matches if at least one value returned by expression</li>
             <li><strong><a href="#button_match_request_by_form_submission_body">form fields</a></strong> (i.e. body parameters)</li>
             <li><strong><a href="#button_match_request_by_not_matching_body_with_xpath">negated matcher</a></strong></li>
         </ul>
