@@ -10,8 +10,8 @@ echo
 
 if test "$BUILDKITE_BRANCH" = "master"; then
     echo "BRANCH: MASTER"
-    mvn -T 1C clean install $1 -Djava.security.egd=file:/dev/./urandom
+    mvn clean install $1 -Djava.security.egd=file:/dev/./urandom
 else
     echo "BRANCH: $CURRENT_BRANCH"
-    mvn -T 1C clean install $1 -Djava.security.egd=file:/dev/./urandom
+    mvn clean install $1 -Djava.security.egd=file:/dev/./urandom
 fi
