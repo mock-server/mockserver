@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>9</version>
-    </parent>
-
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.mock-server</groupId>
@@ -34,6 +28,17 @@
         <developerConnection>scm:git:git@github.com:jamesdbloom/mockservice.git</developerConnection>
     </scm>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
     <developers>
         <developer>
             <id>jamesdbloom</id>
@@ -57,8 +62,8 @@
         <boucycastle.verion>1.60</boucycastle.verion>
         <spring.version>4.3.18.RELEASE</spring.version>
         <skipTests>false</skipTests>
-        <release.arguments />
-        <javadoc.additional.parameters />
+        <release.arguments/>
+        <javadoc.additional.parameters/>
     </properties>
 
     <modules>
@@ -423,6 +428,103 @@
                 <javadoc.additional.parameters>-Xdoclint:none</javadoc.additional.parameters>
             </properties>
         </profile>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <!-- generate sources -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>templating-maven-plugin</artifactId>
+                        <version>1.0.0</version>
+                        <executions>
+                            <execution>
+                                <id>generate-verion-class</id>
+                                <goals>
+                                    <goal>filter-sources</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- generate javadoc -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <configuration>
+                            <excludePackageNames>org.mockserver.examples:org.mockserver.examples.*</excludePackageNames>
+                            <failOnError>false</failOnError>
+                            <!--<additionalparam>${javadoc.additional.parameters}</additionalparam>-->
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>aggregate</id>
+                                <goals>
+                                    <goal>aggregate</goal>
+                                </goals>
+                                <phase>site</phase>
+                                <configuration>
+                                    <excludePackageNames>org.mockserver.examples:org.mockserver.examples.*</excludePackageNames>
+                                    <reportOutputDirectory>${basedir}/jekyll-www.mock-server.com/_site</reportOutputDirectory>
+                                    <destDir>apidocs</destDir>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- sign releases -->
+                    <!-- Error:
+                          gpg: signing failed: Inappropriate ioctl for device
+                         Fix:
+                          $ GPG_TTY=$(tty)
+                          $ export GPG_TTY -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- perform releases -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>2.5.3</version>
+                        <configuration>
+                            <autoVersionSubmodules>true</autoVersionSubmodules>
+                            <useReleaseProfile>false</useReleaseProfile>
+                            <releaseProfiles>release</releaseProfiles>
+                            <goals>deploy</goals>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <build>
@@ -453,68 +555,11 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- generate sources -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>templating-maven-plugin</artifactId>
-                <version>1.0.0</version>
-                <executions>
-                    <execution>
-                        <id>generate-verion-class</id>
-                        <goals>
-                            <goal>filter-sources</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- generate javadoc -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.0.1</version>
-                <configuration>
-                    <excludePackageNames>org.mockserver.examples:org.mockserver.examples.*</excludePackageNames>
-                    <failOnError>false</failOnError>
-                    <!--<additionalparam>${javadoc.additional.parameters}</additionalparam>-->
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>aggregate</id>
-                        <goals>
-                            <goal>aggregate</goal>
-                        </goals>
-                        <phase>site</phase>
-                        <configuration>
-                            <excludePackageNames>org.mockserver.examples:org.mockserver.examples.*</excludePackageNames>
-                            <reportOutputDirectory>${basedir}/jekyll-www.mock-server.com/_site</reportOutputDirectory>
-                            <destDir>apidocs</destDir>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <!-- output MANIFEST.MF file -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.1.1</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -561,11 +606,11 @@
                     </filesets>
                 </configuration>
             </plugin>
-            <!-- testing & coverage -->
+            <!-- testing -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.20.1</version>
+                <version>2.22.1</version>
                 <configuration>
                     <!-- allow debugging tests -->
                     <!--<forkCount>0</forkCount>-->
@@ -587,7 +632,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.20.1</version>
+                <version>2.22.1</version>
                 <configuration>
                     <!-- allow debugging tests -->
                     <!--<forkCount>0</forkCount>-->
@@ -611,6 +656,7 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- code format -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -632,15 +678,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <configuration>
-                    <mavenExecutorId>forked-path</mavenExecutorId>
-                    <useReleaseProfile>false</useReleaseProfile>
-                    <arguments>-Psonatype-oss-release ${release.arguments}</arguments>
-                </configuration>
             </plugin>
         </plugins>
     </build>

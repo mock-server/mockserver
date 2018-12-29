@@ -9,4 +9,6 @@ echo
 mvn -version
 echo
 
-mvn clean deploy $1 -Djava.security.egd=file:/dev/./urandom
+export GPG_TTY=$(tty)
+
+mvn clean deploy -P release $1 -Djava.security.egd=file:/dev/./urandom
