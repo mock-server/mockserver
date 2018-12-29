@@ -4,7 +4,7 @@
 
     <groupId>org.mock-server</groupId>
     <artifactId>mockserver</artifactId>
-    <version>5.5.1-SNAPSHOT</version>
+    <version>5.5.1</version>
     <packaging>pom</packaging>
 
     <name>MockServer</name>
@@ -26,7 +26,8 @@
         <url>https://github.com/jamesdbloom/mockservice.git</url>
         <connection>scm:git:https://github.com/jamesdbloom/mockservice.git</connection>
         <developerConnection>scm:git:git@github.com:jamesdbloom/mockservice.git</developerConnection>
-    </scm>
+      <tag>mockserver-5.5.1</tag>
+  </scm>
 
     <distributionManagement>
         <snapshotRepository>
@@ -62,8 +63,8 @@
         <boucycastle.verion>1.60</boucycastle.verion>
         <spring.version>4.3.18.RELEASE</spring.version>
         <skipTests>false</skipTests>
-        <release.arguments/>
-        <javadoc.additional.parameters/>
+        <release.arguments />
+        <javadoc.additional.parameters />
     </properties>
 
     <modules>
