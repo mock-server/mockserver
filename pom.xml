@@ -507,6 +507,7 @@
                             <useReleaseProfile>false</useReleaseProfile>
                             <releaseProfiles>release</releaseProfiles>
                             <goals>deploy</goals>
+                            <arguments>${release.arguments}</arguments>
                         </configuration>
                     </plugin>
                 </plugins>
