@@ -14,7 +14,7 @@ To install the chart with:
 Remotely using `www.mock-server.com` as a chart repo:
 
 ```bash
-helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.5.0.tgz
+helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.5.1.tgz
 ```
 
 **OR** 
