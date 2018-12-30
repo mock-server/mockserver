@@ -70,6 +70,21 @@ public class HttpStateHandlerTest {
     }
 
     @Test
+    public void shouldAllowAddingOfExceptionsWithNullFields() {
+        // given - some existing expectations
+        Expectation expectationOne = new Expectation(null).thenRespond(response("response_one"));
+        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond((HttpResponse)null);
+
+        // when
+        httpStateHandler.add(expectationOne);
+        httpStateHandler.add(expectationTwo);
+
+        // then - correct expectations exist
+        assertThat(httpStateHandler.firstMatchingExpectation(null), is(expectationOne));
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_two")), is(expectationOne));
+    }
+
+    @Test
     public void shouldClearLogsAndExpectationsForNullRequestMatcher() {
         // given - a request
         HttpRequest request = request();
