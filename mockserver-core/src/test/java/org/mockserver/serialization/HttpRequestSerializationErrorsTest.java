@@ -71,14 +71,14 @@ public class HttpRequestSerializationErrorsTest {
     }
 
     @Test
-    public void shouldHandleNullAndEmptyWhileSerializingArray() throws IOException {
+    public void shouldHandleNullAndEmptyWhileSerializingArray() {
         // when
         assertEquals("[]", httpRequestSerializer.serialize(new HttpRequest[]{}));
         assertEquals("[]", httpRequestSerializer.serialize((HttpRequest[]) null));
     }
 
     @Test
-    public void shouldHandleExceptionWhileDeserializingObject() throws IOException {
+    public void shouldHandleExceptionWhileDeserializingObject() {
         // given
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("JsonParseException - Unrecognized token 'requestBytes': was expecting ('true', 'false' or 'null')");
@@ -88,10 +88,10 @@ public class HttpRequestSerializationErrorsTest {
     }
 
     @Test
-    public void shouldHandleExceptionWhileDeserializingArray() throws IOException {
+    public void shouldHandleExceptionWhileDeserializingArray() {
         // given
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'requestBytes': was expecting ('true', 'false' or 'null')" + NEW_LINE +
+        thrown.expectMessage("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'requestBytes': was expecting ('true', 'false' or 'null')\n" +
                 " at [Source: (String)\"requestBytes\"; line: 1, column: 25]");
 
         // when
@@ -99,7 +99,7 @@ public class HttpRequestSerializationErrorsTest {
     }
 
     @Test
-    public void shouldValidateInputForArray() throws IOException {
+    public void shouldValidateInputForArray() {
         // given
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("1 error:" + NEW_LINE +

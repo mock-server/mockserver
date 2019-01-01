@@ -12,13 +12,11 @@ import java.nio.ByteBuffer;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.mockserver.character.Character.NEW_LINE;
 
 /**
  * @author jamesdbloom
  */
 public class IOStreamUtilsTest {
-
 
     @Test
     public void shouldReadSocketInputStreamToString() throws IOException {
@@ -38,31 +36,31 @@ public class IOStreamUtilsTest {
         // given
         Socket socket = mock(Socket.class);
         when(socket.getInputStream()).thenReturn(IOUtils.toInputStream("" +
-                        "Cache-Control:public, max-age=60\r\n" +
-                        "Content-Length:10\r\n" +
-                        "Content-Type:text/html; charset=utf-8\r\n" +
-                        "Date:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
-                        "Expires:Sat, 04 Jan 2014 17:19:54 GMT\r\n" +
-                        "Last-Modified:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
-                        "Vary:*\n" +
-                        "\r\n" +
-                        "1234567890",
-                UTF_8));
+                "Cache-Control:public, max-age=60\r\n" +
+                "Content-Length:10\r\n" +
+                "Content-Type:text/html; charset=utf-8\r\n" +
+                "Date:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
+                "Expires:Sat, 04 Jan 2014 17:19:54 GMT\r\n" +
+                "Last-Modified:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
+                "Vary:*\r\n" +
+                "\r\n" +
+                "1234567890",
+            UTF_8));
 
         // when
         String result = IOStreamUtils.readInputStreamToString(socket);
 
         // then
         assertEquals("" +
-                "Cache-Control:public, max-age=60\n" +
-                "Content-Length:10\n" +
-                "Content-Type:text/html; charset=utf-8\n" +
-                "Date:Sat, 04 Jan 2014 17:18:54 GMT\n" +
-                "Expires:Sat, 04 Jan 2014 17:19:54 GMT\n" +
-                "Last-Modified:Sat, 04 Jan 2014 17:18:54 GMT\n" +
-                "Vary:*\n" +
-                "\n" +
-                "1234567890", result);
+            "Cache-Control:public, max-age=60\n" +
+            "Content-Length:10\n" +
+            "Content-Type:text/html; charset=utf-8\n" +
+            "Date:Sat, 04 Jan 2014 17:18:54 GMT\n" +
+            "Expires:Sat, 04 Jan 2014 17:19:54 GMT\n" +
+            "Last-Modified:Sat, 04 Jan 2014 17:18:54 GMT\n" +
+            "Vary:*\n" +
+            "\n" +
+            "1234567890", result);
     }
 
     @Test
@@ -70,31 +68,31 @@ public class IOStreamUtilsTest {
         // given
         Socket socket = mock(Socket.class);
         when(socket.getInputStream()).thenReturn(IOUtils.toInputStream("" +
-                        "cache-control:public, max-age=60\r\n" +
-                        "content-length:10\r\n" +
-                        "content-type:text/html; charset=utf-8\r\n" +
-                        "date:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
-                        "expires:Sat, 04 Jan 2014 17:19:54 GMT\r\n" +
-                        "last-modified:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
-                        "vary:*\n" +
-                        "\r\n" +
-                        "1234567890",
-                UTF_8));
+                "cache-control:public, max-age=60\r\n" +
+                "content-length:10\r\n" +
+                "content-type:text/html; charset=utf-8\r\n" +
+                "date:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
+                "expires:Sat, 04 Jan 2014 17:19:54 GMT\r\n" +
+                "last-modified:Sat, 04 Jan 2014 17:18:54 GMT\r\n" +
+                "vary:*\r\n" +
+                "\r\n" +
+                "1234567890",
+            UTF_8));
 
         // when
         String result = IOStreamUtils.readInputStreamToString(socket);
 
         // then
         assertEquals("" +
-                "cache-control:public, max-age=60\n" +
-                "content-length:10\n" +
-                "content-type:text/html; charset=utf-8\n" +
-                "date:Sat, 04 Jan 2014 17:18:54 GMT\n" +
-                "expires:Sat, 04 Jan 2014 17:19:54 GMT\n" +
-                "last-modified:Sat, 04 Jan 2014 17:18:54 GMT\n" +
-                "vary:*\n" +
-                "\n" +
-                "1234567890", result);
+            "cache-control:public, max-age=60\n" +
+            "content-length:10\n" +
+            "content-type:text/html; charset=utf-8\n" +
+            "date:Sat, 04 Jan 2014 17:18:54 GMT\n" +
+            "expires:Sat, 04 Jan 2014 17:19:54 GMT\n" +
+            "last-modified:Sat, 04 Jan 2014 17:18:54 GMT\n" +
+            "vary:*\n" +
+            "\n" +
+            "1234567890", result);
     }
 
     @Test
@@ -102,7 +100,7 @@ public class IOStreamUtilsTest {
         // given
         ServletRequest servletRequest = mock(ServletRequest.class);
         when(servletRequest.getInputStream()).thenReturn(
-                new DelegatingServletInputStream(IOUtils.toInputStream("bytes", UTF_8))
+            new DelegatingServletInputStream(IOUtils.toInputStream("bytes", UTF_8))
         );
 
         // when
@@ -127,7 +125,7 @@ public class IOStreamUtilsTest {
         // given
         ServletRequest servletRequest = mock(ServletRequest.class);
         when(servletRequest.getInputStream()).thenReturn(
-                new DelegatingServletInputStream(IOUtils.toInputStream("bytes", UTF_8))
+            new DelegatingServletInputStream(IOUtils.toInputStream("bytes", UTF_8))
         );
 
         // when
