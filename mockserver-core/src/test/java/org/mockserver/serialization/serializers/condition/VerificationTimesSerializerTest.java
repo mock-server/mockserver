@@ -6,6 +6,7 @@ import org.mockserver.serialization.ObjectMapperFactory;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.verify.VerificationTimes.*;
 
 /**
@@ -21,9 +22,9 @@ public class VerificationTimesSerializerTest {
                 .writeValueAsString(
                     between(1, 2)
                 ),
-            is("{\n" +
-                "  \"atLeast\" : 1,\n" +
-                "  \"atMost\" : 2\n" +
+            is("{" + NEW_LINE +
+                "  \"atLeast\" : 1," + NEW_LINE +
+                "  \"atMost\" : 2" + NEW_LINE +
                 "}"));
     }
 
@@ -35,9 +36,9 @@ public class VerificationTimesSerializerTest {
                 .writeValueAsString(
                     once()
                 ),
-            is("{\n" +
-                "  \"atLeast\" : 1,\n" +
-                "  \"atMost\" : 1\n" +
+            is("{" + NEW_LINE +
+                "  \"atLeast\" : 1," + NEW_LINE +
+                "  \"atMost\" : 1" + NEW_LINE +
                 "}"));
     }
 
@@ -49,9 +50,9 @@ public class VerificationTimesSerializerTest {
                 .writeValueAsString(
                     exactly(2)
                 ),
-            is("{\n" +
-                "  \"atLeast\" : 2,\n" +
-                "  \"atMost\" : 2\n" +
+            is("{" + NEW_LINE +
+                "  \"atLeast\" : 2," + NEW_LINE +
+                "  \"atMost\" : 2" + NEW_LINE +
                 "}"));
     }
 
@@ -63,8 +64,8 @@ public class VerificationTimesSerializerTest {
                 .writeValueAsString(
                     atLeast(2)
                 ),
-            is("{\n" +
-                "  \"atLeast\" : 2\n" +
+            is("{" + NEW_LINE +
+                "  \"atLeast\" : 2" + NEW_LINE +
                 "}"));
     }
 
@@ -76,8 +77,8 @@ public class VerificationTimesSerializerTest {
                 .writeValueAsString(
                     atMost(2)
                 ),
-            is("{\n" +
-                "  \"atMost\" : 2\n" +
+            is("{" + NEW_LINE +
+                "  \"atMost\" : 2" + NEW_LINE +
                 "}"));
     }
 }
