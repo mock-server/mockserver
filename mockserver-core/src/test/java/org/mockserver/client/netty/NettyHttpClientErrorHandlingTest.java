@@ -63,7 +63,6 @@ public class NettyHttpClientErrorHandlingTest {
         try {
             // then
             exception.expect(ExecutionException.class);
-            exception.expectMessage(containsString("Exception caught before valid response has been received"));
             exception.expectMessage(anyOf(
                 containsString("Exception caught before valid response has been received"),
                 containsString("Channel set as inactive before valid response has been received")

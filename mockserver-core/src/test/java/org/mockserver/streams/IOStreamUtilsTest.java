@@ -29,7 +29,7 @@ public class IOStreamUtilsTest {
         String result = new IOStreamUtils().readInputStreamToString(socket);
 
         // then
-        assertEquals("bytes\n", result);
+        assertEquals("bytes" + NEW_LINE, result);
     }
 
     @Test
