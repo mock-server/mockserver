@@ -606,8 +606,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // when
             output.write(("" +
                 "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0\r" + NEW_LINE +
-                "\r\n"
+                "Content-Length: 0" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -615,7 +615,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             assertThat(IOStreamUtils.readInputStreamToString(socket), is("" +
                 "HTTP/1.1 200 OK" + NEW_LINE +
                 "content-type: audio/*" + NEW_LINE +
-                "connection: close\n"
+                "connection: close" + NEW_LINE
             ));
 
             TimeUnit.SECONDS.sleep(3);
@@ -651,8 +651,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // when
             output.write(("" +
                 "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0\r" + NEW_LINE +
-                "\r\n"
+                "Content-Length: 0" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -660,7 +660,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             assertThat(IOStreamUtils.readInputStreamToString(sslSocket), is("" +
                 "HTTP/1.1 200 OK" + NEW_LINE +
                 "content-type: audio/*" + NEW_LINE +
-                "connection: close\n"
+                "connection: close" + NEW_LINE
             ));
         } finally {
             if (sslSocket != null) {
@@ -693,8 +693,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // when
             output.write(("" +
                 "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0\r" + NEW_LINE +
-                "\r\n"
+                "Content-Length: 0" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -716,8 +716,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // when
             output.write(("" +
                 "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0\r" + NEW_LINE +
-                "\r\n"
+                "Content-Length: 0" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -753,8 +753,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // when
             output.write(("" +
                 "GET " + calculatePath("http_error") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0\r" + NEW_LINE +
-                "\r\n"
+                "Content-Length: 0" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
