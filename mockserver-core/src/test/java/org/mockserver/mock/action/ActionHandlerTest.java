@@ -11,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
 import org.mockserver.log.model.RequestResponseLogEntry;
@@ -23,14 +22,15 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
 
-import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
+import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXPECTATION_RESPONSE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.FORWARDED_REQUEST;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
@@ -47,48 +47,35 @@ import static org.mockserver.model.HttpTemplate.template;
  */
 public class ActionHandlerTest {
 
+    private static Scheduler scheduler;
     @Mock
     private HttpResponseActionHandler mockHttpResponseActionHandler;
-
     @Mock
     private HttpResponseTemplateActionHandler mockHttpResponseTemplateActionHandler;
-
     @Mock
     private HttpResponseClassCallbackActionHandler mockHttpResponseClassCallbackActionHandler;
-
     @Mock
     private HttpResponseObjectCallbackActionHandler mockHttpResponseObjectCallbackActionHandler;
-
     @Mock
     private HttpForwardActionHandler mockHttpForwardActionHandler;
-
     @Mock
     private HttpForwardTemplateActionHandler mockHttpForwardTemplateActionHandler;
-
     @Mock
     private HttpForwardClassCallbackActionHandler mockHttpForwardClassCallbackActionHandler;
-
     @Mock
     private HttpForwardObjectCallbackActionHandler mockHttpForwardObjectCallbackActionHandler;
-
     @Mock
     private HttpOverrideForwardedRequestActionHandler mockHttpOverrideForwardedRequestActionHandler;
-
     @Mock
     private HttpErrorActionHandler mockHttpErrorActionHandler;
-
     @Mock
     private ResponseWriter mockResponseWriter;
-
     @Mock
     private MockServerLogger mockLogFormatter;
-
     @Spy
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
-
     @Mock
     private NettyHttpClient mockNettyHttpClient;
-
     private HttpStateHandler mockHttpStateHandler;
     private HttpRequest request;
     private HttpResponse response;
@@ -96,10 +83,13 @@ public class ActionHandlerTest {
     private HttpRequest forwardedHttpRequest;
     private HttpForwardActionResult httpForwardActionResult;
     private Expectation expectation;
-    private static Scheduler scheduler;
-
     @InjectMocks
     private ActionHandler actionHandler;
+
+    @AfterClass
+    public static void stopScheduler() {
+        scheduler.shutdown();
+    }
 
     @Before
     public void setupMocks() {
@@ -125,11 +115,6 @@ public class ActionHandlerTest {
         when(mockHttpForwardTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenReturn(httpForwardActionResult);
         when(mockHttpForwardClassCallbackActionHandler.handle(any(HttpClassCallback.class), any(HttpRequest.class))).thenReturn(httpForwardActionResult);
         when(mockHttpOverrideForwardedRequestActionHandler.handle(any(HttpOverrideForwardedRequest.class), any(HttpRequest.class))).thenReturn(httpForwardActionResult);
-    }
-
-    @AfterClass
-    public static void stopScheduler() {
-        scheduler.shutdown();
     }
 
     @Test
@@ -334,7 +319,7 @@ public class ActionHandlerTest {
         verify(mockLogFormatter).info(
             FORWARDED_REQUEST,
             request,
-            "returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}",
+            "returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}",
             response,
             request,
             httpRequestToCurlSerializer.toCurl(request, remoteAddress)

@@ -2,10 +2,10 @@ package org.mockserver.serialization.java;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
-import org.mockserver.serialization.Base64Converter;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+import org.mockserver.serialization.Base64Converter;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -228,18 +228,17 @@ public class ExpectationToJavaSerializerTest {
                     unlimited()
                 )
                     .thenRespond(
-                        template(HttpTemplate.TemplateType.JAVASCRIPT, "if (request.method === 'POST' && request.path === '/somePath') {" + NEW_LINE +
-                            "    return {" + NEW_LINE +
-                            "        'statusCode': 200," + NEW_LINE +
-                            "        'body': JSON.stringify({name: 'value'})" + NEW_LINE +
-                            "    };" + NEW_LINE +
-                            "} else {" + NEW_LINE +
-                            "    return {" + NEW_LINE +
-                            "        'statusCode': 406," + NEW_LINE +
-                            "        'body': request.body" + NEW_LINE +
-                            "    };" + NEW_LINE +
-                            "}"
-                        )
+                        template(HttpTemplate.TemplateType.JAVASCRIPT, "if (request.method === 'POST' && request.path === '/somePath') {\n" +
+                            "    return {\n" +
+                            "        'statusCode': 200,\n" +
+                            "        'body': JSON.stringify({name: 'value'})\n" +
+                            "    };\n" +
+                            "} else {\n" +
+                            "    return {\n" +
+                            "        'statusCode': 406,\n" +
+                            "        'body': request.body\n" +
+                            "    };\n" +
+                            "}")
                     )
             )
         );
