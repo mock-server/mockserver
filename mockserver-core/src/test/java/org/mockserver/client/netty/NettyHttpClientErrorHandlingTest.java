@@ -46,6 +46,7 @@ public class NettyHttpClientErrorHandlingTest {
         exception.expect(ExecutionException.class);
         exception.expectMessage(anyOf(
             containsString("Connection refused: /127.0.0.1:" + freePort),
+            containsString("Connection refused: no further information: /127.0.0.1:" + freePort),
             containsString("Channel closed before valid response")
         ));
 
@@ -63,6 +64,10 @@ public class NettyHttpClientErrorHandlingTest {
             // then
             exception.expect(ExecutionException.class);
             exception.expectMessage(containsString("Exception caught before valid response has been received"));
+            exception.expectMessage(anyOf(
+                containsString("Exception caught before valid response has been received"),
+                containsString("Channel set as inactive before valid response has been received")
+            ));
 
             // when
             new NettyHttpClient(clientEventLoopGroup, null).sendRequest(request().withSecure(true).withHeader(HOST.toString(), "127.0.0.1:" + echoServer.getPort()))
