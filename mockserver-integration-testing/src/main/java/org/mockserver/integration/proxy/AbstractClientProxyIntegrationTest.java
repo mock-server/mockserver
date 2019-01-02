@@ -124,11 +124,11 @@ public abstract class AbstractClientProxyIntegrationTest {
             // when
             // - send GET request for headers only
             output.write(("" +
-                "GET " + addContextToPath("test_headers_only") + " HTTP/1.1\r" + NEW_LINE +
-                "Host: localhost:" + getServerPort() + "\r" + NEW_LINE +
-                "x-test: test_headers_only\r" + NEW_LINE +
-                "Connection: keep-alive\r" + NEW_LINE +
-                "\r\n"
+                "GET " + addContextToPath("test_headers_only") + " HTTP/1.1" + NEW_LINE +
+                "Host: localhost:" + getServerPort() + "" + NEW_LINE +
+                "x-test: test_headers_only" + NEW_LINE +
+                "Connection: keep-alive" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -145,11 +145,11 @@ public abstract class AbstractClientProxyIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                "GET " + addContextToPath("test_headers_and_body") + " HTTP/1.1\r" + NEW_LINE +
-                "Host: localhost:" + getServerPort() + "\r" + NEW_LINE +
-                "Content-Length: " + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "\r" + NEW_LINE +
-                "x-test: test_headers_and_body\r" + NEW_LINE +
-                "\r" + NEW_LINE +
+                "GET " + addContextToPath("test_headers_and_body") + " HTTP/1.1" + NEW_LINE +
+                "Host: localhost:" + getServerPort() + "" + NEW_LINE +
+                "Content-Length: " + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "" + NEW_LINE +
+                "x-test: test_headers_and_body" + NEW_LINE +
+                NEW_LINE +
                 "an_example_body"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
@@ -262,10 +262,10 @@ public abstract class AbstractClientProxyIntegrationTest {
             // when
             // - send GET request
             output.write(("" +
-                "GET " + addContextToPath("not_found") + " HTTP/1.1\r" + NEW_LINE +
-                "Host: localhost:" + getServerPort() + "\r" + NEW_LINE +
-                "Connection: close\r" + NEW_LINE +
-                "\r\n"
+                "GET " + addContextToPath("not_found") + " HTTP/1.1" + NEW_LINE +
+                "Host: localhost:" + getServerPort() + "" + NEW_LINE +
+                "Connection: close" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
