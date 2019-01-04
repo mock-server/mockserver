@@ -7,13 +7,14 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 
 /**
  * @author jamesdbloom
  */
-public class HttpResponse extends Action<HttpResponse> {
+public class HttpResponse extends Action<HttpResponse> implements HttpObject<HttpResponse, BodyWithContentType> {
     private Integer statusCode;
     private String reasonPhrase;
     private BodyWithContentType body;
@@ -156,6 +157,11 @@ public class HttpResponse extends Action<HttpResponse> {
     }
 
     @JsonIgnore
+    public byte[] getBodyAsRawBytes() {
+        return this.body != null ? this.body.getRawBytes() : new byte[0];
+    }
+
+    @JsonIgnore
     public String getBodyAsString() {
         if (body != null) {
             return body.toString();
@@ -215,6 +221,19 @@ public class HttpResponse extends Action<HttpResponse> {
      */
     public HttpResponse withHeader(String name, String... values) {
         this.headers.withEntry(name, values);
+        return this;
+    }
+
+    /**
+     * Add a header to return as a Header object, if a header with
+     * the same name already exists this will NOT be modified but
+     * two headers will exist
+     *
+     * @param name   the header name as a NottableString
+     * @param values the header values which can be a varags of NottableStrings
+     */
+    public HttpResponse withHeader(NottableString name, NottableString... values) {
+        this.headers.withEntry(header(name, values));
         return this;
     }
 

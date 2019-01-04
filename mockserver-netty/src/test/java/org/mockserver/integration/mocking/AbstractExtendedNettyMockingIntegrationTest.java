@@ -2,10 +2,14 @@ package org.mockserver.integration.mocking;
 
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
+import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
 import org.junit.Test;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.server.AbstractExtendedSameJVMMockingIntegrationTest;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
+import org.mockserver.metrics.Metrics;
 import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
@@ -639,7 +643,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     containsString("Connection reset"),
                     containsString("Protocol wrong type"),
                     containsString("Software caused connection abort")
-                    ));
+                ));
             }
         } finally {
             if (socket != null) {

@@ -1,7 +1,10 @@
 package org.mockserver.client;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
+import org.mockserver.metrics.Metrics;
+import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;

@@ -4,15 +4,18 @@ import org.mockserver.collections.CircularLinkedList;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
+import org.mockserver.metrics.Metrics;
+import org.mockserver.model.Action;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.ui.MockServerMatcherNotifier;
-import org.mockserver.model.HttpRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import static org.mockserver.configuration.ConfigurationProperties.maxExpectations;
+import static org.mockserver.metrics.Metrics.Name.*;
 
 /**
  * @author jamesdbloom
@@ -30,6 +33,9 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     public synchronized void add(Expectation expectation) {
         httpRequestMatchers.add(matcherBuilder.transformsToMatcher(expectation));
         notifyListeners(this);
+        if (expectation != null && expectation.getAction() != null) {
+            Metrics.increment(expectation.getAction().getType());
+        }
     }
 
     private synchronized List<HttpRequestMatcher> cloneMatchers() {
@@ -38,6 +44,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
 
     public synchronized void reset() {
         httpRequestMatchers.clear();
+        Metrics.clearActionMetrics();
         notifyListeners(this);
     }
 
@@ -50,12 +57,20 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
             if (!httpRequestMatcher.isActive()) {
                 if (httpRequestMatchers.contains(httpRequestMatcher)) {
                     httpRequestMatchers.remove(httpRequestMatcher);
+                    Metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
                     notifyListeners(this);
                 }
             }
             if (matchingExpectation != null) {
                 break;
             }
+        }
+        if (matchingExpectation == null || matchingExpectation.getAction() == null) {
+            Metrics.increment(EXPECTATION_NOT_MATCHED_COUNT);
+        } else if (matchingExpectation.getAction().getType().direction == Action.Direction.FORWARD) {
+            Metrics.increment(FORWARD_EXPECTATION_MATCHED_COUNT);
+        } else {
+            Metrics.increment(RESPONSE_EXPECTATION_MATCHED_COUNT);
         }
         return matchingExpectation;
     }
@@ -67,6 +82,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
                 if (clearHttpRequestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
                     if (httpRequestMatchers.contains(httpRequestMatcher)) {
                         httpRequestMatchers.remove(httpRequestMatcher);
+                        Metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
                         notifyListeners(this);
                     }
                 }

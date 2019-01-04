@@ -42,7 +42,7 @@ public class MockServerEventBusTest {
 	}
 	
 	@Test
-	public void shoudPublishStopEventToOneRegisteredSubscriber() {
+	public void shouldPublishStopEventToOneRegisteredSubscriber() {
 		// given
 		bus.subscribe(subscriber, STOP);
 		

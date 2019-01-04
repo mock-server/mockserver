@@ -1,7 +1,13 @@
 package org.mockserver.integration.server;
 
+import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockserver.integration.callback.StaticTestExpectationResponseCallback;
+import org.mockserver.metrics.Metrics;
+import org.mockserver.mock.action.ExpectationResponseCallback;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
 

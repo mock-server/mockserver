@@ -24,13 +24,14 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
     }
 
     public void handle(final ActionHandler actionHandler, final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous) {
-        String clientId = httpObjectCallback.getClientId();
-        String webSocketCorrelationId = UUID.randomUUID().toString();
-        webSocketClientRegistry.registerCallbackHandler(webSocketCorrelationId, new WebSocketRequestCallback() {
+        final String clientId = httpObjectCallback.getClientId();
+        final String webSocketCorrelationId = UUID.randomUUID().toString();
+        webSocketClientRegistry.registerForwardCallbackHandler(webSocketCorrelationId, new WebSocketRequestCallback() {
             @Override
             public void handle(final HttpRequest request) {
                 final HttpForwardActionResult responseFuture = sendRequest(request.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), null);
                 actionHandler.writeForwardActionResponse(responseFuture, responseWriter, request, httpObjectCallback, synchronous);
+                webSocketClientRegistry.unregisterForwardCallbackHandler(webSocketCorrelationId);
             }
         });
         webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId));

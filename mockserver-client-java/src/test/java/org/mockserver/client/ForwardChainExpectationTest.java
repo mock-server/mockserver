@@ -81,29 +81,29 @@ public class ForwardChainExpectationTest {
         verify(mockExpectation).thenRespond(same(callback));
         verify(mockAbstractClient).sendExpectation(mockExpectation);
     }
-
-    @Test
-    public void shouldSetResponseObjectCallback() {
-        // given
-        ExpectationResponseCallback callback = new ExpectationResponseCallback() {
-            @Override
-            public HttpResponse handle(HttpRequest httpRequest) {
-                return response();
-            }
-        };
-
-        // and
-        when(webSocketClient.registerExpectationCallback(callback)).thenReturn(webSocketClient);
-        when(webSocketClient.clientId()).thenReturn("some_client_id");
-
-        // when
-        forwardChainExpectation.respond(callback);
-
-        // then
-        verify(webSocketClient).registerExpectationCallback(same(callback));
-        verify(mockExpectation).thenRespond(new HttpObjectCallback().withClientId("some_client_id"));
-        verify(mockAbstractClient).sendExpectation(mockExpectation);
-    }
+//
+//    @Test
+//    public void shouldSetResponseObjectCallback() {
+//        // given
+//        ExpectationResponseCallback callback = new ExpectationResponseCallback() {
+//            @Override
+//            public HttpResponse handle(HttpRequest httpRequest) {
+//                return response();
+//            }
+//        };
+//
+//        // and
+//        when(webSocketClient.registerExpectationCallback(callback)).thenReturn(webSocketClient);
+//        when(webSocketClient.clientId()).thenReturn("some_client_id");
+//
+//        // when
+//        forwardChainExpectation.respond(callback);
+//
+//        // then
+//        verify(webSocketClient).registerExpectationCallback(same(callback));
+//        verify(mockExpectation).thenRespond(new HttpObjectCallback().withClientId("some_client_id"));
+//        verify(mockAbstractClient).sendExpectation(mockExpectation);
+//    }
 
     @Test
     public void shouldSetForward() {
@@ -143,29 +143,29 @@ public class ForwardChainExpectationTest {
         verify(mockExpectation).thenForward(same(callback));
         verify(mockAbstractClient).sendExpectation(mockExpectation);
     }
-
-    @Test
-    public void shouldSetForwardObjectCallback() {
-        // given
-        ExpectationForwardCallback callback = new ExpectationForwardCallback() {
-            @Override
-            public HttpRequest handle(HttpRequest httpRequest) {
-                return request();
-            }
-        };
-
-        // and
-        when(webSocketClient.registerExpectationCallback(callback)).thenReturn(webSocketClient);
-        when(webSocketClient.clientId()).thenReturn("some_client_id");
-
-        // when
-        forwardChainExpectation.forward(callback);
-
-        // then
-        verify(webSocketClient).registerExpectationCallback(same(callback));
-        verify(mockExpectation).thenForward(new HttpObjectCallback().withClientId("some_client_id"));
-        verify(mockAbstractClient).sendExpectation(mockExpectation);
-    }
+//
+//    @Test
+//    public void shouldSetForwardObjectCallback() {
+//        // given
+//        ExpectationForwardCallback callback = new ExpectationForwardCallback() {
+//            @Override
+//            public HttpRequest handle(HttpRequest httpRequest) {
+//                return request();
+//            }
+//        };
+//
+//        // and
+//        when(webSocketClient.registerExpectationCallback(callback)).thenReturn(webSocketClient);
+//        when(webSocketClient.clientId()).thenReturn("some_client_id");
+//
+//        // when
+//        forwardChainExpectation.forward(callback);
+//
+//        // then
+//        verify(webSocketClient).registerExpectationCallback(same(callback));
+//        verify(mockExpectation).thenForward(new HttpObjectCallback().withClientId("some_client_id"));
+//        verify(mockAbstractClient).sendExpectation(mockExpectation);
+//    }
 
     @Test
     public void shouldSetOverrideForwardedRequest() {

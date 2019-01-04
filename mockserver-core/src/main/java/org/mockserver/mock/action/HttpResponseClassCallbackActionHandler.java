@@ -47,7 +47,12 @@ public class HttpResponseClassCallbackActionHandler {
         if (httpRequest != null) {
             ExpectationResponseCallback expectationResponseCallback = instantiateCallback(httpClassCallback);
             if (expectationResponseCallback != null) {
-                return expectationResponseCallback.handle(httpRequest);
+                try {
+                    return expectationResponseCallback.handle(httpRequest);
+                } catch (Throwable throwable) {
+                    mockServerLogger.error(httpClassCallback.getCallbackClass() + " throw exception while executing handle callback method", throwable);
+                    return notFoundResponse();
+                }
             } else {
                 return notFoundResponse();
             }
