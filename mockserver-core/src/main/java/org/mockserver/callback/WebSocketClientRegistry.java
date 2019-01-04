@@ -3,16 +3,18 @@ package org.mockserver.callback;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.mockserver.client.netty.websocket.WebSocketException;
-import org.mockserver.metrics.Metrics;
-import org.mockserver.serialization.WebSocketMessageSerializer;
-import org.mockserver.serialization.model.WebSocketClientIdDTO;
 import org.mockserver.collections.CircularHashMap;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.metrics.Metrics;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.serialization.WebSocketMessageSerializer;
+import org.mockserver.serialization.model.WebSocketClientIdDTO;
+import org.mockserver.serialization.model.WebSocketErrorDTO;
 
 import static org.mockserver.configuration.ConfigurationProperties.maxWebSocketExpectations;
 import static org.mockserver.metrics.Metrics.Name.*;
+import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
@@ -37,9 +39,29 @@ public class WebSocketClientRegistry {
                 }
             } else if (deserializedMessage instanceof HttpRequest) {
                 HttpRequest httpRequest = (HttpRequest) deserializedMessage;
-                WebSocketRequestCallback webSocketRequestCallback = forwardCallbackRegistry.get(httpRequest.getFirstHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME));
+                final String firstHeader = httpRequest.getFirstHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME);
+                WebSocketRequestCallback webSocketRequestCallback = forwardCallbackRegistry.get(firstHeader);
                 if (webSocketRequestCallback != null) {
                     webSocketRequestCallback.handle(httpRequest);
+                }
+            } else if (deserializedMessage instanceof WebSocketErrorDTO) {
+                WebSocketErrorDTO webSocketErrorDTO = (WebSocketErrorDTO) deserializedMessage;
+                if (forwardCallbackRegistry.containsKey(webSocketErrorDTO.getWebSocketCorrelationId())) {
+                    forwardCallbackRegistry
+                        .get(webSocketErrorDTO.getWebSocketCorrelationId())
+                        .handleError(
+                            response()
+                                .withStatusCode(404)
+                                .withBody(webSocketErrorDTO.getMessage())
+                        );
+                } else if (responseCallbackRegistry.containsKey(webSocketErrorDTO.getWebSocketCorrelationId())) {
+                    responseCallbackRegistry
+                        .get(webSocketErrorDTO.getWebSocketCorrelationId())
+                        .handle(
+                            response()
+                                .withStatusCode(404)
+                                .withBody(webSocketErrorDTO.getMessage())
+                        );
                 }
             } else {
                 throw new WebSocketException("Unsupported web socket message " + deserializedMessage);

@@ -11,6 +11,7 @@ import org.mockserver.responsewriter.ResponseWriter;
 import java.util.UUID;
 
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
+import static org.mockserver.model.HttpResponse.notFoundResponse;
 
 /**
  * @author jamesdbloom

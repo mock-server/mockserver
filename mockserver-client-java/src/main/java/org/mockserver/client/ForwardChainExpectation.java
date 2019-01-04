@@ -6,11 +6,13 @@ import org.mockserver.client.MockServerEventBus.SubscriberHandler;
 import org.mockserver.client.netty.websocket.WebSocketClient;
 import org.mockserver.client.netty.websocket.WebSocketException;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.*;
 
 import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
 
 /**
  * @author jamesdbloom
@@ -19,10 +21,12 @@ public class ForwardChainExpectation {
 
     private final MockServerClient mockServerClient;
     private final Expectation expectation;
+    private final Semaphore availableWebSocketCallbackRegistrations;
 
-    ForwardChainExpectation(MockServerClient mockServerClient, Expectation expectation) {
+    ForwardChainExpectation(MockServerClient mockServerClient, Expectation expectation, Semaphore availableWebSocketCallbackRegistrations) {
         this.mockServerClient = mockServerClient;
         this.expectation = expectation;
+        this.availableWebSocketCallbackRegistrations = availableWebSocketCallbackRegistrations;
     }
 
     /**
@@ -69,30 +73,8 @@ public class ForwardChainExpectation {
      * @param expectationResponseCallback object to call locally or remotely to generate response
      */
     public void respond(final ExpectationResponseCallback expectationResponseCallback) {
-        try {
-            final WebSocketClient<HttpResponse> webSocketClient = new WebSocketClient<>();
-            final Future<String> register = webSocketClient.registerExpectationCallback(
-                expectationResponseCallback,
-                mockServerClient.getEventLoopGroup(),
-                mockServerClient.remoteAddress(),
-                mockServerClient.contextPath(),
-                mockServerClient.isSecure()
-            );
-            MockServerEventBus.getInstance().subscribe(new SubscriberHandler() {
-                @Override
-                public void handle() {
-                    webSocketClient.stopClient();
-                }
-            }, EventType.STOP, EventType.RESET);
-            expectation.thenRespond(new HttpObjectCallback().withClientId(register.get()));
-            mockServerClient.sendExpectation(expectation);
-        } catch (Exception e) {
-            if (e.getCause() instanceof WebSocketException && e.getCause().getMessage().contains(expectationResponseCallback.getClass().getSimpleName() + " is not supported")) {
-                throw new ClientException(e.getCause().getMessage());
-            } else {
-                throw new ClientException("Unable to retrieve client registration id", e);
-            }
-        }
+        expectation.thenRespond(new HttpObjectCallback().withClientId(registerWebSocketClient(expectationResponseCallback)));
+        mockServerClient.sendExpectation(expectation);
     }
 
     /**
@@ -143,11 +125,11 @@ public class ForwardChainExpectation {
         mockServerClient.sendExpectation(expectation);
     }
 
-    private String registerWebSocketClient(ExpectationForwardCallback expectationForwardCallback) {
+    private <T extends HttpObject> String registerWebSocketClient(ExpectationCallback<T> expectationCallback) {
         try {
-            final WebSocketClient<HttpRequest> webSocketClient = new WebSocketClient<>();
+            final WebSocketClient<T> webSocketClient = new WebSocketClient<>(availableWebSocketCallbackRegistrations);
             final Future<String> register = webSocketClient.registerExpectationCallback(
-                expectationForwardCallback,
+                expectationCallback,
                 mockServerClient.getEventLoopGroup(),
                 mockServerClient.remoteAddress(),
                 mockServerClient.contextPath(),
@@ -161,8 +143,8 @@ public class ForwardChainExpectation {
             }, EventType.STOP, EventType.RESET);
             return register.get();
         } catch (Exception e) {
-            if (e.getCause() instanceof WebSocketException && e.getCause().getMessage().contains(expectationForwardCallback.getClass().getSimpleName() + " is not supported")) {
-                throw new ClientException(e.getCause().getMessage());
+            if (e.getCause() instanceof WebSocketException) {
+                throw new ClientException(e.getCause().getMessage(), e);
             } else {
                 throw new ClientException("Unable to retrieve client registration id", e);
             }

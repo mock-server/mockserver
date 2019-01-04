@@ -60,21 +60,22 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     }
 
     @Override
-    public void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void channelRead0(ChannelHandlerContext ctx, Object msg) {
         Channel ch = ctx.channel();
         if (msg instanceof FullHttpResponse) {
             FullHttpResponse httpResponse = (FullHttpResponse) msg;
+            final SettableFuture<String> registrationFuture = ch.attr(REGISTRATION_FUTURE).get();
             if (httpResponse.headers().contains(UPGRADE, WEBSOCKET, true) && !handshaker.isHandshakeComplete()) {
                 handshaker.finishHandshake(ch, httpResponse);
                 final String clientRegistrationId = httpResponse.headers().get("X-CLIENT-REGISTRATION-ID");
-                ch.attr(REGISTRATION_FUTURE).get().set(clientRegistrationId);
+                registrationFuture.set(clientRegistrationId);
                 mockServerLogger.trace("web socket client " + clientRegistrationId + " connected!");
             } else if (httpResponse.status().equals(HttpResponseStatus.NOT_IMPLEMENTED)) {
                 String message = readRequestBody(httpResponse);
-                ch.attr(REGISTRATION_FUTURE).get().setException(new WebSocketException(message));
+                registrationFuture.setException(new WebSocketException(message));
                 mockServerLogger.warn(message);
             } else {
-                throw new WebSocketException("Unsupported web socket message " + new FullHttpResponseToMockServerResponse().mapMockServerResponseToFullHttpResponse(httpResponse));
+                registrationFuture.setException(new WebSocketException("Unsupported web socket message " + new FullHttpResponseToMockServerResponse().mapMockServerResponseToFullHttpResponse(httpResponse)));
             }
         } else if (msg instanceof WebSocketFrame) {
             WebSocketFrame frame = (WebSocketFrame) msg;

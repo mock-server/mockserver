@@ -58,7 +58,7 @@ public class HttpStateHandler {
     public HttpStateHandler(Scheduler scheduler) {
         this.scheduler = scheduler;
         mockServerLog = new MockServerEventLog(mockServerLogger, scheduler);
-        mockServerMatcher = new MockServerMatcher(mockServerLogger, scheduler);
+        mockServerMatcher = new MockServerMatcher(mockServerLogger, scheduler, webSocketClientRegistry);
         addExpectationsFromInitializer();
     }
 

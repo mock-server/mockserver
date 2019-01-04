@@ -7,13 +7,13 @@ import org.mockito.Mock;
 import org.mockserver.client.netty.websocket.WebSocketClient;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.action.ExpectationForwardCallback;
-import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.*;
+
+import java.util.concurrent.Semaphore;
 
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
@@ -39,7 +39,8 @@ public class ForwardChainExpectationTest {
     public void setupMocks() {
         mockAbstractClient = mock(MockServerClient.class);
         mockExpectation = mock(Expectation.class);
-        forwardChainExpectation = new ForwardChainExpectation(mockAbstractClient, mockExpectation);
+        Semaphore availableWebSocketCallbackRegistrations = new Semaphore(1);
+        forwardChainExpectation = new ForwardChainExpectation(mockAbstractClient, mockExpectation, availableWebSocketCallbackRegistrations);
         initMocks(this);
     }
 
@@ -81,29 +82,6 @@ public class ForwardChainExpectationTest {
         verify(mockExpectation).thenRespond(same(callback));
         verify(mockAbstractClient).sendExpectation(mockExpectation);
     }
-//
-//    @Test
-//    public void shouldSetResponseObjectCallback() {
-//        // given
-//        ExpectationResponseCallback callback = new ExpectationResponseCallback() {
-//            @Override
-//            public HttpResponse handle(HttpRequest httpRequest) {
-//                return response();
-//            }
-//        };
-//
-//        // and
-//        when(webSocketClient.registerExpectationCallback(callback)).thenReturn(webSocketClient);
-//        when(webSocketClient.clientId()).thenReturn("some_client_id");
-//
-//        // when
-//        forwardChainExpectation.respond(callback);
-//
-//        // then
-//        verify(webSocketClient).registerExpectationCallback(same(callback));
-//        verify(mockExpectation).thenRespond(new HttpObjectCallback().withClientId("some_client_id"));
-//        verify(mockAbstractClient).sendExpectation(mockExpectation);
-//    }
 
     @Test
     public void shouldSetForward() {
@@ -143,29 +121,6 @@ public class ForwardChainExpectationTest {
         verify(mockExpectation).thenForward(same(callback));
         verify(mockAbstractClient).sendExpectation(mockExpectation);
     }
-//
-//    @Test
-//    public void shouldSetForwardObjectCallback() {
-//        // given
-//        ExpectationForwardCallback callback = new ExpectationForwardCallback() {
-//            @Override
-//            public HttpRequest handle(HttpRequest httpRequest) {
-//                return request();
-//            }
-//        };
-//
-//        // and
-//        when(webSocketClient.registerExpectationCallback(callback)).thenReturn(webSocketClient);
-//        when(webSocketClient.clientId()).thenReturn("some_client_id");
-//
-//        // when
-//        forwardChainExpectation.forward(callback);
-//
-//        // then
-//        verify(webSocketClient).registerExpectationCallback(same(callback));
-//        verify(mockExpectation).thenForward(new HttpObjectCallback().withClientId("some_client_id"));
-//        verify(mockAbstractClient).sendExpectation(mockExpectation);
-//    }
 
     @Test
     public void shouldSetOverrideForwardedRequest() {

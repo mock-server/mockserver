@@ -1,11 +1,13 @@
 package org.mockserver.mock;
 
+import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.collections.CircularLinkedList;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.metrics.Metrics;
 import org.mockserver.model.Action;
+import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.ui.MockServerMatcherNotifier;
@@ -22,12 +24,14 @@ import static org.mockserver.metrics.Metrics.Name.*;
  */
 public class MockServerMatcher extends MockServerMatcherNotifier {
 
-    protected final List<HttpRequestMatcher> httpRequestMatchers = Collections.synchronizedList(new CircularLinkedList<HttpRequestMatcher>(maxExpectations()));
+    final List<HttpRequestMatcher> httpRequestMatchers = Collections.synchronizedList(new CircularLinkedList<HttpRequestMatcher>(maxExpectations()));
+    private WebSocketClientRegistry webSocketClientRegistry;
     private MatcherBuilder matcherBuilder;
 
-    MockServerMatcher(MockServerLogger logFormatter, Scheduler scheduler) {
+    MockServerMatcher(MockServerLogger logFormatter, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry) {
         super(scheduler);
         this.matcherBuilder = new MatcherBuilder(logFormatter);
+        this.webSocketClientRegistry = webSocketClientRegistry;
     }
 
     public synchronized void add(Expectation expectation) {
@@ -55,11 +59,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
                 matchingExpectation = httpRequestMatcher.decrementRemainingMatches();
             }
             if (!httpRequestMatcher.isActive()) {
-                if (httpRequestMatchers.contains(httpRequestMatcher)) {
-                    httpRequestMatchers.remove(httpRequestMatcher);
-                    Metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
-                    notifyListeners(this);
-                }
+                removeHttpRequestMatcher(httpRequestMatcher);
             }
             if (matchingExpectation != null) {
                 break;
@@ -80,15 +80,32 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
             HttpRequestMatcher clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
             for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
                 if (clearHttpRequestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
-                    if (httpRequestMatchers.contains(httpRequestMatcher)) {
-                        httpRequestMatchers.remove(httpRequestMatcher);
-                        Metrics.decrement(httpRequestMatcher.getExpectation().getAction().getType());
-                        notifyListeners(this);
-                    }
+                    removeHttpRequestMatcher(httpRequestMatcher);
                 }
             }
         } else {
             reset();
+        }
+    }
+
+    private void removeHttpRequestMatcher(HttpRequestMatcher httpRequestMatcher) {
+        if (httpRequestMatchers.contains(httpRequestMatcher)) {
+            httpRequestMatchers.remove(httpRequestMatcher);
+            if (httpRequestMatcher.getExpectation() != null) {
+                final Action action = httpRequestMatcher.getExpectation().getAction();
+                if (action != null) {
+                    switch (action.getType()) {
+                        case FORWARD_OBJECT_CALLBACK:
+                            webSocketClientRegistry.unregisterForwardCallbackHandler(((HttpObjectCallback) action).getClientId());
+                            break;
+                        case RESPONSE_OBJECT_CALLBACK:
+                            webSocketClientRegistry.unregisterResponseCallbackHandler(((HttpObjectCallback) action).getClientId());
+                            break;
+                    }
+                    Metrics.decrement(action.getType());
+                }
+            }
+            notifyListeners(this);
         }
     }
 

@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -43,6 +44,7 @@ public class MockServerClient implements Stoppable {
 
     protected final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
     private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+    private final Semaphore availableWebSocketCallbackRegistrations = new Semaphore(1);
     private final String host;
     private final String contextPath;
     private final Class<MockServerClient> clientClass;
@@ -516,7 +518,7 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times) {
-        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, TimeToLive.unlimited()));
+        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, TimeToLive.unlimited()), availableWebSocketCallbackRegistrations);
     }
 
     /**
@@ -544,7 +546,7 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
-        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, timeToLive));
+        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, timeToLive), availableWebSocketCallbackRegistrations);
     }
 
     void sendExpectation(Expectation expectation) {

@@ -6,11 +6,13 @@ import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 
 import java.util.UUID;
 
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
@@ -31,6 +33,12 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
             public void handle(final HttpRequest request) {
                 final HttpForwardActionResult responseFuture = sendRequest(request.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), null);
                 actionHandler.writeForwardActionResponse(responseFuture, responseWriter, request, httpObjectCallback, synchronous);
+                webSocketClientRegistry.unregisterForwardCallbackHandler(webSocketCorrelationId);
+            }
+
+            @Override
+            public void handleError(HttpResponse httpResponse) {
+                actionHandler.writeResponseActionResponse(httpResponse, responseWriter, request, httpObjectCallback, synchronous);
                 webSocketClientRegistry.unregisterForwardCallbackHandler(webSocketCorrelationId);
             }
         });

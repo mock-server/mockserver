@@ -2,6 +2,7 @@ package org.mockserver.mock;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
@@ -24,6 +25,7 @@ public class MockServerMatcherSequentialResponsesTest {
 
     private MockServerLogger mockLogFormatter;
     private Scheduler scheduler;
+    private WebSocketClientRegistry webSocketClientRegistry;
 
     @Before
     public void prepareTestFixture() {
@@ -34,7 +36,8 @@ public class MockServerMatcherSequentialResponsesTest {
         };
         mockLogFormatter = mock(MockServerLogger.class);
         scheduler = mock(Scheduler.class);
-        mockServerMatcher = new MockServerMatcher(mockLogFormatter, scheduler);
+        webSocketClientRegistry = mock(WebSocketClientRegistry.class);
+        mockServerMatcher = new MockServerMatcher(mockLogFormatter, scheduler, webSocketClientRegistry);
     }
 
     @Test
