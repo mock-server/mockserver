@@ -256,6 +256,7 @@ public class ActionHandler {
         HttpResponse response = notFoundResponse();
         if (request.getHeaders().containsEntry("x-forwarded-by", "MockServer")) {
             response.withHeader("x-forwarded-by", "MockServer");
+            mockServerLogger.trace(request, "no expectation for:{}returning response:{}", request, notFoundResponse());
         } else {
             httpStateHandler.log(new RequestLogEntry(request));
             mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "no expectation for:{}returning response:{}", request, notFoundResponse());
