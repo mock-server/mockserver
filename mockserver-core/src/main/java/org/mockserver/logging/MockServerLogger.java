@@ -26,6 +26,10 @@ public class MockServerLogger {
     public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger();
 
     static {
+        initialiseLogLevels();
+    }
+
+    public static void initialiseLogLevels() {
         setRootLogLevel("io.netty");
         setRootLogLevel("org.apache.velocity");
         Logger mockServerLogger = LoggerFactory.getLogger("org.mockserver");

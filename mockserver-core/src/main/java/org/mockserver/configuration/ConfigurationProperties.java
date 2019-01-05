@@ -288,6 +288,7 @@ public class ConfigurationProperties {
             throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
         }
         System.setProperty(MOCKSERVER_LOG_LEVEL, level);
+        MockServerLogger.initialiseLogLevels();
     }
 
     public static boolean disableRequestAudit() {
