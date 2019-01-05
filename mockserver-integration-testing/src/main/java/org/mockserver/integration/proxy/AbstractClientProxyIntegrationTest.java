@@ -114,7 +114,6 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldForwardRequestsUsingSocketDirectly() throws Exception {
         try (Socket socket = new Socket("localhost", getProxyPort())) {
-
             // given
             OutputStream output = socket.getOutputStream();
 
