@@ -7,8 +7,8 @@ export JAVA_HOME=`/usr/libexec/java_home -v 1.7`
 echo
 java -version
 echo
-mvn -version
+./mvnw -version
 echo
 
 # to run from specific module use argument in quotes "-rf mockserver-war"
-mvn -T 1C clean install -offline $1 -Djava.security.egd=file:/dev/urandom
+./mvnw -T 1C clean install -offline $1 -Djava.security.egd=file:/dev/urandom

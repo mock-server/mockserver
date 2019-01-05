@@ -17,7 +17,7 @@ function printModule {
 function runSubModule {
     printModule "$1"
     cd $1
-    mvn install -Dmaven-invoker-parallel-threads=2 -Djava.security.egd=file:/dev/./urandom
+    ./mvnw install -Dmaven-invoker-parallel-threads=2 -Djava.security.egd=file:/dev/./urandom
     cd $current_directory
 }
 

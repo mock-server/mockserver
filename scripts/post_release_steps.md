@@ -37,7 +37,7 @@ Release Steps
    1. upload to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
 1. add javaDoc
    1. checkout release git hash
-   1. mvn javadoc:aggregate -P release -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/x.x.x'
+   1. ./mvnw javadoc:aggregate -P release -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/x.x.x'
    1. upload to S3
    1. update README.md
 1. update www.mock-server.com
