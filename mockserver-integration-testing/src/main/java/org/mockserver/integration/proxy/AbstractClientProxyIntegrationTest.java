@@ -22,8 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.tls.KeyStoreFactory;
@@ -60,6 +60,17 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 public abstract class AbstractClientProxyIntegrationTest {
 
     protected static String servletContext = "";
+    private static EventLoopGroup clientEventLoopGroup;
+
+    @BeforeClass
+    public static void createClientAndEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup();
+    }
+
+    @AfterClass
+    public static void stopEventLoopGroup() {
+        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+    }
 
     private HttpClient createHttpClient() {
         return HttpClients
@@ -95,18 +106,6 @@ public abstract class AbstractClientProxyIntegrationTest {
         return (!cleanedPath.startsWith("/") ? "/" : "") + cleanedPath;
     }
 
-    private static EventLoopGroup clientEventLoopGroup;
-
-    @BeforeClass
-    public static void createClientAndEventLoopGroup() {
-        clientEventLoopGroup = new NioEventLoopGroup();
-    }
-
-    @AfterClass
-    public static void stopEventLoopGroup() {
-        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
-    }
-
     @Before
     public void resetServer() {
         getMockServerClient().reset();
@@ -114,9 +113,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     @Test
     public void shouldForwardRequestsUsingSocketDirectly() throws Exception {
-        Socket socket = null;
-        try {
-            socket = new Socket("localhost", getProxyPort());
+        try (Socket socket = new Socket("localhost", getProxyPort())) {
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -158,20 +155,16 @@ public abstract class AbstractClientProxyIntegrationTest {
             String response = IOStreamUtils.readInputStreamToString(socket);
             assertContains(response, "x-test: test_headers_and_body");
             assertContains(response, "an_example_body");
-
-            // and
-            getMockServerClient().verify(
-                request()
-                    .withMethod("GET")
-                    .withPath("/test_headers_and_body")
-                    .withBody("an_example_body"),
-                exactly(1)
-            );
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
         }
+
+        // and
+        getMockServerClient().verify(
+            request()
+                .withMethod("GET")
+                .withPath("/test_headers_and_body")
+                .withBody("an_example_body"),
+            exactly(1)
+        );
     }
 
     @Test
@@ -253,9 +246,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     @Test
     public void shouldForwardRequestsToUnknownPath() throws Exception {
-        Socket socket = null;
-        try {
-            socket = new Socket("localhost", getProxyPort());
+        try (Socket socket = new Socket("localhost", getProxyPort())) {
             // given
             OutputStream output = socket.getOutputStream();
 
@@ -271,19 +262,16 @@ public abstract class AbstractClientProxyIntegrationTest {
 
             // then
             assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 404 Not Found");
-
-            // and
-            getMockServerClient().verify(
-                request()
-                    .withMethod("GET")
-                    .withPath("/not_found"),
-                exactly(1)
-            );
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
         }
+
+        // and
+        getMockServerClient().verify(
+            request()
+                .withMethod("GET")
+                .withPath("/not_found"),
+            exactly(1)
+        );
+
     }
 
     @Test
