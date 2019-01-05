@@ -63,6 +63,7 @@
         <boucycastle.verion>1.60</boucycastle.verion>
         <spring.version>4.3.18.RELEASE</spring.version>
         <skipTests>false</skipTests>
+        <skipAssembly>false</skipAssembly>
         <release.arguments />
         <javadoc.additional.parameters />
     </properties>
