@@ -200,7 +200,6 @@ public class ActionHandler {
                         if (response == null) {
                             response = notFoundResponse();
                         }
-                        responseWriter.writeResponse(request, response, false);
                         if (response.containsHeader("x-forwarded-by", "MockServer")) {
                             httpStateHandler.log(new RequestLogEntry(request));
                             mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "no expectation for:{}returning response:{}", request, notFoundResponse());
@@ -208,6 +207,7 @@ public class ActionHandler {
                             httpStateHandler.log(new RequestResponseLogEntry(request, response));
                             mockServerLogger.info(FORWARDED_REQUEST, request, "returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}", response, request, httpRequestToCurlSerializer.toCurl(request, remoteAddress));
                         }
+                        responseWriter.writeResponse(request, response, false);
                     } catch (SocketCommunicationException sce) {
                         returnNotFound(responseWriter, request);
                     } catch (Exception ex) {
@@ -231,8 +231,8 @@ public class ActionHandler {
     void writeResponseActionResponse(final HttpResponse response, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous) {
         scheduler.schedule(new Runnable() {
             public void run() {
-                responseWriter.writeResponse(request, response, false);
                 mockServerLogger.info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, action);
+                responseWriter.writeResponse(request, response, false);
             }
         }, synchronous, action.getDelay(), response.getDelay());
     }
@@ -242,9 +242,9 @@ public class ActionHandler {
             public void run() {
                 try {
                     HttpResponse response = responseFuture.getHttpResponse().get();
-                    responseWriter.writeResponse(request, response, false);
                     httpStateHandler.log(new RequestResponseLogEntry(request, response));
                     mockServerLogger.info(FORWARDED_REQUEST, request, "returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}", response, responseFuture.getHttpRequest(), httpRequestToCurlSerializer.toCurl(responseFuture.getHttpRequest()), action);
+                    responseWriter.writeResponse(request, response, false);
                 } catch (Exception ex) {
                     mockServerLogger.error(request, ex, ex.getMessage());
                 }

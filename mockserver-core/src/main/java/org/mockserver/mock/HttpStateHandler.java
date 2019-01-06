@@ -302,14 +302,14 @@ public class HttpStateHandler {
         Action action = expectation.getAction();
         String NOT_SUPPORTED_MESSAGE = " is not supported by MockServer deployed as a WAR due to limitations in the JEE specification; use mockserver-netty to enable these features";
         if (action instanceof HttpResponse && ((HttpResponse) action).getConnectionOptions() != null) {
+            valid = false;
             responseWriter.writeResponse(request, response("ConnectionOptions" + NOT_SUPPORTED_MESSAGE), true);
-            valid = false;
         } else if (action instanceof HttpObjectCallback) {
+            valid = false;
             responseWriter.writeResponse(request, response("HttpObjectCallback" + NOT_SUPPORTED_MESSAGE), true);
-            valid = false;
         } else if (action instanceof HttpError) {
-            responseWriter.writeResponse(request, response("HttpError" + NOT_SUPPORTED_MESSAGE), true);
             valid = false;
+            responseWriter.writeResponse(request, response("HttpError" + NOT_SUPPORTED_MESSAGE), true);
         }
         return valid;
     }
