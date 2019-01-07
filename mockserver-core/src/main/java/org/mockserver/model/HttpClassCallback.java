@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 /**
  * @author jamesdbloom
  */
-public class HttpClassCallback extends Action {
+public class HttpClassCallback extends Action<HttpClassCallback> {
 
     private String callbackClass;
     private Type actionType;

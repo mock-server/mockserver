@@ -3,6 +3,9 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
+        "delay": {
+            "$ref": "#/definitions/delay"
+        },
         "callbackClass": {
             "type": "string"
         }

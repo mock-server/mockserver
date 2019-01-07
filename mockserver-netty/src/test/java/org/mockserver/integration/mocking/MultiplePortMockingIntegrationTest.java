@@ -4,7 +4,6 @@ import com.google.common.base.Joiner;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.integration.server.AbstractBasicMockingIntegrationTest;
 import org.mockserver.socket.PortFactory;
@@ -19,6 +18,7 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -26,7 +26,6 @@ import static org.mockserver.model.HttpStatusCode.OK_200;
 public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingIntegrationTest {
 
     private static Integer[] severHttpPort;
-    private static EchoServer echoServer;
     private final Random random = new Random();
 
     @BeforeClass
@@ -34,29 +33,16 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
         mockServerClient = startClientAndServer(0, PortFactory.findFreePort(), 0, PortFactory.findFreePort());
         List<Integer> boundPorts = ((ClientAndServer) mockServerClient).getLocalPorts();
         severHttpPort = boundPorts.toArray(new Integer[boundPorts.size()]);
-
-        echoServer = new EchoServer(false);
     }
 
     @AfterClass
     public static void stopServer() {
-        if (mockServerClient != null) {
-            mockServerClient.stop();
-        }
-
-        if (echoServer != null) {
-            echoServer.stop();
-        }
+        stopQuietly(mockServerClient);
     }
 
     @Override
     public int getServerPort() {
         return severHttpPort[random.nextInt(severHttpPort.length)];
-    }
-
-    @Override
-    public int getEchoServerPort() {
-        return echoServer.getPort();
     }
 
     @Test

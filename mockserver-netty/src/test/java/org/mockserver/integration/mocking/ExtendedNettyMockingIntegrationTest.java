@@ -6,12 +6,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.echo.http.EchoServer;
 import org.mockserver.mockserver.MockServer;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -19,35 +19,21 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 public class ExtendedNettyMockingIntegrationTest extends AbstractExtendedNettyMockingIntegrationTest {
 
     private static int mockServerPort;
-    private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() {
         mockServerPort = new MockServer().getLocalPort();
         mockServerClient = new MockServerClient("localhost", mockServerPort, servletContext);
-
-        echoServer = new EchoServer(false);
     }
 
     @AfterClass
     public static void stopServer() {
-        if (mockServerClient != null) {
-            mockServerClient.stop();
-        }
-
-        if (echoServer != null) {
-            echoServer.stop();
-        }
+        stopQuietly(mockServerClient);
     }
 
     @Override
     public int getServerPort() {
         return mockServerPort;
-    }
-
-    @Override
-    public int getEchoServerPort() {
-        return echoServer.getPort();
     }
 
     @Rule

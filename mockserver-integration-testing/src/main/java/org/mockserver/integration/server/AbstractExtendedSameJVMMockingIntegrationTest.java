@@ -1,8 +1,13 @@
 package org.mockserver.integration.server;
 
+import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
 import org.junit.Test;
-import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.callback.StaticTestExpectationResponseCallback;
+import org.mockserver.metrics.Metrics;
+import org.mockserver.mock.action.ExpectationResponseCallback;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
 
@@ -185,101 +190,96 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
 
     @Test // same JVM due to issues detecting Nashorn is enabled via Maven plugin
     public void shouldForwardTemplateInJavaScript() {
-        EchoServer secureEchoServer = new EchoServer(false);
-        try {
-            // when
-            mockServerClient
-                .when(
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                template(HttpTemplate.TemplateType.JAVASCRIPT,
+                    "return {" + NEW_LINE +
+                        "    'path' : \"/somePath\"," + NEW_LINE +
+                        "    'headers' : [ {" + NEW_LINE +
+                        "        'name' : \"Host\"," + NEW_LINE +
+                        "        'values' : [ \"127.0.0.1:" + insecureEchoServer.getPort() + "\" ]" + NEW_LINE +
+                        "    }, {" + NEW_LINE +
+                        "        'name' : \"x-test\"," + NEW_LINE +
+                        "        'values' : [ request.headers['x-test'][0] ]" + NEW_LINE +
+                        "    } ]," + NEW_LINE +
+                        "    'body': \"template_\" + request.body" + NEW_LINE +
+                        "};")
+                    .withDelay(MILLISECONDS, 10)
+            );
+
+        if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
+
+            // then
+            // - in http
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("template_an_example_body_http"),
+                makeRequest(
                     request()
                         .withPath(calculatePath("echo"))
-                )
-                .forward(
-                    template(HttpTemplate.TemplateType.JAVASCRIPT,
-                        "return {" + NEW_LINE +
-                            "    'path' : \"/somePath\"," + NEW_LINE +
-                            "    'headers' : [ {" + NEW_LINE +
-                            "        'name' : \"Host\"," + NEW_LINE +
-                            "        'values' : [ \"127.0.0.1:" + secureEchoServer.getPort() + "\" ]" + NEW_LINE +
-                            "    }, {" + NEW_LINE +
-                            "        'name' : \"x-test\"," + NEW_LINE +
-                            "        'values' : [ request.headers['x-test'][0] ]" + NEW_LINE +
-                            "    } ]," + NEW_LINE +
-                            "    'body': \"template_\" + request.body" + NEW_LINE +
-                            "};")
-                        .withDelay(MILLISECONDS, 10)
-                );
-
-            if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
-
-                // then
-                // - in http
-                assertEquals(
-                    response()
-                        .withStatusCode(OK_200.code())
-                        .withReasonPhrase(OK_200.reasonPhrase())
+                        .withMethod("POST")
                         .withHeaders(
                             header("x-test", "test_headers_and_body")
                         )
-                        .withBody("template_an_example_body_http"),
-                    makeRequest(
-                        request()
-                            .withPath(calculatePath("echo"))
-                            .withMethod("POST")
-                            .withHeaders(
-                                header("x-test", "test_headers_and_body")
-                            )
-                            .withBody("an_example_body_http"),
-                        headersToIgnore)
-                );
-                // - in https
-                assertEquals(
-                    response()
-                        .withStatusCode(OK_200.code())
-                        .withReasonPhrase(OK_200.reasonPhrase())
+                        .withBody("an_example_body_http"),
+                    headersToIgnore)
+            );
+            // - in https
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("template_an_example_body_https"),
+                makeRequest(
+                    request()
+                        .withSecure(true)
+                        .withPath(calculatePath("echo"))
+                        .withMethod("POST")
                         .withHeaders(
                             header("x-test", "test_headers_and_body")
                         )
-                        .withBody("template_an_example_body_https"),
-                    makeRequest(
-                        request()
-                            .withSecure(true)
-                            .withPath(calculatePath("echo"))
-                            .withMethod("POST")
-                            .withHeaders(
-                                header("x-test", "test_headers_and_body")
-                            )
-                            .withBody("an_example_body_https"),
-                        headersToIgnore)
-                );
+                        .withBody("an_example_body_https"),
+                    headersToIgnore)
+            );
 
-            } else {
+        } else {
 
-                // then
-                // - in http
-                assertEquals(
-                    notFoundResponse(),
-                    makeRequest(
-                        request()
-                            .withPath(calculatePath("some_path"))
-                            .withCookie("name", "value")
-                            .withBody("some_request_body"),
-                        headersToIgnore)
-                );
-                // - in https
-                assertEquals(
-                    notFoundResponse(),
-                    makeRequest(
-                        request()
-                            .withSecure(true)
-                            .withPath(calculatePath("some_path"))
-                            .withCookie("name", "value")
-                            .withBody("some_request_body"),
-                        headersToIgnore)
-                );
+            // then
+            // - in http
+            assertEquals(
+                notFoundResponse(),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("some_path"))
+                        .withCookie("name", "value")
+                        .withBody("some_request_body"),
+                    headersToIgnore)
+            );
+            // - in https
+            assertEquals(
+                notFoundResponse(),
+                makeRequest(
+                    request()
+                        .withSecure(true)
+                        .withPath(calculatePath("some_path"))
+                        .withCookie("name", "value")
+                        .withBody("some_request_body"),
+                    headersToIgnore)
+            );
 
-            }
-        } finally {
-            secureEchoServer.stop();
         }
     }
 }

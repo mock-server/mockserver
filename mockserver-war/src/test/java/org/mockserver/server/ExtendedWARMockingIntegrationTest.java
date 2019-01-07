@@ -8,11 +8,13 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.echo.http.EchoServer;
 import org.mockserver.socket.PortFactory;
-import org.mockserver.socket.KeyStoreFactory;
+import org.mockserver.socket.tls.KeyStoreFactory;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
+
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -22,7 +24,6 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
     private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static Tomcat tomcat;
-    private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() throws Exception {
@@ -56,12 +57,10 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
         Context ctx = tomcat.addContext("/" + servletContext, new File(".").getAbsolutePath());
         tomcat.addServlet("/" + servletContext, "mockServerServlet", new MockServerServlet());
         ctx.addServletMappingDecoded("/*", "mockServerServlet");
+        ctx.addApplicationListener(MockServerServlet.class.getName());
 
         // start server
         tomcat.start();
-
-        // start test server
-        echoServer = new EchoServer( false);
 
         // start client
         mockServerClient = new MockServerClient("localhost", SERVER_HTTP_PORT, servletContext);
@@ -69,12 +68,17 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
 
     @AfterClass
     public static void stopServer() throws Exception {
-        // stop mock server
-        tomcat.stop();
-        tomcat.getServer().await();
+        // stop client
+        stopQuietly(mockServerClient);
 
-        // stop test server
-        echoServer.stop();
+        // stop mock server
+        if (tomcat != null) {
+            tomcat.stop();
+            tomcat.getServer().await();
+        }
+
+        // wait for server to shutdown
+        TimeUnit.MILLISECONDS.sleep(500);
     }
 
     @Override
@@ -87,8 +91,4 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
         return SERVER_HTTPS_PORT;
     }
 
-    @Override
-    public int getEchoServerPort() {
-        return echoServer.getPort();
-    }
 }

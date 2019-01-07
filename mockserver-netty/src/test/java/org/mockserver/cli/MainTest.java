@@ -1,5 +1,8 @@
 package org.mockserver.cli;
 
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.client.netty.NettyHttpClient;
@@ -16,16 +19,25 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
  */
 public class MainTest {
+
+    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
+
+    @AfterClass
+    public static void stopEventLoopGroup() {
+        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+    }
 
     @Test
     public void shouldStartMockServer() {
@@ -46,7 +58,7 @@ public class MainTest {
             assertThat(ConfigurationProperties.logLevel().toString(), is("DEBUG"));
         } finally {
             ConfigurationProperties.logLevel(originalLogLevel.toString());
-            mockServerClient.stop();
+            stopQuietly(mockServerClient);
         }
     }
 
@@ -65,7 +77,7 @@ public class MainTest {
                 "-proxyRemotePort", String.valueOf(echoServer.getPort()),
                 "-proxyRemoteHost", "127.0.0.1"
             );
-            final HttpResponse response = new NettyHttpClient()
+            final HttpResponse response = new NettyHttpClient(clientEventLoopGroup, null)
                 .sendRequest(
                     request()
                         .withHeader(HOST.toString(), "127.0.0.1:" + freePort),
@@ -77,7 +89,7 @@ public class MainTest {
             assertThat(mockServerClient.isRunning(), is(true));
             assertThat(response.getBodyAsString(), is("port_forwarded_response"));
         } finally {
-            mockServerClient.stop();
+            stopQuietly(mockServerClient);
         }
     }
 
@@ -95,7 +107,7 @@ public class MainTest {
                 "-serverPort", String.valueOf(freePort),
                 "-proxyRemotePort", String.valueOf(echoServer.getPort())
             );
-            final HttpResponse response = new NettyHttpClient()
+            final HttpResponse response = new NettyHttpClient(clientEventLoopGroup, null)
                 .sendRequest(
                     request()
                         .withHeader(HOST.toString(), "127.0.0.1:" + freePort),
@@ -107,7 +119,7 @@ public class MainTest {
             assertThat(mockServerClient.isRunning(), is(true));
             assertThat(response.getBodyAsString(), is("port_forwarded_response"));
         } finally {
-            mockServerClient.stop();
+            stopQuietly(mockServerClient);
         }
     }
 

@@ -14,7 +14,7 @@ To install the chart with:
 Remotely using `www.mock-server.com` as a chart repo:
 
 ```bash
-helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.4.1.tgz
+helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.5.1.tgz
 ```
 
 **OR** 
@@ -66,10 +66,7 @@ curl -v -X PUT http://$MOCKSERVER_HOST/status
 
 #### Inside Kubernetes Cluster
 
-If a [DNS server](https://kubernetes.io/docs/concepts/services-networking/service/#dns) has been installed in the Kubernetes cluster the following DNS names should be available:
-- **within `mockserver` namespace:** `mockserver`
-- **outside `mockserver` namespace:** `mockserver.mockserver`  
-- **DNS SRV query:** `_serviceport._tcp.mockserver.mockserver`
+If a [DNS server](https://kubernetes.io/docs/concepts/services-networking/service/#dns) has been installed in the Kubernetes cluster the following DNS name should be available `mockserver.<namespace>.svc.cluster.local`, i.e. `mockserver.mockserver.svc.cluster.local`
 
 ### Helm Delete
 

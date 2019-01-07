@@ -7,10 +7,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author jamesdbloom
  */
-public class HttpTemplate extends Action {
+public class HttpTemplate extends Action<HttpTemplate> {
     private final TemplateType templateType;
     private String template;
-    private Delay delay;
     private Type actionType;
 
     public HttpTemplate(TemplateType type) {
@@ -44,31 +43,6 @@ public class HttpTemplate extends Action {
 
     public String getTemplate() {
         return template;
-    }
-
-    /**
-     * The delay before responding with this request as a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
-     *
-     * @param delay a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
-     */
-    public HttpTemplate withDelay(Delay delay) {
-        this.delay = delay;
-        return this;
-    }
-
-    /**
-     * The delay before responding with this request as a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
-     *
-     * @param timeUnit a the time unit, for example TimeUnit.SECONDS
-     * @param value    a the number of time units to delay the response
-     */
-    public HttpTemplate withDelay(TimeUnit timeUnit, long value) {
-        withDelay(new Delay(timeUnit, value));
-        return this;
-    }
-
-    public Delay getDelay() {
-        return delay;
     }
 
     public void setActionType(Type actionType) {

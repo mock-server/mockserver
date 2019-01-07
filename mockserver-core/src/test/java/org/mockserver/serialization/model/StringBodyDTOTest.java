@@ -89,4 +89,30 @@ public class StringBodyDTOTest {
         assertThat(subString("some_body"), is(new StringBody("some_body", true)));
         assertThat(subString("some_body", StandardCharsets.UTF_16), is(new StringBody("some_body", true, StandardCharsets.UTF_16)));
     }
+
+    @Test
+    public void shouldHandleNull() {
+        // given
+        String body = null;
+
+        // when
+        StringBody stringBody = new StringBodyDTO(new StringBody(body)).buildObject();
+
+        // then
+        assertThat(stringBody.getValue(), nullValue());
+        assertThat(stringBody.getType(), is(Body.Type.STRING));
+    }
+
+    @Test
+    public void shouldHandleEmptyByteArray() {
+        // given
+        String body = "";
+
+        // when
+        StringBody stringBody = new StringBodyDTO(new StringBody(body)).buildObject();
+
+        // then
+        assertThat(stringBody.getValue(), is(""));
+        assertThat(stringBody.getType(), is(Body.Type.STRING));
+    }
 }

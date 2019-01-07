@@ -59,11 +59,23 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
                     JsonBody jsonBody = (JsonBody) request.getBody();
                     output.append("new JsonBody(\"").append(StringEscapeUtils.escapeJava(jsonBody.getValue())).append("\", JsonBodyMatchType.").append(jsonBody.getMatchType()).append(")");
                     output.append(")");
+                } else if (request.getBody() instanceof JsonPathBody) {
+                    appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
+                    output.append(".withBody(");
+                    JsonPathBody jsonPathBody = (JsonPathBody) request.getBody();
+                    output.append("new JsonPathBody(\"").append(StringEscapeUtils.escapeJava(jsonPathBody.getValue())).append("\")");
+                    output.append(")");
                 } else if (request.getBody() instanceof JsonSchemaBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     output.append(".withBody(");
                     JsonSchemaBody jsonSchemaBody = (JsonSchemaBody) request.getBody();
                     output.append("new JsonSchemaBody(\"").append(StringEscapeUtils.escapeJava(jsonSchemaBody.getValue())).append("\")");
+                    output.append(")");
+                } else if (request.getBody() instanceof XmlBody) {
+                    appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
+                    output.append(".withBody(");
+                    XmlBody xmlBody = (XmlBody) request.getBody();
+                    output.append("new XmlBody(\"").append(StringEscapeUtils.escapeJava(xmlBody.getValue())).append("\")");
                     output.append(")");
                 } else if (request.getBody() instanceof XPathBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);

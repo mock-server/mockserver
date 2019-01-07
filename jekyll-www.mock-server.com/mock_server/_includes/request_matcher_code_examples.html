@@ -34,7 +34,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "path" : "/some/path"
   },
@@ -87,7 +87,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "path" : "/some/path"
   },
@@ -150,7 +150,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "path" : "/some/path"
   },
@@ -207,7 +207,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "path" : "/some.*"
   },
@@ -254,7 +254,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "path" : "!/some.*"
   },
@@ -301,7 +301,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "method" : "P.*{2,3}"
   },
@@ -348,7 +348,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "method" : "!GET"
   },
@@ -400,7 +400,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path",
         "queryStringParameters": {
@@ -455,7 +455,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path",
         "queryStringParameters": {
@@ -513,7 +513,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "method" : "GET",
     "path" : "/some/path",
@@ -572,7 +572,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">// matches requests that have any header starting with the name Accept
-curl -v -X PUT "http://localhost:1080/expectation" -d '{
+curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path",
         "headers": {
@@ -629,7 +629,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">// matches requests that have a header with a name starting with Accept and a value containing gzip
-curl -v -X PUT "http://localhost:1080/expectation" -d '{
+curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path",
         "headers": {
@@ -689,7 +689,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "path" : "/some/path",
     "headers" : {
@@ -748,7 +748,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "path" : "/some/path",
     "headers" : {
@@ -811,7 +811,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "method" : "GET",
     "path" : "/view/cart",
@@ -867,7 +867,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "body" : {
       "type": "STRING",
@@ -920,7 +920,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "body" : {
       "type" : "STRING",
@@ -971,7 +971,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "type": "REGEX",
     "body" : "starts_with_.*"
@@ -1036,7 +1036,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "method" : "POST",
     "headers" : {
@@ -1058,14 +1058,15 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_body_with_xpath" class="accordion">match request by body with xpath</button>
 <div class="panel">
+    <p>Matches if at least one value is returned by the JsonPath expression</p>
     <p>For details of the full xpath supported please see <a href="https://www.w3.org/TR/1999/REC-xpath-19991116/">www.w3.org</a>.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .when(
         request()
-            // matches any request with an XML body containing
-            // an element that matches the XPath expression
+            // matches any request with an XML body that contains
+            // one or more elements that match the XPath expression
             .withBody(
                 xpath("/bookstore/book[price>30]/price")
             )
@@ -1106,8 +1107,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
         "body": {
-            // matches any request with an XML body containing
-            // an element that matches the XPath expression
+            // matches any request with an XML body that contains
+            // one or more elements that match the XPath expression
             "type": "XPATH",
             "xpath": "/bookstore/book[price>30]/price"
         }
@@ -1144,7 +1145,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "body" : {
       "type" : "XPATH",
@@ -1159,6 +1160,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_not_matching_body_with_xpath" class="accordion">match request by not matching body with xpath</button>
 <div class="panel">
+    <p>Matches if at least one value is returned by the JsonPath expression</p>
+    <p>For details of the full xpath supported please see <a href="https://www.w3.org/TR/1999/REC-xpath-19991116/">www.w3.org</a>.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -1166,7 +1169,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         request()
             .withBody(
                 // matches any request with an XML body that does NOT
-                // contain an element that matches the XPath expression
+                // contain one or more elements that match the XPath expression
                 not(xpath("/bookstore/book[price>30]/price"))
             )
     )
@@ -1182,7 +1185,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
         "body": {
             // matches any request with an XML body that does NOT
-            // contain an element that matches the XPath expression
+            // contain one or more elements that match the XPath expression
             "not": true,
             "type": "XPATH",
             "xpath": "/bookstore/book[price>30]/price"
@@ -1202,7 +1205,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "body" : {
       "not" : true,
@@ -1270,7 +1273,7 @@ mockServerClient(&quot;localhost&quot;, 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   &quot;httpRequest&quot; : {
     &quot;body&quot; : {
       &quot;type&quot; : &quot;XML&quot;,
@@ -1361,7 +1364,7 @@ mockServerClient(&quot;localhost&quot;, 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   &quot;httpRequest&quot; : {
     &quot;body&quot; : {
       &quot;type&quot; : &quot;XML_SCHEMA&quot;,
@@ -1393,6 +1396,7 @@ mockServerClient(&quot;localhost&quot;, 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_body_with_json_exactly" class="accordion">match request by body with json exactly</button>
 <div class="panel">
+    <p>Json body matcher supports two mode <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request matcher</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -1446,7 +1450,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "body" : {
       "type" : "JSON",
@@ -1463,6 +1467,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_body_with_json_ignoring_extra_fields" class="accordion">match request by body with json ignoring extra fields</button>
 <div class="panel">
+    <p>Json body matcher supports two mode <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request matcher</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -1515,7 +1520,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "body" : {
       "type" : "JSON",
@@ -1627,11 +1632,129 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
   "httpRequest" : {
     "body" : {
       "type" : "JSON_SCHEMA",
       "jsonSchema" : "{\"$schema\": \"http://json-schema.org/draft-04/schema#\", \"title\": \"Product\", \"description\": \"A product from Acme's catalog\", \"type\": \"object\", \"properties\": { \"id\": { \"description\": \"The unique identifier for a product\", \"type\": \"integer\" }, \"name\": { \"description\": \"Name of the product\", \"type\": \"string\"}, \"price\": { \"type\": \"number\", \"minimum\": 0, \"exclusiveMinimum\": true }, \"tags\": { \"type\": \"array\", \"items\": { \"type\": \"string\" }, \"minItems\": 1, \"uniqueItems\": true } }, \"required\": [\"id\", \"name\", \"price\"] }"
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_body_with_json_path" class="accordion">match request by body with jsonpath</button>
+<div class="panel">
+    <p>Matches if at least one value is returned by the JsonPath expression. For details of the full JsonPath supported please see <a href="https://github.com/json-path/JsonPath">github.com/json-path/JsonPath</a>.</p>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(
+                // matches any request with an JSON body that contain
+                // one or more fields that match the JsonPath expression
+                jsonPath("$.store.book[?(@.price < 10)]")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "body": {
+            // matches any request with an JSON body that contain
+            // one or more fields that match the JsonPath expression
+            "type": "JSON_PATH",
+            "jsonPath": "$.store.book[?(@.price < 10)]"
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+  "httpRequest" : {
+    "body" : {
+      "type": "JSON_PATH",
+      "jsonPath": "$.store.book[?(@.price < 10)]"
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_match_request_by_not_matching_body_with_json_path" class="accordion">match request by not matching body with JsonPath</button>
+<div class="panel">
+    <p>Matches if at least one value is returned by the JsonPath expression. For details of the full JsonPath supported please see <a href="https://github.com/json-path/JsonPath">github.com/json-path/JsonPath</a>.</p>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(
+                // matches any request with an JSON body that does NOT contain
+                // one or more fields that match the JsonPath expression
+                not(jsonPath("$.store.book[?(@.price < 10)]"))
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "body": {
+            // matches any request with an JSON body that does NOT contain
+            // one or more fields that match the JsonPath expression
+            "not": true,
+            "type": "JSON_PATH",
+            "jsonPath": "$.store.book[?(@.price < 10)]"
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+  "httpRequest" : {
+    "body" : {
+      "not": true,
+      "type": "JSON_PATH",
+      "jsonPath": "$.store.book[?(@.price < 10)]"
     }
   },
   "httpResponse" : {

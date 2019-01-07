@@ -1,0 +1,54 @@
+---
+title: Kubernetes
+layout: page
+pageOrder: 8
+section: 'Where'
+subsection: true
+sitemap:
+  priority: 0.6
+  changefreq: 'monthly'
+  lastmod: 2018-11-16T16:00:00+01:00
+---
+
+<p>MockServer is available as Helm chart so it can be easily installed in Kubernetes.</p>
+
+<p>To install the chart with:</p>
+
+<ul>
+  <li><strong>release name:</strong> mockserver</li>
+  <li><strong>namespace:</strong> mockserver</li>
+  <li><strong>configuration:</strong> values (see values.yaml for values definitions)</li>
+</ul>
+
+<p>Remotely using www.mock-server.com as a chart repo:</p>
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.5.1.tgz</code></pre>
+
+<p>Or if you have helm chart source folder (i.e. you have the repository cloned):</p>
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --values helm/mockserver/values.yaml --namespace mockserver mockserver helm/mockserver</code></pre>
+
+<p>To wait until the deployment is complete run:</p>
+
+<pre class="prettyprint code"><code class="code">kubectl rollout status deployments mockserver -n mockserver</code></pre>
+
+<p>To check the status of the deployment without waiting, run the following command and confirm the mockserver has the Running status:</p>
+
+<pre class="prettyprint code"><code class="code">kubectl get po -l release=mockserver -n mockserver</code></pre>
+
+<p>To view the logs:</p>
+
+<pre class="prettyprint code"><code class="code">kubectl logs $(kubectl get po -l release=mockserver -n mockserver | awk '{if(NR==2)print $1}') -n mockserver</code></pre>
+
+<p>MockServer will know be deployed a DNS inside kubernetes cluster, of <span class="keyword">mockserver.&lt;namespace&gt;.svc.cluster.local</span>, i.e. <span class="keyword">mockserver.mockserver.svc.cluster.local</span></p>
+
+<p>To retrieve MockServer address outside kubernetes cluster:</p>
+
+<pre class="prettyprint code"><code class="code">export NODE_PORT=$(kubectl get --namespace mockserver -o jsonpath="{.spec.ports[0].nodePort}" services mockserver)
+export NODE_IP=$(kubectl get nodes --namespace mockserver -o jsonpath="{.items[0].status.addresses[0].address}")
+export MOCKSERVER_HOST=$NODE_IP:$NODE_PORT
+echo http://$MOCKSERVER_HOST</code></pre>
+
+<p>To remove the MockServer deployment from Kubernetes:</p>
+
+<pre class="prettyprint code"><code class="code">helm delete mockserver --purge</code></pre>

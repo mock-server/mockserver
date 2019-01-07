@@ -10,7 +10,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
 import org.mockserver.examples.proxy.json.ObjectMapperFactory;
 import org.mockserver.examples.proxy.model.Book;
-import org.mockserver.socket.NettySslContextFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -24,7 +23,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
+import static org.mockserver.socket.tls.NettySslContextFactory.nettySslContextFactory;
 
 /**
  * @author jamesdbloom

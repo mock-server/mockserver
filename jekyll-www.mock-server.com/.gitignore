@@ -20,7 +20,6 @@ vendor/bundle
 # Jekyll #
 ##########
 _site
-apidocs
 
 # SASS #
 ########

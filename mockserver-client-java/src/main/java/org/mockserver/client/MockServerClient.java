@@ -1,9 +1,11 @@
 package org.mockserver.client;
 
 import com.google.common.base.Strings;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.Version;
-import org.mockserver.client.MockServerEventBus.MockServerEvent;
+import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -13,6 +15,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.*;
+import org.mockserver.stop.Stoppable;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
@@ -21,6 +24,8 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -35,22 +40,23 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 /**
  * @author jamesdbloom
  */
-public class MockServerClient implements java.io.Closeable {
+public class MockServerClient implements Stoppable {
 
     protected final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
+    private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+    private final Semaphore availableWebSocketCallbackRegistrations = new Semaphore(1);
     private final String host;
     private final String contextPath;
     private final Class<MockServerClient> clientClass;
     protected Future<Integer> portFuture;
     private Boolean secure;
     private Integer port;
-    private NettyHttpClient nettyHttpClient = new NettyHttpClient();
+    private NettyHttpClient nettyHttpClient = new NettyHttpClient(eventLoopGroup, null);
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(mockServerLogger);
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer(mockServerLogger);
     private VerificationSerializer verificationSerializer = new VerificationSerializer(mockServerLogger);
     private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
-
 
     /**
      * Start the client communicating to a MockServer on localhost at the port
@@ -101,6 +107,10 @@ public class MockServerClient implements java.io.Closeable {
         this.contextPath = contextPath;
     }
 
+    EventLoopGroup getEventLoopGroup() {
+        return eventLoopGroup;
+    }
+
     public boolean isSecure() {
         return secure != null ? secure : false;
     }
@@ -142,31 +152,39 @@ public class MockServerClient implements java.io.Closeable {
     }
 
     private HttpResponse sendRequest(HttpRequest request) {
-        if (secure != null) {
-            request.withSecure(secure);
-        }
-
-        HttpResponse response = nettyHttpClient.sendRequest(
-            request.withHeader(HOST.toString(), this.host + ":" + port()),
-            ConfigurationProperties.maxSocketTimeout(),
-            TimeUnit.MILLISECONDS
-        );
-
-        if (response != null) {
-            if (response.getStatusCode() != null &&
-                response.getStatusCode() == BAD_REQUEST.code()) {
-                throw new IllegalArgumentException(response.getBodyAsString());
+        try {
+            if (secure != null) {
+                request.withSecure(secure);
             }
-            String serverVersion = response.getFirstHeader("version");
-            String clientVersion = Version.getVersion();
-            if (!Strings.isNullOrEmpty(serverVersion) &&
-                !Strings.isNullOrEmpty(clientVersion) &&
-                !clientVersion.equals(serverVersion)) {
-                throw new ClientException("Client version \"" + clientVersion + "\" does not match server version \"" + serverVersion + "\"");
+
+            HttpResponse response = nettyHttpClient.sendRequest(
+                request.withHeader(HOST.toString(), this.host + ":" + port()),
+                ConfigurationProperties.maxSocketTimeout(),
+                TimeUnit.MILLISECONDS
+            );
+
+            if (response != null) {
+                if (response.getStatusCode() != null &&
+                    response.getStatusCode() == BAD_REQUEST.code()) {
+                    throw new IllegalArgumentException(response.getBodyAsString());
+                }
+                String serverVersion = response.getFirstHeader("version");
+                String clientVersion = Version.getVersion();
+                if (!Strings.isNullOrEmpty(serverVersion) &&
+                    !Strings.isNullOrEmpty(clientVersion) &&
+                    !clientVersion.equals(serverVersion)) {
+                    throw new ClientException("Client version \"" + clientVersion + "\" does not match server version \"" + serverVersion + "\"");
+                }
+            }
+
+            return response;
+        } catch (RuntimeException rex) {
+            if (!Strings.isNullOrEmpty(rex.getMessage()) && (rex.getMessage().contains("executor not accepting a task") || rex.getMessage().contains("loop shut down"))) {
+                throw new IllegalStateException(this.getClass().getSimpleName() + " has already been closed, please create new " + this.getClass().getSimpleName() + " instance");
+            } else {
+                throw rex;
             }
         }
-
-        return response;
     }
 
     /**
@@ -210,15 +228,15 @@ public class MockServerClient implements java.io.Closeable {
     /**
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
-    public MockServerClient stop() {
-        MockServerEventBus.getInstance().publish(MockServerEvent.STOP);
-        return stop(false);
+    public void stop() {
+        stop(true);
     }
 
     /**
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
     public MockServerClient stop(boolean ignoreFailure) {
+        MockServerEventBus.getInstance().publish(EventType.STOP);
         try {
             sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
             if (isRunning()) {
@@ -226,10 +244,15 @@ public class MockServerClient implements java.io.Closeable {
                     TimeUnit.MILLISECONDS.sleep(5);
                 }
             }
+        } catch (RejectedExecutionException ree) {
+            mockServerLogger.trace("Request rejected because closing down but logging at trace level for information just in case due to some other actual error " + ree);
         } catch (Exception e) {
             if (!ignoreFailure) {
                 mockServerLogger.warn("Failed to send stop request to MockServer " + e.getMessage());
             }
+        }
+        if (!eventLoopGroup.isShuttingDown()) {
+            eventLoopGroup.shutdownGracefully();
         }
         return clientClass.cast(this);
     }
@@ -243,7 +266,7 @@ public class MockServerClient implements java.io.Closeable {
      * Reset MockServer by clearing all expectations
      */
     public MockServerClient reset() {
-        MockServerEventBus.getInstance().publish(MockServerEvent.RESET);
+        MockServerEventBus.getInstance().publish(EventType.RESET);
         sendRequest(request().withMethod("PUT").withPath(calculatePath("reset")));
         return clientClass.cast(this);
     }
@@ -495,7 +518,7 @@ public class MockServerClient implements java.io.Closeable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times) {
-        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, TimeToLive.unlimited()));
+        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, TimeToLive.unlimited()), availableWebSocketCallbackRegistrations);
     }
 
     /**
@@ -523,7 +546,7 @@ public class MockServerClient implements java.io.Closeable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
-        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, timeToLive));
+        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, timeToLive), availableWebSocketCallbackRegistrations);
     }
 
     void sendExpectation(Expectation expectation) {

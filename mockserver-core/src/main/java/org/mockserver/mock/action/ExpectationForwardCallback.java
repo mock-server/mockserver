@@ -6,7 +6,7 @@ import org.mockserver.model.HttpResponse;
 /**
  * @author jamesdbloom
  */
-public interface ExpectationForwardCallback {
+public interface ExpectationForwardCallback extends ExpectationCallback<HttpRequest> {
 
     /**
      * Called for every request when expectation condition has been satisfied.
@@ -17,4 +17,5 @@ public interface ExpectationForwardCallback {
      * @return the request that will be proxied
      */
     HttpRequest handle(HttpRequest httpRequest);
+
 }

@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.RegexBody;
 
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.RegexBody.regex;
@@ -36,5 +37,31 @@ public class RegexBodyDTOTest {
     @Test
     public void shouldReturnCorrectObjectFromStaticBuilder() {
         assertThat(regex("some_body"), is(new RegexBody("some_body")));
+    }
+
+    @Test
+    public void shouldHandleNull() {
+        // given
+        String body = null;
+
+        // when
+        RegexBody regexBody = new RegexBodyDTO(new RegexBody(body)).buildObject();
+
+        // then
+        assertThat(regexBody.getValue(), nullValue());
+        assertThat(regexBody.getType(), is(Body.Type.REGEX));
+    }
+
+    @Test
+    public void shouldHandleEmptyByteArray() {
+        // given
+        String body = "";
+
+        // when
+        RegexBody regexBody = new RegexBodyDTO(new RegexBody(body)).buildObject();
+
+        // then
+        assertThat(regexBody.getValue(), is(""));
+        assertThat(regexBody.getType(), is(Body.Type.REGEX));
     }
 }

@@ -45,12 +45,12 @@ public class HttpTemplateTest {
     @Test
     public void shouldReturnFormattedRequestInToString() {
         TestCase.assertEquals("{" + NEW_LINE +
-                "  \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
-                "  \"template\" : \"some_template\"," + NEW_LINE +
                 "  \"delay\" : {" + NEW_LINE +
                 "    \"timeUnit\" : \"HOURS\"," + NEW_LINE +
                 "    \"value\" : 1" + NEW_LINE +
-                "  }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"templateType\" : \"JAVASCRIPT\"," + NEW_LINE +
+                "  \"template\" : \"some_template\"" + NEW_LINE +
                 "}",
             template(JAVASCRIPT)
                 .withTemplate("some_template")
@@ -58,4 +58,5 @@ public class HttpTemplateTest {
                 .toString()
         );
     }
+
 }

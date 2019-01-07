@@ -196,12 +196,11 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
     @Test
     public void shouldCallbackForForwardCallbackToSpecifiedClassInTestClasspath() {
         // given
-        EchoServer secureEchoServer = new EchoServer(false);
         TestClasspathTestExpectationForwardCallback.httpRequests.clear();
         TestClasspathTestExpectationForwardCallback.httpRequestToReturn = request()
             .withHeaders(
                 header("x-callback", "test_callback_header"),
-                header("Host", "localhost:" + secureEchoServer.getPort())
+                header("Host", "localhost:" + insecureEchoServer.getPort())
             )
             .withBody("a_callback_forward");
 

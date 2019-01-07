@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver</artifactId>
-        <version>5.4.2-SNAPSHOT</version>
+        <version>5.5.2-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -92,7 +92,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.0.2</version>
+                <version>3.1.1</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -108,6 +108,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
+                    <skipAssembly>${skipAssembly}</skipAssembly>
                     <tarLongFileMode>posix</tarLongFileMode>
                     <archive>
                         <manifest>
@@ -130,137 +131,5 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>debian_package</id>
-            <!--<activation>-->
-                <!--<file>-->
-                    <!--<exists>/usr/bin/debuild</exists>-->
-                <!--</file>-->
-            <!--</activation>-->
-
-            <properties>
-                <build.number>TRAVIS_BUILD_NUMBER</build.number>
-                <package.name>${project.artifactId}_${project.version}</package.name>
-            </properties>
-
-            <build>
-                <plugins>
-                    <!-- build debian package -->
-                    <plugin>
-                        <artifactId>jdeb</artifactId>
-                        <groupId>org.vafer</groupId>
-                        <version>1.1.1</version>
-                        <executions>
-                            <execution>
-                                <phase>deploy</phase>
-                                <goals>
-                                    <goal>jdeb</goal>
-                                </goals>
-                                <configuration>
-                                    <verbose>true</verbose>
-                                    <snapshotExpand>true</snapshotExpand>
-                                    <snapshotEnv>${build.number}</snapshotEnv>
-                                    <controlDir>${basedir}/src/main/package/control</controlDir>
-                                    <deb>${project.build.directory}/${package.name}.deb</deb>
-                                    <changesOut>${project.build.directory}/${package.name}.changes</changesOut>
-                                    <dataSet>
-
-                                        <data>
-                                            <src>${project.build.directory}/war_extract</src>
-                                            <type>directory</type>
-                                            <mapper>
-                                                <type>perm</type>
-                                                <prefix>/var/lib/tomcat8/webapps/gameserver</prefix>
-                                                <user>tomcat8</user>
-                                                <group>tomcat8</group>
-                                            </mapper>
-                                        </data>
-
-                                        <data>
-                                            <src>${basedir}/src/main/package/usr/share/tomcat8/bin/setenv.sh
-                                            </src>
-                                            <type>file</type>
-                                            <mapper>
-                                                <type>perm</type>
-                                                <prefix>/usr/share/tomcat8/bin</prefix>
-                                                <filemode>33252</filemode>
-                                                <user>tomcat8</user>
-                                                <group>tomcat8</group>
-                                            </mapper>
-                                        </data>
-
-                                        <data>
-                                            <src>
-                                                ${basedir}/src/main/package/var/nektan/config/game-server/environment.properties
-                                            </src>
-                                            <type>file</type>
-                                            <mapper>
-                                                <type>perm</type>
-                                                <prefix>/var/lib/tomcat8/webapps/gameserver/WEB-INF/classes</prefix>
-                                                <filemode>0244</filemode>
-                                                <user>tomcat8</user>
-                                                <group>tomcat8</group>
-                                            </mapper>
-                                        </data>
-
-                                        <data>
-                                            <type>link</type>
-                                            <symlink>true</symlink>
-                                            <linkName>/var/log/nektan-${project.artifactId}</linkName>
-                                            <linkTarget>tomcat8</linkTarget>
-                                        </data>
-
-                                        <data>
-                                            <type>link</type>
-                                            <symlink>true</symlink>
-                                            <linkName>/etc/init.d/nektan-${project.artifactId}</linkName>
-                                            <linkTarget>tomcat8</linkTarget>
-                                        </data>
-
-                                    </dataSet>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!-- upload to repository -->
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <version>1.6.0</version>
-                        <executions>
-                            <execution>
-                                <id>lintian</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <configuration>
-                                    <executable>${basedir}/src/main/package/lintian.sh</executable>
-                                    <arguments>
-                                        <argument>${project.build.directory}/${package.name}.deb</argument>
-                                    </arguments>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>dput</id>
-                                <phase>deploy</phase>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <configuration>
-                                    <executable>${basedir}/src/main/package/dput.sh</executable>
-                                    <arguments>
-                                        <argument>${project.build.directory}/${package.name}.changes</argument>
-                                    </arguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
 </project>

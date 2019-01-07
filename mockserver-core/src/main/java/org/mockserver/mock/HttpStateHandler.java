@@ -1,15 +1,10 @@
 package org.mockserver.mock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.callback.WebSocketClientRegistry;
-import org.mockserver.log.model.RequestLogEntry;
-import org.mockserver.serialization.*;
-import org.mockserver.serialization.java.ExpectationToJavaSerializer;
-import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.filters.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.log.model.MessageLogEntry;
@@ -17,11 +12,14 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.serialization.*;
+import org.mockserver.serialization.java.ExpectationToJavaSerializer;
+import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
+import org.mockserver.server.initialize.ExpectationInitializerLoader;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -33,7 +31,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.socket.KeyAndCertificateFactory.addSubjectAlternativeName;
+import static org.mockserver.socket.tls.KeyAndCertificateFactory.addSubjectAlternativeName;
 
 /**
  * @author jamesdbloom
@@ -60,7 +58,14 @@ public class HttpStateHandler {
     public HttpStateHandler(Scheduler scheduler) {
         this.scheduler = scheduler;
         mockServerLog = new MockServerEventLog(mockServerLogger, scheduler);
-        mockServerMatcher = new MockServerMatcher(mockServerLogger, scheduler);
+        mockServerMatcher = new MockServerMatcher(mockServerLogger, scheduler, webSocketClientRegistry);
+        addExpectationsFromInitializer();
+    }
+
+    private void addExpectationsFromInitializer() {
+        for (Expectation expectation : ExpectationInitializerLoader.loadExpectations()) {
+            mockServerMatcher.add(expectation);
+        }
     }
 
     public MockServerLogger getMockServerLogger() {
@@ -106,14 +111,16 @@ public class HttpStateHandler {
 
     public void add(Expectation... expectations) {
         for (Expectation expectation : expectations) {
-            final String hostHeader = expectation.getHttpRequest().getFirstHeader(HOST.toString());
-            if (!Strings.isNullOrEmpty(hostHeader)) {
-                scheduler.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        addSubjectAlternativeName(hostHeader);
-                    }
-                });
+            if (expectation.getHttpRequest() != null) {
+                final String hostHeader = expectation.getHttpRequest().getFirstHeader(HOST.toString());
+                if (!Strings.isNullOrEmpty(hostHeader)) {
+                    scheduler.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            addSubjectAlternativeName(hostHeader);
+                        }
+                    });
+                }
             }
             mockServerMatcher.add(expectation);
             mockServerLogger.info(CREATED_EXPECTATION, expectation.getHttpRequest(), "creating expectation:{}", expectation.clone());
@@ -136,94 +143,95 @@ public class HttpStateHandler {
     }
 
     public HttpResponse retrieve(HttpRequest request) {
-        HttpRequest httpRequest = null;
-        if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
-            httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
-        }
         HttpResponse response = response();
-        try {
-            Format format = Format.valueOf(StringUtils.defaultIfEmpty(request.getFirstQueryStringParameter("format").toUpperCase(), "JSON"));
-            RetrieveType retrieveType = RetrieveType.valueOf(StringUtils.defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "REQUESTS"));
-            switch (retrieveType) {
-                case LOGS: {
-                    mockServerLogger.info(RETRIEVED, httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
-                    List<MessageLogEntry> retrievedMessages = mockServerLog.retrieveMessages(httpRequest);
-                    StringBuilder stringBuffer = new StringBuilder();
-                    for (int i = 0; i < retrievedMessages.size(); i++) {
-                        MessageLogEntry messageLogEntry = retrievedMessages.get(i);
-                        stringBuffer
-                            .append(messageLogEntry.getTimestamp())
-                            .append(" - ")
-                            .append(messageLogEntry.getMessage());
-                        if (i < retrievedMessages.size() - 1) {
-                            stringBuffer.append(LOG_SEPARATOR);
-                        }
-                    }
-                    stringBuffer.append(NEW_LINE);
-                    response.withBody(stringBuffer.toString(), PLAIN_TEXT_UTF_8);
-                    break;
-                }
-                case REQUESTS: {
-                    mockServerLogger.info(RETRIEVED, httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
-                    List<HttpRequest> httpRequests = mockServerLog.retrieveRequests(httpRequest);
-                    switch (format) {
-                        case JAVA:
-                            response.withBody(httpRequestToJavaSerializer.serialize(httpRequests), create("application", "java").withCharset(UTF_8));
-                            break;
-                        case JSON:
-                            response.withBody(httpRequestSerializer.serialize(httpRequests), JSON_UTF_8);
-                            break;
-                        case LOG_ENTRIES:
-                            response.withBody(logEntrySerializer.serialize(mockServerLog.retrieveRequestLogEntries(httpRequest)), JSON_UTF_8);
-                            break;
-                    }
-                    break;
-                }
-                case RECORDED_EXPECTATIONS: {
-                    mockServerLogger.info(RETRIEVED, httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
-                    List<Expectation> expectations = mockServerLog.retrieveExpectations(httpRequest);
-                    switch (format) {
-                        case JAVA:
-                            response.withBody(expectationToJavaSerializer.serialize(expectations), create("application", "java").withCharset(UTF_8));
-                            break;
-                        case JSON:
-                        case LOG_ENTRIES:
-                            response.withBody(expectationSerializer.serialize(expectations), JSON_UTF_8);
-                            break;
-                    }
-                    break;
-                }
-                case ACTIVE_EXPECTATIONS: {
-                    mockServerLogger.info(RETRIEVED, httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
-                    List<Expectation> expectations = mockServerMatcher.retrieveExpectations(httpRequest);
-                    switch (format) {
-                        case JAVA:
-                            response.withBody(expectationToJavaSerializer.serialize(expectations), create("application", "java").withCharset(UTF_8));
-                            break;
-                        case JSON:
-                        case LOG_ENTRIES:
-                            response.withBody(expectationSerializer.serialize(expectations), JSON_UTF_8);
-                            break;
-                    }
-                    break;
-                }
+        if (request != null) {
+            HttpRequest httpRequest = null;
+            if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+                httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
             }
-        } catch (IllegalArgumentException iae) {
-            if (iae.getMessage().contains(RetrieveType.class.getSimpleName())) {
-                throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Lists.transform(Arrays.asList(RetrieveType.values()), new Function<RetrieveType, String>() {
-                    public String apply(RetrieveType input) {
-                        return input.name().toLowerCase();
+            try {
+                Format format = Format.valueOf(StringUtils.defaultIfEmpty(request.getFirstQueryStringParameter("format").toUpperCase(), "JSON"));
+                RetrieveType retrieveType = RetrieveType.valueOf(StringUtils.defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "REQUESTS"));
+                switch (retrieveType) {
+                    case LOGS: {
+                        mockServerLogger.info(RETRIEVED, httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
+                        List<MessageLogEntry> retrievedMessages = mockServerLog.retrieveMessages(httpRequest);
+                        StringBuilder stringBuffer = new StringBuilder();
+                        for (int i = 0; i < retrievedMessages.size(); i++) {
+                            MessageLogEntry messageLogEntry = retrievedMessages.get(i);
+                            stringBuffer
+                                .append(messageLogEntry.getTimestamp())
+                                .append(" - ")
+                                .append(messageLogEntry.getMessage());
+                            if (i < retrievedMessages.size() - 1) {
+                                stringBuffer.append(LOG_SEPARATOR);
+                            }
+                        }
+                        stringBuffer.append(NEW_LINE);
+                        response.withBody(stringBuffer.toString(), PLAIN_TEXT_UTF_8);
+                        break;
                     }
-                }));
-            } else {
-                throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("format") + "\" is not a valid value for \"format\" parameter, only the following values are supported " + Lists.transform(Arrays.asList(Format.values()), new Function<Format, String>() {
-                    public String apply(Format input) {
-                        return input.name().toLowerCase();
+                    case REQUESTS: {
+                        mockServerLogger.info(RETRIEVED, httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
+                        List<HttpRequest> httpRequests = mockServerLog.retrieveRequests(httpRequest);
+                        switch (format) {
+                            case JAVA:
+                                response.withBody(httpRequestToJavaSerializer.serialize(httpRequests), create("application", "java").withCharset(UTF_8));
+                                break;
+                            case JSON:
+                                response.withBody(httpRequestSerializer.serialize(httpRequests), JSON_UTF_8);
+                                break;
+                            case LOG_ENTRIES:
+                                response.withBody(logEntrySerializer.serialize(mockServerLog.retrieveRequestLogEntries(httpRequest)), JSON_UTF_8);
+                                break;
+                        }
+                        break;
                     }
-                }));
+                    case RECORDED_EXPECTATIONS: {
+                        mockServerLogger.info(RETRIEVED, httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
+                        List<Expectation> expectations = mockServerLog.retrieveExpectations(httpRequest);
+                        switch (format) {
+                            case JAVA:
+                                response.withBody(expectationToJavaSerializer.serialize(expectations), create("application", "java").withCharset(UTF_8));
+                                break;
+                            case JSON:
+                            case LOG_ENTRIES:
+                                response.withBody(expectationSerializer.serialize(expectations), JSON_UTF_8);
+                                break;
+                        }
+                        break;
+                    }
+                    case ACTIVE_EXPECTATIONS: {
+                        mockServerLogger.info(RETRIEVED, httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
+                        List<Expectation> expectations = mockServerMatcher.retrieveExpectations(httpRequest);
+                        switch (format) {
+                            case JAVA:
+                                response.withBody(expectationToJavaSerializer.serialize(expectations), create("application", "java").withCharset(UTF_8));
+                                break;
+                            case JSON:
+                            case LOG_ENTRIES:
+                                response.withBody(expectationSerializer.serialize(expectations), JSON_UTF_8);
+                                break;
+                        }
+                        break;
+                    }
+                }
+            } catch (IllegalArgumentException iae) {
+                if (iae.getMessage().contains(RetrieveType.class.getSimpleName())) {
+                    throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Lists.transform(Arrays.asList(RetrieveType.values()), new Function<RetrieveType, String>() {
+                        public String apply(RetrieveType input) {
+                            return input.name().toLowerCase();
+                        }
+                    }));
+                } else {
+                    throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("format") + "\" is not a valid value for \"format\" parameter, only the following values are supported " + Lists.transform(Arrays.asList(Format.values()), new Function<Format, String>() {
+                        public String apply(Format input) {
+                            return input.name().toLowerCase();
+                        }
+                    }));
+                }
             }
         }
-
         return response.withStatusCode(200);
     }
 
@@ -294,14 +302,14 @@ public class HttpStateHandler {
         Action action = expectation.getAction();
         String NOT_SUPPORTED_MESSAGE = " is not supported by MockServer deployed as a WAR due to limitations in the JEE specification; use mockserver-netty to enable these features";
         if (action instanceof HttpResponse && ((HttpResponse) action).getConnectionOptions() != null) {
+            valid = false;
             responseWriter.writeResponse(request, response("ConnectionOptions" + NOT_SUPPORTED_MESSAGE), true);
-            valid = false;
         } else if (action instanceof HttpObjectCallback) {
+            valid = false;
             responseWriter.writeResponse(request, response("HttpObjectCallback" + NOT_SUPPORTED_MESSAGE), true);
-            valid = false;
         } else if (action instanceof HttpError) {
-            responseWriter.writeResponse(request, response("HttpError" + NOT_SUPPORTED_MESSAGE), true);
             valid = false;
+            responseWriter.writeResponse(request, response("HttpError" + NOT_SUPPORTED_MESSAGE), true);
         }
         return valid;
     }

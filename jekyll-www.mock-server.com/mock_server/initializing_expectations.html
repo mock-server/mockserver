@@ -1,0 +1,146 @@
+---
+title: Initializing Expectations
+layout: page
+pageOrder: 7
+section: 'Mock Server'
+subsection: true
+sitemap:
+  priority: 0.7
+  changefreq: 'monthly'
+  lastmod: 2018-11-16T16:00:00+01:00
+---
+
+<p>To ensure expectations are available as soon as MockServer is started it is possible to use an expectation initializer, there are three options:</p>
+
+<ul>
+    <li><strong>initializer class</strong> loaded from the classpath to construct an array of expectations</li>
+    <li><strong>initializer JSON file</strong> loaded from the filesystem containing a serialised array of expectations</li>
+    <li><strong>maven plugin</strong> loaded from the classpath to add expectations using the MockServerClient</li>
+</ul>
+
+<p><strong>Note:</strong> all three options require the class or file to be available to the MockServer, i.e. in the local classpath or filesystem.  To remotely initialise the MockServer a client is required to connect to the MockServer after it has started and submit one or more expectations.</p>
+
+<a name="expectation_initializer_class" class="anchor" href="#expectation_initializer_class">&nbsp</a>
+
+<h2>Expectation Initializer Class</h2>
+
+<p>MockServer expectations can be initialized when the MockServer starts, using a class, by specified the <strong>initializationClass</strong> configuration property as described in the <a href="/mock_server/configuration_properties.html#button_configuration_initialization_class">Configuration Properties</a> page, for example:</p>
+<pre><code class="code">java -Dmockserver.initializationClass=<span class="string_literal">"org.mockserver.server.initialize.ExpectationInitializerExample"</span> -jar ~/Downloads/mockserver-netty-5.5.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</code></pre>
+
+<p>The class must implement the <strong>org.mockserver.server.initialize.ExpectationInitializer</strong> interface and have a default constructor with zero arguments, for example:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">public class ExpectationInitializerExample implements ExpectationInitializer {
+    @Override
+    public Expectation[] initializeExpectations() {
+        return new Expectation[]{
+            new Expectation(
+                request()
+                    .withPath("/simpleFirst")
+            )
+                .thenRespond(
+                response()
+                    .withBody("some first response")
+            ),
+            new Expectation(
+                request()
+                    .withPath("/simpleSecond")
+            )
+                .thenRespond(
+                response()
+                    .withBody("some second response")
+            )
+        };
+    }
+}</code></pre>
+
+<a name="expectation_initializer_json" class="anchor" href="#expectation_initializer_json">&nbsp;</a>
+
+<h2>Expectation Initializer JSON</h2>
+
+<p>MockServer expectations can be initialized when the MockServer starts, using a JSON file, by specified the <strong>initializationJsonPath</strong> configuration property as described in the <a href="/mock_server/configuration_properties.html#button_configuration_initialization_json_path">Configuration Properties</a> page, for example:</p>
+<pre><code class="code">java -Dmockserver.initializationJsonPath=<span class="string_literal">"org/mockserver/server/initialize/initializerJson.json"</span> -jar ~/Downloads/mockserver-netty-5.5.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</code></pre>
+
+<p>The JSON file can be loaded using a related or absolute path or can be loaded from the classpath.</p>
+<p>The JSON file should contain an array of serialised expectations, for example:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">[
+  {
+    "httpRequest": {
+      "path": "/simpleFirst"
+    },
+    "httpResponse": {
+      "body": "some first response"
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/simpleSecond"
+    },
+    "httpResponse": {
+      "body": "some second response"
+    }
+  }
+]</code></pre>
+
+<a name="maven_plugin_expectation_initializer_class" class="anchor" href="#maven_plugin_expectation_initializer_class">&nbsp;</a>
+
+<h2>Maven Plugin Expectation Initializer Class</h2>
+
+<p>If the MockServer is started using the <a href="/mock_server/running_mock_server.html#maven_plugin">Maven Plugin</a> a <strong>initializationClass</strong> property can be specified to initialize expectations, when the MockServer starts.</p>
+<p><strong>Note:</strong> the plugin must be started during the <strong>process-test-classes</strong> to ensure that the initialization class has been compiled from either <strong>src/main/java</strong> or <strong>src/test/java</strong> locations. In addition the initializer can only be used with <strong>start</strong> and <strong>run</strong> goals, it will not work with the <strong>runForked</strong> goal as a JVM is forked with a separate classpath. (required: false, default: false)</p>
+
+<p>The following section from a pom.xml shows how the <a href="/mock_server/running_mock_server.html#maven_plugin">Maven Plugin</a> can be configured to specify an <strong>initializationClass</strong>:</p>
+
+<pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
+    &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
+    &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">5.5.1</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">configuration</span>&gt;
+        &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
+        &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
+        &lt;<span class="element">initializationClass</span>&gt;<span class="element_value">org.mockserver.maven.ExampleInitializationClass</span>&lt;/<span class="element">initializationClass</span>&gt;
+    &lt;/<span class="element">configuration</span>&gt;
+    &lt;<span class="element">executions</span>&gt;
+        &lt;<span class="element">execution</span>&gt;
+            &lt;<span class="element">id</span>&gt;<span class="element_value">process-test-classes</span>&lt;/<span class="element">id</span>&gt;
+            &lt;<span class="element">phase</span>&gt;<span class="element_value">process-test-classes</span>&lt;/<span class="element">phase</span>&gt;
+            &lt;<span class="element">goals</span>&gt;
+                &lt;<span class="element">goal</span>&gt;<span class="element_value">start</span>&lt;/<span class="element">goal</span>&gt;
+            &lt;/<span class="element">goals</span>&gt;
+        &lt;/<span class="element">execution</span>&gt;
+        &lt;<span class="element">execution</span>&gt;
+            &lt;<span class="element">id</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">id</span>&gt;
+            &lt;<span class="element">phase</span>&gt;<span class="element_value">verify</span>&lt;/<span class="element">phase</span>&gt;
+            &lt;<span class="element">goals</span>&gt;
+                &lt;<span class="element">goal</span>&gt;<span class="element_value">stop</span>&lt;/<span class="element">goal</span>&gt;
+            &lt;/<span class="element">goals</span>&gt;
+        &lt;/<span class="element">execution</span>&gt;
+    &lt;/<span class="element">executions</span>&gt;
+&lt;/<span class="element">plugin</span>&gt;</code></pre>
+
+<p>The class must implement the <strong>org.mockserver.client.initialize.ExpectationInitializer</strong> interface and have a default constructor with zero arguments, for example:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">public class ExampleInitializationClass implements ExpectationInitializer {
+
+    @Override
+    public void initializeExpectations(MockServerClient mockServerClient) {
+        mockServerClient
+                .when(
+                        request()
+                                .withPath("/simpleFirst")
+                )
+                .respond(
+                        response()
+                                .withBody("some first response")
+                );
+        mockServerClient
+                .when(
+                        request()
+                                .withPath("/simpleSecond")
+                )
+                .respond(
+                        response()
+                                .withBody("some second response")
+                );
+    }
+}</code></pre>

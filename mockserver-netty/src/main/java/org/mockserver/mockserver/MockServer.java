@@ -15,6 +15,7 @@ import java.util.List;
 
 import static java.util.Collections.singletonList;
 import static org.mockserver.client.netty.proxy.ProxyConfiguration.proxyConfiguration;
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.mockserver.MockServerHandler.PROXYING;
 
@@ -74,6 +75,9 @@ public class MockServer extends LifeCycle {
         }
 
         remoteSocket = new InetSocketAddress(remoteHost, remotePort);
+        if (proxyConfiguration != null) {
+            mockServerLogger.info(SERVER_CONFIGURATION, "using proxy configuration for forwarded requests:{}", proxyConfiguration);
+        }
         createServerBootstrap(proxyConfiguration, localPorts);
 
         // wait to start
@@ -99,12 +103,6 @@ public class MockServer extends LifeCycle {
 
         bindServerPorts(portBindings);
         startedServer(getLocalPorts());
-
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            public void run() {
-                MockServer.super.stop();
-            }
-        }));
     }
 
     public InetSocketAddress getRemoteAddress() {

@@ -1,5 +1,7 @@
 package org.mockserver.mock.action;
 
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -15,10 +17,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -27,7 +31,9 @@ public class ProxyToInvalidSocketIntegrationTest {
 
     private static ClientAndServer clientAndServer;
 
-    private static NettyHttpClient httpClient = new NettyHttpClient();
+    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
+
+    private static NettyHttpClient httpClient = new NettyHttpClient(clientEventLoopGroup, null);
 
     @BeforeClass
     public static void startServer() {
@@ -35,10 +41,13 @@ public class ProxyToInvalidSocketIntegrationTest {
     }
 
     @AfterClass
+    public static void stopEventLoopGroup() {
+        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+    }
+
+    @AfterClass
     public static void stopServer() {
-        if (clientAndServer != null) {
-            clientAndServer.stop();
-        }
+        stopQuietly(clientAndServer);
     }
 
     @Before

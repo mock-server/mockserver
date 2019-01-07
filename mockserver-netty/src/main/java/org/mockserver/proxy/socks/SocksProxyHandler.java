@@ -6,7 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.KeyAndCertificateFactory;
+import org.mockserver.socket.tls.KeyAndCertificateFactory;
 
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mockserver.MockServerHandler.PROXYING;

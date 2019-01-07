@@ -11,7 +11,7 @@ import java.nio.channels.ClosedSelectorException;
 
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
-import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
+import static org.mockserver.socket.tls.NettySslContextFactory.nettySslContextFactory;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledDownstream;
 
 public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpRequest> {

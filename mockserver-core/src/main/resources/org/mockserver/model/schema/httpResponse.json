@@ -3,11 +3,11 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-        "body": {
-            "$ref": "#/definitions/bodyWithContentType"
-        },
         "delay": {
             "$ref": "#/definitions/delay"
+        },
+        "body": {
+            "$ref": "#/definitions/bodyWithContentType"
         },
         "cookies": {
             "$ref": "#/definitions/keyToValue"

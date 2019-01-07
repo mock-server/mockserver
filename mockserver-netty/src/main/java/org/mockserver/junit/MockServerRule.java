@@ -13,7 +13,8 @@ import java.util.List;
 
 public class MockServerRule implements TestRule {
 
-    private static ClientAndServer perTestSuiteClientAndServer;
+    @VisibleForTesting
+    static ClientAndServer perTestSuiteClientAndServer;
     private final Object target;
     private final Integer[] ports;
     private final boolean perTestSuite;
@@ -24,6 +25,8 @@ public class MockServerRule implements TestRule {
      * Start the MockServer prior to test execution and stop the MockServer after the tests have completed.
      * This constructor dynamically allocates a free port for the MockServer to use.
      *
+     * If the test class contains a MockServerClient field it is set with a client configured for the created MockServer.
+     *
      * @param target an instance of the test being executed
      */
     public MockServerRule(Object target) {
@@ -33,6 +36,8 @@ public class MockServerRule implements TestRule {
     /**
      * Start the MockServer prior to test execution and stop the MockServer after the tests have completed.
      * This constructor dynamically allocates a free port for the MockServer to use.
+     *
+     * If the test class contains a MockServerClient field it is set with a client configured for the created MockServer.
      *
      * @param target       an instance of the test being executed
      * @param perTestSuite indicates how many instances of MockServer are created
@@ -45,13 +50,15 @@ public class MockServerRule implements TestRule {
 
     /**
      * Start the proxy prior to test execution and stop the proxy after the tests have completed.
-     * This constructor dynamically create a proxy that accepts HTTP(s) requests on the specified port
+     * This constructor dynamically create a MockServer that accepts HTTP(s) requests on the specified port
+     *
+     * If the test class contains a MockServerClient field it is set with a client configured for the created MockServer.
      *
      * @param target an instance of the test being executed
      * @param ports  the HTTP(S) port for the proxy
      */
     public MockServerRule(Object target, Integer... ports) {
-        this(target, false, ports);
+        this(target, true, ports);
     }
 
     /**
@@ -98,34 +105,28 @@ public class MockServerRule implements TestRule {
                 if (perTestSuite) {
                     if (perTestSuiteClientAndServer == null) {
                         perTestSuiteClientAndServer = clientAndServerFactory.newClientAndServer();
-                        Runtime.getRuntime().addShutdownHook(new Thread() {
-                            @Override
-                            public void run() {
-                                perTestSuiteClientAndServer.stop();
-                            }
-                        });
+                    } else {
+                        perTestSuiteClientAndServer.reset();
                     }
                     clientAndServer = perTestSuiteClientAndServer;
+                    setMockServerClient(target, perTestSuiteClientAndServer);
+                    base.evaluate();
                 } else {
                     clientAndServer = clientAndServerFactory.newClientAndServer();
-                }
-                setMockServerClient(target, clientAndServer);
-                try {
-                    if (!perTestSuite) {
-                        clientAndServer.reset();
-                    }
-                    base.evaluate();
-                } finally {
-                    if (!perTestSuite) {
+                    setMockServerClient(target, clientAndServer);
+                    try {
+                        base.evaluate();
+                    } finally {
                         clientAndServer.stop();
                     }
                 }
+
             }
         };
     }
 
     private void setMockServerClient(Object target, ClientAndServer clientAndServer) {
-        for (Class<?> clazz = target.getClass(); !clazz.equals(Object.class); clazz = clazz.getSuperclass()) {
+        for (Class<?> clazz = target instanceof Class ? (Class<?>) target : target.getClass(); !clazz.equals(Object.class); clazz = clazz.getSuperclass()) {
             for (Field field : clazz.getDeclaredFields()) {
                 if (field.getType().equals(MockServerClient.class)) {
                     field.setAccessible(true);

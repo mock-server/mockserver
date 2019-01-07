@@ -1,35 +1,5 @@
 package org.mockserver.client;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.verify.Verification.verification;
-import static org.mockserver.verify.VerificationTimes.atLeast;
-import static org.mockserver.verify.VerificationTimes.once;
-
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,41 +10,39 @@ import org.mockito.Mock;
 import org.mockserver.Version;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.netty.SocketConnectionException;
-import org.mockserver.client.netty.websocket.WebSocketClient;
+import org.mockserver.matchers.Times;
+import org.mockserver.mock.Expectation;
+import org.mockserver.model.*;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.VerificationSequenceSerializer;
 import org.mockserver.serialization.VerificationSerializer;
-import org.mockserver.serialization.model.ExpectationDTO;
-import org.mockserver.serialization.model.HttpClassCallbackDTO;
-import org.mockserver.serialization.model.HttpErrorDTO;
-import org.mockserver.serialization.model.HttpForwardDTO;
-import org.mockserver.serialization.model.HttpObjectCallbackDTO;
-import org.mockserver.serialization.model.HttpOverrideForwardedRequestDTO;
-import org.mockserver.serialization.model.HttpRequestDTO;
-import org.mockserver.serialization.model.HttpResponseDTO;
-import org.mockserver.matchers.Times;
-import org.mockserver.mock.Expectation;
-import org.mockserver.mock.action.ExpectationForwardCallback;
-import org.mockserver.mock.action.ExpectationResponseCallback;
-import org.mockserver.model.Action;
-import org.mockserver.model.ClearType;
-import org.mockserver.model.Format;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpClassCallback;
-import org.mockserver.model.HttpError;
-import org.mockserver.model.HttpForward;
-import org.mockserver.model.HttpObjectCallback;
-import org.mockserver.model.HttpOverrideForwardedRequest;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.HttpStatusCode;
-import org.mockserver.model.HttpTemplate;
-import org.mockserver.model.RetrieveType;
-import org.mockserver.model.StringBody;
+import org.mockserver.serialization.model.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
+
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
+
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.verify.Verification.verification;
+import static org.mockserver.verify.VerificationTimes.atLeast;
+import static org.mockserver.verify.VerificationTimes.once;
 
 /**
  * @author jamesdbloom
@@ -261,45 +229,6 @@ public class MockServerClientTest {
     }
 
     @Test
-    public void shouldSetupExpectationWithResponseObjectCallback() {
-        // given
-        HttpRequest httpRequest =
-            new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body"));
-        ExpectationResponseCallback expectationResponseCallback = new ExpectationResponseCallback() {
-            @Override
-            public HttpResponse handle(HttpRequest httpRequest) {
-                return response();
-            }
-        };
-
-        // and
-        WebSocketClient webSocketClient = mock(WebSocketClient.class);
-        when(webSocketClient.registerExpectationCallback(expectationResponseCallback)).thenReturn(webSocketClient);
-        when(webSocketClient.clientId()).thenReturn("some_client_id");
-
-        // when
-        ForwardChainExpectation forwardChainExpectation = mockServerClient.when(httpRequest);
-
-        // and given
-        forwardChainExpectation.setWebSocketClient(webSocketClient);
-
-        // and when
-        forwardChainExpectation.respond(expectationResponseCallback);
-
-        // then
-        Expectation expectation = forwardChainExpectation.getExpectation();
-        assertTrue(expectation.isActive());
-        assertThat(expectation.getHttpResponseClassCallback(), nullValue());
-        assertThat(expectation.getHttpResponseObjectCallback(), is(new HttpObjectCallback()
-            .withActionType(Action.Type.RESPONSE_OBJECT_CALLBACK)
-            .withClientId("some_client_id")
-        ));
-        assertEquals(Times.unlimited(), expectation.getTimes());
-    }
-
-    @Test
     public void shouldSetupExpectationWithForward() {
         // given
         HttpRequest httpRequest =
@@ -364,45 +293,6 @@ public class MockServerClientTest {
         Expectation expectation = forwardChainExpectation.getExpectation();
         assertTrue(expectation.isActive());
         assertSame(httpClassCallback, expectation.getHttpForwardClassCallback());
-        assertEquals(Times.unlimited(), expectation.getTimes());
-    }
-
-    @Test
-    public void shouldSetupExpectationWithForwardObjectCallback() {
-        // given
-        HttpRequest httpRequest =
-            new HttpRequest()
-                .withPath("/some_path")
-                .withBody(new StringBody("some_request_body"));
-        ExpectationForwardCallback expectationResponseCallback = new ExpectationForwardCallback() {
-            @Override
-            public HttpRequest handle(HttpRequest httpRequest) {
-                return request();
-            }
-        };
-
-        // and
-        WebSocketClient webSocketClient = mock(WebSocketClient.class);
-        when(webSocketClient.registerExpectationCallback(expectationResponseCallback)).thenReturn(webSocketClient);
-        when(webSocketClient.clientId()).thenReturn("some_client_id");
-
-        // when
-        ForwardChainExpectation forwardChainExpectation = mockServerClient.when(httpRequest);
-
-        // and given
-        forwardChainExpectation.setWebSocketClient(webSocketClient);
-
-        // and when
-        forwardChainExpectation.forward(expectationResponseCallback);
-
-        // then
-        Expectation expectation = forwardChainExpectation.getExpectation();
-        assertTrue(expectation.isActive());
-        assertThat(expectation.getHttpForwardTemplate(), nullValue());
-        assertThat(expectation.getHttpForwardObjectCallback(), is(new HttpObjectCallback()
-            .withActionType(Action.Type.FORWARD_OBJECT_CALLBACK)
-            .withClientId("some_client_id")
-        ));
         assertEquals(Times.unlimited(), expectation.getTimes());
     }
 
@@ -544,53 +434,6 @@ public class MockServerClientTest {
     }
 
     @Test
-    public void shouldSendExpectationWithRequestObjectCallback() {
-        // given
-        ExpectationResponseCallback expectationResponseCallback = new ExpectationResponseCallback() {
-            @Override
-            public HttpResponse handle(HttpRequest httpRequest) {
-                return response();
-            }
-        };
-
-        // and
-        WebSocketClient webSocketClient = mock(WebSocketClient.class);
-        when(webSocketClient.registerExpectationCallback(expectationResponseCallback)).thenReturn(webSocketClient);
-        when(webSocketClient.clientId()).thenReturn("some_client_id");
-
-        // when
-        ForwardChainExpectation forwardChainExpectation = mockServerClient
-            .when(
-                new HttpRequest()
-                    .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body")),
-                Times.exactly(3)
-            );
-
-        // and given
-        forwardChainExpectation.setWebSocketClient(webSocketClient);
-
-        // and when
-        forwardChainExpectation.respond(expectationResponseCallback);
-
-        // then
-        verify(mockExpectationSerializer).serialize(
-            new ExpectationDTO()
-                .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                    .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))))
-                .setHttpResponseObjectCallback(
-                    new HttpObjectCallbackDTO(
-                        new HttpObjectCallback()
-                            .withClientId("some_client_id")
-                    )
-                )
-                .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
-                .buildObject()
-        );
-    }
-
-    @Test
     public void shouldSendExpectationWithForward() {
         // when
         mockServerClient
@@ -687,53 +530,6 @@ public class MockServerClientTest {
                     new HttpClassCallbackDTO(
                         new HttpClassCallback()
                             .withCallbackClass("some_class")
-                    )
-                )
-                .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
-                .buildObject()
-        );
-    }
-
-    @Test
-    public void shouldSendExpectationWithForwardObjectCallback() {
-        // given
-        ExpectationForwardCallback expectationResponseCallback = new ExpectationForwardCallback() {
-            @Override
-            public HttpRequest handle(HttpRequest httpRequest) {
-                return request();
-            }
-        };
-
-        // and
-        WebSocketClient webSocketClient = mock(WebSocketClient.class);
-        when(webSocketClient.registerExpectationCallback(expectationResponseCallback)).thenReturn(webSocketClient);
-        when(webSocketClient.clientId()).thenReturn("some_client_id");
-
-        // when
-        ForwardChainExpectation forwardChainExpectation = mockServerClient
-            .when(
-                new HttpRequest()
-                    .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body")),
-                Times.exactly(3)
-            );
-
-        // and given
-        forwardChainExpectation.setWebSocketClient(webSocketClient);
-
-        // and when
-        forwardChainExpectation.forward(expectationResponseCallback);
-
-        // then
-        verify(mockExpectationSerializer).serialize(
-            new ExpectationDTO()
-                .setHttpRequest(new HttpRequestDTO(new HttpRequest()
-                    .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))))
-                .setHttpForwardObjectCallback(
-                    new HttpObjectCallbackDTO(
-                        new HttpObjectCallback()
-                            .withClientId("some_client_id")
                     )
                 )
                 .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.exactly(3)))
@@ -1408,32 +1204,6 @@ public class MockServerClientTest {
         ArgumentCaptor<HttpRequest> configRequestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
         verify(mockHttpClient).sendRequest(configRequestCaptor.capture(), anyInt(), any(TimeUnit.class));
         assertTrue(configRequestCaptor.getValue().isSecure());
-    }
-
-    @Test
-    public void shoudStopWebSocketClientWhenResetAndGivenWebsocketClient() {
-        // given
-        WebSocketClient webSocketClient = mock(WebSocketClient.class);
-        mockServerClient.when(request()).setWebSocketClient(webSocketClient);
-
-        // when
-        mockServerClient.reset();
-
-        // then
-        verify(webSocketClient).stopClient();
-    }
-
-    @Test
-    public void shoudStopWebSocketClientWhenStopAndGivenWebsocketClient() {
-        // given
-        WebSocketClient webSocketClient = mock(WebSocketClient.class);
-        mockServerClient.when(request()).setWebSocketClient(webSocketClient);
-
-        // when
-        mockServerClient.stop();
-
-        // then
-        verify(webSocketClient).stopClient();
     }
 
 }

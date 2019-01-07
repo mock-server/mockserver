@@ -6,7 +6,9 @@ export JAVA_HOME=`/usr/libexec/java_home -v 1.7`
 echo
 java -version
 echo
-mvn -version
+./mvnw -version
 echo
 
-mvn clean deploy $1 -Djava.security.egd=file:/dev/./urandom
+export GPG_TTY=$(tty)
+
+./mvnw clean deploy -P release $1 -Djava.security.egd=file:/dev/./urandom

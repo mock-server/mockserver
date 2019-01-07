@@ -1,6 +1,8 @@
 package org.mockserver.integration.proxy;
 
 import com.google.common.base.Strings;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -16,13 +18,15 @@ import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.hamcrest.core.Is;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
-import org.mockserver.socket.KeyStoreFactory;
+import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
 
 import java.io.IOException;
@@ -34,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
@@ -55,8 +60,19 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 public abstract class AbstractClientProxyIntegrationTest {
 
     protected static String servletContext = "";
+    private static EventLoopGroup clientEventLoopGroup;
 
-    protected HttpClient createHttpClient() {
+    @BeforeClass
+    public static void createClientAndEventLoopGroup() {
+        clientEventLoopGroup = new NioEventLoopGroup();
+    }
+
+    @AfterClass
+    public static void stopEventLoopGroup() {
+        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+    }
+
+    private HttpClient createHttpClient() {
         return HttpClients
             .custom()
             .setSSLSocketFactory(new SSLConnectionSocketFactory(KeyStoreFactory.keyStoreFactory().sslContext(), NoopHostnameVerifier.INSTANCE))
@@ -78,7 +94,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         return (!path.startsWith("/") ? "/" : "") + path;
     }
 
-    protected String addContextToPath(String path) {
+    private String addContextToPath(String path) {
         String cleanedPath = path;
         if (!Strings.isNullOrEmpty(servletContext)) {
             cleanedPath =
@@ -97,21 +113,18 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     @Test
     public void shouldForwardRequestsUsingSocketDirectly() throws Exception {
-        Socket socket = null;
-        try {
-            socket = new Socket("localhost", getProxyPort());
-
+        try (Socket socket = new Socket("localhost", getProxyPort())) {
             // given
             OutputStream output = socket.getOutputStream();
 
             // when
             // - send GET request for headers only
             output.write(("" +
-                "GET " + addContextToPath("test_headers_only") + " HTTP/1.1\r" + NEW_LINE +
-                "Host: localhost:" + getServerPort() + "\r" + NEW_LINE +
-                "x-test: test_headers_only\r" + NEW_LINE +
-                "Connection: keep-alive\r" + NEW_LINE +
-                "\r\n"
+                "GET " + addContextToPath("test_headers_only") + " HTTP/1.1" + NEW_LINE +
+                "Host: localhost:" + getServerPort() + "" + NEW_LINE +
+                "x-test: test_headers_only" + NEW_LINE +
+                "Connection: keep-alive" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -128,11 +141,11 @@ public abstract class AbstractClientProxyIntegrationTest {
 
             // - send GET request for headers and body
             output.write(("" +
-                "GET " + addContextToPath("test_headers_and_body") + " HTTP/1.1\r" + NEW_LINE +
-                "Host: localhost:" + getServerPort() + "\r" + NEW_LINE +
-                "Content-Length: " + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "\r" + NEW_LINE +
-                "x-test: test_headers_and_body\r" + NEW_LINE +
-                "\r" + NEW_LINE +
+                "GET " + addContextToPath("test_headers_and_body") + " HTTP/1.1" + NEW_LINE +
+                "Host: localhost:" + getServerPort() + "" + NEW_LINE +
+                "Content-Length: " + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "" + NEW_LINE +
+                "x-test: test_headers_and_body" + NEW_LINE +
+                NEW_LINE +
                 "an_example_body"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
@@ -141,20 +154,16 @@ public abstract class AbstractClientProxyIntegrationTest {
             String response = IOStreamUtils.readInputStreamToString(socket);
             assertContains(response, "x-test: test_headers_and_body");
             assertContains(response, "an_example_body");
-
-            // and
-            getMockServerClient().verify(
-                request()
-                    .withMethod("GET")
-                    .withPath("/test_headers_and_body")
-                    .withBody("an_example_body"),
-                exactly(1)
-            );
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
         }
+
+        // and
+        getMockServerClient().verify(
+            request()
+                .withMethod("GET")
+                .withPath("/test_headers_and_body")
+                .withBody("an_example_body"),
+            exactly(1)
+        );
     }
 
     @Test
@@ -236,37 +245,32 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     @Test
     public void shouldForwardRequestsToUnknownPath() throws Exception {
-        Socket socket = null;
-        try {
-            socket = new Socket("localhost", getProxyPort());
+        try (Socket socket = new Socket("localhost", getProxyPort())) {
             // given
             OutputStream output = socket.getOutputStream();
 
             // when
             // - send GET request
             output.write(("" +
-                "GET " + addContextToPath("not_found") + " HTTP/1.1\r" + NEW_LINE +
-                "Host: localhost:" + getServerPort() + "\r" + NEW_LINE +
-                "Connection: close\r" + NEW_LINE +
-                "\r\n"
+                "GET " + addContextToPath("not_found") + " HTTP/1.1" + NEW_LINE +
+                "Host: localhost:" + getServerPort() + "" + NEW_LINE +
+                "Connection: close" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
             assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 404 Not Found");
-
-            // and
-            getMockServerClient().verify(
-                request()
-                    .withMethod("GET")
-                    .withPath("/not_found"),
-                exactly(1)
-            );
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
         }
+
+        // and
+        getMockServerClient().verify(
+            request()
+                .withMethod("GET")
+                .withPath("/not_found"),
+            exactly(1)
+        );
+
     }
 
     @Test
@@ -838,7 +842,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToClear() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())
@@ -861,7 +865,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToVerify() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())
@@ -883,7 +887,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToVerifySequence() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())

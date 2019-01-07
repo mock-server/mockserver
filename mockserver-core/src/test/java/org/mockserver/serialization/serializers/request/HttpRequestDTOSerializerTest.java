@@ -14,6 +14,7 @@ import static org.junit.Assert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.JsonPathBody.jsonPath;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
@@ -137,14 +138,14 @@ public class HttpRequestDTOSerializerTest {
     }
 
     @Test
-    public void shouldReturnFormattedRequestWithXPathBodyInToString() throws JsonProcessingException {
+    public void shouldReturnFormattedRequestWithJsonPathBodyInToString() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
             new HttpRequestDTO(
                 request()
                     .withMethod("GET")
                     .withPath("/some/path")
                     .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
-                    .withBody(xpath("//some/xml/path"))
+                    .withBody(jsonPath("$..book[?(@.price <= $['expensive'])]"))
                     .withHeaders(new Header("name", "value"))
                     .withCookies(new Cookie("name", "[A-Z]{0,10}"))
             )
@@ -162,8 +163,8 @@ public class HttpRequestDTOSerializerTest {
                 "    \"name\" : \"[A-Z]{0,10}\"" + NEW_LINE +
                 "  }," + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
-                "    \"type\" : \"XPATH\"," + NEW_LINE +
-                "    \"xpath\" : \"//some/xml/path\"" + NEW_LINE +
+                "    \"type\" : \"JSON_PATH\"," + NEW_LINE +
+                "    \"jsonPath\" : \"$..book[?(@.price <= $['expensive'])]\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}")
         );
@@ -201,7 +202,6 @@ public class HttpRequestDTOSerializerTest {
                 "}")
         );
     }
-
 
     @Test
     public void shouldReturnFormattedRequestWithXmlSchemaBodyInToString() throws JsonProcessingException {
@@ -241,6 +241,38 @@ public class HttpRequestDTOSerializerTest {
                 "}"));
     }
 
+    @Test
+    public void shouldReturnFormattedRequestWithXPathBodyInToString() throws JsonProcessingException {
+        assertThat(ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+            new HttpRequestDTO(
+                request()
+                    .withMethod("GET")
+                    .withPath("/some/path")
+                    .withQueryStringParameters(param("parameterOneName", "parameterOneValue"))
+                    .withBody(xpath("//some/xml/path"))
+                    .withHeaders(new Header("name", "value"))
+                    .withCookies(new Cookie("name", "[A-Z]{0,10}"))
+            )
+            ),
+            is("{" + NEW_LINE +
+                "  \"method\" : \"GET\"," + NEW_LINE +
+                "  \"path\" : \"/some/path\"," + NEW_LINE +
+                "  \"queryStringParameters\" : {" + NEW_LINE +
+                "    \"parameterOneName\" : [ \"parameterOneValue\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"headers\" : {" + NEW_LINE +
+                "    \"name\" : [ \"value\" ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"cookies\" : {" + NEW_LINE +
+                "    \"name\" : \"[A-Z]{0,10}\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"body\" : {" + NEW_LINE +
+                "    \"type\" : \"XPATH\"," + NEW_LINE +
+                "    \"xpath\" : \"//some/xml/path\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}")
+        );
+    }
 
     @Test
     public void shouldReturnFormattedRequestWithRegexBodyInToString() throws JsonProcessingException {

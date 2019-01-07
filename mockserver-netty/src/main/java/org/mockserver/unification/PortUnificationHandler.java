@@ -19,6 +19,7 @@ import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.mockserver.callback.CallbackWebSocketServerHandler;
 import org.mockserver.client.netty.proxy.ProxyConfiguration;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.dashboard.DashboardWebSocketServerHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.LoggingHandler;
@@ -29,24 +30,20 @@ import org.mockserver.proxy.socks.Socks4ProxyHandler;
 import org.mockserver.proxy.socks.Socks5ProxyHandler;
 import org.mockserver.proxy.socks.SocksDetector;
 import org.mockserver.server.netty.codec.MockServerServerCodec;
+import org.mockserver.socket.tls.SniHandler;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.Collections.unmodifiableSet;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mockserver.MockServerHandler.LOCAL_HOST_HEADERS;
-import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -164,7 +161,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
 
     private void enableSsl(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
-        pipeline.addFirst(nettySslContextFactory().createServerSslContext().newHandler(ctx.alloc()));
+        pipeline.addFirst(new SniHandler());
         enableSslUpstreamAndDownstream(ctx.channel());
 
         // re-unify (with SSL enabled)
@@ -174,7 +171,11 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private void switchToHttp(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
 
-        addLastIfNotPresent(pipeline, new HttpServerCodec(8192, 8192, 8192));
+        addLastIfNotPresent(pipeline, new HttpServerCodec(
+            ConfigurationProperties.maxInitialLineLength(),
+            ConfigurationProperties.maxHeaderSize(),
+            ConfigurationProperties.maxChunkSize()
+        ));
         addLastIfNotPresent(pipeline, new HttpContentDecompressor());
         addLastIfNotPresent(pipeline, httpContentLengthRemover);
         addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));

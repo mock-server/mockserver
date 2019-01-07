@@ -19,7 +19,7 @@ import org.mockserver.model.PortBinding;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
-import org.mockserver.socket.KeyAndCertificateFactory;
+import org.mockserver.socket.tls.KeyAndCertificateFactory;
 
 import javax.annotation.Nullable;
 import java.net.BindException;
@@ -63,7 +63,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         this.httpStateHandler = httpStateHandler;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.actionHandler = new ActionHandler(httpStateHandler, proxyConfiguration);
+        this.actionHandler = new ActionHandler(server.getEventLoopGroup(), httpStateHandler, proxyConfiguration);
     }
 
     private static boolean isProxyingRequest(ChannelHandlerContext ctx) {
@@ -105,14 +105,16 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 } else if (request.matches("PUT", PATH_PREFIX + "/bind", "/bind")) {
 
                     PortBinding requestedPortBindings = portBindingSerializer.deserialize(request.getBodyAsString());
-                    try {
-                        List<Integer> actualPortBindings = server.bindServerPorts(requestedPortBindings.getPorts());
-                        responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
-                    } catch (RuntimeException e) {
-                        if (e.getCause() instanceof BindException) {
-                            responseWriter.writeResponse(request, BAD_REQUEST, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());
-                        } else {
-                            throw e;
+                    if (requestedPortBindings != null) {
+                        try {
+                            List<Integer> actualPortBindings = server.bindServerPorts(requestedPortBindings.getPorts());
+                            responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(actualPortBindings)), "application/json");
+                        } catch (RuntimeException e) {
+                            if (e.getCause() instanceof BindException) {
+                                responseWriter.writeResponse(request, BAD_REQUEST, e.getMessage() + " port already in use", MediaType.create("text", "plain").toString());
+                            } else {
+                                throw e;
+                            }
                         }
                     }
 
@@ -132,17 +134,16 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 } else if (request.getMethod().getValue().equals("CONNECT")) {
 
-                    String username = ConfigurationProperties.httpProxyServerUsername();
-                    String password = ConfigurationProperties.httpProxyServerPassword();
+                    String username = ConfigurationProperties.proxyAuthenticationUsername();
+                    String password = ConfigurationProperties.proxyAuthenticationPassword();
                     if ((!username.isEmpty() && !password.isEmpty())
                         && (!request.containsHeader(PROXY_AUTHORIZATION.toString())
                             || !request.getFirstHeader(PROXY_AUTHORIZATION.toString()).toLowerCase(US).startsWith("basic ")
                             || !request.getFirstHeader(PROXY_AUTHORIZATION.toString()).substring(6).equals(
                                 new Base64Converter().bytesToBase64String((username + ":" + password).getBytes(UTF_8))))) {
-
                         ctx.writeAndFlush(response()
                             .withStatusCode(PROXY_AUTHENTICATION_REQUIRED.code())
-                            .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + ConfigurationProperties.httpProxyServerRealm().replace("\"", "\\\"") + "\""));
+                            .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + ConfigurationProperties.proxyAuthenticationRealm().replace("\"", "\\\"") + "\""));
                     } else {
                         ctx.channel().attr(PROXYING).set(Boolean.TRUE);
                         // assume SSL for CONNECT request

@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.test.Assert.assertContains;
 
 /**
@@ -30,13 +31,8 @@ public class NettyPortForwardingProxyIntegrationTest {
 
     @AfterClass
     public static void shutdownFixture() {
-        if (echoServer != null) {
-            echoServer.stop();
-        }
-
-        if (mockServer != null) {
-            mockServer.stop();
-        }
+        stopQuietly(echoServer);
+        stopQuietly(mockServer);
     }
 
     @Test

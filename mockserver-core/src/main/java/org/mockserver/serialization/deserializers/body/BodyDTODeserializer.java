@@ -31,6 +31,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         fieldNameToType.put("base64Bytes".toLowerCase(), Body.Type.BINARY);
         fieldNameToType.put("json".toLowerCase(), Body.Type.JSON);
         fieldNameToType.put("jsonSchema".toLowerCase(), Body.Type.JSON_SCHEMA);
+        fieldNameToType.put("jsonPath".toLowerCase(), Body.Type.JSON_PATH);
         fieldNameToType.put("parameters".toLowerCase(), Body.Type.PARAMETERS);
         fieldNameToType.put("regex".toLowerCase(), Body.Type.REGEX);
         fieldNameToType.put("string".toLowerCase(), Body.Type.STRING);
@@ -68,7 +69,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         mockServerLogger.trace("Ignoring invalid value for \"type\" field of \"" + jsonParser.getText() + "\"");
                     }
                 }
-                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "xpath", "xml", "xmlSchema", "base64Bytes") && type != Body.Type.PARAMETERS) {
+                if (jsonParser.getCurrentToken() == JsonToken.FIELD_NAME && containsIgnoreCase(jsonParser.getText(), "string", "regex", "json", "jsonSchema", "jsonPath", "xml", "xmlSchema", "xpath", "base64Bytes") && type != Body.Type.PARAMETERS) {
                     String fieldName = jsonParser.getText().toLowerCase();
                     if (fieldNameToType.containsKey(fieldName)) {
                         type = fieldNameToType.get(fieldName);
@@ -139,6 +140,8 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         }
                     case JSON_SCHEMA:
                         return new JsonSchemaBodyDTO(new JsonSchemaBody(valueJsonValue), not);
+                    case JSON_PATH:
+                        return new JsonPathBodyDTO(new JsonPathBody(valueJsonValue), not);
                     case PARAMETERS:
                         return new ParameterBodyDTO(new ParameterBody(parameters), not);
                     case REGEX:

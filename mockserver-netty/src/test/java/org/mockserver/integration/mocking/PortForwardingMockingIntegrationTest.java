@@ -4,7 +4,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.AbstractBasicMockingIntegrationTest;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mockserver.MockServer;
@@ -27,6 +26,7 @@ import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -34,12 +34,10 @@ import static org.mockserver.model.StringBody.exact;
 public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIntegrationTest {
 
     private static int mockServerPort;
-    private static EchoServer echoServer;
 
     @BeforeClass
     public static void startServer() {
-        echoServer = new EchoServer(false);
-        mockServerPort = new MockServer(echoServer.getPort(), "localhost", 0)
+        mockServerPort = new MockServer(insecureEchoServer.getPort(), "localhost", 0)
             .getLocalPort();
 
         mockServerClient = new MockServerClient("localhost", mockServerPort);
@@ -47,23 +45,12 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
 
     @AfterClass
     public static void stopServer() {
-        if (mockServerClient != null) {
-            mockServerClient.stop();
-        }
-
-        if (echoServer != null) {
-            echoServer.stop();
-        }
+        stopQuietly(mockServerClient);
     }
 
     @Override
     public int getServerPort() {
         return mockServerPort;
-    }
-
-    @Override
-    public int getEchoServerPort() {
-        return echoServer.getPort();
     }
 
     @Test
@@ -79,7 +66,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(getEchoServerPort())
+                    .withPort(insecureEchoServer.getPort())
             );
         mockServerClient
             .when(

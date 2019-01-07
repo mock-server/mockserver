@@ -1,7 +1,10 @@
 package org.mockserver.client;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
+import org.mockserver.metrics.Metrics;
+import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
@@ -31,6 +34,7 @@ import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverridde
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationSequence.verificationSequence;
 
@@ -50,17 +54,26 @@ public class MockServerClientIntegrationTest {
     public static void startEchoServer() {
         echoServer = new EchoServer(false);
         logFilter = echoServer.requestLogFilter();
-        mockServerClient = new MockServerClient("localhost", echoServer.getPort());
     }
 
     @AfterClass
     public static void stopEchoServer() {
-        echoServer.stop();
+        stopQuietly(echoServer);
+    }
+
+    @Before
+    public void createClient() {
+        mockServerClient = new MockServerClient("localhost", echoServer.getPort());
     }
 
     @Before
     public void clearRequestLog() {
         logFilter.reset();
+    }
+
+    @After
+    public void stopClient() {
+        stopQuietly(mockServerClient);
     }
 
     @Test

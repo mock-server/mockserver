@@ -2,11 +2,14 @@ package org.mockserver.integration.mocking;
 
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
+import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
 import org.junit.Test;
-import org.mockserver.echo.http.EchoServer;
+import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.server.AbstractExtendedSameJVMMockingIntegrationTest;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
+import org.mockserver.metrics.Metrics;
 import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
@@ -28,8 +31,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
@@ -46,7 +49,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.*;
-import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
+import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
 
 /**
  * @author jamesdbloom
@@ -240,74 +243,66 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
     @Test
     public void shouldForwardByObjectCallback() {
-        // given
-        final EchoServer echoServer = new EchoServer(false);
-        final EchoServer secureEchoServer = new EchoServer(true);
-
-        try {
-            // when
-            mockServerClient
-                .when(
-                    request()
-                        .withPath(calculatePath("echo"))
-                )
-                .forward(
-                    new ExpectationForwardCallback() {
-                        @Override
-                        public HttpRequest handle(HttpRequest httpRequest) {
-                            return request()
-                                .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : echoServer.getPort()))
-                                .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
-                                .withBody("some_overridden_body")
-                                .withSecure(httpRequest.isSecure());
-                        }
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                new ExpectationForwardCallback() {
+                    @Override
+                    public HttpRequest handle(HttpRequest httpRequest) {
+                        return request()
+                            .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
+                            .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                            .withBody("some_overridden_body")
+                            .withSecure(httpRequest.isSecure());
                     }
-                );
+                }
+            );
 
-            // then
-            // - in http
-            assertEquals(
-                response()
-                    .withStatusCode(OK_200.code())
-                    .withReasonPhrase(OK_200.reasonPhrase())
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
                     .withHeaders(
                         header("x-test", "test_headers_and_body")
                     )
-                    .withBody("some_overridden_body"),
-                makeRequest(
-                    request()
-                        .withPath(calculatePath("echo"))
-                        .withMethod("POST")
-                        .withHeaders(
-                            header("x-test", "test_headers_and_body")
-                        )
-                        .withBody("an_example_body_http"),
-                    headersToIgnore
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body_https")
                 )
-            );
-            // - in https
-            assertEquals(
-                response()
-                    .withStatusCode(OK_200.code())
-                    .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
                     .withHeaders(
                         header("x-test", "test_headers_and_body_https")
                     )
-                    .withBody("some_overridden_body"),
-                makeRequest(
-                    request()
-                        .withSecure(true)
-                        .withPath(calculatePath("echo"))
-                        .withMethod("POST")
-                        .withHeaders(
-                            header("x-test", "test_headers_and_body_https")
-                        )
-                        .withBody("an_example_body_https"),
-                    headersToIgnore)
-            );
-        } finally {
-            echoServer.stop();
-        }
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
     }
 
     @Test
@@ -615,8 +610,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // when
             output.write(("" +
                 "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0\r" + NEW_LINE +
-                "\r\n"
+                "Content-Length: 0" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -624,7 +619,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             assertThat(IOStreamUtils.readInputStreamToString(socket), is("" +
                 "HTTP/1.1 200 OK" + NEW_LINE +
                 "content-type: audio/*" + NEW_LINE +
-                "connection: close\n"
+                "connection: close" + NEW_LINE
             ));
 
             TimeUnit.SECONDS.sleep(3);
@@ -642,7 +637,13 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 IOStreamUtils.readInputStreamToString(socket);
                 fail("Expected socket read to fail because the socket was closed / reset");
             } catch (SocketException se) {
-                assertThat(se.getMessage(), anyOf(containsString("Broken pipe"), containsString("(broken pipe)"), containsString("Connection reset"), containsString("Protocol wrong type")));
+                assertThat(se.getMessage(), anyOf(
+                    containsString("Broken pipe"),
+                    containsString("(broken pipe)"),
+                    containsString("Connection reset"),
+                    containsString("Protocol wrong type"),
+                    containsString("Software caused connection abort")
+                ));
             }
         } finally {
             if (socket != null) {
@@ -660,8 +661,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // when
             output.write(("" +
                 "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0\r" + NEW_LINE +
-                "\r\n"
+                "Content-Length: 0" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -669,7 +670,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             assertThat(IOStreamUtils.readInputStreamToString(sslSocket), is("" +
                 "HTTP/1.1 200 OK" + NEW_LINE +
                 "content-type: audio/*" + NEW_LINE +
-                "connection: close\n"
+                "connection: close" + NEW_LINE
             ));
         } finally {
             if (sslSocket != null) {
@@ -702,8 +703,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // when
             output.write(("" +
                 "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0\r" + NEW_LINE +
-                "\r\n"
+                "Content-Length: 0" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -725,8 +726,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // when
             output.write(("" +
                 "GET " + calculatePath("") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0\r" + NEW_LINE +
-                "\r\n"
+                "Content-Length: 0" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
@@ -762,8 +763,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             // when
             output.write(("" +
                 "GET " + calculatePath("http_error") + " HTTP/1.1" + NEW_LINE +
-                "Content-Length: 0\r" + NEW_LINE +
-                "\r\n"
+                "Content-Length: 0" + NEW_LINE +
+                NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 

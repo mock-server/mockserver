@@ -1,5 +1,5 @@
 <p>The following code examples show how to create different response actions.</p>
-<button id="button_response_literal_body_only" class="accordion">response literal with body only</button>
+<button id="button_response_literal_body_only" class="accordion">literal response with body only</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -33,14 +33,14 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code"># if no request matcher is specified then every request matched
-curl -v -X PUT "http://localhost:1080/expectation" -d '{
+curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpResponse": {
         "body": "some_response_body"
     }
 }'</code></pre>
     </div>
 </div>
-<button id="button_response_literal_UTF16_body" class="accordion">response literal with UTF16 body</button>
+<button id="button_response_literal_UTF16_body" class="accordion">literal response with UTF16 body</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -84,7 +84,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code"># if no request matcher is specified then every request matched
-curl -v -X PUT "http://localhost:1080/expectation" -d '{
+curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpResponse": {
         "headers": {
             "content-type": ["text/plain; charset=utf-16"]
@@ -97,7 +97,7 @@ curl -v -X PUT "http://localhost:1080/expectation" -d '{
 }'</code></pre>
     </div>
 </div>
-<button id="button_response_literal_status_code_and_reason_phrase" class="accordion">response literal with status code and reason phrase</button>
+<button id="button_response_literal_status_code_and_reason_phrase" class="accordion">literal response with status code and reason phrase</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -136,7 +136,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "method": "POST",
         "path": "/some/path"
@@ -148,7 +148,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 }'</code></pre>
     </div>
 </div>
-<button id="button_response_literal_binary_PNG_body" class="accordion">response literal with binary PNG body</button>
+<button id="button_response_literal_binary_PNG_body" class="accordion">literal response with binary PNG body</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -197,7 +197,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/ws/rest/user/[0-9]+/icon/[0-9]+\\.png"
     },
@@ -215,7 +215,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 }'</code></pre>
     </div>
 </div>
-<button id="button_response_literal_with_10_second_delay" class="accordion">response literal with 10 second delay</button>
+<button id="button_response_literal_with_10_second_delay" class="accordion">literal response with 10 second delay</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -255,7 +255,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path"
     },
@@ -269,7 +269,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 }'</code></pre>
     </div>
 </div>
-<button id="button_response_differently_for_same_request" class="accordion">response differently for the same request</button>
+<button id="button_response_differently_for_same_request" class="accordion">respond differently for the same request</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -350,7 +350,7 @@ client.mockAnyResponse({
         <pre class="prettyprint code"><code class="code"># respond once with 200, then respond twice with 204, then
 # respond with 404 as no remaining active expectations
 
-curl -v -X PUT "http://localhost:1080/expectation" -d '{
+curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path"
     },
@@ -363,7 +363,7 @@ curl -v -X PUT "http://localhost:1080/expectation" -d '{
     }
 }'
 
-curl -v -X PUT "http://localhost:1080/expectation" -d '{
+curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path"
     },
@@ -377,7 +377,7 @@ curl -v -X PUT "http://localhost:1080/expectation" -d '{
 }'</code></pre>
     </div>
 </div>
-<button id="button_response_literal_with_connection_options_to_suppress_headers" class="accordion">response literal with connection options to suppress headers</button>
+<button id="button_response_literal_with_connection_options_to_suppress_headers" class="accordion">literal response with connection options to suppress headers</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -421,7 +421,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest" : {
         "path" : "/some/path"
     },
@@ -435,7 +435,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 }'</code></pre>
     </div>
 </div>
-<button id="button_response_literal_with_connection_options_to_override_headers" class="accordion">response literal with connection options to override headers</button>
+<button id="button_response_literal_with_connection_options_to_override_headers" class="accordion">literal response with connection options to override headers</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -479,7 +479,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest" : {
         "path" : "/some/path"
     },
@@ -493,7 +493,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 }'</code></pre>
     </div>
 </div>
-<button id="button_response_literal_with_connection_options_to_close_socket" class="accordion">response literal with connection options to close socket</button>
+<button id="button_response_literal_with_connection_options_to_close_socket" class="accordion">literal response with connection options to close socket</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -535,7 +535,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest" : {
         "path" : "/some/path"
     },
@@ -603,7 +603,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path"
     },
@@ -663,7 +663,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {"path": "/some/path"},
     "httpResponseTemplate": {
         "template": "if (request.method === \"POST\" && request.path === \"/some/path\") { return { statusCode: 200, body: JSON.stringify({name: \"value\"}) }; } else { return { statusCode: 406, body: request.body }; }",
@@ -724,7 +724,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
         "path": "/some/path"
     },
@@ -795,7 +795,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     </div>
     <button class="accordion inner">REST API</button>
     <div class="panel">
-        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/expectation" -d '{
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest" : {
         "path" : "/some.*"
     },
@@ -815,7 +815,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">5.4.1</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">5.5.1</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
@@ -847,9 +847,9 @@ mockServerClient("localhost", 1080).mockAnyResponse({
  &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
     <p>If MockServer is started using the <a href="/mock_server/running_mock_server.html#running_from_command_line">command line</a> then the callback classes must be added to the JVM using the classpath command line switch (<strong>cp</strong> or <strong>classpath</strong>). The <strong>classpath</strong> switch is ignored by the JVM if the
-        <strong>jar</strong> switch is used. So to run the MockServer from the command line directly (with mockserver-netty-5.4.1-jar-with-dependencies.jar) you must specify the <strong>org.mockserver.cli.Main</strong> main class specifically and not use the <strong>jar</strong> switch as follows.</p>
+        <strong>jar</strong> switch is used. So to run the MockServer from the command line directly (with mockserver-netty-5.5.1-jar-with-dependencies.jar) you must specify the <strong>org.mockserver.cli.Main</strong> main class specifically and not use the <strong>jar</strong> switch as follows.</p>
 
-    <pre><code class="code">java -Dfile.encoding=UTF-8 -cp mockserver-netty-5.4.1-jar-with-dependencies.jar:my-callback-dependency.jar org.mockserver.cli.Main -serverPort 1080</code></pre>
+    <pre><code class="code">java -Dfile.encoding=UTF-8 -cp mockserver-netty-5.5.1-jar-with-dependencies.jar:my-callback-dependency.jar org.mockserver.cli.Main -serverPort 1080</code></pre>
 </div>
 <button id="button_response_method_or_closure_callback" class="accordion">method / closure callback</button>
 <div class="panel">

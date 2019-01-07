@@ -31,10 +31,10 @@ public class HttpResponseObjectCallbackActionHandlerTest {
         when(mockHttpStateHandler.getWebSocketClientRegistry()).thenReturn(mockWebSocketClientRegistry);
 
         // when
-        new HttpResponseObjectCallbackActionHandler(mockHttpStateHandler).handle(mock(ActionHandler.class), httpObjectCallback, request, mockResponseWriter);
+        new HttpResponseObjectCallbackActionHandler(mockHttpStateHandler).handle(mock(ActionHandler.class), httpObjectCallback, request, mockResponseWriter, true);
 
         // then
-        verify(mockWebSocketClientRegistry).registerCallbackHandler(any(String.class), any(WebSocketResponseCallback.class));
+        verify(mockWebSocketClientRegistry).registerResponseCallbackHandler(any(String.class), any(WebSocketResponseCallback.class));
         verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class));
     }
 }

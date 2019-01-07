@@ -1,13 +1,13 @@
 ---
 title: Debugging Issues
 layout: page
-pageOrder: 7
+pageOrder: 8
 section: 'Mock Server'
 subsection: true
 sitemap:
   priority: 0.7
   changefreq: 'monthly'
-  lastmod: 2015-04-18T22:40:27+01:00
+  lastmod: 2018-11-16T16:00:00+01:00
 ---
 
 <p>MockServer supports the following features to simplify debugging</p>
@@ -65,7 +65,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_recorded_reqs_using_request_matcher" class="accordion">retrieve recorded requests using request matcher</button>
@@ -96,7 +96,7 @@ mockServerClient("localhost", 1080).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -116,7 +116,7 @@ mockServerClient("localhost", 1080).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS&format=JAVA" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JAVA" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -150,7 +150,7 @@ mockServerClient("localhost", 1080).retrieveRecordedRequests({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=REQUESTS&format=JSON" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=REQUESTS&format=JSON" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -192,7 +192,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_active_expectations_using_request_matcher" class="accordion">retrieve active expectations using request matcher</button>
@@ -223,7 +223,7 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -243,7 +243,7 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS&format=JAVA" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS&format=JAVA" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -277,7 +277,7 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=ACTIVE_EXPECTATIONS&format=JSON" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS&format=JSON" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -321,7 +321,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_recorded_expectations_using_request_matcher" class="accordion">retrieve recorded expectations using request matcher</button>
@@ -352,7 +352,7 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -372,7 +372,7 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS&format=JAVA" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JAVA" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -406,7 +406,7 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" -d '{
     "path": "/some/path"
 }'</code></pre>
         </div>
@@ -459,7 +459,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS"</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS"</code></pre>
         </div>
     </div>
     <button id="button_retrieve_recorded_log_messages_using_request_matcher" class="accordion">retrieve recorded log messages using request matcher</button>
@@ -493,7 +493,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/retrieve?type=LOGS" -d '{
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=LOGS" -d '{
     "path": "/some/path",
     "method": "POST"
 }'</code></pre>
@@ -563,17 +563,17 @@ mockServerClient("localhost", 1080)
 
 <p>When running MockServer directly from <a href="/mock_server/running_mock_server.html#running_from_command_line">the command line</a> the command line argument <span class="inline_code">-logLevel</span> can be used to set the log level, as follows:</p>
 
-<pre><code class="code">java -jar ~/Downloads/mockserver-netty-5.4.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel DEBUG</code></pre>
+<pre><code class="code">java -jar ~/Downloads/mockserver-netty-5.5.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel DEBUG</code></pre>
 
 <p>Alternatively a system property <span class="inline_code">mockserver.logLevel</span> can be used to set the log level, as follows:</p>
 
-<pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-5.4.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span></code></pre>
+<pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-5.5.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span></code></pre>
 
 <p>It is also possible to specify a custom <a href="http://logback.qos.ch">logback</a> configuration file to override the default MockServer or MockServer Proxy logging settings. An example <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-netty/src/main/resources/example_logback.xml">logback configuration file</a> is available in github.</p>
 
 <p>A custom <a href="http://logback.qos.ch">logback</a> configuration file can be specified using the <span class="inline_code">logback.configurationFile</span> system property with an absolute or relative file path or a classpath, as follows:</p>
 
-<pre><code class="code">java -Droot.logLevel=WARN -Dmockserver.logLevel=INFO -Dlogback.configurationFile=example_logback.xml -jar ~/Downloads/mockserver-netty-5.4.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span></code></pre>
+<pre><code class="code">java -Droot.logLevel=WARN -Dmockserver.logLevel=INFO -Dlogback.configurationFile=example_logback.xml -jar ~/Downloads/mockserver-netty-5.5.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span></code></pre>
 
 <p>A custom <a href="http://logback.qos.ch">logback</a> configuration file will also be automatically picked up if it is called <strong>logback.xml</strong> and is in the root of the classpath, however, the jar-with-dependencies already contains a <strong>logback.xml</strong> file, so to override this, the overriding <strong>logback.xml</strong> file must be higher (i.e. earlier) in the classpath.</p>
 
@@ -586,7 +586,7 @@ mockServerClient("localhost", 1080)
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">5.4.1</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">5.5.1</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
@@ -611,10 +611,51 @@ mockServerClient("localhost", 1080)
 
 <a name="logging-with-node" class="anchor" href="#logging-with-node">&nbsp;</a>
 
-<h3>Logging with npm module or Grunt plugin</h3>
+<h3>Logging with npm module</h3>
 
-<p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver_node"><strong>mockserver-node</strong></a> Grunt plugin and Node.js (npm) module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the
-	<span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging. In addition the <span class="inline_code">--verbose</span> command line flag can be used for Grunt builds to enable the <strong>mockserver-node</strong> verbose option dynamically.</p>
+<p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver_node"><strong>mockserver-node</strong></a> Grunt plugin and Node.js (npm) module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the <span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging.</p>
+
+<p>It is generally recommended to enable <span class="inline_code">verbose</span> which should provide the correct amount of information, <span class="inline_code">trace</span> is only required for very low level debugging.</p>
+
+<pre class="prettyprint lang-java code"><code class="code">var mockserver = require('mockserver-node');
+
+mockserver
+    .start_mockserver({
+        serverPort: 1080,
+        verbose: true,
+        trace: true
+    })
+    .then(
+        function () {
+            console.log("started MockServer");
+        },
+        function (error) {
+            console.log(JSON.stringify(error));
+        }
+    );</code></pre>
+
+<h3>Logging with Grunt plugin</h3>
+
+<p>When running MockServer using the <a href="/mock_server/running_mock_server.html#mockserver_node"><strong>mockserver-node</strong></a> as a Grunt plugin module the <span class="inline_code">verbose</span> option can be used to enable <strong>INFO</strong> level logging and the <span class="inline_code">trace</span> option can be used to enable <strong>TRACE</strong> level logging.  The <span class="inline_code">--verbose</span> command line flag can also be used to enable the <strong>mockserver-node</strong> verbose option from the command line.</p>
+
+<p>It is generally recommended to enable <span class="inline_code">verbose</span> which should provide the correct amount of information, <span class="inline_code">trace</span> is only required for very low level debugging.</p>
+
+<pre class="prettyprint lang-java code"><code class="code">grunt.initConfig({
+        start_mockserver: {
+            options: {
+                serverPort: 1080,
+                verbose: true,
+                trace: true
+            }
+        },
+        stop_mockserver: {
+            options: {
+                serverPort: 1080
+            }
+        }
+});
+
+grunt.loadNpmTasks('mockserver-node');</code></pre>
 
 <a name="disabling-logging" class="anchor" href="#disabling-logging">&nbsp;</a>
 

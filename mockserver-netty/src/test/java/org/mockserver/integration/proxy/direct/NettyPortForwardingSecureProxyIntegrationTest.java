@@ -13,7 +13,8 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.socket.SSLSocketFactory.sslSocketFactory;
+import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
+import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
@@ -37,13 +38,9 @@ public class NettyPortForwardingSecureProxyIntegrationTest {
 
     @AfterClass
     public static void shutdownFixture() {
-        if (echoServer != null) {
-            echoServer.stop();
-        }
-
-        if (mockServer != null) {
-            mockServer.stop();
-        }
+        stopQuietly(echoServer);
+        stopQuietly(mockServer);
+        stopQuietly(mockServerClient);
     }
 
     @Test

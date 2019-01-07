@@ -79,9 +79,9 @@ Run commands (DO NOT USE GPG2 THIS IS INCOMPATIBLE WITH MAVEN):
     $ gpg --keyserver hkp://pool.sks-keyservers.net --send-keys 603F270A 
     
     export JAVA_HOME=`/usr/libexec/java_home -v 1.7`
-    mvn release:clean -Dgpg.passphrase=my_pass_phrase -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
-    mvn release:prepare -Dgpg.passphrase=my_pass_phrase -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
-    mvn release:perform -Dgpg.passphrase=my_pass_phrase -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true"
+    ./mvnw release:clean -Dgpg.passphrase=my_pass_phrase -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
+    ./mvnw release:prepare -Dgpg.passphrase=my_pass_phrase -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
+    ./mvnw release:perform -Dgpg.passphrase=my_pass_phrase -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true"
     
 Test username & password:
     

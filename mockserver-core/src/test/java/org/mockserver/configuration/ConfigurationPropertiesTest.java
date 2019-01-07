@@ -7,7 +7,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockserver.socket.KeyStoreFactory;
+import org.mockserver.socket.tls.KeyStoreFactory;
 import org.slf4j.event.Level;
 
 import java.io.IOException;
@@ -20,8 +20,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 /**
  * @author jamesdbloom
@@ -138,6 +137,94 @@ public class ConfigurationPropertiesTest {
 
         // then
         assertEquals(1000, ConfigurationProperties.maxExpectations());
+    }
+
+    @Test
+    public void shouldSetAndReadMaxWebSocketExpectations() {
+        // given
+        System.clearProperty("mockserver.maxWebSocketExpectations");
+
+        // when
+        assertEquals(1000, ConfigurationProperties.maxWebSocketExpectations());
+        ConfigurationProperties.maxWebSocketExpectations(100);
+
+        // then
+        assertEquals(100, ConfigurationProperties.maxWebSocketExpectations());
+    }
+
+    @Test
+    public void shouldHandleInvalidMaxWebSocketExpectations() {
+        // given
+        System.setProperty("mockserver.maxWebSocketExpectations", "invalid");
+
+        // then
+        assertEquals(1000, ConfigurationProperties.maxWebSocketExpectations());
+    }
+
+    @Test
+    public void shouldSetAndReadMaxInitialLineLength() {
+        // given
+        System.clearProperty("mockserver.maxInitialLineLength");
+
+        // when
+        assertEquals(4096, ConfigurationProperties.maxInitialLineLength());
+        ConfigurationProperties.maxInitialLineLength(100);
+
+        // then
+        assertEquals(100, ConfigurationProperties.maxInitialLineLength());
+    }
+
+    @Test
+    public void shouldHandleInvalidMaxInitialLineLength() {
+        // given
+        System.setProperty("mockserver.maxInitialLineLength", "invalid");
+
+        // then
+        assertEquals(4096, ConfigurationProperties.maxInitialLineLength());
+    }
+
+    @Test
+    public void shouldSetAndReadMaxHeaderSize() {
+        // given
+        System.clearProperty("mockserver.maxHeaderSize");
+
+        // when
+        assertEquals(8192, ConfigurationProperties.maxHeaderSize());
+        ConfigurationProperties.maxHeaderSize(100);
+
+        // then
+        assertEquals(100, ConfigurationProperties.maxHeaderSize());
+    }
+
+    @Test
+    public void shouldHandleInvalidMaxHeaderSize() {
+        // given
+        System.setProperty("mockserver.maxHeaderSize", "invalid");
+
+        // then
+        assertEquals(8192, ConfigurationProperties.maxHeaderSize());
+    }
+
+    @Test
+    public void shouldSetAndReadMaxChunkSize() {
+        // given
+        System.clearProperty("mockserver.maxChunkSize");
+
+        // when
+        assertEquals(8192, ConfigurationProperties.maxChunkSize());
+        ConfigurationProperties.maxChunkSize(100);
+
+        // then
+        assertEquals(100, ConfigurationProperties.maxChunkSize());
+    }
+
+    @Test
+    public void shouldHandleInvalidMaxChunkSize() {
+        // given
+        System.setProperty("mockserver.maxChunkSize", "invalid");
+
+        // then
+        assertEquals(8192, ConfigurationProperties.maxChunkSize());
     }
 
     @Test
@@ -370,43 +457,6 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadServerPort() {
-        // given
-        System.clearProperty("mockserver.mockServerPort");
-
-        // when
-        assertEquals(Arrays.asList(-1), ConfigurationProperties.mockServerPort());
-        ConfigurationProperties.mockServerPort(10);
-
-        // then
-        assertEquals("10", System.getProperty("mockserver.mockServerPort"));
-        assertEquals(Arrays.asList(10), ConfigurationProperties.mockServerPort());
-    }
-
-    @Test
-    public void shouldSetAndReadServerPortAsList() {
-        // given
-        System.clearProperty("mockserver.mockServerPort");
-
-        // when
-        assertEquals(Arrays.asList(-1), ConfigurationProperties.mockServerPort());
-        ConfigurationProperties.mockServerPort(10, 20, 30);
-
-        // then
-        assertEquals("10,20,30", System.getProperty("mockserver.mockServerPort"));
-        assertEquals(Arrays.asList(10, 20, 30), ConfigurationProperties.mockServerPort());
-    }
-
-    @Test
-    public void shouldHandleInvalidServerPort() {
-        // given
-        System.setProperty("mockserver.mockServerPort", "invalid");
-
-        // then
-        assertEquals(Arrays.asList(), ConfigurationProperties.mockServerPort());
-    }
-
-    @Test
     public void shouldThrowIllegalArgumentExceptionForInvalidLogLevel() {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage(containsString("log level \"WRONG\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\""));
@@ -434,11 +484,11 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.disableRequestAudit");
 
         // when
-        assertEquals(false, ConfigurationProperties.disableRequestAudit());
+        assertFalse(ConfigurationProperties.disableRequestAudit());
         ConfigurationProperties.disableRequestAudit(false);
 
         // then
-        assertEquals(false, ConfigurationProperties.disableRequestAudit());
+        assertFalse(ConfigurationProperties.disableRequestAudit());
         assertEquals("false", System.getProperty("mockserver.disableRequestAudit"));
     }
 
@@ -448,81 +498,141 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.disableSystemOut");
 
         // when
-        assertEquals(false, ConfigurationProperties.disableSystemOut());
+        assertFalse(ConfigurationProperties.disableSystemOut());
         ConfigurationProperties.disableSystemOut(false);
 
         // then
-        assertEquals(false, ConfigurationProperties.disableSystemOut());
+        assertFalse(ConfigurationProperties.disableSystemOut());
         assertEquals("false", System.getProperty("mockserver.disableSystemOut"));
     }
 
     @Test
-    public void shouldSetAndReadHttpProxyServerRealm() {
+    public void shouldSetAndReadHttpProxy() {
         // given
-        System.clearProperty("mockserver.httpProxyServerRealm");
+        System.clearProperty("mockserver.httpProxy");
 
         // when
-        assertEquals("MockServer HTTP Proxy", ConfigurationProperties.httpProxyServerRealm());
-        ConfigurationProperties.httpProxyServerRealm("my realm");
+        assertNull(ConfigurationProperties.httpProxy());
+        ConfigurationProperties.httpProxy("127.0.0.1:1080");
 
         // then
-        assertEquals("my realm", ConfigurationProperties.httpProxyServerRealm());
-        assertEquals("my realm", System.getProperty("mockserver.httpProxyServerRealm"));
+        assertEquals("/127.0.0.1:1080", ConfigurationProperties.httpProxy().toString());
+        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.httpProxy"));
     }
 
     @Test
-    public void shouldSetAndReadHttpProxyServerUsername() {
-        // given
-        System.clearProperty("mockserver.httpProxyServerUsername");
+    public void shouldThrowIllegalArgumentExceptionForInvalidHttpProxy() {
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("Invalid httpProxy property must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\""));
 
-        // when
-        assertEquals("", ConfigurationProperties.httpProxyServerUsername());
-        ConfigurationProperties.httpProxyServerUsername("john.doe");
-
-        // then
-        assertEquals("john.doe", ConfigurationProperties.httpProxyServerUsername());
-        assertEquals("john.doe", System.getProperty("mockserver.httpProxyServerUsername"));
+        ConfigurationProperties.httpProxy("abc.def");
     }
 
     @Test
-    public void shouldSetAndReadHttpProxyServerPassword() {
+    public void shouldSetAndReadHttpsProxy() {
         // given
-        System.clearProperty("mockserver.httpProxyServerPassword");
+        System.clearProperty("mockserver.httpsProxy");
 
         // when
-        assertEquals("", ConfigurationProperties.httpProxyServerPassword());
-        ConfigurationProperties.httpProxyServerPassword("p@ssw0rd");
+        assertNull(ConfigurationProperties.httpsProxy());
+        ConfigurationProperties.httpsProxy("127.0.0.1:1080");
 
         // then
-        assertEquals("p@ssw0rd", ConfigurationProperties.httpProxyServerPassword());
-        assertEquals("p@ssw0rd", System.getProperty("mockserver.httpProxyServerPassword"));
+        assertEquals("/127.0.0.1:1080", ConfigurationProperties.httpsProxy().toString());
+        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.httpsProxy"));
     }
 
     @Test
-    public void shouldSetAndReadSocksProxyServerUsername() {
-        // given
-        System.clearProperty("mockserver.socksProxyServerUsername");
+    public void shouldThrowIllegalArgumentExceptionForInvalidHttpsProxy() {
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("Invalid httpsProxy property must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\""));
 
-        // when
-        assertEquals("", ConfigurationProperties.socksProxyServerUsername());
-        ConfigurationProperties.socksProxyServerUsername("john.doe");
-
-        // then
-        assertEquals("john.doe", ConfigurationProperties.socksProxyServerUsername());
-        assertEquals("john.doe", System.getProperty("mockserver.socksProxyServerUsername"));
+        ConfigurationProperties.httpsProxy("abc.def");
     }
 
     @Test
-    public void shouldSetAndReadSocksProxyServerPassword() {
+    public void shouldSetAndReadSocksProxy() {
         // given
-        System.clearProperty("mockserver.socksProxyServerPassword");
+        System.clearProperty("mockserver.socksProxy");
 
         // when
-        assertEquals("", ConfigurationProperties.socksProxyServerPassword());
-        ConfigurationProperties.socksProxyServerPassword("p@ssw0rd");
+        assertNull(ConfigurationProperties.socksProxy());
+        ConfigurationProperties.socksProxy("127.0.0.1:1080");
 
         // then
-        assertEquals("p@ssw0rd", ConfigurationProperties.socksProxyServerPassword());
-        assertEquals("p@ssw0rd", System.getProperty("mockserver.socksProxyServerPassword"));
+        assertEquals("/127.0.0.1:1080", ConfigurationProperties.socksProxy().toString());
+        assertEquals("127.0.0.1:1080", System.getProperty("mockserver.socksProxy"));
+    }
+
+    @Test
+    public void shouldThrowIllegalArgumentExceptionForInvalidSocksProxy() {
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("Invalid socksProxy property must include <host>:<port> for example \"127.0.0.1:1090\" or \"localhost:1090\""));
+
+        ConfigurationProperties.socksProxy("abc.def");
+    }
+
+    @Test
+    public void shouldSetAndReadLocalBoundIP() {
+        // given
+        System.clearProperty("mockserver.localBoundIP");
+
+        // when
+        assertEquals("", ConfigurationProperties.localBoundIP());
+        ConfigurationProperties.localBoundIP("127.0.0.1");
+
+        // then
+        assertEquals("127.0.0.1", ConfigurationProperties.localBoundIP());
+        assertEquals("127.0.0.1", System.getProperty("mockserver.localBoundIP"));
+    }
+
+    @Test
+    public void shouldThrowIllegalArgumentExceptionForInvalidLocalBoundIP() {
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("'abc.def' is not an IP string literal"));
+
+        ConfigurationProperties.localBoundIP("abc.def");
+    }
+
+    @Test
+    public void shouldSetAndReadProxyAuthenticationRealm() {
+        // given
+        System.clearProperty("mockserver.proxyAuthenticationRealm");
+
+        // when
+        assertEquals("MockServer HTTP Proxy", ConfigurationProperties.proxyAuthenticationRealm());
+        ConfigurationProperties.proxyAuthenticationRealm("my realm");
+
+        // then
+        assertEquals("my realm", ConfigurationProperties.proxyAuthenticationRealm());
+        assertEquals("my realm", System.getProperty("mockserver.proxyAuthenticationRealm"));
+    }
+
+    @Test
+    public void shouldSetAndReadProxyAuthenticationUsername() {
+        // given
+        System.clearProperty("mockserver.proxyAuthenticationUsername");
+
+        // when
+        assertEquals("", ConfigurationProperties.proxyAuthenticationUsername());
+        ConfigurationProperties.proxyAuthenticationUsername("john.doe");
+
+        // then
+        assertEquals("john.doe", ConfigurationProperties.proxyAuthenticationUsername());
+        assertEquals("john.doe", System.getProperty("mockserver.proxyAuthenticationUsername"));
+    }
+
+    @Test
+    public void shouldSetAndReadProxyAuthenticationPassword() {
+        // given
+        System.clearProperty("mockserver.proxyAuthenticationPassword");
+
+        // when
+        assertEquals("", ConfigurationProperties.proxyAuthenticationPassword());
+        ConfigurationProperties.proxyAuthenticationPassword("p@ssw0rd");
+
+        // then
+        assertEquals("p@ssw0rd", ConfigurationProperties.proxyAuthenticationPassword());
+        assertEquals("p@ssw0rd", System.getProperty("mockserver.proxyAuthenticationPassword"));
     }
 }

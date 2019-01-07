@@ -2,6 +2,11 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.nio.charset.Charset;
+import java.util.List;
+
+import static org.mockserver.model.Header.header;
+
 /**
  * @author jamesdbloom
  */

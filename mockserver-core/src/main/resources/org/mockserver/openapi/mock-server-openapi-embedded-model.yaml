@@ -266,13 +266,23 @@ components:
       - required:
         - httpResponse
       - required:
+        - httpResponseTemplate
+      - required:
+        - httpResponseClassCallback
+      - required:
+        - httpResponseObjectCallback
+      - required:
         - httpForward
       - required:
-        - httpClassCallback
+        - httpForwardTemplate
+      - required:
+        - httpForwardClassCallback
+      - required:
+        - httpForwardObjectCallback
+      - required:
+        - httpOverrideForwardedRequest
       - required:
         - httpError
-      - required:
-        - httpObjectCallback
     HttpRequest:
       title: "request matcher"
       type: object
@@ -299,10 +309,10 @@ components:
       type: object
       additionalProperties: false
       properties:
-        body:
-          $ref: "#/components/schemas/BodyWithContentType"
         delay:
           $ref: "#/components/schemas/Delay"
+        body:
+          $ref: "#/components/schemas/BodyWithContentType"
         cookies:
           $ref: "#/components/schemas/KeyToValue"
         connectionOptions:
@@ -318,19 +328,21 @@ components:
       type: object
       additionalProperties: false
       properties:
+        delay:
+          $ref: "#/components/schemas/Delay"
         templateType:
           enum:
           - JAVASCRIPT
           - VELOCITY
         template:
           type: string
-        delay:
-          $ref: "#/components/schemas/Delay"
     HttpForward:
       title: host and port to forward to
       type: object
       additionalProperties: false
       properties:
+        delay:
+          $ref: "#/components/schemas/Delay"
         host:
           type: string
         port:
@@ -339,13 +351,13 @@ components:
           enum:
           - HTTP
           - HTTPS
-        delay:
-          $ref: "#/components/schemas/Delay"
     HttpClassCallback:
       title: class callback
       type: object
       additionalProperties: false
       properties:
+        delay:
+          $ref: "#/components/schemas/Delay"
         callbackClass:
           type: string
     HttpObjectCallback:
@@ -353,6 +365,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        delay:
+          $ref: "#/components/schemas/Delay"
         clientId:
           type: string
     HttpOverrideForwardedRequest:
@@ -360,10 +374,10 @@ components:
       type: object
       additionalProperties: false
       properties:
-        httpRequest:
-          $ref: "#/components/schemas/HttpRequest"
         delay:
           $ref: "#/components/schemas/Delay"
+        httpRequest:
+          $ref: "#/components/schemas/HttpRequest"
     HttpError:
       title: error behaviour
       type: object
@@ -477,6 +491,16 @@ components:
             enum:
             - JSON_SCHEMA
           jsonSchema:
+            type: string
+      - type: object
+        additionalProperties: false
+        properties:
+          not:
+            type: boolean
+          type:
+            enum:
+            - JSON_PATH
+          jsonPath:
             type: string
       - type: object
         additionalProperties: false

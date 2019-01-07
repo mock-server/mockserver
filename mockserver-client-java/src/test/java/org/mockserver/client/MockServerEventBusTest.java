@@ -4,23 +4,23 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockserver.client.MockServerEventBus.MockServerEvent.RESET;
-import static org.mockserver.client.MockServerEventBus.MockServerEvent.STOP;
+import static org.mockserver.client.MockServerEventBus.EventType.RESET;
+import static org.mockserver.client.MockServerEventBus.EventType.STOP;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockserver.client.MockServerEventBus.MockServerEventSubscriber;
+import org.mockserver.client.MockServerEventBus.SubscriberHandler;
 
 /**
  * @author albans
  */
 public class MockServerEventBusTest {
 	@Mock
-	private MockServerEventSubscriber subscriber;
+	private SubscriberHandler subscriber;
 	
 	@Mock
-	private MockServerEventSubscriber secondSubscriber;
+	private SubscriberHandler secondSubscriber;
 	
 	private MockServerEventBus bus;
 	
@@ -42,7 +42,7 @@ public class MockServerEventBusTest {
 	}
 	
 	@Test
-	public void shoudPublishStopEventToOneRegisteredSubscriber() {
+	public void shouldPublishStopEventToOneRegisteredSubscriber() {
 		// given
 		bus.subscribe(subscriber, STOP);
 		

@@ -6,8 +6,11 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
+import org.mockserver.dashboard.DashboardWebSocketServerHandler;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
+import org.mockserver.mockserver.MockServerHandler;
+import org.mockserver.server.netty.codec.MockServerServerCodec;
 
 import java.util.UUID;
 
@@ -22,10 +25,9 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
 
     private static final AttributeKey<Boolean> CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET = AttributeKey.valueOf("CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET");
     private static final String UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI = "/_mockserver_callback_websocket";
-
+    private final MockServerLogger mockServerLogger;
     private WebSocketServerHandshaker handshaker;
     private WebSocketClientRegistry webSocketClientRegistry;
-    private final MockServerLogger mockServerLogger;
 
     public CallbackWebSocketServerHandler(HttpStateHandler httpStateHandler) {
         webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();
@@ -33,7 +35,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
         boolean release = true;
         try {
             if (msg instanceof FullHttpRequest && ((FullHttpRequest) msg).uri().equals(UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI)) {
@@ -70,18 +72,28 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
         } else {
             final String clientId = UUID.randomUUID().toString();
-            handshaker.handshake(
-                ctx.channel(),
-                httpRequest,
-                new DefaultHttpHeaders().add("X-CLIENT-REGISTRATION-ID", clientId),
-                ctx.channel().newPromise()
-            ).addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture future) throws Exception {
-                    webSocketClientRegistry.registerClient(clientId, ctx);
-                    // TODO(jamesdbloom) remove mockserver codec and handler
-                }
-            });
+            handshaker
+                .handshake(
+                    ctx.channel(),
+                    httpRequest,
+                    new DefaultHttpHeaders().add("X-CLIENT-REGISTRATION-ID", clientId),
+                    ctx.channel().newPromise()
+                )
+                .addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture future) {
+                        ctx.pipeline().remove(DashboardWebSocketServerHandler.class);
+                        ctx.pipeline().remove(MockServerServerCodec.class);
+                        ctx.pipeline().remove(MockServerHandler.class);
+                        webSocketClientRegistry.registerClient(clientId, ctx);
+                        future.channel().closeFuture().addListener(new ChannelFutureListener() {
+                            @Override
+                            public void operationComplete(ChannelFuture future) {
+                                webSocketClientRegistry.unregisterClient(clientId);
+                            }
+                        });
+                    }
+                });
         }
     }
 

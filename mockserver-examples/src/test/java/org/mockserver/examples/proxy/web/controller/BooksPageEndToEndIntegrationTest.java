@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assume.assumeThat;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.verify.VerificationTimes.exactly;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -50,7 +51,7 @@ public abstract class BooksPageEndToEndIntegrationTest {
 
     @AfterClass
     public static void stopProxy() throws Exception {
-        proxy.stop();
+        stopQuietly(proxy);
         System.clearProperty("http.proxyHost");
         System.clearProperty("http.proxyPort");
     }

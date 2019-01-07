@@ -7,11 +7,11 @@ export JAVA_HOME=`/usr/libexec/java_home -v 1.7`
 echo
 java -version
 echo
-mvn -version
+./mvnw -version
 echo
 
 export GPG_TTY=$(tty)
 
-mvn release:clean -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
-mvn release:prepare -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true" && \
-mvn release:perform -Drelease.arguments="-DnonReleaseBuild=false -Dmaven.test.skip=true -DskipTests=true"
+./mvnw release:clean -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true" && \
+./mvnw release:prepare -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true" && \
+./mvnw release:perform -P release -Drelease.arguments="-Dmaven.test.skip=true -DskipTests=true"

@@ -18,6 +18,8 @@ import org.mockserver.validator.Validator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.mockserver.character.Character.NEW_LINE;
 
@@ -26,6 +28,7 @@ import static org.mockserver.character.Character.NEW_LINE;
  */
 public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
+    private static final Map<String, String> schemaCache = new ConcurrentHashMap<>();
     private final String schema;
     private final JsonValidator validator = JsonSchemaFactory.byDefault().getValidator();
     private final MockServerLogger mockServerLogger;
@@ -44,7 +47,10 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
 
     public JsonSchemaValidator(MockServerLogger mockServerLogger, String routePath, String mainSchemeFile, String... referenceFiles) {
         this.mockServerLogger = mockServerLogger;
-        this.schema = addReferencesIntoSchema(routePath, mainSchemeFile, referenceFiles);
+        if (!schemaCache.containsKey(mainSchemeFile)) {
+            schemaCache.put(mainSchemeFile, addReferencesIntoSchema(routePath, mainSchemeFile, referenceFiles));
+        }
+        this.schema = schemaCache.get(mainSchemeFile);
     }
 
     public String getSchema() {
@@ -179,8 +185,13 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     "   }," + NEW_LINE +
                     "   {" + NEW_LINE +
                     "     \"not\": false," + NEW_LINE +
+                    "     \"type\": \"JSON_PATH\"," + NEW_LINE +
+                    "     \"jsonPath\": \"\"" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"PARAMETERS\"," + NEW_LINE +
-                    "     \"parameters\": \"TO DO\"" + NEW_LINE +
+                    "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
                     "   }," + NEW_LINE +
                     "   {" + NEW_LINE +
                     "     \"not\": false," + NEW_LINE +
@@ -232,6 +243,8 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 }
                 oneOfErrorMessage.append(" but ").append(String.valueOf(processingMessage.asJson().get("matched"))).append(" found");
                 validationErrors.add(oneOfErrorMessage.toString() + (fieldPointer.isEmpty() ? "" : " for field \"" + fieldPointer + "\""));
+            } else if (fieldPointer.endsWith("/times") && processingMessage.toString().contains("has properties which are not allowed by the schema") && String.valueOf(processingMessage.asJson().get("schema")).contains("verificationTimes")) {
+                validationErrors.add(processingMessage.getMessage() + " for field \"" + fieldPointer + "\", allowed fields are [\"atLeast\", \"atMost\"]");
             } else {
                 validationErrors.add(processingMessage.getMessage() + (fieldPointer.isEmpty() ? "" : " for field \"" + fieldPointer + "\""));
             }

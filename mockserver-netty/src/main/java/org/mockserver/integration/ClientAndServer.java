@@ -39,11 +39,11 @@ public class ClientAndServer extends MockServerClient {
     }
 
     @Override
-    public MockServerClient stop() {
+    public void stop() {
         mockServer.stop();
-        return super.stop();
+        stop(true);
     }
-    
+
     /**
      * @deprecated use getLocalPort instead of getPort
      */

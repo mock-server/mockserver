@@ -7,19 +7,19 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 
 /**
  * @author jamesdbloom
  */
-public class HttpResponse extends Action {
+public class HttpResponse extends Action<HttpResponse> implements HttpObject<HttpResponse, BodyWithContentType> {
     private Integer statusCode;
     private String reasonPhrase;
     private BodyWithContentType body;
     private Headers headers = new Headers();
     private Cookies cookies = new Cookies();
-    private Delay delay;
     private ConnectionOptions connectionOptions;
 
     /**
@@ -157,6 +157,11 @@ public class HttpResponse extends Action {
     }
 
     @JsonIgnore
+    public byte[] getBodyAsRawBytes() {
+        return this.body != null ? this.body.getRawBytes() : new byte[0];
+    }
+
+    @JsonIgnore
     public String getBodyAsString() {
         if (body != null) {
             return body.toString();
@@ -216,6 +221,19 @@ public class HttpResponse extends Action {
      */
     public HttpResponse withHeader(String name, String... values) {
         this.headers.withEntry(name, values);
+        return this;
+    }
+
+    /**
+     * Add a header to return as a Header object, if a header with
+     * the same name already exists this will NOT be modified but
+     * two headers will exist
+     *
+     * @param name   the header name as a NottableString
+     * @param values the header values which can be a varags of NottableStrings
+     */
+    public HttpResponse withHeader(NottableString name, NottableString... values) {
+        this.headers.withEntry(header(name, values));
         return this;
     }
 
@@ -354,31 +372,6 @@ public class HttpResponse extends Action {
     }
 
     /**
-     * The delay before responding with this request as a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
-     *
-     * @param delay a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
-     */
-    public HttpResponse withDelay(Delay delay) {
-        this.delay = delay;
-        return this;
-    }
-
-    /**
-     * The delay before responding with this request as a Delay object, for example new Delay(TimeUnit.SECONDS, 3)
-     *
-     * @param timeUnit a the time unit, for example TimeUnit.SECONDS
-     * @param value    a the number of time units to delay the response
-     */
-    public HttpResponse withDelay(TimeUnit timeUnit, long value) {
-        this.delay = new Delay(timeUnit, value);
-        return this;
-    }
-
-    public Delay getDelay() {
-        return delay;
-    }
-
-    /**
      * The connection options for override the default connection behaviour, this allows full control of headers such
      * as "Connection" or "Content-Length" or controlling whether the socket is closed after the response has been sent
      *
@@ -406,7 +399,7 @@ public class HttpResponse extends Action {
             .withBody(body)
             .withHeaders(headers.clone())
             .withCookies(cookies.clone())
-            .withDelay(delay)
+            .withDelay(getDelay())
             .withConnectionOptions(connectionOptions);
     }
 }

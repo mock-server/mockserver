@@ -15,6 +15,7 @@ import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.JsonPathBody.jsonPath;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
@@ -517,6 +518,20 @@ public class RequestMatcherExamples {
                             "    }," + System.lineSeparator() +
                             "    \"required\": [\"id\", \"name\", \"price\"]" + System.lineSeparator() +
                             "}"))
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void matchRequestByBodyWithJsonPath() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withBody(
+                        jsonPath("$.store.book[?(@.price < 10)]")
+                    )
             )
             .respond(
                 response()

@@ -44,7 +44,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                 result = true;
             }
             if (!result) {
-                // match as regex - matcher -> matched
                 try {
                     if (matched.matches(matcher)) {
                         result = true;

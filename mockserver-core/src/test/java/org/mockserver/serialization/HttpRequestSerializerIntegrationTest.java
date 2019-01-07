@@ -1,15 +1,16 @@
 package org.mockserver.serialization;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.*;
 import org.mockserver.serialization.model.BodyDTO;
 import org.mockserver.serialization.model.BodyWithContentTypeDTO;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.StringBodyDTO;
-import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -21,6 +22,7 @@ import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.JsonPathBody.jsonPath;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
@@ -29,6 +31,7 @@ import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
 import static org.mockserver.model.XmlBody.xml;
+import static org.mockserver.model.XmlSchemaBody.xmlSchema;
 
 /**
  * @author jamesdbloom
@@ -39,7 +42,7 @@ public class HttpRequestSerializerIntegrationTest {
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void shouldValidateHeaderValueIsList() throws IOException {
+    public void shouldValidateHeaderValueIsList() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
@@ -75,7 +78,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldValidateHeaderNameValid() throws IOException {
+    public void shouldValidateHeaderNameValid() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "    \"headers\" : {" + NEW_LINE +
@@ -111,7 +114,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldValidateQueryStringParameterValueIsList() throws IOException {
+    public void shouldValidateQueryStringParameterValueIsList() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
@@ -147,7 +150,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldValidateQueryStringParameterNameValid() throws IOException {
+    public void shouldValidateQueryStringParameterNameValid() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "    \"queryStringParameters\" : {" + NEW_LINE +
@@ -183,7 +186,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldValidateCookieNameValid() throws IOException {
+    public void shouldValidateCookieNameValid() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "    \"cookies\" : {" + NEW_LINE +
@@ -219,7 +222,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldValidateExtraFields() throws IOException {
+    public void shouldValidateExtraFields() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "    \"path\": \"somePath\"," + NEW_LINE +
@@ -236,7 +239,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializeCompleteObject() throws IOException {
+    public void shouldDeserializeCompleteObject() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"method\" : \"someMethod\"," + NEW_LINE +
@@ -284,7 +287,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializeStringBodyShorthand() throws IOException {
+    public void shouldDeserializeStringBodyShorthand() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"body\" : \"somebody\"" + NEW_LINE +
@@ -300,7 +303,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializeStringBodyWithType() throws IOException {
+    public void shouldDeserializeStringBodyWithType() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
@@ -319,7 +322,26 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializeJsonBody() throws IOException {
+    public void shouldDeserializeRegexBody() {
+        // given
+        String requestBytes = "{" + NEW_LINE +
+            "  \"body\" : {" + NEW_LINE +
+            "    \"type\" : \"REGEX\"," + NEW_LINE +
+            "    \"regex\" : \"some[a-z]{3}\"" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}";
+
+        // when
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequestDTO()
+            .setBody(BodyDTO.createDTO(regex("some[a-z]{3}")))
+            .buildObject(), httpRequest);
+    }
+
+    @Test
+    public void shouldDeserializeJsonBody() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
@@ -339,7 +361,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializeJsonSchemaBody() throws IOException {
+    public void shouldDeserializeJsonSchemaBody() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
@@ -358,12 +380,12 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializeRegexBody() throws IOException {
+    public void shouldDeserializeJsonPathBody() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
-            "    \"type\" : \"REGEX\"," + NEW_LINE +
-            "    \"regex\" : \"some[a-z]{3}\"" + NEW_LINE +
+            "    \"type\" : \"JSON_PATH\"," + NEW_LINE +
+            "    \"jsonPath\" : \"$..book[?(@.price <= $['expensive'])]\"" + NEW_LINE +
             "  }" + NEW_LINE +
             "}";
 
@@ -372,12 +394,72 @@ public class HttpRequestSerializerIntegrationTest {
 
         // then
         assertEquals(new HttpRequestDTO()
-            .setBody(BodyDTO.createDTO(regex("some[a-z]{3}")))
+            .setBody(BodyDTO.createDTO(jsonPath("$..book[?(@.price <= $['expensive'])]")))
             .buildObject(), httpRequest);
     }
 
     @Test
-    public void shouldDeserializeXpathBody() throws IOException {
+    public void shouldDeserializeXmlBody() {
+        // given
+        String requestBytes = "{" + NEW_LINE +
+            "  \"body\" : {" + NEW_LINE +
+            "    \"type\" : \"XML\"," + NEW_LINE +
+            "    \"xml\" : \"<some><xml></xml></some>\"" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}";
+
+        // when
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequestDTO()
+            .setBody(BodyDTO.createDTO(xml("<some><xml></xml></some>")))
+            .buildObject(), httpRequest);
+    }
+
+    @Test
+    public void shouldDeserializeXmlSchemaBody() {
+        // given
+        String xmlSchema = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+            "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" +
+            "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" +
+            "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" +
+            "    <xs:element name=\"notes\">" +
+            "        <xs:complexType>" +
+            "            <xs:sequence>" +
+            "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" +
+            "                    <xs:complexType>" +
+            "                        <xs:sequence>" +
+            "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" +
+            "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" +
+            "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" +
+            "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" +
+            "                        </xs:sequence>" +
+            "                    </xs:complexType>" +
+            "                </xs:element>" +
+            "            </xs:sequence>" +
+            "        </xs:complexType>" +
+            "    </xs:element>" +
+            "</xs:schema>";
+        String requestBytes = "{" + NEW_LINE +
+            "  \"body\" : {" + NEW_LINE +
+            "    \"type\" : \"XML_SCHEMA\"," + NEW_LINE +
+            "    \"xmlSchema\" : \"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}";
+
+
+        // when
+        HttpRequest httpRequest = new HttpRequestSerializer(new MockServerLogger()).deserialize(requestBytes);
+
+        // then
+        assertEquals(new HttpRequestDTO()
+            .setBody(BodyDTO.createDTO(xmlSchema(xmlSchema)))
+            .buildObject(), httpRequest);
+    }
+
+    @Test
+    public void shouldDeserializeXpathBody() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
@@ -396,7 +478,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializeParameterBody() throws IOException {
+    public void shouldDeserializeParameterBody() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
@@ -443,7 +525,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializePartialObject() throws IOException {
+    public void shouldDeserializePartialObject() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "    \"path\": \"somePath\"" + NEW_LINE +
@@ -459,7 +541,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializeAsHttpRequestField() throws IOException {
+    public void shouldDeserializeAsHttpRequestField() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
@@ -484,7 +566,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeCompleteObject() throws IOException {
+    public void shouldSerializeCompleteObject() {
         // when
         String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
@@ -521,7 +603,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeArray() throws IOException {
+    public void shouldSerializeArray() {
         // when
         String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequest[]{
@@ -563,7 +645,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeList() throws IOException {
+    public void shouldSerializeList() {
         // when
         String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             Arrays.asList(
@@ -605,7 +687,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeStringBody() throws IOException {
+    public void shouldSerializeStringBody() {
         // when
         String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
@@ -620,25 +702,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeJsonBody() throws IOException {
-        // when
-        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
-            new HttpRequestDTO()
-                .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
-                .buildObject()
-        );
-
-        // then
-        assertEquals("{" + NEW_LINE +
-            "  \"body\" : {" + NEW_LINE +
-            "    \"type\" : \"JSON\"," + NEW_LINE +
-            "    \"json\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
-            "  }" + NEW_LINE +
-            "}", jsonHttpRequest);
-    }
-
-    @Test
-    public void shouldSerializeRegexBody() throws IOException {
+    public void shouldSerializeRegexBody() {
         // when
         String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
@@ -656,25 +720,61 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeXpathBody() throws IOException {
+    public void shouldSerializeJsonBody() {
         // when
         String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
-                .setBody(BodyDTO.createDTO(xpath("/element[key = 'some_key' and value = 'some_value']")))
+                .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
                 .buildObject()
         );
 
         // then
         assertEquals("{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
-            "    \"type\" : \"XPATH\"," + NEW_LINE +
-            "    \"xpath\" : \"/element[key = 'some_key' and value = 'some_value']\"" + NEW_LINE +
+            "    \"type\" : \"JSON\"," + NEW_LINE +
+            "    \"json\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonHttpRequest);
     }
 
     @Test
-    public void shouldSerializeXmlBody() throws IOException {
+    public void shouldSerializeJsonSchemaBody() {
+        // when
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
+            new HttpRequestDTO()
+                .setBody(BodyDTO.createDTO(jsonSchema("{ \"key\": \"value\" }")))
+                .buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"body\" : {" + NEW_LINE +
+            "    \"type\" : \"JSON_SCHEMA\"," + NEW_LINE +
+            "    \"jsonSchema\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonHttpRequest);
+    }
+
+    @Test
+    public void shouldSerializeJsonPathBody() {
+        // when
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
+            new HttpRequestDTO()
+                .setBody(BodyDTO.createDTO(jsonPath("$..book[?(@.price <= $['expensive'])]")))
+                .buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"body\" : {" + NEW_LINE +
+            "    \"type\" : \"JSON_PATH\"," + NEW_LINE +
+            "    \"jsonPath\" : \"$..book[?(@.price <= $['expensive'])]\"" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonHttpRequest);
+    }
+
+    @Test
+    public void shouldSerializeXmlBody() {
         // when
         String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
@@ -692,7 +792,66 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeParameterBody() throws IOException {
+    public void shouldSerializeXmlSchemaBody() {
+        // given
+        String xmlSchema = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+            "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" +
+            "    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" +
+            "    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" +
+            "    <xs:element name=\"notes\">" +
+            "        <xs:complexType>" +
+            "            <xs:sequence>" +
+            "                <xs:element name=\"note\" maxOccurs=\"unbounded\">" +
+            "                    <xs:complexType>" +
+            "                        <xs:sequence>" +
+            "                            <xs:element name=\"to\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" +
+            "                            <xs:element name=\"from\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" +
+            "                            <xs:element name=\"heading\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" +
+            "                            <xs:element name=\"body\" minOccurs=\"1\" maxOccurs=\"1\" type=\"xs:string\"></xs:element>" +
+            "                        </xs:sequence>" +
+            "                    </xs:complexType>" +
+            "                </xs:element>" +
+            "            </xs:sequence>" +
+            "        </xs:complexType>" +
+            "    </xs:element>" +
+            "</xs:schema>";
+
+        // when
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
+            new HttpRequestDTO()
+                .setBody(BodyDTO.createDTO(xmlSchema(xmlSchema)))
+                .buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"body\" : {" + NEW_LINE +
+            "    \"type\" : \"XML_SCHEMA\"," + NEW_LINE +
+            "    \"xmlSchema\" : \"" + StringEscapeUtils.escapeJava(xmlSchema) + "\"" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonHttpRequest);
+    }
+
+    @Test
+    public void shouldSerializeXpathBody() {
+        // when
+        String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
+            new HttpRequestDTO()
+                .setBody(BodyDTO.createDTO(xpath("/element[key = 'some_key' and value = 'some_value']")))
+                .buildObject()
+        );
+
+        // then
+        assertEquals("{" + NEW_LINE +
+            "  \"body\" : {" + NEW_LINE +
+            "    \"type\" : \"XPATH\"," + NEW_LINE +
+            "    \"xpath\" : \"/element[key = 'some_key' and value = 'some_value']\"" + NEW_LINE +
+            "  }" + NEW_LINE +
+            "}", jsonHttpRequest);
+    }
+
+    @Test
+    public void shouldSerializeParameterBody() {
         // when
         String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
@@ -734,7 +893,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializePartialHttpRequest() throws IOException {
+    public void shouldSerializePartialHttpRequest() {
         // when
         String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(new HttpRequestDTO()
             .setPath(string("somePath"))

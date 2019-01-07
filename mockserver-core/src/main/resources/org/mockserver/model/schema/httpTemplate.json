@@ -3,6 +3,9 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
+        "delay": {
+            "$ref": "#/definitions/delay"
+        },
         "templateType": {
             "enum": [
                 "JAVASCRIPT",
@@ -11,9 +14,6 @@
         },
         "template": {
             "type": "string"
-        },
-        "delay": {
-            "$ref": "#/definitions/delay"
         }
     },
     "definitions": {

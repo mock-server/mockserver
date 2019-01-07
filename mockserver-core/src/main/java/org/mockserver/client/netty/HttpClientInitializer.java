@@ -18,7 +18,7 @@ import java.net.InetSocketAddress;
 
 import static org.mockserver.client.netty.NettyHttpClient.REMOTE_SOCKET;
 import static org.mockserver.client.netty.NettyHttpClient.SECURE;
-import static org.mockserver.socket.NettySslContextFactory.nettySslContextFactory;
+import static org.mockserver.socket.tls.NettySslContextFactory.nettySslContextFactory;
 import static org.slf4j.event.Level.TRACE;
 
 @ChannelHandler.Sharable

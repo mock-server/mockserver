@@ -2,6 +2,7 @@ package org.mockserver.mock;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
@@ -31,12 +32,14 @@ public class MockServerMatcherClearAndResetTest {
     private MockServerMatcher mockServerMatcher;
     private MockServerLogger logFormatter;
     private Scheduler scheduler;
+    private WebSocketClientRegistry webSocketClientRegistry;
 
     @Before
     public void prepareTestFixture() {
         logFormatter = mock(MockServerLogger.class);
         scheduler = mock(Scheduler.class);
-        mockServerMatcher = new MockServerMatcher(logFormatter, scheduler);
+        webSocketClientRegistry = mock(WebSocketClientRegistry.class);
+        mockServerMatcher = new MockServerMatcher(logFormatter, scheduler, webSocketClientRegistry);
     }
 
     @Test

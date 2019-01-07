@@ -1,4 +1,4 @@
-package org.mockserver.initialize;
+package org.mockserver.client.initialize;
 
 import org.mockserver.client.MockServerClient;
 

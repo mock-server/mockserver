@@ -1,5 +1,7 @@
 package org.mockserver.integration.mocking;
 
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.*;
 import org.mockserver.client.netty.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
@@ -13,18 +15,22 @@ import java.util.List;
 import java.util.concurrent.*;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 public class ConcurrencyResponseWebSocketMockingIntegrationTest {
 
-    private ClientAndServer server;
+    private ClientAndServer clientAndServer;
     private NettyHttpClient httpClient;
+
+    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
 
     @Before
     public void setUp() {
-        server = ClientAndServer.startClientAndServer();
-        server
+        clientAndServer = ClientAndServer.startClientAndServer();
+        clientAndServer
             .when(
                 request()
                     .withPath("/my/echo")
@@ -37,12 +43,17 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
                         .withBody(request.getBodyAsString());
                 }
             });
-        httpClient = new NettyHttpClient();
+        httpClient = new NettyHttpClient(clientEventLoopGroup, null);
+    }
+
+    @AfterClass
+    public static void stopEventLoopGroup() {
+        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
     }
 
     @After
     public void tearDown() {
-        server.stop();
+        stopQuietly(clientAndServer);
     }
 
     @Test
@@ -76,7 +87,7 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
                     .withMethod("POST")
                     .withPath("/my/echo")
                     .withBody(requestBody),
-                new InetSocketAddress("localhost", server.getLocalPort())
+                new InetSocketAddress("localhost", clientAndServer.getLocalPort())
             ).get(20, TimeUnit.MINUTES);
             Assert.assertEquals(requestBody, httpResponse.getBodyAsString());
         } catch (Exception ex) {

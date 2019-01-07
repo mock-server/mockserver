@@ -1,0 +1,470 @@
+---
+title: Configuration
+layout: page
+pageOrder: 12
+section: 'Mock Server'
+subsection: true
+sitemap:
+priority: 0.8
+changefreq: 'monthly'
+lastmod: 2018-11-16T16:00:00+01:00
+---
+
+<h2>Settings Properties</h2>
+
+<p>Properties can be set by java code, system property, or property file. The order of precedence means that properties set by java code overrides those set by system properties which in tern overrides properties set in a property file</p>
+<p>The property file defaults to filename <span class="inline_code"><strong>mockserver.properties</strong></span> in the current working directory of MockServer. This value can be overridden by setting <span class="inline_code"><strong>mockserver.propertyFile</strong></span>,
+    for example:</p>
+<pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.propertyFile=/config/mockserver.properties</code></pre>
+
+<p>An example properties file can be found in <a href="https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver.example.properties">github</a>, as follows:</p>
+<pre class="prettyprint code"><code class="code">###############################
+# MockServer & Proxy Settings #
+###############################
+
+# Socket & Port Settings
+
+# socket timeout in milliseconds (default 120000)
+mockserver.maxSocketTimeout=120000
+
+# Java KeyStore
+
+# keystore file path if keystore does not already exist a new keystore with this file name will be created
+# (default depends on javaKeyStoreType value: keystore.jks or keystore.p12 or keystore.jceks)
+mockserver.javaKeyStoreFilePath=keystore.jks
+# keystore password (default "changeit")
+mockserver.javaKeyStorePassword=changeit
+# keystore type options are "jks", "pkcs12" or "jceks" (default "jks")
+mockserver.javaKeyStoreType=jks
+
+# Certificate Generation
+
+# delete KeyStore file on JVM shutdown (default true)
+mockserver.deleteGeneratedKeyStoreOnExit=true
+# certificate domain name (default "localhost")
+mockserver.sslCertificateDomainName=localhost
+# comma separated list of ip addresses for Subject Alternative Name domain names (default empty list)
+mockserver.sslSubjectAlternativeNameDomains=www.example.com,www.another.com
+# comma separated list of ip addresses for Subject Alternative Name ips (default empty list)
+mockserver.sslSubjectAlternativeNameIps=127.0.0.1
+
+# CORS
+
+# enable CORS for MockServer REST API
+mockserver.enableCORSForAPI=true
+# enable CORS for all responses
+mockserver.enableCORSForAllResponses=true</code></pre>
+
+<h2>Properties</h2>
+
+<button id="button_configuration_enable_cors_for_api" class="accordion title"><strong>Enable CORS For MockServer REST API</strong></button>
+<div class="panel title">
+    <p>Enabled CORS for MockServer REST API so that the API can be used from javascript running in browsers, such as selenium</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.enableCORSForAPI(boolean enableCORSForAPI)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.enableCORSForAPI=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.enableCORSForAPI=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.enableCORSForAllResponses="false"</code></pre>
+</div>
+
+<button id="button_configuration_enable_cors_for_all_responses" class="accordion title"><strong>Enable CORS For All Responses</strong></button>
+<div class="panel title">
+    <p>Enabled CORS for all responses from MockServer, including the REST API and expectation responses</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.enableCORSForAllResponses(boolean enableCORSForAllResponses)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.enableCORSForAllResponses=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.enableCORSForAllResponses=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.enableCORSForAllResponses="true"</code></pre>
+</div>
+
+<button id="button_configuration_max_expectations" class="accordion title"><strong>Maximum Expectations To Hold In Memory</strong></button>
+<div class="panel title">
+    <p>Maximum number of expectations held in the in-memory ring buffer</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">1000</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxExpectations(int count)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxExpectations=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxExpectations=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxExpectations="2000"</code></pre>
+</div>
+
+<button id="button_configuration_max_web_socket_expectations" class="accordion title"><strong>Maximum WebSocket For Object Callback Expectations</strong></button>
+<div class="panel title">
+    <p>Maximum number of WebSockets held in the in-memory ring buffer</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">1000</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxWebSocketExpectations(int count)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxWebSocketExpectations=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxWebSocketExpectations=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxWebSocketExpectations="2000"</code></pre>
+</div>
+
+<button id="button_configuration_max_initial_line_length" class="accordion title"><strong>Maximum HTTP Request Initial Line Length</strong></button>
+<div class="panel title">
+    <p>Maximum size the first line of an HTTP request</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">4096</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxInitialLineLength(int length)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxInitialLineLength=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxInitialLineLength=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxInitialLineLength="8192"</code></pre>
+</div>
+
+<button id="button_configuration_max_header_size" class="accordion title"><strong>Maximum HTTP Request Header Size</strong></button>
+<div class="panel title">
+    <p>Maximum size HTTP request headers</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">8192</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxHeaderSize(int size)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxHeaderSize=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxHeaderSize=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxHeaderSize="16384"</code></pre>
+</div>
+
+<button id="button_configuration_max_chunk_size" class="accordion title"><strong>Maximum HTTP Request Chunk Size</strong></button>
+<div class="panel title">
+    <p>Maximum size of HTTP chunks in request or responses</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">8192</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxChunkSize(int size)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxChunkSize=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxChunkSize=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxChunkSize="16384"</code></pre>
+</div>
+
+<button id="button_configuration_nio_event_loop_thread_count" class="accordion title"><strong>Number of Event Loop Threads</strong></button>
+<div class="panel title">
+    <p>Maximum number of threads for main event loop</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">maximum of (5 * availableProcessors) or 1</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.nioEventLoopThreadCount(int count)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.nioEventLoopThreadCount=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.nioEventLoopThreadCount=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.nioEventLoopThreadCount="20"</code></pre>
+</div>
+
+<button id="button_configuration_max_socket_timeout" class="accordion title"><strong>Maximum Socket Timeout</strong></button>
+<div class="panel title">
+    <p>Maximum time allowed for a response from a socket</p>
+    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">20000</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxSocketTimeout(long milliseconds)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxSocketTimeout=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxSocketTimeout=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxSocketTimeout="10000"</code></pre>
+</div>
+
+<button id="button_configuration_socket_connection_timeout" class="accordion title"><strong>Maximum Socket Connection Timeout</strong></button>
+<div class="panel title">
+    <p>Maximum time allowed to connect to a socket</p>
+    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">20000</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.socketConnectionTimeout(int milliseconds)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.socketConnectionTimeout=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.socketConnectionTimeout=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.socketConnectionTimeout="10000"</code></pre>
+</div>
+
+<button id="button_configuration_java_key_store_file_path" class="accordion title"><strong>Java KeyStore File Path</strong></button>
+<div class="panel title">
+    <p>The relative or absolute file path to the java key store</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">`mockserver_keystore` file name with extension depending on `mockserver.javaKeyStoreType` property</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.javaKeyStoreFilePath(String keyStoreFilePath)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javaKeyStoreFilePath=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.javaKeyStoreFilePath=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javaKeyStoreFilePath="mockserver_keystore.jks"</code></pre>
+</div>
+
+<button id="button_configuration_java_key_store_password" class="accordion title"><strong>Java KeyStore File Password</strong></button>
+<div class="panel title">
+    <p>The java key store password</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">changeit</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.javaKeyStorePassword(String keyStorePassword)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javaKeyStorePassword=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.javaKeyStorePassword=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javaKeyStorePassword="changeit"</code></pre>
+</div>
+
+<button id="button_configuration_java_key_store_type" class="accordion title"><strong>Java KeyStore Type</strong></button>
+<div class="panel title">
+    <p>The type of the java key store</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">KeyStore.getDefaultType() - in Java 1.7 this uses the system property `keystore.type` or defaults to `jks`</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.javaKeyStoreType(String keyStoreType)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javaKeyStoreType=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.javaKeyStoreType=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javaKeyStoreType="jks"</code></pre>
+</div>
+
+<button id="button_configuration_delete_generated_key_store_on_exit" class="accordion title"><strong>Delete Generated KeyStore On Exit</strong></button>
+<div class="panel title">
+    <p>Determines if an auto-generated java key store file is deleted on exit</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.deleteGeneratedKeyStoreOnExit(boolean deleteGeneratedKeyStoreOnExit)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.deleteGeneratedKeyStoreOnExit=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.deleteGeneratedKeyStoreOnExit=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.deleteGeneratedKeyStoreOnExit="false"</code></pre>
+</div>
+
+<button id="button_configuration_ssl_certificate_domain_name" class="accordion title"><strong>TLS Certificate Domain Name</strong></button>
+<div class="panel title">
+    <p>The domain name for auto-generate TLS certificates</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">localhost</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.sslCertificateDomainName(String domainName)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslCertificateDomainName=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.sslCertificateDomainName=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslCertificateDomainName="localhost"</code></pre>
+</div>
+
+<button id="button_configuration_ssl_subject_alternative_name_domains" class="accordion title"><strong>TLS Subject Alternative Name Domains</strong></button>
+<div class="panel title">
+    <p>The Subject Alternative Name (SAN) domain names for auto-generate TLS certificates as a comma separated list</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">localhost</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.addSslSubjectAlternativeNameDomains(String... additionalSubjectAlternativeNameDomains)</code></pre>
+    or
+    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.clearSslSubjectAlternativeNameDomains()</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslSubjectAlternativeNameDomains=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.sslSubjectAlternativeNameDomains=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslSubjectAlternativeNameDomains="localhost,www.foo.bar"</code></pre>
+</div>
+
+<button id="button_configuration_ssl_subject_alternative_name_ips" class="accordion title"><strong>TLS Subject Alternative Name IPs</strong></button>
+<div class="panel title">
+    <p>The Subject Alternative Name (SAN) IP addresses for auto-generate TLS certificates as a comma separated list</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">127.0.0.1,0.0.0.0</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.addSslSubjectAlternativeNameIps(String... additionalSubjectAlternativeNameIps)</code></pre>
+    or
+    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.clearSslSubjectAlternativeNameIps()</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslSubjectAlternativeNameIps=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.sslSubjectAlternativeNameIps=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslSubjectAlternativeNameIps="127.0.0.1,0.0.0.0"</code></pre>
+</div>
+
+<button id="button_configuration_log_level" class="accordion title"><strong>Log Level</strong></button>
+<div class="panel title">
+    <p>The log level, note if this is lower then INFO then verification logic does not work because no log events are captured to enable verification</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">INFO</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.logLevel(String level)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.logLevel=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.logLevel</code></pre>
+
+    <p>The log level, which can be TRACE, DEBUG, INFO, WARN, ERROR, OFF</p>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.logLevel="DEBUG"</code></pre>
+</div>
+
+<button id="button_configuration_disable_request_audit" class="accordion title"><strong>Disable Request Audit Log</strong></button>
+<div class="panel title">
+    <p>Disable requests audit logging to improve performance, note if this is disabled then verification logic does not work because no log events are captured to enable verification</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.disableRequestAudit(boolean disableRequestAudit)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableRequestAudit=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.disableRequestAudit=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableRequestAudit="true"</code></pre>
+</div>
+
+<button id="button_configuration_disable_system_out" class="accordion title"><strong>Disable System Out Log Output</strong></button>
+<div class="panel title">
+    <p>Disable logging to the system output</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.disableSystemOut(boolean disableSystemOut)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableSystemOut=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.disableSystemOut=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableSystemOut="true"</code></pre>
+</div>
+
+<button id="button_configuration_http_proxy" class="accordion title"><strong>HTTP Proxy For Forwarded Request</strong></button>
+<div class="panel title">
+    <p>Specifies that all output / forwarded requests are sent via an HTTP proxy</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.httpProxy(String hostAndPort)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.httpProxy=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.httpProxy=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.httpProxy="127.0.0.1:1090"</code></pre>
+</div>
+
+<button id="button_configuration_https_proxy" class="accordion title"><strong>HTTPS Proxy For Forwarded Request</strong></button>
+<div class="panel title">
+    <p>Specifies that all output / forwarded requests are sent via an HTTPS proxy</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.httpsProxy(String hostAndPort)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.httpsProxy=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.httpsProxy=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.httpsProxy="127.0.0.1:1090"</code></pre>
+</div>
+
+<button id="button_configuration_socks_proxy" class="accordion title"><strong>SOCKS Proxy For Forwarded Request</strong></button>
+<div class="panel title">
+    <p>Specifies that all output / forwarded requests are sent via a SOCKS proxy</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.socksProxy(String hostAndPort)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.socksProxy=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.socksProxy=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.socksProxy="127.0.0.1:1090"</code></pre>
+</div>
+
+<button id="button_configuration_local_bound_ip" class="accordion title"><strong>Local Bound IP For Accepting Socket Connection</strong></button>
+<div class="panel title">
+    <p>The local IP address to bind to for accepting new socket connections</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">0.0.0.0</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.localBoundIP(String localBoundIP)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.localBoundIP=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.localBoundIP=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.localBoundIP="0.0.0.0"</code></pre>
+</div>
+
+<button id="button_configuration_proxy_authentication_realm" class="accordion title"><strong>Proxy Authentication Realm</strong></button>
+<div class="panel title">
+    <p>The authentication realm for proxy authentication to MockServer</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">MockServer HTTP Proxy</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyAuthenticationRealm(String proxyAuthenticationRealm)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyAuthenticationRealm=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.proxyAuthenticationRealm=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyAuthenticationRealm="MockServer HTTP Proxy"</code></pre>
+</div>
+
+<button id="button_configuration_proxy_authentication_username" class="accordion title"><strong>Proxy Authentication Username</strong></button>
+<div class="panel title">
+    <p>The required username for proxy authentication to MockServer</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">john.doe</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyAuthenticationUsername(String proxyAuthenticationUsername)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyAuthenticationUsername=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.proxyAuthenticationUsername=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyAuthenticationUsername=john.doe</code></pre>
+</div>
+
+<button id="button_configuration_proxy_authentication_password" class="accordion title"><strong>Proxy Authentication Password</strong></button>
+<div class="panel title">
+    <p>The required password for proxy authentication to MockServer</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">p@ssw0rd</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyAuthenticationPassword(String proxyAuthenticationPassword)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyAuthenticationPassword=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.proxyAuthenticationPassword=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyAuthenticationPassword="p@ssw0rd"</code></pre>
+</div>
+
+<button id="button_configuration_initialization_class" class="accordion title"><strong>Expectation Initialization Class</strong></button>
+<div class="panel title">
+    <p>The class (and package) used to initialize expectations in MockServer at startup</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.initializationClass(String initializationClass)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.initializationClass=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.initializationClass=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.initializationClass="org.mockserver.server.initialize.ExpectationInitializerExample"</code></pre>
+</div>
+
+<button id="button_configuration_initialization_json_path" class="accordion title"><strong>Expectation Initialization JSON file</strong></button>
+<div class="panel title">
+    <p>The path to the json file used to initialize expectations in MockServer at startup</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.initializationJsonPath(String initializationJsonPath)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.initializationJsonPath=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.initializationJsonPath=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.initializationJsonPath="org/mockserver/server/initialize/initializerJson.json"</code></pre>
+</div>

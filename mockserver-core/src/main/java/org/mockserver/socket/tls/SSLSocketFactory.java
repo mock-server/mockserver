@@ -1,10 +1,10 @@
-package org.mockserver.socket;
+package org.mockserver.socket.tls;
 
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.net.Socket;
 
-import static org.mockserver.socket.KeyStoreFactory.keyStoreFactory;
+import static org.mockserver.socket.tls.KeyStoreFactory.keyStoreFactory;
 
 /**
  * @author jamesdbloom

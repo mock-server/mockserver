@@ -1,15 +1,18 @@
 package org.mockserver.client;
 
 import com.google.common.annotations.VisibleForTesting;
-
-import org.mockserver.client.MockServerEventBus.MockServerEvent;
-import org.mockserver.client.MockServerEventBus.MockServerEventSubscriber;
+import org.mockserver.client.MockServerEventBus.EventType;
+import org.mockserver.client.MockServerEventBus.SubscriberHandler;
 import org.mockserver.client.netty.websocket.WebSocketClient;
 import org.mockserver.client.netty.websocket.WebSocketException;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.*;
+
+import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
 
 /**
  * @author jamesdbloom
@@ -18,20 +21,12 @@ public class ForwardChainExpectation {
 
     private final MockServerClient mockServerClient;
     private final Expectation expectation;
-    private WebSocketClient webSocketClient;
+    private final Semaphore availableWebSocketCallbackRegistrations;
 
-    public ForwardChainExpectation(MockServerClient mockServerClient, Expectation expectation) {
+    ForwardChainExpectation(MockServerClient mockServerClient, Expectation expectation, Semaphore availableWebSocketCallbackRegistrations) {
         this.mockServerClient = mockServerClient;
         this.expectation = expectation;
-        
-        MockServerEventBus.getInstance().subscribe(new MockServerEventSubscriber() {
-            @Override
-            public void handle() {
-                if (webSocketClient != null) {
-                    webSocketClient.stopClient();
-                }
-            }
-        }, MockServerEvent.STOP, MockServerEvent.RESET);
+        this.availableWebSocketCallbackRegistrations = availableWebSocketCallbackRegistrations;
     }
 
     /**
@@ -77,20 +72,8 @@ public class ForwardChainExpectation {
      *
      * @param expectationResponseCallback object to call locally or remotely to generate response
      */
-    public void respond(ExpectationResponseCallback expectationResponseCallback) {
-        initWebSocketClient();
-
-        try {
-            expectation.thenRespond(new HttpObjectCallback()
-                .withClientId(
-                    webSocketClient
-                        .registerExpectationCallback(expectationResponseCallback)
-                        .clientId()
-
-                ));
-        } catch (WebSocketException wse) {
-            throw new ClientException(wse.getMessage());
-        }
+    public void respond(final ExpectationResponseCallback expectationResponseCallback) {
+        expectation.thenRespond(new HttpObjectCallback().withClientId(registerWebSocketClient(expectationResponseCallback)));
         mockServerClient.sendExpectation(expectation);
     }
 
@@ -137,20 +120,35 @@ public class ForwardChainExpectation {
      *
      * @param expectationForwardCallback object to call locally or remotely to generate request
      */
-    public void forward(ExpectationForwardCallback expectationForwardCallback) {
-        initWebSocketClient();
-
-        try {
-            expectation.thenForward(new HttpObjectCallback()
-                .withClientId(
-                    webSocketClient
-                        .registerExpectationCallback(expectationForwardCallback)
-                        .clientId()
-                ));
-        } catch (WebSocketException wse) {
-            throw new ClientException(wse.getMessage());
-        }
+    public void forward(final ExpectationForwardCallback expectationForwardCallback) {
+        expectation.thenForward(new HttpObjectCallback().withClientId(registerWebSocketClient(expectationForwardCallback)));
         mockServerClient.sendExpectation(expectation);
+    }
+
+    private <T extends HttpObject> String registerWebSocketClient(ExpectationCallback<T> expectationCallback) {
+        try {
+            final WebSocketClient<T> webSocketClient = new WebSocketClient<>(availableWebSocketCallbackRegistrations);
+            final Future<String> register = webSocketClient.registerExpectationCallback(
+                expectationCallback,
+                mockServerClient.getEventLoopGroup(),
+                mockServerClient.remoteAddress(),
+                mockServerClient.contextPath(),
+                mockServerClient.isSecure()
+            );
+            MockServerEventBus.getInstance().subscribe(new SubscriberHandler() {
+                @Override
+                public void handle() {
+                    webSocketClient.stopClient();
+                }
+            }, EventType.STOP, EventType.RESET);
+            return register.get();
+        } catch (Exception e) {
+            if (e.getCause() instanceof WebSocketException) {
+                throw new ClientException(e.getCause().getMessage(), e);
+            } else {
+                throw new ClientException("Unable to retrieve client registration id", e);
+            }
+        }
     }
 
     /**
@@ -175,23 +173,9 @@ public class ForwardChainExpectation {
         mockServerClient.sendExpectation(expectation);
     }
 
-    private void initWebSocketClient() {
-        if (webSocketClient == null) {
-            webSocketClient = new WebSocketClient(
-                mockServerClient.remoteAddress(),
-                mockServerClient.contextPath(),
-                mockServerClient.isSecure()
-            );
-        }
-    }
-
     @VisibleForTesting
     Expectation getExpectation() {
         return expectation;
     }
 
-    @VisibleForTesting
-    void setWebSocketClient(WebSocketClient webSocketClient) {
-        this.webSocketClient = webSocketClient;
-    }
 }

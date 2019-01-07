@@ -13,17 +13,17 @@ import javax.xml.xpath.XPathFactory;
 /**
  * @author jamesdbloom
  */
-public class XPathStringMatcher extends BodyMatcher<String> {
+public class XPathMatcher extends BodyMatcher<String> {
     private static final String[] excludedFields = {"mockServerLogger", "xpathExpression"};
     private final MockServerLogger mockServerLogger;
     private final String matcher;
     private final StringToXmlDocumentParser stringToXmlDocumentParser = new StringToXmlDocumentParser();
     private XPathExpression xpathExpression = null;
 
-    public XPathStringMatcher(MockServerLogger mockServerLogger, String matcher) {
+    public XPathMatcher(MockServerLogger mockServerLogger, String matcher) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
-        if (StringUtils.isNotEmpty(matcher)) {
+        if (StringUtils.isNotBlank(matcher)) {
             try {
                 xpathExpression = XPathFactory.newInstance().newXPath().compile(matcher);
             } catch (XPathExpressionException e) {
@@ -40,7 +40,6 @@ public class XPathStringMatcher extends BodyMatcher<String> {
         } else if (matcher.equals(matched)) {
             result = true;
         } else if (matched != null) {
-            // match as xpath - matcher -> matched
             try {
                 result = (Boolean) xpathExpression.evaluate(stringToXmlDocumentParser.buildDocument(matched, new StringToXmlDocumentParser.ErrorLogger() {
                     @Override
@@ -54,7 +53,7 @@ public class XPathStringMatcher extends BodyMatcher<String> {
         }
 
         if (!result) {
-            mockServerLogger.trace("Failed to match [{}] with [{}]", matched, this.matcher);
+            mockServerLogger.trace("Failed to match [{}] with [{}]", matched, matcher);
         }
 
         return not != result;
@@ -62,7 +61,7 @@ public class XPathStringMatcher extends BodyMatcher<String> {
 
     @Override
     @JsonIgnore
-    public String[] fieldsExcludedFromEqualsAndHashCode() {
+    protected String[] fieldsExcludedFromEqualsAndHashCode() {
         return excludedFields;
     }
 }

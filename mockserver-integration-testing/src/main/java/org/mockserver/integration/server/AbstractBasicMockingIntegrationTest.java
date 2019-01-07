@@ -1,8 +1,6 @@
 package org.mockserver.integration.server;
 
 import org.junit.Test;
-import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
@@ -53,7 +51,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(getEchoServerPort())
+                    .withPort(insecureEchoServer.getPort())
             );
 
         // then
@@ -100,156 +98,137 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
     @Test
     public void shouldForwardRequestInHTTPS() {
-        EchoServer secureEchoServer = new EchoServer(true);
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                forward()
+                    .withHost("127.0.0.1")
+                    .withPort(secureEchoServer.getPort())
+                    .withScheme(HttpForward.Scheme.HTTPS)
+            );
 
-        try {
-            // when
-            mockServerClient
-                .when(
-                    request()
-                        .withPath(calculatePath("echo"))
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
                 )
-                .forward(
-                    forward()
-                        .withHost("127.0.0.1")
-                        .withPort(secureEchoServer.getPort())
-                        .withScheme(HttpForward.Scheme.HTTPS)
-                );
-
-            // then
-            // - in http
-            assertEquals(
-                response()
-                    .withStatusCode(OK_200.code())
-                    .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("an_example_body_http"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
                     .withHeaders(
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                makeRequest(
-                    request()
-                        .withPath(calculatePath("echo"))
-                        .withMethod("POST")
-                        .withHeaders(
-                            header("x-test", "test_headers_and_body")
-                        )
-                        .withBody("an_example_body_http"),
-                    headersToIgnore)
-            );
-            // - in https
-            assertEquals(
-                response()
-                    .withStatusCode(OK_200.code())
-                    .withReasonPhrase(OK_200.reasonPhrase())
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_https"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
                     .withHeaders(
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_https"),
-                makeRequest(
-                    request()
-                        .withSecure(true)
-                        .withPath(calculatePath("echo"))
-                        .withMethod("POST")
-                        .withHeaders(
-                            header("x-test", "test_headers_and_body")
-                        )
-                        .withBody("an_example_body_https"),
-                    headersToIgnore)
-            );
-        } finally {
-            secureEchoServer.stop();
-        }
+                headersToIgnore)
+        );
     }
 
     @Test
     public void shouldForwardOverriddenRequest() {
-        // given
-        EchoServer echoServer = new EchoServer(false);
-        EchoServer secureEchoServer = new EchoServer(true);
-
-        try {
-            // when
-            mockServerClient
-                .when(
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+            .forward(
+                forwardOverriddenRequest(
                     request()
-                        .withPath(calculatePath("echo"))
-                        .withSecure(false)
-                )
-                .forward(
-                    forwardOverriddenRequest(
-                        request()
-                            .withHeader("Host", "localhost:" + echoServer.getPort())
-                            .withBody("some_overridden_body")
-                    ).withDelay(MILLISECONDS, 10)
-                );
-            mockServerClient
-                .when(
+                        .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                        .withBody("some_overridden_body")
+                ).withDelay(MILLISECONDS, 10)
+            );
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+            .forward(
+                forwardOverriddenRequest(
                     request()
-                        .withPath(calculatePath("echo"))
-                        .withSecure(true)
-                )
-                .forward(
-                    forwardOverriddenRequest(
-                        request()
-                            .withHeader("Host", "localhost:" + secureEchoServer.getPort())
-                            .withBody("some_overridden_body")
-                    ).withDelay(MILLISECONDS, 10)
-                );
+                        .withHeader("Host", "localhost:" + secureEchoServer.getPort())
+                        .withBody("some_overridden_body")
+                ).withDelay(MILLISECONDS, 10)
+            );
 
-            // then
-            // - in http
-            assertEquals(
-                response()
-                    .withStatusCode(OK_200.code())
-                    .withReasonPhrase(OK_200.reasonPhrase())
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
                     .withHeaders(
                         header("x-test", "test_headers_and_body")
                     )
-                    .withBody("some_overridden_body"),
-                makeRequest(
-                    request()
-                        .withPath(calculatePath("echo"))
-                        .withMethod("POST")
-                        .withHeaders(
-                            header("x-test", "test_headers_and_body")
-                        )
-                        .withBody("an_example_body_http"),
-                    headersToIgnore
+                    .withBody("an_example_body_http"),
+                headersToIgnore
 
+            )
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body_https")
                 )
-            );
-            // - in https
-            assertEquals(
-                response()
-                    .withStatusCode(OK_200.code())
-                    .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
                     .withHeaders(
                         header("x-test", "test_headers_and_body_https")
                     )
-                    .withBody("some_overridden_body"),
-                makeRequest(
-                    request()
-                        .withSecure(true)
-                        .withPath(calculatePath("echo"))
-                        .withMethod("POST")
-                        .withHeaders(
-                            header("x-test", "test_headers_and_body_https")
-                        )
-                        .withBody("an_example_body_https"),
-                    headersToIgnore)
-            );
-        } finally {
-            echoServer.stop();
-            secureEchoServer.stop();
-        }
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
     }
 
     @Test
     public void shouldCallbackForForwardToSpecifiedClassWithPrecannedResponse() {
-        // given
-        EchoServer echoServer = new EchoServer(false);
-        EchoServer secureEchoServer = new EchoServer(true);
-
         // when
         mockServerClient
             .when(
@@ -277,7 +256,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withMethod("POST")
                     .withHeaders(
                         header("x-test", "test_headers_and_body"),
-                        header("x-echo-server-port", echoServer.getPort())
+                        header("x-echo-server-port", insecureEchoServer.getPort())
                     )
                     .withBody("an_example_body_http"),
                 headersToIgnore
@@ -310,74 +289,69 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
     @Test
     public void shouldForwardTemplateInVelocity() {
-        EchoServer secureEchoServer = new EchoServer(false);
-        try {
-            // when
-            mockServerClient
-                .when(
-                    request()
-                        .withPath(calculatePath("echo"))
-                )
-                .forward(
-                    template(HttpTemplate.TemplateType.VELOCITY,
-                        "{" + NEW_LINE +
-                            "    'path' : \"/somePath\"," + NEW_LINE +
-                            "    'headers' : [ {" + NEW_LINE +
-                            "        'name' : \"Host\"," + NEW_LINE +
-                            "        'values' : [ \"127.0.0.1:" + secureEchoServer.getPort() + "\" ]" + NEW_LINE +
-                            "    }, {" + NEW_LINE +
-                            "        'name' : \"x-test\"," + NEW_LINE +
-                            "        'values' : [ \"$!request.headers['x-test'][0]\" ]" + NEW_LINE +
-                            "    } ]," + NEW_LINE +
-                            "    'body': \"{'name': 'value'}\"" + NEW_LINE +
-                            "}")
-                        .withDelay(MILLISECONDS, 10)
-                );
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                template(HttpTemplate.TemplateType.VELOCITY,
+                    "{" + NEW_LINE +
+                        "    'path' : \"/somePath\"," + NEW_LINE +
+                        "    'headers' : [ {" + NEW_LINE +
+                        "        'name' : \"Host\"," + NEW_LINE +
+                        "        'values' : [ \"127.0.0.1:" + insecureEchoServer.getPort() + "\" ]" + NEW_LINE +
+                        "    }, {" + NEW_LINE +
+                        "        'name' : \"x-test\"," + NEW_LINE +
+                        "        'values' : [ \"$!request.headers['x-test'][0]\" ]" + NEW_LINE +
+                        "    } ]," + NEW_LINE +
+                        "    'body': \"{'name': 'value'}\"" + NEW_LINE +
+                        "}")
+                    .withDelay(MILLISECONDS, 10)
+            );
 
-            // then
-            // - in http
-            assertEquals(
-                response()
-                    .withStatusCode(OK_200.code())
-                    .withReasonPhrase(OK_200.reasonPhrase())
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("{'name': 'value'}"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
                     .withHeaders(
                         header("x-test", "test_headers_and_body")
                     )
-                    .withBody("{'name': 'value'}"),
-                makeRequest(
-                    request()
-                        .withPath(calculatePath("echo"))
-                        .withMethod("POST")
-                        .withHeaders(
-                            header("x-test", "test_headers_and_body")
-                        )
-                        .withBody("an_example_body_http"),
-                    headersToIgnore
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body_https")
                 )
-            );
-            // - in https
-            assertEquals(
-                response()
-                    .withStatusCode(OK_200.code())
-                    .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("{'name': 'value'}"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
                     .withHeaders(
                         header("x-test", "test_headers_and_body_https")
                     )
-                    .withBody("{'name': 'value'}"),
-                makeRequest(
-                    request()
-                        .withSecure(true)
-                        .withPath(calculatePath("echo"))
-                        .withMethod("POST")
-                        .withHeaders(
-                            header("x-test", "test_headers_and_body_https")
-                        )
-                        .withBody("an_example_body_https"),
-                    headersToIgnore)
-            );
-        } finally {
-            secureEchoServer.stop();
-        }
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
     }
 
     @Test
@@ -392,7 +366,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .forward(
                 forward()
                     .withHost("127.0.0.1")
-                    .withPort(getEchoServerPort())
+                    .withPort(insecureEchoServer.getPort())
             );
         mockServerClient
             .when(
@@ -509,7 +483,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldSupportBatchedExpectations() throws Exception {
         // when
-        new NettyHttpClient().sendRequest(
+        httpClient.sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
@@ -1211,80 +1185,74 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
     @Test
     public void shouldRetrieveRecordedExpectations() {
-        // when
-        EchoServer secureEchoServer = new EchoServer(false);
-        try {
-            mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).forward(
-                forward()
-                    .withHost("127.0.0.1")
-                    .withPort(secureEchoServer.getPort())
-            );
-            HttpRequest complexRequest = request()
-                .withPath(calculatePath("some_path_one"))
+        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).forward(
+            forward()
+                .withHost("127.0.0.1")
+                .withPort(insecureEchoServer.getPort())
+        );
+        HttpRequest complexRequest = request()
+            .withPath(calculatePath("some_path_one"))
+            .withHeader("some", "header")
+            .withQueryStringParameter("some", "parameter")
+            .withCookie("some", "parameter")
+            .withBody("some_body_one");
+        assertEquals(
+            response("some_body_one")
                 .withHeader("some", "header")
-                .withQueryStringParameter("some", "parameter")
-                .withCookie("some", "parameter")
-                .withBody("some_body_one");
-            assertEquals(
-                response("some_body_one")
-                    .withHeader("some", "header")
-                    .withHeader("cookie", "some=parameter")
-                    .withHeader("set-cookie", "some=parameter")
-                    .withCookie("some", "parameter"),
-                makeRequest(
-                    complexRequest,
-                    headersToIgnore
-                )
-            );
-            assertEquals(
-                response("some_body_three"),
-                makeRequest(
-                    request()
-                        .withPath(calculatePath("some_path_three"))
-                        .withBody("some_body_three"),
-                    headersToIgnore
-                )
-            );
+                .withHeader("cookie", "some=parameter")
+                .withHeader("set-cookie", "some=parameter")
+                .withCookie("some", "parameter"),
+            makeRequest(
+                complexRequest,
+                headersToIgnore
+            )
+        );
+        assertEquals(
+            response("some_body_three"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path_three"))
+                    .withBody("some_body_three"),
+                headersToIgnore
+            )
+        );
 
-            // then
-            Expectation[] recordedExpectations = mockServerClient.retrieveRecordedExpectations(request().withPath(calculatePath("some_path_one")));
-            assertThat(recordedExpectations.length, is(1));
-            verifyRequestsMatches(
-                new HttpRequest[]{
-                    recordedExpectations[0].getHttpRequest()
-                },
-                request(calculatePath("some_path_one")).withBody("some_body_one")
-            );
-            assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
-            // and
-            recordedExpectations = mockServerClient.retrieveRecordedExpectations(request());
-            assertThat(recordedExpectations.length, is(2));
-            verifyRequestsMatches(
-                new HttpRequest[]{
-                    recordedExpectations[0].getHttpRequest(),
-                    recordedExpectations[1].getHttpRequest()
-                },
-                request(calculatePath("some_path_one")).withBody("some_body_one"),
-                request(calculatePath("some_path_three")).withBody("some_body_three")
-            );
-            assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
-            assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
-            // and
-            recordedExpectations = mockServerClient.retrieveRecordedExpectations(null);
-            assertThat(recordedExpectations.length, is(2));
-            verifyRequestsMatches(
-                new HttpRequest[]{
-                    recordedExpectations[0].getHttpRequest(),
-                    recordedExpectations[1].getHttpRequest()
-                },
-                request(calculatePath("some_path_one")).withBody("some_body_one"),
-                request(calculatePath("some_path_three")).withBody("some_body_three")
-            );
-            assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
-            assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
-        } finally {
-            secureEchoServer.stop();
-        }
+        // then
+        Expectation[] recordedExpectations = mockServerClient.retrieveRecordedExpectations(request().withPath(calculatePath("some_path_one")));
+        assertThat(recordedExpectations.length, is(1));
+        verifyRequestsMatches(
+            new HttpRequest[]{
+                recordedExpectations[0].getHttpRequest()
+            },
+            request(calculatePath("some_path_one")).withBody("some_body_one")
+        );
+        assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
+        // and
+        recordedExpectations = mockServerClient.retrieveRecordedExpectations(request());
+        assertThat(recordedExpectations.length, is(2));
+        verifyRequestsMatches(
+            new HttpRequest[]{
+                recordedExpectations[0].getHttpRequest(),
+                recordedExpectations[1].getHttpRequest()
+            },
+            request(calculatePath("some_path_one")).withBody("some_body_one"),
+            request(calculatePath("some_path_three")).withBody("some_body_three")
+        );
+        assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
+        assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
+        // and
+        recordedExpectations = mockServerClient.retrieveRecordedExpectations(null);
+        assertThat(recordedExpectations.length, is(2));
+        verifyRequestsMatches(
+            new HttpRequest[]{
+                recordedExpectations[0].getHttpRequest(),
+                recordedExpectations[1].getHttpRequest()
+            },
+            request(calculatePath("some_path_one")).withBody("some_body_one"),
+            request(calculatePath("some_path_three")).withBody("some_body_three")
+        );
+        assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
+        assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
     }
 
     @Test
@@ -1652,7 +1620,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldReturnErrorForInvalidExpectation() throws Exception {
         // when
-        HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+        HttpResponse httpResponse = httpClient.sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())
@@ -1683,7 +1651,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     @Test
     public void shouldReturnErrorForInvalidRequest() throws Exception {
         // when
-        HttpResponse httpResponse = new NettyHttpClient().sendRequest(
+        HttpResponse httpResponse = httpClient.sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + this.getServerPort())

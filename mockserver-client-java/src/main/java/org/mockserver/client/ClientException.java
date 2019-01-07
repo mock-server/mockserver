@@ -5,7 +5,12 @@ package org.mockserver.client;
  */
 public class ClientException extends RuntimeException {
 
-    public ClientException(String message) {
+    ClientException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    ClientException(String message) {
         super(message);
     }
+
 }

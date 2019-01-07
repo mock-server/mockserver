@@ -1,5 +1,7 @@
 package org.mockserver.client.netty;
 
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -14,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.Cookie.cookie;
@@ -21,12 +24,14 @@ import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.stop.Stop.stopQuietly;
 
 public class NettyHttpClientTest {
 
     private static EchoServer echoServer;
     @Rule
     public ExpectedException exception = ExpectedException.none();
+    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
 
     @BeforeClass
     public static void startEchoServer() {
@@ -34,14 +39,19 @@ public class NettyHttpClientTest {
     }
 
     @AfterClass
+    public static void stopEventLoopGroup() {
+        clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+    }
+
+    @AfterClass
     public static void stopEchoServer() {
-        echoServer.stop();
+        stopQuietly(echoServer);
     }
 
     @Test
     public void shouldSendBasicRequest() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient();
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(clientEventLoopGroup, null);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "0.0.0.0:" + echoServer.getPort()))
@@ -62,7 +72,7 @@ public class NettyHttpClientTest {
     @Test
     public void shouldSendBasicRequestToAnotherIpAndPort() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient();
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(clientEventLoopGroup, null);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "www.google.com"), new InetSocketAddress("0.0.0.0", echoServer.getPort()))
@@ -83,7 +93,7 @@ public class NettyHttpClientTest {
     @Test
     public void shouldSendBasicRequestToAnotherIpAndPortWithNoHostHeader() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient();
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(clientEventLoopGroup, null);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(request(), new InetSocketAddress("0.0.0.0", echoServer.getPort()))
@@ -103,7 +113,7 @@ public class NettyHttpClientTest {
     @Test
     public void shouldSendComplexRequest() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient();
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(clientEventLoopGroup, null);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(
