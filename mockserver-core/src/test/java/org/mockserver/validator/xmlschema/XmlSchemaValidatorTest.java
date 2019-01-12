@@ -1,5 +1,6 @@
 package org.mockserver.validator.xmlschema;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -14,6 +15,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.model.XmlSchemaBody.xmlSchemaFromResource;
 
 /**
  * @author jamesdbloom
@@ -50,6 +52,26 @@ public class XmlSchemaValidatorTest {
     @Before
     public void createMocks() {
         initMocks(this);
+    }
+
+    @Test
+    public void shouldSupportXmlImports() {
+        // given
+        String xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+            "<ParentType>\n" +
+            "    <embedded>\n" +
+            "        <numeric>12</numeric>\n" +
+            "        <embedded>\n" +
+            "            <numeric>5</numeric>\n" +
+            "        </embedded>\n" +
+            "    </embedded>\n" +
+            "</ParentType>";
+
+        // when
+        XmlSchemaValidator xmlSchemaValidator = new XmlSchemaValidator(new MockServerLogger(logger, null), xmlSchemaFromResource("org/mockserver/validator/xmlschema/parent.xsd").getValue());
+
+        // then
+        assertThat(xmlSchemaValidator.isValid(xml), CoreMatchers.is(""));
     }
 
     @Test

@@ -22,7 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
-    private final static SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+    private final static SchemaFactory schemaFactory = buildSchemaFactory();
     private final MockServerLogger mockServerLogger;
     private final Schema schema;
 
@@ -41,6 +41,17 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException("Schema file not found", e);
         }
+    }
+
+    private static SchemaFactory buildSchemaFactory() {
+        SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        try {
+            schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "all");
+            schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "all");
+        } catch (Exception e) {
+            new MockServerLogger(XmlSchemaValidator.class).error("exception configuring schema factory", e);
+        }
+        return schemaFactory;
     }
 
     @Override

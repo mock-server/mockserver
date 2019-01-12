@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ParentType>
+    <embedded>
+        <numeric>12</numeric>
+        <embedded>
+            <numeric>5</numeric>
+        </embedded>
+    </embedded>
+</ParentType>
