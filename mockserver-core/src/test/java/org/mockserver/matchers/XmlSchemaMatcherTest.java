@@ -136,7 +136,7 @@ public class XmlSchemaMatcherTest {
     }
 
     @Test
-    public void shouldHandleExpection() {
+    public void shouldHandleExpectation() {
         Level originalLevel = logLevel();
         try {
             // given
