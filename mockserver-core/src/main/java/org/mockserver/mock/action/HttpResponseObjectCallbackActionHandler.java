@@ -29,8 +29,8 @@ public class HttpResponseObjectCallbackActionHandler {
         webSocketClientRegistry.registerResponseCallbackHandler(webSocketCorrelationId, new WebSocketResponseCallback() {
             @Override
             public void handle(HttpResponse response) {
-                actionHandler.writeResponseActionResponse(response.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), responseWriter, request, httpObjectCallback, synchronous);
                 webSocketClientRegistry.unregisterResponseCallbackHandler(webSocketCorrelationId);
+                actionHandler.writeResponseActionResponse(response.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), responseWriter, request, httpObjectCallback, synchronous);
             }
         });
         webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId));
