@@ -120,4 +120,18 @@ public class RegexStringMatcherTest {
     public void shouldHandleIllegalRegexPatternForTest() {
         assertFalse(new RegexStringMatcher(new MockServerLogger(), "some_value").matches("/{}"));
     }
+
+    @Test
+    public void shouldHandleRegexPatternFlagsTest() {
+        assertTrue(new RegexStringMatcher(new MockServerLogger(), "(?ms).*some_value.*")
+            .matches("some_string\nsome_value\nanother_string"));
+    }
+
+    @Test
+    public void shouldHandleRegexPatternFlagsIgnoreCaseTest() {
+        assertTrue(new RegexStringMatcher(new MockServerLogger(), "(?i)^some_value")
+            .matches("Some_value"));
+    }
+
+
 }

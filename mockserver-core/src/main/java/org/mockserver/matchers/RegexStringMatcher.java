@@ -6,6 +6,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
 
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import static org.mockserver.logging.MockServerLogger.MOCK_SERVER_LOGGER;
@@ -82,6 +83,16 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         MOCK_SERVER_LOGGER.trace("Error while matching regex [" + matched.toLowerCase() + "] for string [" + matcher.toLowerCase() + "] " + pse.getMessage());
                     }
                 }
+                // add support of complex patterns
+                if (!result) {
+                    try {
+                        Pattern p = Pattern.compile(matcher);
+                        result = p.matcher(matched).matches();
+                    } catch (PatternSyntaxException pse) {
+                        MOCK_SERVER_LOGGER.trace("Error while matching regex [" + matcher.toLowerCase() + "] for string [" + matched.toLowerCase() + "] " + pse.getMessage());
+                    }
+                }
+
             }
         }
 
