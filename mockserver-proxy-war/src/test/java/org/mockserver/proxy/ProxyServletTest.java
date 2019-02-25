@@ -18,7 +18,7 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.server.ServletResponseWriter;
+import org.mockserver.servlet.responsewriter.ServletResponseWriter;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 

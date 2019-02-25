@@ -317,7 +317,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
                     "  \"ports\" : [ " + getServerPort() + " ]" + NEW_LINE +
-                    "}"),
+                    "}", MediaType.JSON_UTF_8),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/status"))
@@ -334,7 +334,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
                     "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
-                    "}"),
+                    "}", MediaType.JSON_UTF_8),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/bind"))
@@ -351,7 +351,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
                     "  \"ports\" : [ " + this.getServerPort() + ", " + firstNewPort + " ]" + NEW_LINE +
-                    "}"),
+                    "}", MediaType.JSON_UTF_8),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/status"))
@@ -366,7 +366,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
                     "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
-                    "}"),
+                    "}", MediaType.JSON_UTF_8),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -384,7 +384,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
                     "  \"ports\" : [ " + getServerSecurePort() + ", " + firstNewPort + ", " + secondNewPort + " ]" + NEW_LINE +
-                    "}"),
+                    "}", MediaType.JSON_UTF_8),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -413,7 +413,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withStatusCode(BAD_REQUEST_400.code())
                     .withReasonPhrase(BAD_REQUEST_400.reasonPhrase())
                     .withHeader(CONTENT_TYPE.toString(), "text/plain; charset=utf-8")
-                    .withBody("Exception while binding MockServer to port " + newPort + " port already in use"),
+                    .withBody("Exception while binding MockServer to port " + newPort + " port already in use", MediaType.PLAIN_TEXT_UTF_8),
                 makeRequest(
                     request()
                         .withPath(calculatePath("mockserver/bind"))

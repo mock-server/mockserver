@@ -7,6 +7,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockserver.client.NettyHttpClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.model.HttpResponse;
 

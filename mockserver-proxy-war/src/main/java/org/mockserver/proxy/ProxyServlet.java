@@ -13,7 +13,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.PortBindingSerializer;
-import org.mockserver.server.ServletResponseWriter;
+import org.mockserver.servlet.responsewriter.ServletResponseWriter;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
 
 import javax.servlet.ServletContextEvent;

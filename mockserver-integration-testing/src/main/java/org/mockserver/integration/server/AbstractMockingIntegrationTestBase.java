@@ -8,7 +8,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.mockserver.client.netty.NettyHttpClient;
+import org.mockserver.client.NettyHttpClient;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;

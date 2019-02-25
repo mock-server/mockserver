@@ -10,7 +10,7 @@ import org.mockserver.dashboard.DashboardWebSocketServerHandler;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mockserver.MockServerHandler;
-import org.mockserver.server.netty.codec.MockServerServerCodec;
+import org.mockserver.codec.MockServerServerCodec;
 
 import java.util.UUID;
 

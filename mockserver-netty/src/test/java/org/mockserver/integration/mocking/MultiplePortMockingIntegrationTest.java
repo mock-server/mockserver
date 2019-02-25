@@ -1,6 +1,7 @@
 package org.mockserver.integration.mocking;
 
 import com.google.common.base.Joiner;
+import com.google.common.net.MediaType;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -56,7 +57,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
                     "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + NEW_LINE +
-                    "}"),
+                    "}", MediaType.JSON_UTF_8),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/status"))
@@ -71,7 +72,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
                     "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + NEW_LINE +
-                    "}"),
+                    "}", MediaType.JSON_UTF_8),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -96,7 +97,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
                     "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
-                    "}"),
+                    "}", MediaType.JSON_UTF_8),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/bind"))
@@ -113,7 +114,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
                     "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + " ]" + NEW_LINE +
-                    "}"),
+                    "}", MediaType.JSON_UTF_8),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/status"))
@@ -128,7 +129,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
                     "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
-                    "}"),
+                    "}", MediaType.JSON_UTF_8),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -146,7 +147,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
                     "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + ", " + secondNewPort + " ]" + NEW_LINE +
-                    "}"),
+                    "}", MediaType.JSON_UTF_8),
             makeRequest(
                 request()
                     .withSecure(true)

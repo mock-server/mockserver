@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-export MAVEN_OPTS="$MAVEN_OPTS -XX:MaxPermSize=1024m -Xmx2048m"
-MAVEN_OPTS= -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+export MAVEN_OPTS="$MAVEN_OPTS -XX:MaxPermSize=1024m -Xmx2048m -XX:+TieredCompilation -XX:TieredStopAtLevel=1"
 export JAVA_OPTS="$JAVA_OPTS -XX:MaxPermSize=1024m -Xmx2048m"
-export JAVA_HOME=`/usr/libexec/java_home -v 1.7`
+export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
 echo
 java -version
 echo

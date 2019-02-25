@@ -1,11 +1,9 @@
 package org.mockserver.mock.action;
 
-import com.google.common.util.concurrent.SettableFuture;
-import org.mockserver.client.netty.NettyHttpClient;
+import org.mockserver.client.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpClassCallback;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

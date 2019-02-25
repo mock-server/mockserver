@@ -8,7 +8,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.server.netty.codec.MockServerServerCodec;
+import org.mockserver.codec.MockServerServerCodec;
 
 import static org.mockserver.echo.http.EchoServer.*;
 import static org.mockserver.socket.tls.NettySslContextFactory.nettySslContextFactory;

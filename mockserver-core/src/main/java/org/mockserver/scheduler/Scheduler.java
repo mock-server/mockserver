@@ -1,6 +1,6 @@
 package org.mockserver.scheduler;
 
-import org.mockserver.client.netty.SocketCommunicationException;
+import org.mockserver.client.SocketCommunicationException;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.mock.action.HttpForwardActionResult;
 import org.mockserver.model.Delay;

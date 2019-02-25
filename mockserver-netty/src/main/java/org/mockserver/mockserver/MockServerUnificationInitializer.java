@@ -3,7 +3,7 @@ package org.mockserver.mockserver;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
-import org.mockserver.client.netty.proxy.ProxyConfiguration;
+import org.mockserver.proxy.ProxyConfiguration;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.unification.PortUnificationHandler;

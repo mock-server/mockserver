@@ -236,7 +236,7 @@ public class MockServerClientIntegrationTest {
                     "}"))
         ));
         if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
+             throw new AssertionError(result);
         }
     }
 

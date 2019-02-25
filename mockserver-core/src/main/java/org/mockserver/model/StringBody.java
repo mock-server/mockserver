@@ -36,14 +36,18 @@ public class StringBody extends BodyWithContentType<String> {
     }
 
     public StringBody(String value, boolean subString, MediaType contentType) {
+        this(value, null, subString, contentType);
+    }
+
+    public StringBody(String value, byte[] rawBinaryData, boolean subString, MediaType contentType) {
         super(Type.STRING, contentType);
         this.value = value;
         this.subString = subString;
 
-        if (value != null) {
+        if (rawBinaryData == null && value != null) {
             this.rawBinaryData = value.getBytes(determineCharacterSet(contentType, DEFAULT_HTTP_CHARACTER_SET));
         } else {
-            this.rawBinaryData = new byte[0];
+            this.rawBinaryData = rawBinaryData;
         }
     }
 

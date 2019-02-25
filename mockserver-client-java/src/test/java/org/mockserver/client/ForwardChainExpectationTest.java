@@ -4,9 +4,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.client.netty.websocket.WebSocketClient;
+import org.mockserver.websocket.WebSocketClient;
 import org.mockserver.mock.Expectation;
-import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.model.*;
 
 import java.util.concurrent.Semaphore;

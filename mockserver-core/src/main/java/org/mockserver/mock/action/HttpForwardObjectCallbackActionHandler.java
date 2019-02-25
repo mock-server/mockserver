@@ -2,7 +2,7 @@ package org.mockserver.mock.action;
 
 import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.callback.WebSocketRequestCallback;
-import org.mockserver.client.netty.NettyHttpClient;
+import org.mockserver.client.NettyHttpClient;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;

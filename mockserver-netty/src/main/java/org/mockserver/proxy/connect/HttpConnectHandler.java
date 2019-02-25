@@ -12,7 +12,7 @@ import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.proxy.relay.RelayConnectHandler;
-import org.mockserver.server.netty.codec.MockServerServerCodec;
+import org.mockserver.codec.MockServerServerCodec;
 
 import static org.mockserver.model.HttpResponse.response;
 

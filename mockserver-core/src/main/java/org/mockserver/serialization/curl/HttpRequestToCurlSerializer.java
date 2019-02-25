@@ -5,7 +5,7 @@ import io.netty.handler.codec.http.cookie.ClientCookieEncoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import org.apache.commons.lang3.StringUtils;
-import org.mockserver.client.netty.codec.mappers.MockServerHttpRequestToFullHttpRequest;
+import org.mockserver.codec.mappers.MockServerHttpRequestToFullHttpRequest;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;

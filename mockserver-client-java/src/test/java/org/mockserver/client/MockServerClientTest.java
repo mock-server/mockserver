@@ -8,8 +8,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.Version;
-import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;

@@ -18,7 +18,7 @@ import io.netty.util.AttributeKey;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.mockserver.callback.CallbackWebSocketServerHandler;
-import org.mockserver.client.netty.proxy.ProxyConfiguration;
+import org.mockserver.proxy.ProxyConfiguration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.dashboard.DashboardWebSocketServerHandler;
 import org.mockserver.lifecycle.LifeCycle;
@@ -29,7 +29,7 @@ import org.mockserver.mockserver.MockServerHandler;
 import org.mockserver.proxy.socks.Socks4ProxyHandler;
 import org.mockserver.proxy.socks.Socks5ProxyHandler;
 import org.mockserver.proxy.socks.SocksDetector;
-import org.mockserver.server.netty.codec.MockServerServerCodec;
+import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.socket.tls.SniHandler;
 import org.slf4j.LoggerFactory;
 

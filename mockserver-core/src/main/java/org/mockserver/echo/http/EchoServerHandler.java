@@ -10,7 +10,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BodyWithContentType;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.server.netty.codec.MockServerResponseEncoder;
+import org.mockserver.codec.MockServerResponseEncoder;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;

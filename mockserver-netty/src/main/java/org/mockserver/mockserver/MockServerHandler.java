@@ -5,7 +5,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
-import org.mockserver.client.netty.proxy.ProxyConfiguration;
+import org.mockserver.proxy.ProxyConfiguration;
 import org.mockserver.serialization.Base64Converter;
 import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.configuration.ConfigurationProperties;

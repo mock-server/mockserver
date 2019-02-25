@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.servlet.responsewriter.ServletResponseWriter;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import static java.nio.charset.StandardCharsets.UTF_8;

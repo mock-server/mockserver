@@ -1,12 +1,27 @@
 package org.mockserver.matchers;
 
+import io.netty.handler.codec.http.DefaultFullHttpRequest;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.util.CharsetUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.mockserver.codec.MockServerRequestDecoder;
 
+import java.nio.charset.Charset;
+
+import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
+import static io.netty.buffer.Unpooled.wrappedBuffer;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpMethod.GET;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET;
 
 /**
  * @author jamesdbloom
@@ -33,6 +48,65 @@ public class MatcherBuilderTest {
         HttpRequestMatcher httpRequestMapper = new MatcherBuilder(mockLogFormatter).transformsToMatcher(httpRequest);
 
         // then
+        assertTrue(httpRequestMapper.matches(null, httpRequest));
+    }
+
+    @Test
+    public void shouldSupportSpecialCharactersWhenCharsetSpecified() {
+        String bodyTestString = "UTF_8 characters: Bj\u00F6rk";
+
+        // given
+        MockServerRequestDecoder mockServerRequestDecoder = new MockServerRequestDecoder(new MockServerLogger(), false);
+        FullHttpRequest fullHttpRequest = new DefaultFullHttpRequest(
+            HTTP_1_1,
+            GET,
+            "/uri",
+            wrappedBuffer(bodyTestString.getBytes(DEFAULT_HTTP_CHARACTER_SET)));
+        fullHttpRequest.headers().add(CONTENT_TYPE, PLAIN_TEXT_UTF_8.withCharset(DEFAULT_HTTP_CHARACTER_SET).toString());
+
+        // when
+        HttpRequest httpRequest = mockServerRequestDecoder.decode(fullHttpRequest);
+
+        // and
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(new MockServerLogger()).transformsToMatcher(
+            new HttpRequest()
+                .withMethod(GET.name())
+                .withPath("/uri")
+                .withBody(new StringBody(bodyTestString))
+        );
+
+        // then
+        assertThat(httpRequest.getBody().getCharset(null), is(DEFAULT_HTTP_CHARACTER_SET));
+        assertTrue(httpRequestMapper.matches(null, httpRequest));
+    }
+
+    @Test
+    public void shouldSupportSpecialCharactersWithDefaultCharset() {
+        // Body should have Charset NULL, when encoding is UTF-8 - DEFAULT_HTTP_CHARACTER_SET
+        String bodyTestString = "UTF_8 characters: Bj\u00F6rk";
+
+        // given
+        MockServerRequestDecoder mockServerRequestDecoder = new MockServerRequestDecoder(new MockServerLogger(), false);
+        FullHttpRequest fullHttpRequest = new DefaultFullHttpRequest(
+            HTTP_1_1,
+            GET,
+            "/uri",
+            wrappedBuffer(bodyTestString.getBytes(DEFAULT_HTTP_CHARACTER_SET)));
+
+        // when
+        HttpRequest httpRequest = mockServerRequestDecoder.decode(fullHttpRequest);
+
+        // and
+        HttpRequestMatcher httpRequestMapper = new MatcherBuilder(new MockServerLogger()).transformsToMatcher(
+            new HttpRequest()
+                .withMethod(GET.name())
+                .withPath("/uri")
+                .withBody(new StringBody(bodyTestString))
+        );
+
+        // then
+        // decoded httpRequest - because request was with default charset, then body charset is NULL
+        assertNull(httpRequest.getBody().getCharset(null));
         assertTrue(httpRequestMapper.matches(null, httpRequest));
     }
 

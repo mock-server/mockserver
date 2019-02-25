@@ -2,7 +2,7 @@ package org.mockserver.callback;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import org.mockserver.client.netty.websocket.WebSocketException;
+import org.mockserver.websocket.WebSocketException;
 import org.mockserver.collections.CircularHashMap;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.metrics.Metrics;

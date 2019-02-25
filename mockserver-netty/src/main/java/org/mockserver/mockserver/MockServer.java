@@ -5,7 +5,7 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import org.mockserver.client.netty.proxy.ProxyConfiguration;
+import org.mockserver.proxy.ProxyConfiguration;
 import org.mockserver.lifecycle.LifeCycle;
 
 import javax.annotation.Nullable;
@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Collections.singletonList;
-import static org.mockserver.client.netty.proxy.ProxyConfiguration.proxyConfiguration;
+import static org.mockserver.proxy.ProxyConfiguration.proxyConfiguration;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.mockserver.MockServerHandler.PROXYING;

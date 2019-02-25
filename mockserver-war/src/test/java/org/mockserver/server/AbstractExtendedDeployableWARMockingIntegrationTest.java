@@ -1,5 +1,6 @@
 package org.mockserver.server;
 
+import com.google.common.net.MediaType;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -273,7 +274,7 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
                     "  \"ports\" : [ " + getServerPort() + " ]" + NEW_LINE +
-                    "}"),
+                    "}", MediaType.JSON_UTF_8),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/status"))
@@ -288,7 +289,7 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
                 .withBody("{" + NEW_LINE +
                     "  \"ports\" : [ " + getServerSecurePort() + " ]" + NEW_LINE +
-                    "}"),
+                    "}", MediaType.JSON_UTF_8),
             makeRequest(
                 request()
                     .withSecure(true)

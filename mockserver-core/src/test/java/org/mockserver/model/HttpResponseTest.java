@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import io.netty.util.CharsetUtil;
 import org.junit.Test;
 import org.mockserver.serialization.Base64Converter;
 
@@ -167,7 +168,7 @@ public class HttpResponseTest {
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"STRING\"," + NEW_LINE +
                 "    \"string\" : \"some_body\"," + NEW_LINE +
-                "    \"contentType\" : \"text/plain; charset=utf-8\"" + NEW_LINE +
+                "    \"contentType\" : \"text/plain; charset=iso-8859-1\"" + NEW_LINE +
                 "  }," + NEW_LINE +
                 "  \"delay\" : {" + NEW_LINE +
                 "    \"timeUnit\" : \"SECONDS\"," + NEW_LINE +
@@ -179,7 +180,7 @@ public class HttpResponseTest {
                 "  }" + NEW_LINE +
                 "}",
             response()
-                .withBody("some_body", UTF_8)
+                .withBody("some_body", CharsetUtil.ISO_8859_1)
                 .withStatusCode(666)
                 .withReasonPhrase("randomPhrase")
                 .withHeaders(new Header("some_header", "some_header_value"))

@@ -6,8 +6,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.Version;
 import org.mockserver.client.MockServerEventBus.EventType;
-import org.mockserver.client.netty.NettyHttpClient;
-import org.mockserver.client.netty.SocketConnectionException;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;

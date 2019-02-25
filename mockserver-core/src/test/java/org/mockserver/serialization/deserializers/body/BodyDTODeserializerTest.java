@@ -1,6 +1,7 @@
 package org.mockserver.serialization.deserializers.body;
 
 import com.google.common.net.MediaType;
+import io.netty.util.CharsetUtil;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -484,7 +485,7 @@ public class BodyDTODeserializerTest {
         String json = ("{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"body\" : {" + NEW_LINE +
-            "            \"charset\" : \"utf-8\"," + NEW_LINE +
+            "            \"charset\" : \""+ CharsetUtil.ISO_8859_1 +  "\"," + NEW_LINE +
             "            \"string\" : \"some_value\"" + NEW_LINE +
             "        }" + NEW_LINE +
             "    }" + NEW_LINE +
@@ -497,7 +498,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", MediaType.PLAIN_TEXT_UTF_8)))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", MediaType.PLAIN_TEXT_UTF_8.withCharset(CharsetUtil.ISO_8859_1))))
             ), expectationDTO);
     }
 
@@ -646,7 +647,7 @@ public class BodyDTODeserializerTest {
         String json = ("{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"body\" : {" + NEW_LINE +
-            "            \"charset\" : \"utf-8\"," + NEW_LINE +
+            "            \"charset\" : \""+ CharsetUtil.ISO_8859_1 +  "\"," + NEW_LINE +
             "            \"string\" : \"some_value\"" + NEW_LINE +
             "        }" + NEW_LINE +
             "    }" + NEW_LINE +
@@ -659,7 +660,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", MediaType.PLAIN_TEXT_UTF_8)))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", MediaType.PLAIN_TEXT_UTF_8.withCharset(CharsetUtil.ISO_8859_1))))
             ), expectationDTO);
     }
 
