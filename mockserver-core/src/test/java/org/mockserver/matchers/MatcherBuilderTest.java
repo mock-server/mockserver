@@ -1,5 +1,6 @@
 package org.mockserver.matchers;
 
+import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.util.CharsetUtil;
@@ -82,7 +83,6 @@ public class MatcherBuilderTest {
 
     @Test
     public void shouldSupportSpecialCharactersWithDefaultCharset() {
-        // Body should have Charset NULL, when encoding is UTF-8 - DEFAULT_HTTP_CHARACTER_SET
         String bodyTestString = "UTF_8 characters: Bj\u00F6rk";
 
         // given
@@ -91,7 +91,8 @@ public class MatcherBuilderTest {
             HTTP_1_1,
             GET,
             "/uri",
-            wrappedBuffer(bodyTestString.getBytes(DEFAULT_HTTP_CHARACTER_SET)));
+            wrappedBuffer(bodyTestString.getBytes(DEFAULT_HTTP_CHARACTER_SET))
+        );
 
         // when
         HttpRequest httpRequest = mockServerRequestDecoder.decode(fullHttpRequest);
@@ -104,8 +105,7 @@ public class MatcherBuilderTest {
                 .withBody(new StringBody(bodyTestString))
         );
 
-        // then
-        // decoded httpRequest - because request was with default charset, then body charset is NULL
+        // then - request used default charset, then body charset is NULL
         assertNull(httpRequest.getBody().getCharset(null));
         assertTrue(httpRequestMapper.matches(null, httpRequest));
     }

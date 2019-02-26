@@ -28,7 +28,7 @@ public class ContentTypeMapper {
      *     "ISO-8859-1" or its subsets MUST be labeled with an appropriate charset value.
      * </pre>
      */
-    public static final Charset DEFAULT_HTTP_CHARACTER_SET = CharsetUtil.UTF_8;
+    public static final Charset DEFAULT_HTTP_CHARACTER_SET = CharsetUtil.ISO_8859_1;
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ContentTypeMapper.class);
 
     private static final Set<String> UTF_8_CONTENT_TYPES = ImmutableSet.<String>builder()

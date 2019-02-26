@@ -422,9 +422,9 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http
         assertEquals(
             response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString())
                 .withBody(body, StandardCharsets.UTF_16),
             makeRequest(
                 request()
@@ -436,9 +436,9 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https
         assertEquals(
             response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString())
                 .withBody(body, StandardCharsets.UTF_16),
             makeRequest(
                 request()
@@ -468,9 +468,9 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http
         assertEquals(
             response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
                 .withBody(body, MediaType.PLAIN_TEXT_UTF_8),
             makeRequest(
                 request()
@@ -480,9 +480,9 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https
         assertEquals(
             response()
-                .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
                 .withBody(body, MediaType.PLAIN_TEXT_UTF_8),
             makeRequest(
                 request()
@@ -502,7 +502,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withBody(body)
+                    .withBody(body, CharsetUtil.UTF_8)
             );
 
         // then
@@ -511,7 +511,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             response()
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody(body),
+                .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
+                .withBody(body, CharsetUtil.UTF_8),
             makeRequest(
                 request()
                     .withPath(calculatePath("")),
@@ -522,7 +523,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             response()
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody(body),
+                .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
+                .withBody(body, CharsetUtil.UTF_8),
             makeRequest(
                 request()
                     .withSecure(true)

@@ -12,6 +12,7 @@ import org.mockserver.model.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXPECTATION_MATCHED;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
+import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET;
 import static org.mockserver.model.NottableString.string;
 
 import java.nio.charset.StandardCharsets;
@@ -227,7 +228,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
     private boolean bodyMatches(HttpRequest context, HttpRequest request) {
         boolean bodyMatches = true;
-        String bodyAsString = request.getBody() != null ? new String(request.getBody().getRawBytes(), request.getBody().getCharset(StandardCharsets.UTF_8)) : "";
+        String bodyAsString = request.getBody() != null ? new String(request.getBody().getRawBytes(), request.getBody().getCharset(DEFAULT_HTTP_CHARACTER_SET)) : "";
         if (!bodyAsString.isEmpty()) {
             if (bodyMatcher instanceof BinaryMatcher) {
                 bodyMatches = matches(context, bodyMatcher, request.getBodyAsRawBytes());

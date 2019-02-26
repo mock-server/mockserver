@@ -89,7 +89,7 @@ public class StringBodyDTOTest {
         assertThat(stringBody.getValue(), is("some_body"));
         assertThat(stringBody.isSubString(), is(true));
         assertThat(stringBody.getType(), is(Body.Type.STRING));
-        assertThat(stringBody.getContentType(), is(MediaType.PLAIN_TEXT_UTF_8.toString()));
+        assertThat(stringBody.getContentType(), is(MediaType.PLAIN_TEXT_UTF_8.withCharset(DEFAULT_HTTP_CHARACTER_SET).toString()));
     }
 
     @Test
