@@ -156,7 +156,7 @@ public class MockServerClient implements Stoppable {
             }
 
             HttpResponse response = nettyHttpClient.sendRequest(
-                request.withHeader(HOST.toString(), this.host + ":" + port()),
+                request.withHeader(HOST.toString(), this.host),
                 ConfigurationProperties.maxSocketTimeout(),
                 TimeUnit.MILLISECONDS
             );
