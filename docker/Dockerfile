@@ -23,7 +23,7 @@ RUN wget --max-redirect=1 -O /opt/mockserver/mockserver-netty-jar-with-dependenc
 WORKDIR /opt/mockserver
 
 # expose ports.
-EXPOSE 1080 1090
+EXPOSE 1080
 
 # don't run MockServer as root
 RUN addgroup -g 1000 mockserver && \
