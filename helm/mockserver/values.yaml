@@ -1,5 +1,9 @@
 replicaCount: 1
 
+app:
+  logLevel: "INFO"
+  serverPort: "1080"
+
 image:
   repository: jamesdbloom
   snapshot: false

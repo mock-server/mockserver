@@ -45,10 +45,37 @@ To view the logs:
 kubectl logs $(kubectl get po -l release=mockserver -n mockserver | awk '{if(NR==2)print $1}') -n mockserver
 ```
 
-### MockServer URL
-#### Outside Kubernetes Cluster
+### Modify Start Command
 
-Notes on how to retrieve the URL to call MockServer from outside the Kubernetes cluster are printed out when the installation is complete.
+Modify the argument used to start the docker container by setting values explicitly as follows:
+
+```bash
+helm upgrade --install --values helm/mockserver/values.yaml --set app.serverPort=1080  --set app.logLevel=INFO --namespace mockserver mockserver helm/mockserver
+```
+
+The following values are supported:
+- `app.serverPort` (default: 1080)
+- `app.logLevel` (default: INFO)
+- `app.proxyRemoteHost` (no default)
+- `app.proxyRemotePort` (no default)
+- `app.jvmOptions` (no default)
+
+For example configure a proxyRemoteHost and proxyRemotePort, as follows:
+
+```bash
+helm upgrade --install --values helm/mockserver/values.yaml --set app.serverPort=1080  --set app.logLevel=INFO  --set app.proxyRemoteHost=www.mock-server.com --set app.proxyRemotePort=443 --namespace mockserver mockserver helm/mockserver
+```
+
+Double check the correct arguments have been passed to the pod, as follows:
+
+```bash
+kubectl -n mockserver logs -l app=mockserver,release=mockserver
+``` 
+
+### MockServer URL
+
+#### Outside Local Kubernetes Cluster (i.e. minikube)
+
 If the `service` type hasn't been modified the following will provide the MockServer URL from outside the cluster.
 
 ```bash
@@ -62,6 +89,14 @@ To test the installation the following `curl` command should return the ports Mo
 
 ```bash
 curl -v -X PUT http://$MOCKSERVER_HOST/status
+```
+
+#### Outside Remote Kubernetes Cluster (i.e. Azure AKS, AWS EKS, etc)
+
+```bash
+kubectl -n mockserver port-forward svc/mockserver 1080:1080 &
+export MOCKSERVER_HOST=127.0.0.1:1080
+echo http://$MOCKSERVER_HOST
 ```
 
 #### Inside Kubernetes Cluster
