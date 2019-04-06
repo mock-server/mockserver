@@ -1,0 +1,18 @@
+{{- if .Values.letsEncrypt.enabled -}}
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Issuer
+metadata:
+  name: {{ template "mockserver.name" . }}
+  labels:
+    app: {{ template "mockserver.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+spec:
+  acme:
+    server: {{ .Values.letsEncrypt.server }}
+    email: {{ .Values.letsEncrypt.email }}
+    privateKeySecretRef:
+      name: letsencrypt-{{ template "mockserver.name" . }}-{{ .Values.letsEncrypt.environment }}
+    http01: {}
+{{- end -}}

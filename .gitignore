@@ -93,3 +93,7 @@ mockserver-proxy-war/tomcat/
 mockserver-proxy-war/tomcat_proxy/
 mockserver-war/tomcat/
 mockserver-war/tomcat_mockserver/
+
+# ignored files #
+##############################
+*IGNORE*

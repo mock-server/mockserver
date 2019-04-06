@@ -35,3 +35,13 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+letsEncrypt:
+  enabled: false
+  ### Select LetsEncrypt environment by uncommenting out the respective line
+  ## LetsEncrypt Production:
+  server: https://acme-v02.api.letsencrypt.org/directory
+  ## LetsEncrypt Staging:
+  #server: https://acme-staging-v02.api.letsencrypt.org/directory
+  ### Set your email address to be included in the certificate request
+  email: test@test.com
