@@ -13,7 +13,7 @@ metadata:
     heritage: {{ .Release.Service }}
   annotations::
     {{- if .Values.letsEncrypt.enabled }}
-      certmanager.k8s.io/issuer: {{ template "mockserver.fullname" . }}
+      certmanager.k8s.io/issuer: {{ template "mockserver.name" . }}
     {{- end -}}
 {{- with .Values.ingress.annotations }}
 {{ toYaml . | indent 4 }}
