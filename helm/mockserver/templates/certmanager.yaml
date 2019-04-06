@@ -13,6 +13,6 @@ spec:
     server: {{ .Values.letsEncrypt.server }}
     email: {{ .Values.letsEncrypt.email }}
     privateKeySecretRef:
-      name: letsencrypt-{{ template "mockserver.name" . }}-{{ .Values.letsEncrypt.environment }}
+      name: letsencrypt-{{ template "mockserver.name" . }}
     http01: {}
 {{- end -}}
