@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: {{ template "mockserver.name" . }}
-          image: {{ .Values.image.repository }}/mockserver:mockserver-{{- if .Values.image.snapshot }}snapshot{{- else }}{{ .Chart.appVersion }}{{- end }}
+          image: {{ .Values.image.repository }}/mockserver:mockserver-{{- if .Values.image.snapshot }}snapshot{{- else }}{{ .Chart.AppVersion }}{{- end }}
 {{- if .Values.image.snapshot }}
           imagePullPolicy: Always
 {{- else }}
