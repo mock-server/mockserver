@@ -35,4 +35,8 @@ public class MockServerEventLogNotifier extends ObjectWithReflectiveEqualsHashCo
     public void registerListener(MockServerLogListener listener) {
         listeners.add(listener);
     }
+
+    public void unregisterListener(MockServerLogListener listener) {
+        listeners.remove(listener);
+    }
 }

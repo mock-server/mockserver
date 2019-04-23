@@ -152,6 +152,13 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     }
 
     @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        mockServerMatcher.unregisterListener(this);
+        mockServerLog.unregisterListener(this);
+        ctx.fireChannelInactive();
+    }
+
+    @Override
     public void updated(MockServerEventLog mockServerLog) {
         for (Map.Entry<ChannelHandlerContext, HttpRequest> registryEntry : clientRegistry.entrySet()) {
             sendUpdate(registryEntry.getValue(), registryEntry.getKey());
