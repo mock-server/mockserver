@@ -35,4 +35,8 @@ public class MockServerMatcherNotifier extends ObjectWithReflectiveEqualsHashCod
     public void registerListener(MockServerMatcherListener listener) {
         listeners.add(listener);
     }
+
+    public void unregisterListener(MockServerMatcherListener listener) {
+        listeners.remove(listener);
+    }
 }
