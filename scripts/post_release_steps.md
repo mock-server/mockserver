@@ -32,7 +32,7 @@ Release Steps
    1. docker push jamesdbloom/mockserver:mockserver-x.x.x
 1. update helm chart
    1. find and replace previous MockServer release version to new release
-   1. cd mockserver/helm
+   1. cd helm
    1. helm package ./mockserver/
    1. upload to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
 1. add javaDoc

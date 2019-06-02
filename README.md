@@ -45,6 +45,7 @@ Docker Hub contains the following artifacts:
 
 Helm Chart                                               |
 :--------------------------------------------------------|
+[5.5.4](http://www.mock-server.com/mockserver-5.5.4.tgz) |
 [5.5.1](http://www.mock-server.com/mockserver-5.5.1.tgz) |
 [5.5.0](http://www.mock-server.com/mockserver-5.5.0.tgz) |
 [5.4.1](http://www.mock-server.com/mockserver-5.4.1.tgz) |
@@ -54,11 +55,12 @@ Helm Chart                                               |
 
 * [mockserver-client-ruby ![mockserver-client](https://badge.fury.io/rb/mockserver-client.png)](https://rubygems.org/gems/mockserver-client) - Ruby client for both the MockServer and the proxy 
 * [mockserver-client-java](http://search.maven.org/#search%7Cga%7C1%7Cmockserver-client-java) - a Java client for both the MockServer and the proxy 
-* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.5.1/mockServerClient.js) client for both the MockServer and the proxy
+* [mockserver-client-node](https://www.npmjs.org/package/mockserver-client) - a Node.js and [browser](https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.5.4/mockServerClient.js) client for both the MockServer and the proxy
 
 ### Document
 Version | Date        | Git & Docker Tag / Git Hash                                                                                                                                                                 | Documentation                                                         | Java API                                                              | REST API
 :-------|:------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------- |:--------------------------------------------------------------------- |:---------------------------------------------------------------------------------
+5.5.4   | 26 Apr 2019 | [mockserver-5.5.4](https://github.com/jamesdbloom/mockserver/tree/mockserver-5.5.4) / [4ffd31](https://github.com/jamesdbloom/mockserver/commit/4ffd3162a3250f18d343901b30c3ee71a75b1982)   | [Documentation](http://mock-server.com)	                            | [Java API](http://mock-server.com/versions/5.5.4/apidocs/index.html)  | [5.5.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.5.x)
 5.5.1   | 28 Dec 2018 | [mockserver-5.5.1](https://github.com/jamesdbloom/mockserver/tree/mockserver-5.5.1) / [11d8a9](https://github.com/jamesdbloom/mockserver/commit/11d8a96b0eaf07b7fffd29444203503b1cdca653)   | [Documentation](http://mock-server.com)	                            | [Java API](http://mock-server.com/versions/5.5.1/apidocs/index.html)  | [5.5.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.5.x)
 5.5.0   | 15 Nov 2018 | [mockserver-5.5.0](https://github.com/jamesdbloom/mockserver/tree/mockserver-5.5.0) / [06e6fd](https://github.com/jamesdbloom/mockserver/commit/06e6fdc4757f13fb5943fc281d5e55dc1c30919d)   | [Documentation](http://mock-server.com)	                            | [Java API](http://mock-server.com/versions/5.5.0/apidocs/index.html)  | [5.5.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.5.x)
 5.4.1   | 20 Jun 2018 | [mockserver-5.4.1](https://github.com/jamesdbloom/mockserver/tree/mockserver-5.4.1) / [7cd5de](https://github.com/jamesdbloom/mockserver/commit/7cd5defc7463e8773d011467147a8a0f7e7b4af8)   | [Documentation](https://5-4.mock-server.com)                          | [Java API](http://mock-server.com/versions/5.4.1/apidocs/index.html)  | [5.4.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.4.x)

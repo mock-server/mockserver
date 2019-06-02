@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 export MAVEN_OPTS="$MAVEN_OPTS -XX:MaxPermSize=1024m -Xmx2048m"
 export JAVA_OPTS="$JAVA_OPTS -XX:MaxPermSize=1024m -Xmx2048m"
 # -agentpath:/Applications/jprofiler8/bin/macos/libjprofilerti.jnilib=port=25000
