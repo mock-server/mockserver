@@ -1,20 +1,28 @@
 package org.mockserver.collections.multimap;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.model.NottableString;
 
 import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.mockserver.collections.CaseInsensitiveRegexMultiMap.multiMap;
+import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 
 /**
  * @author jamesdbloom
  */
 public class CaseInsensitiveRegexMultiMapTestPut {
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
     @Test
     public void shouldPutSingleValueForNewKey() {
@@ -33,7 +41,7 @@ public class CaseInsensitiveRegexMultiMapTestPut {
     public void shouldPutSingleValueForExistingKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne"}
+            new String[]{"keyTwo", "keyTwo_valueOne"}
         );
 
         // when
@@ -48,7 +56,7 @@ public class CaseInsensitiveRegexMultiMapTestPut {
     public void shouldPutSingleValueForExistingKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // when
@@ -76,7 +84,7 @@ public class CaseInsensitiveRegexMultiMapTestPut {
     public void shouldPutSingleMultiValueForExistingKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyThree", "keyThree_valueOne"}
+            new String[]{"keyThree", "keyThree_valueOne"}
         );
 
         // when
@@ -91,7 +99,7 @@ public class CaseInsensitiveRegexMultiMapTestPut {
     public void shouldPutSingleMultiValueForExistingKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo"}
+            new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo"}
         );
 
         // when

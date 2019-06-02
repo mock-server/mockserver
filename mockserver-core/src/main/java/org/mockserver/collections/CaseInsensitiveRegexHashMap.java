@@ -6,6 +6,7 @@ import org.mockserver.model.NottableString;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -41,7 +42,12 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
         } else {
             for (Entry<NottableString, NottableString> entry : subSet.entrySet()) {
                 if ((entry.getKey().isNot() || entry.getValue().isNot()) && containsKeyValue(entry.getKey().getValue(), entry.getValue().getValue())) {
-                    return false;
+                    Entry<NottableString, NottableString> matchingEntry = retrieveEntry(entry.getKey(), entry.getValue());
+                    if (matchingEntry != null) {
+                        return entry.getKey().isNot() == matchingEntry.getKey().isNot() && entry.getValue().isNot() == matchingEntry.getValue().isNot();
+                    } else {
+                        return false;
+                    }
                 } else if (!containsKeyValue(entry.getKey(), entry.getValue())) {
                     return false;
                 }
@@ -77,19 +83,27 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
         return result;
     }
 
+    private synchronized Entry<NottableString, NottableString> retrieveEntry(NottableString key, NottableString value) {
+
+        for (Entry<NottableString, NottableString> matcherEntry : entrySet()) {
+            if (RegexStringMatcher.matches(value, matcherEntry.getValue(), true)
+                && RegexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
+                return matcherEntry;
+            }
+        }
+
+        return null;
+    }
+
     @Override
     public synchronized boolean containsKey(Object key) {
         boolean result = false;
 
         if (key instanceof NottableString) {
-            if (super.containsKey(key)) {
-                result = true;
-            } else {
-                for (NottableString keyToCompare : keySet()) {
-                    if (RegexStringMatcher.matches(((NottableString) key), keyToCompare, true)) {
-                        result = true;
-                        break;
-                    }
+            for (NottableString keyToCompare : keySet()) {
+                if (RegexStringMatcher.matches(((NottableString) key), keyToCompare, true)) {
+                    result = true;
+                    break;
                 }
             }
         } else if (key instanceof String) {
@@ -139,7 +153,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
             throw new IllegalArgumentException("key must not be null");
         }
         if (value == null) {
-            throw new IllegalArgumentException("key must not be null");
+            throw new IllegalArgumentException("value must not be null");
         }
         return super.put(key, value);
     }

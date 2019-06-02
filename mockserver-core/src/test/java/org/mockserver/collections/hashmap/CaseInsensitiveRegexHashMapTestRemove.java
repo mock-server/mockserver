@@ -6,8 +6,6 @@ import org.mockserver.collections.CaseInsensitiveRegexHashMap;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.mockserver.collections.CaseInsensitiveRegexHashMap.hashMap;
 import static org.mockserver.model.NottableString.string;
 
@@ -20,7 +18,7 @@ public class CaseInsensitiveRegexHashMapTestRemove {
     public void shouldRemoveFromMapWithSingleEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            new String[]{"keyOne", "keyOneValue"}
         );
 
         // when
@@ -35,9 +33,9 @@ public class CaseInsensitiveRegexHashMapTestRemove {
     public void shouldRemoveFromMapWithMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // when
@@ -54,9 +52,9 @@ public class CaseInsensitiveRegexHashMapTestRemove {
     public void shouldRemoveNoMatchingEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // when

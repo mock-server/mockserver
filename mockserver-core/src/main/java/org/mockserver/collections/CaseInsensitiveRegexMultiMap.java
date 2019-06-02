@@ -7,6 +7,7 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
 import java.util.*;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.NottableString.strings;
 
@@ -48,7 +49,12 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         } else {
             for (Entry<NottableString, NottableString> entry : subSet.entryList()) {
                 if ((entry.getKey().isNot() || entry.getValue().isNot()) && containsKeyValue(entry.getKey().getValue(), entry.getValue().getValue())) {
-                    return false;
+                    Entry<NottableString, NottableString> matchingEntry = retrieveEntry(entry.getKey(), entry.getValue());
+                    if (matchingEntry != null) {
+                        return entry.getKey().isNot() == matchingEntry.getKey().isNot() && entry.getValue().isNot() == matchingEntry.getValue().isNot();
+                    } else {
+                        return false;
+                    }
                 } else if (!containsKeyValue(entry.getKey(), entry.getValue())) {
                     return false;
                 }
@@ -71,19 +77,29 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     }
 
     public synchronized boolean containsKeyValue(NottableString key, NottableString value) {
-        boolean result = false;
+        for (NottableString valueToMatch : getAll(key)) {
+            if (RegexStringMatcher.matches(value, valueToMatch, true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private synchronized Entry<NottableString, NottableString> retrieveEntry(NottableString key, NottableString value) {
 
         for (Entry<NottableString, NottableString> matcherEntry : entryList()) {
             if (RegexStringMatcher.matches(value, matcherEntry.getValue(), true)
                 && RegexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
-                result = true;
-                break;
-            } else {
-                result = false;
+                return matcherEntry;
             }
         }
 
-        return result;
+        return null;
+    }
+
+    @Override
+    public synchronized boolean containsKey(Object key) {
+        return backingMap.containsKey(key);
     }
 
     @Override
@@ -102,11 +118,6 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
             return containsValue(string((String) value));
         }
         return false;
-    }
-
-    @Override
-    public synchronized boolean containsKey(Object key) {
-        return backingMap.containsKey(key);
     }
 
     @Override
@@ -141,6 +152,12 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
 
     @Override
     public synchronized NottableString put(NottableString key, NottableString value) {
+        if (key == null) {
+            throw new IllegalArgumentException("key must not be null");
+        }
+        if (value == null) {
+            throw new IllegalArgumentException("value must not be null");
+        }
         List<NottableString> list = Collections.synchronizedList(new ArrayList<NottableString>());
         for (Entry<NottableString, NottableString> entry : entryList()) {
             if (EqualsBuilder.reflectionEquals(entry.getKey(), key)) {
@@ -165,14 +182,6 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
             backingMap.put(key, values);
         }
         return values;
-    }
-
-    public void putValuesForNewKeys(CaseInsensitiveRegexMultiMap multiMap) {
-        for (NottableString key : multiMap.keySet()) {
-            if (!containsKey(key)) {
-                backingMap.put(key, multiMap.getAll(key));
-            }
-        }
     }
 
     @Override

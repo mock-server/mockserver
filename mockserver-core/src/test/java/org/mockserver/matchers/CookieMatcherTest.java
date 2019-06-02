@@ -4,10 +4,10 @@ import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Cookies;
-import org.mockserver.model.NottableString;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -218,7 +218,19 @@ public class CookieMatcherTest {
         // and - not cookie
         assertFalse(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie("cookieOneName", "cookieOneValue"),
-            new Cookie(NottableString.not("cookie.*Name"), NottableString.not("cookie.*Value"))
+            new Cookie(not("cookie.*oName"), not("cookie.*oValue"))
+        )).matches(
+            null,
+            new Cookies().withEntries(
+                new Cookie("cookieOneName", "cookieOneValue"),
+                new Cookie("cookieTwoName", "cookieTwoValue")
+            )
+        ));
+
+        // and - multiple not cookies
+        assertFalse(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
+            new Cookie(not("cookieOneName"), not("cookieOneValue")),
+            new Cookie(not("cookie.*Name"), not("cookie.*Value"))
         )).matches(
             null,
             new Cookies().withEntries(
@@ -230,7 +242,7 @@ public class CookieMatcherTest {
         // and - not matcher and not cookie
         assertTrue(NotMatcher.not(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie("cookieOneName", "cookieOneValue"),
-            new Cookie(NottableString.not("cookie.*Name"), NottableString.not("cookie.*Value"))
+            new Cookie(not("cookie.*oName"), not("cookie.*oValue"))
         ))).matches(
             null,
             new Cookies().withEntries(
@@ -245,7 +257,7 @@ public class CookieMatcherTest {
         // not matching cookie
         assertFalse(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie("cookieOneName", "cookieOneValue"),
-            new Cookie(NottableString.not("cookie.*Name"), NottableString.not("cookie.*Value"))
+            new Cookie(not("cookie.*oName"), not("cookie.*oValue"))
         )).matches(
             null,
             new Cookies().withEntries(
@@ -257,8 +269,7 @@ public class CookieMatcherTest {
         // not extra cookie
         assertFalse(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie("cookieOneName", "cookieOneValue"),
-            new Cookie("cookieTwoName", "cookieTwoValue"),
-            new Cookie(NottableString.not("cookie.*Name"), NottableString.not("cookie.*Value"))
+            new Cookie(not("cookie.*oName"), not("cookie.*oValue"))
         )).matches(
             null,
             new Cookies().withEntries(
@@ -271,7 +282,7 @@ public class CookieMatcherTest {
         assertTrue(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie("cookieOneName", "cookieOneValue"),
             new Cookie("cookieTwoName", "cookieTwoValue"),
-            new Cookie(NottableString.not("cookieThreeName"), NottableString.not("cookieThreeValue"))
+            new Cookie(not("cookieThreeName"), not("cookieThreeValue"))
         )).matches(
             null,
             new Cookies().withEntries(
@@ -280,9 +291,9 @@ public class CookieMatcherTest {
             )
         ));
 
-        // not only cookie
+        // not single cookie
         assertTrue(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
-            new Cookie(NottableString.not("cookieThreeName"), NottableString.not("cookieThreeValue"))
+            new Cookie(not("cookieThreeName"), not("cookieThreeValue"))
         )).matches(
             null,
             new Cookies().withEntries(
@@ -291,9 +302,21 @@ public class CookieMatcherTest {
             )
         ));
 
-        // not all cookies (but matching)
+        // not multiple cookies
+        assertTrue(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
+            new Cookie(not("cookieOneName"), not("cookieOneValue")),
+            new Cookie(not("cookieTwoName"), not("cookieTwoValue"))
+        )).matches(
+            null,
+            new Cookies().withEntries(
+                new Cookie("notCookieOneName", "notCookieOneValue"),
+                new Cookie("notCookieTwoName", "notCookieTwoValue")
+            )
+        ));
+
+        // not all cookies (but not matching name and value)
         assertFalse(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
-            new Cookie(NottableString.not("cookie.*"), NottableString.not(".*"))
+            new Cookie(not("cookie.*"), not(".*"))
         )).matches(
             null,
             new Cookies().withEntries(
@@ -304,7 +327,7 @@ public class CookieMatcherTest {
 
         // not all cookies (but not matching name)
         assertFalse(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
-            new Cookie(NottableString.not("cookie.*"), NottableString.not("cookie.*"))
+            new Cookie(not("cookie.*"), not("cookie.*"))
         )).matches(
             null,
             new Cookies().withEntries(
@@ -315,7 +338,7 @@ public class CookieMatcherTest {
 
         // not all cookies (but not matching value)
         assertTrue(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
-            new Cookie(string("cookie.*"), NottableString.not("cookie.*"))
+            new Cookie(string("cookie.*"), not("cookie.*"))
         )).matches(
             null,
             new Cookies().withEntries(
@@ -328,7 +351,7 @@ public class CookieMatcherTest {
     @Test
     public void shouldMatchMatchingCookieWithOnlyCookie() {
         assertTrue(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
-            new Cookie(NottableString.not("cookieThreeName"), NottableString.not("cookieThreeValue"))
+            new Cookie(not("cookieThreeName"), not("cookieThreeValue"))
         )).matches(
             null,
             new Cookies().withEntries(
@@ -348,7 +371,7 @@ public class CookieMatcherTest {
         ));
 
         assertTrue(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
-            new Cookie(NottableString.not("cookieOneName"), NottableString.not("cookieOneValue"))
+            new Cookie(not("cookieOneName"), not("cookieOneValue"))
         )).matches(
             null,
             new Cookies().withEntries(
@@ -358,7 +381,7 @@ public class CookieMatcherTest {
         ));
 
         assertFalse(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
-            new Cookie(NottableString.not("cookieOneName"), NottableString.not("cookieOneValue"))
+            new Cookie(not("cookieOneName"), not("cookieOneValue"))
         )).matches(
             null,
             new Cookies().withEntries(
@@ -395,7 +418,7 @@ public class CookieMatcherTest {
         ));
 
         assertTrue(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
-            new Cookie(NottableString.not("cookieThree"), NottableString.not("cookieThreeValueOne"))
+            new Cookie(not("cookieThree"), not("cookieThreeValueOne"))
         )).matches(
             null,
             new Cookies()
@@ -406,7 +429,8 @@ public class CookieMatcherTest {
     public void shouldNotMatchMatchingCookieWithNotCookieAndNormalCookie() {
         assertFalse(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie("cookieOneName", "cookieOneValue"),
-            new Cookie(NottableString.not("cookieTwoName"), NottableString.not("cookieTwoValue")))).matches(
+            new Cookie(not("cookieTwoName"), not("cookieTwoValue")))
+        ).matches(
             null,
             new Cookies().withEntries(
                 new Cookie("cookieOneName", "cookieOneValue"),
@@ -417,21 +441,22 @@ public class CookieMatcherTest {
 
     @Test
     public void shouldNotMatchMatchingCookieWithOnlyNotCookie() {
-        assertFalse(
-            new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
-                new Cookie(NottableString.not("cookie.*"), NottableString.not("cookie.*")))).matches(
-                null,
-                new Cookies().withEntries(
-                    new Cookie("cookieOneName", "cookieOneValue"),
-                    new Cookie("cookieTwoName", "cookieTwoValue")
-                )
-            ));
+        assertFalse(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
+            new Cookie(not("cookie.*"), not("cookie.*")))
+        ).matches(
+            null,
+            new Cookies().withEntries(
+                new Cookie("cookieOneName", "cookieOneValue"),
+                new Cookie("cookieTwoName", "cookieTwoValue")
+            )
+        ));
     }
 
     @Test
     public void shouldNotMatchMatchingCookieWithOnlyNotCookieForBodyWithSingleCookie() {
         assertFalse(new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
-            new Cookie(NottableString.not("cookieTwoName"), NottableString.not("cookieTwoValue")))).matches(
+            new Cookie(not("cookieTwoName"), not("cookieTwoValue")))
+        ).matches(
             null,
             new Cookies().withEntries(
                 new Cookie("cookieTwoName", "cookieTwoValue")
@@ -452,13 +477,14 @@ public class CookieMatcherTest {
 
     @Test
     public void shouldNotMatchNullExpectationWhenNotApplied() {
-        assertFalse(NotMatcher.not(new HashMapMatcher(new MockServerLogger(), null)).matches(
-            null,
-            new Cookies().withEntries(
-                new Cookie("cookieOneName", "cookieOneValue"),
-                new Cookie("cookieTwoName", "cookieTwoValue")
-            )
-        ));
+        assertFalse(NotMatcher.not(new HashMapMatcher(new MockServerLogger(), null))
+            .matches(
+                null,
+                new Cookies().withEntries(
+                    new Cookie("cookieOneName", "cookieOneValue"),
+                    new Cookie("cookieTwoName", "cookieTwoValue")
+                )
+            ));
     }
 
     @Test
@@ -474,13 +500,14 @@ public class CookieMatcherTest {
 
     @Test
     public void shouldNotMatchEmptyExpectationWhenNotApplied() {
-        assertFalse(NotMatcher.not(new HashMapMatcher(new MockServerLogger(), new Cookies())).matches(
-            null,
-            new Cookies().withEntries(
-                new Cookie("cookieOneName", "cookieOneValue"),
-                new Cookie("cookieTwoName", "cookieTwoValue")
-            )
-        ));
+        assertFalse(NotMatcher.not(new HashMapMatcher(new MockServerLogger(), new Cookies()))
+            .matches(
+                null,
+                new Cookies().withEntries(
+                    new Cookie("cookieOneName", "cookieOneValue"),
+                    new Cookie("cookieTwoName", "cookieTwoValue")
+                )
+            ));
     }
 
     @Test

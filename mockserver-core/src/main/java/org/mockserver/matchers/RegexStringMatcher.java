@@ -30,7 +30,13 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     }
 
     public static boolean matches(NottableString matcher, NottableString matched, boolean ignoreCase) {
-        return matcher.isNot() != (matched.isNot() != matches(matcher.getValue(), matched.getValue(), ignoreCase));
+        if (matcher.isNot() && matched.isNot()) {
+            // mutual notted control plane match
+            return matches(matcher.getValue(), matched.getValue(), ignoreCase);
+        } else {
+            // data plane & control plan match
+            return (matcher.isNot() || matched.isNot()) ^ matches(matcher.getValue(), matched.getValue(), ignoreCase);
+        }
     }
 
     public static boolean matches(String matcher, String matched, boolean ignoreCase) {

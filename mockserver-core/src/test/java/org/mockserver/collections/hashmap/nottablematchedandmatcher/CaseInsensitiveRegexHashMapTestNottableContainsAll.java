@@ -1,4 +1,4 @@
-package org.mockserver.collections.hashmap.nottablematcher;
+package org.mockserver.collections.hashmap.nottablematchedandmatcher;
 
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexHashMap;
@@ -24,7 +24,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("notKeyOne"), string("keyOneValue")}
+            new NottableString[]{not("keyOne"), string("keyOneValue")}
         )), is(true));
 
         // and then
@@ -42,7 +42,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("keyOne"), string("notKeyOneValue")}
+            new NottableString[]{string("keyOne"), not("keyOneValue")}
         )), is(true));
 
         // and then
@@ -60,7 +60,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("notKeyOne"), string("notKeyOneValue")}
+            new NottableString[]{not("keyOne"), not("keyOneValue")}
         )), is(true));
 
         // and then
@@ -80,7 +80,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("notKeyOne"), string("keyOneValue")}
+            new NottableString[]{not("keyOne"), string("keyOneValue")}
         )), is(true));
 
         // and then
@@ -100,7 +100,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("keyOne"), string("notKeyOneValue")}
+            new NottableString[]{string("keyOne"), not("keyOneValue")}
         )), is(true));
 
         // and then
@@ -120,7 +120,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("notKeyOne"), string("notKeyOneValue")}
+            new NottableString[]{not("keyOne"), string("notKeyOneValue")}
         )), is(true));
 
         // and then
@@ -140,7 +140,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
         // then
         assertThat(hashMap.containsAll(hashMap(
             new NottableString[]{string("keyOne"), string("keyOneValue")},
-            new NottableString[]{string("notKeyTwo"), string("keyTwoValue")}
+            new NottableString[]{not("keyTwo"), string("keyTwoValue")}
         )), is(true));
 
         // and then
@@ -161,7 +161,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
         // then
         assertThat(hashMap.containsAll(hashMap(
             new NottableString[]{string("keyOne"), string("keyOneValue")},
-            new NottableString[]{string("keyTwo"), string("notKeyTwoValue")}
+            new NottableString[]{string("keyTwo"), not("keyTwoValue")}
         )), is(true));
 
         // and then
@@ -182,7 +182,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
         // then
         assertThat(hashMap.containsAll(hashMap(
             new NottableString[]{string("keyOne"), string("keyOneValue")},
-            new NottableString[]{string("notKeyTwo"), string("notKeyTwoValue")}
+            new NottableString[]{not("keyTwo"), not("keyTwoValue")}
         )), is(true));
 
         // and then
@@ -204,7 +204,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
         // then
         assertThat(hashMap.containsAll(hashMap(
             new NottableString[]{string("keyOne"), string("keyOneValue")},
-            new NottableString[]{string("notKeyTwo"), string("keyTwoValue")}
+            new NottableString[]{not("keyTwo"), string("keyTwoValue")}
         )), is(true));
 
         // and then
@@ -226,7 +226,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
         // then
         assertThat(hashMap.containsAll(hashMap(
             new NottableString[]{string("keyOne"), string("keyOneValue")},
-            new NottableString[]{string("keyTwo"), string("notKeyTwoValue")}
+            new NottableString[]{string("keyTwo"), not("keyTwoValue")}
         )), is(true));
 
         // and then
@@ -248,7 +248,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
         // then
         assertThat(hashMap.containsAll(hashMap(
             new NottableString[]{string("keyOne"), string("keyOneValue")},
-            new NottableString[]{string("notKeyTwo"), string("notKeyTwoValue")}
+            new NottableString[]{not("keyTwo"), not("keyTwoValue")}
         )), is(true));
 
         // and then
@@ -258,26 +258,15 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
         )), is(true));
     }
 
+    // FROM HERE
+
     @Test
-    public void shouldContainAllEmptySubSetMultipleKeyAndMultipleValuesForNottedKeyAndValue() {
+    public void shouldContainAllBothNottedMultipleKeysMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{string("keyOne"), string("keyOneValue")},
-            new NottableString[]{not("keyTwo"), not("keyTwoValue")},
+            new NottableString[]{not("keyOne"), string("keyOneValue")},
+            new NottableString[]{not("keyTwo"), string("keyTwoValue")},
             new NottableString[]{string("keyThree"), string("keyThreeValue"), string("keyThree_valueTwo")}
-        );
-
-        // then
-        assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{}
-        )), is(true));
-    }
-
-    @Test
-    public void shouldContainAllSubSetMultipleKeyForEmptyMap() {
-        // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{}
         );
 
         // then
@@ -288,107 +277,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
     }
 
     @Test
-    public void shouldNotContainAllNotMatchSingleKeySingleEntry() {
-        // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{not("keyOne"), string("keyOneValue")}
-        );
-
-        // then
-        assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("keyOne"), string("keyOneValue")}
-        )), is(false));
-    }
-
-    @Test
-    public void shouldNotContainAllNotMatchSingleValueSingleEntry() {
-        // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{string("keyOne"), not("keyOneValue")}
-        );
-
-        // then
-        assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("keyOne"), string("keyOneValue")}
-        )), is(false));
-    }
-
-    @Test
-    public void shouldNotContainAllNotMatchSingleKeyAndValueSingleEntry() {
-        // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{not("keyOne"), not("keyOneValue")}
-        );
-
-        // then
-        assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("keyOne"), string("keyOneValue")}
-        )), is(false));
-    }
-
-    @Test
-    public void shouldNotContainAllNotMatchSingleKeyMultipleEntries() {
-        // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{not("keyOne"), string("keyOneValue")},
-            new NottableString[]{string("keyTwo"), string("keyTwoValue")},
-            new NottableString[]{string("keyThree"), string("keyThreeValue"), string("keyThree_valueTwo")}
-        );
-
-        // then
-        assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("keyOne"), string("keyOneValue")}
-        )), is(false));
-    }
-
-    @Test
-    public void shouldNotContainAllNotMatchSingleValueMultipleEntries() {
-        // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{string("keyOne"), not("keyOneValue")},
-            new NottableString[]{string("keyTwo"), string("keyTwoValue")},
-            new NottableString[]{string("keyThree"), string("keyThreeValue"), string("keyThree_valueTwo")}
-        );
-
-        // then
-        assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("keyOne"), string("keyOneValue")}
-        )), is(false));
-    }
-
-    @Test
-    public void shouldNotContainAllNotMatchSingleKeyAndValueMultipleEntries() {
-        // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{not("keyOne"), not("keyOneValue")},
-            new NottableString[]{string("keyTwo"), string("keyTwoValue")},
-            new NottableString[]{string("keyThree"), string("keyThreeValue"), string("keyThree_valueTwo")}
-        );
-
-        // then
-        assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("keyOne"), string("keyOneValue")}
-        )), is(false));
-    }
-
-    @Test
-    public void shouldNotContainAllNotMatchMultipleKeysMultipleEntries() {
-        // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{not("keyOne"), string("keyOneValue")},
-            new NottableString[]{not("keyTwo"), string("keyTwoValue")},
-            new NottableString[]{string("keyThree"), string("keyThreeValue"), string("keyThree_valueTwo")}
-        );
-
-        // then
-        assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("keyOne"), string("keyOneValue")},
-            new NottableString[]{string("keyTwo"), string("keyTwoValue")}
-        )), is(false));
-    }
-
-    @Test
-    public void shouldNotContainAllNotMatchMultipleValuesMultipleEntries() {
+    public void shouldContainAllBothNottedMultipleValuesMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
             new NottableString[]{string("keyOne"), not("keyOneValue")},
@@ -398,39 +287,36 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsAll {
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("keyOne"), string("keyOneValue")},
-            new NottableString[]{string("keyTwo"), string("keyTwoValue")}
-        )), is(false));
+            new NottableString[]{string("keyOne"), not("keyOneValue")},
+            new NottableString[]{string("keyTwo"), not("keyTwoValue")}
+        )), is(true));
         assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("keyTwo"), string("keyTwo.*")}
-        )), is(false));
+            new NottableString[]{string("keyTwo"), not("keyTwo.*")}
+        )), is(true));
     }
 
     @Test
-    public void shouldNotContainAllNotMatchMultipleValuesMultipleEntriesContradiction() {
+    public void shouldContainAllBothNottedMultipleKeyAndValuesMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{string("keyOne"), string("keyOneValue")}
+            new NottableString[]{not("keyOne"), not("keyOneValue")},
+            new NottableString[]{not("keyTwo"), not("keyTwoValue")},
+            new NottableString[]{string("keyThree"), string("keyThreeValue"), string("keyThree_valueTwo")}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{string("keyOne"), string("keyOneValue")},
-            new NottableString[]{not("keyOne"), not("keyOneValue")}
-        )), is(false));
-    }
-
-    @Test
-    public void shouldNotContainAllSubSetMultipleKeyForEmptyMap() {
-        // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{}
-        );
-
-        // then
+            new NottableString[]{not("keyOne"), not("keyOneValue")},
+            new NottableString[]{not("keyTwo"), not("keyTwoValue")},
+            new NottableString[]{string("keyThree"), string("keyThreeValue"), string("keyThree_valueTwo")}
+        )), is(true));
         assertThat(hashMap.containsAll(hashMap(
-            new NottableString[]{not("keyOne"), string("keyOneValue")},
-            new NottableString[]{string("keyTwo"), string("keyTwoValue")}
-        )), is(false));
+            new NottableString[]{not("keyOne"), not("keyOneValue")},
+            new NottableString[]{not("keyTwo"), not("keyTwoValue")}
+        )), is(true));
+        assertThat(hashMap.containsAll(hashMap(
+            new NottableString[]{not("keyTwo"), not("keyTwo.*")}
+        )), is(true));
     }
+
 }

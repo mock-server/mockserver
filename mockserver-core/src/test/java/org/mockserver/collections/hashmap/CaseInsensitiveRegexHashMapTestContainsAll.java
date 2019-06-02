@@ -16,12 +16,12 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     public void shouldContainAllForEmptyMapMatchedAgainstMapWithSingleEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-                new String[]{}
+            new String[]{}
         )), is(true));
     }
 
@@ -29,14 +29,14 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     public void shouldContainAllForEmptyMapMatchedAgainstMapWithMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-                new String[]{}
+            new String[]{}
         )), is(true));
     }
 
@@ -44,12 +44,12 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndSingleValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            new String[]{"keyOne", "keyOneValue"}
         )), is(true));
     }
 
@@ -57,14 +57,14 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     public void shouldContainAllSubSetSingleKeyAndSingleValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            new String[]{"keyOne", "keyOneValue"}
         )), is(true));
     }
 
@@ -72,14 +72,14 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     public void shouldContainAllExactMatchMultipleKeyAndMultipleValues() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"}
         )), is(true));
     }
 
@@ -87,15 +87,15 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     public void shouldContainAllSubSetMultipleKeyAndMultipleValues() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"}
         )), is(true));
     }
 
@@ -103,12 +103,12 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     public void shouldNotContainAllNotMatchSingleKeySingleEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-                new String[]{"notKeyOne", "keyOneValue"}
+            new String[]{"notKeyOne", "keyOneValue"}
         )), is(false));
     }
 
@@ -116,12 +116,12 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     public void shouldNotContainAllNotMatchSingleValueSingleEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-                new String[]{"keyOne", "notKeyOneValue"}
+            new String[]{"keyOne", "notKeyOneValue"}
         )), is(false));
     }
 
@@ -129,14 +129,14 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     public void shouldNotContainAllNotMatchSingleKeyMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-                new String[]{"notKeyOne", "keyOneValue"}
+            new String[]{"notKeyOne", "keyOneValue"}
         )), is(false));
     }
 
@@ -144,14 +144,14 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     public void shouldNotContainAllNotMatchSingleValueMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-                new String[]{"keyOne", "notKeyOneValue"}
+            new String[]{"keyOne", "notKeyOneValue"}
         )), is(false));
     }
 
@@ -159,15 +159,15 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     public void shouldNotContainAllNotMatchMultipleKeysMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-                new String[]{"notKeyOne", "keyOneValue"},
-                new String[]{"notKeyTwo", "keyTwoValue"}
+            new String[]{"notKeyOne", "keyOneValue"},
+            new String[]{"notKeyTwo", "keyTwoValue"}
         )), is(false));
     }
 
@@ -175,18 +175,18 @@ public class CaseInsensitiveRegexHashMapTestContainsAll {
     public void shouldNotContainAllNotMatchMultipleValuesMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
         assertThat(hashMap.containsAll(hashMap(
-                new String[]{"keyOne", "notKeyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"}
+            new String[]{"keyOne", "notKeyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"}
         )), is(false));
         assertThat(hashMap.containsAll(hashMap(
-                new String[]{"keyTwo", "notKeyTwoValue"}
+            new String[]{"keyTwo", "notKeyTwoValue"}
         )), is(false));
     }
 }

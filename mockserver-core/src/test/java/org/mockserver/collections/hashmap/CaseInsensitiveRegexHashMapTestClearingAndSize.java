@@ -16,9 +16,9 @@ public class CaseInsensitiveRegexHashMapTestClearingAndSize {
     public void shouldReturnSize() {
         // when
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
@@ -40,9 +40,9 @@ public class CaseInsensitiveRegexHashMapTestClearingAndSize {
     public void shouldClear() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // when

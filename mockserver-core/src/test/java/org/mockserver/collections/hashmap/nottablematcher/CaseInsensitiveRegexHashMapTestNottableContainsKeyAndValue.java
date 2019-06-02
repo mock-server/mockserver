@@ -19,7 +19,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForSingleValueForNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), string("keyOneValue")}
+            new NottableString[]{not("keyOne"), string("keyOneValue")}
         );
 
         // then
@@ -31,7 +31,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForSingleValueForNottedValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{string("keyOne"), not("keyOneValue")}
+            new NottableString[]{string("keyOne"), not("keyOneValue")}
         );
 
         // then
@@ -43,7 +43,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForSingleValueForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), not("keyOneValue")}
+            new NottableString[]{not("keyOne"), not("keyOneValue")}
         );
 
         // then
@@ -55,8 +55,8 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForSingleValueForNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), string("keyOneValue")},
-                new NottableString[]{string("keyTwo"), string("keyTwoValue")}
+            new NottableString[]{not("keyOne"), string("keyOneValue")},
+            new NottableString[]{string("keyTwo"), string("keyTwoValue")}
         );
 
         // then
@@ -68,8 +68,8 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForSingleValueForNottedValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{string("keyOne"), not("keyOneValue")},
-                new NottableString[]{string("keyTwo"), string("keyTwoValue")}
+            new NottableString[]{string("keyOne"), not("keyOneValue")},
+            new NottableString[]{string("keyTwo"), string("keyTwoValue")}
         );
 
         // then
@@ -81,8 +81,8 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForSingleValueForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), not("keyOneValue")},
-                new NottableString[]{string("keyTwo"), string("keyTwoValue")}
+            new NottableString[]{not("keyOne"), not("keyOneValue")},
+            new NottableString[]{string("keyTwo"), string("keyTwoValue")}
         );
 
         // then
@@ -94,7 +94,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForSingleValueWithValueMismatchForNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), string("keyOneValue")}
+            new NottableString[]{not("keyOne"), string("keyOneValue")}
         );
 
         // then
@@ -106,7 +106,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForSingleValueWithValueMismatchForNottedValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{string("keyOne"), not("keyOneValue")}
+            new NottableString[]{string("keyOne"), not("keyOneValue")}
         );
 
         // then
@@ -118,7 +118,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForSingleValueWithValueMismatchForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), not("keyOneValue")}
+            new NottableString[]{not("keyOne"), not("keyOneValue")}
         );
 
         // then
@@ -130,8 +130,8 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForMultipleValuesWithValueMismatchForNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{string("keyOne"), string("keyOneValue")},
-                new NottableString[]{not("keyTwo"), string("keyTwoValue")}
+            new NottableString[]{string("keyOne"), string("keyOneValue")},
+            new NottableString[]{not("keyTwo"), string("keyTwoValue")}
         );
 
         // then
@@ -143,8 +143,8 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForMultipleValuesWithValueMismatchForNottedValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{string("keyOne"), string("keyOneValue")},
-                new NottableString[]{string("keyTwo"), not("keyTwoValue")}
+            new NottableString[]{string("keyOne"), string("keyOneValue")},
+            new NottableString[]{string("keyTwo"), not("keyTwoValue")}
         );
 
         // then
@@ -156,8 +156,8 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForMultipleValuesWithValueMismatchForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{string("keyOne"), string("keyOneValue")},
-                new NottableString[]{not("keyTwo"), not("keyTwoValue")}
+            new NottableString[]{string("keyOne"), string("keyOneValue")},
+            new NottableString[]{not("keyTwo"), not("keyTwoValue")}
         );
 
         // then

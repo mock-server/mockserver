@@ -7,8 +7,6 @@ import org.mockserver.model.NottableString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.mockserver.collections.CaseInsensitiveRegexHashMap.hashMap;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
@@ -22,9 +20,9 @@ public class CaseInsensitiveRegexHashMapTestNottableRemove {
     public void shouldRemoveSingleValueEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), string("keyOneValue")},
-                new NottableString[]{not("keyTwo"), string("keyTwoValue")},
-                new NottableString[]{not("keyThree"), string("keyThreeValue")}
+            new NottableString[]{not("keyOne"), string("keyOneValue")},
+            new NottableString[]{not("keyTwo"), string("keyTwoValue")},
+            new NottableString[]{not("keyThree"), string("keyThreeValue")}
         );
 
         // when
@@ -41,9 +39,9 @@ public class CaseInsensitiveRegexHashMapTestNottableRemove {
     public void shouldRemoveSingleValueEntryWithNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), string("keyOneValue")},
-                new NottableString[]{not("keyTwo"), string("keyTwoValue")},
-                new NottableString[]{not("keyThree"), string("keyThreeValue")}
+            new NottableString[]{not("keyOne"), string("keyOneValue")},
+            new NottableString[]{not("keyTwo"), string("keyTwoValue")},
+            new NottableString[]{not("keyThree"), string("keyThreeValue")}
         );
 
         // when
@@ -60,9 +58,9 @@ public class CaseInsensitiveRegexHashMapTestNottableRemove {
     public void shouldRemoveNotMatchingEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), string("keyOneValue")},
-                new NottableString[]{not("keyTwo"), string("keyTwoValue")},
-                new NottableString[]{not("keyThree"), string("keyThreeValue")}
+            new NottableString[]{not("keyOne"), string("keyOneValue")},
+            new NottableString[]{not("keyTwo"), string("keyTwoValue")},
+            new NottableString[]{not("keyThree"), string("keyThreeValue")}
         );
 
         // when
@@ -79,9 +77,9 @@ public class CaseInsensitiveRegexHashMapTestNottableRemove {
     public void shouldRemoveNotMatchingEntryWithNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), string("keyOneValue")},
-                new NottableString[]{not("keyTwo"), string("keyTwoValue")},
-                new NottableString[]{not("keyThree"), string("keyThreeValue")}
+            new NottableString[]{not("keyOne"), string("keyOneValue")},
+            new NottableString[]{not("keyTwo"), string("keyTwoValue")},
+            new NottableString[]{not("keyThree"), string("keyThreeValue")}
         );
 
         // when
