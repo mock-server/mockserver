@@ -283,11 +283,11 @@ public class KeyAndCertificateFactory {
     }
 
     X509Certificate mockServerCertificateAuthorityX509Certificate() {
-        return loadX509FromPEMFile("org/mockserver/socket/CertificateAuthorityCertificate.pem");
+        return loadX509FromPEMFile(ConfigurationProperties.certificateAuthorityCertificate());
     }
 
     private RSAPrivateKey mockServerCertificateAuthorityPrivateKey() {
-        return loadPrivateKeyFromPEMFile("org/mockserver/socket/CertificateAuthorityPrivateKey.pem");
+        return loadPrivateKeyFromPEMFile(ConfigurationProperties.certificateAuthorityPrivateKey());
     }
 
     /**

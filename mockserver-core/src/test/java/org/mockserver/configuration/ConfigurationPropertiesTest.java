@@ -449,11 +449,11 @@ public class ConfigurationPropertiesTest {
         ConfigurationProperties.rebuildKeyStore(false);
 
         // when
-        assertEquals(false, ConfigurationProperties.rebuildKeyStore());
+        assertFalse(ConfigurationProperties.rebuildKeyStore());
         ConfigurationProperties.rebuildKeyStore(true);
 
         // then
-        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+        assertTrue(ConfigurationProperties.rebuildKeyStore());
     }
 
     @Test
@@ -462,6 +462,34 @@ public class ConfigurationPropertiesTest {
         exception.expectMessage(containsString("log level \"WRONG\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\""));
 
         ConfigurationProperties.logLevel("WRONG");
+    }
+
+    @Test
+    public void shouldSetAndReadCertificateAuthorityCertificate() {
+        // given
+        System.clearProperty("mockserver.certificateAuthorityCertificate");
+
+        // when
+        assertEquals("org/mockserver/socket/CertificateAuthorityCertificate.pem", ConfigurationProperties.certificateAuthorityCertificate());
+        ConfigurationProperties.certificateAuthorityCertificate("some/certificate.pem");
+
+        // then
+        assertEquals("some/certificate.pem", ConfigurationProperties.certificateAuthorityCertificate());
+        assertEquals("some/certificate.pem", System.getProperty("mockserver.certificateAuthorityCertificate"));
+    }
+
+    @Test
+    public void shouldSetAndReadCertificateAuthorityPrivateKey() {
+        // given
+        System.clearProperty("mockserver.certificateAuthorityPrivateKey");
+
+        // when
+        assertEquals("org/mockserver/socket/CertificateAuthorityPrivateKey.pem", ConfigurationProperties.certificateAuthorityPrivateKey());
+        ConfigurationProperties.certificateAuthorityPrivateKey("some/private_key.pem");
+
+        // then
+        assertEquals("some/private_key.pem", ConfigurationProperties.certificateAuthorityPrivateKey());
+        assertEquals("some/private_key.pem", System.getProperty("mockserver.certificateAuthorityPrivateKey"));
     }
 
     @Test

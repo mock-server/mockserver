@@ -6,7 +6,6 @@ import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import io.netty.util.NettyRuntime;
 import io.netty.util.internal.SystemPropertyUtil;
-import org.mockserver.server.initialize.ExpectationInitializer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.slf4j.event.Level;
@@ -40,6 +39,8 @@ public class ConfigurationProperties {
     private static final int DEFAULT_MAX_HEADER_SIZE = 8192;
     private static final int DEFAULT_MAX_CHUNK_SIZE = 8192;
     private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = Math.max(1, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors() * 5));
+    private static final String DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "org/mockserver/socket/CertificateAuthorityPrivateKey.pem";
+    private static final String DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "org/mockserver/socket/CertificateAuthorityCertificate.pem";
 
     private static final String MOCKSERVER_PROPERTY_FILE = "mockserver.propertyFile";
     private static final String MOCKSERVER_ENABLE_CORSFOR_API = "mockserver.enableCORSForAPI";
@@ -59,6 +60,8 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME = "mockserver.sslCertificateDomainName";
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS = "mockserver.sslSubjectAlternativeNameDomains";
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS = "mockserver.sslSubjectAlternativeNameIps";
+    private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "mockserver.certificateAuthorityPrivateKey";
+    private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "mockserver.certificateAuthorityCertificate";
     private static final String MOCKSERVER_LOG_LEVEL = "mockserver.logLevel";
     private static final String MOCKSERVER_DISABLE_REQUEST_AUDIT = "mockserver.disableRequestAudit";
     private static final String MOCKSERVER_DISABLE_SYSTEM_OUT = "mockserver.disableSystemOut";
@@ -272,6 +275,32 @@ public class ConfigurationProperties {
 
     public static void rebuildKeyStore(boolean rebuildKeyStore) {
         ConfigurationProperties.REBUILD_KEY_STORE.set(rebuildKeyStore);
+    }
+
+    public static String certificateAuthorityPrivateKey() {
+        return readPropertyHierarchically(MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY, DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY);
+    }
+
+    /**
+     * Override the default certificate authority private key
+     *
+     * @param certificateAuthorityPrivateKey location of the PEM file containing the certificate authority private key
+     */
+    public static void certificateAuthorityPrivateKey(String certificateAuthorityPrivateKey) {
+        System.setProperty(MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY, certificateAuthorityPrivateKey);
+    }
+
+    public static String certificateAuthorityCertificate() {
+        return readPropertyHierarchically(MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE, DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE);
+    }
+
+    /**
+     * Override the default certificate authority X509 certificate
+     *
+     * @param certificateAuthorityCertificate location of the PEM file containing the certificate authority X509 certificate
+     */
+    public static void certificateAuthorityCertificate(String certificateAuthorityCertificate) {
+        System.setProperty(MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE, certificateAuthorityCertificate);
     }
 
     public static Level logLevel() {
