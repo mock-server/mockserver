@@ -1,5 +1,12 @@
 package org.mockserver.logging;
 
+import ch.qos.logback.classic.AsyncAppender;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.rolling.RollingFileAppender;
+import ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP;
+import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 import com.google.common.collect.ImmutableList;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.MessageLogEntry;
@@ -12,6 +19,8 @@ import org.slf4j.event.Level;
 import javax.annotation.Nullable;
 import java.util.List;
 
+import static org.apache.commons.lang3.StringUtils.appendIfMissingIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.configuration.ConfigurationProperties.logLevel;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXCEPTION;
@@ -27,6 +36,7 @@ public class MockServerLogger {
 
     static {
         initialiseLogLevels();
+        setLogbackAppender();
     }
 
     public static void initialiseLogLevels() {
@@ -36,9 +46,63 @@ public class MockServerLogger {
         try {
             Class.forName("ch.qos.logback.classic.Logger");
             if (mockServerLogger instanceof ch.qos.logback.classic.Logger) {
-                ((ch.qos.logback.classic.Logger) mockServerLogger).setLevel(
+                ch.qos.logback.classic.Logger mockServerLogbackLogger = (ch.qos.logback.classic.Logger) mockServerLogger;
+                mockServerLogbackLogger.setLevel(
                     ch.qos.logback.classic.Level.valueOf(System.getProperty("mockserver.logLevel", logLevel().name()))
                 );
+            }
+        } catch (ClassNotFoundException ignore) {
+        }
+    }
+
+    private static void setLogbackAppender() {
+        Logger mockServerLogger = LoggerFactory.getLogger("org.mockserver");
+        try {
+            Class.forName("ch.qos.logback.classic.Logger");
+            if (mockServerLogger instanceof ch.qos.logback.classic.Logger) {
+                LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+                PatternLayoutEncoder patternLayoutEncoder = new PatternLayoutEncoder();
+                patternLayoutEncoder.setPattern("%date %level %logger{20} %msg%n");
+                patternLayoutEncoder.setContext(loggerContext);
+                patternLayoutEncoder.start();
+
+                String logDirectory = isBlank(System.getenv("log.dir")) ? "./" : appendIfMissingIgnoreCase(System.getenv("log.dir"), "/");
+                String logFileName = "mockserver";
+                String logFileExtension = "log";
+
+                SizeAndTimeBasedFNATP<SizeAndTimeBasedFNATP> sizeAndTimeBasedFNATP = new SizeAndTimeBasedFNATP<>();
+                sizeAndTimeBasedFNATP.setMaxFileSize("100MB");
+                sizeAndTimeBasedFNATP.setContext(loggerContext);
+
+                TimeBasedRollingPolicy<SizeAndTimeBasedFNATP> timeBasedRollingPolicy = new TimeBasedRollingPolicy<>();
+                timeBasedRollingPolicy.setFileNamePattern(logDirectory + logFileName + ".%d{yyyy-MM-dd}.%i." + logFileExtension);
+                timeBasedRollingPolicy.setTimeBasedFileNamingAndTriggeringPolicy(sizeAndTimeBasedFNATP);
+                timeBasedRollingPolicy.setMaxHistory(1);
+                timeBasedRollingPolicy.setContext(loggerContext);
+
+                RollingFileAppender<ILoggingEvent> fileAppender = new RollingFileAppender<>();
+                fileAppender.setFile(logDirectory + logFileName + "." + logFileExtension);
+                fileAppender.setEncoder(patternLayoutEncoder);
+                fileAppender.setContext(loggerContext);
+                timeBasedRollingPolicy.setParent(fileAppender);
+                fileAppender.setRollingPolicy(timeBasedRollingPolicy);
+                timeBasedRollingPolicy.start();
+                sizeAndTimeBasedFNATP.start();
+                fileAppender.start();
+
+                AsyncAppender asyncAppender = new AsyncAppender();
+                asyncAppender.setContext(loggerContext);
+                asyncAppender.setQueueSize(250);
+                asyncAppender.setDiscardingThreshold(0);
+                asyncAppender.addAppender(fileAppender);
+                asyncAppender.start();
+
+                ch.qos.logback.classic.Logger mockServerLogbackLogger = (ch.qos.logback.classic.Logger) mockServerLogger;
+                mockServerLogbackLogger.setLevel(
+                    ch.qos.logback.classic.Level.valueOf(System.getProperty("mockserver.logLevel", logLevel().name()))
+                );
+                mockServerLogbackLogger.addAppender(fileAppender);
             }
         } catch (ClassNotFoundException ignore) {
         }
