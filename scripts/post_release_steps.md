@@ -11,7 +11,7 @@ Release Steps
    1. git push origin --tags
    1. npm login
    1. npm publish
-1. update mockserver-node
+1. update mockserver-client-node
    1. delete package-lock.json
    1. find and replace MockServer version
    1. npm i
