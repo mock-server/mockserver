@@ -75,14 +75,13 @@ public class KeyAndCertificateFactory {
     }
 
     private String mockServerCertificatePEMFile;
-    private String mockServerPublicKeyPEMFile;
     private String mockServerPrivateKeyPEMFile;
 
     private KeyAndCertificateFactory() {
 
     }
 
-    public static KeyAndCertificateFactory keyAndCertificateFactory() {
+    static KeyAndCertificateFactory keyAndCertificateFactory() {
         return KEY_AND_CERTIFICATE_FACTORY;
     }
 
@@ -126,7 +125,7 @@ public class KeyAndCertificateFactory {
     /**
      * Create a random 2048 bit RSA key pair with the given length
      */
-    KeyPair generateKeyPair(int keySize) throws Exception {
+    private KeyPair generateKeyPair(int keySize) throws Exception {
         KeyPairGenerator generator = KeyPairGenerator.getInstance(KEY_GENERATION_ALGORITHM, PROVIDER_NAME);
         generator.initialize(keySize, new SecureRandom());
         return generator.generateKeyPair();
@@ -140,14 +139,11 @@ public class KeyAndCertificateFactory {
         // signers name
         X500Name issuerName = new X500Name("CN=www.mockserver.com, O=MockServer, L=London, ST=England, C=UK");
 
-        // subjects name - the same as we are self signed.
-        X500Name subjectName = issuerName;
-
         // serial
         BigInteger serial = BigInteger.valueOf(new Random().nextInt(Integer.MAX_VALUE));
 
-        // create the certificate - version 3
-        X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(issuerName, serial, NOT_BEFORE, NOT_AFTER, subjectName, publicKey);
+        // create the certificate - version 3 (with subjects name same as issues as self signed)
+        X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(issuerName, serial, NOT_BEFORE, NOT_AFTER, issuerName, publicKey);
         builder.addExtension(Extension.subjectKeyIdentifier, false, createSubjectKeyIdentifier(publicKey));
         builder.addExtension(Extension.basicConstraints, true, new BasicConstraints(true));
 
@@ -187,7 +183,7 @@ public class KeyAndCertificateFactory {
         builder.addExtension(Extension.basicConstraints, false, new BasicConstraints(false));
 
         // subject alternative name
-        List<ASN1Encodable> subjectAlternativeNames = new ArrayList<ASN1Encodable>();
+        List<ASN1Encodable> subjectAlternativeNames = new ArrayList<>();
         if (subjectAlternativeNameDomains != null) {
             subjectAlternativeNames.add(new GeneralName(GeneralName.dNSName, domain));
             for (String subjectAlternativeNameDomain : subjectAlternativeNameDomains) {
@@ -205,7 +201,7 @@ public class KeyAndCertificateFactory {
             }
         }
         if (subjectAlternativeNames.size() > 0) {
-            DERSequence subjectAlternativeNamesExtension = new DERSequence(subjectAlternativeNames.toArray(new ASN1Encodable[subjectAlternativeNames.size()]));
+            DERSequence subjectAlternativeNamesExtension = new DERSequence(subjectAlternativeNames.toArray(new ASN1Encodable[0]));
             builder.addExtension(Extension.subjectAlternativeName, false, subjectAlternativeNamesExtension);
         }
 
@@ -222,20 +218,18 @@ public class KeyAndCertificateFactory {
      * <p>
      * Note: X.509 certificate should be stable so this method should rarely be used
      */
-    synchronized KeyAndCertificateFactory buildAndSaveCertificateAuthorityCertificates() throws Exception {
+    private synchronized void buildAndSaveCertificateAuthorityCertificates() throws Exception {
         KeyPair caKeyPair = generateKeyPair(ROOT_KEYSIZE);
 
         saveCertificateAsPEMFile(createCACert(caKeyPair.getPublic(), caKeyPair.getPrivate()), "CertificateAuthorityCertificate.pem", false);
         saveCertificateAsPEMFile(caKeyPair.getPublic(), "CertificateAuthorityPublicKey.pem", false);
         saveCertificateAsPEMFile(caKeyPair.getPrivate(), "CertificateAuthorityPrivateKey.pem", false);
-
-        return this;
     }
 
     /**
      * Create a KeyStore with a server certificate for the given domain and subject alternative names.
      */
-    synchronized KeyAndCertificateFactory buildAndSaveCertificates() {
+    synchronized void buildAndSaveCertificates() {
         try {
             // personal keys
             KeyPair keyPair = generateKeyPair(FAKE_KEYSIZE);
@@ -243,8 +237,8 @@ public class KeyAndCertificateFactory {
             PublicKey mockServerPublicKey = keyPair.getPublic();
 
             // ca keys
-            PrivateKey caPrivateKey = loadPrivateKeyFromPEMFile("org/mockserver/socket/CertificateAuthorityPrivateKey.pem");
-            X509Certificate caCert = loadX509FromPEMFile("org/mockserver/socket/CertificateAuthorityCertificate.pem");
+            PrivateKey caPrivateKey = mockServerCertificateAuthorityPrivateKey();
+            X509Certificate caCert = mockServerCertificateAuthorityX509Certificate();
 
             // generate mockServer certificate
             X509Certificate mockServerCert = createCASignedCert(
@@ -258,12 +252,10 @@ public class KeyAndCertificateFactory {
             );
             String randomUUID = UUID.randomUUID().toString();
             mockServerCertificatePEMFile = saveCertificateAsPEMFile(mockServerCert, "MockServerCertificate" + randomUUID + ".pem", true);
-            mockServerPublicKeyPEMFile = saveCertificateAsPEMFile(mockServerPublicKey, "MockServerPublicKey" + randomUUID + ".pem", true);
             mockServerPrivateKeyPEMFile = saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey" + randomUUID + ".pem", true);
         } catch (Exception e) {
             MOCK_SERVER_LOGGER.error("Error while refreshing certificates", e);
         }
-        return this;
     }
 
     /**
@@ -282,16 +274,20 @@ public class KeyAndCertificateFactory {
         return pemFile.getAbsolutePath();
     }
 
-    public PrivateKey mockServerPrivateKey() {
+    PrivateKey mockServerPrivateKey() {
         return loadPrivateKeyFromPEMFile(mockServerPrivateKeyPEMFile);
     }
 
-    public X509Certificate mockServerX509Certificate() {
+    X509Certificate mockServerX509Certificate() {
         return loadX509FromPEMFile(mockServerCertificatePEMFile);
     }
 
-    public X509Certificate mockServerCertificateAuthorityX509Certificate() {
+    X509Certificate mockServerCertificateAuthorityX509Certificate() {
         return loadX509FromPEMFile("org/mockserver/socket/CertificateAuthorityCertificate.pem");
+    }
+
+    private RSAPrivateKey mockServerCertificateAuthorityPrivateKey() {
+        return loadPrivateKeyFromPEMFile("org/mockserver/socket/CertificateAuthorityPrivateKey.pem");
     }
 
     /**
