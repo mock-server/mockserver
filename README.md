@@ -12,6 +12,7 @@ For chat room: [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://git
 # Versions
 
 ### Maven Central [![mockserver](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty/badge.svg?style=flat)](http://search.maven.org/#search%7Cga%7C1%7Cmockserver)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjamesdbloom%2Fmockserver.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjamesdbloom%2Fmockserver?ref=badge_shield)
 
 Maven Central contains the following MockServer artifacts:
 
@@ -91,3 +92,7 @@ Pull requests are, of course, very welcome! Please read our [contributing to the
 * [James D Bloom](http://blog.jamesdbloom.com)
 
 [![Analytics](https://ga-beacon.appspot.com/UA-32687194-4/mockserver/README.md)](https://github.com/igrigorik/ga-beacon)
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjamesdbloom%2Fmockserver.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjamesdbloom%2Fmockserver?ref=badge_large)
