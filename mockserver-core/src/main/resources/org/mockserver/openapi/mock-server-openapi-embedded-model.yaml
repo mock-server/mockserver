@@ -128,7 +128,7 @@ paths:
         - verify
       summary: verify a request has been received a specific number of times
       responses:
-        '200':
+        '202':
           description: matching request has been received specified number of times
         '400':
           description: incorrect request format
