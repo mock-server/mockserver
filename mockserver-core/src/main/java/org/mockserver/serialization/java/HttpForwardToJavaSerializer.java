@@ -25,6 +25,9 @@ public class HttpForwardToJavaSerializer implements ToJavaSerializer<HttpForward
             if (httpForward.getScheme() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withScheme(HttpForward.Scheme.").append(httpForward.getScheme()).append(")");
             }
+            if (httpForward.getDelay() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDelay(").append(new DelayToJavaSerializer().serialize(0, httpForward.getDelay())).append(")");
+            }
         }
         return output.toString();
     }

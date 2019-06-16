@@ -3,13 +3,13 @@ package org.mockserver.client;
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.client.MockServerEventBus.SubscriberHandler;
-import org.mockserver.websocket.WebSocketClient;
-import org.mockserver.websocket.WebSocketException;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.*;
+import org.mockserver.websocket.WebSocketClient;
+import org.mockserver.websocket.WebSocketException;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
@@ -78,6 +78,22 @@ public class ForwardChainExpectation {
     }
 
     /**
+     * Call method on object locally or remotely (over web socket)
+     * to generate response to return when expectation is matched
+     *
+     * @param expectationResponseCallback object to call locally or remotely to generate response
+     */
+    public void respond(final ExpectationResponseCallback expectationResponseCallback, Delay delay) {
+        expectation
+            .thenRespond(
+                new HttpObjectCallback()
+                    .withClientId(registerWebSocketClient(expectationResponseCallback))
+                    .withDelay(delay)
+            );
+        mockServerClient.sendExpectation(expectation);
+    }
+
+    /**
      * Forward request to the specified host and port when expectation is matched
      *
      * @param httpForward host and port to forward to
@@ -122,6 +138,21 @@ public class ForwardChainExpectation {
      */
     public void forward(final ExpectationForwardCallback expectationForwardCallback) {
         expectation.thenForward(new HttpObjectCallback().withClientId(registerWebSocketClient(expectationForwardCallback)));
+        mockServerClient.sendExpectation(expectation);
+    }
+
+    /**
+     * Call method on object locally or remotely (over web socket)
+     * to generate request to forward when expectation is matched
+     *
+     * @param expectationForwardCallback object to call locally or remotely to generate request
+     */
+    public void forward(final ExpectationForwardCallback expectationForwardCallback, final Delay delay) {
+        expectation
+            .thenForward(new HttpObjectCallback()
+                .withClientId(registerWebSocketClient(expectationForwardCallback))
+                .withDelay(delay)
+            );
         mockServerClient.sendExpectation(expectation);
     }
 

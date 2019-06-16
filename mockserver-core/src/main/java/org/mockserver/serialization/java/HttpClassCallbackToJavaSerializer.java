@@ -19,6 +19,9 @@ public class HttpClassCallbackToJavaSerializer implements ToJavaSerializer<HttpC
             if (httpClassCallback.getCallbackClass() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withCallbackClass(\"").append(httpClassCallback.getCallbackClass()).append("\")");
             }
+            if (httpClassCallback.getDelay() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDelay(").append(new DelayToJavaSerializer().serialize(0, httpClassCallback.getDelay())).append(")");
+            }
         }
 
         return output.toString();

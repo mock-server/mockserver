@@ -2,16 +2,13 @@ package org.mockserver.integration.mocking;
 
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
-import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
 import org.junit.Test;
-import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.server.AbstractExtendedSameJVMMockingIntegrationTest;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
-import org.mockserver.metrics.Metrics;
 import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
+import org.mockserver.model.Delay;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.server.TestClasspathTestExpectationResponseCallback;
@@ -33,10 +30,14 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.exactly;
@@ -860,5 +861,118 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         );
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
         assertEquals(TestClasspathTestExpectationResponseCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
+    }
+
+    @Test
+    public void shouldRespondByObjectCallbackWithDelay() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("object_callback"))
+            )
+            .respond(
+                new ExpectationResponseCallback() {
+                    @Override
+                    public HttpResponse handle(HttpRequest httpRequest) {
+                        HttpRequest expectation = request()
+                            .withPath(calculatePath("object_callback"))
+                            .withMethod("POST")
+                            .withHeaders(
+                                header("x-test", "test_headers_and_body")
+                            )
+                            .withBody("an_example_body_http");
+                        if (new MatcherBuilder(mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
+                            return response()
+                                .withStatusCode(ACCEPTED_202.code())
+                                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                                .withHeaders(
+                                    header("x-object-callback", "test_object_callback_header")
+                                )
+                                .withBody("an_object_callback_response");
+                        } else {
+                            return notFoundResponse();
+                        }
+                    }
+                },
+                new Delay(SECONDS, 3)
+            );
+
+        // then
+        long timeBeforeRequest = System.currentTimeMillis();
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("object_callback"))
+                .withMethod("POST")
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            headersToIgnore
+        );
+        long timeAfterRequest = System.currentTimeMillis();
+
+        // and
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withHeaders(
+                    header("x-object-callback", "test_object_callback_header")
+                )
+                .withBody("an_object_callback_response"),
+            httpResponse
+        );
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
+    }
+
+    @Test
+    public void shouldForwardByObjectCallbackWithDelay() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                new ExpectationForwardCallback() {
+                    @Override
+                    public HttpRequest handle(HttpRequest httpRequest) {
+                        return request()
+                            .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
+                            .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                            .withBody("some_overridden_body")
+                            .withSecure(httpRequest.isSecure());
+                    }
+                },
+                new Delay(SECONDS, 3)
+            );
+
+        // then
+        long timeBeforeRequest = System.currentTimeMillis();
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("echo"))
+                .withMethod("POST")
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            headersToIgnore
+        );
+        long timeAfterRequest = System.currentTimeMillis();
+
+        // and
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            httpResponse
+        );
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
     }
 }

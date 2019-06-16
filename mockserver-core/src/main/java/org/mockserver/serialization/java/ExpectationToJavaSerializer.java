@@ -61,6 +61,11 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
                 output.append(new HttpForwardToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpForward()));
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
             }
+            if (expectation.getHttpOverrideForwardedRequest() != null) {
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".forward(");
+                output.append(new HttpOverrideForwardRequestToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpOverrideForwardedRequest()));
+                appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
+            }
             if (expectation.getHttpForwardTemplate() != null) {
                 appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(".forward(");
                 output.append(new HttpTemplateToJavaSerializer().serialize(numberOfSpacesToIndent + 1, expectation.getHttpForwardTemplate()));

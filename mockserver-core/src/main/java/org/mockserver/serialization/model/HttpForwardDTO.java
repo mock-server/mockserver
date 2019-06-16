@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import org.mockserver.model.Delay;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
@@ -10,12 +11,16 @@ public class HttpForwardDTO extends ObjectWithReflectiveEqualsHashCodeToString i
     private String host;
     private Integer port;
     private HttpForward.Scheme scheme;
+    private DelayDTO delay;
 
     public HttpForwardDTO(HttpForward httpForward) {
         if (httpForward != null) {
             host = httpForward.getHost();
             port = httpForward.getPort();
             scheme = httpForward.getScheme();
+            if (httpForward.getDelay() != null) {
+                delay = new DelayDTO(httpForward.getDelay());
+            }
         }
     }
 
@@ -23,10 +28,15 @@ public class HttpForwardDTO extends ObjectWithReflectiveEqualsHashCodeToString i
     }
 
     public HttpForward buildObject() {
+        Delay delay = null;
+        if (this.delay != null) {
+            delay = this.delay.buildObject();
+        }
         return new HttpForward()
             .withHost(host)
             .withPort(port != null ? port : 80)
-            .withScheme((scheme != null ? scheme : HttpForward.Scheme.HTTP));
+            .withScheme((scheme != null ? scheme : HttpForward.Scheme.HTTP))
+            .withDelay(delay);
     }
 
     public String getHost() {
@@ -54,6 +64,14 @@ public class HttpForwardDTO extends ObjectWithReflectiveEqualsHashCodeToString i
     public HttpForwardDTO setScheme(HttpForward.Scheme scheme) {
         this.scheme = scheme;
         return this;
+    }
+
+    public DelayDTO getDelay() {
+        return delay;
+    }
+
+    public void setDelay(DelayDTO delay) {
+        this.delay = delay;
     }
 }
 

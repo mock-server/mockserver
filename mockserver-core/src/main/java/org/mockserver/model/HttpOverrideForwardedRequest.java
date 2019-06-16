@@ -13,6 +13,13 @@ public class HttpOverrideForwardedRequest extends Action<HttpOverrideForwardedRe
 
     /**
      * Static builder which will allow overriding proxied request with the specified request.
+     */
+    public static HttpOverrideForwardedRequest forwardOverriddenRequest() {
+        return new HttpOverrideForwardedRequest();
+    }
+
+    /**
+     * Static builder which will allow overriding proxied request with the specified request.
      *
      * @param httpRequest the HttpRequest specifying what to override
      */

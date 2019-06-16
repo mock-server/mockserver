@@ -8,6 +8,7 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -35,7 +36,8 @@ public class HttpResponseToJavaSerializerTest {
                 "                        new Cookie(\"responseCookieNameOne\", \"responseCookieValueOne\")," + NEW_LINE +
                 "                        new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")" + NEW_LINE +
                 "                )" + NEW_LINE +
-                "                .withBody(\"responseBody\")",
+                "                .withBody(\"responseBody\")" + NEW_LINE +
+                "                .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))",
             new HttpResponseToJavaSerializer().serialize(1,
                 new HttpResponse()
                     .withStatusCode(304)
@@ -49,12 +51,13 @@ public class HttpResponseToJavaSerializerTest {
                         new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
                     )
                     .withBody("responseBody")
+                    .withDelay(TimeUnit.MILLISECONDS, 100)
             )
         );
     }
 
     @Test
-    public void shouldSerializeFullObjectWithBinaryBodyResponseAsJava() throws IOException {
+    public void shouldSerializeObjectWithBinaryBodyResponseAsJava() throws IOException {
         // when
         assertEquals(NEW_LINE +
                 "        response()" + NEW_LINE +
