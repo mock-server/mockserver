@@ -18,8 +18,20 @@ public class FileReader {
         }
     }
 
+    public static String readFileFromClassPathOrPath(ClassLoader classLoader, String filePath) {
+        try (InputStream inputStream = openStreamToFileFromClassPathOrPath(classLoader, filePath)) {
+            return IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
+        } catch (IOException ioe) {
+            throw new RuntimeException("Exception while loading \"" + filePath + "\"", ioe);
+        }
+    }
+
     public static InputStream openStreamToFileFromClassPathOrPath(String filename) throws FileNotFoundException {
-        InputStream inputStream = FileReader.class.getClassLoader().getResourceAsStream(filename);
+        return openStreamToFileFromClassPathOrPath(FileReader.class.getClassLoader(), filename);
+    }
+
+    public static InputStream openStreamToFileFromClassPathOrPath(ClassLoader classLoader, String filename) throws FileNotFoundException {
+        InputStream inputStream = classLoader.getResourceAsStream(filename);
         if (inputStream == null) {
             // load from path if not found in classpath
             inputStream = new FileInputStream(filename);
