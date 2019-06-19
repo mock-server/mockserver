@@ -72,7 +72,7 @@ public class MockServerClient implements Stoppable {
     /**
      * Start the client communicating to a MockServer at the specified host and port
      * for example:
-     *
+     * <p>
      * MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
      *
      * @param host the host for the MockServer to communicate with
@@ -85,7 +85,7 @@ public class MockServerClient implements Stoppable {
     /**
      * Start the client communicating to a MockServer at the specified host and port
      * and contextPath for example:
-     *
+     * <p>
      * MockServerClient mockServerClient = new MockServerClient("localhost", 1080, "/mockserver");
      *
      * @param host        the host for the MockServer to communicate with
@@ -333,7 +333,7 @@ public class MockServerClient implements Stoppable {
      *  );
      * </pre>
      * VerificationTimes supports multiple static factory methods:
-     *
+     * <p>
      * once()      - verify the request was only received once
      * exactly(n)  - verify the request was only received exactly n times
      * atLeast(n)  - verify the request was only received at least n times
@@ -547,10 +547,33 @@ public class MockServerClient implements Stoppable {
         return new ForwardChainExpectation(this, new Expectation(httpRequest, times, timeToLive), availableWebSocketCallbackRegistrations);
     }
 
-    void sendExpectation(Expectation expectation) {
-        HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", StandardCharsets.UTF_8));
-        if (httpResponse != null && httpResponse.getStatusCode() != 201) {
-            throw new ClientException(formatLogMessage("error:{}while submitted expectation:{}", httpResponse.getBody(), expectation));
+    /**
+     * Specify one or more expectations, normally this method should not be used directly instead the when(...) and response(...) or forward(...) or error(...) methods should be used
+     * for example:
+     * <pre>
+     * mockServerClient
+     *  .when(
+     *      request()
+     *          .withPath("/some_path")
+     *          .withBody("some_request_body"),
+     *      Times.exactly(5),
+     *      TimeToLive.exactly(TimeUnit.SECONDS, 120)
+     *  )
+     *  .respond(
+     *      response()
+     *          .withBody("some_response_body")
+     *          .withHeader("responseName", "responseValue")
+     *  )
+     * </pre>
+     *
+     * @param expectations one or more expectations
+     */
+    public void sendExpectation(Expectation... expectations) {
+        for (Expectation expectation : expectations) {
+            HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", StandardCharsets.UTF_8));
+            if (httpResponse != null && httpResponse.getStatusCode() != 201) {
+                throw new ClientException(formatLogMessage("error:{}while submitted expectation:{}", httpResponse.getBody(), expectation));
+            }
         }
     }
 
