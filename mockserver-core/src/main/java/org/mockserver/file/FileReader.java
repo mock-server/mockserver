@@ -18,6 +18,7 @@ public class FileReader {
         }
     }
 
+    // used by maven plugin
     public static String readFileFromClassPathOrPath(ClassLoader classLoader, String filePath) {
         try (InputStream inputStream = openStreamToFileFromClassPathOrPath(classLoader, filePath)) {
             return IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
