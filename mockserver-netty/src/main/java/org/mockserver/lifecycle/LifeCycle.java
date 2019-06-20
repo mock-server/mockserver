@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
 
@@ -49,15 +50,15 @@ public abstract class LifeCycle implements Stoppable {
         scheduler.shutdown();
 
         // Shut down all event loops to terminate all threads.
-        bossGroup.shutdownGracefully();
-        workerGroup.shutdownGracefully();
+        bossGroup.shutdownGracefully(5, 5, MILLISECONDS);
+        workerGroup.shutdownGracefully(5, 5, MILLISECONDS);
 
         // Wait until all threads are terminated.
         bossGroup.terminationFuture().syncUninterruptibly();
         workerGroup.terminationFuture().syncUninterruptibly();
 
         try {
-            GlobalEventExecutor.INSTANCE.awaitInactivity(5, SECONDS);
+            GlobalEventExecutor.INSTANCE.awaitInactivity(2, SECONDS);
         } catch (InterruptedException ignore) {
             // ignore interruption
         }

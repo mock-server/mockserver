@@ -1,24 +1,20 @@
 package org.mockserver.logging;
 
-import ch.qos.logback.classic.AsyncAppender;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.rolling.RollingFileAppender;
-import ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP;
-import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 import com.google.common.collect.ImmutableList;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpRequest;
+import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
+import static java.lang.invoke.MethodType.methodType;
 import static org.apache.commons.lang3.StringUtils.appendIfMissingIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.configuration.ConfigurationProperties.logLevel;
@@ -40,71 +36,226 @@ public class MockServerLogger {
     }
 
     public static void initialiseLogLevels() {
-        setRootLogLevel("io.netty");
-        setRootLogLevel("org.apache.velocity");
-        Logger mockServerLogger = LoggerFactory.getLogger("org.mockserver");
         try {
-            Class.forName("ch.qos.logback.classic.Logger");
-            if (mockServerLogger instanceof ch.qos.logback.classic.Logger) {
-                ch.qos.logback.classic.Logger mockServerLogbackLogger = (ch.qos.logback.classic.Logger) mockServerLogger;
-                mockServerLogbackLogger.setLevel(
-                    ch.qos.logback.classic.Level.valueOf(System.getProperty("mockserver.logLevel", logLevel().name()))
+            setRootLogLevel("io.netty", System.getProperty("root.logLevel", "WARN"));
+            setRootLogLevel("org.apache.velocity", System.getProperty("root.logLevel", "WARN"));
+            setRootLogLevel("org.mockserver", System.getProperty("mockserver.logLevel", logLevel().name()));
+        } catch (Throwable throwable) {
+            LoggerFactory.getLogger(MockServerLogger.class).debug("exception while initialising log levels please include ch.qos.logback:logback-classic dependency to enable log file support", throwable);
+        }
+    }
+
+    public static void setRootLogLevel(String name, String level) {
+        try {
+            Logger logger = LoggerFactory.getLogger(name);
+            Class loggerClass = Class.forName("ch.qos.logback.classic.Logger");
+            Class levelClass = Class.forName("ch.qos.logback.classic.Level");
+            MethodHandles
+                .publicLookup()
+                .findVirtual(loggerClass, "setLevel", methodType(void.class, levelClass))
+                .invoke(
+                    logger,
+                    MethodHandles
+                        .publicLookup()
+                        .findStatic(levelClass, "valueOf", methodType(levelClass, String.class))
+                        .invoke(level)
                 );
-            }
-        } catch (ClassNotFoundException ignore) {
+        } catch (Throwable throwable) {
+            LoggerFactory.getLogger(MockServerLogger.class).debug("exception while setting log level for " + name + " please include ch.qos.logback:logback-classic dependency to enable log file support", throwable);
         }
     }
 
     private static void setLogbackAppender() {
-        Logger mockServerLogger = LoggerFactory.getLogger("org.mockserver");
         try {
-            Class.forName("ch.qos.logback.classic.Logger");
-            if (mockServerLogger instanceof ch.qos.logback.classic.Logger) {
-                LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+            Logger mockServerLogger = LoggerFactory.getLogger("org.mockserver");
+            Class<?> loggerClass = Class.forName("ch.qos.logback.classic.Logger");
+            if (mockServerLogger.getClass().isAssignableFrom(loggerClass)) {
+                ILoggerFactory loggerContext = LoggerFactory.getILoggerFactory();
+                Class contextClass = Class.forName("ch.qos.logback.core.Context");
 
-                PatternLayoutEncoder patternLayoutEncoder = new PatternLayoutEncoder();
-                patternLayoutEncoder.setPattern("%date %level %logger{20} %msg%n");
-                patternLayoutEncoder.setContext(loggerContext);
-                patternLayoutEncoder.start();
+                // ----------------------
+                // PatternLayoutEncoder
+                // ----------------------
+                Class patternLayoutEncoderClass = Class.forName("ch.qos.logback.classic.encoder.PatternLayoutEncoder");
+                Object patternLayoutEncoder = MethodHandles
+                    .publicLookup()
+                    .findConstructor(patternLayoutEncoderClass, methodType(void.class))
+                    .invoke();
+                // setPattern
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(patternLayoutEncoderClass, "setPattern", methodType(void.class, String.class))
+                    .invoke(patternLayoutEncoder, "%date %level %logger{20} %msg%n");
+                // setContext
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(patternLayoutEncoderClass, "setContext", methodType(void.class, contextClass))
+                    .invoke(patternLayoutEncoder, contextClass.cast(loggerContext));
+                // start
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(patternLayoutEncoderClass, "start", methodType(void.class))
+                    .invoke(patternLayoutEncoder);
 
                 String logDirectory = isBlank(System.getenv("log.dir")) ? "./" : appendIfMissingIgnoreCase(System.getenv("log.dir"), "/");
                 String logFileName = "mockserver";
                 String logFileExtension = "log";
 
-                SizeAndTimeBasedFNATP<SizeAndTimeBasedFNATP> sizeAndTimeBasedFNATP = new SizeAndTimeBasedFNATP<>();
-                sizeAndTimeBasedFNATP.setMaxFileSize("100MB");
-                sizeAndTimeBasedFNATP.setContext(loggerContext);
+                // ----------------------
+                // SizeAndTimeBasedFNATP
+                // ----------------------
+                Class sizeAndTimeBasedFNATPClass = Class.forName("ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP");
+                Object sizeAndTimeBasedFNATP = MethodHandles
+                    .publicLookup()
+                    .findConstructor(sizeAndTimeBasedFNATPClass, methodType(void.class))
+                    .invoke();
+                // setMaxFileSize
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(sizeAndTimeBasedFNATPClass, "setMaxFileSize", methodType(void.class, String.class))
+                    .invoke(sizeAndTimeBasedFNATP, "100MB");
+                // setContext
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(sizeAndTimeBasedFNATPClass, "setContext", methodType(void.class, contextClass))
+                    .invoke(sizeAndTimeBasedFNATP, contextClass.cast(loggerContext));
 
-                TimeBasedRollingPolicy<SizeAndTimeBasedFNATP> timeBasedRollingPolicy = new TimeBasedRollingPolicy<>();
-                timeBasedRollingPolicy.setFileNamePattern(logDirectory + logFileName + ".%d{yyyy-MM-dd}.%i." + logFileExtension);
-                timeBasedRollingPolicy.setTimeBasedFileNamingAndTriggeringPolicy(sizeAndTimeBasedFNATP);
-                timeBasedRollingPolicy.setMaxHistory(1);
-                timeBasedRollingPolicy.setContext(loggerContext);
+                // ----------------------
+                // TimeBasedRollingPolicy
+                // ----------------------
+                Class timeBasedRollingPolicyClass = Class.forName("ch.qos.logback.core.rolling.TimeBasedRollingPolicy");
+                Object timeBasedRollingPolicy = MethodHandles
+                    .publicLookup()
+                    .findConstructor(timeBasedRollingPolicyClass, methodType(void.class))
+                    .invoke();
+                // setFileNamePattern
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(timeBasedRollingPolicyClass, "setFileNamePattern", methodType(void.class, String.class))
+                    .invoke(timeBasedRollingPolicy, logDirectory + logFileName + ".%d{yyyy-MM-dd}.%i." + logFileExtension);
+                // setTimeBasedFileNamingAndTriggeringPolicy
+                Class<?> timeBasedFileNamingAndTriggeringPolicyClass = Class.forName("ch.qos.logback.core.rolling.TimeBasedFileNamingAndTriggeringPolicy");
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(timeBasedRollingPolicyClass, "setTimeBasedFileNamingAndTriggeringPolicy", methodType(void.class, timeBasedFileNamingAndTriggeringPolicyClass))
+                    .invoke(timeBasedRollingPolicy, timeBasedFileNamingAndTriggeringPolicyClass.cast(sizeAndTimeBasedFNATP));
+                // setMaxHistory
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(timeBasedRollingPolicyClass, "setMaxHistory", methodType(void.class, int.class))
+                    .invoke(timeBasedRollingPolicy, 1);
+                // setContext
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(timeBasedRollingPolicyClass, "setContext", methodType(void.class, contextClass))
+                    .invoke(timeBasedRollingPolicy, contextClass.cast(loggerContext));
 
-                RollingFileAppender<ILoggingEvent> fileAppender = new RollingFileAppender<>();
-                fileAppender.setFile(logDirectory + logFileName + "." + logFileExtension);
-                fileAppender.setEncoder(patternLayoutEncoder);
-                fileAppender.setContext(loggerContext);
-                timeBasedRollingPolicy.setParent(fileAppender);
-                fileAppender.setRollingPolicy(timeBasedRollingPolicy);
-                timeBasedRollingPolicy.start();
-                sizeAndTimeBasedFNATP.start();
-                fileAppender.start();
+                // -------------------
+                // RollingFileAppender
+                // -------------------
+                Class rollingFileAppenderClass = Class.forName("ch.qos.logback.core.rolling.RollingFileAppender");
+                Object rollingFileAppender = MethodHandles
+                    .publicLookup()
+                    .findConstructor(rollingFileAppenderClass, methodType(void.class))
+                    .invoke();
+                // setFile
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(rollingFileAppenderClass, "setFile", methodType(void.class, String.class))
+                    .invoke(rollingFileAppender, logDirectory + logFileName + "." + logFileExtension);
+                // setEncoder
+                Class<?> encoderClass = Class.forName("ch.qos.logback.core.encoder.Encoder");
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(rollingFileAppenderClass, "setEncoder", methodType(void.class, encoderClass))
+                    .invoke(rollingFileAppender, encoderClass.cast(patternLayoutEncoder));
+                // setContext
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(rollingFileAppenderClass, "setContext", methodType(void.class, contextClass))
+                    .invoke(rollingFileAppender, contextClass.cast(loggerContext));
 
-                AsyncAppender asyncAppender = new AsyncAppender();
-                asyncAppender.setContext(loggerContext);
-                asyncAppender.setQueueSize(250);
-                asyncAppender.setDiscardingThreshold(0);
-                asyncAppender.addAppender(fileAppender);
-                asyncAppender.start();
+                // timeBasedRollingPolicy_setParent
+                Class fileAppenderClass = Class.forName("ch.qos.logback.core.FileAppender");
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(timeBasedRollingPolicyClass, "setParent", methodType(void.class, fileAppenderClass))
+                    .invoke(timeBasedRollingPolicy, fileAppenderClass.cast(rollingFileAppender));
+                // fileAppender_setRollingPolicy
+                Class rollingPolicyClass = Class.forName("ch.qos.logback.core.rolling.RollingPolicy");
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(rollingFileAppenderClass, "setRollingPolicy", methodType(void.class, rollingPolicyClass))
+                    .invoke(rollingFileAppender, rollingPolicyClass.cast(timeBasedRollingPolicy));
+                // timeBasedRollingPolicy_start
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(timeBasedRollingPolicyClass, "start", methodType(void.class))
+                    .invoke(timeBasedRollingPolicy);
+                // sizeAndTimeBasedFNATP_start
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(sizeAndTimeBasedFNATPClass, "start", methodType(void.class))
+                    .invoke(sizeAndTimeBasedFNATP);
+                // fileAppender_start
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(rollingFileAppenderClass, "start", methodType(void.class))
+                    .invoke(rollingFileAppender);
 
-                ch.qos.logback.classic.Logger mockServerLogbackLogger = (ch.qos.logback.classic.Logger) mockServerLogger;
-                mockServerLogbackLogger.setLevel(
-                    ch.qos.logback.classic.Level.valueOf(System.getProperty("mockserver.logLevel", logLevel().name()))
-                );
-                mockServerLogbackLogger.addAppender(fileAppender);
+                // -------------
+                // AsyncAppender
+                // -------------
+                Class asyncAppenderClass = Class.forName("ch.qos.logback.classic.AsyncAppender");
+                Object asyncAppender = MethodHandles
+                    .publicLookup()
+                    .findConstructor(asyncAppenderClass, methodType(void.class))
+                    .invoke();
+                // setContext
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(asyncAppenderClass, "setContext", methodType(void.class, contextClass))
+                    .invoke(asyncAppender, contextClass.cast(loggerContext));
+                // setQueueSize -> int
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(asyncAppenderClass, "setQueueSize", methodType(void.class, int.class))
+                    .invoke(asyncAppender, 250);
+                // setDiscardingThreshold -> int
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(asyncAppenderClass, "setDiscardingThreshold", methodType(void.class, int.class))
+                    .invoke(asyncAppender, 0);
+                // addAppender -> ch.qos.logback.core.Appender
+                Class appenderClass = Class.forName("ch.qos.logback.core.Appender");
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(asyncAppenderClass, "addAppender", methodType(void.class, appenderClass))
+                    .invoke(asyncAppender, appenderClass.cast(rollingFileAppender));
+                // start
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(asyncAppenderClass, "start", methodType(void.class))
+                    .invoke(asyncAppender);
+
+                // setLevel
+                Class levelClass = Class.forName("ch.qos.logback.classic.Level");
+                Object level = MethodHandles
+                    .publicLookup()
+                    .findStatic(levelClass, "valueOf", methodType(levelClass, String.class))
+                    .invoke(System.getProperty("mockserver.logLevel", logLevel().name()));
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(loggerClass, "setLevel", methodType(void.class, levelClass))
+                    .invoke(mockServerLogger, level);
+                // addAppender
+                MethodHandles
+                    .publicLookup()
+                    .findVirtual(loggerClass, "addAppender", methodType(void.class, appenderClass))
+                    .invoke(mockServerLogger, appenderClass.cast(asyncAppender));
             }
-        } catch (ClassNotFoundException ignore) {
+        } catch (Throwable throwable) {
+            LoggerFactory.getLogger(MockServerLogger.class).debug("exception while initialising log file please include ch.qos.logback:logback-classic dependency to enable log file support", throwable);
         }
     }
 
@@ -124,19 +275,6 @@ public class MockServerLogger {
     public MockServerLogger(final Logger logger, final @Nullable HttpStateHandler httpStateHandler) {
         this.logger = logger;
         this.httpStateHandler = httpStateHandler;
-    }
-
-    public static void setRootLogLevel(String name) {
-        Logger logger = LoggerFactory.getLogger(name);
-        try {
-            Class.forName("ch.qos.logback.classic.Logger");
-            if (logger instanceof ch.qos.logback.classic.Logger) {
-                ((ch.qos.logback.classic.Logger) logger).setLevel(
-                    ch.qos.logback.classic.Level.valueOf(System.getProperty("root.logLevel", "WARN"))
-                );
-            }
-        } catch (ClassNotFoundException ignore) {
-        }
     }
 
     public void trace(final String message, final Object... arguments) {

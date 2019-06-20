@@ -35,8 +35,8 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 public abstract class BooksPageIntegrationTest {
 
     static {
-        MockServerLogger.setRootLogLevel("org.springframework");
-        MockServerLogger.setRootLogLevel("org.eclipse");
+        MockServerLogger.setRootLogLevel("org.springframework", System.getProperty("root.logLevel", "WARN"));
+        MockServerLogger.setRootLogLevel("org.eclipse", System.getProperty("root.logLevel", "WARN"));
     }
     private static ClientAndServer proxy;
     private ClientAndServer mockServer;
