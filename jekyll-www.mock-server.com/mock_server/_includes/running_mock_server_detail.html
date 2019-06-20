@@ -240,23 +240,22 @@
  * Start the proxy prior to test execution and stop the proxy after the tests have completed.
  * This constructor dynamically create a proxy that accepts HTTP(S) requests on the specified port
  *
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the HTTP(S) port for the proxy
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the HTTP(S) port for the proxy
  */</span>
-<span class="keyword">public</span> MockServerRule(Integer port, Object target);
+<span class="keyword">public</span> MockServerRule(Object target, Integer... ports);
 
 <span class="comment">/**
  * Start the proxy prior to test execution and stop the proxy after the tests have completed.
  * This constructor dynamically create a proxy that accepts HTTP(S) requests on the specified port
  *
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the HTTP(S) port for the proxy
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpsPort</span> the HTTPS port for the proxy
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">perTestSuite</span> indicates how many instances of MockServer are created
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the HTTP(S) port for the proxy
  *                     if true a single MockServer is created per JVM
  *                     if false one instance per test class is created
  */</span>
-<span class="keyword">public</span> MockServerRule(Integer port, Object target, <span class="keyword">boolean</span> per TestSuite);</code></pre>
+<span class="keyword">public</span> MockServerRule(Object target, <span class="keyword">boolean</span> per TestSuite, Integer... ports);</code></pre>
 
 <a name="running_from_command_line" class="anchor" href="#running_from_command_line">&nbsp;</a>
 
