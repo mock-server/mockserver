@@ -32,14 +32,25 @@ public class PortBindingIntegrationTest {
 
     @Test
     public void throwsExpectionOnPortAlreadyBound() {
-        // then
-        exception.expect(RuntimeException.class);
-        exception.expectMessage(Matchers.containsString("Exception while binding MockServer to port"));
+        MockServer mockServerOne = null, mockServerTwo = null;
+        try {
+            // then
+            exception.expect(RuntimeException.class);
+            exception.expectMessage(Matchers.containsString("Exception while binding MockServer to port"));
 
-        // when - server started
-        new MockServer(MOCK_SERVER_PORT);
+            // when - server started
+            mockServerOne = new MockServer(MOCK_SERVER_PORT);
 
-        // and - server started again on same port
-        new MockServer(MOCK_SERVER_PORT);
+            // and - server started again on same port
+            mockServerTwo = new MockServer(MOCK_SERVER_PORT);
+
+        } finally {
+            if (mockServerOne != null) {
+                mockServerOne.stop();
+            }
+            if (mockServerTwo != null) {
+                mockServerTwo.stop();
+            }
+        }
     }
 }
