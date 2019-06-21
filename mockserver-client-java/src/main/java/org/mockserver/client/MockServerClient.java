@@ -210,7 +210,7 @@ public class MockServerClient implements Stoppable {
                 }
                 return isRunning(attempts - 1, timeout, timeUnit);
             }
-        } catch (SocketConnectionException sce) {
+        } catch (SocketConnectionException | IllegalStateException sce) {
             return false;
         }
     }

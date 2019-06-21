@@ -5,17 +5,21 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.mockserver.MockServer;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.socket.PortFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
@@ -41,7 +45,7 @@ public class StopIntegrationTest {
         mockServerClient.stop();
 
         // then
-        assertFalse(mockServerClient.isRunning());
+        mockServerClient.retrieveLogMessages(request());
     }
 
     @Test
@@ -67,6 +71,19 @@ public class StopIntegrationTest {
         mockServerClient.stop();
         mockServerClient = new MockServerClient("localhost", MOCK_SERVER_PORT);
         assertFalse(mockServerClient.isRunning());
+    }
+
+    @Test
+    public void reportsIsRunningCorrectlyAfterClientStopped() {
+        // start server
+        MockServerClient mockServerClient = ClientAndServer.startClientAndServer();
+
+        // when
+        mockServerClient.stop();
+
+        // then
+        assertFalse(mockServerClient.isRunning());
+        assertFalse(mockServerClient.isRunning(10, 10000, TimeUnit.MILLISECONDS));
     }
 
     @Test
