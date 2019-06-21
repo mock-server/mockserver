@@ -532,7 +532,6 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     @Test
     public void shouldReturnResponseByMatchingVeryLargeHeader() {
         // when
-        ConfigurationProperties.logLevel("DEBUG");
         String largeHeaderValue = RandomStringUtils.randomAlphanumeric(1024 * 2 * 2 * 2 * 2);
         mockServerClient
             .when(
