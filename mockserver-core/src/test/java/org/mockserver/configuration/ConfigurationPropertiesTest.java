@@ -167,7 +167,7 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.maxInitialLineLength");
 
         // when
-        assertEquals(4096, ConfigurationProperties.maxInitialLineLength());
+        assertEquals(Integer.MAX_VALUE, ConfigurationProperties.maxInitialLineLength());
         ConfigurationProperties.maxInitialLineLength(100);
 
         // then
@@ -180,7 +180,7 @@ public class ConfigurationPropertiesTest {
         System.setProperty("mockserver.maxInitialLineLength", "invalid");
 
         // then
-        assertEquals(4096, ConfigurationProperties.maxInitialLineLength());
+        assertEquals(Integer.MAX_VALUE, ConfigurationProperties.maxInitialLineLength());
     }
 
     @Test
@@ -189,7 +189,7 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.maxHeaderSize");
 
         // when
-        assertEquals(8192, ConfigurationProperties.maxHeaderSize());
+        assertEquals(Integer.MAX_VALUE, ConfigurationProperties.maxHeaderSize());
         ConfigurationProperties.maxHeaderSize(100);
 
         // then
@@ -202,7 +202,7 @@ public class ConfigurationPropertiesTest {
         System.setProperty("mockserver.maxHeaderSize", "invalid");
 
         // then
-        assertEquals(8192, ConfigurationProperties.maxHeaderSize());
+        assertEquals(Integer.MAX_VALUE, ConfigurationProperties.maxHeaderSize());
     }
 
     @Test
@@ -211,7 +211,7 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.maxChunkSize");
 
         // when
-        assertEquals(8192, ConfigurationProperties.maxChunkSize());
+        assertEquals(Integer.MAX_VALUE, ConfigurationProperties.maxChunkSize());
         ConfigurationProperties.maxChunkSize(100);
 
         // then
@@ -224,7 +224,7 @@ public class ConfigurationPropertiesTest {
         System.setProperty("mockserver.maxChunkSize", "invalid");
 
         // then
-        assertEquals(8192, ConfigurationProperties.maxChunkSize());
+        assertEquals(Integer.MAX_VALUE, ConfigurationProperties.maxChunkSize());
     }
 
     @Test

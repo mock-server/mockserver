@@ -2,7 +2,9 @@ package org.mockserver.integration.mocking;
 
 import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.server.AbstractExtendedSameJVMMockingIntegrationTest;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
@@ -523,6 +525,51 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 request()
                     .withSecure(true)
                     .withPath(calculatePath("")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingVeryLargeHeader() {
+        // when
+        ConfigurationProperties.logLevel("DEBUG");
+        String largeHeaderValue = RandomStringUtils.randomAlphanumeric(1024 * 2 * 2 * 2 * 2);
+        mockServerClient
+            .when(
+                request()
+                    .withHeader("largeHeader", largeHeaderValue)
+            )
+            .respond(
+                response()
+                    .withBody("some_string_body_response")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_string_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+                    .withHeader("largeHeader", largeHeaderValue),
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_string_body_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+                    .withHeader("largeHeader", largeHeaderValue),
                 headersToIgnore)
         );
     }

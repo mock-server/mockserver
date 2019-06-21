@@ -35,9 +35,9 @@ public class ConfigurationProperties {
     private static final int DEFAULT_CONNECT_TIMEOUT = 20000;
     private static final int DEFAULT_MAX_EXPECTATIONS = 1000;
     private static final int DEFAULT_MAX_WEB_SOCKET_EXPECTATIONS = 1000;
-    private static final int DEFAULT_MAX_INITIAL_LINE_LENGTH = 4096;
-    private static final int DEFAULT_MAX_HEADER_SIZE = 8192;
-    private static final int DEFAULT_MAX_CHUNK_SIZE = 8192;
+    private static final int DEFAULT_MAX_INITIAL_LINE_LENGTH = Integer.MAX_VALUE;
+    private static final int DEFAULT_MAX_HEADER_SIZE = Integer.MAX_VALUE;
+    private static final int DEFAULT_MAX_CHUNK_SIZE = Integer.MAX_VALUE;
     private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = Math.max(1, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors() * 5));
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "org/mockserver/socket/CertificateAuthorityPrivateKey.pem";
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "org/mockserver/socket/CertificateAuthorityCertificate.pem";
