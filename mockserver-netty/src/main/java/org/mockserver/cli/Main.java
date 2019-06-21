@@ -5,7 +5,6 @@ import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.configuration.IntegerStringListParser;
-import org.mockserver.log.model.MessageLogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mockserver.MockServer;
 

@@ -101,7 +101,12 @@ public class MockServer extends LifeCycle {
             .childAttr(REMOTE_SOCKET, remoteSocket)
             .childAttr(PROXYING, remoteSocket != null);
 
-        bindServerPorts(portBindings);
+        try {
+            bindServerPorts(portBindings);
+        } catch (Throwable throwable) {
+            stop();
+            throw throwable;
+        }
         startedServer(getLocalPorts());
     }
 

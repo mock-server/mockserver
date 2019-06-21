@@ -156,7 +156,7 @@ public abstract class LifeCycle implements Stoppable {
                                 .channel().closeFuture().syncUninterruptibly();
 
                         } catch (Exception e) {
-                            throw new RuntimeException("Exception while binding MockServer to port " + portToBind, e);
+                            channelOpened.setException(new RuntimeException("Exception while binding MockServer to port " + portToBind, e));
                         }
                     }
                 }, "MockServer thread for port: " + portToBind).start();
