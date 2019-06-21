@@ -8,12 +8,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.serialization.model.*;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+import org.mockserver.serialization.model.*;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
@@ -51,10 +51,12 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
         Times.once(),
         TimeToLive.exactly(TimeUnit.HOURS, 2l))
         .thenForward(
-            new HttpOverrideForwardedRequest().withHttpRequest(
-                request("some_overridden_path")
-                    .withBody("some_overridden_body")
-            )
+            new HttpOverrideForwardedRequest()
+                .withHttpRequest(
+                    request("some_overridden_path")
+                        .withBody("some_overridden_body")
+                )
+                .withDelay(new Delay(TimeUnit.SECONDS, 10))
         );
     private final ExpectationDTO fullExpectationDTO = new ExpectationDTO()
         .setHttpRequest(
@@ -79,6 +81,7 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
                         request("some_overridden_path")
                             .withBody("some_overridden_body")
                     )
+                    .withDelay(new Delay(TimeUnit.SECONDS, 10))
             )
         )
         .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.once()))
