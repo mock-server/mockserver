@@ -49,9 +49,10 @@ Release Steps
 1. update docker image
    1. update Dockerfile
    1. docker build -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
+   1. docker login
    1. docker push jamesdbloom/mockserver:mockserver-x.x.x
 1. add javaDoc
-   1. checkout release git hash
+   1. git checkout mockserver-x.x.x
    1. ./mvnw javadoc:aggregate -P release -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/x.x.x'
    1. upload to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/versions/?region=us-east-1
    1. update README.md
