@@ -54,8 +54,9 @@ Release Steps
 1. add javaDoc
    1. git checkout mockserver-x.x.x
    1. ./mvnw javadoc:aggregate -P release -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/x.x.x'
-   1. upload to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/versions/?region=us-east-1
-   1. update README.md
+   1. open /Users/jamesbloom/git/mockserver/javadoc
+   1. upload as public to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/versions/?region=us-east-1
+   1. git checkout master
 1. update www.mock-server.com
    1. find and replace MockServer version
    1. upload to S3
@@ -64,7 +65,8 @@ Release Steps
       1. bundle exec jekyll build
       1. cd _site
       1. copy to https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/?region=us-east-1
+      1. invalidate CloudFront cache
 1. update homebrew
-   1. https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar
+   1. wget https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar
    1. shasum -a 256 mockserver-netty-x.x.x-brew-tar.tar
    1. brew bump-formula-pr --strict mockserver --url=https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar --sha256=...
