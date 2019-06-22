@@ -22,19 +22,34 @@ Release Steps
    1. npm login (not required if done recently)
    1. npm publish
 1. update mockserver-maven-plugin
-   1. find and replace MockServer SNAPSHOT version to release
+   1. update parent pom SNAPSHOT version to RELEASE version
+   1. update jar-with-dependencies SNAPSHOT version to RELEASE version
    1. ./scripts/local_release.sh
-   1. find and replace MockServer release version to new SNAPSHOT
+   1. update parent pom RELEASE version to new SNAPSHOT version
+   1. update jar-with-dependencies RELEASE version to new SNAPSHOT version
    1. ./scripts/local_deploy_snapshot.sh
-1. update docker image
-   1. update Dockerfile
-   1. docker build -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
-   1. docker push jamesdbloom/mockserver:mockserver-x.x.x
+1. create copy of document / website for existing version (for minor or major releases)
+   1. create S3 bucket cloning permissions from existing
+   1. copy public policy
+   1. create cloud front distribution copying existing settings
+   1. create Route53 A record as alias to cloud front distribution
+   1. clone existing website: aws s3 sync s3://aws-website-mockserver-nb9hq s3://aws-website-mockserver----f10aa --source-region us-east-1 --region us-east-1
+   1. delete `versions` and helm charts
 1. update helm chart
    1. find and replace previous MockServer release version to new release
    1. cd helm
    1. helm package ./mockserver/
    1. upload to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
+1. update repo
+   1. delete jekyll-www.mock-server.com/_site
+   1. .mvnw clean
+   1. find and replace
+   1. update README
+   1. commit to github
+1. update docker image
+   1. update Dockerfile
+   1. docker build -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
+   1. docker push jamesdbloom/mockserver:mockserver-x.x.x
 1. add javaDoc
    1. checkout release git hash
    1. ./mvnw javadoc:aggregate -P release -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/x.x.x'
@@ -52,10 +67,3 @@ Release Steps
    1. https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar
    1. shasum -a 256 mockserver-netty-x.x.x-brew-tar.tar
    1. brew bump-formula-pr --strict mockserver --url=https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar --sha256=...
-1. create copy of document / website for existing version (for minor or major releases)
-   1. create S3 bucket cloning permissions from existing
-   1. copy public policy
-   1. create cloud front distribution copying existing settings
-   1. create Route53 A record as alias to cloud front distribution
-   1. clone existing website: aws s3 sync s3://aws-website-mockserver-nb9hq s3://aws-website-mockserver----9684b --source-region us-east-1 --region us-east-1
-   1. delete `versions` and helm charts
