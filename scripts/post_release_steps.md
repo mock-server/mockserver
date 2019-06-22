@@ -57,6 +57,11 @@ Release Steps
    1. open /Users/jamesbloom/git/mockserver/javadoc
    1. upload as public to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/versions/?region=us-east-1
    1. git checkout master
+1. update swaggehub
+   1. update mockserver-core/src/main/resources/org/mockserver/openapi/mock-server-openapi-embedded-model.yaml
+   1. login to https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi
+   1. create new version
+   1. publish version
 1. update www.mock-server.com
    1. find and replace MockServer version
    1. upload to S3
@@ -69,4 +74,5 @@ Release Steps
 1. update homebrew
    1. wget https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar
    1. shasum -a 256 mockserver-netty-x.x.x-brew-tar.tar
+   1. see https://github.com/Homebrew/brew/issues/5561
    1. brew bump-formula-pr --strict mockserver --url=https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar --sha256=...
