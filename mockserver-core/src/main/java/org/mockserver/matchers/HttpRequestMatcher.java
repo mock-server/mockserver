@@ -90,15 +90,15 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     StringBody stringBody = (StringBody) body;
                     bodyDTOMatcher = new StringBodyDTO(stringBody);
                     if (stringBody.isSubString()) {
-                        this.bodyMatcher = new SubStringMatcher(mockServerLogger, string(stringBody.getValue(), stringBody.getNot()));
+                        this.bodyMatcher = new SubStringMatcher(mockServerLogger, string(stringBody.getValue()));
                     } else {
-                        this.bodyMatcher = new ExactStringMatcher(mockServerLogger, string(stringBody.getValue(), stringBody.getNot()));
+                        this.bodyMatcher = new ExactStringMatcher(mockServerLogger, string(stringBody.getValue()));
                     }
                     break;
                 case REGEX:
                     RegexBody regexBody = (RegexBody) body;
                     bodyDTOMatcher = new RegexBodyDTO(regexBody);
-                    this.bodyMatcher = new RegexStringMatcher(mockServerLogger, string(regexBody.getValue(), regexBody.getNot()));
+                    this.bodyMatcher = new RegexStringMatcher(mockServerLogger, string(regexBody.getValue()));
                     break;
                 case PARAMETERS:
                     ParameterBody parameterBody = (ParameterBody) body;
@@ -142,6 +142,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     break;
             }
             if (body.isNot()) {
+                //noinspection ConstantConditions
                 this.bodyMatcher = not(this.bodyMatcher);
             }
         }

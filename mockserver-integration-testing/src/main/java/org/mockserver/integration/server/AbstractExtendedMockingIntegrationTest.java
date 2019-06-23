@@ -580,6 +580,207 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldReturnResponseByMatchingNotRegexBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withBody(Body.not(regex("10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}")))
+            )
+            .respond(
+                response()
+                    .withBody("some_not_regex_body_response")
+            );
+
+        // then
+        // - in http
+        // should not match (because body matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withBody("10.2.3.123"),
+                headersToIgnore)
+        );
+        // should match (because body doesn't matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_not_regex_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withBody("10.2.3.1234"),
+                headersToIgnore)
+        );
+        // - in https
+        // should not match (because body matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withBody("10.2.3.123"),
+                headersToIgnore)
+        );
+        // should match (because body doesn't matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_not_regex_body_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withBody("10.2.3.1234"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingNotSubStringBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withBody(Body.not(subString("some_body")))
+            )
+            .respond(
+                response()
+                    .withBody("some_not_regex_body_response")
+            );
+
+        // then
+        // - in http
+        // should not match (because body matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withBody("some_body_full_string"),
+                headersToIgnore)
+        );
+        // should match (because body doesn't matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_not_regex_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withBody("some_other_body_full_string"),
+                headersToIgnore)
+        );
+        // - in https
+        // should not match (because body matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withBody("some_body_full_string"),
+                headersToIgnore)
+        );
+        // should match (because body doesn't matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_not_regex_body_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withBody("some_other_body_full_string"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingNotExactBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withBody(Body.not(exact("some_body")))
+            )
+            .respond(
+                response()
+                    .withBody("some_not_regex_body_response")
+            );
+
+        // then
+        // - in http
+        // should not match (because body matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withBody("some_body"),
+                headersToIgnore)
+        );
+        // should match (because body doesn't matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_not_regex_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withBody("some_other_body"),
+                headersToIgnore)
+        );
+        // - in https
+        // should not match (because body matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withBody("some_body"),
+                headersToIgnore)
+        );
+        // should match (because body doesn't matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_not_regex_body_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withBody("some_other_body"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingBodyWithXPath() {
         // when
         mockServerClient.when(request().withBody(xpath("/bookstore/book[price>30]/price")), exactly(2)).respond(response().withBody("some_body"));
