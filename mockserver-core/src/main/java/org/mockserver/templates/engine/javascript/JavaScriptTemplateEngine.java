@@ -20,11 +20,14 @@ import static org.mockserver.log.model.MessageLogEntry.LogMessageType.TEMPLATE_G
  */
 public class JavaScriptTemplateEngine implements TemplateEngine {
 
-    private static final ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
+    private static ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
     private final MockServerLogger logFormatter;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
 
     public JavaScriptTemplateEngine(MockServerLogger logFormatter) {
+        if (engine == null) {
+            engine = new ScriptEngineManager().getEngineByName("nashorn");
+        }
         this.logFormatter = logFormatter;
         this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(logFormatter);
     }
