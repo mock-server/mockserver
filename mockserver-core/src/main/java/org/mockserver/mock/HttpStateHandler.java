@@ -65,6 +65,7 @@ public class HttpStateHandler {
     private void addExpectationsFromInitializer() {
         for (Expectation expectation : ExpectationInitializerLoader.loadExpectations()) {
             mockServerMatcher.add(expectation);
+            mockServerLogger.info(CREATED_EXPECTATION, expectation.getHttpRequest(), "creating expectation:{}", expectation.clone());
         }
     }
 
