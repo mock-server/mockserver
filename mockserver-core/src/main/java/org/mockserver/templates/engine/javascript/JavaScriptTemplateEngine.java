@@ -1,15 +1,13 @@
 package org.mockserver.templates.engine.javascript;
 
-import org.mockserver.serialization.model.DTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.serialization.model.DTO;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
+import javax.script.*;
 
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.formatting.StringFormatter.indentAndToString;
@@ -20,7 +18,7 @@ import static org.mockserver.log.model.MessageLogEntry.LogMessageType.TEMPLATE_G
  */
 public class JavaScriptTemplateEngine implements TemplateEngine {
 
-    private static ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
+    private static ScriptEngine engine;
     private final MockServerLogger logFormatter;
     private HttpTemplateOutputDeserializer httpTemplateOutputDeserializer;
 
@@ -38,7 +36,10 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
         String script = "function handle(request) {" + indentAndToString(template)[0] + "}";
         try {
             if (engine != null) {
-                engine.eval(script + " function serialise(request) { return JSON.stringify(handle(JSON.parse(request)), null, 2); }");
+                SimpleScriptContext context = new SimpleScriptContext();
+                context.setBindings(engine.getBindings(ScriptContext.GLOBAL_SCOPE), ScriptContext.GLOBAL_SCOPE);
+                context.setBindings(engine.getBindings(ScriptContext.ENGINE_SCOPE), ScriptContext.ENGINE_SCOPE);
+                engine.eval(script + " function serialise(request) { return JSON.stringify(handle(JSON.parse(request)), null, 2); }", context);
                 // HttpResponse handle(HttpRequest httpRequest) - ES5
                 Object stringifiedResponse = ((Invocable) engine).invokeFunction("serialise", new HttpRequestTemplateObject(request));
                 logFormatter.info(TEMPLATE_GENERATED, request, "generated output:{}from template:{}for request:{}", stringifiedResponse, script, request);
