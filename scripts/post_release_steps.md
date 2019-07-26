@@ -3,6 +3,7 @@ Release Steps
 1. ./scripts/local_deploy_snapshot.sh
 1. update mockserver-node
    1. delete package-lock.json
+   1. rm -rf node_modules
    1. find and replace MockServer version
    1. npm i
    1. grunt
@@ -13,6 +14,7 @@ Release Steps
    1. npm publish
 1. update mockserver-client-node
    1. delete package-lock.json
+   1. rm -rf node_modules
    1. find and replace MockServer version
    1. npm i
    1. grunt
