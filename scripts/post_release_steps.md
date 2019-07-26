@@ -37,6 +37,11 @@ Release Steps
    1. create Route53 A record as alias to cloud front distribution
    1. clone existing website: aws s3 sync s3://aws-website-mockserver-nb9hq s3://aws-website-mockserver----f10aa --source-region us-east-1 --region us-east-1
    1. delete `versions` and helm charts
+1. update docker image
+   1. update Dockerfile
+   1. docker build -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
+   1. docker login
+   1. docker push jamesdbloom/mockserver:mockserver-x.x.x
 1. update helm chart
    1. find and replace previous MockServer release version to new release
    1. cd helm
@@ -44,15 +49,10 @@ Release Steps
    1. upload to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
 1. update repo
    1. delete jekyll-www.mock-server.com/_site
-   1. .mvnw clean
+   1. ./mvnw clean
    1. find and replace
    1. update README
    1. commit to github
-1. update docker image
-   1. update Dockerfile
-   1. docker build -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
-   1. docker login
-   1. docker push jamesdbloom/mockserver:mockserver-x.x.x
 1. add javaDoc
    1. git checkout mockserver-x.x.x
    1. ./mvnw javadoc:aggregate -P release -DreportOutputDirectory='/Users/jamesbloom/git/mockserver/javadoc/x.x.x'

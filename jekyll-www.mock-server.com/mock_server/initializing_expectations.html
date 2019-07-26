@@ -25,7 +25,7 @@ sitemap:
 <h2>Expectation Initializer Class</h2>
 
 <p>MockServer expectations can be initialized when the MockServer starts, using a class, by specified the <strong>initializationClass</strong> configuration property as described in the <a href="/mock_server/configuration_properties.html#button_configuration_initialization_class">Configuration Properties</a> page, for example:</p>
-<pre><code class="code">java -Dmockserver.initializationClass=<span class="string_literal">"org.mockserver.server.initialize.ExpectationInitializerExample"</span> -jar ~/Downloads/mockserver-netty-5.6.0-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</code></pre>
+<pre><code class="code">java -Dmockserver.initializationClass=<span class="string_literal">"org.mockserver.server.initialize.ExpectationInitializerExample"</span> -jar ~/Downloads/mockserver-netty-5.6.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</code></pre>
 
 <p>The class must implement the <strong>org.mockserver.server.initialize.ExpectationInitializer</strong> interface and have a default constructor with zero arguments, for example:</p>
 
@@ -58,7 +58,7 @@ sitemap:
 <h2>Expectation Initializer JSON</h2>
 
 <p>MockServer expectations can be initialized when the MockServer starts, using a JSON file, by specified the <strong>initializationJsonPath</strong> configuration property as described in the <a href="/mock_server/configuration_properties.html#button_configuration_initialization_json_path">Configuration Properties</a> page, for example:</p>
-<pre><code class="code">java -Dmockserver.initializationJsonPath=<span class="string_literal">"org/mockserver/server/initialize/initializerJson.json"</span> -jar ~/Downloads/mockserver-netty-5.6.0-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</code></pre>
+<pre><code class="code">java -Dmockserver.initializationJsonPath=<span class="string_literal">"org/mockserver/server/initialize/initializerJson.json"</span> -jar ~/Downloads/mockserver-netty-5.6.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel INFO</code></pre>
 
 <p>The JSON file can be loaded using a related or absolute path or can be loaded from the classpath.</p>
 <p>The JSON file should contain an array of serialised expectations, for example:</p>
@@ -94,7 +94,7 @@ sitemap:
 <pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-    &lt;<span class="element">version</span>&gt;<span class="element_value">5.6.0</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">5.6.1</span>&lt;/<span class="element">version</span>&gt;
     &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
