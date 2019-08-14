@@ -50,11 +50,10 @@ public class KeyAndCertificateFactory {
      */
     private static final int ROOT_KEYSIZE = 2048;
     /**
-     * Generates an 1024 bit RSA key pair using SHA1PRNG for the server
-     * certificates. Thoughts: 2048 takes much longer time on older CPUs. And
-     * for almost every client, 1024 is sufficient.
+     * Generates an 2048 bit RSA key pair using SHA1PRNG for the server
+     * certificates.
      */
-    private static final int FAKE_KEYSIZE = 1024;
+    private static final int FAKE_KEYSIZE = 2048;
     /**
      * Current time minus 1 year, just in case software clock goes back due to
      * time synchronization
