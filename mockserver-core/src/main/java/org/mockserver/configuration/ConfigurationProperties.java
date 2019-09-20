@@ -33,7 +33,7 @@ public class ConfigurationProperties {
     private static final String DEFAULT_LOG_LEVEL = "INFO";
     private static final long DEFAULT_MAX_TIMEOUT = 20;
     private static final int DEFAULT_CONNECT_TIMEOUT = 20000;
-    private static final int DEFAULT_MAX_EXPECTATIONS = 1000;
+    private static final int DEFAULT_MAX_EXPECTATIONS = 5000;
     private static final int DEFAULT_MAX_WEB_SOCKET_EXPECTATIONS = 1000;
     private static final int DEFAULT_MAX_INITIAL_LINE_LENGTH = Integer.MAX_VALUE;
     private static final int DEFAULT_MAX_HEADER_SIZE = Integer.MAX_VALUE;
@@ -118,6 +118,14 @@ public class ConfigurationProperties {
     }
 
     public static void maxExpectations(int count) {
+        System.setProperty(MOCKSERVER_MAX_EXPECTATIONS, "" + count);
+    }
+
+    public static int requestLogSize() {
+        return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, maxExpectations() * maxExpectations());
+    }
+
+    public static void requestLogSize(int count) {
         System.setProperty(MOCKSERVER_MAX_EXPECTATIONS, "" + count);
     }
 

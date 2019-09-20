@@ -17,7 +17,7 @@ import org.mockserver.verify.VerificationSequence;
 
 import java.util.*;
 
-import static org.mockserver.configuration.ConfigurationProperties.maxExpectations;
+import static org.mockserver.configuration.ConfigurationProperties.requestLogSize;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.VERIFICATION_FAILED;
 
 /**
@@ -62,7 +62,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         }
     };
     private MockServerLogger logFormatter;
-    private Queue<LogEntry> requestLog = new BoundedConcurrentLinkedQueue<>(maxExpectations() * 2);
+    private Queue<LogEntry> requestLog = new BoundedConcurrentLinkedQueue<>(requestLogSize());
     private MatcherBuilder matcherBuilder;
     private HttpRequestSerializer httpRequestSerializer;
 

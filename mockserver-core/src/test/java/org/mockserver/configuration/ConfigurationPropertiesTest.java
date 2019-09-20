@@ -123,7 +123,7 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.maxExpectations");
 
         // when
-        assertEquals(1000, ConfigurationProperties.maxExpectations());
+        assertEquals(5000, ConfigurationProperties.maxExpectations());
         ConfigurationProperties.maxExpectations(100);
 
         // then
@@ -136,7 +136,29 @@ public class ConfigurationPropertiesTest {
         System.setProperty("mockserver.maxExpectations", "invalid");
 
         // then
-        assertEquals(1000, ConfigurationProperties.maxExpectations());
+        assertEquals(5000, ConfigurationProperties.maxExpectations());
+    }
+
+    @Test
+    public void shouldSetAndReadRequestLogSize() {
+        // given
+        System.clearProperty("mockserver.requestLogSize");
+
+        // when
+        assertEquals(5000 * 5000, ConfigurationProperties.requestLogSize());
+        ConfigurationProperties.requestLogSize(10);
+
+        // then
+        assertEquals(10, ConfigurationProperties.requestLogSize());
+    }
+
+    @Test
+    public void shouldHandleInvalidRequestLogSize() {
+        // given
+        System.setProperty("mockserver.requestLogSize", "invalid");
+
+        // then
+        assertEquals(5000 * 5000, ConfigurationProperties.requestLogSize());
     }
 
     @Test
