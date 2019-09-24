@@ -11,6 +11,7 @@ FROM debian:jessie
 # update packages
 RUN export DEBIAN_FRONTEND=noninteractive
 RUN sed -i 's/# \(.*multiverse$\)/\1/g' /etc/apt/sources.list
+RUN add-apt-repository -y ppa:openjdk-r/ppa
 RUN apt-get update
 RUN apt-get -y upgrade
 
