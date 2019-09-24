@@ -28,3 +28,7 @@ RUN apt-get update
 RUN apt-get install -y openjdk-8-jdk maven
 COPY settings.xml /etc/maven/settings.xml
 RUN rm -f /etc/alternatives/java && ln -s /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java /etc/alternatives/java
+
+# pre-fetch maven dependencies
+RUN git clone https://github.com/jamesdbloom/mockserver.git
+RUN cd mockserver && ./mvnw dependency:go-offline && rm mockserver
