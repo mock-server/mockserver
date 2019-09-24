@@ -530,15 +530,6 @@
 
     <build>
         <plugins>
-            <!-- pre-fetch dependencies -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.1.1</version>
-                <configuration>
-                    <excludeGroupIds>org.mock-server</excludeGroupIds>
-                </configuration>
-            </plugin>
             <!-- compile with correct warnings -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
