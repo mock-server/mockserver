@@ -1,6 +1,5 @@
 package org.mockserver.junit.jupiter;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.junit.jupiter.api.extension.*;
 import org.junit.platform.commons.support.AnnotationSupport;
 import org.mockserver.client.MockServerClient;
@@ -13,15 +12,15 @@ import java.util.Optional;
 
 public class MockServerExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback {
     private static ClientAndServer perTestSuiteClient;
-    private final ClientAndServerFactory clientAndServerFactory;
+    private final ClientAndServer clientAndServerFactory;
     private ClientAndServer client;
     private boolean perTestSuite;
 
     public MockServerExtension() {
-        clientAndServerFactory = new ClientAndServerFactory();
+        clientAndServerFactory = new ClientAndServer();
     }
 
-    public MockServerExtension(ClientAndServerFactory clientAndServerFactory) {
+    public MockServerExtension(ClientAndServer clientAndServerFactory) {
         this.clientAndServerFactory = clientAndServerFactory;
     }
 
@@ -55,12 +54,12 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
     private ClientAndServer instantiateClient(List<Integer> ports) {
         if (perTestSuite) {
             if (perTestSuiteClient == null) {
-                perTestSuiteClient = clientAndServerFactory.newClientAndServer(ports);
+                perTestSuiteClient = clientAndServerFactory.startClientAndServer(ports);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> perTestSuiteClient.stop()));
             }
             return perTestSuiteClient;
         }
-        return clientAndServerFactory.newClientAndServer(ports);
+        return clientAndServerFactory.startClientAndServer(ports);
     }
 
     @Override

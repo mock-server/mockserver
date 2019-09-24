@@ -20,13 +20,13 @@ class MockServerExtensionSinglePortTest {
     }
 
     @Test
-    public void injectsClientWithStartedServer() {
+    void injectsClientWithStartedServer() {
         assertThat(client, is(not(nullValue())));
         assertThat(client.isRunning(), is(true));
     }
 
     @Test
-    public void usesRequestedPort() {
+    void usesRequestedPort() {
         assertThat(client.remoteAddress().getPort(), is(equalTo(8989)));
     }
 }

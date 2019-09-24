@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
 class MockServerExtensionWithMocksTest {
     private MockServerExtension subject;
     @Mock
-    private ClientAndServerFactory mockClientAndServerFactory;
+    private ClientAndServer mockClientAndServerFactory;
 
     @Mock
     private ParameterContext mockParameterContext;
@@ -41,12 +41,12 @@ class MockServerExtensionWithMocksTest {
     private AnnotatedElement mockAnnotatedElement;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         subject = new MockServerExtension(mockClientAndServerFactory);
     }
 
     @Test
-    public void identifiesSupportedParameter() throws Exception {
+    void identifiesSupportedParameter() throws Exception {
         doReturn(mockParameter).when(mockParameterContext).getParameter();
         doReturn(MockServerClient.class).when(mockParameter).getType();
         boolean result = subject.supportsParameter(mockParameterContext, null);
@@ -54,7 +54,7 @@ class MockServerExtensionWithMocksTest {
     }
 
     @Test
-    public void doesNotsupportsRandomParameterType() throws Exception {
+    void doesNotsupportsRandomParameterType() throws Exception {
         doReturn(mockParameter).when(mockParameterContext).getParameter();
         doReturn(Object.class).when(mockParameter).getType();
         boolean result = subject.supportsParameter(mockParameterContext, null);
@@ -62,49 +62,49 @@ class MockServerExtensionWithMocksTest {
     }
 
     @Test
-    public void beforeAdd_startsServerWithRandomPort() throws Exception {
+    void beforeAdd_startsServerWithRandomPort() throws Exception {
         Optional<AnnotatedElement> element = Optional.of(mockAnnotatedElement);
         MockServerSettings mockServerSettings = mock(MockServerSettings.class);
         doReturn(Optional.empty()).when(mockExtensionContext).getParent();
         subject.beforeAll(mockExtensionContext);
-        verify(mockClientAndServerFactory).newClientAndServer(anyList());
+        verify(mockClientAndServerFactory).startClientAndServer(anyList());
     }
 
     @Test
-    public void beforeAdd_startsServerWithSpecifiedPorts() throws Exception {
+    void beforeAdd_startsServerWithSpecifiedPorts() throws Exception {
         List<Integer> ports = mockServerCreation();
         subject.beforeAll(mockExtensionContext);
-        verify(mockClientAndServerFactory).newClientAndServer(ports);
+        verify(mockClientAndServerFactory).startClientAndServer(ports);
     }
 
     @Test
-    public void beforeAdd_startsPerTestSuiteServer() throws Exception {
+    void beforeAdd_startsPerTestSuiteServer() throws Exception {
         List<Integer> ports = mockServerCreation();
         ClientAndServer mockServerClient = mock(ClientAndServer.class);
-        doReturn(mockServerClient).when(mockClientAndServerFactory).newClientAndServer(anyList());
+        doReturn(mockServerClient).when(mockClientAndServerFactory).startClientAndServer(anyList());
         subject.beforeAll(mockExtensionContext);
-        verify(mockClientAndServerFactory).newClientAndServer(ports);
+        verify(mockClientAndServerFactory).startClientAndServer(ports);
     }
 
     @Test
-    public void resolveParameter_returnsClientInstance() throws Exception {
+    void resolveParameter_returnsClientInstance() throws Exception {
         Optional<AnnotatedElement> element = Optional.of(mockAnnotatedElement);
         MockServerSettings mockServerSettings = mock(MockServerSettings.class);
         ClientAndServer mockServerClient = mock(ClientAndServer.class);
         doReturn(Optional.empty()).when(mockExtensionContext).getParent();
-        doReturn(mockServerClient).when(mockClientAndServerFactory).newClientAndServer(anyList());
+        doReturn(mockServerClient).when(mockClientAndServerFactory).startClientAndServer(anyList());
         subject.beforeAll(mockExtensionContext);
         Object result = subject.resolveParameter(null, null);
         assertThat(result, is(equalTo(mockServerClient)));
     }
 
     @Test
-    public void afterAll_stopsClientInstance() throws Exception {
+    void afterAll_stopsClientInstance() throws Exception {
         Optional<AnnotatedElement> element = Optional.of(mockAnnotatedElement);
         MockServerSettings mockServerSettings = mock(MockServerSettings.class);
         ClientAndServer mockServerClient = mock(ClientAndServer.class);
         doReturn(Optional.empty()).when(mockExtensionContext).getParent();
-        doReturn(mockServerClient).when(mockClientAndServerFactory).newClientAndServer(anyList());
+        doReturn(mockServerClient).when(mockClientAndServerFactory).startClientAndServer(anyList());
         doReturn(true).when(mockServerClient).isRunning();
         subject.beforeAll(mockExtensionContext);
         subject.afterAll(null);
