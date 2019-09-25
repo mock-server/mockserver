@@ -11,14 +11,13 @@ FROM debian:jessie
 # update packages
 RUN export DEBIAN_FRONTEND=noninteractive
 RUN sed -i 's/# \(.*multiverse$\)/\1/g' /etc/apt/sources.list
-RUN add-apt-repository -y ppa:openjdk-r/ppa
 RUN apt-get update
 RUN apt-get -y upgrade
 
 # install basic build tools
 RUN apt-get install -y build-essential
 RUN apt-get install -y software-properties-common
-RUN apt-get install -y curl git htop man unzip vim wget pkg-config python2.7 openjdk-8-jre
+RUN apt-get install -y curl git htop man unzip vim wget pkg-config python2.7 openjdk-7-jre
 
 # install xvfb & chromium
 RUN apt-get install -y xvfb chromium
