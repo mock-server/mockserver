@@ -31,4 +31,4 @@ RUN rm -f /etc/alternatives/java && ln -s /usr/lib/jvm/java-8-openjdk-amd64/jre/
 
 # pre-fetch maven dependencies
 RUN git clone https://github.com/jamesdbloom/mockserver.git
-RUN cd mockserver && ./mvnw -s /etc/maven/settings.xml dependency:go-offline && cd .. && rm mockserver
+RUN cd mockserver && ./mvnw -s /etc/maven/settings.xml dependency:go-offline && cd .. && rm -rf mockserver
