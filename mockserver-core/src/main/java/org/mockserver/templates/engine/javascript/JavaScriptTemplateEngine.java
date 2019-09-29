@@ -9,6 +9,7 @@ import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer
 
 import javax.script.*;
 
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.formatting.StringFormatter.indentAndToString;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.TEMPLATE_GENERATED;
@@ -36,12 +37,16 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
         String script = "function handle(request) {" + indentAndToString(template)[0] + "}";
         try {
             if (engine != null) {
-                SimpleScriptContext context = new SimpleScriptContext();
-                context.setBindings(engine.getBindings(ScriptContext.GLOBAL_SCOPE), ScriptContext.GLOBAL_SCOPE);
-                context.setBindings(engine.getBindings(ScriptContext.ENGINE_SCOPE), ScriptContext.ENGINE_SCOPE);
-                engine.eval(script + " function serialise(request) { return JSON.stringify(handle(JSON.parse(request)), null, 2); }", context);
+                Compilable compilable = (Compilable) engine;
+                CompiledScript compiledScript = compilable.compile(script + " function serialise(request) { return JSON.stringify(handle(JSON.parse(request)), null, 2); }");
+
+                Bindings bindings = engine.createBindings();
+                compiledScript.eval(bindings);
+
+                ScriptObjectMirror scriptObjectMirror = (ScriptObjectMirror) bindings.get("serialise");
+                Object stringifiedResponse = scriptObjectMirror.call(null, new HttpRequestTemplateObject(request));
+
                 // HttpResponse handle(HttpRequest httpRequest) - ES5
-                Object stringifiedResponse = ((Invocable) engine).invokeFunction("serialise", new HttpRequestTemplateObject(request));
                 logFormatter.info(TEMPLATE_GENERATED, request, "generated output:{}from template:{}for request:{}", stringifiedResponse, script, request);
                 result = httpTemplateOutputDeserializer.deserializer(request, (String) stringifiedResponse, dtoClass);
             } else {

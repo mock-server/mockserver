@@ -1,5 +1,12 @@
 package org.mockserver.templates.engine.javascript;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -341,6 +348,81 @@ public class JavaScriptTemplateEngineTest {
                 .withBody("some_body"),
             HttpRequestDTO.class
         );
+    }
+    
+    @Test
+    public void shouldrRestrictGlobalContextMultipleHttpRequestsInParallel1() throws InterruptedException, ExecutionException {
+        // given
+        final String template = ""
+                + "var resbody = \"ok\"; " + NEW_LINE
+                + "if (request.path.match(\".*1$\")) { " + NEW_LINE
+                + "    resbody = \"nok\"; " + NEW_LINE
+                + "}; " + NEW_LINE
+                + "resp = { " + NEW_LINE
+                + "    'statusCode': 200, "
+                + "    'body': resbody" + NEW_LINE
+                + "}; " + NEW_LINE
+                + "return resp;";
+
+        // when
+        final JavaScriptTemplateEngine javaScriptTemplateEngine = new JavaScriptTemplateEngine(logFormatter);
+
+        // then
+        final HttpRequest ok = request()
+                .withPath("/somePath/0")
+                .withMethod("POST")
+                .withBody("some_body");
+
+        final HttpRequest nok = request()
+                .withPath("/somePath/1")
+                .withMethod("POST")
+                .withBody("another_body");
+
+        if (new ScriptEngineManager().getEngineByName("nashorn") != null) {
+            ExecutorService newFixedThreadPool = Executors.newFixedThreadPool(30);
+
+            List<Future<Boolean>> futures = new ArrayList<>();
+            for (int i = 0; i < 100; i++) {
+                futures.add(newFixedThreadPool.submit(new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() throws Exception {
+                        assertThat(javaScriptTemplateEngine.executeTemplate(template, ok,
+                                HttpResponseDTO.class
+                        ), is(
+                                response()
+                                        .withStatusCode(200)
+                                        .withBody("ok")
+                        ));
+                        return true;
+                    }
+                }));
+
+                futures.add(newFixedThreadPool.submit(new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() throws Exception {
+                        assertThat(javaScriptTemplateEngine.executeTemplate(template, nok,
+                                HttpResponseDTO.class
+                        ), is(
+                                response()
+                                        .withStatusCode(200)
+                                        .withBody("nok")
+                        ));
+                        return true;
+                    }
+                }));
+
+            }
+
+            for (Future<Boolean> future : futures) {
+                future.get();
+            }
+            newFixedThreadPool.shutdown();
+
+        } else {
+            assertThat(javaScriptTemplateEngine.executeTemplate(template, ok,
+                    HttpResponseDTO.class
+            ), nullValue());
+        }
     }
 
 }
