@@ -4,8 +4,6 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.xmlschema.XmlSchemaValidator;
 
-import static org.mockserver.character.Character.NEW_LINE;
-
 /**
  * See http://xml-schema.org/
  *
