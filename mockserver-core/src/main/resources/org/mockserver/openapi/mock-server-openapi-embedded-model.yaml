@@ -226,11 +226,11 @@ components:
     Expectations:
       title: "list of expectations"
       oneOf:
-      - type: array
-        additionalProperties: false
-        items:
-          $ref: "#/components/schemas/Expectation"
-      - $ref: "#/components/schemas/Expectation"
+        - type: array
+          additionalProperties: false
+          items:
+            $ref: "#/components/schemas/Expectation"
+        - $ref: "#/components/schemas/Expectation"
     Expectation:
       title: "expectation"
       type: object
@@ -263,26 +263,26 @@ components:
         timeToLive:
           $ref: "#/components/schemas/TimeToLive"
       oneOf:
-      - required:
-        - httpResponse
-      - required:
-        - httpResponseTemplate
-      - required:
-        - httpResponseClassCallback
-      - required:
-        - httpResponseObjectCallback
-      - required:
-        - httpForward
-      - required:
-        - httpForwardTemplate
-      - required:
-        - httpForwardClassCallback
-      - required:
-        - httpForwardObjectCallback
-      - required:
-        - httpOverrideForwardedRequest
-      - required:
-        - httpError
+        - required:
+            - httpResponse
+        - required:
+            - httpResponseTemplate
+        - required:
+            - httpResponseClassCallback
+        - required:
+            - httpResponseObjectCallback
+        - required:
+            - httpForward
+        - required:
+            - httpForwardTemplate
+        - required:
+            - httpForwardClassCallback
+        - required:
+            - httpForwardObjectCallback
+        - required:
+            - httpOverrideForwardedRequest
+        - required:
+            - httpError
     HttpRequest:
       title: "request matcher"
       type: object
@@ -332,8 +332,8 @@ components:
           $ref: "#/components/schemas/Delay"
         templateType:
           enum:
-          - JAVASCRIPT
-          - VELOCITY
+            - JAVASCRIPT
+            - VELOCITY
         template:
           type: string
     HttpForward:
@@ -349,8 +349,8 @@ components:
           type: integer
         scheme:
           enum:
-          - HTTP
-          - HTTPS
+            - HTTP
+            - HTTPS
     HttpClassCallback:
       title: class callback
       type: object
@@ -405,238 +405,257 @@ components:
       properties:
         timeUnit:
           enum:
-          - HOURS
-          - MINUTES
-          - SECONDS
-          - MILLISECONDS
-          - MICROSECONDS
-          - NANOSECONDS
+            - HOURS
+            - MINUTES
+            - SECONDS
+            - MILLISECONDS
+            - MICROSECONDS
+            - NANOSECONDS
         timeToLive:
           type: integer
         unlimited:
           type: boolean
     KeyToMultiValue:
       oneOf:
-      - type: array
-        additionalProperties: false
-        items:
-          type: object
-          properties:
-            name:
-              type: string
-            values:
-              type: array
-              items:
+        - type: array
+          additionalProperties: false
+          items:
+            type: object
+            properties:
+              name:
                 type: string
-      - type: object
-        # additionalProperties: false
-        # patternProperties:
-        #   "^\\S+$":
-        #     type: array
-        #     items:
-        #       type: string
+              values:
+                type: array
+                items:
+                  type: string
+        - type: object
+          # additionalProperties: false
+          # patternProperties:
+          #   "^\\S+$":
+          #     type: array
+          #     items:
+          #       type: string
     KeyToValue:
       oneOf:
-      - type: array
-        additionalProperties: false
-        items:
-          type: object
-          properties:
-            name:
-              type: string
-            value:
-              type: string
-      - type: object
+        - type: array
+          additionalProperties: false
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              value:
+                type: string
+        - type: object
       #   additionalProperties: false
       #   patternProperties:
       #     "^\\S+$":
       #       type: string
     Body:
-      title: "request body matcher"
-      oneOf:
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - BINARY
-          base64Bytes:
-            type: string
-          contentType:
-            type: string
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - JSON
-          json:
-            type: string
-          contentType:
-            type: string
-          matchType:
-            enum:
-            - STRICT
-            - ONLY_MATCHING_FIELDS
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - JSON_SCHEMA
-          jsonSchema:
-            type: string
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - JSON_PATH
-          jsonPath:
-            type: string
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - PARAMETERS
-          parameters:
-            $ref: "#/components/schemas/KeyToMultiValue"
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - REGEX
-          regex:
-            type: string
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - STRING
-          string:
-            type: string
-          contentType:
-            type: string
-          subString:
-            type: boolean
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - XML
-          xml:
-            type: string
-          contentType:
-            type: string
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - XML_SCHEMA
-          xmlSchema:
-            type: string
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - XPATH
-          xpath:
-            type: string
-      - type: string
+      description: "request body matcher"
+      anyOf:
+        - type: object
+          description: "binary body matcher"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - BINARY
+            base64Bytes:
+              type: string
+            contentType:
+              type: string
+        - type: object
+          description: "json body matcher"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - JSON
+            json:
+              type: string
+            contentType:
+              type: string
+            matchType:
+              enum:
+                - STRICT
+                - ONLY_MATCHING_FIELDS
+        - type: object
+          description: "json matching fields body matcher"
+          additionalProperties: true
+        - type: object
+          description: "json schema body matcher"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - JSON_SCHEMA
+            jsonSchema:
+              type: string
+        - type: object
+          description: "json path body matcher"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - JSON_PATH
+            jsonPath:
+              type: string
+        - type: object
+          description: "parameter body matcher"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - PARAMETERS
+            parameters:
+              $ref: "#/components/schemas/KeyToMultiValue"
+        - type: object
+          description: "regex body matcher"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - REGEX
+            regex:
+              type: string
+        - type: object
+          description: "string body matcher"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - STRING
+            string:
+              type: string
+            contentType:
+              type: string
+            subString:
+              type: boolean
+        - type: string
+          description: "substring body matcher"
+        - type: object
+          description: "xml body matcher"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - XML
+            xml:
+              type: string
+            contentType:
+              type: string
+        - type: object
+          description: "xml schema body matcher"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - XML_SCHEMA
+            xmlSchema:
+              type: string
+        - type: object
+          description: "xpath body matcher"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - XPATH
+            xpath:
+              type: string
     BodyWithContentType:
-      title: "response body"
-      oneOf:
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - BINARY
-          base64Bytes:
-            type: string
-          contentType:
-            type: string
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - JSON
-          json:
-            type: string
-          contentType:
-            type: string
-          matchType:
-            enum:
-            - STRICT
-            - ONLY_MATCHING_FIELDS
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - PARAMETERS
-          parameters:
-            $ref: "#/components/schemas/KeyToMultiValue"
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - STRING
-          string:
-            type: string
-          contentType:
-            type: string
-      - type: object
-        additionalProperties: false
-        properties:
-          not:
-            type: boolean
-          type:
-            enum:
-            - XML
-          xml:
-            type: string
-          contentType:
-            type: string
-      - type: string
+      description: "response body"
+      anyOf:
+        - type: object
+          description: "binary response body"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - BINARY
+            base64Bytes:
+              type: string
+            contentType:
+              type: string
+        - type: object
+          description: "json response body"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - JSON
+            json:
+              type: string
+            contentType:
+              type: string
+        - type: object
+          description: "json response body"
+          additionalProperties: true
+        - type: object
+          description: "parameters response body"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - PARAMETERS
+            parameters:
+              $ref: "#/components/schemas/KeyToMultiValue"
+        - type: object
+          description: "string response body"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - STRING
+            string:
+              type: string
+            contentType:
+              type: string
+        - type: string
+          description: "string response body"
+        - type: object
+          description: "xml response body"
+          additionalProperties: false
+          properties:
+            not:
+              type: boolean
+            type:
+              enum:
+                - XML
+            xml:
+              type: string
+            contentType:
+              type: string
     Delay:
-      title: "response delay"
+      description: "response delay"
       type: object
       additionalProperties: false
       properties:
@@ -645,7 +664,7 @@ components:
         value:
           type: integer
     ConnectionOptions:
-      title: "connection options"
+      description: "connection options"
       type: object
       additionalProperties: false
       properties:
@@ -660,7 +679,7 @@ components:
         keepAliveOverride:
           type: boolean
     Verification:
-      title: "verification"
+      description: "verification"
       type: object
       additionalProperties: false
       properties:
@@ -669,7 +688,7 @@ components:
         times:
           $ref: "#/components/schemas/VerificationTimes"
     VerificationTimes:
-      title: "number of request to verify"
+      description: "number of request to verify"
       type: object
       additionalProperties: false
       properties:
@@ -678,7 +697,7 @@ components:
         atMost:
           type: integer
     VerificationSequence:
-      title: "verification sequence"
+      description: "verification sequence"
       type: object
       additionalProperties: false
       properties:
@@ -687,7 +706,7 @@ components:
           items:
             $ref: "#/components/schemas/HttpRequest"
     Ports:
-      title: "list of ports"
+      description: "list of ports"
       type: object
       additionalProperties: false
       properties:

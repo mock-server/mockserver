@@ -70,7 +70,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         try {
                             type = Body.Type.valueOf(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException iae) {
-                            mockServerLogger.trace("Ignoring invalid value for \"type\" field of \"" + String.valueOf(entry.getValue()) + "\"");
+                            mockServerLogger.trace("Ignoring invalid value for \"type\" field of \"" + entry.getValue() + "\"");
                         }
                     }
                     if (containsIgnoreCase(key, "string", "regex", "json", "jsonSchema", "jsonPath", "xml", "xmlSchema", "xpath", "base64Bytes") && type != Body.Type.PARAMETERS) {
@@ -87,30 +87,30 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         try {
                             matchType = MatchType.valueOf(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException iae) {
-                            mockServerLogger.trace("Ignoring incorrect JsonBodyMatchType with value \"" + String.valueOf(entry.getValue()) + "\"");
+                            mockServerLogger.trace("Ignoring incorrect JsonBodyMatchType with value \"" + entry.getValue() + "\"");
                         }
                     }
                     if (key.equalsIgnoreCase("subString")) {
                         try {
                             subString = Boolean.parseBoolean(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException uce) {
-                            mockServerLogger.trace("Ignoring unsupported boolean with value \"" + String.valueOf(entry.getValue()) + "\"");
+                            mockServerLogger.trace("Ignoring unsupported boolean with value \"" + entry.getValue() + "\"");
                         }
                     }
                     if (key.equalsIgnoreCase("contentType")) {
                         try {
                             contentType = MediaType.parse(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException uce) {
-                            mockServerLogger.trace("Ignoring unsupported MediaType with value \"" + String.valueOf(entry.getValue()) + "\"");
+                            mockServerLogger.trace("Ignoring unsupported MediaType with value \"" + entry.getValue() + "\"");
                         }
                     }
                     if (key.equalsIgnoreCase("charset")) {
                         try {
                             charset = Charset.forName(String.valueOf(entry.getValue()));
                         } catch (UnsupportedCharsetException uce) {
-                            mockServerLogger.trace("Ignoring unsupported Charset with value \"" + String.valueOf(entry.getValue()) + "\"");
+                            mockServerLogger.trace("Ignoring unsupported Charset with value \"" + entry.getValue() + "\"");
                         } catch (IllegalCharsetNameException icne) {
-                            mockServerLogger.trace("Ignoring invalid Charset with value \"" + String.valueOf(entry.getValue()) + "\"");
+                            mockServerLogger.trace("Ignoring invalid Charset with value \"" + entry.getValue() + "\"");
                         }
                     }
                     if (key.equalsIgnoreCase("parameters")) {

@@ -1,6 +1,6 @@
 {
     "title": "request body matcher",
-    "oneOf": [
+    "anyOf": [
         {
             "type": "object",
             "additionalProperties": false,
@@ -46,6 +46,10 @@
                     ]
                 }
             }
+        },
+        {
+            "type": "object",
+            "additionalProperties": true
         },
         {
             "type": "object",
@@ -139,6 +143,9 @@
             }
         },
         {
+            "type": "string"
+        },
+        {
             "type": "object",
             "additionalProperties": false,
             "properties": {
@@ -191,9 +198,6 @@
                     "type": "string"
                 }
             }
-        },
-        {
-            "type": "string"
         }
     ]
 }

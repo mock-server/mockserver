@@ -1,6 +1,6 @@
 {
     "title": "response body",
-    "oneOf": [
+    "anyOf": [
         {
             "type": "object",
             "additionalProperties": false,
@@ -38,14 +38,12 @@
                 },
                 "contentType": {
                     "type": "string"
-                },
-                "matchType": {
-                    "enum": [
-                        "STRICT",
-                        "ONLY_MATCHING_FIELDS"
-                    ]
                 }
             }
+        },
+        {
+            "type": "object",
+            "additionalProperties": true
         },
         {
             "type": "object",
@@ -85,6 +83,9 @@
             }
         },
         {
+            "type": "string"
+        },
+        {
             "type": "object",
             "additionalProperties": false,
             "properties": {
@@ -103,9 +104,6 @@
                     "type": "string"
                 }
             }
-        },
-        {
-            "type": "string"
         }
     ]
 }
