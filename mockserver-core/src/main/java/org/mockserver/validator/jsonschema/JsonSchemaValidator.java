@@ -112,6 +112,10 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
             if (processingMessage.asJson().get("instance") != null && processingMessage.asJson().get("instance").get("pointer") != null) {
                 fieldPointer = String.valueOf(processingMessage.asJson().get("instance").get("pointer")).replaceAll("\"", "");
             }
+            String schemaPointer = "";
+            if (processingMessage.asJson().get("schema") != null && processingMessage.asJson().get("schema").get("pointer") != null) {
+                schemaPointer = String.valueOf(processingMessage.asJson().get("schema").get("pointer"));
+            }
             if (fieldPointer.endsWith("/headers")) {
                 validationErrors.add("for field \"" + fieldPointer + "\" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
                     "    \"" + fieldPointer + "\" : {" + NEW_LINE +
@@ -163,8 +167,8 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     "            \"values\" : \"exampleCookieValueTwo\"" + NEW_LINE +
                     "        }" + NEW_LINE +
                     "    ]");
-            } else if (fieldPointer.endsWith("/body")) {
-                validationErrors.add("for field \"" + fieldPointer + "\" a plain string or one of the following example bodies must be specified " + NEW_LINE +
+            } else if (fieldPointer.endsWith("/body") && !schemaPointer.contains("bodyWithContentType")) {
+                validationErrors.add("for field \"" + fieldPointer + "\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
                     "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"BINARY\"," + NEW_LINE +
@@ -218,6 +222,31 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"XPATH\"," + NEW_LINE +
                     "     \"xpath\": \"\"" + NEW_LINE +
+                    "   }");
+            } else if (fieldPointer.endsWith("/body") && schemaPointer.contains("bodyWithContentType")) {
+                validationErrors.add("for field \"" + fieldPointer + "\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"type\": \"BINARY\"," + NEW_LINE +
+                    "     \"base64Bytes\": \"\"," + NEW_LINE +
+                    "     \"contentType\": \"\"" + NEW_LINE +
+                    "   }, " + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"type\": \"JSON\"," + NEW_LINE +
+                    "     \"json\": \"\"," + NEW_LINE +
+                    "     \"contentType\": \"\"" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"type\": \"PARAMETERS\"," + NEW_LINE +
+                    "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"type\": \"STRING\"," + NEW_LINE +
+                    "     \"string\": \"\"" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"type\": \"XML\"," + NEW_LINE +
+                    "     \"xml\": \"\"," + NEW_LINE +
+                    "     \"contentType\": \"\"" + NEW_LINE +
                     "   }");
             } else if (String.valueOf(processingMessage.asJson().get("keyword")).equals("\"oneOf\"")) {
                 StringBuilder oneOfErrorMessage = new StringBuilder("oneOf of the following must be specified ");

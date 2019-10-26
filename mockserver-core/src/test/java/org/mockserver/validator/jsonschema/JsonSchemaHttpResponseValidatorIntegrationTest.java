@@ -44,70 +44,36 @@ public class JsonSchemaHttpResponseValidatorIntegrationTest {
     }
 
     @Test
-    public void shouldValidateInvalidBodyFields() {
+    public void shouldValidateInvalidBodyType() {
         // when
         assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
-                "    \"body\" : {" + NEW_LINE +
-                "      \"type\" : \"STRING\"," + NEW_LINE +
-                "      \"value\" : \"someBody\"" + NEW_LINE +
-                "    }" + NEW_LINE +
+                "    \"body\" : 1" + NEW_LINE +
                 "  }"),
             is(
                 "1 error:" + NEW_LINE +
-                    " - for field \"/body\" a plain string or one of the following example bodies must be specified " + NEW_LINE +
+                    " - for field \"/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"BINARY\"," + NEW_LINE +
                     "     \"base64Bytes\": \"\"," + NEW_LINE +
                     "     \"contentType\": \"\"" + NEW_LINE +
                     "   }, " + NEW_LINE +
                     "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"JSON\"," + NEW_LINE +
                     "     \"json\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"," + NEW_LINE +
-                    "     \"matchType\": \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
+                    "     \"contentType\": \"\"" + NEW_LINE +
                     "   }," + NEW_LINE +
                     "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"JSON_SCHEMA\"," + NEW_LINE +
-                    "     \"jsonSchema\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"JSON_PATH\"," + NEW_LINE +
-                    "     \"jsonPath\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"PARAMETERS\"," + NEW_LINE +
                     "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
                     "   }," + NEW_LINE +
                     "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"REGEX\"," + NEW_LINE +
-                    "     \"regex\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"STRING\"," + NEW_LINE +
                     "     \"string\": \"\"" + NEW_LINE +
                     "   }," + NEW_LINE +
                     "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"XML\"," + NEW_LINE +
                     "     \"xml\": \"\"," + NEW_LINE +
                     "     \"contentType\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"XML_SCHEMA\"," + NEW_LINE +
-                    "     \"xmlSchema\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"XPATH\"," + NEW_LINE +
-                    "     \"xpath\": \"\"" + NEW_LINE +
                     "   }"
             ));
     }
@@ -136,60 +102,29 @@ public class JsonSchemaHttpResponseValidatorIntegrationTest {
                 "  }"),
             is(
                 "2 errors:" + NEW_LINE +
-                    " - for field \"/body\" a plain string or one of the following example bodies must be specified " + NEW_LINE +
+                    " - for field \"/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"BINARY\"," + NEW_LINE +
                     "     \"base64Bytes\": \"\"," + NEW_LINE +
                     "     \"contentType\": \"\"" + NEW_LINE +
                     "   }, " + NEW_LINE +
                     "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"JSON\"," + NEW_LINE +
                     "     \"json\": \"\"," + NEW_LINE +
-                    "     \"contentType\": \"\"," + NEW_LINE +
-                    "     \"matchType\": \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
+                    "     \"contentType\": \"\"" + NEW_LINE +
                     "   }," + NEW_LINE +
                     "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"JSON_SCHEMA\"," + NEW_LINE +
-                    "     \"jsonSchema\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"JSON_PATH\"," + NEW_LINE +
-                    "     \"jsonPath\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"PARAMETERS\"," + NEW_LINE +
                     "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
                     "   }," + NEW_LINE +
                     "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"REGEX\"," + NEW_LINE +
-                    "     \"regex\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"STRING\"," + NEW_LINE +
                     "     \"string\": \"\"" + NEW_LINE +
                     "   }," + NEW_LINE +
                     "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"XML\"," + NEW_LINE +
                     "     \"xml\": \"\"," + NEW_LINE +
                     "     \"contentType\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"XML_SCHEMA\"," + NEW_LINE +
-                    "     \"xmlSchema\": \"\"" + NEW_LINE +
-                    "   }," + NEW_LINE +
-                    "   {" + NEW_LINE +
-                    "     \"not\": false," + NEW_LINE +
-                    "     \"type\": \"XPATH\"," + NEW_LINE +
-                    "     \"xpath\": \"\"" + NEW_LINE +
                     "   }" + NEW_LINE +
                     " - instance type (string) does not match any allowed primitive type (allowed: [\"integer\"]) for field \"/statusCode\""
             ));

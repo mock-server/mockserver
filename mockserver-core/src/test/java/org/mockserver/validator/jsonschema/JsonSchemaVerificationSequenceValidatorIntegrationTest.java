@@ -69,19 +69,16 @@ public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
     }
 
     @Test
-    public void shouldValidateInvalidBodyFields() {
+    public void shouldValidateInvalidBodyType() {
         // when
         assertThat(jsonSchemaValidator.isValid("{ \"httpRequests\": [" + NEW_LINE +
                 "  {" + NEW_LINE +
-                "    \"body\" : {" + NEW_LINE +
-                "      \"type\" : \"STRING\"," + NEW_LINE +
-                "      \"value\" : \"someBody\"" + NEW_LINE +
-                "    }" + NEW_LINE +
+                "    \"body\" : 1" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "]}"),
             is(
                 "1 error:" + NEW_LINE +
-                    " - for field \"/httpRequests/0/body\" a plain string or one of the following example bodies must be specified " + NEW_LINE +
+                    " - for field \"/httpRequests/0/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
                     "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"BINARY\"," + NEW_LINE +

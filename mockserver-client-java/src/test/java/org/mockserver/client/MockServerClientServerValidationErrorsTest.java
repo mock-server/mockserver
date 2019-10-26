@@ -17,7 +17,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public class MockServerClientServerVallidationErrorsTest {
+public class MockServerClientServerValidationErrorsTest {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -36,7 +36,7 @@ public class MockServerClientServerVallidationErrorsTest {
         // given
         String responseBody = "2 errors:" + NEW_LINE +
                 " - object instance has properties which are not allowed by the schema: [\"paths\"] for field \"/httpRequest\"" + NEW_LINE +
-                " - for field \"/httpRequest/body\" a plain string or one of the following example bodies must be specified " + NEW_LINE +
+                " - for field \"/httpRequest/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                 "   {" + NEW_LINE +
                 "     \"not\": false," + NEW_LINE +
                 "     \"type\": \"BINARY\"," + NEW_LINE +
