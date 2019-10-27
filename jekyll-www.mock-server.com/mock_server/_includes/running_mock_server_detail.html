@@ -139,7 +139,7 @@
 		<strong>timeout</strong> - How long to block waiting for MockServer, after the timeout the plugin will shutdown MockServer, used by <strong>run</strong> goal, 0 means wait indefinitely (required: false, default: 0)
 	</li>
 	<li>
-		<strong>logLevel</strong> - The logging level (required: false, default: WARN)
+		<strong>logLevel</strong> - The logging level (required: false, default: INFO)
 	</li>
 	<li>
 		<strong>skip</strong> - Prevent the plugin from running (required: false, default: false)
@@ -315,9 +315,10 @@
                                  proxyRemotePort has been specified,
                                  proxyRemoteHost will default to \"localhost\".
 
-    -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>            Optionally specify log level as TRACE, DEBUG,
-                                 INFO, WARN, ERROR or OFF. If not specified
-                                 default is INFO
+    -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>            Optionally specify log level using SLF4J levels:
+                                 TRACE, DEBUG, INFO, WARN, ERROR, OFF or Java
+                                 Logger levels: FINEST, FINE, INFO, WARNING,
+                                 SEVERE or OFF. If not specified default is INFO
 
     -jvmOptions <span class="command_line_argument_placeholder">&lt;level&gt;</span>          Specified generic JVM options or system properties.
 
@@ -326,13 +327,6 @@ i.e. mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080,10
 <p>For example run the MockServer, as follows:</p>
 
 <pre><code class="code">mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080</span></code></pre>
-
-<h3>Logging</h3>
-
-<p>When MockServer is installed via Homebrew a log directory is created at <strong>/usr/local/var/log/mockserver</strong>. All logs are written into this directory, this includes normal application logs, which are are written in
-	<strong>/usr/local/var/log/mockserver/mockserver.log</strong>, and request logs, which are written into <strong>/usr/local/var/log/mockserver/mockserver_request.log</strong> (when a <strong>dumpToLog</strong> request is received).</p>
-
-<p>The amount of logs written into the application log <strong>/usr/local/var/log/mockserver/mockserver.log</strong> can be controlled using the <strong>-logLevel</strong> command as detailed above.</p>
 
 <a name="running_from_command_line_using_java" class="anchor" href="#running_from_command_line_using_java">&nbsp;</a>
 
@@ -374,9 +368,10 @@ i.e. mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080,10
                                  proxyRemotePort has been specified,
                                  proxyRemoteHost will default to \"localhost\".
 
-    -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>            Optionally specify log level as TRACE, DEBUG,
-                                 INFO, WARN, ERROR or OFF. If not specified
-                                 default is INFO
+    -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>            Optionally specify log level using SLF4J levels:
+                                 TRACE, DEBUG, INFO, WARN, ERROR, OFF or Java
+                                 Logger levels: FINEST, FINE, INFO, WARNING,
+                                 SEVERE or OFF. If not specified default is INFO
 
 i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
 
@@ -384,28 +379,9 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <pre><code class="code">java -jar ~/Downloads/mockserver-netty-5.6.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080,1081</span> -logLevel INFO</code></pre>
 
-<p>All interactions with the MockServer are logged including setting up expectations, matching expectations, clearing expectations and verifying requests.  The when running from the command line, Maven plugin, npm module or Grunt plugin the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running. This log can be particularly helpful when trying to debug why a test is failing or expectations are not being matched.</p>
+<p>All interactions with the MockServer are logged including setting up expectations, matching expectations, clearing expectations and verifying requests.  This log information can be particularly helpful when trying to debug why a test is failing or expectations are not being matched.</p>
 
-<p>The argument <span class="inline_code">logLevel</span> can be used to set the <a href="/mock_server/debugging_issues.html#logging-levels">log level</a>, as shown above.</p>
-
-<p>It is also possible to specify a custom <a href="http://logback.qos.ch">logback</a> configuration file to override the default MockServer or MockServer Proxy logging settings. An example <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-netty/src/main/resources/example_logback.xml">logback configuration file</a> is available in github.</p>
-
-<p>A custom <a href="http://logback.qos.ch">logback</a> configuration file can be specified using the <span class="inline_code">logback.configurationFile</span> system property with an absolute or relative file path or a classpath, as follows:</p>
-
-<pre><code class="code">java -Droot.logLevel=WARN -Dlogback.configurationFile=example_logback.xml -jar ~/Downloads/mockserver-netty-5.6.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080,1081</span> -logLevel INFO</code></pre>
-
-<p>A custom <a href="http://logback.qos.ch">logback</a> configuration file will also be automatically picked up if it is called <strong>logback.xml</strong> and is in the root of the classpath, however, the jar-with-dependencies already contains a <strong>logback.xml</strong> file, so to override this, the overriding <strong>logback.xml</strong> file must be higher (i.e. earlier) in the classpath.</p>
-
-<h3>Disabling Logging</h3>
-
-<p>To disable logging the following system properties can be used:</p>
-
-<ul>
-	<li><code class="code inline">-Dmockserver.logLevel=OFF</code> - to disable logging from the MockServer and MockServer Proxy classes, this is equivalent to using the command line argument <code>-logLevel OFF</code></li>
-	<li><code class="code inline">-Droot.logLevel=OFF</code> - to disable all logging from all other classes (i.e. all none MockServer and MockServer Proxy classes)</li>
-</ul>
-
-<p>If logging is disabled then no log file will be created.  This is because the log files are only created when the first item is written to the log file.</p>
+<p>The argument <span class="inline_code">logLevel</span> can be used to set the <a href="/mock_server/debugging_issues.html#logging-levels">log level</a>, as shown above. It is also possible to further customise where loggers send log events by overriding the default <a href="/mock_server/debugging_issues.html#configure_java_logger">logging configuration</a>.</p>
 
 <a name="running_from_command_line_using_maven_plugin" class="anchor" href="#running_from_command_line_using_maven_plugin">&nbsp;</a>
 
@@ -422,7 +398,7 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 		<strong>mockserver.serverPort</strong> - The port the MockServer listens for incoming request. Port unification is used to support both HTTP and HTTPS and proxying on the same port (required: false)
 	</li>
 	<li>
-		<strong>mockserver.logLevel</strong> - The logging level (required: false, default: WARN)
+		<strong>mockserver.logLevel</strong> - The logging level (required: false, default: INFO)
 	</li>
 </ul>
 

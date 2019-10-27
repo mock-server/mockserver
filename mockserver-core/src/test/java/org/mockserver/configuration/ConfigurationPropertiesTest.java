@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.Assert.*;
@@ -480,10 +481,11 @@ public class ConfigurationPropertiesTest {
 
     @Test
     public void shouldThrowIllegalArgumentExceptionForInvalidLogLevel() {
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("log level \"WRONG\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\""));
-
-        ConfigurationProperties.logLevel("WRONG");
+        try {
+            ConfigurationProperties.logLevel("WRONG");
+        } catch (IllegalArgumentException iae) {
+            assertThat(iae.getMessage(), is("log level \"WRONG\" is not legal it must be one of SL4J levels: \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\" or the Java Logger levels: \"FINEST\", \"FINE\", \"INFO\", \"WARNING\", \"SEVERE\", \"OFF\""));
+        }
     }
 
     @Test
@@ -515,7 +517,7 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadLogLevel() {
+    public void shouldSetAndReadLogLevelUsingSLF4J() {
         // given
         System.clearProperty("mockserver.logLevel");
 
@@ -525,7 +527,23 @@ public class ConfigurationPropertiesTest {
 
         // then
         assertEquals(Level.TRACE, ConfigurationProperties.logLevel());
+        assertEquals("FINEST", ConfigurationProperties.javaLoggerLogLevel());
         assertEquals("TRACE", System.getProperty("mockserver.logLevel"));
+    }
+
+    @Test
+    public void shouldSetAndReadLogLevelUsingJavaLogger() {
+        // given
+        System.clearProperty("mockserver.logLevel");
+
+        // when
+        assertEquals(Level.INFO, ConfigurationProperties.logLevel());
+        ConfigurationProperties.logLevel("FINEST");
+
+        // then
+        assertEquals(Level.TRACE, ConfigurationProperties.logLevel());
+        assertEquals("FINEST", ConfigurationProperties.javaLoggerLogLevel());
+        assertEquals("FINEST", System.getProperty("mockserver.logLevel"));
     }
 
     @Test

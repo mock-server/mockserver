@@ -545,17 +545,11 @@ mockServerClient("localhost", 1080)
 
 <p>The <strong>TRACE</strong> level logging results in a lot of verbose logging but can be very helpful to debug why a complex matcher (such as the JSON Schema matcher) is not matching.</p>
 
-<p>When MockServer is run from the command line, Maven plugin, npm module or Grunt plugin the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running.</p>
-
 <a name="logging_with_api" class="anchor" href="#logging_with_api">&nbsp;</a>
 
 <h3>Logging with JUnit @Rule or API</h3>
 
-<p>If the MockSever is being launched using the <a href="/mock_server/running_mock_server.html#junit_rule"><strong>JUnit @Rule</strong></a> or <a href="/mock_server/running_mock_server.html#client_api"><strong>programmatically via an API</strong></a> then a custom
-	<a href="http://logback.qos.ch">logback</a> configuration file to override the default MockServer or MockServer Proxy logging settings. An example
-	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-netty/src/main/resources/example_logback.xml">logback configuration file</a> is available in github.</p>
-
-<p>A custom <a href="http://logback.qos.ch">logback</a> configuration file can be specified using the <span class="inline_code">logback.configurationFile</span> system property with an absolute or relative file path or a classpath, as follows: <code class="code inline">-Dlogback.configurationFile=example_logback.xml</code></p>
+<p>MockServer uses SL4J for logging so if MockSever is being launched using the <a href="/mock_server/running_mock_server.html#junit_rule"><strong>JUnit @Rule</strong></a> or <a href="/mock_server/running_mock_server.html#client_api"><strong>programmatically via an API</strong></a> configure the logging output by configuring <a href="http://www.slf4j.org/faq.html">SLF4J</a></p>
 
 <a name="logging_with_command_line" class="anchor" href="#logging_with_command_line">&nbsp;</a>
 
@@ -569,13 +563,16 @@ mockServerClient("localhost", 1080)
 
 <pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-5.6.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span></code></pre>
 
-<p>It is also possible to specify a custom <a href="http://logback.qos.ch">logback</a> configuration file to override the default MockServer or MockServer Proxy logging settings. An example <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-netty/src/main/resources/example_logback.xml">logback configuration file</a> is available in github.</p>
+<a name="configure_java_logger" class="anchor" href="#configure_java_logger">&nbsp;</a>
 
-<p>A custom <a href="http://logback.qos.ch">logback</a> configuration file can be specified using the <span class="inline_code">logback.configurationFile</span> system property with an absolute or relative file path or a classpath, as follows:</p>
+<h3>Configuring Java Logger</h3>
 
-<pre><code class="code">java -Droot.logLevel=WARN -Dmockserver.logLevel=INFO -Dlogback.configurationFile=example_logback.xml -jar ~/Downloads/mockserver-netty-5.6.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span></code></pre>
+<p>When running MockServer from the command line it relies on the Java Logger <span class="inline_code">java.util.logging.Logger</span> in addition to controlling the log level of MockServer using <span class="inline_code">-logLevel</span> the underlying logging framework can be configured (overriding the default configuration) by specifying the System Property <span class="inline_code">java.util.logging.config.file</span> or <span class="inline_code">java.util.logging.config.class</span> as detailed in the <a href="https://docs.oracle.com/javase/7/docs/api/java/util/logging/LogManager.html">LogManager JavaDoc</a>.</p>
 
-<p>A custom <a href="http://logback.qos.ch">logback</a> configuration file will also be automatically picked up if it is called <strong>logback.xml</strong> and is in the root of the classpath, however, the jar-with-dependencies already contains a <strong>logback.xml</strong> file, so to override this, the overriding <strong>logback.xml</strong> file must be higher (i.e. earlier) in the classpath.</p>
+<p>An example <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-netty/src/main/resources/example_logging_configuration.properties">Java Logger configuration file</a> (which would be configured using <span class="inline_code">java.util.logging.config.file</span>) is available in github.</p>
+
+<p>The default logging configuration can be overridden as follows:</p>
+<pre><code class="code">java -Djava.util.logging.config.file=/path/to/example_logging_configuration.properties -jar ~/Downloads/mockserver-netty-5.6.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel DEBUG</code></pre>
 
 <a name="logging_with_maven_plugin" class="anchor" href="#logging_with_maven_plugin">&nbsp;</a>
 
@@ -667,5 +664,3 @@ grunt.loadNpmTasks('mockserver-node');</code></pre>
 <li><code class="code inline">-Dmockserver.logLevel=OFF</code> - to disable logging from the MockServer and Proxy classes</li>
 <li><code class="code inline">-Droot.logLevel=OFF</code> - to disable all logging from all other classes</li>
 </ul>
-
-<p>If logging is disabled then no log file will be created.  This is because the log files are only created when the first item is written to the log file.</p>

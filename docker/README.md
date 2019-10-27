@@ -78,9 +78,10 @@ run_mockserver.sh -serverPort <port> [-proxyRemotePort <port>] [-proxyRemoteHost
                                  proxyRemotePort has been specified,           
                                  proxyRemoteHost will default to \"localhost\".
         
-    -logLevel <level>            Optionally specify log level as TRACE, DEBUG, 
-                                 INFO, WARN, ERROR or OFF. If not specified    
-                                 default is INFO                               
+    -logLevel <level>            Optionally specify log level using SLF4J levels:
+                                 TRACE, DEBUG, INFO, WARN, ERROR, OFF or Java    
+                                 Logger levels: FINEST, FINE, INFO, WARNING,     
+                                 SEVERE or OFF. If not specified default is INFO                               
         
 i.e. run_mockserver.sh -logLevel INFO -serverPort 1080,1081 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com
 ```

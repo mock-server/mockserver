@@ -215,9 +215,9 @@ public class MainTest {
             // then
             String actual = new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
             String expected = NEW_LINE +
-                "   =======================================================================================================" + NEW_LINE +
-                "   logLevel value \"FOO\" is invalid, please specify one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"" + NEW_LINE +
-                "   =======================================================================================================" + NEW_LINE +
+                "   ====================================================================================================================================================================================================" + NEW_LINE +
+                "   logLevel value \"FOO\" is invalid, please specify one of SL4J levels: \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\" or the Java Logger levels: \"FINEST\", \"FINE\", \"INFO\", \"WARNING\", \"SEVERE\", \"OFF\"" + NEW_LINE +
+                "   ====================================================================================================================================================================================================" + NEW_LINE +
                 NEW_LINE +
                 Main.USAGE;
             assertThat(actual, is(expected));

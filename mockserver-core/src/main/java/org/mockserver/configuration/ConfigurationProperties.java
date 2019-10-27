@@ -2,6 +2,7 @@ package org.mockserver.configuration;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import io.netty.util.NettyRuntime;
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.mockserver.logging.MockServerLogger.configureLogger;
 
 /**
  * @author jamesdbloom
@@ -84,6 +86,48 @@ public class ConfigurationProperties {
     static {
         addSslSubjectAlternativeNameDomains(readPropertyHierarchically(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, "localhost").split(","));
         addSslSubjectAlternativeNameIps(readPropertyHierarchically(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, "127.0.0.1,0.0.0.0").split(","));
+    }
+
+    private static Map<String, String> slf4jOrJavaLoggerToJavaLoggerLevelMapping;
+
+    private static Map<String, String> slf4jOrJavaLoggerToSLF4JLevelMapping;
+
+    private static Map<String, String> getSLF4JOrJavaLoggerToJavaLoggerLevelMapping() {
+        if (slf4jOrJavaLoggerToJavaLoggerLevelMapping == null) {
+            slf4jOrJavaLoggerToJavaLoggerLevelMapping = ImmutableMap
+                .<String, String>builder()
+                .put("TRACE", "FINEST")
+                .put("DEBUG", "FINE")
+                .put("INFO", "INFO")
+                .put("WARN", "WARNING")
+                .put("ERROR", "SEVERE")
+                .put("FINEST", "FINEST")
+                .put("FINE", "FINE")
+                .put("WARNING", "WARNING")
+                .put("SEVERE", "SEVERE")
+                .put("OFF", "OFF")
+                .build();
+        }
+        return slf4jOrJavaLoggerToJavaLoggerLevelMapping;
+    }
+
+    private static Map<String, String> getSLF4JOrJavaLoggerToSLF4JLevelMapping() {
+        if (slf4jOrJavaLoggerToSLF4JLevelMapping == null) {
+            slf4jOrJavaLoggerToSLF4JLevelMapping = ImmutableMap
+                .<String, String>builder()
+                .put("FINEST", "TRACE")
+                .put("FINE", "DEBUG")
+                .put("INFO", "INFO")
+                .put("WARNING", "WARN")
+                .put("SEVERE", "ERROR")
+                .put("TRACE", "TRACE")
+                .put("DEBUG", "DEBUG")
+                .put("WARN", "WARN")
+                .put("ERROR", "ERROR")
+                .put("OFF", "OFF")
+                .build();
+        }
+        return slf4jOrJavaLoggerToSLF4JLevelMapping;
     }
 
     private static String propertyFile() {
@@ -312,20 +356,26 @@ public class ConfigurationProperties {
     }
 
     public static Level logLevel() {
-        return Level.valueOf(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL));
+        ;
+        return Level.valueOf(getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL).toUpperCase()));
+    }
+
+    public static String javaLoggerLogLevel() {
+        ;
+        return getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL).toUpperCase());
     }
 
     /**
      * Override the default logging level of INFO
      *
-     * @param level the log level, which can be TRACE, DEBUG, INFO, WARN, ERROR, OFF
+     * @param level the log level, which can be TRACE, DEBUG, INFO, WARN, ERROR, OFF, FINEST, FINE, INFO, WARNING, SEVERE
      */
     public static void logLevel(String level) {
-        if (!Arrays.asList("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF").contains(level)) {
-            throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"");
+        if (!getSLF4JOrJavaLoggerToSLF4JLevelMapping().containsKey(level)) {
+            throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of SL4J levels: \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\" or the Java Logger levels: \"FINEST\", \"FINE\", \"INFO\", \"WARNING\", \"SEVERE\", \"OFF\"");
         }
         System.setProperty(MOCKSERVER_LOG_LEVEL, level);
-        MockServerLogger.initialiseLogLevels();
+        configureLogger();
     }
 
     public static boolean disableRequestAudit() {

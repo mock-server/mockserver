@@ -45,9 +45,10 @@ public class Main {
         "                                     proxyRemotePort has been specified,                                                                                         " + NEW_LINE +
         "                                     proxyRemoteHost will default to \"localhost\".                                                                              " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE +
-        "        -logLevel <level>            Optionally specify log level as TRACE, DEBUG,                                                                               " + NEW_LINE +
-        "                                     INFO, WARN, ERROR or OFF. If not specified                                                                                  " + NEW_LINE +
-        "                                     default is INFO                                                                                                             " + NEW_LINE +
+        "        -logLevel <level>            Optionally specify log level using SLF4J levels:                                                                            " + NEW_LINE +
+        "                                     TRACE, DEBUG, INFO, WARN, ERROR, OFF or Java                                                                                " + NEW_LINE +
+        "                                     Logger levels: FINEST, FINE, INFO, WARNING,                                                                                 " + NEW_LINE +
+        "                                     SEVERE or OFF. If not specified default is INFO                                                                             " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE +
         "   i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort 1080 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -logLevel WARN          " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE;
@@ -126,8 +127,8 @@ public class Main {
                             }
                             break;
                         case logLevel:
-                            if (!Arrays.asList("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF").contains(argumentValue)) {
-                                errorMessage = argumentName + " value \"" + argumentValue + "\" is invalid, please specify one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"";
+                            if (!Arrays.asList("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF", "FINEST", "FINE", "INFO", "WARNING", "SEVERE").contains(argumentValue)) {
+                                errorMessage = argumentName + " value \"" + argumentValue + "\" is invalid, please specify one of SL4J levels: \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\" or the Java Logger levels: \"FINEST\", \"FINE\", \"INFO\", \"WARNING\", \"SEVERE\", \"OFF\"";
                             }
                             break;
                     }

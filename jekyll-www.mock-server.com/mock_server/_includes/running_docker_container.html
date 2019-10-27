@@ -96,11 +96,12 @@ In addition it is possible to <a href="#docker_container_customization">customis
                                                 proxyRemotePort has been specified,
                                                 proxyRemoteHost will default to \"localhost\".
 
-        -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>                       Optionally specify log level as TRACE, DEBUG,
-                                                INFO, WARN, ERROR or OFF. If not specified
-                                                default is INFO
+        -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>                       Optionally specify log level using SLF4J levels:
+                                                TRACE, DEBUG, INFO, WARN, ERROR, OFF or Java
+                                                Logger levels: FINEST, FINE, INFO, WARNING,
+                                                SEVERE or OFF. If not specified default is INFO
 
-        -jvmOptions <span class="command_line_argument_placeholder">&lt;system parameters&gt;</span>  Specified generic JVM options or system properties.
+        -jvmOptions <span class="command_line_argument_placeholder">&lt;system parameters&gt;</span>         Specified generic JVM options or system properties.
 
    i.e. /opt/mockserver/run_mockserver.sh -serverPort 1080,1081 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -jvmOptions -logLevel INFO "-Dmockserver.enableCORSForAllResponses=true -Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'"</code></pre>
 
