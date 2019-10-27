@@ -88,7 +88,7 @@ paths:
           name: type
           schema:
             type: string
-            enum: ["logs", "requests", "recorded_expectations", "active_expectations"]
+            enum: ["logs", "requests", "request_responses", "recorded_expectations", "active_expectations"]
           description: specifies the type of object that is retrieve, default if not specified is "requests", supported values are "logs", "requests", "recorded_expectations", "active_expectations"
       responses:
         '200':
