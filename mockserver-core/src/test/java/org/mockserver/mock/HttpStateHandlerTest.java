@@ -9,10 +9,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.log.model.ExpectationMatchLogEntry;
-import org.mockserver.log.model.MessageLogEntry;
-import org.mockserver.log.model.RequestLogEntry;
-import org.mockserver.log.model.RequestResponseLogEntry;
+import org.mockserver.log.model.*;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
@@ -32,6 +29,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
@@ -42,7 +40,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.slf4j.event.Level.INFO;
 
 /**
  * @author jamesdbloom
@@ -73,7 +73,7 @@ public class HttpStateHandlerTest {
     public void shouldAllowAddingOfExceptionsWithNullFields() {
         // given - some existing expectations
         Expectation expectationOne = new Expectation(null).thenRespond(response("response_one"));
-        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond((HttpResponse)null);
+        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond((HttpResponse) null);
 
         // when
         httpStateHandler.add(expectationOne);
@@ -327,6 +327,75 @@ public class HttpStateHandlerTest {
     }
 
     @Test
+    public void shouldRetrieveRecordedRequestResponsesAsJson() {
+        // given - a request
+        HttpRequest request = request()
+            .withQueryStringParameter("type", "request_responses")
+            .withBody(httpRequestSerializer.serialize(request("request_one")));
+        // given - some log entries
+        httpStateHandler.log(new MessageLogEntry(EXPECTATION_RESPONSE, INFO, request("request_one"), "returning response:{}for request:{}for action:{}", response("response_one"), request("request_one"), response("response_one")));
+        httpStateHandler.log(new MessageLogEntry(EXPECTATION_RESPONSE, INFO, request("request_one"), "returning response:{}for request:{}for action:{}", response("response_two"), request("request_one"), response("response_two")));
+        httpStateHandler.log(new MessageLogEntry(EXPECTATION_NOT_MATCHED_RESPONSE, INFO, request("request_one"), "no expectation for:{}returning response:{}", request("request_one"), notFoundResponse()));
+        httpStateHandler.log(new MessageLogEntry(EXPECTATION_RESPONSE, INFO, request("request_three"), "returning response:{}for request:{}for action:{}", response("response_three"), request("request_three"), response("response_three")));
+
+        // when
+        HttpResponse response = httpStateHandler.retrieve(request);
+
+        // then
+        assertThat(response,
+            is(response().withBody(logEntrySerializer.serialize(Arrays.<LogEntry>asList(
+                new RequestResponseLogEntry(request("request_one"), response("response_one")),
+                new RequestResponseLogEntry(request("request_one"), response("response_two")),
+                new RequestResponseLogEntry(request("request_one"), notFoundResponse())
+            )), JSON_UTF_8).withStatusCode(200))
+        );
+        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving request_responses in json that match:{}", request("request_one"));
+    }
+
+    @Test
+    public void shouldRetrieveRecordedRequestsResponsesAsLogEntries() throws JsonProcessingException {
+        // given - a request
+        HttpRequest request = request()
+            .withQueryStringParameter("format", "log_entries")
+            .withQueryStringParameter("type", "request_responses")
+            .withBody(httpRequestSerializer.serialize(request("request_one")));
+        // given - some log entries
+        httpStateHandler.log(new MessageLogEntry(EXPECTATION_RESPONSE, INFO, request("request_one"), "returning response:{}for request:{}for action:{}", response("response_one"), request("request_one"), response("response_one")));
+        httpStateHandler.log(new MessageLogEntry(EXPECTATION_RESPONSE, INFO, request("request_one"), "returning response:{}for request:{}for action:{}", response("response_two"), request("request_one"), response("response_two")));
+        httpStateHandler.log(new MessageLogEntry(EXPECTATION_NOT_MATCHED_RESPONSE, INFO, request("request_one"), "no expectation for:{}returning response:{}", request("request_one"), notFoundResponse()));
+        httpStateHandler.log(new MessageLogEntry(EXPECTATION_RESPONSE, INFO, request("request_three"), "returning response:{}for request:{}for action:{}", response("response_three"), request("request_three"), response("response_three")));
+
+        // when
+        HttpResponse response = httpStateHandler.retrieve(request);
+
+        // then
+        assertThat(response,
+            is(response().withBody(logEntrySerializer.serialize(Arrays.<LogEntry>asList(
+                new RequestResponseLogEntry(request("request_one"), response("response_one")),
+                new RequestResponseLogEntry(request("request_one"), response("response_two")),
+                new RequestResponseLogEntry(request("request_one"), notFoundResponse())
+            )), JSON_UTF_8).withStatusCode(200))
+        );
+        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving request_responses in log_entries that match:{}", request("request_one"));
+    }
+
+    @Test
+    public void shouldRetrieveRecordedRequestsResponsesAsJava() {
+        // given - a request
+        HttpRequest request = request()
+            .withQueryStringParameter("format", "java")
+            .withQueryStringParameter("type", "request_responses")
+            .withBody(httpRequestSerializer.serialize(request("request_one")));
+
+        // when
+        HttpResponse response = httpStateHandler.retrieve(request);
+
+        // then
+        assertThat(response.getBodyAsString(), is("JAVA not supported for REQUEST_RESPONSES"));
+        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving request_responses in java that match:{}", request("request_one"));
+    }
+
+    @Test
     public void shouldRetrieveRecordedExpectationsAsJson() {
         // given - a request
         HttpRequest request = request()
@@ -472,22 +541,26 @@ public class HttpStateHandlerTest {
 
     @Test
     public void shouldThrowExceptionForInvalidRetrieveType() {
-        // given
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("\"invalid\" is not a valid value for \"type\" parameter, only the following values are supported [logs, requests, recorded_expectations, active_expectations]"));
-
-        // when
-        httpStateHandler.retrieve(request().withQueryStringParameter("type", "invalid"));
+        try {
+            // when
+            httpStateHandler.retrieve(request().withQueryStringParameter("type", "invalid"));
+            fail();
+        } catch (IllegalArgumentException iae) {
+            // then
+            assertThat(iae.getMessage(), is("\"invalid\" is not a valid value for \"type\" parameter, only the following values are supported [logs, requests, request_responses, recorded_expectations, active_expectations]"));
+        }
     }
 
     @Test
     public void shouldThrowExceptionForInvalidRetrieveFormat() {
-        // given
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("\"invalid\" is not a valid value for \"format\" parameter, only the following values are supported [java, json, log_entries]"));
-
-        // when
-        httpStateHandler.retrieve(request().withQueryStringParameter("format", "invalid"));
+        try {
+            // when
+            httpStateHandler.retrieve(request().withQueryStringParameter("format", "invalid"));
+            fail();
+        } catch (IllegalArgumentException iae) {
+            // then
+            assertThat(iae.getMessage(), is("\"invalid\" is not a valid value for \"format\" parameter, only the following values are supported [java, json, log_entries]"));
+        }
     }
 
     @Test

@@ -18,7 +18,7 @@ import org.mockserver.verify.VerificationSequence;
 import java.util.*;
 
 import static org.mockserver.configuration.ConfigurationProperties.requestLogSize;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.VERIFICATION_FAILED;
+import static org.mockserver.log.model.MessageLogEntry.LogMessageType.*;
 
 /**
  * @author jamesdbloom
@@ -44,6 +44,12 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     static Predicate<LogEntry> requestLogPredicate = new Predicate<LogEntry>() {
         public boolean apply(LogEntry input) {
             return REQUEST_LOG_TYPES.contains(input.getClass());
+        }
+    };
+    static Predicate<LogEntry> requestResponseLogPredicate = new Predicate<LogEntry>() {
+        public boolean apply(LogEntry input) {
+            return MESSAGE_LOG_TYPES.contains(input.getClass()) &&
+                (((MessageLogEntry) input).getType() == EXPECTATION_RESPONSE || ((MessageLogEntry) input).getType() == EXPECTATION_NOT_MATCHED_RESPONSE);
         }
     };
     static Predicate<LogEntry> expectationLogPredicate = new Predicate<LogEntry>() {
@@ -113,15 +119,15 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         });
     }
 
-    public List<MessageLogEntry> retrieveMessageLogEntries(HttpRequest httpRequest) {
-        return retrieveLogEntries(httpRequest, messageLogPredicate, new Function<LogEntry, MessageLogEntry>() {
+    public List<MessageLogEntry> retrieveRequestResponseMessageLogEntries(HttpRequest httpRequest) {
+        return retrieveLogEntries(httpRequest, requestResponseLogPredicate, new Function<LogEntry, MessageLogEntry>() {
             public MessageLogEntry apply(LogEntry input) {
                 return (MessageLogEntry) input;
             }
         });
     }
 
-    public List<MessageLogEntry> retrieveMessages(HttpRequest httpRequest) {
+    public List<MessageLogEntry> retrieveMessageLogEntries(HttpRequest httpRequest) {
         return retrieveLogEntries(httpRequest, messageLogPredicate, new Function<LogEntry, MessageLogEntry>() {
             public MessageLogEntry apply(LogEntry input) {
                 return (MessageLogEntry) input;

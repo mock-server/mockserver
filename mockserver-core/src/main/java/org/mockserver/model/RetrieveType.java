@@ -6,6 +6,7 @@ package org.mockserver.model;
 public enum RetrieveType {
     LOGS,
     REQUESTS,
+    REQUEST_RESPONSES,
     RECORDED_EXPECTATIONS,
     ACTIVE_EXPECTATIONS
 }

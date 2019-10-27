@@ -8,6 +8,7 @@ import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.filters.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.log.model.MessageLogEntry;
+import org.mockserver.log.model.RequestResponseLogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
@@ -20,8 +21,7 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static com.google.common.net.MediaType.*;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -155,7 +155,7 @@ public class HttpStateHandler {
                 switch (retrieveType) {
                     case LOGS: {
                         mockServerLogger.info(RETRIEVED, httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
-                        List<MessageLogEntry> retrievedMessages = mockServerLog.retrieveMessages(httpRequest);
+                        List<MessageLogEntry> retrievedMessages = mockServerLog.retrieveMessageLogEntries(httpRequest);
                         StringBuilder stringBuffer = new StringBuilder();
                         for (int i = 0; i < retrievedMessages.size(); i++) {
                             MessageLogEntry messageLogEntry = retrievedMessages.get(i);
@@ -183,6 +183,24 @@ public class HttpStateHandler {
                                 break;
                             case LOG_ENTRIES:
                                 response.withBody(logEntrySerializer.serialize(mockServerLog.retrieveRequestLogEntries(httpRequest)), JSON_UTF_8);
+                                break;
+                        }
+                        break;
+                    }
+                    case REQUEST_RESPONSES: {
+                        mockServerLogger.info(RETRIEVED, httpRequest, "retrieving " + retrieveType.name().toLowerCase() + " in " + format.name().toLowerCase() + " that match:{}", (httpRequest == null ? request() : httpRequest));
+                        List<MessageLogEntry> requestResponseLogEntries = mockServerLog.retrieveRequestResponseMessageLogEntries(httpRequest);
+                        switch (format) {
+                            case JAVA:
+                                response.withBody("JAVA not supported for REQUEST_RESPONSES", create("text", "plain").withCharset(UTF_8));
+                                break;
+                            case JSON:
+                            case LOG_ENTRIES:
+                                List<LogEntry> requestResponses = new ArrayList<>();
+                                for (MessageLogEntry requestResponseLogEntry : requestResponseLogEntries) {
+                                    requestResponses.add(new RequestResponseLogEntry(requestResponseLogEntry.getHttpRequest(), requestResponseLogEntry.getHttpResponse()));
+                                }
+                                response.withBody(logEntrySerializer.serialize(requestResponses), JSON_UTF_8);
                                 break;
                         }
                         break;

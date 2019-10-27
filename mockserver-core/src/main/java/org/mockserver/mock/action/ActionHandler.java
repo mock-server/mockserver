@@ -202,7 +202,7 @@ public class ActionHandler {
                         }
                         if (response.containsHeader("x-forwarded-by", "MockServer")) {
                             httpStateHandler.log(new RequestLogEntry(request));
-                            mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "no expectation for:{}returning response:{}", request, notFoundResponse());
+                            mockServerLogger.info(EXPECTATION_NOT_MATCHED_RESPONSE, request, "no expectation for:{}returning response:{}", request, notFoundResponse());
                         } else {
                             httpStateHandler.log(new RequestResponseLogEntry(request, response));
                             mockServerLogger.info(FORWARDED_REQUEST, request, "returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}", response, request, httpRequestToCurlSerializer.toCurl(request, remoteAddress));
@@ -259,7 +259,7 @@ public class ActionHandler {
             mockServerLogger.trace(request, "no expectation for:{}returning response:{}", request, notFoundResponse());
         } else {
             httpStateHandler.log(new RequestLogEntry(request));
-            mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "no expectation for:{}returning response:{}", request, notFoundResponse());
+            mockServerLogger.info(EXPECTATION_NOT_MATCHED_RESPONSE, request, "no expectation for:{}returning response:{}", request, notFoundResponse());
         }
         responseWriter.writeResponse(request, response, false);
     }

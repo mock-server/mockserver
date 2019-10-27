@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.log.model.*;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.scheduler.Scheduler;
@@ -71,7 +70,7 @@ public class LogFilterTest {
         assertThat(logFilter.retrieveLogEntries(null, expectationLogPredicate, logEntryToLogEntry), empty());
         assertThat(logFilter.retrieveExpectations(null), empty());
         assertThat(logFilter.retrieveLogEntries(null, messageLogPredicate, logEntryToLogEntry), empty());
-        assertThat(logFilter.retrieveMessages(null), empty());
+        assertThat(logFilter.retrieveMessageLogEntries(null), empty());
     }
 
     @Test
@@ -114,7 +113,7 @@ public class LogFilterTest {
         assertThat(logFilter.retrieveLogEntries(null, expectationLogPredicate, logEntryToLogEntry), IsIterableContainingInOrder.<LogEntry>contains(
             requestResponseLogEntry
         ));
-        List<String> logMessages = Lists.transform(logFilter.retrieveMessages(null), new Function<MessageLogEntry, String>() {
+        List<String> logMessages = Lists.transform(logFilter.retrieveMessageLogEntries(null), new Function<MessageLogEntry, String>() {
             public String apply(MessageLogEntry input) {
                 return input.getMessage();
             }
@@ -169,7 +168,7 @@ public class LogFilterTest {
         assertThat(logFilter.retrieveLogEntries(null, expectationLogPredicate, logEntryToLogEntry), empty());
         assertThat(logFilter.retrieveExpectations(null), empty());
         assertThat(logFilter.retrieveLogEntries(null, messageLogPredicate, logEntryToLogEntry), empty());
-        assertThat(logFilter.retrieveMessages(null), empty());
+        assertThat(logFilter.retrieveMessageLogEntries(null), empty());
     }
 
     @Test
@@ -262,7 +261,7 @@ public class LogFilterTest {
         logFilter.add(new MessageLogEntry(TRACE,null, request("request_seven"), "message_seven"));
 
         // then
-        List<String> logMessages = Lists.transform(logFilter.retrieveMessages(null), new Function<MessageLogEntry, String>() {
+        List<String> logMessages = Lists.transform(logFilter.retrieveMessageLogEntries(null), new Function<MessageLogEntry, String>() {
             public String apply(MessageLogEntry input) {
                 return input.getMessage();
             }
