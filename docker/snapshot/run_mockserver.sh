@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+#set -o xtrace
 
 function showUsage {
     echo >&2 "   run_mockserver.sh -serverPort <port> [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>] [-logLevel <level>] [-jvmOptions <system parameters>]"
@@ -46,6 +47,29 @@ function runCommand {
     eval $1
 }
 
+function prep_term {
+    unset term_child_pid
+    unset term_kill_needed
+    trap 'handle_term' TERM INT
+}
+
+function handle_term {
+    if [ "${term_child_pid}" ]; then
+        kill -TERM "${term_child_pid}" 2>/dev/null
+    else
+        term_kill_needed="yes"
+    fi
+}
+
+function wait_term {
+    term_child_pid=$!
+    if [ "${term_kill_needed}" ]; then
+        kill -TERM "${term_child_pid}" 2>/dev/null
+    fi
+    wait ${term_child_pid}
+    trap - TERM INT
+    wait ${term_child_pid}
+}
 
 while [ $# -gt 0 ]
 do
@@ -130,4 +154,6 @@ then
     fi
 fi
 
-runCommand "java $JVM_OPTIONS -Dfile.encoding=UTF-8 -jar /opt/mockserver/mockserver-netty-jar-with-dependencies.jar$COMMAND_LINE_OPTS"
+prep_term
+runCommand "java ${JVM_OPTIONS} -Dfile.encoding=UTF-8 -jar /opt/mockserver/mockserver-netty-jar-with-dependencies.jar ${COMMAND_LINE_OPTS} &"
+wait_term
