@@ -58,6 +58,8 @@ function locationHashChanged(e) {
                 accordionTitleButton = document.getElementById("button_error");
             } else if (elementId.indexOf("recorded_reqs") !== -1) {
                 accordionTitleButton = document.getElementById("button_recorded_reqs");
+            } else if (elementId.indexOf("recorded_req_res") !== -1) {
+                accordionTitleButton = document.getElementById("button_recorded_req_res");
             } else if (elementId.indexOf("active_expectations") !== -1) {
                 accordionTitleButton = document.getElementById("button_active_expectations");
             } else if (elementId.indexOf("recorded_expectations") !== -1) {
