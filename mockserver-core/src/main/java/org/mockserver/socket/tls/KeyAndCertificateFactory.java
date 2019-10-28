@@ -89,6 +89,7 @@ public class KeyAndCertificateFactory {
         if (host != null) {
             String hostWithoutPort = StringUtils.substringBefore(host, ":");
 
+            // TODO make IP resolution as an optional setting
             if (!ConfigurationProperties.containsSslSubjectAlternativeName(hostWithoutPort)) {
                 try {
                     // resolve host name for subject alternative name in case host name is ip address
