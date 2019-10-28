@@ -7,7 +7,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.client.SocketCommunicationException;
 import org.mockserver.client.SocketConnectionException;
-import org.mockserver.proxy.ProxyConfiguration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.ExpectationMatchLogEntry;
@@ -17,6 +16,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
+import org.mockserver.proxy.ProxyConfiguration;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
@@ -24,6 +24,7 @@ import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.Set;
+import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
@@ -40,6 +41,7 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 public class ActionHandler {
 
     public static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
+    private static final String uniqueLoopPreventionHeader = "MockServer_" + UUID.randomUUID().toString();
 
     private final HttpStateHandler httpStateHandler;
     private final Scheduler scheduler;
@@ -180,46 +182,47 @@ public class ActionHandler {
 
             responseWriter.writeResponse(request, OK);
 
-        } else if (potentiallyHttpProxy && request.getHeaders().containsEntry("x-forwarded-by", "MockServer")) {
-
-            mockServerLogger.trace("Received \"x-forwarded-by\" header caused by exploratory HTTP proxy - falling back to no proxy: {}", request);
-            returnNotFound(responseWriter, request);
-
         } else if (proxyingRequest || potentiallyHttpProxy) {
 
-            final InetSocketAddress remoteAddress = ctx != null ? ctx.channel().attr(REMOTE_SOCKET).get() : null;
-            final HttpRequest clonedRequest = hopByHopHeaderFilter.onRequest(request);
-            if (potentiallyHttpProxy) {
-                clonedRequest.withHeader("x-forwarded-by", "MockServer");
-            }
-            final HttpForwardActionResult responseFuture = new HttpForwardActionResult(clonedRequest, httpClient.sendRequest(clonedRequest, remoteAddress, potentiallyHttpProxy ? 1000 : ConfigurationProperties.socketConnectionTimeout()));
-            scheduler.submit(responseFuture, new Runnable() {
-                public void run() {
-                    try {
-                        HttpResponse response = responseFuture.getHttpResponse().get();
-                        if (response == null) {
-                            response = notFoundResponse();
-                        }
-                        if (response.containsHeader("x-forwarded-by", "MockServer")) {
-                            httpStateHandler.log(new RequestLogEntry(request));
-                            mockServerLogger.info(EXPECTATION_NOT_MATCHED_RESPONSE, request, "no expectation for:{}returning response:{}", request, notFoundResponse());
-                        } else {
-                            httpStateHandler.log(new RequestResponseLogEntry(request, response));
-                            mockServerLogger.info(FORWARDED_REQUEST, request, "returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}", response, request, httpRequestToCurlSerializer.toCurl(request, remoteAddress));
-                        }
-                        responseWriter.writeResponse(request, response, false);
-                    } catch (SocketCommunicationException sce) {
-                        returnNotFound(responseWriter, request);
-                    } catch (Exception ex) {
-                        if (potentiallyHttpProxy && (ex.getCause() instanceof ConnectException || ex.getCause() instanceof SocketConnectionException)) {
-                            mockServerLogger.trace("Failed to connect to proxied socket due to exploratory HTTP proxy for: {}falling back to no proxy: {}", request, ex.getCause());
+            if (request.getHeaders().containsEntry("x-forwarded-by", uniqueLoopPreventionHeader)) {
+
+                mockServerLogger.trace("Received \"x-forwarded-by\" header caused by exploratory HTTP proxy or proxy loop - falling back to no proxy: {}", request);
+                returnNotFound(responseWriter, request);
+
+            } else {
+
+                final InetSocketAddress remoteAddress = ctx != null ? ctx.channel().attr(REMOTE_SOCKET).get() : null;
+                final HttpRequest clonedRequest = hopByHopHeaderFilter.onRequest(request).withHeader("x-forwarded-by", uniqueLoopPreventionHeader);
+                final HttpForwardActionResult responseFuture = new HttpForwardActionResult(clonedRequest, httpClient.sendRequest(clonedRequest, remoteAddress, potentiallyHttpProxy ? 1000 : ConfigurationProperties.socketConnectionTimeout()));
+                scheduler.submit(responseFuture, new Runnable() {
+                    public void run() {
+                        try {
+                            HttpResponse response = responseFuture.getHttpResponse().get();
+                            if (response == null) {
+                                response = notFoundResponse();
+                            }
+                            if (response.containsHeader("x-forwarded-by", uniqueLoopPreventionHeader)) {
+                                httpStateHandler.log(new RequestLogEntry(request));
+                                mockServerLogger.info(EXPECTATION_NOT_MATCHED_RESPONSE, request, "no expectation for:{}returning response:{}", request, notFoundResponse());
+                            } else {
+                                httpStateHandler.log(new RequestResponseLogEntry(request, response));
+                                mockServerLogger.info(FORWARDED_REQUEST, request, "returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}", response, request, httpRequestToCurlSerializer.toCurl(request, remoteAddress));
+                            }
+                            responseWriter.writeResponse(request, response, false);
+                        } catch (SocketCommunicationException sce) {
                             returnNotFound(responseWriter, request);
-                        } else {
-                            mockServerLogger.error(request, ex, ex.getMessage());
+                        } catch (Exception ex) {
+                            if (potentiallyHttpProxy && (ex.getCause() instanceof ConnectException || ex.getCause() instanceof SocketConnectionException)) {
+                                mockServerLogger.trace("Failed to connect to proxied socket due to exploratory HTTP proxy for: {}falling back to no proxy: {}", request, ex.getCause());
+                                returnNotFound(responseWriter, request);
+                            } else {
+                                mockServerLogger.error(request, ex, ex.getMessage());
+                            }
                         }
                     }
-                }
-            }, synchronous);
+                }, synchronous);
+
+            }
 
         } else {
 
