@@ -7,6 +7,7 @@ import org.mockserver.model.*;
 
 import java.util.List;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.serialization.java.ExpectationToJavaSerializer.INDENT_SIZE;
 
@@ -33,11 +34,11 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
         if (request != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output);
             output.append("request()");
-            if (!Strings.isNullOrEmpty(request.getMethod().getValue())) {
+            if (isNotBlank(request.getMethod().getValue())) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withMethod(\"").append(request.getMethod().getValue()).append("\")");
             }
-            if (!Strings.isNullOrEmpty(request.getPath().getValue())) {
+            if (isNotBlank(request.getPath().getValue())) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withPath(\"").append(request.getPath().getValue()).append("\")");
             }

@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import org.apache.commons.text.StringEscapeUtils;
 import org.mockserver.model.HttpTemplate;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.serialization.java.ExpectationToJavaSerializer.INDENT_SIZE;
 
@@ -17,7 +18,7 @@ public class HttpTemplateToJavaSerializer implements ToJavaSerializer<HttpTempla
         StringBuffer output = new StringBuffer();
         if (httpTemplate != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append("template(HttpTemplate.TemplateType." + httpTemplate.getTemplateType().name() + ")");
-            if (!Strings.isNullOrEmpty(httpTemplate.getTemplate())) {
+            if (isNotBlank(httpTemplate.getTemplate())) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withTemplate(\"").append(StringEscapeUtils.escapeJava(httpTemplate.getTemplate())).append("\")");
             }
             if (httpTemplate.getDelay() != null) {

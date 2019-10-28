@@ -2,13 +2,13 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.*;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXPECTATION_MATCHED;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
@@ -181,8 +181,8 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                 matches = true;
             } else {
                 if (request != null) {
-                    boolean methodMatches = Strings.isNullOrEmpty(request.getMethod().getValue()) || matches(context, methodMatcher, request.getMethod());
-                    boolean pathMatches = Strings.isNullOrEmpty(request.getPath().getValue()) || matches(context, pathMatcher, request.getPath());
+                    boolean methodMatches = isBlank(request.getMethod().getValue()) || matches(context, methodMatcher, request.getMethod());
+                    boolean pathMatches = isBlank(request.getPath().getValue()) || matches(context, pathMatcher, request.getPath());
                     boolean queryStringParametersMatches = matches(context, queryStringParameterMatcher, request.getQueryStringParameters());
                     boolean bodyMatches = bodyMatches(context, request);
                     boolean headersMatch = matches(context, headerMatcher, request.getHeaders());

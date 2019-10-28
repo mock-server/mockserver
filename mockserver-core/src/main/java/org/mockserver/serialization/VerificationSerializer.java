@@ -1,13 +1,13 @@
 package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
-import org.mockserver.serialization.model.VerificationDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.serialization.model.VerificationDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaVerificationValidator;
 import org.mockserver.verify.Verification;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.VERIFICATION_FAILED;
 
@@ -36,7 +36,7 @@ public class VerificationSerializer implements Serializer<Verification> {
     }
 
     public Verification deserialize(String jsonVerification) {
-        if (Strings.isNullOrEmpty(jsonVerification)) {
+        if (isBlank(jsonVerification)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a verification is required but value was \"" + String.valueOf(jsonVerification) + "\"");
         } else {
             String validationErrors = verificationValidator.isValid(jsonVerification);

@@ -1,6 +1,5 @@
 package org.mockserver.websocket;
 
-import com.google.common.base.Strings;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -21,6 +20,7 @@ import java.nio.charset.Charset;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.UPGRADE;
 import static io.netty.handler.codec.http.HttpHeaderValues.WEBSOCKET;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.websocket.WebSocketClient.REGISTRATION_FUTURE;
 
 public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> {
@@ -42,7 +42,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     }
 
     private String cleanContextPath(String contextPath) {
-        if (!Strings.isNullOrEmpty(contextPath)) {
+        if (isNotBlank(contextPath)) {
             return (!contextPath.startsWith("/") ? "/" : "") + contextPath;
         } else {
             return "";

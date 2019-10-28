@@ -1,6 +1,5 @@
 package org.mockserver.socket.tls;
 
-import com.google.common.base.Strings;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.ssl.AbstractSniHandler;
@@ -11,6 +10,7 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.internal.PlatformDependent;
 import org.mockserver.configuration.ConfigurationProperties;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.socket.tls.NettySslContextFactory.nettySslContextFactory;
 
 /**
@@ -20,7 +20,7 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
 
     @Override
     protected Future<SslContext> lookup(ChannelHandlerContext ctx, String hostname) {
-        if (!Strings.isNullOrEmpty(hostname)) {
+        if (isNotBlank(hostname)) {
             ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostname);
         }
         return ctx.executor().newSucceededFuture(nettySslContextFactory().createServerSslContext());

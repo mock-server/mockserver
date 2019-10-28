@@ -1,6 +1,5 @@
 package org.mockserver.integration.proxy;
 
-import com.google.common.base.Strings;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.http.Header;
@@ -39,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
@@ -96,7 +96,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     private String addContextToPath(String path) {
         String cleanedPath = path;
-        if (!Strings.isNullOrEmpty(servletContext)) {
+        if (isNotBlank(servletContext)) {
             cleanedPath =
                 (!servletContext.startsWith("/") ? "/" : "") +
                     servletContext +

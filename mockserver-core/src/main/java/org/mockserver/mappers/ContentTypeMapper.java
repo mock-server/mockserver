@@ -1,6 +1,5 @@
 package org.mockserver.mappers;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import io.netty.handler.codec.http.HttpConstants;
 import io.netty.util.CharsetUtil;
@@ -13,6 +12,7 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderValues.CHARSET;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * @author jamesdbloom
@@ -61,7 +61,7 @@ public class ContentTypeMapper {
 
     public static boolean isBinary(String contentTypeHeader) {
         boolean binary = false;
-        if (!Strings.isNullOrEmpty(contentTypeHeader)) {
+        if (isNotBlank(contentTypeHeader)) {
             String contentType = contentTypeHeader.toLowerCase();
             boolean utf8Body = contentType.contains("utf-8")
                 || contentType.contains("utf8")
@@ -101,7 +101,7 @@ public class ContentTypeMapper {
         Charset charset = DEFAULT_HTTP_CHARACTER_SET;
         if (contentType != null) {
             String charsetName = StringUtils.substringAfterLast(contentType, CHARSET.toString() + (char) HttpConstants.EQUALS).replaceAll("\"", "");
-            if (!Strings.isNullOrEmpty(charsetName)) {
+            if (isNotBlank(charsetName)) {
                 try {
                     charset = Charset.forName(charsetName);
                 } catch (UnsupportedCharsetException uce) {

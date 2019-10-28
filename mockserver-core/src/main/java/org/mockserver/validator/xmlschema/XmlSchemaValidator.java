@@ -1,6 +1,5 @@
 package org.mockserver.validator.xmlschema;
 
-import com.google.common.base.Strings;
 import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
@@ -16,6 +15,7 @@ import java.io.FileNotFoundException;
 import java.io.StringReader;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * @author jamesdbloom
@@ -29,7 +29,7 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
     public XmlSchemaValidator(MockServerLogger mockServerLogger, String schema) {
         this.mockServerLogger = mockServerLogger;
         try {
-            if (schema.trim().endsWith(">") || Strings.isNullOrEmpty(schema)) {
+            if (schema.trim().endsWith(">") || isBlank(schema)) {
                 this.schema = schemaFactory.newSchema(new StreamSource(new StringReader(schema)));
             } else if (schema.trim().endsWith(".xsd")) {
                 this.schema = schemaFactory.newSchema(new StreamSource(FileReader.openReaderToFileFromClassPathOrPath(schema)));

@@ -1,6 +1,5 @@
 package org.mockserver.integration.server;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -8,8 +7,8 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.mockserver.client.NettyHttpClient;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.client.NettyHttpClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
@@ -24,18 +23,8 @@ import java.util.concurrent.TimeUnit;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.mockserver.model.Cookie.cookie;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.Header.header;
-import static org.mockserver.model.HttpClassCallback.callback;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpTemplate.template;
-import static org.mockserver.model.Parameter.param;
-import static org.mockserver.model.StringBody.exact;
 
 /**
  * @author jamesdbloom
@@ -114,7 +103,7 @@ public abstract class AbstractMockingIntegrationTestBase {
 
     String addContextToPath(String path) {
         String cleanedPath = path;
-        if (!Strings.isNullOrEmpty(servletContext)) {
+        if (isNotBlank(servletContext)) {
             cleanedPath =
                 (!servletContext.startsWith("/") ? "/" : "") +
                     servletContext +

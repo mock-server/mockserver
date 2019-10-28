@@ -1,7 +1,6 @@
 package org.mockserver.configuration;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
@@ -23,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.logging.MockServerLogger.configureLogger;
@@ -483,7 +483,7 @@ public class ConfigurationProperties {
     private static InetSocketAddress readInetSocketAddressProperty(String key) {
         InetSocketAddress inetSocketAddress = null;
         String proxy = readPropertyHierarchically(key, null);
-        if (!Strings.isNullOrEmpty(proxy)) {
+        if (isNotBlank(proxy)) {
             String[] proxyParts = proxy.split(":");
             if (proxyParts.length > 1) {
                 try {

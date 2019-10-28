@@ -1,12 +1,12 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Strings;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.JSONCompareResult;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.skyscreamer.jsonassert.JSONCompare.compareJSON;
 
 /**
@@ -29,7 +29,7 @@ public class JsonStringMatcher extends BodyMatcher<String> {
 
         JSONCompareResult jsonCompareResult;
         try {
-            if (Strings.isNullOrEmpty(matcher)) {
+            if (isBlank(matcher)) {
                 result = true;
             } else {
                 JSONCompareMode jsonCompareMode = JSONCompareMode.LENIENT;

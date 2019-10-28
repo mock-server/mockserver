@@ -1,11 +1,11 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Strings;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -29,7 +29,7 @@ public class ExactStringMatcher extends BodyMatcher<NottableString> {
     public static boolean matches(String matcher, String matched, boolean ignoreCase) {
         boolean result = false;
 
-        if (Strings.isNullOrEmpty(matcher)) {
+        if (isBlank(matcher)) {
             result = true;
         } else if (matched != null) {
             if (matched.equals(matcher)) {

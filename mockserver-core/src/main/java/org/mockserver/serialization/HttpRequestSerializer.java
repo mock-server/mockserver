@@ -3,10 +3,9 @@ package org.mockserver.serialization;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 
@@ -14,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -93,8 +93,8 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
     }
 
     public HttpRequest deserialize(String jsonHttpRequest) {
-        if (Strings.isNullOrEmpty(jsonHttpRequest)) {
-            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request is required but value was \"" + String.valueOf(jsonHttpRequest) + "\"");
+        if (isBlank(jsonHttpRequest)) {
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request is required but value was \"" + jsonHttpRequest + "\"");
         } else {
             if (jsonHttpRequest.contains("\"httpRequest\"")) {
                 try {
@@ -133,18 +133,18 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
     }
 
     public HttpRequest[] deserializeArray(String jsonHttpRequests) {
-        List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
-        if (Strings.isNullOrEmpty(jsonHttpRequests)) {
-            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request or request array is required but value was \"" + String.valueOf(jsonHttpRequests) + "\"");
+        List<HttpRequest> httpRequests = new ArrayList<>();
+        if (isBlank(jsonHttpRequests)) {
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request or request array is required but value was \"" + jsonHttpRequests + "\"");
         } else {
             List<String> jsonRequestList = jsonArraySerializer.returnJSONObjects(jsonHttpRequests);
             if (jsonRequestList.isEmpty()) {
                 throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request or array of request is required");
             } else {
                 List<String> validationErrorsList = new ArrayList<String>();
-                for (String jsonExpecation : jsonRequestList) {
+                for (String jsonRequest : jsonRequestList) {
                     try {
-                        httpRequests.add(deserialize(jsonExpecation));
+                        httpRequests.add(deserialize(jsonRequest));
                     } catch (IllegalArgumentException iae) {
                         validationErrorsList.add(iae.getMessage());
                     }
@@ -155,7 +155,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                 }
             }
         }
-        return httpRequests.toArray(new HttpRequest[httpRequests.size()]);
+        return httpRequests.toArray(new HttpRequest[0]);
     }
 
 }

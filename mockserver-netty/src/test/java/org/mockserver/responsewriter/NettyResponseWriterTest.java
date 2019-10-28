@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
@@ -24,6 +25,8 @@ public class NettyResponseWriterTest {
     private ChannelHandlerContext mockChannelHandlerContext;
     @Mock
     private ChannelFuture mockChannelFuture;
+    @Mock
+    private MockServerLogger mockServerLogger;
 
     @Before
     public void setupTestFixture() {
@@ -39,7 +42,7 @@ public class NettyResponseWriterTest {
         HttpResponse response = response("some_response");
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -55,7 +58,7 @@ public class NettyResponseWriterTest {
         HttpRequest request = request("some_request");
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), (HttpResponse) null, false);
+        new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), (HttpResponse) null, false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -75,7 +78,7 @@ public class NettyResponseWriterTest {
             HttpResponse response = response("some_response");
 
             // when
-            new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
+            new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), response.clone(), false);
 
             // then
             verify(mockChannelHandlerContext).writeAndFlush(
@@ -102,7 +105,7 @@ public class NettyResponseWriterTest {
         HttpResponse response = response("some_response");
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -123,7 +126,7 @@ public class NettyResponseWriterTest {
                 );
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -148,7 +151,7 @@ public class NettyResponseWriterTest {
                 );
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -172,7 +175,7 @@ public class NettyResponseWriterTest {
                 );
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(

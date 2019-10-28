@@ -27,6 +27,7 @@ import static com.google.common.net.MediaType.*;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
@@ -75,7 +76,7 @@ public class HttpStateHandler {
 
     public void clear(HttpRequest request) {
         HttpRequest requestMatcher = null;
-        if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+        if (isNotBlank(request.getBodyAsString())) {
             requestMatcher = httpRequestSerializer.deserialize(request.getBodyAsString());
         }
         try {
@@ -114,7 +115,7 @@ public class HttpStateHandler {
         for (Expectation expectation : expectations) {
             if (expectation.getHttpRequest() != null) {
                 final String hostHeader = expectation.getHttpRequest().getFirstHeader(HOST.toString());
-                if (!Strings.isNullOrEmpty(hostHeader)) {
+                if (isNotBlank(hostHeader)) {
                     scheduler.submit(new Runnable() {
                         @Override
                         public void run() {
@@ -146,7 +147,7 @@ public class HttpStateHandler {
         HttpResponse response = response();
         if (request != null) {
             HttpRequest httpRequest = null;
-            if (!Strings.isNullOrEmpty(request.getBodyAsString())) {
+            if (isNotBlank(request.getBodyAsString())) {
                 httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
             }
             try {

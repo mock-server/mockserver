@@ -11,6 +11,7 @@ import org.mockserver.mockserver.MockServer;
 import java.io.PrintStream;
 import java.util.*;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.cli.Main.Arguments.*;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
@@ -78,7 +79,7 @@ public class Main {
                 Integer[] localPorts = INTEGER_STRING_LIST_PARSER.toArray(parsedArguments.get(serverPort.name()));
                 if (parsedArguments.containsKey(proxyRemotePort.name())) {
                     String remoteHost = parsedArguments.get(proxyRemoteHost.name());
-                    if (Strings.isNullOrEmpty(remoteHost)) {
+                    if (isBlank(remoteHost)) {
                         remoteHost = "localhost";
                     }
                     new MockServer(Integer.parseInt(parsedArguments.get(proxyRemotePort.name())), remoteHost, localPorts);

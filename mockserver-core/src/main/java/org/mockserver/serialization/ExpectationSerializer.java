@@ -2,17 +2,17 @@ package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import org.mockserver.serialization.model.ExpectationDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.serialization.model.ExpectationDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -64,8 +64,8 @@ public class ExpectationSerializer implements Serializer<Expectation> {
     }
 
     public Expectation deserialize(String jsonExpectation) {
-        if (Strings.isNullOrEmpty(jsonExpectation)) {
-            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation is required but value was \"" + String.valueOf(jsonExpectation) + "\"");
+        if (isBlank(jsonExpectation)) {
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation is required but value was \"" + jsonExpectation + "\"");
         } else {
             String validationErrors = expectationValidator.isValid(jsonExpectation);
             if (validationErrors.isEmpty()) {
@@ -93,9 +93,9 @@ public class ExpectationSerializer implements Serializer<Expectation> {
     }
 
     public Expectation[] deserializeArray(String jsonExpectations) {
-        List<Expectation> expectations = new ArrayList<Expectation>();
-        if (Strings.isNullOrEmpty(jsonExpectations)) {
-            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation or expectation array is required but value was \"" + String.valueOf(jsonExpectations) + "\"");
+        List<Expectation> expectations = new ArrayList<>();
+        if (isBlank(jsonExpectations)) {
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation or expectation array is required but value was \"" + jsonExpectations + "\"");
         } else {
             List<String> jsonExpectationList = jsonArraySerializer.returnJSONObjects(jsonExpectations);
             if (jsonExpectationList.isEmpty()) {

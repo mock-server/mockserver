@@ -1,18 +1,20 @@
 package org.mockserver.codec.mappers;
 
-import com.google.common.base.Strings;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.*;
-import org.mockserver.model.*;
+import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.NottableString;
+import org.mockserver.model.Parameter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
-import static io.netty.handler.codec.http.HttpHeaderValues.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
+import static io.netty.handler.codec.http.HttpHeaderValues.*;
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.codec.BodyDecoderEncoder.bodyToByteBuf;
 
 /**
@@ -81,7 +83,7 @@ public class MockServerHttpRequestToFullHttpRequest {
             }
         }
 
-        if (!Strings.isNullOrEmpty(httpRequest.getFirstHeader(HOST.toString()))) {
+        if (isNotBlank(httpRequest.getFirstHeader(HOST.toString()))) {
             request.headers().add(HOST, httpRequest.getFirstHeader(HOST.toString()));
         }
         request.headers().set(ACCEPT_ENCODING, GZIP + "," + DEFLATE);

@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
@@ -87,7 +89,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
     }
 
     public String getMethod(String defaultValue) {
-        if (Strings.isNullOrEmpty(method.getValue())) {
+        if (isBlank(method.getValue())) {
             return defaultValue;
         } else {
             return method.getValue();
@@ -543,7 +545,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
     }
 
     public InetSocketAddress socketAddressFromHostHeader() {
-        if (!Strings.isNullOrEmpty(getFirstHeader(HOST.toString()))) {
+        if (isNotBlank(getFirstHeader(HOST.toString()))) {
             boolean isSsl = isSecure() != null && isSecure();
             String[] hostHeaderParts = getFirstHeader(HOST.toString()).split(":");
             return new InetSocketAddress(hostHeaderParts[0], hostHeaderParts.length > 1 ? Integer.parseInt(hostHeaderParts[1]) : isSsl ? 443 : 80);
@@ -565,10 +567,10 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
     }
 
     public HttpRequest update(HttpRequest replaceRequest) {
-        if (!Strings.isNullOrEmpty(replaceRequest.getMethod().getValue())) {
+        if (replaceRequest.getMethod() != null && isNotBlank(replaceRequest.getMethod().getValue())) {
             withMethod(replaceRequest.getMethod());
         }
-        if (!Strings.isNullOrEmpty(replaceRequest.getPath().getValue())) {
+        if (replaceRequest.getPath() != null && isNotBlank(replaceRequest.getPath().getValue())) {
             withPath(replaceRequest.getPath());
         }
         for (Header header : replaceRequest.getHeaderList()) {

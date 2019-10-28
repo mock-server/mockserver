@@ -3,17 +3,17 @@ package org.mockserver.serialization;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import org.mockserver.serialization.model.HttpResponseDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.serialization.model.HttpResponseDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -65,8 +65,8 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
     }
 
     public HttpResponse deserialize(String jsonHttpResponse) {
-        if (Strings.isNullOrEmpty(jsonHttpResponse)) {
-            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a response is required but value was \"" + String.valueOf(jsonHttpResponse) + "\"");
+        if (isBlank(jsonHttpResponse)) {
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a response is required but value was \"" + jsonHttpResponse + "\"");
         } else {
             if (jsonHttpResponse.contains("\"httpResponse\"")) {
                 try {
@@ -105,9 +105,9 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
     }
 
     public HttpResponse[] deserializeArray(String jsonHttpResponses) {
-        List<HttpResponse> httpResponses = new ArrayList<HttpResponse>();
-        if (Strings.isNullOrEmpty(jsonHttpResponses)) {
-            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a response or response array is required but value was \"" + String.valueOf(jsonHttpResponses) + "\"");
+        List<HttpResponse> httpResponses = new ArrayList<>();
+        if (isBlank(jsonHttpResponses)) {
+            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a response or response array is required but value was \"" + jsonHttpResponses + "\"");
         } else {
             List<String> jsonResponseList = jsonArraySerializer.returnJSONObjects(jsonHttpResponses);
             if (jsonResponseList.isEmpty()) {
@@ -127,7 +127,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                 }
             }
         }
-        return httpResponses.toArray(new HttpResponse[httpResponses.size()]);
+        return httpResponses.toArray(new HttpResponse[0]);
     }
 
 }

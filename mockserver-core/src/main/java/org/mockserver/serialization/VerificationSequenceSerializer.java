@@ -1,13 +1,13 @@
 package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
-import org.mockserver.serialization.model.VerificationSequenceDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.serialization.model.VerificationSequenceDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaVerificationSequenceValidator;
 import org.mockserver.verify.VerificationSequence;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.VERIFICATION_FAILED;
 
@@ -36,7 +36,7 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
     }
 
     public VerificationSequence deserialize(String jsonVerificationSequence) {
-        if (Strings.isNullOrEmpty(jsonVerificationSequence)) {
+        if (isBlank(jsonVerificationSequence)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a verification sequence is required but value was \"" + String.valueOf(jsonVerificationSequence) + "\"");
         } else {
             String validationErrors = verificationSequenceValidator.isValid(jsonVerificationSequence);

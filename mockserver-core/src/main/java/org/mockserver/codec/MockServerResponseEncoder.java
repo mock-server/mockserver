@@ -1,6 +1,5 @@
 package org.mockserver.codec;
 
-import com.google.common.base.Strings;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
@@ -20,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.codec.BodyDecoderEncoder.bodyToByteBuf;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 
@@ -66,7 +66,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         }
 
         // Content-Type
-        if (Strings.isNullOrEmpty(httpResponse.getFirstHeader(CONTENT_TYPE.toString()))) {
+        if (isBlank(httpResponse.getFirstHeader(CONTENT_TYPE.toString()))) {
             if (httpResponse.getBody() != null
                 && httpResponse.getBody().getContentType() != null) {
                 response.headers().set(CONTENT_TYPE, httpResponse.getBody().getContentType());
@@ -74,7 +74,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         }
 
         // Content-Length
-        if (Strings.isNullOrEmpty(httpResponse.getFirstHeader(CONTENT_LENGTH.toString()))) {
+        if (isBlank(httpResponse.getFirstHeader(CONTENT_LENGTH.toString()))) {
             ConnectionOptions connectionOptions = httpResponse.getConnectionOptions();
             boolean overrideContentLength = connectionOptions != null && connectionOptions.getContentLengthHeaderOverride() != null;
             boolean addContentLength = connectionOptions == null || isFalseOrNull(connectionOptions.getSuppressContentLengthHeader());

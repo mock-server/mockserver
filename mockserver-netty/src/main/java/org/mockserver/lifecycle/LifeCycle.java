@@ -1,6 +1,5 @@
 package org.mockserver.lifecycle;
 
-import com.google.common.base.Strings;
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -22,6 +21,7 @@ import java.util.concurrent.Future;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
 
 /**
@@ -136,7 +136,7 @@ public abstract class LifeCycle implements Stoppable {
                     public void run() {
                         try {
                             InetSocketAddress inetSocketAddress;
-                            if (Strings.isNullOrEmpty(localBoundIP)) {
+                            if (isBlank(localBoundIP)) {
                                 inetSocketAddress = new InetSocketAddress(portToBind);
                             } else {
                                 inetSocketAddress = new InetSocketAddress(localBoundIP, portToBind);
