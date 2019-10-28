@@ -5,9 +5,6 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
-import org.mockserver.proxy.ProxyConfiguration;
-import org.mockserver.serialization.Base64Converter;
-import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.dashboard.DashboardHandler;
 import org.mockserver.lifecycle.LifeCycle;
@@ -16,9 +13,12 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.PortBinding;
+import org.mockserver.proxy.ProxyConfiguration;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
+import org.mockserver.serialization.Base64Converter;
+import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
 
 import javax.annotation.Nullable;
@@ -27,12 +27,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static io.netty.handler.codec.http.HttpHeaderNames.PROXY_AUTHENTICATE;
-import static io.netty.handler.codec.http.HttpHeaderNames.PROXY_AUTHORIZATION;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static io.netty.handler.codec.http.HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
+import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Locale.US;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
@@ -85,7 +81,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final HttpRequest request) {
 
-        ResponseWriter responseWriter = new NettyResponseWriter(ctx);
+        ResponseWriter responseWriter = new NettyResponseWriter(ctx, mockServerLogger);
         try {
 
             server.getScheduler().submit(new Runnable() {
@@ -138,9 +134,9 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     String password = ConfigurationProperties.proxyAuthenticationPassword();
                     if ((!username.isEmpty() && !password.isEmpty())
                         && (!request.containsHeader(PROXY_AUTHORIZATION.toString())
-                            || !request.getFirstHeader(PROXY_AUTHORIZATION.toString()).toLowerCase(US).startsWith("basic ")
-                            || !request.getFirstHeader(PROXY_AUTHORIZATION.toString()).substring(6).equals(
-                                new Base64Converter().bytesToBase64String((username + ":" + password).getBytes(UTF_8))))) {
+                        || !request.getFirstHeader(PROXY_AUTHORIZATION.toString()).toLowerCase(US).startsWith("basic ")
+                        || !request.getFirstHeader(PROXY_AUTHORIZATION.toString()).substring(6).equals(
+                        new Base64Converter().bytesToBase64String((username + ":" + password).getBytes(UTF_8))))) {
                         ctx.writeAndFlush(response()
                             .withStatusCode(PROXY_AUTHENTICATION_REQUIRED.code())
                             .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + ConfigurationProperties.proxyAuthenticationRealm().replace("\"", "\\\"") + "\""));
