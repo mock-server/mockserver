@@ -4,6 +4,8 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.cors.CORSHeaders;
+import org.mockserver.log.model.MessageLogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -22,9 +24,11 @@ import static org.mockserver.model.HttpResponse.response;
 public class NettyResponseWriter extends ResponseWriter {
 
     private final ChannelHandlerContext ctx;
+    private final MockServerLogger mockServerLogger;
     private CORSHeaders addCORSHeaders = new CORSHeaders();
 
-    public NettyResponseWriter(ChannelHandlerContext ctx) {
+    public NettyResponseWriter(ChannelHandlerContext ctx, MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
         this.ctx = ctx;
     }
 
@@ -69,6 +73,8 @@ public class NettyResponseWriter extends ResponseWriter {
     }
 
     private void writeAndCloseSocket(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
+        mockServerLogger.debug(MessageLogEntry.LogMessageType.TRACE, "Returning response: [{}] for request: [{}]", response, request);
+
         boolean closeChannel;
 
         ConnectionOptions connectionOptions = response.getConnectionOptions();
