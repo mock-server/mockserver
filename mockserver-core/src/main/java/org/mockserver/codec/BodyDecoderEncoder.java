@@ -1,5 +1,6 @@
 package org.mockserver.codec;
 
+import com.google.common.net.MediaType;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.mockserver.mappers.ContentTypeMapper;
@@ -11,6 +12,7 @@ import org.mockserver.model.StringBody;
 import java.nio.charset.Charset;
 
 import static com.google.common.net.MediaType.parse;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 public class BodyDecoderEncoder {
 
@@ -38,11 +40,19 @@ public class BodyDecoderEncoder {
                 if (ContentTypeMapper.isBinary(contentTypeHeader)) {
                     return new BinaryBody(bodyBytes);
                 } else {
+                    MediaType parse = null;
+                    try {
+                        if (isNotBlank(contentTypeHeader)) {
+                            parse = parse(contentTypeHeader);
+                        }
+                    } catch (Throwable throwable) {
+                        // ignore content-type parse failure
+                    }
                     return new StringBody(
                         new String(bodyBytes, ContentTypeMapper.getCharsetFromContentTypeHeader(contentTypeHeader)),
                         bodyBytes,
                         false,
-                        contentTypeHeader != null ? parse(contentTypeHeader) : null
+                        parse
                     );
                 }
             }

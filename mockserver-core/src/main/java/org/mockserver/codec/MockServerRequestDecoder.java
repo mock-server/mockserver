@@ -37,18 +37,22 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
 
     public HttpRequest decode(FullHttpRequest fullHttpRequest) {
         HttpRequest httpRequest = new HttpRequest();
-        if (fullHttpRequest != null) {
-            setMethod(httpRequest, fullHttpRequest);
+        try {
+            if (fullHttpRequest != null) {
+                setMethod(httpRequest, fullHttpRequest);
 
-            setPath(httpRequest, fullHttpRequest);
-            setQueryString(httpRequest, new QueryStringDecoder(fullHttpRequest.uri()));
+                setPath(httpRequest, fullHttpRequest);
+                setQueryString(httpRequest, new QueryStringDecoder(fullHttpRequest.uri()));
 
-            setHeaders(httpRequest, fullHttpRequest);
-            setCookies(httpRequest, fullHttpRequest);
-            setBody(httpRequest, fullHttpRequest);
+                setHeaders(httpRequest, fullHttpRequest);
+                setCookies(httpRequest, fullHttpRequest);
+                setBody(httpRequest, fullHttpRequest);
 
-            httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
-            httpRequest.withSecure(isSecure);
+                httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
+                httpRequest.withSecure(isSecure);
+            }
+        } catch (Throwable throwable) {
+            mockServerLogger.error((HttpRequest) null, throwable, "Exception decoding request {}", fullHttpRequest);
         }
         return httpRequest;
     }

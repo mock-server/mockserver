@@ -2,6 +2,7 @@ package org.mockserver.codec.mappers;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.*;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
@@ -25,17 +26,21 @@ public class MockServerHttpRequestToFullHttpRequest {
     public FullHttpRequest mapMockServerResponseToHttpServletResponse(HttpRequest httpRequest) {
         // method
         HttpMethod httpMethod = HttpMethod.valueOf(httpRequest.getMethod("GET"));
+        try {
+            // the request
+            FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, getURI(httpRequest), getBody(httpRequest));
 
-        // the request
-        FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, getURI(httpRequest), getBody(httpRequest));
+            // headers
+            setHeader(httpRequest, request);
 
-        // headers
-        setHeader(httpRequest, request);
+            // cookies
+            setCookies(httpRequest, request);
 
-        // cookies
-        setCookies(httpRequest, request);
-
-        return request;
+            return request;
+        } catch (Throwable throwable) {
+            MockServerLogger.MOCK_SERVER_LOGGER.error((HttpRequest) null, throwable, "Exception encoding request {}", httpRequest);
+            return new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, getURI(httpRequest));
+        }
     }
 
     public String getURI(HttpRequest httpRequest) {

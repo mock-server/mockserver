@@ -5,6 +5,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.codec.BodyDecoderEncoder;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
@@ -16,11 +17,15 @@ public class FullHttpResponseToMockServerResponse {
 
     public HttpResponse mapMockServerResponseToFullHttpResponse(FullHttpResponse fullHttpResponse) {
         HttpResponse httpResponse = new HttpResponse();
-        if (fullHttpResponse != null) {
-            setStatusCode(httpResponse, fullHttpResponse);
-            setHeaders(httpResponse, fullHttpResponse);
-            setCookies(httpResponse);
-            setBody(httpResponse, fullHttpResponse);
+        try {
+            if (fullHttpResponse != null) {
+                setStatusCode(httpResponse, fullHttpResponse);
+                setHeaders(httpResponse, fullHttpResponse);
+                setCookies(httpResponse);
+                setBody(httpResponse, fullHttpResponse);
+            }
+        } catch (Throwable throwable) {
+            MockServerLogger.MOCK_SERVER_LOGGER.error((HttpRequest) null, throwable, "Exception decoding request {}", fullHttpResponse);
         }
         return httpResponse;
     }

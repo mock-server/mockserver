@@ -40,7 +40,7 @@ public class MockServerLogger {
                     "handlers=org.mockserver.logging.StandardOutConsoleHandler\n" +
                     "org.mockserver.logging.StandardOutConsoleHandler.level=ALL\n" +
                     "org.mockserver.logging.StandardOutConsoleHandler.formatter=java.util.logging.SimpleFormatter\n" +
-                    "java.util.logging.SimpleFormatter.format=%1$tF %1$tT  %4$s  %5$s %n\n" +
+                    "java.util.logging.SimpleFormatter.format=%1$tF %1$tT  %3$s  %4$s  %5$s %n\n" +
                     ".level=" + javaLoggerLogLevel() + "\n" +
                     "io.netty.handler.ssl.SslHandler.level=WARNING";
                 LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingConfiguration.getBytes(Charset.forName("UTF-8"))));

@@ -11,6 +11,7 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
 
@@ -27,20 +28,26 @@ import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
  * @author jamesdbloom
  */
 public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpResponse> {
+
     @Override
     protected void encode(ChannelHandlerContext ctx, HttpResponse response, List<Object> out) {
         out.add(encode(response));
     }
 
     public DefaultFullHttpResponse encode(HttpResponse httpResponse) {
-        DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
-            HttpVersion.HTTP_1_1,
-            getStatus(httpResponse),
-            getBody(httpResponse)
-        );
-        setHeaders(httpResponse, defaultFullHttpResponse);
-        setCookies(httpResponse, defaultFullHttpResponse);
-        return defaultFullHttpResponse;
+        try {
+            DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
+                HttpVersion.HTTP_1_1,
+                getStatus(httpResponse),
+                getBody(httpResponse)
+            );
+            setHeaders(httpResponse, defaultFullHttpResponse);
+            setCookies(httpResponse, defaultFullHttpResponse);
+            return defaultFullHttpResponse;
+        } catch (Throwable throwable) {
+            MockServerLogger.MOCK_SERVER_LOGGER.error((HttpRequest) null, throwable, "Exception encoding response {}", httpResponse);
+            return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, getStatus(httpResponse));
+        }
     }
 
     private HttpResponseStatus getStatus(HttpResponse httpResponse) {
