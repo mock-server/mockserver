@@ -1,20 +1,18 @@
 package org.mockserver.client;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
-import org.mockserver.metrics.Metrics;
-import org.mockserver.mock.action.ExpectationResponseCallback;
-import org.mockserver.serialization.ExpectationSerializer;
-import org.mockserver.serialization.HttpRequestSerializer;
-import org.mockserver.serialization.java.ExpectationToJavaSerializer;
-import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.filters.MockServerEventLog;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.serialization.HttpRequestResponseSerializer;
+import org.mockserver.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.java.ExpectationToJavaSerializer;
+import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.verify.VerificationTimes;
 
 import java.util.Arrays;
@@ -236,7 +234,7 @@ public class MockServerClientIntegrationTest {
                     "}"))
         ));
         if (result != null && !result.isEmpty()) {
-             throw new AssertionError(result);
+            throw new AssertionError(result);
         }
     }
 
@@ -923,7 +921,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new HttpRequestSerializer(new MockServerLogger()).serialize(Arrays.asList(
+                .withBody(new StringBody(new HttpRequestSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(Arrays.asList(
                     request("/some_request_one"),
                     request("/some_request_two")
                 ))))
@@ -972,7 +970,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new HttpRequestSerializer(new MockServerLogger()).serialize(Arrays.asList(
+                .withBody(new StringBody(new HttpRequestSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(Arrays.asList(
                     request("/some_request_one"),
                     request("/some_request_two")
                 ))))
@@ -1011,7 +1009,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRequestsAsJson() {
         // given
-        String serializedRequests = new HttpRequestSerializer(new MockServerLogger()).serialize(Arrays.asList(
+        String serializedRequests = new HttpRequestSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(Arrays.asList(
             request("/some_request_one"),
             request("/some_request_two")
         ));
@@ -1105,12 +1103,171 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
+    public void shouldRetrieveRequestAndResponses() {
+        // given
+        echoServer.withNextResponse(
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(new HttpRequestResponseSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(Arrays.asList(
+                    new HttpRequestAndHttpResponse()
+                        .setHttpRequest(request("/some_request_one"))
+                        .setHttpResponse(response("some_body_one")),
+                    new HttpRequestAndHttpResponse()
+                        .setHttpRequest(request("/some_request_two"))
+                        .setHttpResponse(response("some_body_two"))
+                ))))
+        );
+
+        // when
+        HttpRequestAndHttpResponse[] actualResponse = mockServerClient.retrieveRecordedRequestsAndResponses(
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body"))
+        );
+
+        // then
+        assertThat(Arrays.asList(actualResponse), hasItems(
+            new HttpRequestAndHttpResponse()
+                .setHttpRequest(request("/some_request_one"))
+                .setHttpResponse(response("some_body_one")),
+            new HttpRequestAndHttpResponse()
+                .setHttpRequest(request("/some_request_two"))
+                .setHttpResponse(response("some_body_two"))
+        ));
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
+            request()
+                .withMethod("PUT")
+                .withPath("/mockserver/retrieve")
+                .withQueryStringParameter("type", RetrieveType.REQUEST_RESPONSES.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("{" + NEW_LINE +
+                    "  \"path\" : \"/some_path\"," + NEW_LINE +
+                    "  \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "}"))
+        ));
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
+        }
+    }
+
+    @Test
+    public void shouldRetrieveRequestAndResponsesWithNullRequest() {
+        // given
+        echoServer.withNextResponse(
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(new HttpRequestResponseSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(Arrays.asList(
+                    new HttpRequestAndHttpResponse()
+                        .setHttpRequest(request("/some_request_one"))
+                        .setHttpResponse(response("some_body_one")),
+                    new HttpRequestAndHttpResponse()
+                        .setHttpRequest(request("/some_request_two"))
+                        .setHttpResponse(response("some_body_two"))
+                ))))
+        );
+
+        // when
+        HttpRequestAndHttpResponse[] actualResponse = mockServerClient.retrieveRecordedRequestsAndResponses(null);
+
+        // then
+        assertThat(Arrays.asList(actualResponse), hasItems(
+            new HttpRequestAndHttpResponse()
+                .setHttpRequest(request("/some_request_one"))
+                .setHttpResponse(response("some_body_one")),
+            new HttpRequestAndHttpResponse()
+                .setHttpRequest(request("/some_request_two"))
+                .setHttpResponse(response("some_body_two"))
+        ));
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
+            request()
+                .withMethod("PUT")
+                .withPath("/mockserver/retrieve")
+                .withQueryStringParameter("type", RetrieveType.REQUEST_RESPONSES.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("content-length", "0"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+        ));
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
+        }
+    }
+
+    @Test
+    public void shouldRetrieveRequestAndResponsesAsJson() {
+        // given
+        String serializedRequests = new HttpRequestResponseSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(Arrays.asList(
+            new HttpRequestAndHttpResponse()
+                .setHttpRequest(request("/some_request_one"))
+                .setHttpResponse(response("some_body_one")),
+            new HttpRequestAndHttpResponse()
+                .setHttpRequest(request("/some_request_two"))
+                .setHttpResponse(response("some_body_two"))
+        ));
+        echoServer.withNextResponse(
+            response()
+                .withStatusCode(201)
+                .withBody(new StringBody(serializedRequests))
+        );
+
+        // when
+        String recordedResponse = mockServerClient.retrieveRecordedRequestsAndResponses(
+            request()
+                .withPath("/some_path")
+                .withBody(new StringBody("some_request_body")),
+            Format.JSON
+        );
+
+        // then
+        assertThat(recordedResponse, is(serializedRequests));
+        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
+        String result = logFilter.verify(verification().withRequest(
+            request()
+                .withMethod("PUT")
+                .withPath("/mockserver/retrieve")
+                .withQueryStringParameter("type", RetrieveType.REQUEST_RESPONSES.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withHeaders(
+                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("accept-encoding", "gzip,deflate"),
+                    new Header("connection", "keep-alive"),
+                    new Header("content-type", "text/plain; charset=utf-8")
+                )
+                .withSecure(false)
+                .withKeepAlive(true)
+                .withBody(new StringBody("{" + NEW_LINE +
+                    "  \"path\" : \"/some_path\"," + NEW_LINE +
+                    "  \"body\" : \"some_request_body\"" + NEW_LINE +
+                    "}"))
+        ));
+        if (result != null && !result.isEmpty()) {
+            throw new AssertionError(result);
+        }
+    }
+
+    @Test
     public void shouldRetrieveActiveExpectations() {
         // given
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new ExpectationSerializer(new MockServerLogger()).serialize(
+                .withBody(new StringBody(new ExpectationSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
                 )))
@@ -1159,7 +1316,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new ExpectationSerializer(new MockServerLogger()).serialize(
+                .withBody(new StringBody(new ExpectationSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
                 )))
@@ -1198,7 +1355,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveActiveExpectationsAsJson() {
         // given
-        String serializeExpectations = new ExpectationSerializer(new MockServerLogger()).serialize(
+        String serializeExpectations = new ExpectationSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         );
@@ -1297,7 +1454,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new ExpectationSerializer(new MockServerLogger()).serialize(
+                .withBody(new StringBody(new ExpectationSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
                 )))
@@ -1346,7 +1503,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new ExpectationSerializer(new MockServerLogger()).serialize(
+                .withBody(new StringBody(new ExpectationSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
                 )))
@@ -1385,7 +1542,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRecordedExpectationsAsJson() {
         // given
-        String serializeExpectations = new ExpectationSerializer(new MockServerLogger()).serialize(
+        String serializeExpectations = new ExpectationSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         );

@@ -48,7 +48,7 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                         verificationSequence = verificationDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {}for VerificationSequence", jsonVerificationSequence);
+                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for VerificationSequence", jsonVerificationSequence);
                     throw new RuntimeException("Exception while parsing [" + jsonVerificationSequence + "] for VerificationSequence", e);
                 }
                 return verificationSequence;

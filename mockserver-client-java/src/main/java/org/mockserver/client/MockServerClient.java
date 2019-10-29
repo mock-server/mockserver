@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.mock.HttpStateHandler.LOG_SEPARATOR;
 import static org.mockserver.model.HttpRequest.request;
@@ -51,6 +52,7 @@ public class MockServerClient implements Stoppable {
     private Integer port;
     private NettyHttpClient nettyHttpClient = new NettyHttpClient(eventLoopGroup, null);
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
+    private HttpRequestResponseSerializer httpRequestResponseSerializer = new HttpRequestResponseSerializer(mockServerLogger);
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(mockServerLogger);
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer(mockServerLogger);
     private VerificationSerializer verificationSerializer = new VerificationSerializer(mockServerLogger);
@@ -139,7 +141,7 @@ public class MockServerClient implements Stoppable {
 
     private String calculatePath(String path) {
         String cleanedPath = "/mockserver/" + path;
-        if (!Strings.isNullOrEmpty(contextPath)) {
+        if (isNotBlank(contextPath)) {
             cleanedPath =
                 (!contextPath.startsWith("/") ? "/" : "") +
                     contextPath +
@@ -168,16 +170,14 @@ public class MockServerClient implements Stoppable {
                 }
                 String serverVersion = response.getFirstHeader("version");
                 String clientVersion = Version.getVersion();
-                if (!Strings.isNullOrEmpty(serverVersion) &&
-                    !Strings.isNullOrEmpty(clientVersion) &&
-                    !clientVersion.equals(serverVersion)) {
+                if (isNotBlank(serverVersion) && isNotBlank(clientVersion) && !clientVersion.equals(serverVersion)) {
                     throw new ClientException("Client version \"" + clientVersion + "\" does not match server version \"" + serverVersion + "\"");
                 }
             }
 
             return response;
         } catch (RuntimeException rex) {
-            if (!Strings.isNullOrEmpty(rex.getMessage()) && (rex.getMessage().contains("executor not accepting a task") || rex.getMessage().contains("loop shut down"))) {
+            if (isNotBlank(rex.getMessage()) && (rex.getMessage().contains("executor not accepting a task") || rex.getMessage().contains("loop shut down"))) {
                 throw new IllegalStateException(this.getClass().getSimpleName() + " has already been closed, please create new " + this.getClass().getSimpleName() + " instance");
             } else {
                 throw rex;
@@ -409,6 +409,40 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
+     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
+     */
+    public HttpRequestAndHttpResponse[] retrieveRecordedRequestsAndResponses(HttpRequest httpRequest) {
+        String recordedRequests = retrieveRecordedRequestsAndResponses(httpRequest, Format.JSON);
+        if (StringUtils.isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
+            return httpRequestResponseSerializer.deserializeArray(recordedRequests);
+        } else {
+            return new HttpRequestAndHttpResponse[0];
+        }
+    }
+
+    /**
+     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
+     *
+     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @param format      the format to retrieve the expectations, either JAVA or JSON
+     * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
+     */
+    public String retrieveRecordedRequestsAndResponses(HttpRequest httpRequest, Format format) {
+        HttpResponse httpResponse = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withPath(calculatePath("retrieve"))
+                .withQueryStringParameter("type", RetrieveType.REQUEST_RESPONSES.name())
+                .withQueryStringParameter("format", format.name())
+                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
+        );
+        return httpResponse.getBodyAsString();
+    }
+
+    /**
      * Retrieve the request-response combinations that have been recorded as a list of expectations, only those that match the httpRequest parameter are returned, use null to retrieve all requests
      *
      * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
@@ -416,7 +450,7 @@ public class MockServerClient implements Stoppable {
      */
     public Expectation[] retrieveRecordedExpectations(HttpRequest httpRequest) {
         String recordedExpectations = retrieveRecordedExpectations(httpRequest, Format.JSON);
-        if (!Strings.isNullOrEmpty(recordedExpectations) && !recordedExpectations.equals("[]")) {
+        if (isNotBlank(recordedExpectations) && !recordedExpectations.equals("[]")) {
             return expectationSerializer.deserializeArray(recordedExpectations);
         } else {
             return new Expectation[0];
@@ -585,7 +619,7 @@ public class MockServerClient implements Stoppable {
      */
     public Expectation[] retrieveActiveExpectations(HttpRequest httpRequest) {
         String activeExpectations = retrieveActiveExpectations(httpRequest, Format.JSON);
-        if (!Strings.isNullOrEmpty(activeExpectations) && !activeExpectations.equals("[]")) {
+        if (isNotBlank(activeExpectations) && !activeExpectations.equals("[]")) {
             return expectationSerializer.deserializeArray(activeExpectations);
         } else {
             return new Expectation[0];

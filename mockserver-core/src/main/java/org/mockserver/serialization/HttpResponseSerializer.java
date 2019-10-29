@@ -75,7 +75,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                         jsonHttpResponse = jsonNode.get("httpResponse").toString();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {}for HttpResponse", jsonHttpResponse);
+                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for HttpResponse", jsonHttpResponse);
                     throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
                 }
             }
@@ -88,7 +88,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                         httpResponse = httpResponseDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {}for HttpResponse", jsonHttpResponse);
+                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for HttpResponse", jsonHttpResponse);
                     throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
                 }
                 return httpResponse;
