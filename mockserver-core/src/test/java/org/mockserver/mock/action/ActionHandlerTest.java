@@ -26,6 +26,7 @@ import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
+import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -96,6 +97,7 @@ public class ActionHandlerTest {
         mockHttpStateHandler = mock(HttpStateHandler.class);
         scheduler = spy(new Scheduler());
         when(mockHttpStateHandler.getScheduler()).thenReturn(scheduler);
+        when(mockHttpStateHandler.getUniqueLoopPreventionHeaderValue()).thenReturn("MockServer_" + UUID.randomUUID().toString());
         actionHandler = new ActionHandler(null, mockHttpStateHandler, null);
 
         initMocks(this);
@@ -308,14 +310,15 @@ public class ActionHandlerTest {
         when(mockChannel.attr(REMOTE_SOCKET)).thenReturn(inetSocketAddressAttribute);
 
         // and - netty http client
-        when(mockNettyHttpClient.sendRequest(request("request_one"), remoteAddress, ConfigurationProperties.socketConnectionTimeout())).thenReturn(responseFuture);
+        HttpRequest requestBeingForwarded = request("request_one").withHeader(mockHttpStateHandler.getUniqueLoopPreventionHeaderName(), mockHttpStateHandler.getUniqueLoopPreventionHeaderValue());
+        when(mockNettyHttpClient.sendRequest(requestBeingForwarded, remoteAddress, ConfigurationProperties.socketConnectionTimeout())).thenReturn(responseFuture);
 
         // when
         actionHandler.processAction(request("request_one"), mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), true, true);
 
         // then
         verify(mockHttpStateHandler).log(new RequestResponseLogEntry(request, response));
-        verify(mockNettyHttpClient).sendRequest(request("request_one"), remoteAddress, ConfigurationProperties.socketConnectionTimeout());
+        verify(mockNettyHttpClient).sendRequest(requestBeingForwarded, remoteAddress, ConfigurationProperties.socketConnectionTimeout());
         verify(mockLogFormatter).info(
             FORWARDED_REQUEST,
             request,

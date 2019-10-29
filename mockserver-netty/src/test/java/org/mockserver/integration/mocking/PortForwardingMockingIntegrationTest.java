@@ -388,20 +388,17 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     "\tssl matched" + NEW_LINE // 4-1
             },
             new String[]{
-                "returning response:" + NEW_LINE +
+                "no expectation for:" + NEW_LINE +
                     NEW_LINE +
-                    "\t{" + NEW_LINE +
-                    "\t  \"statusCode\" : 404," + NEW_LINE +
-                    "\t  \"reasonPhrase\" : \"Not Found\"," + NEW_LINE +
-                    "\t  \"headers\" : {", // 5-0
-                " for forwarded request" + NEW_LINE +
-                    NEW_LINE +
-                    " in json:" + NEW_LINE +
-                    "" + NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
                     "\t  \"path\" : \"/not_found\"", // 5-1
-                " in curl:" // 5-2
+                " returning response:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"statusCode\" : 404," + NEW_LINE +
+                    "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
+                    "\t}" // 5-0
             },
             new String[]{
                 "request:" + NEW_LINE +

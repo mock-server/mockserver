@@ -9,8 +9,6 @@ import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.socket.PortFactory;
-import org.mockserver.verify.VerificationTimes;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.Future;
@@ -79,31 +77,35 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
         // and - verify request received by proxy (not possible for target due to loop prevention)
         loadBalancerClientAndServer.verify(request().withPath("/some_path"));
 
-        // and - target logs hide proxied request
-        String[] logMessages = targetClientAndServer.retrieveLogMessagesArray(null);
-        assertThat(logMessages[0], containsString("resetting all expectations and request logs"));
-        assertThat(logMessages[1], containsString("retrieving logs that match:" + NEW_LINE  +
-            NEW_LINE  +
-            "\t{ }" + NEW_LINE  +
-            "\n"));
-        assertThat(logMessages.length, is(2));
-
-        // and - proxy logs hide proxied request
-        logMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
-        assertThat(logMessages[0], containsString("resetting all expectations and request logs"));
-        assertThat(logMessages[1], containsString("no expectation for:" + NEW_LINE  +
-            "" + NEW_LINE  +
-            "\t{" + NEW_LINE  +
-            "\t  \"method\" : \"GET\"," + NEW_LINE  +
-            "\t  \"path\" : \"/some_path\"," + NEW_LINE)
+        // and - logs hide proxied request
+        String[] loadBalancerLogMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
+        String[] targetLogMessages = targetClientAndServer.retrieveLogMessagesArray(null);
+        assertThat(loadBalancerLogMessages[1], containsString("returning response:" + NEW_LINE +
+            NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"statusCode\" : 404," + NEW_LINE +
+            "\t  \"reasonPhrase\" : \"Not Found\",\n")
         );
-        assertThat(logMessages[1], containsString(
-            " returning response:" + NEW_LINE  +
-            "" + NEW_LINE  +
-            "\t{" + NEW_LINE  +
-            "\t  \"statusCode\" : 404," + NEW_LINE  +
-            "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE  +
-            "\t}")
+        assertThat(loadBalancerLogMessages[1], containsString(" for forwarded request" + NEW_LINE +
+            NEW_LINE +
+            " in json:" + NEW_LINE +
+            "" + NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"method\" : \"GET\"," + NEW_LINE +
+            "\t  \"path\" : \"/some_path\",\n")
+        );
+        assertThat(targetLogMessages[1], containsString("no expectation for:" + NEW_LINE +
+            NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"method\" : \"GET\"," + NEW_LINE +
+            "\t  \"path\" : \"/some_path\",")
+        );
+        assertThat(targetLogMessages[1], containsString(" returning response:" + NEW_LINE +
+            NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"statusCode\" : 404," + NEW_LINE +
+            "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
+            "\t}" + NEW_LINE)
         );
     }
 
@@ -140,24 +142,24 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
 
         // and - logs hide proxied request
         String[] logMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
-        assertThat(logMessages[1], containsString("returning response:" + NEW_LINE  +
-            "" + NEW_LINE  +
-            "\t{" + NEW_LINE  +
-            "\t  \"statusCode\" : 200," + NEW_LINE  +
-            "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE  +
-            "\t  \"headers\" : {" + NEW_LINE  +
-            "\t    \"content-length\" : [ \"15\" ]," + NEW_LINE  +
-            "\t    \"connection\" : [ \"keep-alive\" ]" + NEW_LINE  +
-            "\t  }," + NEW_LINE  +
-            "\t  \"body\" : \"target_response\"" + NEW_LINE  +
-            "\t}" + NEW_LINE  +
-            "" + NEW_LINE  +
-            " for forwarded request" + NEW_LINE  +
-            "" + NEW_LINE  +
-            " in json:" + NEW_LINE  +
-            "" + NEW_LINE  +
-            "\t{" + NEW_LINE  +
-            "\t  \"method\" : \"GET\"," + NEW_LINE  +
+        assertThat(logMessages[1], containsString("returning response:" + NEW_LINE +
+            "" + NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"statusCode\" : 200," + NEW_LINE +
+            "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+            "\t  \"headers\" : {" + NEW_LINE +
+            "\t    \"content-length\" : [ \"15\" ]," + NEW_LINE +
+            "\t    \"connection\" : [ \"keep-alive\" ]" + NEW_LINE +
+            "\t  }," + NEW_LINE +
+            "\t  \"body\" : \"target_response\"" + NEW_LINE +
+            "\t}" + NEW_LINE +
+            "" + NEW_LINE +
+            " for forwarded request" + NEW_LINE +
+            "" + NEW_LINE +
+            " in json:" + NEW_LINE +
+            "" + NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"method\" : \"GET\"," + NEW_LINE +
             "\t  \"path\" : \"/target\"," + NEW_LINE));
     }
 

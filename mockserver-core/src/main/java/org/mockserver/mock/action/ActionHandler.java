@@ -24,7 +24,6 @@ import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.Set;
-import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
@@ -41,7 +40,6 @@ import static org.mockserver.model.HttpResponse.notFoundResponse;
 public class ActionHandler {
 
     public static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
-    private static final String uniqueLoopPreventionHeader = "MockServer_" + UUID.randomUUID().toString();
 
     private final HttpStateHandler httpStateHandler;
     private final Scheduler scheduler;
@@ -184,7 +182,7 @@ public class ActionHandler {
 
         } else if (proxyingRequest || potentiallyHttpProxy) {
 
-            if (request.getHeaders().containsEntry("x-forwarded-by", uniqueLoopPreventionHeader)) {
+            if (request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
 
                 mockServerLogger.trace("Received \"x-forwarded-by\" header caused by exploratory HTTP proxy or proxy loop - falling back to no proxy: {}", request);
                 returnNotFound(responseWriter, request);
@@ -192,7 +190,7 @@ public class ActionHandler {
             } else {
 
                 final InetSocketAddress remoteAddress = ctx != null ? ctx.channel().attr(REMOTE_SOCKET).get() : null;
-                final HttpRequest clonedRequest = hopByHopHeaderFilter.onRequest(request).withHeader("x-forwarded-by", uniqueLoopPreventionHeader);
+                final HttpRequest clonedRequest = hopByHopHeaderFilter.onRequest(request).withHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue());
                 final HttpForwardActionResult responseFuture = new HttpForwardActionResult(clonedRequest, httpClient.sendRequest(clonedRequest, remoteAddress, potentiallyHttpProxy ? 1000 : ConfigurationProperties.socketConnectionTimeout()));
                 scheduler.submit(responseFuture, new Runnable() {
                     public void run() {
@@ -201,7 +199,8 @@ public class ActionHandler {
                             if (response == null) {
                                 response = notFoundResponse();
                             }
-                            if (response.containsHeader("x-forwarded-by", uniqueLoopPreventionHeader)) {
+                            if (response.containsHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
+                                response.removeHeader(httpStateHandler.getUniqueLoopPreventionHeaderName());
                                 httpStateHandler.log(new RequestLogEntry(request));
                                 mockServerLogger.info(EXPECTATION_NOT_MATCHED_RESPONSE, request, "no expectation for:{}returning response:{}", request, notFoundResponse());
                             } else {
@@ -257,8 +256,8 @@ public class ActionHandler {
 
     private void returnNotFound(ResponseWriter responseWriter, HttpRequest request) {
         HttpResponse response = notFoundResponse();
-        if (request.getHeaders().containsEntry("x-forwarded-by", "MockServer")) {
-            response.withHeader("x-forwarded-by", "MockServer");
+        if (request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
+            response.withHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue());
             mockServerLogger.trace(request, "no expectation for:{}returning response:{}", request, notFoundResponse());
         } else {
             httpStateHandler.log(new RequestLogEntry(request));

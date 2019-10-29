@@ -1,7 +1,6 @@
 package org.mockserver.mock;
 
 import com.google.common.base.Function;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.callback.WebSocketClientRegistry;
@@ -21,7 +20,10 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 
 import static com.google.common.net.MediaType.*;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -41,6 +43,7 @@ public class HttpStateHandler {
 
     public static final String LOG_SEPARATOR = NEW_LINE + "------------------------------------" + NEW_LINE;
     public static final String PATH_PREFIX = "/mockserver";
+    private final String uniqueLoopPreventionHeaderValue = "MockServer_" + UUID.randomUUID().toString();
     private final MockServerEventLog mockServerLog;
     private final Scheduler scheduler;
     // mockserver
@@ -347,5 +350,13 @@ public class HttpStateHandler {
 
     public Scheduler getScheduler() {
         return scheduler;
+    }
+
+    public String getUniqueLoopPreventionHeaderName() {
+        return "x-forwarded-by";
+    }
+
+    public String getUniqueLoopPreventionHeaderValue() {
+        return uniqueLoopPreventionHeaderValue;
     }
 }

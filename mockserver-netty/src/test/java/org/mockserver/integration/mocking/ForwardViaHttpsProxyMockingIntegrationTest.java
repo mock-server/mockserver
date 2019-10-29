@@ -4,17 +4,16 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.proxy.ProxyConfiguration;
 import org.mockserver.integration.server.AbstractMockingIntegrationTestBase;
 import org.mockserver.mockserver.MockServer;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
+import org.mockserver.proxy.ProxyConfiguration;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.proxy.ProxyConfiguration.proxyConfiguration;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpClassCallback.callback;
@@ -24,6 +23,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.proxy.ProxyConfiguration.proxyConfiguration;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -75,8 +75,7 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("x-forwarded-by", "MockServer")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("an_example_body_http"),
             makeRequest(
@@ -116,8 +115,7 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("x-forwarded-by", "MockServer")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("some_overridden_body"),
             makeRequest(
@@ -154,8 +152,7 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("x-forwarded-by", "MockServer")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("some_overridden_body"),
             makeRequest(
@@ -204,8 +201,7 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("x-forwarded-by", "MockServer")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("{'name': 'value'}"),
             makeRequest(
@@ -255,8 +251,7 @@ public class ForwardViaHttpsProxyMockingIntegrationTest extends AbstractMockingI
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeaders(
-                    header("x-test", "test_headers_and_body"),
-                    header("x-forwarded-by", "MockServer")
+                    header("x-test", "test_headers_and_body")
                 )
                 .withBody("some_overridden_body"),
             makeRequest(
