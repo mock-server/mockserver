@@ -88,7 +88,7 @@ public class HttpResponseSerializationErrorsTest {
             fail();
         } catch (IllegalArgumentException iae) {
             // then
-            assertThat(iae.getMessage(), is("JsonParseException - Unrecognized token 'responseBytes': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n" +
+            assertThat(iae.getMessage(), is("JsonParseException - Unrecognized token 'responseBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"responseBytes\"; line: 1, column: 27]"));
         }
     }
@@ -101,7 +101,7 @@ public class HttpResponseSerializationErrorsTest {
             fail();
         } catch (IllegalArgumentException iae) {
             // then
-            assertThat(iae.getMessage(), is("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'responseBytes': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n" +
+            assertThat(iae.getMessage(), is("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'responseBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"responseBytes\"; line: 1, column: 27]"));
         }
     }

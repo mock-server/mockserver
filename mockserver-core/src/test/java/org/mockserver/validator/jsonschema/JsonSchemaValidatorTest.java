@@ -81,28 +81,28 @@ public class JsonSchemaValidatorTest {
     public void shouldHandleJsonTooFewItems() {
         // then
         assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ ],         enumField: \\\"one\\\"}"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n" +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ ],         enumField: \\\"one\\\"}\"; line: 1, column: 39]"));
     }
 
     @Test
     public void shouldHandleJsonTooLongString() {
         assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n" +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}\"; line: 1, column: 17]"));
     }
 
     @Test
     public void shouldHandleJsonIncorrectEnum() {
         assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n" +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}\"; line: 1, column: 17]"));
     }
 
     @Test
     public void shouldHandleJsonExtraField() {
         assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n" +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}\"; line: 1, column: 17]"));
     }
 
@@ -110,7 +110,7 @@ public class JsonSchemaValidatorTest {
     @Test
     public void shouldHandleJsonIncorrectSubField() {
         assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n" +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }\"; line: 1, column: 17]"));
     }
 
@@ -118,7 +118,7 @@ public class JsonSchemaValidatorTest {
     @Test
     public void shouldHandleJsonMissingSubField() {
         assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n" +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }\"; line: 1, column: 17]"));
     }
 
@@ -126,7 +126,7 @@ public class JsonSchemaValidatorTest {
     @Test
     public void shouldHandleJsonMultipleErrors() {
         assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ ],  stringField: \\\"1234\\\"}"),
-            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n" +
+            is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ ],  stringField: \\\"1234\\\"}\"; line: 1, column: 34]"));
     }
 
