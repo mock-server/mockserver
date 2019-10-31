@@ -73,8 +73,6 @@ public class NettyResponseWriter extends ResponseWriter {
     }
 
     private void writeAndCloseSocket(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
-        mockServerLogger.debug(MessageLogEntry.LogMessageType.TRACE, "Returning response: [{}] for request: [{}]", response, request);
-
         boolean closeChannel;
 
         ConnectionOptions connectionOptions = response.getConnectionOptions();
