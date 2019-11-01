@@ -6,7 +6,7 @@
 #
 
 # pull base image.
-FROM ubuntu:trusty
+FROM ubuntu:bionic
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
