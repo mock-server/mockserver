@@ -433,12 +433,12 @@
         </profile>
         <!-- disable javadoc linting only in java 8 -->
         <profile>
-            <id>disable_javadoc_linting</id>
+            <id>disable-java8-doclint</id>
             <activation>
-                <jdk>1.8</jdk>
+                <jdk>[1.8,)</jdk>
             </activation>
             <properties>
-                <javadoc.additional.parameters>-Xdoclint:none</javadoc.additional.parameters>
+                <additionalparam>-Xdoclint:none</additionalparam>
             </properties>
         </profile>
         <profile>
@@ -467,7 +467,7 @@
                         <configuration>
                             <excludePackageNames>org.mockserver.examples:org.mockserver.examples.*</excludePackageNames>
                             <failOnError>false</failOnError>
-                            <!--<additionalparam>${javadoc.additional.parameters}</additionalparam>-->
+                            <doclint>none</doclint>
                         </configuration>
                         <executions>
                             <execution>
