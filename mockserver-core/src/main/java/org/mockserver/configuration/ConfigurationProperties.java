@@ -62,6 +62,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME = "mockserver.sslCertificateDomainName";
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS = "mockserver.sslSubjectAlternativeNameDomains";
     private static final String MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS = "mockserver.sslSubjectAlternativeNameIps";
+    private static final String MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE = "mockserver.preventCertificateDynamicUpdate";
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "mockserver.certificateAuthorityPrivateKey";
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "mockserver.certificateAuthorityCertificate";
     private static final String MOCKSERVER_LOG_LEVEL = "mockserver.logLevel";
@@ -81,6 +82,7 @@ public class ConfigurationProperties {
     private static final Set<String> ALL_SUBJECT_ALTERNATIVE_DOMAINS = Sets.newConcurrentHashSet();
     private static final Set<String> ALL_SUBJECT_ALTERNATIVE_IPS = Sets.newConcurrentHashSet();
     private static final AtomicBoolean REBUILD_KEY_STORE = new AtomicBoolean(false);
+    private static final AtomicBoolean REBUILD_SERVER_KEY_STORE = new AtomicBoolean(false);
     private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
 
     static {
@@ -271,7 +273,7 @@ public class ConfigurationProperties {
 
     public static void sslCertificateDomainName(String domainName) {
         System.setProperty(MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME, domainName);
-        rebuildKeyStore(true);
+        rebuildServerKeyStore(true);
     }
 
     public static String[] sslSubjectAlternativeNameDomains() {
@@ -287,7 +289,7 @@ public class ConfigurationProperties {
         }
         if (subjectAlternativeDomainsModified) {
             System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS, Joiner.on(",").join(new TreeSet<>(ALL_SUBJECT_ALTERNATIVE_DOMAINS)));
-            rebuildKeyStore(true);
+            rebuildServerKeyStore(true);
         }
     }
 
@@ -312,7 +314,7 @@ public class ConfigurationProperties {
         }
         if (subjectAlternativeIpsModified) {
             System.setProperty(MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS, Joiner.on(",").join(new TreeSet<>(ALL_SUBJECT_ALTERNATIVE_IPS)));
-            rebuildKeyStore(true);
+            rebuildServerKeyStore(true);
         }
     }
 
@@ -327,6 +329,27 @@ public class ConfigurationProperties {
 
     public static void rebuildKeyStore(boolean rebuildKeyStore) {
         ConfigurationProperties.REBUILD_KEY_STORE.set(rebuildKeyStore);
+    }
+
+    public static boolean rebuildServerKeyStore() {
+        return REBUILD_SERVER_KEY_STORE.get();
+    }
+
+    public static void rebuildServerKeyStore(boolean rebuildKeyStore) {
+        ConfigurationProperties.REBUILD_SERVER_KEY_STORE.set(rebuildKeyStore);
+    }
+
+    /**
+     * Prevent certificates from dynamically updating when domain list changes
+     *
+     * @param preventCertificateDynamicUpdate prevent certificates from dynamically updating when domain list changes
+     */
+    public static void preventCertificateDynamicUpdate(boolean preventCertificateDynamicUpdate) {
+        System.setProperty(MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE, "" + preventCertificateDynamicUpdate);
+    }
+
+    public static boolean preventCertificateDynamicUpdate() {
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE, "" + false));
     }
 
     public static String certificateAuthorityPrivateKey() {
@@ -356,12 +379,10 @@ public class ConfigurationProperties {
     }
 
     public static Level logLevel() {
-        ;
         return Level.valueOf(getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL).toUpperCase()));
     }
 
     public static String javaLoggerLogLevel() {
-        ;
         return getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL).toUpperCase());
     }
 

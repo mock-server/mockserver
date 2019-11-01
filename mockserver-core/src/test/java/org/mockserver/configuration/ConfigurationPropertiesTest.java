@@ -38,6 +38,7 @@ public class ConfigurationPropertiesTest {
         System.getProperties().store(stringWriter, "");
         propertiesBeforeTest = stringWriter.toString();
         ConfigurationProperties.rebuildKeyStore(false);
+        ConfigurationProperties.rebuildServerKeyStore(false);
     }
 
     @After
@@ -53,11 +54,11 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.enableCORSForAPI");
 
         // when
-        assertEquals(true, ConfigurationProperties.enableCORSForAPI());
+        assertTrue(ConfigurationProperties.enableCORSForAPI());
         ConfigurationProperties.enableCORSForAPI(false);
 
         // then
-        assertEquals(false, ConfigurationProperties.enableCORSForAPI());
+        assertFalse(ConfigurationProperties.enableCORSForAPI());
         assertEquals("false", System.getProperty("mockserver.enableCORSForAPI"));
     }
 
@@ -67,17 +68,17 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.enableCORSForAPI");
 
         // when
-        assertEquals(false, ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
+        assertFalse(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
         ConfigurationProperties.enableCORSForAPI(true);
-        assertEquals(true, ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
+        assertTrue(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
 
         // given
         System.clearProperty("mockserver.enableCORSForAPI");
 
         // when
-        assertEquals(false, ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
+        assertFalse(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
         System.setProperty("mockserver.enableCORSForAPI", "" + true);
-        assertEquals(true, ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
+        assertTrue(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
     }
 
     @Test
@@ -86,11 +87,11 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.enableCORSForAllResponses");
 
         // when
-        assertEquals(false, ConfigurationProperties.enableCORSForAllResponses());
+        assertFalse(ConfigurationProperties.enableCORSForAllResponses());
         ConfigurationProperties.enableCORSForAllResponses(false);
 
         // then
-        assertEquals(false, ConfigurationProperties.enableCORSForAllResponses());
+        assertFalse(ConfigurationProperties.enableCORSForAllResponses());
         assertEquals("false", System.getProperty("mockserver.enableCORSForAllResponses"));
     }
 
@@ -306,7 +307,7 @@ public class ConfigurationPropertiesTest {
         // then
         assertEquals("newKeyStoreFile.jks", ConfigurationProperties.javaKeyStoreFilePath());
         assertEquals("newKeyStoreFile.jks", System.getProperty("mockserver.javaKeyStoreFilePath"));
-        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+        assertTrue(ConfigurationProperties.rebuildKeyStore());
     }
 
     @Test
@@ -321,7 +322,7 @@ public class ConfigurationPropertiesTest {
         // then
         assertEquals("newPassword", ConfigurationProperties.javaKeyStorePassword());
         assertEquals("newPassword", System.getProperty("mockserver.javaKeyStorePassword"));
-        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+        assertTrue(ConfigurationProperties.rebuildKeyStore());
     }
 
     @Test
@@ -336,7 +337,7 @@ public class ConfigurationPropertiesTest {
         // then
         assertEquals("PKCS11", ConfigurationProperties.javaKeyStoreType());
         assertEquals("PKCS11", System.getProperty("mockserver.javaKeyStoreType"));
-        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+        assertTrue(ConfigurationProperties.rebuildKeyStore());
     }
 
     @Test
@@ -345,11 +346,11 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.deleteGeneratedKeyStoreOnExit");
 
         // when
-        assertEquals(true, ConfigurationProperties.deleteGeneratedKeyStoreOnExit());
+        assertTrue(ConfigurationProperties.deleteGeneratedKeyStoreOnExit());
         ConfigurationProperties.deleteGeneratedKeyStoreOnExit(false);
 
         // then
-        assertEquals(false, ConfigurationProperties.deleteGeneratedKeyStoreOnExit());
+        assertFalse(ConfigurationProperties.deleteGeneratedKeyStoreOnExit());
         assertEquals("false", System.getProperty("mockserver.deleteGeneratedKeyStoreOnExit"));
     }
 
@@ -365,7 +366,7 @@ public class ConfigurationPropertiesTest {
         // then
         assertEquals("newDomain", ConfigurationProperties.sslCertificateDomainName());
         assertEquals("newDomain", System.getProperty("mockserver.sslCertificateDomainName"));
-        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+        assertTrue(ConfigurationProperties.rebuildServerKeyStore());
     }
 
     @Test
@@ -380,14 +381,14 @@ public class ConfigurationPropertiesTest {
         // then
         assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d"));
         assertEquals("a,b,c,d", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
-        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+        assertTrue(ConfigurationProperties.rebuildServerKeyStore());
     }
 
     @Test
     public void shouldAddSslSubjectAlternativeNameDomains() {
         // given
         ConfigurationProperties.clearSslSubjectAlternativeNameDomains();
-        ConfigurationProperties.rebuildKeyStore(false);
+        ConfigurationProperties.rebuildServerKeyStore(false);
 
         // when
         assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), empty());
@@ -403,10 +404,10 @@ public class ConfigurationPropertiesTest {
         // then - add subject alternative domain names
         assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "e", "f", "g"));
         assertEquals("a,b,c,d,e,f,g", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
-        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+        assertTrue(ConfigurationProperties.rebuildServerKeyStore());
 
         // given
-        ConfigurationProperties.rebuildKeyStore(false);
+        ConfigurationProperties.rebuildServerKeyStore(false);
 
         // when
         ConfigurationProperties.addSslSubjectAlternativeNameDomains("e", "f", "g");
@@ -414,7 +415,7 @@ public class ConfigurationPropertiesTest {
         // then - do not add duplicate subject alternative domain names
         assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameDomains()), containsInAnyOrder("a", "b", "c", "d", "e", "f", "g"));
         assertEquals("a,b,c,d,e,f,g", System.getProperty("mockserver.sslSubjectAlternativeNameDomains"));
-        assertEquals(false, ConfigurationProperties.rebuildKeyStore());
+        assertFalse(ConfigurationProperties.rebuildServerKeyStore());
     }
 
     @Test
@@ -429,14 +430,14 @@ public class ConfigurationPropertiesTest {
         // then
         assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameIps()), containsInAnyOrder("0.0.0.0", "1", "127.0.0.1", "2", "3", "4"));
         assertEquals("0.0.0.0,1,127.0.0.1,2,3,4", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
-        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+        assertTrue(ConfigurationProperties.rebuildServerKeyStore());
     }
 
     @Test
     public void shouldAddSslSubjectAlternativeNameIps() {
         // given
         ConfigurationProperties.clearSslSubjectAlternativeNameIps();
-        ConfigurationProperties.rebuildKeyStore(false);
+        ConfigurationProperties.rebuildServerKeyStore(false);
 
         // when
         assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameIps()), containsInAnyOrder("127.0.0.1", "0.0.0.0"));
@@ -452,10 +453,10 @@ public class ConfigurationPropertiesTest {
         // then - add subject alternative domain names
         assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameIps()), containsInAnyOrder("0.0.0.0", "1", "127.0.0.1", "2", "3", "4", "5", "6", "7"));
         assertEquals("0.0.0.0,1,127.0.0.1,2,3,4,5,6,7", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
-        assertEquals(true, ConfigurationProperties.rebuildKeyStore());
+        assertTrue(ConfigurationProperties.rebuildServerKeyStore());
 
         // given
-        ConfigurationProperties.rebuildKeyStore(false);
+        ConfigurationProperties.rebuildServerKeyStore(false);
 
         // when
         ConfigurationProperties.addSslSubjectAlternativeNameIps("5", "6", "7");
@@ -463,20 +464,20 @@ public class ConfigurationPropertiesTest {
         // then - do not add duplicate subject alternative domain names
         assertThat(Arrays.asList(ConfigurationProperties.sslSubjectAlternativeNameIps()), containsInAnyOrder("0.0.0.0", "1", "127.0.0.1", "2", "3", "4", "5", "6", "7"));
         assertEquals("0.0.0.0,1,127.0.0.1,2,3,4,5,6,7", System.getProperty("mockserver.sslSubjectAlternativeNameIps"));
-        assertEquals(false, ConfigurationProperties.rebuildKeyStore());
+        assertFalse(ConfigurationProperties.rebuildServerKeyStore());
     }
 
     @Test
     public void shouldSetAndReadRebuildKeyStore() {
         // given
-        ConfigurationProperties.rebuildKeyStore(false);
+        ConfigurationProperties.rebuildServerKeyStore(false);
 
         // when
         assertFalse(ConfigurationProperties.rebuildKeyStore());
-        ConfigurationProperties.rebuildKeyStore(true);
+        ConfigurationProperties.rebuildServerKeyStore(true);
 
         // then
-        assertTrue(ConfigurationProperties.rebuildKeyStore());
+        assertTrue(ConfigurationProperties.rebuildServerKeyStore());
     }
 
     @Test
@@ -500,6 +501,20 @@ public class ConfigurationPropertiesTest {
         // then
         assertEquals("some/certificate.pem", ConfigurationProperties.certificateAuthorityCertificate());
         assertEquals("some/certificate.pem", System.getProperty("mockserver.certificateAuthorityCertificate"));
+    }
+
+    @Test
+    public void shouldSetAndReadPreventCertificateDynamicUpdate() {
+        // given
+        System.clearProperty("mockserver.preventCertificateDynamicUpdate");
+
+        // when
+        assertFalse(ConfigurationProperties.preventCertificateDynamicUpdate());
+        ConfigurationProperties.preventCertificateDynamicUpdate(false);
+
+        // then
+        assertFalse(ConfigurationProperties.preventCertificateDynamicUpdate());
+        assertEquals("false", System.getProperty("mockserver.preventCertificateDynamicUpdate"));
     }
 
     @Test

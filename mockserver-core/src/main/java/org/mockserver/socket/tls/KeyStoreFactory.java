@@ -152,8 +152,6 @@ public class KeyStoreFactory {
             }
         }
         System.setProperty("javax.net.ssl.trustStore", keyStoreFile.getAbsolutePath());
-        // don't rebuild again and again and again
-        ConfigurationProperties.rebuildKeyStore(false);
         return populateKeyStore(keystore);
     }
 

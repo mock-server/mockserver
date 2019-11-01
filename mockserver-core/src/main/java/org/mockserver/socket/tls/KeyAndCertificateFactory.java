@@ -20,10 +20,7 @@ import org.mockserver.file.FileReader;
 import org.mockserver.logging.MockServerLogger;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -282,6 +279,10 @@ public class KeyAndCertificateFactory {
         return loadX509FromPEMFile(mockServerCertificatePEMFile);
     }
 
+    boolean mockServerX509CertificateCreated() {
+        return validX509PEMFileExists(mockServerCertificatePEMFile);
+    }
+
     X509Certificate mockServerCertificateAuthorityX509Certificate() {
         return loadX509FromPEMFile(ConfigurationProperties.certificateAuthorityCertificate());
     }
@@ -311,6 +312,17 @@ public class KeyAndCertificateFactory {
             return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(FileReader.openStreamToFileFromClassPathOrPath(filename));
         } catch (Exception e) {
             throw new RuntimeException("Exception reading X509 from PEM file", e);
+        }
+    }
+
+    /**
+     * Check if PEM file exists.
+     */
+    private boolean validX509PEMFileExists(String filename) {
+        try {
+            return CertificateFactory.getInstance("X.509").generateCertificate(FileReader.openStreamToFileFromClassPathOrPath(filename)) != null;
+        } catch (Exception e) {
+            return false;
         }
     }
 
