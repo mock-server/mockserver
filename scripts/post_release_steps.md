@@ -69,7 +69,7 @@ Release Steps
    1. upload to S3
       1. cd jekyll-www.mock-server.com
       1. rm -rf _site
-      1. bundle exec jekyll build
+      1. `rbenv which bundle` exec jekyll build
       1. cd _site
       1. copy to https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/?region=us-east-1
       1. invalidate CloudFront cache
