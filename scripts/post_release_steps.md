@@ -30,6 +30,11 @@ Release Steps
    1. update parent pom RELEASE version to new SNAPSHOT version
    1. update jar-with-dependencies RELEASE version to new SNAPSHOT version
    1. ./scripts/local_deploy_snapshot.sh
+1. update docker image
+   1. update Dockerfile
+   1. docker build -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
+   1. docker login
+   1. docker push jamesdbloom/mockserver:mockserver-x.x.x
 1. create copy of document / website for existing version (for minor or major releases)
    1. create S3 bucket cloning permissions from existing
    1. copy public policy
@@ -37,11 +42,6 @@ Release Steps
    1. create Route53 A record as alias to cloud front distribution
    1. clone existing website: aws s3 sync s3://aws-website-mockserver-nb9hq s3://aws-website-mockserver----f10aa --source-region us-east-1 --region us-east-1
    1. delete `versions` and helm charts
-1. update docker image
-   1. update Dockerfile
-   1. docker build -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
-   1. docker login
-   1. docker push jamesdbloom/mockserver:mockserver-x.x.x
 1. update helm chart
    1. find and replace previous MockServer release version to new release
    1. cd helm
