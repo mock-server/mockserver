@@ -43,10 +43,10 @@ Release Steps
 1. create copy of document / website for existing version (for minor or major releases)
    1. create S3 bucket cloning permissions from existing
    1. copy public policy
+   1. clone existing website: aws s3 sync s3://aws-website-mockserver-nb9hq s3://aws-website-mockserver--c89db --source-region us-east-1 --region eu-west-2 (**Note:** prepend with credentials from secrets manager)
+   1. delete `versions` and helm charts
    1. create cloud front distribution copying existing settings
    1. create Route53 A record as alias to cloud front distribution
-   1. clone existing website: aws s3 sync s3://aws-website-mockserver-nb9hq s3://aws-website-mockserver----f10aa --source-region us-east-1 --region us-east-1
-   1. delete `versions` and helm charts
 1. update repo
    1. delete jekyll-www.mock-server.com/_site
    1. ./mvnw clean
