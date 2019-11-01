@@ -1,5 +1,5 @@
  mockServer:
-   image: jamesdbloom/mockserver:mockserver-5.6.1
+   image: jamesdbloom/mockserver:mockserver-5.7.0
    ports:
    - 1080:1080
    environment:
