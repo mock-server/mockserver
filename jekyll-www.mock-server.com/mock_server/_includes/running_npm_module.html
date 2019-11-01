@@ -90,6 +90,14 @@ The request log will only be captured in MockServer if the log level is <span cl
 
 <p>This value specifies the path to the artifactory leading to the mockserver-netty jar with dependencies.</p>
 
+<p><span class="inline_code"><strong>options.mockServerVersion</strong></span></p>
+
+<p><strong>Type:</strong> String <strong>Default:</strong> 5.7.0</p>
+
+<p>This value specifies the artifact version of MockServer to download.</p>
+
+<p><strong>Note:</strong> It is also possible to specify a SNAPSHOT version to get the latest unreleased changes.</p>
+
 <p><span class="inline_code"><strong>options.verbose</strong></span></p>
 
 <p><strong>Type:</strong> Boolean <strong>Default:</strong> false</p>
@@ -126,3 +134,9 @@ The request log will only be captured in MockServer if the log level is <span cl
         jvmOptions: <span class="string_literal">"-Dmockserver.enableCORSForAllResponses=true"</span>
     }
 }</code></pre>
+
+<p><span class="inline_code"><strong>options.startupRetries</strong></span></p>
+
+<p><strong>Type:</strong> Integer <strong>Default:</strong> if javaDebugPort is not set 110, but if javaDebugPort is set 500</p>
+
+<p>This value indicates the how many times we will call the check to confirm if the mock server started up correctly. It will default to 110 which will take about 11 seconds to complete, this is normally long enough for the server to startup. The server can take longer to start up if Java debugging is enabled so this will default to 500. The default will, in some cases, need to be overridden as the JVM may take longer to start up on some architectures,  e.g. Mac seems to take a little longer.</p>
