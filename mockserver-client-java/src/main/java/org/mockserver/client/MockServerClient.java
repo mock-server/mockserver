@@ -409,10 +409,10 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Retrieve the recorded requests that match the httpRequest parameter, use null for the parameter to retrieve all requests
+     * Retrieve the recorded requests and responses that match the httpRequest parameter, use null for the parameter to retrieve all requests and responses
      *
-     * @param httpRequest the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
-     * @return an array of all requests that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
+     * @param httpRequest the http request that is matched against when deciding whether to return each request (and its corresponding response), use null for the parameter to retrieve for all requests
+     * @return an array of all requests and responses that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
     public HttpRequestAndHttpResponse[] retrieveRecordedRequestsAndResponses(HttpRequest httpRequest) {
         String recordedRequests = retrieveRecordedRequestsAndResponses(httpRequest, Format.JSON);
