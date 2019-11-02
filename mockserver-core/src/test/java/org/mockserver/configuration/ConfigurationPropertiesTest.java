@@ -533,32 +533,47 @@ public class ConfigurationPropertiesTest {
 
     @Test
     public void shouldSetAndReadLogLevelUsingSLF4J() {
-        // given
-        System.clearProperty("mockserver.logLevel");
+        // SAVE
+        String previousValue = ConfigurationProperties.logLevel().name();
+        try {
+            // given
+            System.clearProperty("mockserver.logLevel");
 
-        // when
-        assertEquals(Level.INFO, ConfigurationProperties.logLevel());
-        ConfigurationProperties.logLevel("TRACE");
+            // when
+            assertEquals(Level.INFO, ConfigurationProperties.logLevel());
+            ConfigurationProperties.logLevel("TRACE");
 
-        // then
-        assertEquals(Level.TRACE, ConfigurationProperties.logLevel());
-        assertEquals("FINEST", ConfigurationProperties.javaLoggerLogLevel());
-        assertEquals("TRACE", System.getProperty("mockserver.logLevel"));
+            // then
+            assertEquals(Level.TRACE, ConfigurationProperties.logLevel());
+            assertEquals("FINEST", ConfigurationProperties.javaLoggerLogLevel());
+            assertEquals("TRACE", System.getProperty("mockserver.logLevel"));
+        } finally {
+            // RESET
+            ConfigurationProperties.logLevel(previousValue);
+        }
     }
 
     @Test
     public void shouldSetAndReadLogLevelUsingJavaLogger() {
-        // given
-        System.clearProperty("mockserver.logLevel");
+        // SAVE
+        String previousValue = ConfigurationProperties.logLevel().name();
+        try {
+            // given
+            System.clearProperty("mockserver.logLevel");
+            ConfigurationProperties.logLevel(null);
 
-        // when
-        assertEquals(Level.INFO, ConfigurationProperties.logLevel());
-        ConfigurationProperties.logLevel("FINEST");
+            // when
+            assertEquals(Level.INFO, ConfigurationProperties.logLevel());
+            ConfigurationProperties.logLevel("FINEST");
 
-        // then
-        assertEquals(Level.TRACE, ConfigurationProperties.logLevel());
-        assertEquals("FINEST", ConfigurationProperties.javaLoggerLogLevel());
-        assertEquals("FINEST", System.getProperty("mockserver.logLevel"));
+            // then
+            assertEquals(Level.TRACE, ConfigurationProperties.logLevel());
+            assertEquals("FINEST", ConfigurationProperties.javaLoggerLogLevel());
+            assertEquals("FINEST", System.getProperty("mockserver.logLevel"));
+        } finally {
+            // RESET
+            ConfigurationProperties.logLevel(previousValue);
+        }
     }
 
     @Test

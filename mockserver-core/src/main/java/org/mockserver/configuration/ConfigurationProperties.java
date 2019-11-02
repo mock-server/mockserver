@@ -132,6 +132,9 @@ public class ConfigurationProperties {
         return slf4jOrJavaLoggerToSLF4JLevelMapping;
     }
 
+    private static Level logLevel = null;
+    private static String javaLoggerLogLevel = null;
+
     private static String propertyFile() {
         return System.getProperty(MOCKSERVER_PROPERTY_FILE, "mockserver.properties");
     }
@@ -379,11 +382,21 @@ public class ConfigurationProperties {
     }
 
     public static Level logLevel() {
-        return Level.valueOf(getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL).toUpperCase()));
+        if (logLevel == null) {
+            if (getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL).toUpperCase()).equals("OFF")) {
+                logLevel = null;
+            } else {
+                logLevel = Level.valueOf(getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL).toUpperCase()));
+            }
+        }
+        return logLevel;
     }
 
     public static String javaLoggerLogLevel() {
-        return getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL).toUpperCase());
+        if (javaLoggerLogLevel == null) {
+            javaLoggerLogLevel = getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL).toUpperCase());
+        }
+        return javaLoggerLogLevel;
     }
 
     /**
@@ -392,10 +405,22 @@ public class ConfigurationProperties {
      * @param level the log level, which can be TRACE, DEBUG, INFO, WARN, ERROR, OFF, FINEST, FINE, INFO, WARNING, SEVERE
      */
     public static void logLevel(String level) {
-        if (!getSLF4JOrJavaLoggerToSLF4JLevelMapping().containsKey(level)) {
-            throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of SL4J levels: \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\" or the Java Logger levels: \"FINEST\", \"FINE\", \"INFO\", \"WARNING\", \"SEVERE\", \"OFF\"");
+        if (isNotBlank(level)) {
+            if (!getSLF4JOrJavaLoggerToSLF4JLevelMapping().containsKey(level)) {
+                throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of SL4J levels: \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\" or the Java Logger levels: \"FINEST\", \"FINE\", \"INFO\", \"WARNING\", \"SEVERE\", \"OFF\"");
+            }
+            System.setProperty(MOCKSERVER_LOG_LEVEL, level);
+            if (getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL).toUpperCase()).equals("OFF")) {
+                logLevel = null;
+                javaLoggerLogLevel = "OFF";
+            } else {
+                logLevel = Level.valueOf(getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL).toUpperCase()));
+                javaLoggerLogLevel = getSLF4JOrJavaLoggerToJavaLoggerLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, DEFAULT_LOG_LEVEL).toUpperCase());
+            }
+        } else {
+            logLevel = null;
+            javaLoggerLogLevel = null;
         }
-        System.setProperty(MOCKSERVER_LOG_LEVEL, level);
         configureLogger();
     }
 

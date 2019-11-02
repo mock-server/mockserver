@@ -16,29 +16,41 @@ public class BoundedConcurrentLinkedQueue<E> extends ConcurrentLinkedQueue<E> {
 
     @Override
     public boolean add(E element) {
-        if (size() >= maxSize) {
-            super.poll();
+        if (maxSize > 0) {
+            if (size() >= maxSize) {
+                super.poll();
+            }
+            return super.add(element);
+        } else {
+            return false;
         }
-        return super.add(element);
     }
 
     @Override
     public boolean addAll(Collection<? extends E> collection) {
-        boolean result = false;
-        for (E element : collection) {
-            if (add(element)) {
-                result = true;
+        if (maxSize > 0) {
+            boolean result = false;
+            for (E element : collection) {
+                if (add(element)) {
+                    result = true;
+                }
             }
+            return result;
+        } else {
+            return false;
         }
-        return result;
     }
 
     @Override
     public boolean offer(E element) {
-        if (size() >= maxSize) {
-            super.poll();
+        if (maxSize > 0) {
+            if (size() >= maxSize) {
+                super.poll();
+            }
+            return super.offer(element);
+        } else {
+            return false;
         }
-        return super.offer(element);
     }
 
 }

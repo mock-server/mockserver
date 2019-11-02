@@ -15,6 +15,12 @@
     <url>http://www.mock-server.com</url>
 
     <dependencies>
+        <!-- disruptor -->
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+        </dependency>
+
         <!-- http -->
         <dependency>
             <groupId>javax.servlet</groupId>
