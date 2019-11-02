@@ -1,8 +1,6 @@
 package org.mockserver.integration.server;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
@@ -10,9 +8,6 @@ import org.mockserver.model.*;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.verify.VerificationTimes;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -761,61 +756,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withMethod("GET")
                     .withSecure(true)
                     .withPath(calculatePath("some_pathRequest"))
-                    .withQueryStringParameters(
-                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
-                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
-                    )
-                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-    }
-
-    @Test
-    public void shouldReturnResponseByMatchingUrlEncodedPath() throws UnsupportedEncodingException {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath(URLEncoder.encode("ab@c.de", StandardCharsets.UTF_8.name())))
-            )
-            .respond(
-                response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
-                    .withBody("some_body_response")
-            );
-
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withPath(calculatePath("ab%40c.de"))
-                    .withQueryStringParameters(
-                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
-                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
-                    )
-                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withSecure(true)
-                    .withPath(calculatePath("ab%40c.de"))
                     .withQueryStringParameters(
                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
                         param("queryStringParameterTwoName", "queryStringParameterTwoValue")

@@ -11,12 +11,18 @@ import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.HttpStatusCode;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
+import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
@@ -24,6 +30,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
 import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.model.Parameter.param;
 
 /**
  * @author jamesdbloom
@@ -32,6 +39,61 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
+
+    @Test
+    public void shouldReturnResponseByMatchingUrlEncodedPath() throws UnsupportedEncodingException {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("ab@c.de"))
+            )
+            .respond(
+                response()
+                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withBody("some_body_response")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("ab%40c.de"))
+                    .withQueryStringParameters(
+                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
+                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                    )
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withSecure(true)
+                    .withPath(calculatePath("ab%40c.de"))
+                    .withQueryStringParameters(
+                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
+                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                    )
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
+    }
 
     @Test
     public void shouldReturnErrorResponseForExpectationWithConnectionOptions() {

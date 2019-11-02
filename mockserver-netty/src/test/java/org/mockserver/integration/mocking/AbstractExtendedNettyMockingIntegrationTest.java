@@ -13,6 +13,7 @@ import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.Delay;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.HttpStatusCode;
 import org.mockserver.server.TestClasspathTestExpectationResponseCallback;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.streams.IOStreamUtils;
@@ -21,9 +22,11 @@ import org.mockserver.verify.VerificationTimes;
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +48,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
+import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
@@ -52,12 +56,68 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.*;
+import static org.mockserver.model.Parameter.param;
 import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
 
 /**
  * @author jamesdbloom
  */
 public abstract class AbstractExtendedNettyMockingIntegrationTest extends AbstractExtendedSameJVMMockingIntegrationTest {
+
+    @Test
+    public void shouldReturnResponseByMatchingUrlEncodedPath() throws UnsupportedEncodingException {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath(URLEncoder.encode("ab@c.de", StandardCharsets.UTF_8.name())))
+            )
+            .respond(
+                response()
+                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withBody("some_body_response")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("ab%40c.de"))
+                    .withQueryStringParameters(
+                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
+                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                    )
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withSecure(true)
+                    .withPath(calculatePath("ab%40c.de"))
+                    .withQueryStringParameters(
+                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
+                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                    )
+                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
+                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
+                headersToIgnore)
+        );
+    }
 
     @Test
     public void shouldRespondByObjectCallback() {
