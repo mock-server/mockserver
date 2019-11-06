@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -219,8 +220,8 @@ public class MockServerHandlerTest {
     @Test
     public void shouldRetrieveLogMessages() throws InterruptedException {
         // given
-        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
+        httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
+        MILLISECONDS.sleep(100);
 
         // when
         HttpRequest retrieveLogRequest = request("/mockserver/retrieve")
