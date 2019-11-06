@@ -1,12 +1,12 @@
 package org.mockserver.client;
 
-import com.google.common.base.Strings;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.Version;
 import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
@@ -35,13 +35,15 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.PortBinding.portBinding;
 import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationTimes.exactly;
+import static org.slf4j.event.Level.TRACE;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
  */
 public class MockServerClient implements Stoppable {
 
-    protected final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
+    protected static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClient.class);
     private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
     private final Semaphore availableWebSocketCallbackRegistrations = new Semaphore(1);
     private final String host;
@@ -51,12 +53,12 @@ public class MockServerClient implements Stoppable {
     private Boolean secure;
     private Integer port;
     private NettyHttpClient nettyHttpClient = new NettyHttpClient(eventLoopGroup, null);
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
-    private HttpRequestResponseSerializer httpRequestResponseSerializer = new HttpRequestResponseSerializer(mockServerLogger);
-    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(mockServerLogger);
-    private VerificationSerializer verificationSerializer = new VerificationSerializer(mockServerLogger);
-    private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
+    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(MOCK_SERVER_LOGGER);
+    private HttpRequestResponseSerializer httpRequestResponseSerializer = new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER);
+    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(MOCK_SERVER_LOGGER);
+    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(MOCK_SERVER_LOGGER);
+    private VerificationSerializer verificationSerializer = new VerificationSerializer(MOCK_SERVER_LOGGER);
+    private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(MOCK_SERVER_LOGGER);
 
     /**
      * Start the client communicating to a MockServer on localhost at the port
@@ -243,10 +245,20 @@ public class MockServerClient implements Stoppable {
                 }
             }
         } catch (RejectedExecutionException ree) {
-            mockServerLogger.trace("Request rejected because closing down but logging at trace level for information just in case due to some other actual error " + ree);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("Request rejected because closing down but logging at trace level for information just in case due to some other actual error " + ree)
+            );
         } catch (Exception e) {
             if (!ignoreFailure) {
-                mockServerLogger.warn("Failed to send stop request to MockServer " + e.getMessage());
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.WARN)
+                        .setLogLevel(WARN)
+                        .setMessageFormat("Failed to send stop request to MockServer " + e.getMessage())
+                );
             }
         }
         if (!eventLoopGroup.isShuttingDown()) {

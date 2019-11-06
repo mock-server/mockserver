@@ -25,7 +25,7 @@ import static org.mockserver.model.HttpRequest.request;
  */
 public class PortBindingIntegrationTest {
 
-    private final static int MOCK_SERVER_PORT = PortFactory.findFreePort();
+    private static final int MOCK_SERVER_PORT = PortFactory.findFreePort();
 
     @Rule
     public ExpectedException exception = ExpectedException.none();

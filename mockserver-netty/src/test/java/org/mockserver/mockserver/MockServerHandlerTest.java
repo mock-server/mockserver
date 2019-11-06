@@ -8,13 +8,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
-import org.mockserver.serialization.ExpectationSerializer;
-import org.mockserver.serialization.HttpRequestSerializer;
-import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.lifecycle.LifeCycle;
-import org.mockserver.log.model.RequestLogEntry;
-import org.mockserver.log.model.RequestResponseLogEntry;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
@@ -24,6 +21,9 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.responsewriter.NettyResponseWriter;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.PortBindingSerializer;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -35,14 +35,11 @@ import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.mockserver.MockServerHandler.LOCAL_HOST_HEADERS;
 import static org.mockserver.mockserver.MockServerHandler.PROXYING;
@@ -81,36 +78,40 @@ public class MockServerHandlerTest {
         embeddedChannel = new EmbeddedChannel(mockServerHandler);
     }
 
-    private void assertResponse(int responseStatusCode, String responseBody) {
-        HttpResponse httpResponse = embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), is(responseStatusCode));
-        assertThat(httpResponse.getBodyAsString(), is(responseBody));
-    }
-
     @Test
     public void shouldRetrieveRequests() {
         // given
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setType(RECEIVED_REQUEST)
+        );
+
+        // when
         HttpRequest expectationRetrieveRequestsRequest = request("/mockserver/retrieve")
             .withMethod("PUT")
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
             );
-
-        // when
         embeddedChannel.writeInbound(expectationRetrieveRequestsRequest);
 
         // then
-        assertResponse(200, httpRequestSerializer.serialize(Collections.singletonList(
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(200));
+        assertThat(httpResponse.getBodyAsString(), is(httpRequestSerializer.serialize(Collections.singletonList(
             request("request_one")
-        )));
+        ))));
     }
 
     @Test
     public void shouldClear() {
         // given
         httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setType(EXPECTATION_MATCHED)
+        );
         HttpRequest clearRequest = request("/mockserver/clear")
             .withMethod("PUT")
             .withBody(
@@ -121,7 +122,9 @@ public class MockServerHandlerTest {
         embeddedChannel.writeInbound(clearRequest);
 
         // then
-        assertResponse(200, "");
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(200));
+        assertThat(httpResponse.getBodyAsString(), is(""));
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(nullValue()));
         assertThat(httpStateHandler.retrieve(request("/mockserver/retrieve")
             .withMethod("PUT")
@@ -140,9 +143,11 @@ public class MockServerHandlerTest {
         embeddedChannel.writeInbound(statusRequest);
 
         // then
-        assertResponse(200, portBindingSerializer.serialize(
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(200));
+        assertThat(httpResponse.getBodyAsString(), is(portBindingSerializer.serialize(
             portBinding(1080, 1090)
-        ));
+        )));
     }
 
     @Test
@@ -160,9 +165,11 @@ public class MockServerHandlerTest {
 
         // then
         verify(server).bindServerPorts(Arrays.asList(1080, 1090));
-        assertResponse(200, portBindingSerializer.serialize(
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(200));
+        assertThat(httpResponse.getBodyAsString(), is(portBindingSerializer.serialize(
             portBinding(1080, 1090)
-        ));
+        )));
     }
 
     @Test
@@ -175,7 +182,9 @@ public class MockServerHandlerTest {
         embeddedChannel.writeInbound(statusRequest);
 
         // then
-        assertResponse(200, null);
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(200));
+        assertThat(httpResponse.getBodyAsString(), is((String) null));
         TimeUnit.SECONDS.sleep(1); // ensure stop thread has run
         verify(server).stop();
     }
@@ -183,24 +192,28 @@ public class MockServerHandlerTest {
     @Test
     public void shouldRetrieveRecordedExpectations() {
         // given
-        httpStateHandler.log(new RequestResponseLogEntry(
-            request("request_one"),
-            response("response_one")
-        ));
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setHttpResponse(response("response_one"))
+                .setType(FORWARDED_REQUEST)
+        );
+
+        // when
         HttpRequest expectationRetrieveExpectationsRequest = request("/mockserver/retrieve")
             .withMethod("PUT")
             .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
             );
-
-        // when
         embeddedChannel.writeInbound(expectationRetrieveExpectationsRequest);
 
         // then
-        assertResponse(200, expectationSerializer.serialize(Collections.singletonList(
-            new Expectation(request("request_one"), Times.once(), null).thenRespond(response("response_one"))
-        )));
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(200));
+        assertThat(httpResponse.getBodyAsString(), is(expectationSerializer.serialize(Collections.singletonList(
+            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one"))
+        ))));
     }
 
     @Test
@@ -208,25 +221,23 @@ public class MockServerHandlerTest {
         // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         httpStateHandler.add(expectationOne);
+
+        // when
         HttpRequest retrieveLogRequest = request("/mockserver/retrieve")
             .withMethod("PUT")
             .withQueryStringParameter("type", RetrieveType.LOGS.name())
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
             );
-
-        // when
         embeddedChannel.writeInbound(retrieveLogRequest);
 
         // then
         HttpResponse response = embeddedChannel.readOutbound();
         assertThat(response.getStatusCode(), is(200));
-        String[] splitBody = response.getBodyAsString().split(NEW_LINE + "------------------------------------" + NEW_LINE);
-        assertThat(splitBody.length, is(2));
         assertThat(
-            splitBody[0],
+            response.getBodyAsString(),
             is(endsWith("creating expectation:" + NEW_LINE +
-                "" + NEW_LINE +
+                NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"httpRequest\" : {" + NEW_LINE +
                 "\t    \"path\" : \"request_one\"" + NEW_LINE +
@@ -242,16 +253,9 @@ public class MockServerHandlerTest {
                 "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                 "\t    \"body\" : \"response_one\"" + NEW_LINE +
                 "\t  }" + NEW_LINE +
-                "\t}" + NEW_LINE))
-        );
-        assertThat(
-            splitBody[1],
-            is(endsWith("retrieving logs that match:" + NEW_LINE +
-                NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"path\" : \"request_one\"" + NEW_LINE +
                 "\t}" + NEW_LINE +
-                NEW_LINE)));
+                NEW_LINE))
+        );
     }
 
     @Test
@@ -266,7 +270,9 @@ public class MockServerHandlerTest {
         embeddedChannel.writeInbound(request);
 
         // then
-        assertResponse(201, "");
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(201));
+        assertThat(httpResponse.getBodyAsString(), is(""));
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(expectationOne));
     }
 
@@ -286,9 +292,11 @@ public class MockServerHandlerTest {
         embeddedChannel.writeInbound(expectationRetrieveExpectationsRequest);
 
         // then
-        assertResponse(200, expectationSerializer.serialize(Collections.singletonList(
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(200));
+        assertThat(httpResponse.getBodyAsString(), is(expectationSerializer.serialize(Collections.singletonList(
             expectationOne
-        )));
+        ))));
     }
 
     @Test

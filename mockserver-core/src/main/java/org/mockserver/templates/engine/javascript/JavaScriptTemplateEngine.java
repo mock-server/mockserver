@@ -1,5 +1,6 @@
 package org.mockserver.templates.engine.javascript;
 
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.serialization.model.DTO;
@@ -10,9 +11,11 @@ import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer
 import javax.script.*;
 
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import org.slf4j.event.Level;
+
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.formatting.StringFormatter.indentAndToString;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.TEMPLATE_GENERATED;
+import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
 
 /**
  * @author jamesdbloom
@@ -47,11 +50,25 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 Object stringifiedResponse = scriptObjectMirror.call(null, new HttpRequestTemplateObject(request));
 
                 // HttpResponse handle(HttpRequest httpRequest) - ES5
-                logFormatter.info(TEMPLATE_GENERATED, request, "generated output:{}from template:{}for request:{}", stringifiedResponse, script, request);
+                logFormatter.logEvent(
+                    new LogEntry()
+                        .setType(TEMPLATE_GENERATED)
+                        .setLogLevel(Level.INFO)
+                        .setHttpRequest(request)
+                        .setMessageFormat("generated output:{}from template:{}for request:{}")
+                        .setArguments(stringifiedResponse, script, request)
+                );
                 result = httpTemplateOutputDeserializer.deserializer(request, (String) stringifiedResponse, dtoClass);
             } else {
-                logFormatter.error(request, "JavaScript based templating is only available in a JVM with the \"nashorn\" JavaScript engine, " +
-                    "please use a JVM with the \"nashorn\" JavaScript engine, such as Oracle Java 8+", new RuntimeException("\"nashorn\" JavaScript engine not available"));
+                logFormatter.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setHttpRequest(request)
+                        .setMessageFormat("JavaScript based templating is only available in a JVM with the \"nashorn\" JavaScript engine, " +
+                            "please use a JVM with the \"nashorn\" JavaScript engine, such as Oracle Java 8+")
+                        .setArguments(new RuntimeException("\"nashorn\" JavaScript engine not available"))
+                );
             }
         } catch (Exception e) {
             throw new RuntimeException(formatLogMessage("Exception transforming template:{}for request:{}", script, request), e);

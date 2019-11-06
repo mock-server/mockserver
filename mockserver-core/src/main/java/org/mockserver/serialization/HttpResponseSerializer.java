@@ -3,11 +3,12 @@ package org.mockserver.serialization;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.model.HttpResponseDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
+import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +16,7 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator.jsonSchemaHttpResponseValidator;
 
 /**
  * @author jamesdbloom
@@ -27,7 +29,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
 
     public HttpResponseSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        httpResponseValidator = new JsonSchemaHttpResponseValidator(mockServerLogger);
+        httpResponseValidator = jsonSchemaHttpResponseValidator();
     }
 
     public String serialize(HttpResponse httpResponse) {
@@ -36,7 +38,13 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(new HttpResponseDTO(httpResponse));
         } catch (Exception e) {
-            mockServerLogger.error(String.format("Exception while serializing httpResponse to JSON with value %s", httpResponse), e);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat(String.format("Exception while serializing httpResponse to JSON with value %s", httpResponse))
+                    .setThrowable(e)
+            );
             throw new RuntimeException(String.format("Exception while serializing httpResponse to JSON with value %s", httpResponse), e);
         }
     }
@@ -59,7 +67,13 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                 return "[]";
             }
         } catch (Exception e) {
-            mockServerLogger.error("Exception while serializing HttpResponse to JSON with value " + Arrays.asList(httpResponses), e);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception while serializing HttpResponse to JSON with value " + Arrays.asList(httpResponses))
+                    .setThrowable(e)
+            );
             throw new RuntimeException("Exception while serializing HttpResponse to JSON with value " + Arrays.asList(httpResponses), e);
         }
     }
@@ -75,7 +89,14 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                         jsonHttpResponse = jsonNode.get("httpResponse").toString();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for HttpResponse", jsonHttpResponse);
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.EXCEPTION)
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("exception while parsing {} for HttpResponse")
+                            .setArguments(jsonHttpResponse)
+                            .setThrowable(e)
+                    );
                     throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
                 }
             }
@@ -88,12 +109,26 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                         httpResponse = httpResponseDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for HttpResponse", jsonHttpResponse);
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.EXCEPTION)
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("exception while parsing {} for HttpResponse")
+                            .setArguments(jsonHttpResponse)
+                            .setThrowable(e)
+                    );
                     throw new RuntimeException("Exception while parsing [" + jsonHttpResponse + "] for HttpResponse", e);
                 }
                 return httpResponse;
             } else {
-                mockServerLogger.error("validation failed:{}response:{}", validationErrors, jsonHttpResponse);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setHttpRequest(null)
+                        .setMessageFormat("validation failed:{}response:{}")
+                        .setArguments(validationErrors, jsonHttpResponse)
+                );
                 throw new IllegalArgumentException(validationErrors);
             }
         }

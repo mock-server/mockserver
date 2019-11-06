@@ -51,7 +51,7 @@ class CaseInsensitiveNottableRegexListHashMap extends LinkedHashMap<NottableStri
     }
 
     public synchronized Collection<List<NottableString>> getAll(Object key) {
-        List<List<NottableString>> values = new ArrayList<List<NottableString>>();
+        List<List<NottableString>> values = new ArrayList<>();
         if (key instanceof NottableString) {
             for (Entry<NottableString, List<NottableString>> entry : entrySet()) {
                 if (RegexStringMatcher.matches((NottableString) key, entry.getKey(), true)) {
@@ -70,9 +70,9 @@ class CaseInsensitiveNottableRegexListHashMap extends LinkedHashMap<NottableStri
 
     @Override
     public synchronized List<NottableString> remove(Object key) {
-        List<NottableString> values = new ArrayList<NottableString>();
+        List<NottableString> values = new ArrayList<>();
         if (key instanceof NottableString) {
-            for (Entry<NottableString, List<NottableString>> entry : new HashSet<Map.Entry<NottableString, List<NottableString>>>(entrySet())) {
+            for (Entry<NottableString, List<NottableString>> entry : new HashSet<>(entrySet())) {
                 if (RegexStringMatcher.matches((NottableString) key, entry.getKey(), true)) {
                     values.addAll(super.remove(entry.getKey()));
                 }

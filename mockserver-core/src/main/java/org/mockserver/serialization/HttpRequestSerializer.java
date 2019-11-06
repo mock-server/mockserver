@@ -3,11 +3,13 @@ package org.mockserver.serialization;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
+import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +17,7 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator.jsonSchemaHttpRequestValidator;
 
 /**
  * @author jamesdbloom
@@ -27,7 +30,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
 
     public HttpRequestSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        httpRequestValidator = new JsonSchemaHttpRequestValidator(mockServerLogger);
+        httpRequestValidator = jsonSchemaHttpRequestValidator();
     }
 
     public String serialize(HttpRequest httpRequest) {
@@ -46,7 +49,13 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                     .writeValueAsString(new HttpRequestDTO(httpRequest));
             }
         } catch (Exception e) {
-            mockServerLogger.error(String.format("Exception while serializing HttpRequest to JSON with value %s", httpRequest), e);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat(String.format("Exception while serializing HttpRequest to JSON with value %s", httpRequest))
+                    .setThrowable(e)
+            );
             throw new RuntimeException(String.format("Exception while serializing HttpRequest to JSON with value %s", httpRequest), e);
         }
     }
@@ -56,7 +65,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
     }
 
     public String serialize(boolean prettyPrint, List<HttpRequest> httpRequests) {
-        return serialize(prettyPrint, httpRequests.toArray(new HttpRequest[httpRequests.size()]));
+        return serialize(prettyPrint, httpRequests.toArray(new HttpRequest[0]));
     }
 
     public String serialize(HttpRequest... httpRequests) {
@@ -87,7 +96,13 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                 return "[]";
             }
         } catch (Exception e) {
-            mockServerLogger.error("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequests), e);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequests))
+                    .setThrowable(e)
+            );
             throw new RuntimeException("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequests), e);
         }
     }
@@ -103,7 +118,14 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                         jsonHttpRequest = jsonNode.get("httpRequest").toString();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for HttpRequest", jsonHttpRequest);
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.EXCEPTION)
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("exception while parsing {} for HttpRequest")
+                            .setArguments(jsonHttpRequest)
+                            .setThrowable(e)
+                    );
                     throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
                 }
             }
@@ -116,12 +138,26 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                         httpRequest = httpRequestDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for HttpRequest", jsonHttpRequest);
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.EXCEPTION)
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("exception while parsing {} for HttpRequest")
+                            .setArguments(jsonHttpRequest)
+                            .setThrowable(e)
+                    );
                     throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
                 }
                 return httpRequest;
             } else {
-                mockServerLogger.error("validation failed:{}request:{}", validationErrors, jsonHttpRequest);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setHttpRequest(null)
+                        .setMessageFormat("validation failed:{}request:{}")
+                        .setArguments(validationErrors, jsonHttpRequest)
+                );
                 throw new IllegalArgumentException(validationErrors);
             }
         }

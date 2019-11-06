@@ -22,7 +22,8 @@ import static org.mockserver.model.HttpResponse.response;
 public class WebSocketClientRegistry {
 
     public static final String WEB_SOCKET_CORRELATION_ID_HEADER_NAME = "WebSocketCorrelationId";
-    private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer(new MockServerLogger());
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(WebSocketClientRegistry.class);
+    private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer(MOCK_SERVER_LOGGER);
     private CircularHashMap<String, ChannelHandlerContext> clientRegistry = new CircularHashMap<>(maxWebSocketExpectations());
     private CircularHashMap<String, WebSocketResponseCallback> responseCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
     private CircularHashMap<String, WebSocketRequestCallback> forwardCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
@@ -73,7 +74,7 @@ public class WebSocketClientRegistry {
 
     void registerClient(String clientId, ChannelHandlerContext ctx) {
         try {
-            ctx.channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(new WebSocketClientIdDTO().setClientId(clientId))));
+            ctx.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(new WebSocketClientIdDTO().setClientId(clientId))));
         } catch (Exception e) {
             throw new WebSocketException("Exception while sending web socket registration client id message to client " + clientId, e);
         }

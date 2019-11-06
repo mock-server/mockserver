@@ -33,8 +33,7 @@ public class HttpForwardClassCallbackActionHandlerTest {
     @Before
     public void setupFixture() {
         mockHttpClient = mock(NettyHttpClient.class);
-        MockServerLogger logFormatter = new MockServerLogger(HttpForwardClassCallbackActionHandlerTest.class);
-        httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(logFormatter, mockHttpClient);
+        httpForwardClassCallbackActionHandler = new HttpForwardClassCallbackActionHandler(new MockServerLogger(), mockHttpClient);
 
         initMocks(this);
     }

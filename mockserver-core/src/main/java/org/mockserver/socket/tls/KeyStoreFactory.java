@@ -2,6 +2,7 @@ package org.mockserver.socket.tls;
 
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -16,8 +17,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.socket.tls.KeyAndCertificateFactory.keyAndCertificateFactory;
+import static org.slf4j.event.Level.*;
 
 /**
  * @author jamesdbloom, ganskef
@@ -102,7 +104,12 @@ public class KeyStoreFactory {
             String keyStoreFileAbsolutePath = new File(keyStoreFileName).getAbsolutePath();
             try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFileAbsolutePath)) {
                 keyStore.store(fileOutputStream, keyStorePassword);
-                MOCK_SERVER_LOGGER.trace("Saving key store to file [" + keyStoreFileAbsolutePath + "]");
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("Saving key store to file [" + keyStoreFileAbsolutePath + "]")
+                );
             }
             if (deleteOnExit) {
                 new File(keyStoreFileAbsolutePath).deleteOnExit();
@@ -132,10 +139,22 @@ public class KeyStoreFactory {
 
     private SSLContext getSSLContextInstance() throws NoSuchAlgorithmException {
         try {
-            MOCK_SERVER_LOGGER.debug(SERVER_CONFIGURATION, "Using protocol {}", SSL_CONTEXT_PROTOCOL);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(SERVER_CONFIGURATION)
+                    .setLogLevel(DEBUG)
+                    .setMessageFormat("Using protocol {}")
+                    .setArguments(SSL_CONTEXT_PROTOCOL)
+            );
             return SSLContext.getInstance(SSL_CONTEXT_PROTOCOL);
         } catch (NoSuchAlgorithmException e) {
-            MOCK_SERVER_LOGGER.warn("Protocol {} not available, falling back to {}", SSL_CONTEXT_PROTOCOL, SSL_CONTEXT_FALLBACK_PROTOCOL);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.WARN)
+                    .setLogLevel(WARN)
+                    .setMessageFormat("Protocol {} not available, falling back to {}")
+                    .setArguments(SSL_CONTEXT_PROTOCOL, SSL_CONTEXT_FALLBACK_PROTOCOL)
+            );
             return SSLContext.getInstance(SSL_CONTEXT_FALLBACK_PROTOCOL);
         }
     }

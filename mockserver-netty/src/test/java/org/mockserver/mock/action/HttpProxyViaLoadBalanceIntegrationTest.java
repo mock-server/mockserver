@@ -80,13 +80,13 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
         // and - logs hide proxied request
         String[] loadBalancerLogMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
         String[] targetLogMessages = targetClientAndServer.retrieveLogMessagesArray(null);
-        assertThat(loadBalancerLogMessages[1], containsString("returning response:" + NEW_LINE +
+        assertThat(loadBalancerLogMessages[2], containsString("returning response:" + NEW_LINE +
             NEW_LINE +
             "\t{" + NEW_LINE +
             "\t  \"statusCode\" : 404," + NEW_LINE +
             "\t  \"reasonPhrase\" : \"Not Found\",\n")
         );
-        assertThat(loadBalancerLogMessages[1], containsString(" for forwarded request" + NEW_LINE +
+        assertThat(loadBalancerLogMessages[2], containsString(" for forwarded request" + NEW_LINE +
             NEW_LINE +
             " in json:" + NEW_LINE +
             "" + NEW_LINE +
@@ -94,18 +94,17 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
             "\t  \"method\" : \"GET\"," + NEW_LINE +
             "\t  \"path\" : \"/some_path\",\n")
         );
-        assertThat(targetLogMessages[1], containsString("no expectation for:" + NEW_LINE +
+        assertThat(targetLogMessages[2], containsString("no expectation for:" + NEW_LINE +
             NEW_LINE +
             "\t{" + NEW_LINE +
             "\t  \"method\" : \"GET\"," + NEW_LINE +
             "\t  \"path\" : \"/some_path\",")
         );
-        assertThat(targetLogMessages[1], containsString(" returning response:" + NEW_LINE +
+        assertThat(targetLogMessages[2], containsString(" returning response:" + NEW_LINE +
             NEW_LINE +
             "\t{" + NEW_LINE +
             "\t  \"statusCode\" : 404," + NEW_LINE +
-            "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
-            "\t}" + NEW_LINE)
+            "\t  \"reasonPhrase\" : \"Not Found\"")
         );
     }
 
@@ -142,14 +141,14 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
 
         // and - logs hide proxied request
         String[] logMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
-        assertThat(logMessages[1], containsString("returning response:" + NEW_LINE +
+        assertThat(logMessages[2], containsString("returning response:" + NEW_LINE +
             "" + NEW_LINE +
             "\t{" + NEW_LINE +
             "\t  \"statusCode\" : 200," + NEW_LINE +
             "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
             "\t  \"headers\" : {" + NEW_LINE +
-            "\t    \"content-length\" : [ \"15\" ]," + NEW_LINE +
-            "\t    \"connection\" : [ \"keep-alive\" ]" + NEW_LINE +
+            "\t    \"connection\" : [ \"keep-alive\" ]," + NEW_LINE +
+            "\t    \"content-length\" : [ \"15\" ]" + NEW_LINE +
             "\t  }," + NEW_LINE +
             "\t  \"body\" : \"target_response\"" + NEW_LINE +
             "\t}" + NEW_LINE +

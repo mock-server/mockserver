@@ -24,10 +24,10 @@ public class HttpRequestSerializer extends StdSerializer<HttpRequest> {
         if (httpRequest.getNot() != null && httpRequest.getNot()) {
             jgen.writeBooleanField("not", httpRequest.getNot());
         }
-        if (httpRequest.getMethod() != null && isNotBlank(httpRequest.getMethod().getValue())) {
+        if (httpRequest.getMethod() != null && !httpRequest.getMethod().isBlank()) {
             jgen.writeObjectField("method", httpRequest.getMethod());
         }
-        if (httpRequest.getPath() != null && isNotBlank(httpRequest.getPath().getValue())) {
+        if (httpRequest.getPath() != null && !httpRequest.getPath().isBlank()) {
             jgen.writeObjectField("path", httpRequest.getPath());
         }
         if (httpRequest.getQueryStringParameterList() != null && !httpRequest.getQueryStringParameterList().isEmpty()) {

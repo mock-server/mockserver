@@ -6,9 +6,11 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.url.URLParser;
+import org.slf4j.event.Level;
 
 import java.util.List;
 import java.util.Set;
@@ -16,17 +18,18 @@ import java.util.Set;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.COOKIE;
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
+import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.NottableString.strings;
 
 /**
  * @author jamesdbloom
  */
 public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRequest> {
 
-    private final MockServerLogger mockServerLogger;
+    public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerResponseEncoder.class);
     private final boolean isSecure;
 
-    public MockServerRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure) {
-        this.mockServerLogger = mockServerLogger;
+    public MockServerRequestDecoder(boolean isSecure) {
         this.isSecure = isSecure;
     }
 
@@ -42,7 +45,9 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
                 setMethod(httpRequest, fullHttpRequest);
 
                 setPath(httpRequest, fullHttpRequest);
-                setQueryString(httpRequest, new QueryStringDecoder(fullHttpRequest.uri()));
+                if (fullHttpRequest.uri().contains("?")) {
+                    setQueryString(httpRequest, new QueryStringDecoder(fullHttpRequest.uri()));
+                }
 
                 setHeaders(httpRequest, fullHttpRequest);
                 setCookies(httpRequest, fullHttpRequest);
@@ -52,7 +57,14 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
                 httpRequest.withSecure(isSecure);
             }
         } catch (Throwable throwable) {
-            mockServerLogger.error((HttpRequest) null, throwable, "Exception decoding request {}", fullHttpRequest);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception decoding request {}")
+                    .setArguments(fullHttpRequest)
+                    .setThrowable(throwable)
+            );
         }
         return httpRequest;
     }
@@ -70,7 +82,14 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         try {
             parameters.withEntries(queryStringDecoder.parameters());
         } catch (IllegalArgumentException iae) {
-            mockServerLogger.error(httpRequest, "Exception while parsing query string", iae);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setHttpRequest(httpRequest)
+                    .setMessageFormat("Exception while parsing query string")
+                    .setArguments(iae)
+            );
         }
         httpRequest.withQueryStringParameters(parameters);
     }

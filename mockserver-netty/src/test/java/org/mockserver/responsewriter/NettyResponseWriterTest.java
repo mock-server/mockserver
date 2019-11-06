@@ -42,7 +42,7 @@ public class NettyResponseWriterTest {
         HttpResponse response = response("some_response");
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -58,7 +58,7 @@ public class NettyResponseWriterTest {
         HttpRequest request = request("some_request");
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), (HttpResponse) null, false);
+        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), (HttpResponse) null, false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -78,7 +78,7 @@ public class NettyResponseWriterTest {
             HttpResponse response = response("some_response");
 
             // when
-            new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), response.clone(), false);
+            new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
 
             // then
             verify(mockChannelHandlerContext).writeAndFlush(
@@ -89,7 +89,6 @@ public class NettyResponseWriterTest {
                             .withHeader("access-control-allow-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
                             .withHeader("access-control-expose-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
                             .withHeader("access-control-max-age", "300")
-                            .withHeader("x-cors", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.enableCORSForAPI=false")
             );
             verify(mockChannelFuture).addListener(ChannelFutureListener.CLOSE);
         } finally {
@@ -105,7 +104,7 @@ public class NettyResponseWriterTest {
         HttpResponse response = response("some_response");
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -126,7 +125,7 @@ public class NettyResponseWriterTest {
                 );
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -151,7 +150,7 @@ public class NettyResponseWriterTest {
                 );
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
@@ -175,7 +174,7 @@ public class NettyResponseWriterTest {
                 );
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext, mockServerLogger).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(

@@ -1,11 +1,15 @@
 package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpRequestAndHttpResponse;
 import org.mockserver.serialization.model.HttpRequestAndHttpResponseDTO;
+import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,16 +25,29 @@ public class HttpRequestResponseSerializer {
     private final MockServerLogger mockServerLogger;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
+    private final ObjectWriter objectWriter;
 
     public HttpRequestResponseSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
+
+        DefaultPrettyPrinter prettyPrinter = new DefaultPrettyPrinter()
+            .withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE)
+            .withObjectIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE);
+
+        objectWriter = ObjectMapperFactory.createObjectMapper().writer(prettyPrinter);
     }
 
     public String serialize(HttpRequestAndHttpResponse httpRequestAndHttpResponse) {
         try {
-            return objectMapper.writeValueAsString(new HttpRequestAndHttpResponseDTO(httpRequestAndHttpResponse));
+            return objectWriter.writeValueAsString(new HttpRequestAndHttpResponseDTO(httpRequestAndHttpResponse));
         } catch (Exception e) {
-            mockServerLogger.error(String.format("Exception while serializing HttpRequestAndHttpResponse to JSON with value %s", httpRequestAndHttpResponse), e);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat(String.format("Exception while serializing HttpRequestAndHttpResponse to JSON with value %s", httpRequestAndHttpResponse))
+                    .setThrowable(e)
+            );
             throw new RuntimeException(String.format("Exception while serializing HttpRequestAndHttpResponse to JSON with value %s", httpRequestAndHttpResponse), e);
         }
     }
@@ -46,12 +63,18 @@ public class HttpRequestResponseSerializer {
                 for (int i = 0; i < httpRequestAndHttpResponses.length; i++) {
                     httpRequestAndHttpResponseDTOS[i] = new HttpRequestAndHttpResponseDTO(httpRequestAndHttpResponses[i]);
                 }
-                return objectMapper.writeValueAsString(httpRequestAndHttpResponseDTOS);
+                return objectWriter.writeValueAsString(httpRequestAndHttpResponseDTOS);
             } else {
                 return "[]";
             }
         } catch (Exception e) {
-            mockServerLogger.error("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequestAndHttpResponses), e);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequestAndHttpResponses))
+                    .setThrowable(e)
+            );
             throw new RuntimeException("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequestAndHttpResponses), e);
         }
     }
@@ -67,7 +90,14 @@ public class HttpRequestResponseSerializer {
                     httpRequestAndHttpResponse = httpRequestAndHttpResponseDTO.buildObject();
                 }
             } catch (Exception e) {
-                mockServerLogger.error((HttpRequest) null, e, "exception while parsing {} for HttpRequestAndHttpResponse", jsonHttpRequestAndHttpResponse);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("exception while parsing {} for HttpRequestAndHttpResponse")
+                        .setArguments(jsonHttpRequestAndHttpResponse)
+                        .setThrowable(e)
+                );
                 throw new RuntimeException("Exception while parsing [" + jsonHttpRequestAndHttpResponse + "] for HttpRequestAndHttpResponse", e);
             }
             return httpRequestAndHttpResponse;

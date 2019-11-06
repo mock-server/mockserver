@@ -57,23 +57,11 @@ public class MockServerResponseToHttpServletResponseEncoder {
     private void setCookies(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         if (httpResponse.getCookieList() != null) {
             for (Cookie cookie : httpResponse.getCookieList()) {
-                if (!cookieHeaderAlreadyExists(httpResponse, cookie)) {
+                if (!httpResponse.cookieHeaderAlreadyExists(cookie)) {
                     httpServletResponse.addHeader(SET_COOKIE.toString(), ServerCookieEncoder.LAX.encode(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue())));
                 }
             }
         }
-    }
-
-    private boolean cookieHeaderAlreadyExists(HttpResponse response, Cookie cookieValue) {
-        List<String> setCookieHeaders = response.getHeader(SET_COOKIE.toString());
-        for (String setCookieHeader : setCookieHeaders) {
-            String existingCookieName = ClientCookieDecoder.LAX.decode(setCookieHeader).name();
-            String existingCookieValue = ClientCookieDecoder.LAX.decode(setCookieHeader).value();
-            if (existingCookieName.equalsIgnoreCase(cookieValue.getName().getValue()) && existingCookieValue.equalsIgnoreCase(cookieValue.getValue().getValue())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void setBody(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {

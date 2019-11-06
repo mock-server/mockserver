@@ -12,7 +12,7 @@ import static org.mockserver.character.Character.NEW_LINE;
  */
 public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
 
-    private JsonSchemaValidator jsonSchemaValidator = new JsonSchemaVerificationSequenceValidator(new MockServerLogger());
+    private JsonSchemaValidator jsonSchemaValidator = new JsonSchemaVerificationSequenceValidator();
 
     @Test
     public void shouldValidateValidCompleteRequestWithStringBody() {

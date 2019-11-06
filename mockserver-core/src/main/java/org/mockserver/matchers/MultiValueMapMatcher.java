@@ -2,9 +2,12 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.KeysToMultiValues;
+
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -24,14 +27,24 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
     }
 
     public boolean matches(final HttpRequest context, KeysToMultiValues values) {
-        boolean result = false;
+        boolean result;
 
         if (multiMap == null || multiMap.isEmpty()) {
             result = true;
+        } else if (values == null || values.isEmpty()) {
+            result = multiMap.allKeysNotted();
         } else if (values.toCaseInsensitiveRegexMultiMap().containsAll(multiMap)) {
             result = true;
         } else {
-            mockServerLogger.trace(context, "Map [{}] is not a subset of {}", multiMap, values);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setHttpRequest(context)
+                    .setMessageFormat("Map [{}] is not a subset of {}")
+                    .setArguments(multiMap, values)
+            );
+            result = false;
         }
 
         return not != result;

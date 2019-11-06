@@ -1,15 +1,12 @@
 package org.mockserver.validator.jsonschema;
 
-import org.mockserver.logging.MockServerLogger;
-
 /**
  * @author jamesdbloom
  */
 public class JsonSchemaVerificationValidator extends JsonSchemaValidator {
 
-    public JsonSchemaVerificationValidator(MockServerLogger mockServerLogger) {
+    public JsonSchemaVerificationValidator() {
         super(
-            mockServerLogger,
             "org/mockserver/model/schema/",
             "verification",
             "httpRequest",
@@ -18,6 +15,15 @@ public class JsonSchemaVerificationValidator extends JsonSchemaValidator {
             "keyToValue",
             "verificationTimes"
         );
+    }
+
+    private static JsonSchemaVerificationValidator jsonSchemaVerificationValidator = new JsonSchemaVerificationValidator();
+
+    public static JsonSchemaVerificationValidator jsonSchemaVerificationValidator() {
+        if (jsonSchemaVerificationValidator == null) {
+            jsonSchemaVerificationValidator = new JsonSchemaVerificationValidator();
+        }
+        return jsonSchemaVerificationValidator;
     }
 
 }

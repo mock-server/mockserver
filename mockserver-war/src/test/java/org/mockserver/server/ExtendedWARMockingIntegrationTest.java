@@ -21,8 +21,8 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployableWARMockingIntegrationTest {
 
-    private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
+    private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private static final int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static Tomcat tomcat;
 
     @BeforeClass

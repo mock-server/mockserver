@@ -1,22 +1,21 @@
-package org.mockserver.filters;
+package org.mockserver.log;
 
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.log.model.ExpectationMatchLogEntry;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.verify.Verification;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationTimes.atLeast;
 import static org.mockserver.verify.VerificationTimes.exactly;
@@ -24,7 +23,7 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 /**
  * @author jamesdbloom
  */
-public class LogFilterExpectationMatchLogEntryVerificationTest {
+public class LogFilterRequestLogEntryVerificationTest {
 
     private static Scheduler scheduler = new Scheduler();
 
@@ -38,28 +37,53 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(otherHttpRequest, new Expectation(otherHttpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(otherHttpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
 
         // then
         assertThat(logFilter.verify((Verification) null), is(""));
     }
 
     @Test
-    public void shouldPassVerificationWithDefaultTimes() {
+    public void shouldPassVerificationWithDefaultTimes() throws InterruptedException {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(otherHttpRequest, new Expectation(otherHttpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(otherHttpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then
         assertThat(logFilter.verify(
@@ -81,16 +105,29 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
     }
 
     @Test
-    public void shouldPassVerificationWithAtLeastTwoTimes() {
+    public void shouldPassVerificationWithAtLeastTwoTimes() throws InterruptedException {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(otherHttpRequest, new Expectation(otherHttpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(otherHttpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then
         assertThat(logFilter.verify(
@@ -108,12 +145,24 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(otherHttpRequest, new Expectation(otherHttpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(otherHttpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
 
         // then
         assertThat(logFilter.verify(
@@ -127,16 +176,29 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
     }
 
     @Test
-    public void shouldPassVerificationWithExactlyTwoTimes() {
+    public void shouldPassVerificationWithExactlyTwoTimes() throws InterruptedException {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(otherHttpRequest, new Expectation(otherHttpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(otherHttpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then
         assertThat(logFilter.verify(
@@ -155,12 +217,24 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(otherHttpRequest, new Expectation(otherHttpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(otherHttpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
 
         // then
         assertThat(logFilter.verify(
@@ -177,23 +251,36 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
     @Test
     public void shouldFailVerificationWithNullRequest() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler, true);
 
         // then
         assertThat(logFilter.verify((Verification) null), is(""));
     }
 
     @Test
-    public void shouldFailVerificationWithDefaultTimes() {
+    public void shouldFailVerificationWithDefaultTimes() throws InterruptedException {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(otherHttpRequest, new Expectation(otherHttpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(otherHttpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then
         assertThat(logFilter.verify(
@@ -214,16 +301,29 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
     }
 
     @Test
-    public void shouldFailVerificationWithAtLeastTwoTimes() {
+    public void shouldFailVerificationWithAtLeastTwoTimes() throws InterruptedException {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(otherHttpRequest, new Expectation(otherHttpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(otherHttpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then
         assertThat(logFilter.verify(
@@ -245,16 +345,29 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
     }
 
     @Test
-    public void shouldFailVerificationWithExactTwoTimes() {
+    public void shouldFailVerificationWithExactTwoTimes() throws InterruptedException {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(otherHttpRequest, new Expectation(otherHttpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(otherHttpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then
         assertThat(logFilter.verify(
@@ -279,7 +392,7 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
     @Test
     public void shouldFailVerificationWithExactOneTime() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler, true);
 
         // then
         assertThat(logFilter.verify(
@@ -296,16 +409,29 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
     }
 
     @Test
-    public void shouldFailVerificationWithExactZeroTimes() {
+    public void shouldFailVerificationWithExactZeroTimes() throws InterruptedException {
         // given
         HttpRequest httpRequest = new HttpRequest().withPath("some_path");
         HttpRequest otherHttpRequest = new HttpRequest().withPath("some_other_path");
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(otherHttpRequest, new Expectation(otherHttpRequest).thenRespond(response("some_response"))));
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(otherHttpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then
         assertThat(logFilter.verify(
@@ -328,13 +454,18 @@ public class LogFilterExpectationMatchLogEntryVerificationTest {
     }
 
     @Test
-    public void shouldFailVerificationWithNoInteractions() {
+    public void shouldFailVerificationWithNoInteractions() throws InterruptedException {
         // given
         HttpRequest httpRequest = new HttpRequest();
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(httpRequest, new Expectation(httpRequest).thenRespond(response("some_response"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(httpRequest)
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then
         assertThat(logFilter.verify(

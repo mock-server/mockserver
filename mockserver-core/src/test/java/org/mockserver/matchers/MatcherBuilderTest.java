@@ -57,7 +57,7 @@ public class MatcherBuilderTest {
         String bodyTestString = "UTF_8 characters: Bj\u00F6rk";
 
         // given
-        MockServerRequestDecoder mockServerRequestDecoder = new MockServerRequestDecoder(new MockServerLogger(), false);
+        MockServerRequestDecoder mockServerRequestDecoder = new MockServerRequestDecoder(false);
         FullHttpRequest fullHttpRequest = new DefaultFullHttpRequest(
             HTTP_1_1,
             GET,
@@ -86,7 +86,7 @@ public class MatcherBuilderTest {
         String bodyTestString = "UTF_8 characters: Bj\u00F6rk";
 
         // given
-        MockServerRequestDecoder mockServerRequestDecoder = new MockServerRequestDecoder(new MockServerLogger(), false);
+        MockServerRequestDecoder mockServerRequestDecoder = new MockServerRequestDecoder(false);
         FullHttpRequest fullHttpRequest = new DefaultFullHttpRequest(
             HTTP_1_1,
             GET,

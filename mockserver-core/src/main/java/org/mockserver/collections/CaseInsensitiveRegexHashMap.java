@@ -6,7 +6,6 @@ import org.mockserver.model.NottableString;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.NottableString.string;
 
 /**
@@ -56,7 +55,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
         return true;
     }
 
-    private boolean allKeysNotted() {
+    public boolean allKeysNotted() {
         for (NottableString key : keySet()) {
             if (!key.isNot()) {
                 return false;
@@ -84,14 +83,12 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
     }
 
     private synchronized Entry<NottableString, NottableString> retrieveEntry(NottableString key, NottableString value) {
-
         for (Entry<NottableString, NottableString> matcherEntry : entrySet()) {
             if (RegexStringMatcher.matches(value, matcherEntry.getValue(), true)
                 && RegexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
                 return matcherEntry;
             }
         }
-
         return null;
     }
 

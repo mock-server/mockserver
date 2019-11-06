@@ -1,30 +1,33 @@
-package org.mockserver.filters;
+package org.mockserver.log;
 
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.log.model.ExpectationMatchLogEntry;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mock.Expectation;
-import org.mockserver.mock.MockServerMatcher;
-import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.verify.VerificationSequence;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
  */
-public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
+public class LogFilterRequestLogEntryVerificationSequenceTest {
 
+    private MockServerLogger mockLogFormatter;
     private static Scheduler scheduler = new Scheduler();
+
+    @Before
+    public void setupTestFixture() {
+        mockLogFormatter = mock(MockServerLogger.class);
+    }
 
     @AfterClass
     public static void stopScheduler() {
@@ -34,14 +37,34 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationWithNullRequest() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mockLogFormatter, scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("four"), new Expectation(request("four")).thenRespond(response("four"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("four"))
+                .setType(RECEIVED_REQUEST)
+        );
 
         // then
         assertThat(logFilter.verify((VerificationSequence) null), is(""));
@@ -50,14 +73,34 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     @Test
     public void shouldPassVerificationSequenceWithNoRequest() {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mockLogFormatter, scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("four"), new Expectation(request("four")).thenRespond(response("four"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("four"))
+                .setType(RECEIVED_REQUEST)
+        );
 
         // then
         assertThat(logFilter.verify(
@@ -70,16 +113,37 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldPassVerificationSequenceWithOneRequest() {
+    public void shouldPassVerificationSequenceWithOneRequest() throws InterruptedException {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mockLogFormatter, scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("four"), new Expectation(request("four")).thenRespond(response("four"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("four"))
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then
         assertThat(logFilter.verify(
@@ -113,16 +177,37 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldPassVerificationSequenceWithTwoRequests() {
+    public void shouldPassVerificationSequenceWithTwoRequests() throws InterruptedException {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mockLogFormatter, scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("four"), new Expectation(request("four")).thenRespond(response("four"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("four"))
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then - next to each other
         assertThat(logFilter.verify(
@@ -193,16 +278,37 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldFailVerificationSequenceWithOneRequest() {
+    public void shouldFailVerificationSequenceWithOneRequest() throws InterruptedException {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mockLogFormatter, scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("four"), new Expectation(request("four")).thenRespond(response("four"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("four"))
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then
         assertThat(logFilter.verify(
@@ -227,16 +333,37 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldFailVerificationSequenceWithTwoRequestsWrongOrder() {
+    public void shouldFailVerificationSequenceWithTwoRequestsWrongOrder() throws InterruptedException {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mockLogFormatter, scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("four"), new Expectation(request("four")).thenRespond(response("four"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("four"))
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then - next to each other
         assertThat(logFilter.verify(
@@ -353,16 +480,37 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldFailVerificationSequenceWithTwoRequestsFirstIncorrect() {
+    public void shouldFailVerificationSequenceWithTwoRequestsFirstIncorrect() throws InterruptedException {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mockLogFormatter, scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("four"), new Expectation(request("four")).thenRespond(response("four"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("four"))
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then - next to each other
         assertThat(logFilter.verify(
@@ -434,16 +582,37 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldFailVerificationSequenceWithTwoRequestsSecondIncorrect() {
+    public void shouldFailVerificationSequenceWithTwoRequestsSecondIncorrect() throws InterruptedException {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mockLogFormatter, scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("four"), new Expectation(request("four")).thenRespond(response("four"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("four"))
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then - next to each other
         assertThat(logFilter.verify(
@@ -515,16 +684,37 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldFailVerificationSequenceWithThreeRequestsWrongOrder() {
+    public void shouldFailVerificationSequenceWithThreeRequestsWrongOrder() throws InterruptedException {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mockLogFormatter, scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("four"), new Expectation(request("four")).thenRespond(response("four"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("four"))
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then - next to each other
         assertThat(logFilter.verify(
@@ -632,16 +822,37 @@ public class LogFilterExpectationMatchLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldFailVerificationSequenceWithThreeRequestsDuplicateMissing() {
+    public void shouldFailVerificationSequenceWithThreeRequestsDuplicateMissing() throws InterruptedException {
         // given
-        MockServerEventLog logFilter = new MockServerEventLog(mock(MockServerLogger.class), scheduler);
+        MockServerEventLog logFilter = new MockServerEventLog(mockLogFormatter, scheduler, true);
 
         // when
-        logFilter.add(new ExpectationMatchLogEntry(request("one"), new Expectation(request("one")).thenRespond(response("one"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("three"), new Expectation(request("three")).thenRespond(response("three"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("multi"), new Expectation(request("multi")).thenRespond(response("multi"))));
-        logFilter.add(new ExpectationMatchLogEntry(request("four"), new Expectation(request("four")).thenRespond(response("four"))));
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("three"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("multi"))
+                .setType(RECEIVED_REQUEST)
+        );
+        logFilter.add(
+            new LogEntry()
+                .setHttpRequest(request("four"))
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // then
         assertThat(logFilter.verify(

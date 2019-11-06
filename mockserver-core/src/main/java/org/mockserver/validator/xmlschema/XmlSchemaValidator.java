@@ -1,9 +1,11 @@
 package org.mockserver.validator.xmlschema;
 
 import org.mockserver.file.FileReader;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.validator.Validator;
+import org.slf4j.event.Level;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -22,7 +24,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  */
 public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
-    private final static SchemaFactory schemaFactory = buildSchemaFactory();
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(XmlSchemaValidator.class);
+    private static final SchemaFactory schemaFactory = buildSchemaFactory();
     private final MockServerLogger mockServerLogger;
     private final Schema schema;
 
@@ -49,7 +52,13 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
             schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "all");
             schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "all");
         } catch (Exception e) {
-            new MockServerLogger(XmlSchemaValidator.class).error("exception configuring schema factory", e);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("exception configuring schema factory")
+                    .setThrowable(e)
+            );
         }
         return schemaFactory;
     }
@@ -64,7 +73,13 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
                 errorMessage = e.getMessage();
             }
         } catch (Exception e) {
-            mockServerLogger.error("Exception validating JSON", e);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception validating JSON")
+                    .setThrowable(e)
+            );
             return e.getClass().getSimpleName() + " - " + e.getMessage();
         }
         return errorMessage;

@@ -5,6 +5,7 @@ import com.google.common.net.MediaType;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mock.HttpStateHandler;
@@ -15,6 +16,7 @@ import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.servlet.responsewriter.ServletResponseWriter;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
+import org.slf4j.event.Level;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -73,12 +75,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
 
             request = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
             final String hostHeader = request.getFirstHeader(HOST.toString());
-            scheduler.submit(new Runnable() {
-                @Override
-                public void run() {
-                    KeyAndCertificateFactory.addSubjectAlternativeName(hostHeader);
-                }
-            });
+            scheduler.submit(() -> KeyAndCertificateFactory.addSubjectAlternativeName(hostHeader));
 
             if (!httpStateHandler.handle(request, responseWriter, true)) {
 
@@ -113,11 +110,25 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
                 }
             }
         } catch (IllegalArgumentException iae) {
-            mockServerLogger.error(request, "exception processing: {} error: {}", request, iae.getMessage());
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setHttpRequest(request)
+                    .setMessageFormat("exception processing: {} error: {}")
+                    .setArguments(request, iae.getMessage())
+            );
             // send request without API CORS headers
             responseWriter.writeResponse(request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
-            mockServerLogger.error(request, e, "exception processing " + request);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setHttpRequest(request)
+                    .setMessageFormat("exception processing " + request)
+                    .setThrowable(e)
+            );
             responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()), true);
         }
     }

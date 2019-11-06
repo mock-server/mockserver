@@ -37,7 +37,7 @@ public class MockServerMatcherManageExpectationsTest {
         webSocketClientRegistry = mock(WebSocketClientRegistry.class);
         httpRequest = new HttpRequest();
         httpResponse = new HttpResponse();
-        mockServerMatcher = new MockServerMatcher(new MockServerLogger(this.getClass()), scheduler, webSocketClientRegistry);
+        mockServerMatcher = new MockServerMatcher(new MockServerLogger(), scheduler, webSocketClientRegistry);
     }
 
     @Test

@@ -6,14 +6,15 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.Attribute;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.log.model.ExpectationMatchLogEntry;
-import org.mockserver.log.model.RequestResponseLogEntry;
+import org.mockserver.log.TimeService;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
@@ -23,6 +24,7 @@ import org.mockserver.model.*;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
+import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
@@ -30,10 +32,8 @@ import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockito.internal.verification.VerificationModeFactory.times;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXPECTATION_RESPONSE;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.FORWARDED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.model.Delay.milliseconds;
 import static org.mockserver.model.HttpClassCallback.callback;
@@ -42,6 +42,7 @@ import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.slf4j.event.Level.INFO;
 
 /**
  * @author jamesdbloom
@@ -72,7 +73,7 @@ public class ActionHandlerTest {
     @Mock
     private ResponseWriter mockResponseWriter;
     @Mock
-    private MockServerLogger mockLogFormatter;
+    private MockServerLogger mockServerLogger;
     @Spy
     private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
     @Mock
@@ -86,6 +87,11 @@ public class ActionHandlerTest {
     private Expectation expectation;
     @InjectMocks
     private ActionHandler actionHandler;
+
+    @BeforeClass
+    public static void fixTime() {
+        TimeService.fixedTime = true;
+    }
 
     @AfterClass
     public static void stopScheduler() {
@@ -106,7 +112,7 @@ public class ActionHandlerTest {
         responseFuture = SettableFuture.create();
         responseFuture.set(response);
         forwardedHttpRequest = mock(HttpRequest.class);
-        httpForwardActionResult = new HttpForwardActionResult(forwardedHttpRequest, responseFuture);
+        httpForwardActionResult = new HttpForwardActionResult(forwardedHttpRequest, responseFuture, new InetSocketAddress(1234));
         expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(response);
 
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
@@ -127,13 +133,28 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
 
         // then
         verify(mockHttpResponseActionHandler).handle(response);
         verify(mockResponseWriter).writeResponse(request, this.response, false);
-        verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockLogFormatter).info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", this.response, request, response);
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("received request:{}")
+                .setArguments(request)
+        );
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_RESPONSE)
+                .setHttpRequest(request)
+                .setHttpResponse(this.response)
+                .setMessageFormat("returning response:{}for request:{}for action:{}")
+                .setArguments(this.response, request, response)
+        );
         verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(1)), eq(milliseconds(0)));
     }
 
@@ -150,8 +171,23 @@ public class ActionHandlerTest {
         // then
         verify(mockHttpResponseTemplateActionHandler).handle(template, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
-        verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockLogFormatter).info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, template);
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("received request:{}")
+                .setArguments(request)
+        );
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_RESPONSE)
+                .setHttpRequest(request)
+                .setHttpResponse(response)
+                .setMessageFormat("returning response:{}for request:{}for action:{}")
+                .setArguments(response, request, template)
+        );
         verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(1)), eq(milliseconds(0)));
     }
 
@@ -168,8 +204,23 @@ public class ActionHandlerTest {
         // then
         verify(mockHttpResponseClassCallbackActionHandler).handle(callback, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
-        verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockLogFormatter).info(EXPECTATION_RESPONSE, request, "returning response:{}for request:{}for action:{}", response, request, callback);
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("received request:{}")
+                .setArguments(request)
+        );
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(EXPECTATION_RESPONSE)
+                .setLogLevel(INFO)
+                .setHttpRequest(request)
+                .setHttpResponse(response)
+                .setMessageFormat("returning response:{}for request:{}for action:{}")
+                .setArguments(response, request, callback)
+        );
         verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(1)), eq(milliseconds(0)));
     }
 
@@ -185,8 +236,15 @@ public class ActionHandlerTest {
         actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
 
         // then
-        verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
         verify(mockHttpResponseObjectCallbackActionHandler).handle(any(ActionHandler.class), same(callback), same(request), same(mockResponseWriter), eq(true));
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("received request:{}")
+                .setArguments(request)
+        );
     }
 
     @Test
@@ -204,9 +262,25 @@ public class ActionHandlerTest {
         // then
         verify(mockHttpForwardActionHandler).handle(forward, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
-        verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockLogFormatter).info(same(FORWARDED_REQUEST), same(request), eq("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}"), same(response), same(forwardedHttpRequest), any(String.class), eq(expectation.getAction()));
-        verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest);
+        InetSocketAddress remoteAddress = httpForwardActionResult.getRemoteAddress();
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("received request:{}")
+                .setArguments(request)
+        );
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(FORWARDED_REQUEST)
+                .setHttpRequest(request)
+                .setHttpResponse(response)
+                .setMessageFormat("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}")
+                .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction())
+        );
+        verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest, remoteAddress);
     }
 
     @Test
@@ -222,9 +296,25 @@ public class ActionHandlerTest {
         // then
         verify(mockHttpForwardTemplateActionHandler).handle(template, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
-        verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockLogFormatter).info(same(FORWARDED_REQUEST), same(request), eq("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}"), same(response), same(forwardedHttpRequest), any(String.class), eq(expectation.getAction()));
-        verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest);
+        InetSocketAddress remoteAddress = httpForwardActionResult.getRemoteAddress();
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("received request:{}")
+                .setArguments(request)
+        );
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(FORWARDED_REQUEST)
+                .setHttpRequest(request)
+                .setHttpResponse(response)
+                .setMessageFormat("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}")
+                .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction())
+        );
+        verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest, remoteAddress);
     }
 
     @Test
@@ -240,9 +330,25 @@ public class ActionHandlerTest {
         // then
         verify(mockHttpForwardClassCallbackActionHandler).handle(callback, request);
         verify(mockResponseWriter).writeResponse(request, response, false);
-        verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
-        verify(mockLogFormatter).info(same(FORWARDED_REQUEST), same(request), eq("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}"), same(response), same(forwardedHttpRequest), any(String.class), eq(expectation.getAction()));
-        verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest);
+        InetSocketAddress remoteAddress = httpForwardActionResult.getRemoteAddress();
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("received request:{}")
+                .setArguments(request)
+        );
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(FORWARDED_REQUEST)
+                .setHttpRequest(request)
+                .setHttpResponse(response)
+                .setMessageFormat("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}")
+                .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction())
+        );
+        verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest, remoteAddress);
     }
 
     @Test
@@ -257,8 +363,15 @@ public class ActionHandlerTest {
         actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
 
         // then
-        verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
         verify(mockHttpForwardObjectCallbackActionHandler).handle(any(ActionHandler.class), same(callback), same(request), same(mockResponseWriter), eq(true));
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("received request:{}")
+                .setArguments(request)
+        );
     }
 
     @Test
@@ -273,8 +386,26 @@ public class ActionHandlerTest {
         actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
 
         // then
-        verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
         verify(mockHttpOverrideForwardedRequestActionHandler).handle(httpOverrideForwardedRequest, request);
+        InetSocketAddress remoteAddress = httpForwardActionResult.getRemoteAddress();
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("received request:{}")
+                .setArguments(request)
+        );
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(FORWARDED_REQUEST)
+                .setHttpRequest(request)
+                .setHttpResponse(response)
+                .setMessageFormat("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}")
+                .setArguments(response, forwardedHttpRequest, "curl -v 'http://" + remoteAddress.getHostName() + ":" + remoteAddress.getPort() + "/'", expectation.getAction())
+        );
+        verify(httpRequestToCurlSerializer).toCurl(forwardedHttpRequest, remoteAddress);
     }
 
     @Test
@@ -290,9 +421,24 @@ public class ActionHandlerTest {
         actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), false, true);
 
         // then
-        verify(mockHttpStateHandler, times(1)).log(new ExpectationMatchLogEntry(request, expectation));
         verify(mockHttpErrorActionHandler).handle(error, mockChannelHandlerContext);
-        verify(mockLogFormatter).info(EXPECTATION_RESPONSE, request, "returning error:{}for request:{}for action:{}", error, request, error);
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("received request:{}")
+                .setArguments(request)
+        );
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_RESPONSE)
+                .setHttpRequest(request)
+                .setHttpError(error)
+                .setMessageFormat("returning error:{}for request:{}for action:{}")
+                .setArguments(error, request, error)
+        );
     }
 
     @Test
@@ -317,15 +463,23 @@ public class ActionHandlerTest {
         actionHandler.processAction(request("request_one"), mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), true, true);
 
         // then
-        verify(mockHttpStateHandler).log(new RequestResponseLogEntry(request, response));
         verify(mockNettyHttpClient).sendRequest(requestBeingForwarded, remoteAddress, ConfigurationProperties.socketConnectionTimeout());
-        verify(mockLogFormatter).info(
-            FORWARDED_REQUEST,
-            request,
-            "returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}",
-            response,
-            request,
-            httpRequestToCurlSerializer.toCurl(request, remoteAddress)
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("received request:{}")
+                .setArguments(request)
+        );
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(FORWARDED_REQUEST)
+                .setHttpRequest(request)
+                .setHttpResponse(response)
+                .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}")
+                .setArguments(response, request, httpRequestToCurlSerializer.toCurl(request, remoteAddress))
         );
     }
 }

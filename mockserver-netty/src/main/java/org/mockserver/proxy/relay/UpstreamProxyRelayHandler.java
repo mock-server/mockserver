@@ -4,7 +4,9 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.ssl.SslHandler;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.slf4j.event.Level;
 
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
@@ -45,7 +47,13 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
                     ctx.channel().read();
                 } else {
                     if (isNotSocketClosedException(future.cause())) {
-                        mockServerLogger.error("Exception while returning response for request \"" + request.method() + " " + request.uri() + "\"", future.cause());
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(LogEntry.LogMessageType.EXCEPTION)
+                                .setLogLevel(Level.ERROR)
+                                .setMessageFormat("Exception while returning response for request \"" + request.method() + " " + request.uri() + "\"")
+                                .setThrowable(future.cause())
+                        );
                     }
                     future.channel().close();
                 }
@@ -65,7 +73,13 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            mockServerLogger.error("Exception caught by upstream relay handler -> closing pipeline " + ctx.channel(), cause);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception caught by upstream relay handler -> closing pipeline " + ctx.channel())
+                    .setThrowable(cause)
+            );
         }
         closeOnFlush(ctx.channel());
     }

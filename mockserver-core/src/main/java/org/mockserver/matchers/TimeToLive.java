@@ -47,11 +47,7 @@ public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
     }
 
     public boolean stillAlive() {
-        if (unlimited || isAfterNow(endDate)) {
-            return true;
-        } else {
-            return false;
-        }
+        return unlimited || isAfterNow(endDate);
     }
 
     private boolean isAfterNow(Date date) {

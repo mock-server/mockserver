@@ -22,8 +22,8 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasicMockingIntegrationTest {
 
-    private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
+    private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private static final int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static Tomcat tomcat;
 
     @BeforeClass

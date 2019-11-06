@@ -1,6 +1,7 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
@@ -8,13 +9,15 @@ import org.mockserver.model.NottableString;
 import java.util.regex.PatternSyntaxException;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.mockserver.logging.MockServerLogger.MOCK_SERVER_LOGGER;
 import static org.mockserver.model.NottableString.string;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
  */
 public class RegexStringMatcher extends BodyMatcher<NottableString> {
+
+    public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(RegexStringMatcher.class);
     private static final String[] excludedFields = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final NottableString matcher;
@@ -32,66 +35,155 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     public static boolean matches(NottableString matcher, NottableString matched, boolean ignoreCase) {
         if (matcher.isNot() && matched.isNot()) {
             // mutual notted control plane match
-            return matches(matcher.getValue(), matched.getValue(), ignoreCase);
+            return matchesInternal(matcher, matched, ignoreCase);
         } else {
             // data plane & control plan match
-            return (matcher.isNot() || matched.isNot()) ^ matches(matcher.getValue(), matched.getValue(), ignoreCase);
+            return (matcher.isNot() || matched.isNot()) ^ matchesInternal(matcher, matched, ignoreCase);
         }
     }
 
-    public static boolean matches(String matcher, String matched, boolean ignoreCase) {
-        boolean result = false;
+    private static boolean matchesInternal(NottableString matcher, NottableString matched, boolean ignoreCase) {
 
-        if (isBlank(matcher)) {
-            result = true;
-        } else if (matched != null) {
+        if (matcher.isBlank()) {
+            return true;
+        } else if (matched.getValue() != null) {
             // match as exact string
-            if (matched.equals(matcher)) {
-                result = true;
+            if (matched.getValue().equals(matcher.getValue())) {
+                return true;
             }
-            if (!result) {
+            try {
+                if (matched.matches(matcher.getValue())) {
+                    return true;
+                }
+            } catch (PatternSyntaxException pse) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("Error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
+                );
+            }
+            // match as regex - matched -> matcher
+            try {
+                if (matcher.matches(matched.getValue())) {
+                    return true;
+                }
+            } catch (PatternSyntaxException pse) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("Error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
+                );
+            }
+            // case insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
+            if (ignoreCase) {
+                // match as exact string lower-case
+                if (matched.getValue().equalsIgnoreCase(matcher.getValue())) {
+                    return true;
+                }
+                // match as regex - matcher -> matched
                 try {
-                    if (matched.matches(matcher)) {
-                        result = true;
+                    if (matched.matchesIgnoreCase(matcher.getValue())) {
+                        return true;
                     }
                 } catch (PatternSyntaxException pse) {
-                    MOCK_SERVER_LOGGER.trace("Error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage());
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.TRACE)
+                            .setLogLevel(TRACE)
+                            .setMessageFormat("Error while matching regex [" + matcher + "] for string [" + matched + "] and ignoring case " + pse.getMessage())
+                    );
                 }
                 // match as regex - matched -> matcher
                 try {
-                    if (matcher.matches(matched)) {
-                        result = true;
+                    if (matcher.matchesIgnoreCase(matched.getValue())) {
+                        return true;
                     }
                 } catch (PatternSyntaxException pse) {
-                    MOCK_SERVER_LOGGER.trace("Error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage());
-                }
-                // case insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
-                if (!result && ignoreCase) {
-                    // match as exact string lower-case
-                    if (matched.equalsIgnoreCase(matcher)) {
-                        result = true;
-                    }
-                    // match as regex - matcher -> matched
-                    try {
-                        if (matched.toLowerCase().matches(matcher.toLowerCase())) {
-                            result = true;
-                        }
-                    } catch (PatternSyntaxException pse) {
-                        MOCK_SERVER_LOGGER.trace("Error while matching regex [" + matcher.toLowerCase() + "] for string [" + matched.toLowerCase() + "] " + pse.getMessage());
-                    }
-                    // match as regex - matched -> matcher
-                    try {
-                        if (matcher.toLowerCase().matches(matched.toLowerCase())) {
-                            result = true;
-                        }
-                    } catch (PatternSyntaxException pse) {
-                        MOCK_SERVER_LOGGER.trace("Error while matching regex [" + matched.toLowerCase() + "] for string [" + matcher.toLowerCase() + "] " + pse.getMessage());
-                    }
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.TRACE)
+                            .setLogLevel(TRACE)
+                            .setMessageFormat("Error while matching regex [" + matched + "] for string [" + matcher + "] and ignoring case " + pse.getMessage())
+                    );
                 }
             }
         }
 
-        return result;
+        return false;
+    }
+
+    public static boolean matches(String matcher, String matched, boolean ignoreCase) {
+
+        if (isBlank(matcher)) {
+            return true;
+        } else if (matched != null) {
+            // match as exact string
+            if (matched.equals(matcher)) {
+                return true;
+            }
+            try {
+                if (matched.matches(matcher)) {
+                    return true;
+                }
+            } catch (PatternSyntaxException pse) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("Error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
+                );
+            }
+            // match as regex - matched -> matcher
+            try {
+                if (matcher.matches(matched)) {
+                    return true;
+                }
+            } catch (PatternSyntaxException pse) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("Error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
+                );
+            }
+            // case insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
+            if (ignoreCase) {
+                // match as exact string lower-case
+                if (matched.equalsIgnoreCase(matcher)) {
+                    return true;
+                }
+                // match as regex - matcher -> matched
+                try {
+                    if (matched.toLowerCase().matches(matcher.toLowerCase())) {
+                        return true;
+                    }
+                } catch (PatternSyntaxException pse) {
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.TRACE)
+                            .setLogLevel(TRACE)
+                            .setMessageFormat("Error while matching regex [" + matcher.toLowerCase() + "] for string [" + matched.toLowerCase() + "] " + pse.getMessage())
+                    );
+                }
+                // match as regex - matched -> matcher
+                try {
+                    if (matcher.toLowerCase().matches(matched.toLowerCase())) {
+                        return true;
+                    }
+                } catch (PatternSyntaxException pse) {
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.TRACE)
+                            .setLogLevel(TRACE)
+                            .setMessageFormat("Error while matching regex [" + matched.toLowerCase() + "] for string [" + matcher.toLowerCase() + "] " + pse.getMessage())
+                    );
+                }
+            }
+        }
+
+        return false;
     }
 
     public boolean matches(String matched) {
@@ -106,7 +198,14 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         }
 
         if (!result) {
-            mockServerLogger.trace(context, "Failed to match [{}] with [{}]", matched, this.matcher);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setHttpRequest(context)
+                    .setMessageFormat("Failed to match [{}] with [{}]")
+                    .setArguments(matched, this.matcher)
+            );
         }
 
         return matched.isNot() != (matcher.isNot() != (not != result));

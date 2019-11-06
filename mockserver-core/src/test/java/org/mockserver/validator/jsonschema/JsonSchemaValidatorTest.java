@@ -67,41 +67,41 @@ public class JsonSchemaValidatorTest {
 
     @Test
     public void shouldMatchJson() {
-        assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ \"one\" ], enumField: \"one\"}"), is(""));
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid("{arrayField: [ \"one\" ], enumField: \"one\"}"), is(""));
     }
 
     @Test
     public void shouldHandleJsonMissingRequiredFields() {
         // then
-        assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{}"), is("1 error:" + NEW_LINE +
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid("{}"), is("1 error:" + NEW_LINE +
             " - object has missing required properties ([\"arrayField\",\"enumField\"])"));
     }
 
     @Test
     public void shouldHandleJsonTooFewItems() {
         // then
-        assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ ],         enumField: \\\"one\\\"}"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid("{arrayField: [ ],         enumField: \\\"one\\\"}"),
             is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ ],         enumField: \\\"one\\\"}\"; line: 1, column: 39]"));
     }
 
     @Test
     public void shouldHandleJsonTooLongString() {
-        assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}"),
             is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", stringField: \\\"1234567\\\"}\"; line: 1, column: 17]"));
     }
 
     @Test
     public void shouldHandleJsonIncorrectEnum() {
-        assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}"),
             is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"four\\\"}\"; line: 1, column: 17]"));
     }
 
     @Test
     public void shouldHandleJsonExtraField() {
-        assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}"),
             is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}\"; line: 1, column: 17]"));
     }
@@ -109,7 +109,7 @@ public class JsonSchemaValidatorTest {
 
     @Test
     public void shouldHandleJsonIncorrectSubField() {
-        assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }"),
             is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }\"; line: 1, column: 17]"));
     }
@@ -117,7 +117,7 @@ public class JsonSchemaValidatorTest {
 
     @Test
     public void shouldHandleJsonMissingSubField() {
-        assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }"),
             is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }\"; line: 1, column: 17]"));
     }
@@ -125,7 +125,7 @@ public class JsonSchemaValidatorTest {
 
     @Test
     public void shouldHandleJsonMultipleErrors() {
-        assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid("{arrayField: [ ],  stringField: \\\"1234\\\"}"),
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid("{arrayField: [ ],  stringField: \\\"1234\\\"}"),
             is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ ],  stringField: \\\"1234\\\"}\"; line: 1, column: 34]"));
     }
@@ -137,7 +137,7 @@ public class JsonSchemaValidatorTest {
         exception.expectMessage("Schema must either be a path reference to a *.json file or a json string");
 
         // given
-        new JsonSchemaValidator(new MockServerLogger(), "illegal_json").isValid("illegal_json");
+        new JsonSchemaValidator( "illegal_json").isValid("illegal_json");
     }
 
     @Test
@@ -146,7 +146,7 @@ public class JsonSchemaValidatorTest {
         exception.expect(NullPointerException.class);
 
         // given
-        new JsonSchemaValidator(new MockServerLogger(), null).isValid("some_value");
+        new JsonSchemaValidator( null).isValid("some_value");
     }
 
     @Test
@@ -156,18 +156,18 @@ public class JsonSchemaValidatorTest {
         exception.expectMessage("Schema must either be a path reference to a *.json file or a json string");
 
         // given
-        new JsonSchemaValidator(new MockServerLogger(), "").isValid("some_value");
+        new JsonSchemaValidator( "").isValid("some_value");
     }
 
     @Test
     public void shouldHandleNullTest() {
         // given
-        assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid(null), is(""));
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid(null), is(""));
     }
 
     @Test
     public void shouldHandleEmptyTest() {
         // given
-        assertThat(new JsonSchemaValidator(new MockServerLogger(), JSON_SCHEMA).isValid(""), is(""));
+        assertThat(new JsonSchemaValidator(JSON_SCHEMA).isValid(""), is(""));
     }
 }

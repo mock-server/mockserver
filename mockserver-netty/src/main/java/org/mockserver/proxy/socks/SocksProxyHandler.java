@@ -5,8 +5,10 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.mockserver.lifecycle.LifeCycle;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
+import org.slf4j.event.Level;
 
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mockserver.MockServerHandler.PROXYING;
@@ -35,12 +37,7 @@ public abstract class SocksProxyHandler<T> extends SimpleChannelInboundHandler<T
         }
 
         // add Subject Alternative Name for SSL certificate
-        server.getScheduler().submit(new Runnable() {
-            @Override
-            public void run() {
-                KeyAndCertificateFactory.addSubjectAlternativeName(addr);
-            }
-        });
+        server.getScheduler().submit(() -> KeyAndCertificateFactory.addSubjectAlternativeName(addr));
 
         ctx.pipeline().replace(this, null, forwarder);
     }
@@ -53,7 +50,13 @@ public abstract class SocksProxyHandler<T> extends SimpleChannelInboundHandler<T
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            mockServerLogger.error("Exception caught by SOCKS proxy handler -> closing pipeline " + ctx.channel(), cause);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception caught by SOCKS proxy handler -> closing pipeline " + ctx.channel())
+                    .setThrowable(cause)
+            );
         }
         ctx.close();
     }

@@ -82,7 +82,7 @@ public class JsonSchemaMatcherTest {
     @Before
     public void setupMocks() {
         logger = mock(Logger.class);
-        jsonSchemaMatcher = new JsonSchemaMatcher(new MockServerLogger(logger, null), JSON_SCHEMA);
+        jsonSchemaMatcher = new JsonSchemaMatcher(new MockServerLogger(logger), JSON_SCHEMA);
         initMocks(this);
 
         when(logger.isTraceEnabled()).thenReturn(true);
@@ -159,7 +159,8 @@ public class JsonSchemaMatcherTest {
                 NEW_LINE +
                 " because: " + NEW_LINE +
                 NEW_LINE +
-                "\tvalidator_error" + NEW_LINE);
+                "\tvalidator_error" + NEW_LINE,
+                (Throwable) null);
         } finally {
             logLevel(originalLevel.toString());
         }
@@ -224,7 +225,8 @@ public class JsonSchemaMatcherTest {
                 NEW_LINE +
                 " because: " + NEW_LINE +
                 NEW_LINE +
-                "\tTEST_EXCEPTION" + NEW_LINE);
+                "\tTEST_EXCEPTION" + NEW_LINE,
+                (Throwable) null);
         } finally {
             logLevel(originalLevel.toString());
         }

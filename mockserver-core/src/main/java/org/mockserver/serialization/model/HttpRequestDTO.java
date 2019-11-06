@@ -10,10 +10,10 @@ import static org.mockserver.model.NottableString.string;
 public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
     private NottableString method = string("");
     private NottableString path = string("");
-    private Parameters queryStringParameters = new Parameters();
+    private Parameters queryStringParameters;
     private BodyDTO body;
-    private Cookies cookies = new Cookies();
-    private Headers headers = new Headers();
+    private Cookies cookies;
+    private Headers headers;
     private Boolean keepAlive = null;
     private Boolean secure = null;
 

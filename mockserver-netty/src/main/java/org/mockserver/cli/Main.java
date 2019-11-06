@@ -5,6 +5,7 @@ import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.configuration.IntegerStringListParser;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mockserver.MockServer;
 
@@ -14,7 +15,8 @@ import java.util.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.cli.Main.Arguments.*;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
@@ -70,7 +72,13 @@ public class Main {
         try {
             Map<String, String> parsedArguments = parseArguments(arguments);
 
-            MOCK_SERVER_LOGGER.debug(SERVER_CONFIGURATION, "Using command line options: {}", Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments));
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(SERVER_CONFIGURATION)
+                    .setLogLevel(DEBUG)
+                    .setMessageFormat("Using command line options: {}")
+                    .setArguments(Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments))
+            );
 
             if (parsedArguments.size() > 0 && parsedArguments.containsKey(serverPort.name())) {
                 if (parsedArguments.containsKey(logLevel.name())) {

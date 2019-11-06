@@ -2,16 +2,18 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.*;
+import org.slf4j.event.Level;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXPECTATION_MATCHED;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
+import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
+import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
 import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET;
 import static org.mockserver.model.NottableString.string;
 
@@ -21,6 +23,10 @@ import static org.mockserver.model.NottableString.string;
 public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
     private static final String[] excludedFields = {"mockServerLogger", "objectMapper"};
+    private static final String DID_NOT_MATCH = "didn't match";
+    private static final String MATCHED = "matched";
+    private static final String REQUEST = "request";
+    private static final String EXPECTATION = "expectation";
     private MockServerLogger mockServerLogger;
     private Expectation expectation;
     private HttpRequest httpRequest;
@@ -196,14 +202,14 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                     if (logMatchResults) {
                         if (!totalResultAfterNotOperatorApplied) {
                             StringBuilder becauseBuilder = new StringBuilder();
-                            becauseBuilder.append("method ").append((methodMatches ? "matched" : "didn't match"));
-                            becauseBuilder.append(",").append(NEW_LINE).append("path ").append((pathMatches ? "matched" : "didn't match"));
-                            becauseBuilder.append(",").append(NEW_LINE).append("query ").append((queryStringParametersMatches ? "matched" : "didn't match"));
-                            becauseBuilder.append(",").append(NEW_LINE).append("body ").append((bodyMatches ? "matched" : "didn't match"));
-                            becauseBuilder.append(",").append(NEW_LINE).append("headers ").append((headersMatch ? "matched" : "didn't match"));
-                            becauseBuilder.append(",").append(NEW_LINE).append("cookies ").append((cookiesMatch ? "matched" : "didn't match"));
-                            becauseBuilder.append(",").append(NEW_LINE).append("keep-alive ").append((keepAliveMatches ? "matched" : "didn't match"));
-                            becauseBuilder.append(",").append(NEW_LINE).append("ssl ").append((sslMatches ? "matched" : "didn't match"));
+                            becauseBuilder.append("method ").append((methodMatches ? MATCHED : DID_NOT_MATCH));
+                            becauseBuilder.append(",").append(NEW_LINE).append("path ").append((pathMatches ? MATCHED : DID_NOT_MATCH));
+                            becauseBuilder.append(",").append(NEW_LINE).append("query ").append((queryStringParametersMatches ? MATCHED : DID_NOT_MATCH));
+                            becauseBuilder.append(",").append(NEW_LINE).append("body ").append((bodyMatches ? MATCHED : DID_NOT_MATCH));
+                            becauseBuilder.append(",").append(NEW_LINE).append("headers ").append((headersMatch ? MATCHED : DID_NOT_MATCH));
+                            becauseBuilder.append(",").append(NEW_LINE).append("cookies ").append((cookiesMatch ? MATCHED : DID_NOT_MATCH));
+                            becauseBuilder.append(",").append(NEW_LINE).append("keep-alive ").append((keepAliveMatches ? MATCHED : DID_NOT_MATCH));
+                            becauseBuilder.append(",").append(NEW_LINE).append("ssl ").append((sslMatches ? MATCHED : DID_NOT_MATCH));
                             if (request.isNot()) {
                                 becauseBuilder.append(",").append(NEW_LINE).append("request \'not\' operator is enabled");
                             }
@@ -213,9 +219,25 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                             if (not) {
                                 becauseBuilder.append(",").append(NEW_LINE).append("expectation's request matcher \'not\' operator is enabled");
                             }
-                            mockServerLogger.info(EXPECTATION_NOT_MATCHED, request, "request:{}" + (totalResult ? "matched " : "didn't match ") + (this.expectation == null ? "request" : "expectation") + ":{}because:{}", request, (this.expectation == null ? this : this.expectation.clone()), becauseBuilder.toString());
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(EXPECTATION_NOT_MATCHED)
+                                    .setLogLevel(Level.INFO)
+                                    .setHttpRequest(request)
+                                    .setExpectation(this.expectation)
+                                    .setMessageFormat(String.format("request:{}didn't match %s:{}because:{}", this.expectation == null ? REQUEST : EXPECTATION))
+                                    .setArguments(request, (this.expectation == null ? this : this.expectation.clone()), becauseBuilder.toString())
+                            );
                         } else {
-                            mockServerLogger.info(EXPECTATION_MATCHED, request, "request:{}matched " + (this.expectation == null ? "request" : "expectation") + ":{}", request, (this.expectation == null ? this : this.expectation.clone()));
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(EXPECTATION_MATCHED)
+                                    .setLogLevel(Level.INFO)
+                                    .setHttpRequest(request)
+                                    .setExpectation(this.expectation)
+                                    .setMessageFormat(String.format("request:{}matched %s:{}", this.expectation == null ? REQUEST : EXPECTATION))
+                                    .setArguments(request, (this.expectation == null ? this : this.expectation.clone()))
+                            );
                         }
                     }
                     matches = totalResultAfterNotOperatorApplied;

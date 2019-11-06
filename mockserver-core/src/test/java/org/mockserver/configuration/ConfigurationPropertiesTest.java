@@ -30,15 +30,13 @@ public class ConfigurationPropertiesTest {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
-    String propertiesBeforeTest;
+    private String propertiesBeforeTest;
 
     @Before
     public void backupProperties() throws IOException {
         StringWriter stringWriter = new StringWriter();
         System.getProperties().store(stringWriter, "");
         propertiesBeforeTest = stringWriter.toString();
-        ConfigurationProperties.rebuildKeyStore(false);
-        ConfigurationProperties.rebuildServerKeyStore(false);
     }
 
     @After
@@ -46,6 +44,7 @@ public class ConfigurationPropertiesTest {
         java.util.Properties properties = new java.util.Properties();
         properties.load(new StringReader(propertiesBeforeTest));
         System.setProperties(properties);
+        ConfigurationProperties.reset();
     }
 
     @Test
@@ -54,12 +53,12 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.enableCORSForAPI");
 
         // when
-        assertTrue(ConfigurationProperties.enableCORSForAPI());
-        ConfigurationProperties.enableCORSForAPI(false);
+        assertFalse(ConfigurationProperties.enableCORSForAPI());
+        ConfigurationProperties.enableCORSForAPI(true);
 
         // then
-        assertFalse(ConfigurationProperties.enableCORSForAPI());
-        assertEquals("false", System.getProperty("mockserver.enableCORSForAPI"));
+        assertTrue(ConfigurationProperties.enableCORSForAPI());
+        assertEquals("true", System.getProperty("mockserver.enableCORSForAPI"));
     }
 
     @Test
@@ -70,14 +69,6 @@ public class ConfigurationPropertiesTest {
         // when
         assertFalse(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
         ConfigurationProperties.enableCORSForAPI(true);
-        assertTrue(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
-
-        // given
-        System.clearProperty("mockserver.enableCORSForAPI");
-
-        // when
-        assertFalse(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
-        System.setProperty("mockserver.enableCORSForAPI", "" + true);
         assertTrue(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
     }
 
@@ -577,26 +568,29 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadDisableRequestAudit() {
+    public void shouldSetAndReadMetricsEnabled() {
         // given
-        System.clearProperty("mockserver.disableRequestAudit");
+        System.clearProperty("mockserver.metricsEnabled");
 
         // when
-        assertFalse(ConfigurationProperties.disableRequestAudit());
-        ConfigurationProperties.disableRequestAudit(false);
+        assertFalse(ConfigurationProperties.metricsEnabled());
+        ConfigurationProperties.metricsEnabled(true);
 
         // then
-        assertFalse(ConfigurationProperties.disableRequestAudit());
-        assertEquals("false", System.getProperty("mockserver.disableRequestAudit"));
+        assertTrue(ConfigurationProperties.metricsEnabled());
+        assertEquals("true", System.getProperty("mockserver.metricsEnabled"));
     }
 
     @Test
     public void shouldSetAndReadDisableSystemOut() {
-        // given
-        System.clearProperty("mockserver.disableSystemOut");
+        // when
+        ConfigurationProperties.disableSystemOut(true);
+
+        // then
+        assertTrue(ConfigurationProperties.disableSystemOut());
+        assertEquals("true", System.getProperty("mockserver.disableSystemOut"));
 
         // when
-        assertFalse(ConfigurationProperties.disableSystemOut());
         ConfigurationProperties.disableSystemOut(false);
 
         // then

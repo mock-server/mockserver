@@ -1,8 +1,8 @@
 package org.mockserver.model;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimaps;
 import org.apache.commons.lang3.ArrayUtils;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 
@@ -15,9 +15,10 @@ import static org.mockserver.model.NottableString.*;
  */
 public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends KeysToMultiValues> extends ObjectWithJsonToString {
 
-    private ListMultimap<NottableString, NottableString> listMultimap = Multimaps.synchronizedListMultimap(LinkedListMultimap.<NottableString, NottableString>create());
+    private final ListMultimap<NottableString, NottableString> listMultimap = LinkedListMultimap.create();
+    private final K k = (K) this;
 
-    public CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(List<T> entries) {
+    private CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(final List<T> entries) {
         CaseInsensitiveRegexMultiMap caseInsensitiveRegexMultiMap = new CaseInsensitiveRegexMultiMap();
         if (entries != null) {
             for (KeyToMultiValue keyToMultiValue : entries) {
@@ -29,150 +30,165 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         return caseInsensitiveRegexMultiMap;
     }
 
-    public abstract T build(NottableString name, List<NottableString> values);
+    public abstract T build(final NottableString name, final Collection<NottableString> values);
 
-    public K withEntries(Map<String, List<String>> entries) {
+    public K withEntries(final Map<String, List<String>> entries) {
         listMultimap.clear();
         for (String name : entries.keySet()) {
             for (String value : entries.get(name)) {
                 withEntry(name, value);
             }
         }
-        return (K) this;
+        return k;
     }
 
-    public K withEntries(List<T> entries) {
+    public K withEntries(final List<T> entries) {
         listMultimap.clear();
         if (entries != null) {
             for (T entry : entries) {
                 withEntry(entry);
             }
         }
-        return (K) this;
+        return k;
     }
 
     @SafeVarargs
-    public final K withEntries(T... entries) {
+    public final K withEntries(final T... entries) {
         if (ArrayUtils.isNotEmpty(entries)) {
             withEntries(Arrays.asList(entries));
         }
-        return (K) this;
+        return k;
     }
 
-    public K withEntry(T entry) {
+    public K withEntry(final T entry) {
         if (entry.getValues().isEmpty()) {
             listMultimap.put(entry.getName(), null);
         } else {
             listMultimap.putAll(entry.getName(), entry.getValues());
         }
-        return (K) this;
+        return k;
     }
 
-    public K withEntry(String name, String... values) {
+    public K withEntry(final String name, final String... values) {
         if (ArrayUtils.isNotEmpty(values)) {
             listMultimap.putAll(string(name), deserializeNottableStrings(values));
         }
-        return (K) this;
+        return k;
     }
 
-    public K withEntry(NottableString name, List<NottableString> values) {
+    public K withEntry(final NottableString name, final List<NottableString> values) {
         if (values != null) {
             listMultimap.putAll(name, values);
         }
-        return (K) this;
+        return k;
     }
 
-    public K withEntry(NottableString name, NottableString... values) {
+    public K withEntry(final NottableString name, final NottableString... values) {
         if (ArrayUtils.isNotEmpty(values)) {
             withEntry(name, Arrays.asList(values));
         }
-        return (K) this;
+        return k;
     }
 
-    public K remove(String name) {
-        for (NottableString key : new ArrayList<>(listMultimap.keySet())) {
+    public K remove(final String name) {
+        for (NottableString key : ImmutableList.copyOf(listMultimap.keySet())) {
             if (key.equalsIgnoreCase(name)) {
                 listMultimap.removeAll(key);
             }
         }
-        return (K) this;
+        return k;
     }
 
-    public K remove(NottableString name) {
-        for (NottableString key : new ArrayList<>(listMultimap.keySet())) {
+    public K remove(final NottableString name) {
+        for (NottableString key : ImmutableList.copyOf(listMultimap.keySet())) {
             if (key.equalsIgnoreCase(name)) {
                 listMultimap.removeAll(key);
             }
         }
-        return (K) this;
+        return k;
     }
 
-    public K replaceEntry(T entry) {
+    K replaceEntry(final T entry) {
         if (entry != null) {
             remove(entry.getName());
             listMultimap.putAll(entry.getName(), entry.getValues());
         }
-        return (K) this;
+        return k;
     }
 
-    public K replaceEntry(String name, String... values) {
+    K replaceEntry(final String name, final String... values) {
         if (ArrayUtils.isNotEmpty(values)) {
             remove(name);
             listMultimap.putAll(string(name), deserializeNottableStrings(values));
         }
-        return (K) this;
+        return k;
     }
 
     public List<T> getEntries() {
-        ArrayList<T> headers = new ArrayList<>();
-        for (NottableString nottableString : new ArrayList<>(listMultimap.keySet())) {
-            headers.add(build(nottableString, listMultimap.get(nottableString)));
+        if (!isEmpty()) {
+            ArrayList<T> headers = new ArrayList<>();
+            for (NottableString nottableString : ImmutableList.copyOf(listMultimap.keySet())) {
+                headers.add(build(nottableString, listMultimap.get(nottableString)));
+            }
+            return headers;
+        } else {
+            return Collections.emptyList();
         }
-        return headers;
     }
 
-    public List<String> getValues(String name) {
-        List<String> values = new ArrayList<>();
-        for (NottableString key : new ArrayList<>(listMultimap.keySet())) {
-            if (key != null &&
-                name != null &&
-                key.equalsIgnoreCase(name)) {
-                values.addAll(serialiseNottableString(listMultimap.get(key)));
+    public List<String> getValues(final String name) {
+        if (!isEmpty() && name != null) {
+            List<String> values = new ArrayList<>();
+            for (NottableString key : ImmutableList.copyOf(listMultimap.keySet())) {
+                if (key != null && key.equalsIgnoreCase(name)) {
+                    values.addAll(serialiseNottableString(listMultimap.get(key)));
+                }
+            }
+            return values;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    String getFirstValue(final String name) {
+        if (!isEmpty()) {
+            for (NottableString key : ImmutableList.copyOf(listMultimap.keySet())) {
+                if (key != null && key.equalsIgnoreCase(name)) {
+                    List<NottableString> nottableStrings = listMultimap.get(key);
+                    if (!nottableStrings.isEmpty() && nottableStrings.get(0) != null) {
+                        return nottableStrings.get(0).getValue();
+                    }
+                }
             }
         }
-        return values;
+        return "";
     }
 
-    public String getFirstValue(String name) {
-        String firstEntryValue = "";
-        List<String> values = getValues(name);
-        if (!values.isEmpty()) {
-            firstEntryValue = values.get(0);
-        }
-        return firstEntryValue;
-    }
-
-    public boolean containsEntry(String name) {
-        if (!getValues(name).isEmpty()) {
-            return true;
+    public boolean containsEntry(final String name) {
+        if (!isEmpty()) {
+            for (NottableString key : ImmutableList.copyOf(listMultimap.keySet())) {
+                if (key != null && key.equalsIgnoreCase(name)) {
+                    return true;
+                }
+            }
         }
         return false;
     }
 
-    public boolean containsEntry(String name, String value) {
+    public boolean containsEntry(final String name, final String value) {
         return containsEntry(string(name), string(value));
     }
 
-    public boolean containsEntry(NottableString name, NottableString value) {
-        for (NottableString entryKey : new ArrayList<>(listMultimap.keySet())) {
-            if (entryKey != null &&
-                name != null &&
-                entryKey.equalsIgnoreCase(name)) {
-                if (listMultimap.get(entryKey) != null &&
-                    value != null) {
-                    for (NottableString entryValue : new ArrayList<>(listMultimap.get(entryKey))) {
-                        if (value.equalsIgnoreCase(entryValue)) {
-                            return true;
+    boolean containsEntry(final NottableString name, final NottableString value) {
+        if (!isEmpty() && name != null && value != null) {
+            for (NottableString entryKey : ImmutableList.copyOf(listMultimap.keySet())) {
+                if (entryKey != null && entryKey.equalsIgnoreCase(name)) {
+                    List<NottableString> nottableStrings = listMultimap.get(entryKey);
+                    if (nottableStrings != null) {
+                        for (NottableString entryValue : ImmutableList.copyOf(nottableStrings)) {
+                            if (value.equalsIgnoreCase(entryValue)) {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -190,7 +206,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }

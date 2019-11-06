@@ -2,11 +2,13 @@ package org.mockserver.codec.mappers;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.*;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
 import org.mockserver.model.Parameter;
+import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +25,8 @@ import static org.mockserver.codec.BodyDecoderEncoder.bodyToByteBuf;
  */
 public class MockServerHttpRequestToFullHttpRequest {
 
+    public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerHttpRequestToFullHttpRequest.class);
+
     public FullHttpRequest mapMockServerResponseToHttpServletResponse(HttpRequest httpRequest) {
         // method
         HttpMethod httpMethod = HttpMethod.valueOf(httpRequest.getMethod("GET"));
@@ -38,19 +42,30 @@ public class MockServerHttpRequestToFullHttpRequest {
 
             return request;
         } catch (Throwable throwable) {
-            MockServerLogger.MOCK_SERVER_LOGGER.error((HttpRequest) null, throwable, "Exception encoding request {}", httpRequest);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception encoding request {}")
+                    .setArguments(httpRequest)
+                    .setThrowable(throwable)
+            );
             return new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, getURI(httpRequest));
         }
     }
 
     public String getURI(HttpRequest httpRequest) {
-        QueryStringEncoder queryStringEncoder = new QueryStringEncoder(httpRequest.getPath().getValue());
-        for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
-            for (NottableString value : parameter.getValues()) {
-                queryStringEncoder.addParam(parameter.getName().getValue(), value.getValue());
+        if (httpRequest.getPath() != null) {
+            QueryStringEncoder queryStringEncoder = new QueryStringEncoder(httpRequest.getPath().getValue());
+            for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
+                for (NottableString value : parameter.getValues()) {
+                    queryStringEncoder.addParam(parameter.getName().getValue(), value.getValue());
+                }
             }
+            return queryStringEncoder.toString();
+        } else {
+            return "";
         }
-        return queryStringEncoder.toString();
     }
 
     private ByteBuf getBody(HttpRequest httpRequest) {

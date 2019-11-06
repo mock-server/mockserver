@@ -2,11 +2,13 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.net.MediaType;
+import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
 import static org.mockserver.model.HttpStatusCode.OK_200;
@@ -15,11 +17,12 @@ import static org.mockserver.model.HttpStatusCode.OK_200;
  * @author jamesdbloom
  */
 public class HttpResponse extends Action<HttpResponse> implements HttpObject<HttpResponse, BodyWithContentType> {
+    private static final HttpResponse NOT_FOUND_RESPONSE = new HttpResponse().withStatusCode(NOT_FOUND_404.code()).withReasonPhrase(NOT_FOUND_404.reasonPhrase());
     private Integer statusCode;
     private String reasonPhrase;
     private BodyWithContentType body;
-    private Headers headers = new Headers();
-    private Cookies cookies = new Cookies();
+    private Headers headers;
+    private Cookies cookies;
     private ConnectionOptions connectionOptions;
 
     /**
@@ -42,7 +45,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * Static builder to create a not found response.
      */
     public static HttpResponse notFoundResponse() {
-        return new HttpResponse().withStatusCode(NOT_FOUND_404.code()).withReasonPhrase(NOT_FOUND_404.reasonPhrase());
+        return NOT_FOUND_RESPONSE;
     }
 
     /**
@@ -174,8 +177,19 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
         return this.headers;
     }
 
+    private Headers getOrCreateHeaders() {
+        if (this.headers == null) {
+            this.headers = new Headers();
+        }
+        return this.headers;
+    }
+
     public HttpResponse withHeaders(Headers headers) {
-        this.headers = headers;
+        if (headers == null || headers.isEmpty()) {
+            this.headers = null;
+        } else {
+            this.headers = headers;
+        }
         return this;
     }
 
@@ -185,7 +199,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @param headers a list of Header objects
      */
     public HttpResponse withHeaders(List<Header> headers) {
-        this.headers.withEntries(headers);
+        getOrCreateHeaders().withEntries(headers);
         return this;
     }
 
@@ -195,7 +209,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @param headers varargs of Header objects
      */
     public HttpResponse withHeaders(Header... headers) {
-        this.headers.withEntries(headers);
+        getOrCreateHeaders().withEntries(headers);
         return this;
     }
 
@@ -207,7 +221,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @param header a Header object
      */
     public HttpResponse withHeader(Header header) {
-        this.headers.withEntry(header);
+        getOrCreateHeaders().withEntry(header);
         return this;
     }
 
@@ -220,7 +234,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @param values the header values
      */
     public HttpResponse withHeader(String name, String... values) {
-        this.headers.withEntry(name, values);
+        getOrCreateHeaders().withEntry(name, values);
         return this;
     }
 
@@ -233,7 +247,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @param values the header values which can be a varags of NottableStrings
      */
     public HttpResponse withHeader(NottableString name, NottableString... values) {
-        this.headers.withEntry(header(name, values));
+        getOrCreateHeaders().withEntry(header(name, values));
         return this;
     }
 
@@ -244,7 +258,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @param header a Header object
      */
     public HttpResponse replaceHeader(Header header) {
-        this.headers.replaceEntry(header);
+        getOrCreateHeaders().replaceEntry(header);
         return this;
     }
 
@@ -256,20 +270,32 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @param values the header values
      */
     public HttpResponse replaceHeader(String name, String... values) {
-        this.headers.replaceEntry(name, values);
+        getOrCreateHeaders().replaceEntry(name, values);
         return this;
     }
 
     public List<Header> getHeaderList() {
-        return this.headers.getEntries();
+        if (this.headers != null) {
+            return this.headers.getEntries();
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public List<String> getHeader(String name) {
-        return this.headers.getValues(name);
+        if (this.headers != null) {
+            return this.headers.getValues(name);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public String getFirstHeader(String name) {
-        return this.headers.getFirstValue(name);
+        if (this.headers != null) {
+            return this.headers.getFirstValue(name);
+        } else {
+            return "";
+        }
     }
 
     /**
@@ -279,25 +305,24 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @return true if a header has been added with that name otherwise false
      */
     public boolean containsHeader(String name) {
-        return this.headers.containsEntry(name);
+        if (this.headers != null) {
+            return this.headers.containsEntry(name);
+        } else {
+            return false;
+        }
     }
 
     public HttpResponse removeHeader(String name) {
-        headers.remove(name);
+        if (this.headers != null) {
+            headers.remove(name);
+        }
         return this;
     }
 
     public HttpResponse removeHeader(NottableString name) {
-        headers.remove(name);
-        return this;
-    }
-
-    public Cookies getCookies() {
-        return this.cookies;
-    }
-
-    public HttpResponse withCookies(Cookies cookies) {
-        this.cookies = cookies;
+        if (this.headers != null) {
+            headers.remove(name);
+        }
         return this;
     }
 
@@ -309,7 +334,32 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @return true if a header has been added with that name otherwise false
      */
     public boolean containsHeader(String name, String value) {
-        return this.headers.containsEntry(name, value);
+        if (this.headers != null) {
+            return this.headers.containsEntry(name, value);
+        } else {
+            return false;
+        }
+    }
+
+
+    public Cookies getCookies() {
+        return this.cookies;
+    }
+
+    private Cookies getOrCreateCookies() {
+        if (this.cookies == null) {
+            this.cookies = new Cookies();
+        }
+        return this.cookies;
+    }
+
+    public HttpResponse withCookies(Cookies cookies) {
+        if (cookies == null || cookies.isEmpty()) {
+            this.cookies = null;
+        } else {
+            this.cookies = cookies;
+        }
+        return this;
     }
 
     /**
@@ -318,7 +368,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @param cookies a list of Cookie objects
      */
     public HttpResponse withCookies(List<Cookie> cookies) {
-        this.cookies.withEntries(cookies);
+        getOrCreateCookies().withEntries(cookies);
         return this;
     }
 
@@ -328,7 +378,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @param cookies a varargs of Cookie objects
      */
     public HttpResponse withCookies(Cookie... cookies) {
-        this.cookies.withEntries(cookies);
+        getOrCreateCookies().withEntries(cookies);
         return this;
     }
 
@@ -338,7 +388,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @param cookie a Cookie object
      */
     public HttpResponse withCookie(Cookie cookie) {
-        this.cookies.withEntry(cookie);
+        getOrCreateCookies().withEntry(cookie);
         return this;
     }
 
@@ -349,7 +399,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @param value the cookies value
      */
     public HttpResponse withCookie(String name, String value) {
-        this.cookies.withEntry(name, value);
+        getOrCreateCookies().withEntry(name, value);
         return this;
     }
 
@@ -363,12 +413,28 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * @param value the cookies value
      */
     public HttpResponse withCookie(NottableString name, NottableString value) {
-        this.cookies.withEntry(name, value);
+        getOrCreateCookies().withEntry(name, value);
         return this;
     }
 
     public List<Cookie> getCookieList() {
-        return this.cookies.getEntries();
+        if (this.cookies != null) {
+            return this.cookies.getEntries();
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    public boolean cookieHeaderAlreadyExists(Cookie cookieValue) {
+        List<String> setCookieHeaders = getHeader(SET_COOKIE.toString());
+        for (String setCookieHeader : setCookieHeaders) {
+            String existingCookieName = ClientCookieDecoder.LAX.decode(setCookieHeader).name();
+            String existingCookieValue = ClientCookieDecoder.LAX.decode(setCookieHeader).value();
+            if (existingCookieName.equalsIgnoreCase(cookieValue.getName().getValue()) && existingCookieValue.equalsIgnoreCase(cookieValue.getValue().getValue())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -397,8 +463,8 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
             .withStatusCode(statusCode)
             .withReasonPhrase(reasonPhrase)
             .withBody(body)
-            .withHeaders(headers.clone())
-            .withCookies(cookies.clone())
+            .withHeaders(headers != null ? headers.clone() : null)
+            .withCookies(cookies != null ? cookies.clone() : null)
             .withDelay(getDelay())
             .withConnectionOptions(connectionOptions);
     }

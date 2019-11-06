@@ -1,10 +1,10 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Strings;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -21,10 +21,10 @@ import static org.mockserver.model.NottableString.string;
 public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
     private NottableString method = string("");
     private NottableString path = string("");
-    private Parameters queryStringParameters = new Parameters();
+    private Parameters queryStringParameters;
     private Body body = null;
-    private Headers headers = new Headers();
-    private Cookies cookies = new Cookies();
+    private Headers headers;
+    private Cookies cookies;
     private Boolean keepAlive = null;
     private Boolean secure = null;
 
@@ -141,8 +141,19 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
         return this.queryStringParameters;
     }
 
+    private Parameters getOrCreateQueryStringParameters() {
+        if (this.queryStringParameters == null) {
+            this.queryStringParameters = new Parameters();
+        }
+        return this.queryStringParameters;
+    }
+
     public HttpRequest withQueryStringParameters(Parameters parameters) {
-        this.queryStringParameters = parameters;
+        if (parameters == null || parameters.isEmpty()) {
+            this.queryStringParameters = null;
+        } else {
+            this.queryStringParameters = parameters;
+        }
         return this;
     }
 
@@ -153,7 +164,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param parameters the list of Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
     public HttpRequest withQueryStringParameters(List<Parameter> parameters) {
-        this.queryStringParameters.withEntries(parameters);
+        getOrCreateQueryStringParameters().withEntries(parameters);
         return this;
     }
 
@@ -164,7 +175,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param parameters the varags Parameter objects where the values or keys of each parameter can be either a string or a regex
      */
     public HttpRequest withQueryStringParameters(Parameter... parameters) {
-        this.queryStringParameters.withEntries(parameters);
+        getOrCreateQueryStringParameters().withEntries(parameters);
         return this;
     }
 
@@ -175,7 +186,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param parameters the Map<String, List<String>> object where the values or keys of each parameter can be either a string or a regex
      */
     public HttpRequest withQueryStringParameters(Map<String, List<String>> parameters) {
-        this.queryStringParameters.withEntries(parameters);
+        getOrCreateQueryStringParameters().withEntries(parameters);
         return this;
     }
 
@@ -186,7 +197,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param parameter the Parameter object which can have a values list of strings or regular expressions
      */
     public HttpRequest withQueryStringParameter(Parameter parameter) {
-        this.queryStringParameters.withEntry(parameter);
+        getOrCreateQueryStringParameters().withEntry(parameter);
         return this;
     }
 
@@ -198,7 +209,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param values the parameter values which can be a varags of strings or regular expressions
      */
     public HttpRequest withQueryStringParameter(String name, String... values) {
-        this.queryStringParameters.withEntry(name, values);
+        getOrCreateQueryStringParameters().withEntry(name, values);
         return this;
     }
 
@@ -212,24 +223,40 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param values the parameter values which can be a varags of NottableStrings
      */
     public HttpRequest withQueryStringParameter(NottableString name, NottableString... values) {
-        this.queryStringParameters.withEntry(name, values);
+        getOrCreateQueryStringParameters().withEntry(name, values);
         return this;
     }
 
     public List<Parameter> getQueryStringParameterList() {
-        return this.queryStringParameters.getEntries();
+        if (this.queryStringParameters != null) {
+            return this.queryStringParameters.getEntries();
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public boolean hasQueryStringParameter(String name, String value) {
-        return this.queryStringParameters.containsEntry(name, value);
+        if (this.queryStringParameters != null) {
+            return this.queryStringParameters.containsEntry(name, value);
+        } else {
+            return false;
+        }
     }
 
     public boolean hasQueryStringParameter(NottableString name, NottableString value) {
-        return this.queryStringParameters.containsEntry(name, value);
+        if (this.queryStringParameters != null) {
+            return this.queryStringParameters.containsEntry(name, value);
+        } else {
+            return false;
+        }
     }
 
     public String getFirstQueryStringParameter(String name) {
-        return this.queryStringParameters.getFirstValue(name);
+        if (this.queryStringParameters != null) {
+            return this.queryStringParameters.getFirstValue(name);
+        } else {
+            return "";
+        }
     }
 
     /**
@@ -365,8 +392,19 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
         return this.headers;
     }
 
+    private Headers getOrCreateHeaders() {
+        if (this.headers == null) {
+            this.headers = new Headers();
+        }
+        return this.headers;
+    }
+
     public HttpRequest withHeaders(Headers headers) {
-        this.headers = headers;
+        if (headers == null || headers.isEmpty()) {
+            this.headers = null;
+        } else {
+            this.headers = headers;
+        }
         return this;
     }
 
@@ -377,7 +415,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param headers the list of Header objects where the values or keys of each header can be either a string or a regex
      */
     public HttpRequest withHeaders(List<Header> headers) {
-        this.headers.withEntries(headers);
+        getOrCreateHeaders().withEntries(headers);
         return this;
     }
 
@@ -388,7 +426,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param headers the varags of Header objects where the values or keys of each header can be either a string or a regex
      */
     public HttpRequest withHeaders(Header... headers) {
-        this.headers.withEntries(headers);
+        getOrCreateHeaders().withEntries(headers);
         return this;
     }
 
@@ -399,7 +437,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param header the Header object which can have a values list of strings or regular expressions
      */
     public HttpRequest withHeader(Header header) {
-        this.headers.withEntry(header);
+        getOrCreateHeaders().withEntry(header);
         return this;
     }
 
@@ -411,7 +449,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param values the header values which can be a varags of strings or regular expressions
      */
     public HttpRequest withHeader(String name, String... values) {
-        this.headers.withEntry(header(name, values));
+        getOrCreateHeaders().withEntry(header(name, values));
         return this;
     }
 
@@ -425,7 +463,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param values the header values which can be a varags of NottableStrings
      */
     public HttpRequest withHeader(NottableString name, NottableString... values) {
-        this.headers.withEntry(header(name, values));
+        getOrCreateHeaders().withEntry(header(name, values));
         return this;
     }
 
@@ -436,39 +474,59 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param header the Header object which can have a values list of strings or regular expressions
      */
     public HttpRequest replaceHeader(Header header) {
-        this.headers.replaceEntry(header);
+        getOrCreateHeaders().replaceEntry(header);
         return this;
     }
 
     public List<Header> getHeaderList() {
-        return this.headers.getEntries();
+        if (this.headers != null) {
+            return this.headers.getEntries();
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public List<String> getHeader(String name) {
-        return this.headers.getValues(name);
+        if (this.headers != null) {
+            return this.headers.getValues(name);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public String getFirstHeader(String name) {
-        return this.headers.getFirstValue(name);
+        if (this.headers != null) {
+            return this.headers.getFirstValue(name);
+        } else {
+            return "";
+        }
     }
 
     /**
      * Returns true if a header with the specified name has been added
      *
-     * @param name the Header name
+     * @param name the header name
      * @return true if a header has been added with that name otherwise false
      */
     public boolean containsHeader(String name) {
-        return this.headers.containsEntry(name);
+        if (this.headers != null) {
+            return this.headers.containsEntry(name);
+        } else {
+            return false;
+        }
     }
 
     public HttpRequest removeHeader(String name) {
-        headers.remove(name);
+        if (this.headers != null) {
+            headers.remove(name);
+        }
         return this;
     }
 
     public HttpRequest removeHeader(NottableString name) {
-        headers.remove(name);
+        if (this.headers != null) {
+            headers.remove(name);
+        }
         return this;
     }
 
@@ -476,8 +534,19 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
         return this.cookies;
     }
 
+    private Cookies getOrCreateCookies() {
+        if (this.cookies == null) {
+            this.cookies = new Cookies();
+        }
+        return this.cookies;
+    }
+
     public HttpRequest withCookies(Cookies cookies) {
-        this.cookies = cookies;
+        if (cookies == null || cookies.isEmpty()) {
+            this.cookies = null;
+        } else {
+            this.cookies = cookies;
+        }
         return this;
     }
 
@@ -488,7 +557,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param cookies a list of Cookie objects
      */
     public HttpRequest withCookies(List<Cookie> cookies) {
-        this.cookies.withEntries(cookies);
+        getOrCreateCookies().withEntries(cookies);
         return this;
     }
 
@@ -499,7 +568,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param cookies a varargs of Cookie objects
      */
     public HttpRequest withCookies(Cookie... cookies) {
-        this.cookies.withEntries(cookies);
+        getOrCreateCookies().withEntries(cookies);
         return this;
     }
 
@@ -510,7 +579,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param cookie a Cookie object
      */
     public HttpRequest withCookie(Cookie cookie) {
-        this.cookies.withEntry(cookie);
+        getOrCreateCookies().withEntry(cookie);
         return this;
     }
 
@@ -522,7 +591,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param value the cookies value
      */
     public HttpRequest withCookie(String name, String value) {
-        this.cookies.withEntry(name, value);
+        getOrCreateCookies().withEntry(name, value);
         return this;
     }
 
@@ -536,12 +605,16 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      * @param value the cookies value
      */
     public HttpRequest withCookie(NottableString name, NottableString value) {
-        this.cookies.withEntry(name, value);
+        getOrCreateCookies().withEntry(name, value);
         return this;
     }
 
     public List<Cookie> getCookieList() {
-        return this.cookies.getEntries();
+        if (this.cookies != null) {
+            return this.cookies.getEntries();
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public InetSocketAddress socketAddressFromHostHeader() {
@@ -558,10 +631,10 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
         return not(request(), not)
             .withMethod(method)
             .withPath(path)
-            .withQueryStringParameters(getQueryStringParameters().clone())
+            .withQueryStringParameters(queryStringParameters != null ? queryStringParameters.clone() : null)
             .withBody(body)
-            .withHeaders(getHeaders().clone())
-            .withCookies(getCookies().clone())
+            .withHeaders(headers != null ? headers.clone() : null)
+            .withCookies(cookies != null ? cookies.clone() : null)
             .withKeepAlive(keepAlive)
             .withSecure(secure);
     }

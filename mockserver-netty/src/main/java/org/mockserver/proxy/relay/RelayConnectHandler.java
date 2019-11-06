@@ -11,7 +11,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.AttributeKey;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.lifecycle.LifeCycle;
-import org.mockserver.log.model.MessageLogEntry;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
 import org.slf4j.event.Level;
@@ -26,6 +26,7 @@ import static org.mockserver.mockserver.MockServerHandler.PROXYING;
 import static org.mockserver.socket.tls.NettySslContextFactory.nettySslContextFactory;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledDownstream;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledUpstream;
+import static org.slf4j.event.Level.DEBUG;
 
 @ChannelHandler.Sharable
 public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler<T> {
@@ -109,7 +110,13 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                 if (!future.isSuccess()) {
                     failure("Connection failed to " + remoteSocket, future.cause(), serverCtx, failureResponse(request));
                 } else {
-                    mockServerLogger.debug(MessageLogEntry.LogMessageType.TRACE, "Connected to {}", remoteSocket);
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.DEBUG)
+                            .setLogLevel(DEBUG)
+                            .setMessageFormat("Connected to {}")
+                            .setArguments(remoteSocket)
+                    );
                 }
             }
         });
@@ -130,7 +137,13 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
 
     private void failure(String message, Throwable cause, ChannelHandlerContext ctx, Object response) {
         if (shouldNotIgnoreException(cause)) {
-            mockServerLogger.error(message, cause);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat(message)
+                    .setThrowable(cause)
+            );
         }
         Channel channel = ctx.channel();
         channel.writeAndFlush(response);

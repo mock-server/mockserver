@@ -19,13 +19,14 @@ import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
 import static org.mockserver.model.XmlBody.xml;
 import static org.mockserver.model.XmlSchemaBody.xmlSchema;
+import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator.jsonSchemaHttpRequestValidator;
 
 /**
  * @author jamesdbloom
  */
 public class JsonSchemaHttpRequestValidatorIntegrationTest {
 
-    private JsonSchemaValidator jsonSchemaValidator = new JsonSchemaHttpRequestValidator(new MockServerLogger());
+    private JsonSchemaValidator jsonSchemaValidator = jsonSchemaHttpRequestValidator();
 
     @Test
     public void shouldValidateValidCompleteRequestFromRawJson() {

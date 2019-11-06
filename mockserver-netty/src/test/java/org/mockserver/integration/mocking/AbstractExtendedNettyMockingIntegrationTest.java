@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -199,7 +200,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldRespondByObjectCallbackAndVerifyRequests() {
+    public void shouldRespondByObjectCallbackAndVerifyRequests() throws InterruptedException {
         // when
         mockServerClient
             .when(
@@ -231,6 +232,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 headersToIgnore
             )
         );
+
+        MILLISECONDS.sleep(100);
 
         // then - verify request
         mockServerClient

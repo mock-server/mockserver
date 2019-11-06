@@ -3,7 +3,7 @@ package org.mockserver.client;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.filters.MockServerEventLog;
+import org.mockserver.log.MockServerEventLog;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
@@ -41,9 +41,10 @@ import static org.mockserver.verify.VerificationSequence.verificationSequence;
  */
 public class MockServerClientIntegrationTest {
 
+    public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClientIntegrationTest.class);
     private static MockServerClient mockServerClient;
     private static EchoServer echoServer;
-    private static MockServerEventLog logFilter;
+    private static MockServerEventLog mockServerEventLog;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -51,7 +52,7 @@ public class MockServerClientIntegrationTest {
     @BeforeClass
     public static void startEchoServer() {
         echoServer = new EchoServer(false);
-        logFilter = echoServer.requestLogFilter();
+        mockServerEventLog = echoServer.requestLogFilter();
     }
 
     @AfterClass
@@ -66,7 +67,7 @@ public class MockServerClientIntegrationTest {
 
     @Before
     public void clearRequestLog() {
-        logFilter.reset();
+        mockServerEventLog.reset();
     }
 
     @After
@@ -93,8 +94,8 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
@@ -149,8 +150,8 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
@@ -203,8 +204,8 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
@@ -256,8 +257,8 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
@@ -311,8 +312,8 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
@@ -366,8 +367,8 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
@@ -420,8 +421,8 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
@@ -473,8 +474,8 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
@@ -529,8 +530,8 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
@@ -588,8 +589,8 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
@@ -644,8 +645,8 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
@@ -691,7 +692,7 @@ public class MockServerClientIntegrationTest {
         mockServerClient.stop();
 
         // then
-        String result = logFilter.verify(verificationSequence().withRequests(
+        String result = mockServerEventLog.verify(verificationSequence().withRequests(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/stop")
@@ -730,8 +731,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(isRunning, is(true));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/status")
@@ -762,8 +763,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(isRunning, is(false));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(numberOfRetries));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(numberOfRetries));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/status")
@@ -790,8 +791,8 @@ public class MockServerClientIntegrationTest {
         mockServerClient.reset();
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/reset")
@@ -823,8 +824,8 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/clear")
@@ -862,8 +863,8 @@ public class MockServerClientIntegrationTest {
             );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/clear")
@@ -895,8 +896,8 @@ public class MockServerClientIntegrationTest {
         mockServerClient.clear(null);
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/clear")
@@ -921,7 +922,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new HttpRequestSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(Arrays.asList(
+                .withBody(new StringBody(new HttpRequestSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
                     request("/some_request_one"),
                     request("/some_request_two")
                 ))))
@@ -939,8 +940,8 @@ public class MockServerClientIntegrationTest {
             request("/some_request_one"),
             request("/some_request_two")
         ));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -970,7 +971,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new HttpRequestSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(Arrays.asList(
+                .withBody(new StringBody(new HttpRequestSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
                     request("/some_request_one"),
                     request("/some_request_two")
                 ))))
@@ -984,8 +985,8 @@ public class MockServerClientIntegrationTest {
             request("/some_request_one"),
             request("/some_request_two")
         ));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1009,7 +1010,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRequestsAsJson() {
         // given
-        String serializedRequests = new HttpRequestSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(Arrays.asList(
+        String serializedRequests = new HttpRequestSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
             request("/some_request_one"),
             request("/some_request_two")
         ));
@@ -1029,8 +1030,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(recordedResponse, is(serializedRequests));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1077,8 +1078,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(actualResponse, is(serializedRequest));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1108,7 +1109,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new HttpRequestResponseSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(Arrays.asList(
+                .withBody(new StringBody(new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
                     new HttpRequestAndHttpResponse()
                         .setHttpRequest(request("/some_request_one"))
                         .setHttpResponse(response("some_body_one")),
@@ -1134,8 +1135,8 @@ public class MockServerClientIntegrationTest {
                 .setHttpRequest(request("/some_request_two"))
                 .setHttpResponse(response("some_body_two"))
         ));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1165,7 +1166,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new HttpRequestResponseSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(Arrays.asList(
+                .withBody(new StringBody(new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
                     new HttpRequestAndHttpResponse()
                         .setHttpRequest(request("/some_request_one"))
                         .setHttpResponse(response("some_body_one")),
@@ -1187,8 +1188,8 @@ public class MockServerClientIntegrationTest {
                 .setHttpRequest(request("/some_request_two"))
                 .setHttpResponse(response("some_body_two"))
         ));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1212,7 +1213,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRequestAndResponsesAsJson() {
         // given
-        String serializedRequests = new HttpRequestResponseSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(Arrays.asList(
+        String serializedRequests = new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
             new HttpRequestAndHttpResponse()
                 .setHttpRequest(request("/some_request_one"))
                 .setHttpResponse(response("some_body_one")),
@@ -1236,8 +1237,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(recordedResponse, is(serializedRequests));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1267,7 +1268,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new ExpectationSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(
+                .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
                 )))
@@ -1285,8 +1286,8 @@ public class MockServerClientIntegrationTest {
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1316,7 +1317,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new ExpectationSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(
+                .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
                 )))
@@ -1330,8 +1331,8 @@ public class MockServerClientIntegrationTest {
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1355,7 +1356,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveActiveExpectationsAsJson() {
         // given
-        String serializeExpectations = new ExpectationSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(
+        String serializeExpectations = new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         );
@@ -1375,8 +1376,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(actualResponse, is(serializeExpectations));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1423,8 +1424,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(actualResponse, is(serializedExpectations));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1454,7 +1455,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new ExpectationSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(
+                .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
                 )))
@@ -1472,8 +1473,8 @@ public class MockServerClientIntegrationTest {
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1503,7 +1504,7 @@ public class MockServerClientIntegrationTest {
         echoServer.withNextResponse(
             response()
                 .withStatusCode(201)
-                .withBody(new StringBody(new ExpectationSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(
+                .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
                 )))
@@ -1517,8 +1518,8 @@ public class MockServerClientIntegrationTest {
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1542,7 +1543,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRecordedExpectationsAsJson() {
         // given
-        String serializeExpectations = new ExpectationSerializer(MockServerLogger.MOCK_SERVER_LOGGER).serialize(
+        String serializeExpectations = new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         );
@@ -1562,8 +1563,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(actualResponse, is(serializeExpectations));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1610,8 +1611,8 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(actualResponse, is(serializedExpectations));
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/retrieve")
@@ -1651,8 +1652,8 @@ public class MockServerClientIntegrationTest {
         );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/verifySequence")
@@ -1696,8 +1697,8 @@ public class MockServerClientIntegrationTest {
         );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/verifySequence")
@@ -1742,8 +1743,8 @@ public class MockServerClientIntegrationTest {
         );
 
         // then
-        assertThat(logFilter.retrieveRequests(request()).size(), is(1));
-        String result = logFilter.verify(verification().withRequest(
+        assertThat(mockServerEventLog.retrieveRequests(request()).size(), is(1));
+        String result = mockServerEventLog.verify(verification().withRequest(
             request()
                 .withMethod("PUT")
                 .withPath("/mockserver/verify")

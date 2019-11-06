@@ -20,7 +20,7 @@ public class WebSocketMessageSerializer {
     private Map<Class, Serializer> serializers;
 
     public WebSocketMessageSerializer(MockServerLogger mockServerLogger) {
-        serializers = ImmutableMap.<Class, Serializer>of(
+        serializers = ImmutableMap.of(
             HttpRequest.class, new HttpRequestSerializer(mockServerLogger),
             HttpResponse.class, new HttpResponseSerializer(mockServerLogger)
         );

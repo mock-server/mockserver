@@ -1,5 +1,6 @@
 package org.mockserver.metrics;
 
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.model.Action;
 
 import java.util.Map;
@@ -26,47 +27,55 @@ public class Metrics {
     }
 
     public static void increment(Name name) {
-        synchronized (name) {
-            final Integer currentValue = metrics.get(name);
-            if (currentValue != null) {
-                metrics.put(name, currentValue + 1);
-            } else {
-                metrics.put(name, 1);
+        if (ConfigurationProperties.metricsEnabled()) {
+            synchronized (name) {
+                final Integer currentValue = metrics.get(name);
+                if (currentValue != null) {
+                    metrics.put(name, currentValue + 1);
+                } else {
+                    metrics.put(name, 1);
+                }
             }
         }
     }
 
     public static void decrement(Name name) {
-        synchronized (name) {
-            final Integer currentValue = metrics.get(name);
-            if (currentValue != null) {
-                metrics.put(name, currentValue - 1);
-            } else {
-                throw new IllegalArgumentException("Can not decrement metric \"" + name + "\" because it not exist");
+        if (ConfigurationProperties.metricsEnabled()) {
+            synchronized (name) {
+                final Integer currentValue = metrics.get(name);
+                if (currentValue != null) {
+                    metrics.put(name, currentValue - 1);
+                } else {
+                    throw new IllegalArgumentException("Can not decrement metric \"" + name + "\" because it not exist");
+                }
             }
         }
     }
 
     public static void increment(Action.Type type) {
-        Name name = Name.valueOf("ACTION_" + type.name() + "_COUNT");
-        synchronized (name) {
-            final Integer currentValue = metrics.get(name);
-            if (currentValue != null) {
-                metrics.put(name, currentValue + 1);
-            } else {
-                metrics.put(name, 1);
+        if (ConfigurationProperties.metricsEnabled()) {
+            Name name = Name.valueOf("ACTION_" + type.name() + "_COUNT");
+            synchronized (name) {
+                final Integer currentValue = metrics.get(name);
+                if (currentValue != null) {
+                    metrics.put(name, currentValue + 1);
+                } else {
+                    metrics.put(name, 1);
+                }
             }
         }
     }
 
     public static void decrement(Action.Type type) {
-        Name name = Name.valueOf("ACTION_" + type.name() + "_COUNT");
-        synchronized (name) {
-            final Integer currentValue = metrics.get(name);
-            if (currentValue != null) {
-                metrics.put(name, currentValue - 1);
-            } else {
-                throw new IllegalArgumentException("Can not decrement metric \"" + name + "\" because it not exist");
+        if (ConfigurationProperties.metricsEnabled()) {
+            Name name = Name.valueOf("ACTION_" + type.name() + "_COUNT");
+            synchronized (name) {
+                final Integer currentValue = metrics.get(name);
+                if (currentValue != null) {
+                    metrics.put(name, currentValue - 1);
+                } else {
+                    throw new IllegalArgumentException("Can not decrement metric \"" + name + "\" because it not exist");
+                }
             }
         }
     }

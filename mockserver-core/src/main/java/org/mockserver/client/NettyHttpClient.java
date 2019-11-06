@@ -26,7 +26,7 @@ public class NettyHttpClient {
     static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");
     static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
     static final AttributeKey<SettableFuture<HttpResponse>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
-    private static final MockServerLogger mockServerLogger = new MockServerLogger(NettyHttpClient.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(NettyHttpClient.class);
     private final EventLoopGroup eventLoopGroup;
     private final ProxyConfiguration proxyConfiguration;
 
@@ -62,7 +62,7 @@ public class NettyHttpClient {
                 .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
                 .attr(REMOTE_SOCKET, remoteAddress)
                 .attr(RESPONSE_FUTURE, httpResponseSettableFuture)
-                .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger))
+                .handler(new HttpClientInitializer(proxyConfiguration, MOCK_SERVER_LOGGER))
                 .connect(remoteAddress)
                 .addListener(new ChannelFutureListener() {
                     @Override

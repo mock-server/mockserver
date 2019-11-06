@@ -9,10 +9,12 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.github.fge.jsonschema.main.JsonValidator;
 import com.google.common.base.Joiner;
 import org.mockserver.file.FileReader;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.validator.Validator;
+import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,13 +31,12 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
     private static final Map<String, String> schemaCache = new ConcurrentHashMap<>();
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(JsonSchemaValidator.class);
     private final String schema;
     private final JsonValidator validator = JsonSchemaFactory.byDefault().getValidator();
-    private final MockServerLogger mockServerLogger;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
-    public JsonSchemaValidator(MockServerLogger mockServerLogger, String schema) {
-        this.mockServerLogger = mockServerLogger;
+    public JsonSchemaValidator(String schema) {
         if (schema.trim().endsWith(".json")) {
             this.schema = FileReader.readFileFromClassPathOrPath(schema);
         } else if (schema.trim().endsWith("}")) {
@@ -45,8 +46,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
         }
     }
 
-    public JsonSchemaValidator(MockServerLogger mockServerLogger, String routePath, String mainSchemeFile, String... referenceFiles) {
-        this.mockServerLogger = mockServerLogger;
+    public JsonSchemaValidator(String routePath, String mainSchemeFile, String... referenceFiles) {
         if (!schemaCache.containsKey(mainSchemeFile)) {
             schemaCache.put(mainSchemeFile, addReferencesIntoSchema(routePath, mainSchemeFile, referenceFiles));
         }
@@ -76,7 +76,13 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(jsonSchema);
         } catch (Exception e) {
-            mockServerLogger.error("Exception loading JSON Schema for Exceptions", e);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception loading JSON Schema for Exceptions")
+                    .setThrowable(e)
+            );
         }
         return combinedSchema;
     }
@@ -98,7 +104,13 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     validationResult = formatProcessingReport(processingReport);
                 }
             } catch (Exception e) {
-                mockServerLogger.error("Exception validating JSON", e);
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("Exception validating JSON")
+                        .setThrowable(e)
+                );
                 return e.getClass().getSimpleName() + " - " + e.getMessage();
             }
         }
@@ -266,11 +278,11 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 } else {
                     for (JsonNode jsonNode : processingMessage.asJson().get("reports")) {
                         if (jsonNode.get(0) != null && jsonNode.get(0).get("required") != null && jsonNode.get(0).get("required").get(0) != null) {
-                            oneOfErrorMessage.append(String.valueOf(jsonNode.get(0).get("required").get(0))).append(" ");
+                            oneOfErrorMessage.append(jsonNode.get(0).get("required").get(0)).append(" ");
                         }
                     }
                 }
-                oneOfErrorMessage.append(" but ").append(String.valueOf(processingMessage.asJson().get("matched"))).append(" found");
+                oneOfErrorMessage.append(" but ").append(processingMessage.asJson().get("matched")).append(" found");
                 validationErrors.add(oneOfErrorMessage.toString() + (fieldPointer.isEmpty() ? "" : " for field \"" + fieldPointer + "\""));
             } else if (fieldPointer.endsWith("/times") && processingMessage.toString().contains("has properties which are not allowed by the schema") && String.valueOf(processingMessage.asJson().get("schema")).contains("verificationTimes")) {
                 validationErrors.add(processingMessage.getMessage() + " for field \"" + fieldPointer + "\", allowed fields are [\"atLeast\", \"atMost\"]");

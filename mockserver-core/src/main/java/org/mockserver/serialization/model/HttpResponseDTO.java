@@ -12,8 +12,8 @@ public class HttpResponseDTO extends ObjectWithReflectiveEqualsHashCodeToString 
     private Integer statusCode;
     private String reasonPhrase;
     private BodyWithContentTypeDTO body;
-    private Cookies cookies = new Cookies();
-    private Headers headers = new Headers();
+    private Cookies cookies;
+    private Headers headers;
     private DelayDTO delay;
     private ConnectionOptionsDTO connectionOptions;
 

@@ -17,7 +17,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  */
 public class ExpectationInitializerLoader {
 
-    private static ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ExpectationInitializerLoader.class);
+    private static ExpectationSerializer expectationSerializer = new ExpectationSerializer(MOCK_SERVER_LOGGER);
 
     private static Expectation[] retrieveExpectationsFromInitializerClass() {
         try {

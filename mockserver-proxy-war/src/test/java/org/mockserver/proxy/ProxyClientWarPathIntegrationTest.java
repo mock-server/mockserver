@@ -20,7 +20,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class ProxyClientWarPathIntegrationTest extends AbstractClientProxyIntegrationTest {
 
-    private final static int PROXY_PORT = PortFactory.findFreePort();
+    private static final int PROXY_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
     private static Tomcat tomcat;
     private static MockServerClient mockServerClient;

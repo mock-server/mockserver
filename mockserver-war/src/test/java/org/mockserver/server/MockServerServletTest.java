@@ -5,26 +5,29 @@ import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
-import org.mockserver.serialization.ExpectationSerializer;
-import org.mockserver.serialization.HttpRequestSerializer;
-import org.mockserver.serialization.PortBindingSerializer;
-import org.mockserver.log.model.RequestLogEntry;
-import org.mockserver.log.model.RequestResponseLogEntry;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.servlet.responsewriter.ServletResponseWriter;
+import org.slf4j.event.Level;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static org.apache.commons.codec.Charsets.UTF_8;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -34,6 +37,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -82,15 +86,33 @@ public class MockServerServletTest {
     @Test
     public void shouldRetrieveRequests() {
         // given
-        MockHttpServletRequest expectationRetrieveRequestsRequest = buildHttpServletRequest(
-            "PUT",
-            "/mockserver/retrieve",
-            httpRequestSerializer.serialize(request("request_one"))
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request("request_one"))
+                .setMessageFormat("received request:{}")
+                .setArguments(request("request_one"))
         );
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request("request_two"))
+                .setMessageFormat("received request:{}")
+                .setArguments(request("request_two"))
+        );
 
         // when
-        mockServerServlet.service(expectationRetrieveRequestsRequest, response);
+        mockServerServlet
+            .service(
+                buildHttpServletRequest(
+                    "PUT",
+                    "/mockserver/retrieve",
+                    httpRequestSerializer.serialize(request("request_one"))
+                ),
+                response
+            );
 
         // then
         assertResponse(response, 200, httpRequestSerializer.serialize(Collections.singletonList(
@@ -102,7 +124,11 @@ public class MockServerServletTest {
     public void shouldClear() {
         // given
         httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setType(EXPECTATION_MATCHED)
+        );
         MockHttpServletRequest clearRequest = buildHttpServletRequest(
             "PUT",
             "/mockserver/clear",
@@ -175,23 +201,31 @@ public class MockServerServletTest {
     @Test
     public void shouldRetrieveRecordedExpectations() {
         // given
-        httpStateHandler.log(new RequestResponseLogEntry(
-            request("request_one"),
-            response("response_one")
-        ));
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setHttpResponse(response("response_one"))
+                .setType(FORWARDED_REQUEST)
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_two"))
+                .setHttpResponse(response("response_two"))
+                .setType(FORWARDED_REQUEST)
+        );
+
+        // when
         MockHttpServletRequest expectationRetrieveExpectationsRequest = buildHttpServletRequest(
             "PUT",
             "/mockserver/retrieve",
             httpRequestSerializer.serialize(request("request_one"))
         );
         expectationRetrieveExpectationsRequest.setQueryString("type=" + RetrieveType.RECORDED_EXPECTATIONS.name());
-
-        // when
         mockServerServlet.service(expectationRetrieveExpectationsRequest, response);
 
         // then
         assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
-            new Expectation(request("request_one"), Times.once(), null).thenRespond(response("response_one"))
+            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one"))
         )));
     }
 
@@ -251,38 +285,24 @@ public class MockServerServletTest {
 
         // then
         assertThat(response.getStatus(), is(200));
-        String[] splitBody = new String(response.getContentAsByteArray(), UTF_8).split(NEW_LINE + "------------------------------------" + NEW_LINE);
-        assertThat(splitBody.length, is(2));
-        assertThat(
-            splitBody[0],
-            is(endsWith("creating expectation:" + NEW_LINE +
-                "" + NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"httpRequest\" : {" + NEW_LINE +
-                "\t    \"path\" : \"request_one\"" + NEW_LINE +
-                "\t  }," + NEW_LINE +
-                "\t  \"times\" : {" + NEW_LINE +
-                "\t    \"unlimited\" : true" + NEW_LINE +
-                "\t  }," + NEW_LINE +
-                "\t  \"timeToLive\" : {" + NEW_LINE +
-                "\t    \"unlimited\" : true" + NEW_LINE +
-                "\t  }," + NEW_LINE +
-                "\t  \"httpResponse\" : {" + NEW_LINE +
-                "\t    \"statusCode\" : 200," + NEW_LINE +
-                "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-                "\t    \"body\" : \"response_one\"" + NEW_LINE +
-                "\t  }" + NEW_LINE +
-                "\t}" + NEW_LINE))
-        );
-        assertThat(
-            splitBody[1],
-            is(endsWith("retrieving logs that match:" + NEW_LINE +
-                NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"path\" : \"request_one\"" + NEW_LINE +
-                "\t}" + NEW_LINE +
-                NEW_LINE))
-        );
+        assertThat(new String(response.getContentAsByteArray(), UTF_8), containsString("creating expectation:" + NEW_LINE +
+            "" + NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"httpRequest\" : {" + NEW_LINE +
+            "\t    \"path\" : \"request_one\"" + NEW_LINE +
+            "\t  }," + NEW_LINE +
+            "\t  \"times\" : {" + NEW_LINE +
+            "\t    \"unlimited\" : true" + NEW_LINE +
+            "\t  }," + NEW_LINE +
+            "\t  \"timeToLive\" : {" + NEW_LINE +
+            "\t    \"unlimited\" : true" + NEW_LINE +
+            "\t  }," + NEW_LINE +
+            "\t  \"httpResponse\" : {" + NEW_LINE +
+            "\t    \"statusCode\" : 200," + NEW_LINE +
+            "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+            "\t    \"body\" : \"response_one\"" + NEW_LINE +
+            "\t  }" + NEW_LINE +
+            "\t}" + NEW_LINE));
     }
 
     @Test

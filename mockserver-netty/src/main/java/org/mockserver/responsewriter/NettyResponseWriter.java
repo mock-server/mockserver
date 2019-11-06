@@ -4,8 +4,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.cors.CORSHeaders;
-import org.mockserver.log.model.MessageLogEntry;
-import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -24,21 +22,19 @@ import static org.mockserver.model.HttpResponse.response;
 public class NettyResponseWriter extends ResponseWriter {
 
     private final ChannelHandlerContext ctx;
-    private final MockServerLogger mockServerLogger;
-    private CORSHeaders addCORSHeaders = new CORSHeaders();
+    private static final CORSHeaders CORS_HEADERS = new CORSHeaders();
 
-    public NettyResponseWriter(ChannelHandlerContext ctx, MockServerLogger mockServerLogger) {
-        this.mockServerLogger = mockServerLogger;
+    public NettyResponseWriter(ChannelHandlerContext ctx) {
         this.ctx = ctx;
     }
 
     @Override
-    public void writeResponse(HttpRequest request, HttpResponseStatus responseStatus) {
+    public void writeResponse(final HttpRequest request, final HttpResponseStatus responseStatus) {
         writeResponse(request, responseStatus, "", "application/json");
     }
 
     @Override
-    public void writeResponse(HttpRequest request, HttpResponseStatus responseStatus, String body, String contentType) {
+    public void writeResponse(final HttpRequest request, final HttpResponseStatus responseStatus, final String body, final String contentType) {
         HttpResponse response = response()
             .withStatusCode(responseStatus.code())
             .withBody(body);
@@ -49,14 +45,14 @@ public class NettyResponseWriter extends ResponseWriter {
     }
 
     @Override
-    public void writeResponse(HttpRequest request, HttpResponse response, boolean apiResponse) {
+    public void writeResponse(final HttpRequest request, HttpResponse response, final boolean apiResponse) {
         if (response == null) {
             response = notFoundResponse();
         }
         if (enableCORSForAllResponses()) {
-            addCORSHeaders.addCORSHeaders(request, response);
+            CORS_HEADERS.addCORSHeaders(request, response);
         } else if (apiResponse && enableCORSForAPI()) {
-            addCORSHeaders.addCORSHeaders(request, response);
+            CORS_HEADERS.addCORSHeaders(request, response);
         }
         if (apiResponse) {
             response.withHeader("version", org.mockserver.Version.getVersion());
@@ -67,12 +63,10 @@ public class NettyResponseWriter extends ResponseWriter {
             }
         }
 
-        addConnectionHeader(request, response);
-
-        writeAndCloseSocket(ctx, request, response);
+        writeAndCloseSocket(ctx, request, addConnectionHeader(request, response));
     }
 
-    private void writeAndCloseSocket(ChannelHandlerContext ctx, HttpRequest request, HttpResponse response) {
+    private void writeAndCloseSocket(final ChannelHandlerContext ctx, final HttpRequest request, HttpResponse response) {
         boolean closeChannel;
 
         ConnectionOptions connectionOptions = response.getConnectionOptions();

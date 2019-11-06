@@ -22,11 +22,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mockserver.MockServer;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
+import org.slf4j.event.Level;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -367,7 +369,13 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
                 @Override
                 public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-                    MOCK_SERVER_LOGGER.error("Connection could not be established to proxy at socket [" + sa + "]", ioe);
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.EXCEPTION)
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("Connection could not be established to proxy at socket [" + sa + "]")
+                            .setThrowable(ioe)
+                    );
                 }
             });
 

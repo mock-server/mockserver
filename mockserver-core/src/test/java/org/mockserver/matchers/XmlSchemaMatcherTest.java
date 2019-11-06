@@ -66,7 +66,7 @@ public class XmlSchemaMatcherTest {
     @Before
     public void setupMocks() {
         logger = mock(Logger.class);
-        xmlSchemaMatcher = new XmlSchemaMatcher(new MockServerLogger(logger, null), XML_SCHEMA);
+        xmlSchemaMatcher = new XmlSchemaMatcher(new MockServerLogger(logger), XML_SCHEMA);
         initMocks(this);
 
         when(logger.isTraceEnabled()).thenReturn(true);
@@ -129,7 +129,8 @@ public class XmlSchemaMatcherTest {
                 NEW_LINE +
                 "\tvalidator_error" + NEW_LINE +
                 NEW_LINE +
-                " ]");
+                " ]",
+                (Throwable) null);
         } finally {
             logLevel(originalLevel.toString());
         }
@@ -180,7 +181,8 @@ public class XmlSchemaMatcherTest {
                 NEW_LINE +
                 "\tTEST_EXCEPTION" + NEW_LINE +
                 NEW_LINE +
-                " ]");
+                " ]",
+                (Throwable) null);
         } finally {
             logLevel(originalLevel.toString());
         }

@@ -1,5 +1,6 @@
 package org.mockserver.url;
 
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 
 import java.io.ByteArrayOutputStream;
@@ -21,7 +22,12 @@ public class URLEncoder {
 
         if (MOCK_SERVER_LOGGER.isEnabled(TRACE)) {
             for (int i = 0; i < urlAllowedCharacters.length; i++) {
-                MOCK_SERVER_LOGGER.trace("urlAllowedCharacters[" + i + "] = " + (char) urlAllowedCharacters[i]);
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("urlAllowedCharacters[" + i + "] = " + (char) urlAllowedCharacters[i])
+                );
             }
         }
     }
@@ -49,7 +55,13 @@ public class URLEncoder {
             }
             return new String(bos.toByteArray(), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            MOCK_SERVER_LOGGER.trace("Exception while decoding or encoding url [" + input + "]", e);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("Exception while decoding or encoding url [" + input + "]")
+                    .setArguments(e)
+            );
             return input;
         }
     }

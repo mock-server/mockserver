@@ -5,8 +5,11 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.proxy.ProxyConfiguration;
 import org.mockserver.lifecycle.LifeCycle;
+import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
@@ -14,8 +17,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Collections.singletonList;
+import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.proxy.ProxyConfiguration.proxyConfiguration;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.mockserver.MockServerHandler.PROXYING;
 
@@ -76,7 +80,14 @@ public class MockServer extends LifeCycle {
 
         remoteSocket = new InetSocketAddress(remoteHost, remotePort);
         if (proxyConfiguration != null) {
-            mockServerLogger.info(SERVER_CONFIGURATION, "using proxy configuration for forwarded requests:{}", proxyConfiguration);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(SERVER_CONFIGURATION)
+                    .setLogLevel(Level.INFO)
+                    .setHttpRequest(request())
+                    .setMessageFormat("using proxy configuration for forwarded requests:{}")
+                    .setArguments(proxyConfiguration)
+            );
         }
         createServerBootstrap(proxyConfiguration, localPorts);
 
@@ -97,7 +108,7 @@ public class MockServer extends LifeCycle {
             .childOption(ChannelOption.AUTO_READ, true)
             .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024))
-            .childHandler(new MockServerUnificationInitializer(MockServer.this, httpStateHandler, proxyConfiguration))
+            .childHandler(new MockServerUnificationInitializer(MockServer.this, httpStateHandler, new ActionHandler(getEventLoopGroup(), httpStateHandler, proxyConfiguration)))
             .childAttr(REMOTE_SOCKET, remoteSocket)
             .childAttr(PROXYING, remoteSocket != null);
 

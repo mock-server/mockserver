@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.net.MediaType;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.model.*;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.mockserver.model.NottableString.string;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -43,7 +45,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
         fieldNameToType.put("xpath".toLowerCase(), Body.Type.XPATH);
     }
 
-    private final MockServerLogger mockServerLogger = new MockServerLogger(BodyDTODeserializer.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(BodyDTODeserializer.class);
     private final Base64Converter base64Converter = new Base64Converter();
 
     public BodyDTODeserializer() {
@@ -70,7 +72,12 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         try {
                             type = Body.Type.valueOf(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException iae) {
-                            mockServerLogger.trace("Ignoring invalid value for \"type\" field of \"" + entry.getValue() + "\"");
+                            MOCK_SERVER_LOGGER.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.TRACE)
+                                    .setLogLevel(TRACE)
+                                    .setMessageFormat("Ignoring invalid value for \"type\" field of \"" + entry.getValue() + "\"")
+                            );
                         }
                     }
                     if (containsIgnoreCase(key, "string", "regex", "json", "jsonSchema", "jsonPath", "xml", "xmlSchema", "xpath", "base64Bytes") && type != Body.Type.PARAMETERS) {
@@ -87,30 +94,55 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         try {
                             matchType = MatchType.valueOf(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException iae) {
-                            mockServerLogger.trace("Ignoring incorrect JsonBodyMatchType with value \"" + entry.getValue() + "\"");
+                            MOCK_SERVER_LOGGER.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.TRACE)
+                                    .setLogLevel(TRACE)
+                                    .setMessageFormat("Ignoring incorrect JsonBodyMatchType with value \"" + entry.getValue() + "\"")
+                            );
                         }
                     }
                     if (key.equalsIgnoreCase("subString")) {
                         try {
                             subString = Boolean.parseBoolean(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException uce) {
-                            mockServerLogger.trace("Ignoring unsupported boolean with value \"" + entry.getValue() + "\"");
+                            MOCK_SERVER_LOGGER.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.TRACE)
+                                    .setLogLevel(TRACE)
+                                    .setMessageFormat("Ignoring unsupported boolean with value \"" + entry.getValue() + "\"")
+                            );
                         }
                     }
                     if (key.equalsIgnoreCase("contentType")) {
                         try {
                             contentType = MediaType.parse(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException uce) {
-                            mockServerLogger.trace("Ignoring unsupported MediaType with value \"" + entry.getValue() + "\"");
+                            MOCK_SERVER_LOGGER.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.TRACE)
+                                    .setLogLevel(TRACE)
+                                    .setMessageFormat("Ignoring unsupported MediaType with value \"" + entry.getValue() + "\"")
+                            );
                         }
                     }
                     if (key.equalsIgnoreCase("charset")) {
                         try {
                             charset = Charset.forName(String.valueOf(entry.getValue()));
                         } catch (UnsupportedCharsetException uce) {
-                            mockServerLogger.trace("Ignoring unsupported Charset with value \"" + entry.getValue() + "\"");
+                            MOCK_SERVER_LOGGER.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.TRACE)
+                                    .setLogLevel(TRACE)
+                                    .setMessageFormat("Ignoring unsupported Charset with value \"" + entry.getValue() + "\"")
+                            );
                         } catch (IllegalCharsetNameException icne) {
-                            mockServerLogger.trace("Ignoring invalid Charset with value \"" + entry.getValue() + "\"");
+                            MOCK_SERVER_LOGGER.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.TRACE)
+                                    .setLogLevel(TRACE)
+                                    .setMessageFormat("Ignoring invalid Charset with value \"" + entry.getValue() + "\"")
+                            );
                         }
                     }
                     if (key.equalsIgnoreCase("parameters")) {

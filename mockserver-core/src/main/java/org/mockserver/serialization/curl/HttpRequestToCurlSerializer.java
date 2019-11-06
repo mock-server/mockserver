@@ -71,7 +71,7 @@ public class HttpRequestToCurlSerializer {
     }
 
     private boolean hasDefaultMethod(HttpRequest request) {
-        return isBlank(request.getMethod().getValue()) || request.getMethod().getValue().equalsIgnoreCase("GET");
+        return request.getMethod() == null || isBlank(request.getMethod().getValue()) || request.getMethod().getValue().equalsIgnoreCase("GET");
     }
 
     private String getUri(HttpRequest request) {

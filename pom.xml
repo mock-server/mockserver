@@ -55,13 +55,14 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
         <jetty.version>9.2.26.v20180806</jetty.version>
-        <slf4j.version>1.7.28</slf4j.version>
+        <slf4j.version>1.7.29</slf4j.version>
         <tomcat.version>8.0.53</tomcat.version>
         <jackson.version>2.10.0</jackson.version>
+        <velocity.version>2.1</velocity.version>
         <netty.version>4.1.43.Final</netty.version>
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.64</boucycastle.verion>
-        <spring.version>4.3.18.RELEASE</spring.version>
+        <spring.version>4.3.23.RELEASE</spring.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
         <release.arguments />
@@ -182,12 +183,7 @@
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
-                <version>${httpcomponents.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpcore</artifactId>
-                <version>${httpcomponents.version}</version>
+                <version>4.5.10</version>
             </dependency>
 
             <!-- Netty -->
@@ -262,12 +258,12 @@
             <dependency>
                 <groupId>org.apache.velocity</groupId>
                 <artifactId>velocity-engine-scripting</artifactId>
-                <version>2.1</version>
+                <version>${velocity.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.velocity</groupId>
                 <artifactId>velocity-engine-core</artifactId>
-                <version>2.1</version>
+                <version>${velocity.version}</version>
             </dependency>
 
             <!-- json (object serialisation) -->
@@ -350,7 +346,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>20.0</version>
+                <version>28.1-jre</version>
             </dependency>
 
             <!-- logging -->

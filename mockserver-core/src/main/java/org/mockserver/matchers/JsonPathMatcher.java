@@ -4,8 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jayway.jsonpath.JsonPath;
 import org.apache.commons.lang3.StringUtils;
 import net.minidev.json.JSONArray;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * See https://github.com/json-path/JsonPath
@@ -25,7 +28,13 @@ public class JsonPathMatcher extends BodyMatcher<String> {
             try {
                 jsonPath = JsonPath.compile(matcher);
             } catch (Throwable throwable) {
-                mockServerLogger.trace("Error while creating xpath expression for [" + matcher + "] assuming matcher not xpath - " + throwable.getMessage(), throwable);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("Error while creating xpath expression for [" + matcher + "] assuming matcher not xpath - " + throwable.getMessage())
+                        .setArguments(throwable)
+                );
             }
         }
     }
@@ -34,19 +43,38 @@ public class JsonPathMatcher extends BodyMatcher<String> {
         boolean result = false;
 
         if (jsonPath == null) {
-            mockServerLogger.trace(context, "Attempting match against null XPath Expression for [" + matched + "]" + new RuntimeException("Attempting match against null XPath Expression for [" + matched + "]"));
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setHttpRequest(context)
+                    .setMessageFormat("Attempting match against null XPath Expression for [" + matched + "]" + new RuntimeException("Attempting match against null XPath Expression for [" + matched + "]"))
+            );
         } else if (matcher.equals(matched)) {
             result = true;
         } else if (matched != null) {
             try {
                 result = !jsonPath.<JSONArray>read(matched).isEmpty();
             } catch (Exception e) {
-                mockServerLogger.trace(context, "Failed to match JSON: {}with JsonPath: {}because: {}", matched, jsonPath, e.getMessage());
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setHttpRequest(context)
+                        .setMessageFormat("Failed to match JSON: {}with JsonPath: {}because: {}")
+                        .setArguments(matched, jsonPath, e.getMessage())
+                );
             }
         }
 
         if (!result) {
-            mockServerLogger.trace("Failed to match [{}] with [{}]", matched, matcher);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("Failed to match [{}] with [{}]")
+                    .setArguments(matched, matcher)
+            );
         }
 
         return not != result;

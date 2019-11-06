@@ -2,9 +2,11 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.net.MediaType;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatchType;
+import org.slf4j.event.Level;
 
 import java.nio.charset.Charset;
 
@@ -17,6 +19,7 @@ public class JsonBody extends BodyWithContentType {
 
     public static final MatchType DEFAULT_MATCH_TYPE = MatchType.ONLY_MATCHING_FIELDS;
     public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.create("application", "json");
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(JsonBody.class);
     private final String json;
     private final byte[] rawBinaryData;
     private final MatchType matchType;
@@ -74,7 +77,13 @@ public class JsonBody extends BodyWithContentType {
         try {
             json = ObjectMapperFactory.createObjectMapper().writeValueAsString(object);
         } catch (JsonProcessingException e) {
-            new MockServerLogger(JsonBody.class).error("error mapping object for json body to JSON", e);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("error mapping object for json body to JSON")
+                    .setThrowable(e)
+            );
         }
         return json;
     }

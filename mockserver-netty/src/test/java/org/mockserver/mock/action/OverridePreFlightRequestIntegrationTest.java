@@ -77,7 +77,6 @@ public class OverridePreFlightRequestIntegrationTest {
         assertThat(response.getHeader("access-control-allow-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
         assertThat(response.getHeader("access-control-expose-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
         assertThat(response.getHeader("access-control-max-age"), containsInAnyOrder("300"));
-        assertThat(response.getHeader("x-cors"), containsInAnyOrder("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.enableCORSForAPI=false"));
         assertThat(response.getFirstHeader("version"), not(isEmptyString()));
     }
 

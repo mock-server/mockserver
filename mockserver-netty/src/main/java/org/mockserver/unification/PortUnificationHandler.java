@@ -18,7 +18,8 @@ import io.netty.util.AttributeKey;
 import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.mockserver.callback.CallbackWebSocketServerHandler;
-import org.mockserver.proxy.ProxyConfiguration;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.dashboard.DashboardWebSocketServerHandler;
 import org.mockserver.lifecycle.LifeCycle;
@@ -31,7 +32,7 @@ import org.mockserver.proxy.socks.Socks5ProxyHandler;
 import org.mockserver.proxy.socks.SocksDetector;
 import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.socket.tls.SniHandler;
-import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -56,17 +57,17 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private static final Map<KeyValue<InetSocketAddress, String>, Set<String>> localAddressesCache = new ConcurrentHashMap<>();
 
     protected final MockServerLogger mockServerLogger;
-    private final LoggingHandler loggingHandler = new LoggingHandler(LoggerFactory.getLogger(PortUnificationHandler.class));
+    private final LoggingHandler loggingHandler = new LoggingHandler(PortUnificationHandler.class);
     private final HttpContentLengthRemover httpContentLengthRemover = new HttpContentLengthRemover();
     private final LifeCycle server;
     private final HttpStateHandler httpStateHandler;
-    private final ProxyConfiguration proxyConfiguration;
+    private final ActionHandler actionHandler;
 
-    public PortUnificationHandler(LifeCycle server, HttpStateHandler httpStateHandler, ProxyConfiguration proxyConfiguration) {
+    public PortUnificationHandler(LifeCycle server, HttpStateHandler httpStateHandler, ActionHandler actionHandler) {
         this.server = server;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.httpStateHandler = httpStateHandler;
-        this.proxyConfiguration = proxyConfiguration;
+        this.actionHandler = actionHandler;
     }
 
     public static void enableSslUpstreamAndDownstream(Channel channel) {
@@ -168,7 +169,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         ctx.pipeline().fireChannelRead(msg.readBytes(actualReadableBytes()));
     }
 
-    private void switchToHttp(ChannelHandlerContext ctx, ByteBuf msg) {
+    private void    switchToHttp(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
 
         addLastIfNotPresent(pipeline, new HttpServerCodec(
@@ -184,8 +185,8 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         }
         addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpStateHandler));
         addLastIfNotPresent(pipeline, new DashboardWebSocketServerHandler(httpStateHandler));
-        addLastIfNotPresent(pipeline, new MockServerServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel())));
-        addLastIfNotPresent(pipeline, new MockServerHandler(server, httpStateHandler, proxyConfiguration));
+        addLastIfNotPresent(pipeline, new MockServerServerCodec(isSslEnabledUpstream(ctx.channel())));
+        addLastIfNotPresent(pipeline, new MockServerHandler(server, httpStateHandler, actionHandler));
         pipeline.remove(this);
 
         ctx.channel().attr(LOCAL_HOST_HEADERS).set(getLocalAddresses(ctx));
@@ -242,7 +243,13 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            mockServerLogger.error("Exception caught by port unification handler -> closing pipeline " + ctx.channel(), cause);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception caught by port unification handler -> closing pipeline " + ctx.channel())
+                    .setThrowable(cause)
+            );
         }
         closeOnFlush(ctx.channel());
     }

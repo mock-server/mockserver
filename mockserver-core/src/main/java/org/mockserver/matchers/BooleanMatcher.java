@@ -1,9 +1,12 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
+
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -29,7 +32,14 @@ public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString i
         }
 
         if (!result) {
-            mockServerLogger.trace(context, "Failed to match [{}] with [{}]", matched, this.matcher);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setHttpRequest(context)
+                    .setMessageFormat("Failed to match [{}] with [{}]")
+                    .setArguments(matched, this.matcher)
+            );
         }
 
         return result;

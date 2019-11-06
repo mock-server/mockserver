@@ -8,36 +8,25 @@ import org.mockserver.model.Delay;
 import java.util.concurrent.*;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
  * @author jamesdbloom
  */
 public class Scheduler {
 
-    private ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(poolSize(), new ThreadPoolExecutor.CallerRunsPolicy());
+    private final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(poolSize(), new ThreadPoolExecutor.CallerRunsPolicy());
 
     private int poolSize() {
-        return Math.max(2, Runtime.getRuntime().availableProcessors() * 2);
+        return Math.max(10, Runtime.getRuntime().availableProcessors() * 2);
     }
 
     public synchronized void shutdown() {
-        if (scheduler != null) {
-            scheduler.shutdown();
-            try {
-                scheduler.awaitTermination(500, MILLISECONDS);
-            } catch (InterruptedException ignore) {
-                // ignore interrupted exception
-            }
-            scheduler = null;
+        scheduler.shutdown();
+        try {
+            scheduler.awaitTermination(500, MILLISECONDS);
+        } catch (InterruptedException ignore) {
+            // ignore interrupted exception
         }
-    }
-
-    private synchronized ScheduledExecutorService getScheduler() {
-        if (scheduler == null) {
-            scheduler = new ScheduledThreadPoolExecutor(poolSize(), new ThreadPoolExecutor.CallerRunsPolicy());
-        }
-        return scheduler;
     }
 
     public void schedule(Runnable command, boolean synchronous, Delay... delays) {
@@ -49,7 +38,7 @@ public class Scheduler {
             command.run();
         } else {
             if (delay != null) {
-                getScheduler().schedule(command, delay.getValue(), delay.getTimeUnit());
+                scheduler.schedule(command, delay.getValue(), delay.getTimeUnit());
             } else {
                 command.run();
             }
@@ -82,7 +71,8 @@ public class Scheduler {
         if (synchronous) {
             command.run();
         } else {
-            getScheduler().schedule(command, 0, NANOSECONDS);
+            scheduler.submit(command);
+//            scheduler.schedule(command, 0, NANOSECONDS);
         }
     }
 
@@ -98,7 +88,7 @@ public class Scheduler {
                 }
                 command.run();
             } else {
-                future.getHttpResponse().addListener(command, getScheduler());
+                future.getHttpResponse().addListener(command, scheduler);
             }
         }
     }

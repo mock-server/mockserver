@@ -4,15 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.net.MediaType;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockserver.log.model.*;
+import org.mockserver.log.TimeService;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ExpectationSerializer;
@@ -21,27 +22,33 @@ import org.mockserver.serialization.LogEntrySerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
+import org.slf4j.event.Level;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.*;
+import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
+import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.model.Format.LOG_ENTRIES;
+import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.RetrieveType.REQUEST_RESPONSES;
 import static org.slf4j.event.Level.INFO;
 
 /**
@@ -56,17 +63,306 @@ public class HttpStateHandlerTest {
     private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
     private ExpectationSerializer httpExpectationSerializer = new ExpectationSerializer(new MockServerLogger());
     private ExpectationToJavaSerializer httpExpectationToJavaSerializer = new ExpectationToJavaSerializer();
-    private Scheduler scheduler;
-    @Mock
-    private MockServerLogger mockLogFormatter;
     @InjectMocks
     private HttpStateHandler httpStateHandler;
 
+    @BeforeClass
+    public static void fixTime() {
+        TimeService.fixedTime = true;
+    }
+
     @Before
     public void prepareTestFixture() {
-        scheduler = mock(Scheduler.class);
+        Scheduler scheduler = mock(Scheduler.class);
         httpStateHandler = new HttpStateHandler(scheduler);
         initMocks(this);
+    }
+
+    @Test
+    public void shouldRetrieveLogEntries() throws InterruptedException {
+        // given
+        httpStateHandler.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                .setHttpRequest(request("request_one"))
+                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setMessageFormat("no expectation for:{}returning response:{}")
+                .setArguments(request("request_one"), notFoundResponse())
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_RESPONSE)
+                .setHttpRequest(request("request_two"))
+                .setHttpResponse(response("response_two"))
+                .setMessageFormat("returning error:{}for request:{}for action:{}")
+                .setArguments(request("request_two"), response("response_two"), response("response_two"))
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_MATCHED)
+                .setHttpRequest(request("request_one"))
+                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setMessageFormat("request:{}matched expectation:{}")
+                .setArguments(request("request_one"), new Expectation(request("request_one")).thenRespond(response("response_two")))
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_MATCHED)
+                .setHttpRequest(request("request_two"))
+                .setExpectation(new Expectation(request("request_two")).thenRespond(response("response_two")))
+                .setMessageFormat("request:{}matched expectation:{}")
+                .setArguments(request("request_two"), new Expectation(request("request_two")).thenRespond(response("response_two")))
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(TRACE)
+                .setLogLevel(INFO)
+                .setHttpRequest(request("request_four"))
+                .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
+                .setMessageFormat("some random {} message")
+                .setArguments("argument_one")
+        );
+        MILLISECONDS.sleep(100);
+
+        // when
+        HttpResponse response = httpStateHandler
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", "logs")
+            );
+
+        // then
+        assertThat(response,
+            is(response().withBody("" +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    " returning response:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"statusCode\" : 404," + NEW_LINE +
+                    "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - returning error:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"request_two\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    " for request:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"statusCode\" : 200," + NEW_LINE +
+                    "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                    "\t  \"body\" : \"response_two\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    " for action:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"statusCode\" : 200," + NEW_LINE +
+                    "\t  \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                    "\t  \"body\" : \"response_two\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    " matched expectation:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"httpRequest\" : {" + NEW_LINE +
+                    "\t    \"path\" : \"request_one\"" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"times\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"timeToLive\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"httpResponse\" : {" + NEW_LINE +
+                    "\t    \"statusCode\" : 200," + NEW_LINE +
+                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                    "\t    \"body\" : \"response_two\"" + NEW_LINE +
+                    "\t  }" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"request_two\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    " matched expectation:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"httpRequest\" : {" + NEW_LINE +
+                    "\t    \"path\" : \"request_two\"" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"times\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"timeToLive\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"httpResponse\" : {" + NEW_LINE +
+                    "\t    \"statusCode\" : 200," + NEW_LINE +
+                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                    "\t    \"body\" : \"response_two\"" + NEW_LINE +
+                    "\t  }" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random " + NEW_LINE +
+                    NEW_LINE +
+                    "\targument_one" + NEW_LINE +
+                    NEW_LINE +
+                    " message" + NEW_LINE,
+                PLAIN_TEXT_UTF_8).withStatusCode(200))
+        );
+    }
+
+    @Test
+    public void shouldRetrieveLogEntriesWithRequestMatcher() throws InterruptedException {
+        // given
+        httpStateHandler.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                .setHttpRequest(request("request_one"))
+                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setMessageFormat("no expectation for:{}returning response:{}")
+                .setArguments(request("request_one"), notFoundResponse())
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_RESPONSE)
+                .setHttpRequest(request("request_two"))
+                .setHttpResponse(response("response_two"))
+                .setMessageFormat("returning error:{}for request:{}for action:{}")
+                .setArguments(request("request_two"), response("response_two"), response("response_two"))
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(EXPECTATION_MATCHED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request("request_one"))
+                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setMessageFormat("request:{}matched expectation:{}")
+                .setArguments(request("request_one"), new Expectation(request("request_one")).thenRespond(response("response_two")))
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(EXPECTATION_MATCHED)
+                .setLogLevel(INFO)
+                .setHttpRequest(request("request_two"))
+                .setExpectation(new Expectation(request("request_two")).thenRespond(response("response_two")))
+                .setMessageFormat("request:{}matched expectation:{}")
+                .setArguments(request("request_two"), new Expectation(request("request_two")).thenRespond(response("response_two")))
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(TRACE)
+                .setHttpRequest(request("request_four"))
+                .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
+                .setMessageFormat("some random {} message")
+                .setArguments("argument_one")
+        );
+        MILLISECONDS.sleep(100);
+
+        // when
+        HttpResponse response = httpStateHandler
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", "logs")
+                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+            );
+
+        // then
+        assertThat(response,
+            is(response().withBody("" +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - no expectation for:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    " returning response:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"statusCode\" : 404," + NEW_LINE +
+                    "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - request:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    " matched expectation:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"httpRequest\" : {" + NEW_LINE +
+                    "\t    \"path\" : \"request_one\"" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"times\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"timeToLive\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"httpResponse\" : {" + NEW_LINE +
+                    "\t    \"statusCode\" : 200," + NEW_LINE +
+                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                    "\t    \"body\" : \"response_two\"" + NEW_LINE +
+                    "\t  }" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE,
+                PLAIN_TEXT_UTF_8).withStatusCode(200))
+        );
+    }
+
+    @Test
+    public void shouldThrowExceptionForInvalidRetrieveType() {
+        try {
+            // when
+            httpStateHandler.retrieve(request().withQueryStringParameter("type", "invalid"));
+            fail();
+        } catch (Throwable ex) {
+            // then
+            assertThat(ex, instanceOf(IllegalArgumentException.class));
+            assertThat(ex.getMessage(), is("\"invalid\" is not a valid value for \"type\" parameter, only the following values are supported [logs, requests, request_responses, recorded_expectations, active_expectations]"));
+        }
+    }
+
+    @Test
+    public void shouldThrowExceptionForInvalidRetrieveFormat() {
+        try {
+            // when
+            httpStateHandler.retrieve(request().withQueryStringParameter("format", "invalid"));
+            fail();
+        } catch (Throwable ex) {
+            // then
+            assertThat(ex, instanceOf(IllegalArgumentException.class));
+            assertThat(ex.getMessage(), is("\"invalid\" is not a valid value for \"format\" parameter, only the following values are supported [java, json, log_entries]"));
+        }
     }
 
     @Test
@@ -85,139 +381,297 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldClearLogsAndExpectationsForNullRequestMatcher() {
-        // given - a request
-        HttpRequest request = request();
-        // given - some existing expectations
-        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
+    public void shouldClearLogsAndExpectations() throws InterruptedException {
+        // given
+        httpStateHandler.add(
+            new Expectation(request("request_one"))
+                .thenRespond(response("response_one"))
+        );
         // given - some log entries
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(TRACE)
+                .setHttpRequest(request("request_four"))
+                .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
+                .setMessageFormat("some random {} message")
+                .setArguments("argument_one")
+        );
+        MILLISECONDS.sleep(100);
 
         // when
-        httpStateHandler.clear(request);
+        httpStateHandler
+            .clear(
+                request()
+                    .withQueryStringParameter("type", "all")
+            );
+        MILLISECONDS.sleep(100);
 
-        // then - correct log entries removed
-        assertThat(httpStateHandler.retrieve(request), is(response().withBody("[]", JSON_UTF_8).withStatusCode(200)));
-        // then - correct expectations removed
-        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
-        // then - activity logged
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).info(CLEARED, (HttpRequest) null, "clearing expectations and request logs that match:{}", "{}");
-    }
-
-    @Test
-    public void shouldClearLogsAndExpectations() {
-        // given - a request
-        HttpRequest request = request().withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some existing expectations
-        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
-        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
-        httpStateHandler.add(expectationTwo);
-        // given - some log entries
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
-        httpStateHandler.log(new RequestLogEntry(request("request_two")));
-
-        // when
-        httpStateHandler.clear(request);
-
-        // then - correct log entries removed
+        // then - retrieves correct state
         assertThat(
-            httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_one")))),
+            httpStateHandler
+                .retrieve(
+                    request()
+                        .withQueryStringParameter("type", "logs")
+                ),
+            is(response().withBody("" +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{}" + NEW_LINE +
+                    NEW_LINE,
+                PLAIN_TEXT_UTF_8).withStatusCode(200))
+        );
+        assertThat(
+            httpStateHandler
+                .retrieve(
+                    request()
+                        .withQueryStringParameter("type", "active_expectations")
+                ),
             is(response().withBody("[]", JSON_UTF_8).withStatusCode(200))
         );
-        assertThat(
-            httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_two")))),
-            is(response().withBody(httpRequestSerializer.serialize(Collections.singletonList(
-                request("request_two")
-            )), JSON_UTF_8).withStatusCode(200))
-        );
-        // then - correct expectations removed
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
-        assertThat(httpStateHandler.firstMatchingExpectation(request("request_two")), is(expectationTwo));
-        // then - activity logged
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).info(CLEARED, request("request_one"), "clearing expectations and request logs that match:{}", request("request_one"));
     }
 
     @Test
-    public void shouldClearLogsOnly() {
-        // given - a request
-        HttpRequest request = request()
-            .withQueryStringParameter("type", "log")
-            .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some existing expectations
-        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
-        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
-        httpStateHandler.add(expectationTwo);
+    public void shouldClearLogsAndExpectationsWithRequestMatcher() throws InterruptedException {
+        // given
+        httpStateHandler.add(
+            new Expectation(request("request_one"))
+                .thenRespond(response("response_one"))
+        );
+        httpStateHandler.add(
+            new Expectation(request("request_four"))
+                .thenRespond(response("response_four"))
+        );
         // given - some log entries
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
-        httpStateHandler.log(new RequestLogEntry(request("request_two")));
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(TRACE)
+                .setLogLevel(INFO)
+                .setHttpRequest(request("request_one"))
+                .setMessageFormat("some random {} message")
+                .setArguments("argument_one")
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(TRACE)
+                .setLogLevel(INFO)
+                .setHttpRequest(request("request_four"))
+                .setMessageFormat("some random {} message")
+                .setArguments("argument_four")
+        );
+        MILLISECONDS.sleep(100);
 
         // when
-        httpStateHandler.clear(request);
+        httpStateHandler
+            .clear(
+                request()
+                    .withQueryStringParameter("type", "all")
+                    .withBody(httpRequestSerializer.serialize(request("request_four")))
+            );
+        MILLISECONDS.sleep(100);
 
-        // then - correct log entries removed
+        // then - retrieves correct state
         assertThat(
-            httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_one")))),
-            is(response().withBody("[]", JSON_UTF_8).withStatusCode(200))
+            httpStateHandler
+                .retrieve(
+                    request()
+                        .withQueryStringParameter("type", "logs")
+                ),
+            is(response().withBody("" +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"httpRequest\" : {" + NEW_LINE +
+                    "\t    \"path\" : \"request_one\"" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"times\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"timeToLive\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"httpResponse\" : {" + NEW_LINE +
+                    "\t    \"statusCode\" : 200," + NEW_LINE +
+                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                    "\t    \"body\" : \"response_one\"" + NEW_LINE +
+                    "\t  }" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    "" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random " + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\targument_one" + NEW_LINE +
+                    "" + NEW_LINE +
+                    " message" + NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    "" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"request_four\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    "" + NEW_LINE,
+                PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
         assertThat(
-            httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_two")))),
-            is(response().withBody(httpRequestSerializer.serialize(Collections.singletonList(
-                request("request_two")
-            )), JSON_UTF_8).withStatusCode(200))
+            httpStateHandler
+                .retrieve(
+                    request()
+                        .withQueryStringParameter("type", "active_expectations")
+                ),
+            is(response().withBody("" +
+                    "[ {" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"request_one\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpResponse\" : {" + NEW_LINE +
+                    "    \"statusCode\" : 200," + NEW_LINE +
+                    "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                    "    \"body\" : \"response_one\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"timeToLive\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "} ]",
+                JSON_UTF_8).withStatusCode(200))
         );
-        // then - correct expectations removed
-        assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), is(expectationOne));
-        assertThat(httpStateHandler.firstMatchingExpectation(request("request_two")), is(expectationTwo));
-        // then - activity logged
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).info(CLEARED, request("request_one"), "clearing recorded requests and logs that match:{}", request("request_one"));
+        assertThat(
+            httpStateHandler.firstMatchingExpectation(request("request_one")),
+            is(
+                new Expectation(request("request_one"))
+                    .thenRespond(response("response_one"))
+            )
+        );
+        assertThat(
+            httpStateHandler.firstMatchingExpectation(request("request_four")),
+            nullValue()
+        );
     }
 
     @Test
-    public void shouldClearExpectationsOnly() {
-        // given - a request
-        HttpRequest request = request()
-            .withQueryStringParameter("type", "expectations")
-            .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some existing expectations
-        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
-        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
-        httpStateHandler.add(expectationTwo);
+    public void shouldClearLogsOnly() throws InterruptedException {
+        // given
+        httpStateHandler.add(
+            new Expectation(request("request_one"))
+                .thenRespond(response("response_one"))
+        );
         // given - some log entries
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
-        httpStateHandler.log(new RequestLogEntry(request("request_two")));
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(TRACE)
+                .setHttpRequest(request("request_four"))
+                .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
+                .setMessageFormat("some random {} message")
+                .setArguments("argument_one")
+        );
+        MILLISECONDS.sleep(100);
 
         // when
-        httpStateHandler.clear(request);
+        httpStateHandler
+            .clear(
+                request()
+                    .withQueryStringParameter("type", "log")
+            );
+        MILLISECONDS.sleep(100);
 
-        // then - correct log entries removed
+        // then - retrieves correct state
         assertThat(
-            httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_one")))),
-            is(response().withBody(httpRequestSerializer.serialize(Collections.singletonList(
-                request("request_one")
-            )), JSON_UTF_8).withStatusCode(200))
+            httpStateHandler
+                .retrieve(
+                    request()
+                        .withQueryStringParameter("type", "logs")
+                ),
+            is(response().withBody("" +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing logs that match:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{}" + NEW_LINE +
+                    NEW_LINE,
+                PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
         assertThat(
-            httpStateHandler.retrieve(request().withBody(httpRequestSerializer.serialize(request("request_two")))),
-            is(response().withBody(httpRequestSerializer.serialize(Collections.singletonList(
-                request("request_two")
-            )), JSON_UTF_8).withStatusCode(200))
+            httpStateHandler
+                .retrieve(
+                    request()
+                        .withQueryStringParameter("type", "active_expectations")
+                ),
+            is(response().withBody("" +
+                    "[ {" + NEW_LINE +
+                    "  \"httpRequest\" : {" + NEW_LINE +
+                    "    \"path\" : \"request_one\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"httpResponse\" : {" + NEW_LINE +
+                    "    \"statusCode\" : 200," + NEW_LINE +
+                    "    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                    "    \"body\" : \"response_one\"" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"times\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }," + NEW_LINE +
+                    "  \"timeToLive\" : {" + NEW_LINE +
+                    "    \"unlimited\" : true" + NEW_LINE +
+                    "  }" + NEW_LINE +
+                    "} ]",
+                JSON_UTF_8).withStatusCode(200))
+        );
+        assertThat(
+            httpStateHandler.firstMatchingExpectation(request("request_one")),
+            is(
+                new Expectation(request("request_one"))
+                    .thenRespond(response("response_one"))
+            )
+        );
+    }
+
+    @Test
+    public void shouldClearExpectationsOnly() throws InterruptedException, JsonProcessingException {
+        // given
+        httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
+        httpStateHandler.add(new Expectation(request("request_two")).thenRespond(response("response_two")));
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setHttpResponse(response("response_one"))
+                .setType(EXPECTATION_RESPONSE)
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_two"))
+                .setHttpError(error().withResponseBytes("response_two" .getBytes(UTF_8)))
+                .setType(EXPECTATION_RESPONSE)
+        );
+        MILLISECONDS.sleep(100);
+
+        // when
+        httpStateHandler
+            .clear(
+                request()
+                    .withQueryStringParameter("type", "expectations")
+                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+            );
+        MILLISECONDS.sleep(100);
+
+        // then - correct log entries removed
+        HttpResponse retrieve = httpStateHandler
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", REQUEST_RESPONSES.name())
+                    .withQueryStringParameter("format", LOG_ENTRIES.name())
+                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+            );
+        assertThat(
+            retrieve.getBodyAsString(),
+            is(new LogEntrySerializer(new MockServerLogger()).serialize(Collections.singletonList(
+                new LogEntry()
+                    .setHttpRequest(request("request_one"))
+                    .setHttpResponse(response("response_one"))
+                    .setType(EXPECTATION_RESPONSE)
+            )))
         );
         // then - correct expectations removed
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
-        assertThat(httpStateHandler.firstMatchingExpectation(request("request_two")), is(expectationTwo));
-        // then - activity logged
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).info(CLEARED, request("request_one"), "clearing expectations that match:{}", request("request_one"));
+        assertThat(httpStateHandler.firstMatchingExpectation(request("request_two")), is(new Expectation(request("request_two")).thenRespond(response("response_two"))));
     }
 
     @Test
@@ -231,22 +685,31 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldRetrieveRecordedRequestsAsJson() {
-        // given - a request
-        HttpRequest request = request()
-            .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some existing expectations
-        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
-        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
-        httpStateHandler.add(expectationTwo);
-        // given - some log entries
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
-        httpStateHandler.log(new RequestLogEntry(request("request_two")));
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+    public void shouldRetrieveRecordedRequestsAsJson() throws InterruptedException {
+        // given
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_two"))
+                .setType(RECEIVED_REQUEST)
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // when
-        HttpResponse response = httpStateHandler.retrieve(request);
+        HttpResponse response = httpStateHandler
+            .retrieve(
+                request()
+                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+            );
 
         // then
         assertThat(response,
@@ -255,64 +718,94 @@ public class HttpStateHandlerTest {
                 request("request_one")
             )), JSON_UTF_8).withStatusCode(200))
         );
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving requests in json that match:{}", request("request_one"));
     }
 
     @Test
-    public void shouldRetrieveRecordedRequestsAsLogEntries() throws JsonProcessingException {
-        // given - a request
-        HttpRequest request = request()
-            .withQueryStringParameter("format", "log_entries")
-            .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some existing expectations
-        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
-        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
-        httpStateHandler.add(expectationTwo);
-        // given - some log entries
-        final RequestLogEntry logEntryOne = new RequestLogEntry(request("request_one"));
-        httpStateHandler.log(logEntryOne);
-        final RequestLogEntry logEntryTwo = new RequestLogEntry(request("request_two"));
-        httpStateHandler.log(logEntryTwo);
-        final RequestLogEntry logEntryThree = new RequestLogEntry(request("request_one"));
-        httpStateHandler.log(logEntryThree);
-        ObjectWriter objectWriter = ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter();
+    public void shouldRetrieveRecordedRequestsAsLogEntries() throws JsonProcessingException, InterruptedException {
+        // given
+        httpStateHandler
+            .log(
+                new LogEntry()
+                    .setType(RECEIVED_REQUEST)
+                    .setLogLevel(Level.INFO)
+                    .setHttpRequest(request("request_one"))
+                    .setMessageFormat("received request:{}")
+                    .setArguments(request("request_one"))
+            );
+        httpStateHandler
+            .log(
+                new LogEntry()
+                    .setType(RECEIVED_REQUEST)
+                    .setLogLevel(Level.INFO)
+                    .setHttpRequest(request("request_two"))
+                    .setMessageFormat("received request:{}")
+                    .setArguments(request("request_two"))
+            );
+        httpStateHandler
+            .log(
+                new LogEntry()
+                    .setType(RECEIVED_REQUEST)
+                    .setLogLevel(Level.INFO)
+                    .setHttpRequest(request("request_one"))
+                    .setMessageFormat("received request:{}")
+                    .setArguments(request("request_one"))
+            );
+        MILLISECONDS.sleep(100);
 
         // when
-        HttpResponse response = httpStateHandler.retrieve(request);
+        HttpResponse response = httpStateHandler
+            .retrieve(
+                request()
+                    .withQueryStringParameter("format", "log_entries")
+                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+            );
 
         // then
         assertThat(response,
-            is(response().withBody(objectWriter.writeValueAsString(Arrays.asList(
-                of("httpRequest", logEntryOne.getHttpRequest(), "timestamp", logEntryOne.getTimestamp()),
-                of("httpRequest", logEntryThree.getHttpRequest(), "timestamp", logEntryThree.getTimestamp())
+            is(response().withBody(new LogEntrySerializer(new MockServerLogger()).serialize(Arrays.asList(
+                new LogEntry()
+                    .setType(RECEIVED_REQUEST)
+                    .setLogLevel(Level.INFO)
+                    .setHttpRequest(request("request_one"))
+                    .setMessageFormat("received request:{}")
+                    .setArguments(request("request_one")),
+                new LogEntry()
+                    .setType(RECEIVED_REQUEST)
+                    .setLogLevel(Level.INFO)
+                    .setHttpRequest(request("request_one"))
+                    .setMessageFormat("received request:{}")
+                    .setArguments(request("request_one"))
             )), JSON_UTF_8).withStatusCode(200))
         );
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving requests in log_entries that match:{}", request("request_one"));
     }
 
     @Test
-    public void shouldRetrieveRecordedRequestsAsJava() {
-        // given - a request
-        HttpRequest request = request()
-            .withQueryStringParameter("format", "java")
-            .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some existing expectations
-        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
-        Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
-        httpStateHandler.add(expectationTwo);
-        // given - some log entries
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
-        httpStateHandler.log(new RequestLogEntry(request("request_two")));
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+    public void shouldRetrieveRecordedRequestsAsJava() throws InterruptedException {
+        // given
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_two"))
+                .setType(RECEIVED_REQUEST)
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setType(RECEIVED_REQUEST)
+        );
+        MILLISECONDS.sleep(100);
 
         // when
-        HttpResponse response = httpStateHandler.retrieve(request);
+        HttpResponse response = httpStateHandler
+            .retrieve(
+                request()
+                    .withQueryStringParameter("format", "java")
+                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+            );
 
         // then
         assertThat(response,
@@ -321,148 +814,316 @@ public class HttpStateHandlerTest {
                 request("request_one")
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
         );
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving requests in java that match:{}", request("request_one"));
     }
 
     @Test
-    public void shouldRetrieveRecordedRequestResponsesAsJson() {
-        // given - a request
-        HttpRequest request = request()
-            .withQueryStringParameter("type", "request_responses")
-            .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some log entries
-        httpStateHandler.log(new MessageLogEntry(EXPECTATION_RESPONSE, INFO, request("request_one"), "returning response:{}for request:{}for action:{}", response("response_one"), request("request_one"), response("response_one")));
-        httpStateHandler.log(new MessageLogEntry(EXPECTATION_RESPONSE, INFO, request("request_one"), "returning response:{}for request:{}for action:{}", response("response_two"), request("request_one"), response("response_two")));
-        httpStateHandler.log(new MessageLogEntry(EXPECTATION_NOT_MATCHED_RESPONSE, INFO, request("request_one"), "no expectation for:{}returning response:{}", request("request_one"), notFoundResponse()));
-        httpStateHandler.log(new MessageLogEntry(EXPECTATION_RESPONSE, INFO, request("request_three"), "returning response:{}for request:{}for action:{}", response("response_three"), request("request_three"), response("response_three")));
+    public void shouldRetrieveRecordedRequestResponsesAsJson() throws InterruptedException {
+        // given
+        httpStateHandler.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                .setHttpRequest(request("request_one"))
+                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setMessageFormat("no expectation for:{}returning response:{}")
+                .setArguments(request("request_one"), notFoundResponse())
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_RESPONSE)
+                .setHttpRequest(request("request_two"))
+                .setHttpResponse(response("response_two"))
+                .setMessageFormat("returning error:{}for request:{}for action:{}")
+                .setArguments(request("request_two"), response("response_two"), response("response_two"))
+        );
+        MILLISECONDS.sleep(100);
 
         // when
-        HttpResponse response = httpStateHandler.retrieve(request);
+        HttpResponse response = httpStateHandler
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", "request_responses")
+                    .withBody(httpRequestSerializer.serialize(request("request_.*")))
+            );
 
         // then
         assertThat(response,
-            is(response().withBody(logEntrySerializer.serialize(Arrays.<LogEntry>asList(
-                new RequestResponseLogEntry(request("request_one"), response("response_one")),
-                new RequestResponseLogEntry(request("request_one"), response("response_two")),
-                new RequestResponseLogEntry(request("request_one"), notFoundResponse())
-            )), JSON_UTF_8).withStatusCode(200))
+            is(response().withBody("[" + NEW_LINE +
+                "  {" + NEW_LINE +
+                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
+                "    \"httpRequest\" : {" + NEW_LINE +
+                "      \"path\" : \"request_one\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  {" + NEW_LINE +
+                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
+                "    \"httpRequest\" : {" + NEW_LINE +
+                "      \"path\" : \"request_two\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\" : {" + NEW_LINE +
+                "      \"statusCode\" : 200," + NEW_LINE +
+                "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "      \"body\" : \"response_two\"" + NEW_LINE +
+                "    }" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "]", JSON_UTF_8).withStatusCode(200))
         );
-        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving request_responses in json that match:{}", request("request_one"));
     }
 
     @Test
-    public void shouldRetrieveRecordedRequestsResponsesAsLogEntries() throws JsonProcessingException {
-        // given - a request
-        HttpRequest request = request()
-            .withQueryStringParameter("format", "log_entries")
-            .withQueryStringParameter("type", "request_responses")
-            .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some log entries
-        httpStateHandler.log(new MessageLogEntry(EXPECTATION_RESPONSE, INFO, request("request_one"), "returning response:{}for request:{}for action:{}", response("response_one"), request("request_one"), response("response_one")));
-        httpStateHandler.log(new MessageLogEntry(EXPECTATION_RESPONSE, INFO, request("request_one"), "returning response:{}for request:{}for action:{}", response("response_two"), request("request_one"), response("response_two")));
-        httpStateHandler.log(new MessageLogEntry(EXPECTATION_NOT_MATCHED_RESPONSE, INFO, request("request_one"), "no expectation for:{}returning response:{}", request("request_one"), notFoundResponse()));
-        httpStateHandler.log(new MessageLogEntry(EXPECTATION_RESPONSE, INFO, request("request_three"), "returning response:{}for request:{}for action:{}", response("response_three"), request("request_three"), response("response_three")));
+    public void shouldRetrieveRecordedRequestsResponsesAsLogEntries() throws InterruptedException {
+        // given
+        httpStateHandler.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                .setHttpRequest(request("request_one"))
+                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setMessageFormat("no expectation for:{}returning response:{}")
+                .setArguments(request("request_one"), notFoundResponse())
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_RESPONSE)
+                .setHttpRequest(request("request_two"))
+                .setHttpResponse(response("response_two"))
+                .setMessageFormat("returning error:{}for request:{}for action:{}")
+                .setArguments(request("request_two"), response("response_two"), response("response_two"))
+        );
+        MILLISECONDS.sleep(100);
 
         // when
-        HttpResponse response = httpStateHandler.retrieve(request);
+        HttpResponse response = httpStateHandler
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", "request_responses")
+                    .withQueryStringParameter("format", "log_entries")
+                    .withBody(httpRequestSerializer.serialize(request("request_.*")))
+            );
 
         // then
         assertThat(response,
-            is(response().withBody(logEntrySerializer.serialize(Arrays.<LogEntry>asList(
-                new RequestResponseLogEntry(request("request_one"), response("response_one")),
-                new RequestResponseLogEntry(request("request_one"), response("response_two")),
-                new RequestResponseLogEntry(request("request_one"), notFoundResponse())
-            )), JSON_UTF_8).withStatusCode(200))
+            is(response().withBody("[\n" +
+                "  {\n" +
+                "    \"logLevel\" : \"INFO\",\n" +
+                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\",\n" +
+                "    \"type\" : \"EXPECTATION_NOT_MATCHED_RESPONSE\",\n" +
+                "    \"httpRequest\" : {\n" +
+                "      \"path\" : \"request_one\"\n" +
+                "    },\n" +
+                "    \"expectation\" : {\n" +
+                "      \"httpRequest\" : {\n" +
+                "        \"path\" : \"request_one\"\n" +
+                "      },\n" +
+                "      \"times\" : {\n" +
+                "        \"unlimited\" : true\n" +
+                "      },\n" +
+                "      \"timeToLive\" : {\n" +
+                "        \"unlimited\" : true\n" +
+                "      },\n" +
+                "      \"httpResponse\" : {\n" +
+                "        \"statusCode\" : 200,\n" +
+                "        \"reasonPhrase\" : \"OK\",\n" +
+                "        \"body\" : \"response_two\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    \"message\" : [\n" +
+                "      \"no expectation for:\",\n" +
+                "      \"\",\n" +
+                "      \"   {\",\n" +
+                "      \"     \\\"path\\\" : \\\"request_one\\\"\",\n" +
+                "      \"   }\",\n" +
+                "      \"\",\n" +
+                "      \" returning response:\",\n" +
+                "      \"\",\n" +
+                "      \"   {\",\n" +
+                "      \"     \\\"statusCode\\\" : 404,\",\n" +
+                "      \"     \\\"reasonPhrase\\\" : \\\"Not Found\\\"\",\n" +
+                "      \"   }\"\n" +
+                "    ]\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"logLevel\" : \"INFO\",\n" +
+                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\",\n" +
+                "    \"type\" : \"EXPECTATION_RESPONSE\",\n" +
+                "    \"httpRequest\" : {\n" +
+                "      \"path\" : \"request_two\"\n" +
+                "    },\n" +
+                "    \"httpResponse\" : {\n" +
+                "      \"statusCode\" : 200,\n" +
+                "      \"reasonPhrase\" : \"OK\",\n" +
+                "      \"body\" : \"response_two\"\n" +
+                "    },\n" +
+                "    \"message\" : [\n" +
+                "      \"returning error:\",\n" +
+                "      \"\",\n" +
+                "      \"   {\",\n" +
+                "      \"     \\\"path\\\" : \\\"request_two\\\"\",\n" +
+                "      \"   }\",\n" +
+                "      \"\",\n" +
+                "      \" for request:\",\n" +
+                "      \"\",\n" +
+                "      \"   {\",\n" +
+                "      \"     \\\"statusCode\\\" : 200,\",\n" +
+                "      \"     \\\"reasonPhrase\\\" : \\\"OK\\\",\",\n" +
+                "      \"     \\\"body\\\" : \\\"response_two\\\"\",\n" +
+                "      \"   }\",\n" +
+                "      \"\",\n" +
+                "      \" for action:\",\n" +
+                "      \"\",\n" +
+                "      \"   {\",\n" +
+                "      \"     \\\"statusCode\\\" : 200,\",\n" +
+                "      \"     \\\"reasonPhrase\\\" : \\\"OK\\\",\",\n" +
+                "      \"     \\\"body\\\" : \\\"response_two\\\"\",\n" +
+                "      \"   }\"\n" +
+                "    ]\n" +
+                "  }\n" +
+                "]", JSON_UTF_8).withStatusCode(200))
         );
-        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving request_responses in log_entries that match:{}", request("request_one"));
     }
 
     @Test
     public void shouldRetrieveRecordedRequestsResponsesAsJava() {
-        // given - a request
-        HttpRequest request = request()
-            .withQueryStringParameter("format", "java")
-            .withQueryStringParameter("type", "request_responses")
-            .withBody(httpRequestSerializer.serialize(request("request_one")));
-
         // when
-        HttpResponse response = httpStateHandler.retrieve(request);
+        HttpResponse response = httpStateHandler
+            .retrieve(
+                request()
+                    .withQueryStringParameter("format", "java")
+                    .withQueryStringParameter("type", "request_responses")
+                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+            );
 
         // then
         assertThat(response.getBodyAsString(), is("JAVA not supported for REQUEST_RESPONSES"));
-        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving request_responses in java that match:{}", request("request_one"));
     }
 
     @Test
-    public void shouldRetrieveRecordedExpectationsAsJson() {
-        // given - a request
-        HttpRequest request = request()
-            .withQueryStringParameter("type", "recorded_expectations")
-            .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some log entries
-        httpStateHandler.log(new RequestResponseLogEntry(request("request_one"), response("response_one")));
-        httpStateHandler.log(new RequestResponseLogEntry(request("request_two"), response("response_two")));
-        httpStateHandler.log(new RequestResponseLogEntry(request("request_one"), response("request_three")));
+    public void shouldRetrieveRecordedExpectationsAsJson() throws InterruptedException {
+        // given
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(FORWARDED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request("request_one"))
+                .setHttpResponse(response("response_one"))
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(FORWARDED_REQUEST)
+                .setHttpRequest(request("request_two"))
+                .setHttpResponse(response("response_two"))
+        );
+        MILLISECONDS.sleep(100);
 
         // when
-        HttpResponse response = httpStateHandler.retrieve(request);
+        HttpResponse response = httpStateHandler
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", "recorded_expectations")
+                    .withQueryStringParameter("format", "json")
+            );
 
         // then
         assertThat(response,
             is(response().withBody(httpExpectationSerializer.serialize(Arrays.asList(
-                new Expectation(request("request_one"), Times.once(), null).thenRespond(response("response_one")),
-                new Expectation(request("request_one"), Times.once(), null).thenRespond(response("request_three"))
+                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one")),
+                new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_two"))
             )), JSON_UTF_8).withStatusCode(200))
         );
-        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving recorded_expectations in json that match:{}", request("request_one"));
     }
 
     @Test
-    public void shouldRetrieveRecordedExpectationsAsJava() {
-        // given - a request
-        HttpRequest request = request()
-            .withQueryStringParameter("type", "recorded_expectations")
-            .withQueryStringParameter("format", "java")
-            .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some log entries
-        httpStateHandler.log(new RequestResponseLogEntry(request("request_one"), response("response_one")));
-        httpStateHandler.log(new RequestResponseLogEntry(request("request_two"), response("response_two")));
-        httpStateHandler.log(new RequestResponseLogEntry(request("request_one"), response("request_three")));
+    public void shouldRetrieveRecordedExpectationsAsJava() throws InterruptedException {
+        // given
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(FORWARDED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request("request_one"))
+                .setHttpResponse(response("response_one"))
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(FORWARDED_REQUEST)
+                .setHttpRequest(request("request_two"))
+                .setHttpResponse(response("response_two"))
+        );
+        MILLISECONDS.sleep(100);
 
         // when
-        HttpResponse response = httpStateHandler.retrieve(request);
+        HttpResponse response = httpStateHandler
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", "recorded_expectations")
+                    .withQueryStringParameter("format", "java")
+            );
 
         // then
         assertThat(response,
             is(response().withBody(httpExpectationToJavaSerializer.serialize(Arrays.asList(
-                new Expectation(request("request_one"), Times.once(), null).thenRespond(response("response_one")),
-                new Expectation(request("request_one"), Times.once(), null).thenRespond(response("request_three"))
+                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one")),
+                new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_two"))
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
         );
-        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving recorded_expectations in java that match:{}", request("request_one"));
+    }
+
+    @Test
+    public void shouldRetrieveRecordedExpectationsAsJavaWithRequestMatcher() throws InterruptedException {
+        // given
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(FORWARDED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request("request_one"))
+                .setHttpResponse(response("response_one"))
+        );
+        httpStateHandler.log(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(FORWARDED_REQUEST)
+                .setHttpRequest(request("request_two"))
+                .setHttpResponse(response("response_two"))
+        );
+        MILLISECONDS.sleep(100);
+
+        // when
+        HttpResponse response = httpStateHandler
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", "recorded_expectations")
+                    .withQueryStringParameter("format", "java")
+                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+            );
+
+        // then
+        assertThat(response,
+            is(response().withBody(httpExpectationToJavaSerializer.serialize(Collections.singletonList(
+                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one"))
+            )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
+        );
     }
 
     @Test
     public void shouldRetrieveActiveExpectationsAsJson() {
-        // given - a request
-        HttpRequest request = request()
-            .withQueryStringParameter("type", "active_expectations")
-            .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some existing expectations
+        // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         httpStateHandler.add(expectationOne);
         Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
         httpStateHandler.add(expectationTwo);
         Expectation expectationThree = new Expectation(request("request_one")).thenRespond(response("request_three"));
         httpStateHandler.add(expectationThree);
-        // given - some log entries
-        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_one"), expectationOne));
-        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_two"), expectationTwo));
 
         // when
-        HttpResponse response = httpStateHandler.retrieve(request);
+        HttpResponse response = httpStateHandler
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", "active_expectations")
+                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+            );
 
         // then
         assertThat(response,
@@ -471,32 +1132,26 @@ public class HttpStateHandlerTest {
                 expectationThree
             )), JSON_UTF_8).withStatusCode(200))
         );
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationThree);
-        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving active_expectations in json that match:{}", request("request_one"));
     }
 
     @Test
     public void shouldRetrieveActiveExpectationsAsJava() {
-        // given - a request
-        HttpRequest request = request()
-            .withQueryStringParameter("type", "active_expectations")
-            .withQueryStringParameter("format", "java")
-            .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some existing expectations
+        // given
         Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
         httpStateHandler.add(expectationOne);
         Expectation expectationTwo = new Expectation(request("request_two")).thenRespond(response("response_two"));
         httpStateHandler.add(expectationTwo);
         Expectation expectationThree = new Expectation(request("request_one")).thenRespond(response("request_three"));
         httpStateHandler.add(expectationThree);
-        // given - some log entries
-        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_one"), expectationOne));
-        httpStateHandler.log(new ExpectationMatchLogEntry(request("request_two"), expectationTwo));
 
         // when
-        HttpResponse response = httpStateHandler.retrieve(request);
+        HttpResponse response = httpStateHandler
+            .retrieve(
+                request()
+                    .withQueryStringParameter("type", "active_expectations")
+                    .withQueryStringParameter("format", "java")
+                    .withBody(httpRequestSerializer.serialize(request("request_one")))
+            );
 
         // then
         assertThat(response,
@@ -505,85 +1160,50 @@ public class HttpStateHandlerTest {
                 expectationThree
             )), MediaType.create("application", "java").withCharset(UTF_8)).withStatusCode(200))
         );
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_two"), "creating expectation:{}", expectationTwo);
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationThree);
-        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving active_expectations in java that match:{}", request("request_one"));
     }
 
     @Test
-    public void shouldRetrieveLogs() {
-        // given - a request
-        HttpRequest request = request()
-            .withQueryStringParameter("type", "logs")
-            .withBody(httpRequestSerializer.serialize(request("request_one")));
-        // given - some log messages
-        MessageLogEntry logEntryOne = new MessageLogEntry(TRACE, null, request("request_one"), "message_one");
-        httpStateHandler.log(logEntryOne);
-        MessageLogEntry logEntryTwo = new MessageLogEntry(TRACE, null, request("request_one"), "message_two");
-        httpStateHandler.log(logEntryTwo);
-        MessageLogEntry logEntryThree = new MessageLogEntry(TRACE, null, request("request_one"), "message_three");
-        httpStateHandler.log(logEntryThree);
-
-        // when
-        HttpResponse response = httpStateHandler.retrieve(request);
-
-        // then
-        assertThat(response,
-            is(response().withBody(
-                logEntryOne.getTimestamp() + " - " + logEntryOne.getMessage() + NEW_LINE + "------------------------------------" + NEW_LINE +
-                    logEntryTwo.getTimestamp() + " - " + logEntryTwo.getMessage() + NEW_LINE + "------------------------------------" + NEW_LINE +
-                    logEntryThree.getTimestamp() + " - " + logEntryThree.getMessage() + NEW_LINE,
-                PLAIN_TEXT_UTF_8).withStatusCode(200))
+    public void shouldReset() throws InterruptedException {
+        // given
+        httpStateHandler.add(
+            new Expectation(request("request_one"))
+                .thenRespond(response("response_one"))
         );
-        verify(mockLogFormatter).info(RETRIEVED, request("request_one"), "retrieving logs that match:{}", request("request_one"));
-    }
-
-    @Test
-    public void shouldThrowExceptionForInvalidRetrieveType() {
-        try {
-            // when
-            httpStateHandler.retrieve(request().withQueryStringParameter("type", "invalid"));
-            fail();
-        } catch (IllegalArgumentException iae) {
-            // then
-            assertThat(iae.getMessage(), is("\"invalid\" is not a valid value for \"type\" parameter, only the following values are supported [logs, requests, request_responses, recorded_expectations, active_expectations]"));
-        }
-    }
-
-    @Test
-    public void shouldThrowExceptionForInvalidRetrieveFormat() {
-        try {
-            // when
-            httpStateHandler.retrieve(request().withQueryStringParameter("format", "invalid"));
-            fail();
-        } catch (IllegalArgumentException iae) {
-            // then
-            assertThat(iae.getMessage(), is("\"invalid\" is not a valid value for \"format\" parameter, only the following values are supported [java, json, log_entries]"));
-        }
-    }
-
-    @Test
-    public void shouldReset() {
-        // given - a request
-        HttpRequest request = request();
-        // given - some existing expectations
-        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
         // given - some log entries
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(TRACE)
+                .setHttpRequest(request("request_four"))
+                .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
+                .setMessageFormat("some random {} message")
+                .setArguments("argument_one")
+        );
+        MILLISECONDS.sleep(100);
 
         // when
         httpStateHandler.reset();
+        MILLISECONDS.sleep(100);
 
-        // then - correct log entries removed
-        assertThat(httpStateHandler.retrieve(request), is(response().withBody("[]", JSON_UTF_8).withStatusCode(200)));
-        // then - correct expectations removed
+        // then - retrieves correct state
+        assertThat(
+            httpStateHandler
+                .retrieve(
+                    request()
+                        .withQueryStringParameter("type", "logs")
+                ),
+            is(response().withBody("" +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - resetting all expectations and request logs" + NEW_LINE,
+                PLAIN_TEXT_UTF_8).withStatusCode(200))
+        );
+        assertThat(
+            httpStateHandler
+                .retrieve(
+                    request()
+                        .withQueryStringParameter("type", "active_expectations")
+                ),
+            is(response().withBody("[]", JSON_UTF_8).withStatusCode(200))
+        );
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
-        // then - activity logged
-        verify(mockLogFormatter).info(CREATED_EXPECTATION, request("request_one"), "creating expectation:{}", expectationOne);
-        verify(mockLogFormatter).info(RETRIEVED, (HttpRequest) null, "retrieving requests in json that match:{}", request());
-        verify(mockLogFormatter).info(CLEARED, "resetting all expectations and request logs");
     }
 
 }

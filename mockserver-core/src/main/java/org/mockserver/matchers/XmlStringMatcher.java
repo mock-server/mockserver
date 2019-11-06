@@ -1,9 +1,11 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
+import org.slf4j.event.Level;
 import org.xml.sax.SAXException;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.builder.Input;
@@ -14,6 +16,7 @@ import javax.xml.transform.TransformerException;
 import java.io.IOException;
 
 import static org.mockserver.model.NottableString.string;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -38,7 +41,13 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
                 .ignoreWhitespace()
                 .checkForSimilar();
         } catch (Exception e) {
-            mockServerLogger.error("Error while creating xml string matcher for [" + matcher + "]" + e.getMessage(), e);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Error while creating xml string matcher for [" + matcher + "]" + e.getMessage())
+                    .setThrowable(e)
+            );
         }
     }
 
@@ -46,7 +55,13 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
         return stringToXmlDocumentParser.normaliseXmlString(input, new StringToXmlDocumentParser.ErrorLogger() {
             @Override
             public void logError(final String matched, final Exception exception) {
-                mockServerLogger.error("SAXParseException while parsing [" + input + "]", exception);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("SAXParseException while parsing [" + input + "]")
+                        .setThrowable(exception)
+                );
             }
         });
     }
@@ -69,11 +84,24 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
                 result = !diff.hasDifferences();
 
                 if (!result) {
-                    mockServerLogger.trace("Failed to match [{}] with schema [{}] because [{}]", matched, this.matcher, diff.toString());
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.TRACE)
+                            .setLogLevel(TRACE)
+                            .setMessageFormat("Failed to match [{}] with schema [{}] because [{}]")
+                            .setArguments(matched, this.matcher, diff.toString())
+                    );
                 }
 
             } catch (Exception e) {
-                mockServerLogger.trace(context, "Failed to match [{}] with schema [{}] because [{}]", matched, this.matcher, e.getMessage());
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setHttpRequest(context)
+                        .setMessageFormat("Failed to match [{}] with schema [{}] because [{}]")
+                        .setArguments(matched, this.matcher, e.getMessage())
+                );
             }
         }
 

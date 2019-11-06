@@ -1,5 +1,6 @@
 package org.mockserver.ui;
 
+import com.google.common.collect.ImmutableList;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.scheduler.Scheduler;
@@ -13,7 +14,8 @@ import java.util.List;
  */
 public class MockServerMatcherNotifier extends ObjectWithReflectiveEqualsHashCodeToString {
 
-    private List<MockServerMatcherListener> listeners = Collections.synchronizedList(new ArrayList<MockServerMatcherListener>());
+    private boolean listenerAdded = false;
+    private final List<MockServerMatcherListener> listeners = Collections.synchronizedList(new ArrayList<>());
     private final Scheduler scheduler;
 
     public MockServerMatcherNotifier(Scheduler scheduler) {
@@ -21,19 +23,18 @@ public class MockServerMatcherNotifier extends ObjectWithReflectiveEqualsHashCod
     }
 
     protected void notifyListeners(final MockServerMatcher notifier) {
-        scheduler.submit(
-            new Runnable() {
-                public void run() {
-                    for (MockServerMatcherListener listener : new ArrayList<>(listeners)) {
-                        listener.updated(notifier);
-                    }
+        if (listenerAdded && !listeners.isEmpty()) {
+            scheduler.submit(() -> {
+                for (MockServerMatcherListener listener : ImmutableList.copyOf(listeners)) {
+                    listener.updated(notifier);
                 }
             });
-
+        }
     }
 
     public void registerListener(MockServerMatcherListener listener) {
         listeners.add(listener);
+        listenerAdded = true;
     }
 
     public void unregisterListener(MockServerMatcherListener listener) {

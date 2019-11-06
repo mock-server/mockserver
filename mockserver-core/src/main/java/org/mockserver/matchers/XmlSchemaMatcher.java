@@ -1,8 +1,11 @@
 package org.mockserver.matchers;
 
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.xmlschema.XmlSchemaValidator;
+
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * See http://xml-schema.org/
@@ -33,10 +36,24 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
             result = validation.isEmpty();
 
             if (!result) {
-                mockServerLogger.trace(context, "Failed to match [{}] with schema [{}] because [{}]", matched, this.schema, validation);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setHttpRequest(context)
+                        .setMessageFormat("Failed to match [{}] with schema [{}] because [{}]")
+                        .setArguments(matched, this.schema, validation)
+                );
             }
         } catch (Exception e) {
-            mockServerLogger.trace(context, "Failed to match [{}] with schema [{}] because [{}]", matched, this.schema, e.getMessage());
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setHttpRequest(context)
+                    .setMessageFormat("Failed to match [{}] with schema [{}] because [{}]")
+                    .setArguments(matched, this.schema, e.getMessage())
+            );
         }
 
         return not != result;

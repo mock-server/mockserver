@@ -7,10 +7,12 @@ import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import org.mockserver.dashboard.DashboardWebSocketServerHandler;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mockserver.MockServerHandler;
 import org.mockserver.codec.MockServerServerCodec;
+import org.slf4j.event.Level;
 
 import java.util.UUID;
 
@@ -112,7 +114,13 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            mockServerLogger.error("web socket server caught exception", cause);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("web socket server caught exception")
+                    .setThrowable(cause)
+            );
         }
         ctx.close();
     }

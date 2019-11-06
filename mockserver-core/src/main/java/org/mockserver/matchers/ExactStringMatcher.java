@@ -1,12 +1,14 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.model.NottableString.string;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -27,23 +29,20 @@ public class ExactStringMatcher extends BodyMatcher<NottableString> {
     }
 
     public static boolean matches(String matcher, String matched, boolean ignoreCase) {
-        boolean result = false;
 
         if (isBlank(matcher)) {
-            result = true;
+            return true;
         } else if (matched != null) {
             if (matched.equals(matcher)) {
-                result = true;
+                return true;
             }
             // case insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
             if (ignoreCase) {
-                if (matched.equalsIgnoreCase(matcher)) {
-                    result = true;
-                }
+                return matched.equalsIgnoreCase(matcher);
             }
         }
 
-        return result;
+        return false;
     }
 
     public boolean matches(final HttpRequest context, String matched) {
@@ -58,7 +57,14 @@ public class ExactStringMatcher extends BodyMatcher<NottableString> {
         }
 
         if (!result) {
-            mockServerLogger.trace(context, "Failed to match [{}] with [{}]", matched, this.matcher);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setHttpRequest(context)
+                    .setMessageFormat("Failed to match [{}] with [{}]")
+                    .setArguments(matched, this.matcher)
+            );
         }
 
         return matched.isNot() != (matcher.isNot() != (not != result));

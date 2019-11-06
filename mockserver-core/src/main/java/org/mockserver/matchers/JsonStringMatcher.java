@@ -1,6 +1,7 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -8,6 +9,7 @@ import org.skyscreamer.jsonassert.JSONCompareResult;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.skyscreamer.jsonassert.JSONCompare.compareJSON;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -43,11 +45,25 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                 }
 
                 if (!result) {
-                    mockServerLogger.trace(context, "Failed to perform JSON match \"{}\" with \"{}\" because {}", matched, this.matcher, jsonCompareResult.getMessage());
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.TRACE)
+                            .setLogLevel(TRACE)
+                            .setHttpRequest(context)
+                            .setMessageFormat("Failed to perform JSON match \"{}\" with \"{}\" because {}")
+                            .setArguments(matched, this.matcher, jsonCompareResult.getMessage())
+                    );
                 }
             }
         } catch (Exception e) {
-            mockServerLogger.trace(context, "Failed to perform JSON match \"{}\" with \"{}\" because {}", matched, this.matcher, e.getMessage());
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setHttpRequest(context)
+                    .setMessageFormat("Failed to perform JSON match \"{}\" with \"{}\" because {}")
+                    .setArguments(matched, this.matcher, e.getMessage())
+            );
         }
 
         return not != result;

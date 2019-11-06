@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -16,7 +17,7 @@ public class Parameters extends KeysToMultiValues<Parameter, Parameters> {
     }
 
     @Override
-    public Parameter build(NottableString name, List<NottableString> values) {
+    public Parameter build(NottableString name, Collection<NottableString> values) {
         return new Parameter(name, values);
     }
 

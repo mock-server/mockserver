@@ -1,15 +1,12 @@
 package org.mockserver.validator.jsonschema;
 
-import org.mockserver.logging.MockServerLogger;
-
 /**
  * @author jamesdbloom
  */
 public class JsonSchemaHttpResponseValidator extends JsonSchemaValidator {
 
-    public JsonSchemaHttpResponseValidator(MockServerLogger mockServerLogger) {
+    private JsonSchemaHttpResponseValidator() {
         super(
-            mockServerLogger,
             "org/mockserver/model/schema/",
             "httpResponse",
             "bodyWithContentType",
@@ -18,6 +15,15 @@ public class JsonSchemaHttpResponseValidator extends JsonSchemaValidator {
             "keyToMultiValue",
             "keyToValue"
         );
+    }
+
+    private static JsonSchemaHttpResponseValidator jsonSchemaHttpResponseValidator = new JsonSchemaHttpResponseValidator();
+
+    public static JsonSchemaHttpResponseValidator jsonSchemaHttpResponseValidator() {
+        if (jsonSchemaHttpResponseValidator == null) {
+            jsonSchemaHttpResponseValidator = new JsonSchemaHttpResponseValidator();
+        }
+        return jsonSchemaHttpResponseValidator;
     }
 
 }

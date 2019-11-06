@@ -127,11 +127,11 @@ public class HttpRequestDTOTest {
 
         // then
         assertThat(httpRequestDTO.getBody(), is(nullValue()));
-        assertTrue(httpRequestDTO.getCookies().isEmpty());
-        assertTrue(httpRequestDTO.getHeaders().isEmpty());
+        assertThat(httpRequestDTO.getCookies(), is(nullValue()));
+        assertThat(httpRequestDTO.getHeaders(), is(nullValue()));
         assertThat(httpRequestDTO.getMethod(), is(string("")));
         assertThat(httpRequestDTO.getPath(), is(string("")));
-        assertTrue(httpRequestDTO.getQueryStringParameters().isEmpty());
+        assertThat(httpRequestDTO.getQueryStringParameters(), is(nullValue()));
         assertThat(httpRequestDTO.getKeepAlive(), is(nullValue()));
         assertThat(httpRequestDTO.getSecure(), is(nullValue()));
     }
@@ -143,11 +143,11 @@ public class HttpRequestDTOTest {
 
         // then
         assertThat(httpRequestDTO.getBody(), is(nullValue()));
-        assertTrue(httpRequestDTO.getCookies().isEmpty());
-        assertTrue(httpRequestDTO.getHeaders().isEmpty());
+        assertThat(httpRequestDTO.getCookies(), is(nullValue()));
+        assertThat(httpRequestDTO.getHeaders(), is(nullValue()));
         assertThat(httpRequestDTO.getMethod(), is(string("")));
         assertThat(httpRequestDTO.getPath(), is(string("")));
-        assertTrue(httpRequestDTO.getQueryStringParameters().isEmpty());
+        assertThat(httpRequestDTO.getQueryStringParameters(), is(nullValue()));
         assertThat(httpRequestDTO.getKeepAlive(), is(nullValue()));
         assertThat(httpRequestDTO.getSecure(), is(nullValue()));
     }

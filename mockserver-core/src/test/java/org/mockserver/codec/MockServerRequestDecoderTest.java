@@ -2,24 +2,22 @@ package org.mockserver.codec;
 
 import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.http.*;
-import io.netty.util.CharsetUtil;
-import org.hamcrest.core.Is;
+import io.netty.handler.codec.http.DefaultFullHttpRequest;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpVersion;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.HttpRequest;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
@@ -41,8 +39,8 @@ public class MockServerRequestDecoderTest {
 
     @Before
     public void setupFixture() {
-        mockServerRequestDecoder = new MockServerRequestDecoder(new MockServerLogger(), false);
-        output = new ArrayList<Object>();
+        mockServerRequestDecoder = new MockServerRequestDecoder(false);
+        output = new ArrayList<>();
     }
 
     @Test
@@ -62,9 +60,9 @@ public class MockServerRequestDecoderTest {
     public void shouldDecodeQueryParameters() {
         // given
         String uri = "/uri?" +
-                "queryStringParameterNameOne=queryStringParameterValueOne_One&" +
-                "queryStringParameterNameOne=queryStringParameterValueOne_Two&" +
-                "queryStringParameterNameTwo=queryStringParameterValueTwo_One";
+            "queryStringParameterNameOne=queryStringParameterValueOne_One&" +
+            "queryStringParameterNameOne=queryStringParameterValueOne_Two&" +
+            "queryStringParameterNameTwo=queryStringParameterValueTwo_One";
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri);
 
         // when
@@ -73,8 +71,8 @@ public class MockServerRequestDecoderTest {
         // then
         List<Parameter> queryStringParameters = ((HttpRequest) output.get(0)).getQueryStringParameterList();
         assertThat(queryStringParameters, containsInAnyOrder(
-                param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
-                param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+            param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+            param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
         ));
     }
 
@@ -105,8 +103,8 @@ public class MockServerRequestDecoderTest {
         // then
         List<Header> headers = ((HttpRequest) output.get(0)).getHeaderList();
         assertThat(headers, containsInAnyOrder(
-                header("headerName1", "headerValue1_1", "headerValue1_2"),
-                header("headerName2", "headerValue2")
+            header("headerName1", "headerValue1_1", "headerValue1_2"),
+            header("headerName2", "headerValue2")
         ));
     }
 
@@ -151,9 +149,9 @@ public class MockServerRequestDecoderTest {
         // then
         List<Cookie> cookies = ((HttpRequest) output.get(0)).getCookieList();
         assertThat(cookies, containsInAnyOrder(
-                cookie("cookieName1", "cookieValue1  "),
-                cookie("cookieName2", "cookieValue2"),
-                cookie("cookieName3", "cookieValue3        ")
+            cookie("cookieName1", "cookieValue1  "),
+            cookie("cookieName2", "cookieValue2"),
+            cookie("cookieName3", "cookieValue3        ")
         ));
     }
 
@@ -169,8 +167,8 @@ public class MockServerRequestDecoderTest {
         // then
         List<Cookie> cookies = ((HttpRequest) output.get(0)).getCookieList();
         assertThat(cookies, containsInAnyOrder(
-                cookie("cookieName1", "cookie=Value1  "),
-                cookie("cookieName2", "cookie==Value2")
+            cookie("cookieName1", "cookie=Value1  "),
+            cookie("cookieName2", "cookie==Value2")
         ));
     }
 
@@ -191,7 +189,7 @@ public class MockServerRequestDecoderTest {
         // then
         List<Cookie> cookies = ((HttpRequest) output.get(0)).getCookieList();
         assertThat(cookies, containsInAnyOrder(
-                cookie("Customer", "WILE_E_COYOTE")
+            cookie("Customer", "WILE_E_COYOTE")
         ));
     }
 
@@ -206,7 +204,7 @@ public class MockServerRequestDecoderTest {
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        assertThat(body, Is.<Body>is(exact("A normal string with ASCII characters", MediaType.create("text", "plain"))));
+        assertThat(body, is(exact("A normal string with ASCII characters", MediaType.create("text", "plain"))));
     }
 
     @Test
@@ -219,7 +217,7 @@ public class MockServerRequestDecoderTest {
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        assertThat(body, Is.<Body>is(exact("A normal string with ASCII characters")));
+        assertThat(body, is(exact("A normal string with ASCII characters")));
     }
 
     @Test
@@ -234,7 +232,7 @@ public class MockServerRequestDecoderTest {
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
         assertThat(body.getRawBytes(), is("Euro sign: \u20AC".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
-        assertThat((String)body.getValue(), is(new String("Euro sign: \u20AC".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET), ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
+        assertThat(body.getValue(), is(new String("Euro sign: \u20AC".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET), ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
     }
 
     @Test
@@ -248,7 +246,11 @@ public class MockServerRequestDecoderTest {
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        assertThat(body, Is.<Body>is(new StringBody("A normal string with ASCII characters",  "A normal string with ASCII characters".getBytes(UTF_8), false, MediaType.parse("plain/text; charset=invalid-charset"))));
+        assertThat(body, is(new StringBody("A normal string with ASCII characters", "A normal string with ASCII characters".getBytes(UTF_8), false, MediaType.parse("plain/text; charset=invalid-charset"))));
+    }
+
+    @Test
+    public void name() {
     }
 
     @Test
@@ -262,7 +264,7 @@ public class MockServerRequestDecoderTest {
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        assertThat(body, Is.<Body>is(exact("avro işarəsi: \u20AC", StandardCharsets.UTF_8)));
+        assertThat(body, is(exact("avro işarəsi: \u20AC", StandardCharsets.UTF_8)));
     }
 
     @Test
@@ -276,7 +278,7 @@ public class MockServerRequestDecoderTest {
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        assertThat(body, Is.<Body>is(exact("我说中国话", StandardCharsets.UTF_16)));
+        assertThat(body, is(exact("我说中国话", StandardCharsets.UTF_16)));
     }
 
     @Test
@@ -290,7 +292,7 @@ public class MockServerRequestDecoderTest {
 
         // then
         Body body = ((HttpRequest) output.get(0)).getBody();
-        assertThat(body, Is.<Body>is(binary("some_random_bytes".getBytes(UTF_8))));
+        assertThat(body, is(binary("some_random_bytes".getBytes(UTF_8))));
     }
 
 }

@@ -68,7 +68,7 @@ public class XmlSchemaValidatorTest {
             "</ParentType>";
 
         // when
-        XmlSchemaValidator xmlSchemaValidator = new XmlSchemaValidator(new MockServerLogger(logger, null), xmlSchemaFromResource("org/mockserver/validator/xmlschema/parent.xsd").getValue());
+        XmlSchemaValidator xmlSchemaValidator = new XmlSchemaValidator(new MockServerLogger(), xmlSchemaFromResource("org/mockserver/validator/xmlschema/parent.xsd").getValue());
 
         // then
         assertThat(xmlSchemaValidator.isValid(xml), CoreMatchers.is(""));

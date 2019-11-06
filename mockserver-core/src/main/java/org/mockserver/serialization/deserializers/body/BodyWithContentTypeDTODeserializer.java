@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.net.MediaType;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.serialization.Base64Converter;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.mockserver.model.NottableString.string;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -37,7 +39,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
         fieldNameToType.put("xml".toLowerCase(), Body.Type.XML);
     }
 
-    private final MockServerLogger mockServerLogger = new MockServerLogger(ObjectMapperFactory.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ObjectMapperFactory.class);
     private final Base64Converter base64Converter = new Base64Converter();
 
     public BodyWithContentTypeDTODeserializer() {
@@ -62,7 +64,12 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         try {
                             type = Body.Type.valueOf(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException iae) {
-                            mockServerLogger.trace("Ignoring invalid value for \"type\" field of \"" + entry.getValue() + "\"");
+                            MOCK_SERVER_LOGGER.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.TRACE)
+                                    .setLogLevel(TRACE)
+                                    .setMessageFormat("Ignoring invalid value for \"type\" field of \"" + entry.getValue() + "\"")
+                            );
                         }
                     }
                     if (containsIgnoreCase(key, "string", "regex", "json", "jsonSchema", "jsonPath", "xml", "xmlSchema", "xpath", "base64Bytes") && type != Body.Type.PARAMETERS) {
@@ -79,16 +86,31 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         try {
                             contentType = MediaType.parse(String.valueOf(entry.getValue()));
                         } catch (IllegalArgumentException uce) {
-                            mockServerLogger.trace("Ignoring unsupported MediaType with value \"" + entry.getValue() + "\"");
+                            MOCK_SERVER_LOGGER.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.TRACE)
+                                    .setLogLevel(TRACE)
+                                    .setMessageFormat("Ignoring unsupported MediaType with value \"" + entry.getValue() + "\"")
+                            );
                         }
                     }
                     if (key.equalsIgnoreCase("charset")) {
                         try {
                             charset = Charset.forName(String.valueOf(entry.getValue()));
                         } catch (UnsupportedCharsetException uce) {
-                            mockServerLogger.trace("Ignoring unsupported Charset with value \"" + entry.getValue() + "\"");
+                            MOCK_SERVER_LOGGER.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.TRACE)
+                                    .setLogLevel(TRACE)
+                                    .setMessageFormat("Ignoring unsupported Charset with value \"" + entry.getValue() + "\"")
+                            );
                         } catch (IllegalCharsetNameException icne) {
-                            mockServerLogger.trace("Ignoring invalid Charset with value \"" + entry.getValue() + "\"");
+                            MOCK_SERVER_LOGGER.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.TRACE)
+                                    .setLogLevel(TRACE)
+                                    .setMessageFormat("Ignoring invalid Charset with value \"" + entry.getValue() + "\"")
+                            );
                         }
                     }
                     if (key.equalsIgnoreCase("parameters")) {

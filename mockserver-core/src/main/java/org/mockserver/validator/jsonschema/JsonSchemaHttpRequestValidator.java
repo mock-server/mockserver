@@ -1,18 +1,25 @@
 package org.mockserver.validator.jsonschema;
 
-import org.mockserver.logging.MockServerLogger;
-
 /**
  * @author jamesdbloom
  */
 public class JsonSchemaHttpRequestValidator extends JsonSchemaValidator {
 
-    public JsonSchemaHttpRequestValidator(MockServerLogger mockServerLogger) {
-        super(mockServerLogger,
+    private JsonSchemaHttpRequestValidator() {
+        super(
             "org/mockserver/model/schema/",
             "httpRequest",
             "body",
             "keyToMultiValue",
             "keyToValue");
+    }
+
+    private static JsonSchemaHttpRequestValidator jsonSchemaHttpRequestValidator = new JsonSchemaHttpRequestValidator();
+
+    public static JsonSchemaHttpRequestValidator jsonSchemaHttpRequestValidator() {
+        if (jsonSchemaHttpRequestValidator == null) {
+            jsonSchemaHttpRequestValidator = new JsonSchemaHttpRequestValidator();
+        }
+        return jsonSchemaHttpRequestValidator;
     }
 }

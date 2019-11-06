@@ -31,6 +31,7 @@ import static org.mockserver.model.Header.header;
  */
 public abstract class AbstractMockingIntegrationTestBase {
 
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(AbstractMockingIntegrationTestBase.class);
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
     protected static List<String> headersToIgnore = ImmutableList.of(
@@ -118,7 +119,7 @@ public abstract class AbstractMockingIntegrationTestBase {
             throw new AssertionError("Number of request matchers does not match number of requests, expected:<" + httpRequestMatchers.length + "> but was:<" + httpRequests.length + ">");
         } else {
             for (int i = 0; i < httpRequestMatchers.length; i++) {
-                if (!new HttpRequestMatcher(httpRequestMatchers[i], new MockServerLogger(this.getClass())).matches(null, httpRequests[i])) {
+                if (!new HttpRequestMatcher(httpRequestMatchers[i], MOCK_SERVER_LOGGER).matches(null, httpRequests[i])) {
                     throw new AssertionError("Request does not match request matcher, expected:<" + httpRequestMatchers[i] + "> but was:<" + httpRequests[i] + ">");
                 }
             }

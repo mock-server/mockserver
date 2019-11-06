@@ -11,9 +11,11 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.*;
+import org.slf4j.event.Level;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -28,6 +30,8 @@ import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
  * @author jamesdbloom
  */
 public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpResponse> {
+
+    public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerResponseEncoder.class);
 
     @Override
     protected void encode(ChannelHandlerContext ctx, HttpResponse response, List<Object> out) {
@@ -45,7 +49,14 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
             setCookies(httpResponse, defaultFullHttpResponse);
             return defaultFullHttpResponse;
         } catch (Throwable throwable) {
-            MockServerLogger.MOCK_SERVER_LOGGER.error((HttpRequest) null, throwable, "Exception encoding response {}", httpResponse);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception encoding response {}")
+                    .setArguments(httpResponse)
+                    .setThrowable(throwable)
+            );
             return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, getStatus(httpResponse));
         }
     }
@@ -110,7 +121,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
         if (httpResponse.getCookieList() != null) {
             List<Cookie> cookieValues = new ArrayList<Cookie>();
             for (org.mockserver.model.Cookie cookie : httpResponse.getCookieList()) {
-                if (!cookieHeaderAlreadyExists(httpResponse, cookie)) {
+                if (!httpResponse.cookieHeaderAlreadyExists(cookie)) {
                     cookieValues.add(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
                 }
             }
@@ -118,17 +129,5 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
                 response.headers().add(SET_COOKIE, ServerCookieEncoder.LAX.encode(cookieValue));
             }
         }
-    }
-
-    private boolean cookieHeaderAlreadyExists(HttpResponse httpResponse, org.mockserver.model.Cookie cookieValue) {
-        List<String> setCookieHeaders = httpResponse.getHeader(SET_COOKIE.toString());
-        for (String setCookieHeader : setCookieHeaders) {
-            String existingCookieName = ClientCookieDecoder.LAX.decode(setCookieHeader).name();
-            String existingCookieValue = ClientCookieDecoder.LAX.decode(setCookieHeader).value();
-            if (existingCookieName.equalsIgnoreCase(cookieValue.getName().getValue()) && existingCookieValue.equalsIgnoreCase(cookieValue.getValue().getValue())) {
-                return true;
-            }
-        }
-        return false;
     }
 }

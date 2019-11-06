@@ -58,11 +58,15 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
     }
 
     public List<T> getEntries() {
-        ArrayList<T> cookies = new ArrayList<>();
-        for (NottableString nottableString : map.keySet()) {
-            cookies.add(build(nottableString, map.get(nottableString)));
+        if (!map.isEmpty()) {
+            ArrayList<T> cookies = new ArrayList<>();
+            for (NottableString nottableString : map.keySet()) {
+                cookies.add(build(nottableString, map.get(nottableString)));
+            }
+            return cookies;
+        } else {
+            return Collections.emptyList();
         }
-        return cookies;
     }
 
     public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap() {

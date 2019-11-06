@@ -9,10 +9,12 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.stop.Stoppable;
+import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -22,16 +24,14 @@ import java.util.concurrent.Future;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.mockserver.model.HttpRequest.request;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
  */
 public abstract class LifeCycle implements Stoppable {
-
-    static {
-        new MockServerLogger();
-    }
 
     protected final MockServerLogger mockServerLogger;
     protected EventLoopGroup bossGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
@@ -69,7 +69,7 @@ public abstract class LifeCycle implements Stoppable {
         stop();
     }
 
-    public EventLoopGroup getEventLoopGroup() {
+    protected EventLoopGroup getEventLoopGroup() {
         return workerGroup;
     }
 
@@ -102,7 +102,13 @@ public abstract class LifeCycle implements Stoppable {
             try {
                 return ((InetSocketAddress) channelOpened.get(2, SECONDS).localAddress()).getPort();
             } catch (Exception e) {
-                mockServerLogger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("Exception while retrieving port from channel future, ignoring port for this channel")
+                        .setArguments(e)
+                );
             }
         }
         return -1;
@@ -114,7 +120,13 @@ public abstract class LifeCycle implements Stoppable {
             try {
                 ports.add(((InetSocketAddress) channelOpened.get(3, SECONDS).localAddress()).getPort());
             } catch (Exception e) {
-                mockServerLogger.trace("Exception while retrieving port from channel future, ignoring port for this channel", e);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("Exception while retrieving port from channel future, ignoring port for this channel")
+                        .setArguments(e)
+                );
             }
         }
         return ports;
@@ -170,7 +182,14 @@ public abstract class LifeCycle implements Stoppable {
     }
 
     protected void startedServer(List<Integer> ports) {
-        mockServerLogger.info(SERVER_CONFIGURATION, "started on port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports));
+        final String message = "started on port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports);
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(SERVER_CONFIGURATION)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request())
+                .setMessageFormat(message)
+        );
     }
 
 }

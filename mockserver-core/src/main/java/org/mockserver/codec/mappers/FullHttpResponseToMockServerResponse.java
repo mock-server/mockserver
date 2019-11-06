@@ -5,8 +5,10 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.codec.BodyDecoderEncoder;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.slf4j.event.Level;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 
@@ -14,6 +16,8 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
  * @author jamesdbloom
  */
 public class FullHttpResponseToMockServerResponse {
+
+    public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(FullHttpResponseToMockServerResponse.class);
 
     public HttpResponse mapMockServerResponseToFullHttpResponse(FullHttpResponse fullHttpResponse) {
         HttpResponse httpResponse = new HttpResponse();
@@ -25,7 +29,14 @@ public class FullHttpResponseToMockServerResponse {
                 setBody(httpResponse, fullHttpResponse);
             }
         } catch (Throwable throwable) {
-            MockServerLogger.MOCK_SERVER_LOGGER.error((HttpRequest) null, throwable, "Exception decoding request {}", fullHttpResponse);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception decoding request {}")
+                    .setArguments(fullHttpResponse)
+                    .setThrowable(throwable)
+            );
         }
         return httpResponse;
     }

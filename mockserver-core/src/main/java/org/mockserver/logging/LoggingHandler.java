@@ -72,12 +72,12 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
     protected final Logger logger;
 
-    public LoggingHandler(String loggerName) {
+    public LoggingHandler(final String loggerName) {
         logger = LoggerFactory.getLogger(loggerName);
     }
 
-    public LoggingHandler(Logger logger) {
-        this.logger = logger;
+    public LoggingHandler(final Class loggerClass) {
+        logger = LoggerFactory.getLogger(loggerClass.getName());
     }
 
     public void addLoggingHandler(ChannelHandlerContext ctx) {

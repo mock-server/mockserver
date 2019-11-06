@@ -8,20 +8,20 @@ import io.netty.util.AttributeKey;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.dashboard.DashboardHandler;
 import org.mockserver.lifecycle.LifeCycle;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.PortBinding;
-import org.mockserver.proxy.ProxyConfiguration;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.serialization.Base64Converter;
 import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
+import org.slf4j.event.Level;
 
-import javax.annotation.Nullable;
 import java.net.BindException;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +46,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
     public static final AttributeKey<Boolean> PROXYING = AttributeKey.valueOf("PROXYING");
     public static final AttributeKey<Set> LOCAL_HOST_HEADERS = AttributeKey.valueOf("LOCAL_HOST_HEADERS");
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerHandler.class);
     private MockServerLogger mockServerLogger;
     private HttpStateHandler httpStateHandler;
     private PortBindingSerializer portBindingSerializer;
@@ -53,13 +54,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private ActionHandler actionHandler;
     private DashboardHandler dashboardHandler = new DashboardHandler();
 
-    public MockServerHandler(LifeCycle server, HttpStateHandler httpStateHandler, @Nullable ProxyConfiguration proxyConfiguration) {
+    public MockServerHandler(LifeCycle server, HttpStateHandler httpStateHandler, ActionHandler actionHandler) {
         super(false);
         this.server = server;
         this.httpStateHandler = httpStateHandler;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.actionHandler = new ActionHandler(server.getEventLoopGroup(), httpStateHandler, proxyConfiguration);
+        this.actionHandler = actionHandler;
     }
 
     private static boolean isProxyingRequest(ChannelHandlerContext ctx) {
@@ -81,16 +82,9 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final HttpRequest request) {
 
-        ResponseWriter responseWriter = new NettyResponseWriter(ctx, mockServerLogger);
+        ResponseWriter responseWriter = new NettyResponseWriter(ctx);
         try {
-
-            server.getScheduler().submit(new Runnable() {
-                @Override
-                public void run() {
-                    final String hostHeader = request.getFirstHeader(HOST.toString());
-                    KeyAndCertificateFactory.addSubjectAlternativeName(hostHeader);
-                }
-            });
+            KeyAndCertificateFactory.addSubjectAlternativeName(request.getFirstHeader(HOST.toString()));
 
             if (!httpStateHandler.handle(request, responseWriter, false)) {
 
@@ -145,12 +139,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                         // assume SSL for CONNECT request
                         enableSslUpstreamAndDownstream(ctx.channel());
                         // add Subject Alternative Name for SSL certificate
-                        server.getScheduler().submit(new Runnable() {
-                            @Override
-                            public void run() {
-                                KeyAndCertificateFactory.addSubjectAlternativeName(request.getPath().getValue());
-                            }
-                        });
+                        server.getScheduler().submit(() -> KeyAndCertificateFactory.addSubjectAlternativeName(request.getPath().getValue()));
                         ctx.pipeline().addLast(new HttpConnectHandler(server, mockServerLogger, request.getPath().getValue(), -1));
                         ctx.pipeline().remove(this);
                         ctx.fireChannelRead(request);
@@ -163,12 +152,26 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 }
             }
         } catch (IllegalArgumentException iae) {
-            mockServerLogger.error(request, "exception processing: {} error: {}", request, iae.getMessage());
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setHttpRequest(request)
+                    .setMessageFormat("exception processing: {} error: {}")
+                    .setArguments(request, iae.getMessage())
+            );
             // send request without API CORS headers
             responseWriter.writeResponse(request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
-        } catch (Exception e) {
-            mockServerLogger.error(request, e, "exception processing " + request);
-            responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()), true);
+        } catch (Exception ex) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.ERROR)
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setHttpRequest(request)
+                    .setMessageFormat("exception processing " + request)
+                    .setThrowable(ex)
+            );
+            responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(ex.getMessage()), true);
         }
     }
 
@@ -180,7 +183,13 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            new MockServerLogger(this.getClass()).error("Exception caught by " + server.getClass() + " handler -> closing pipeline " + ctx.channel(), cause);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception caught by " + server.getClass() + " handler -> closing pipeline " + ctx.channel())
+                    .setThrowable(cause)
+            );
         }
         closeOnFlush(ctx.channel());
     }

@@ -17,13 +17,16 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.IPAddress;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FileReader;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.slf4j.event.Level;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -81,23 +84,14 @@ public class KeyAndCertificateFactory {
         return KEY_AND_CERTIFICATE_FACTORY;
     }
 
-
     public static void addSubjectAlternativeName(String host) {
         if (host != null) {
             String hostWithoutPort = StringUtils.substringBefore(host, ":");
+            if (IPAddress.isValid(hostWithoutPort)) {
+                ConfigurationProperties.addSslSubjectAlternativeNameIps(hostWithoutPort);
+            } else {
+                ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostWithoutPort);
 
-            // TODO(jamesdbloom) make IP resolution as an optional setting
-            if (!ConfigurationProperties.containsSslSubjectAlternativeName(hostWithoutPort)) {
-                try {
-                    // resolve host name for subject alternative name in case host name is ip address
-                    for (InetAddress addr : InetAddress.getAllByName(hostWithoutPort)) {
-                        ConfigurationProperties.addSslSubjectAlternativeNameIps(addr.getHostAddress());
-                        ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getHostName());
-                        ConfigurationProperties.addSslSubjectAlternativeNameDomains(addr.getCanonicalHostName());
-                    }
-                } catch (UnknownHostException uhe) {
-                    ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostWithoutPort);
-                }
             }
         }
     }
@@ -251,7 +245,13 @@ public class KeyAndCertificateFactory {
             mockServerCertificatePEMFile = saveCertificateAsPEMFile(mockServerCert, "MockServerCertificate" + randomUUID + ".pem", true);
             mockServerPrivateKeyPEMFile = saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey" + randomUUID + ".pem", true);
         } catch (Exception e) {
-            MOCK_SERVER_LOGGER.error("Error while refreshing certificates", e);
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Error while refreshing certificates")
+                    .setThrowable(e)
+            );
         }
     }
 

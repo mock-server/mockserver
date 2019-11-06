@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import io.netty.handler.codec.http.HttpConstants;
 import io.netty.util.CharsetUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 
 import java.nio.charset.Charset;
@@ -13,6 +14,7 @@ import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderValues.CHARSET;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
@@ -105,9 +107,21 @@ public class ContentTypeMapper {
                 try {
                     charset = Charset.forName(charsetName);
                 } catch (UnsupportedCharsetException uce) {
-                    MOCK_SERVER_LOGGER.warn("Unsupported character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.WARN)
+                            .setLogLevel(WARN)
+                            .setMessageFormat("Unsupported character set {} in Content-Type header: {}.")
+                            .setArguments(StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType)
+                    );
                 } catch (IllegalCharsetNameException icne) {
-                    MOCK_SERVER_LOGGER.warn("Illegal character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.WARN)
+                            .setLogLevel(WARN)
+                            .setMessageFormat("Illegal character set {} in Content-Type header: {}.")
+                            .setArguments(StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType)
+                    );
                 }
             } else if (UTF_8_CONTENT_TYPES.contains(contentType)) {
                 charset = CharsetUtil.UTF_8;

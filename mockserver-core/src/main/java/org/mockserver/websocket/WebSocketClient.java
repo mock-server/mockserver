@@ -12,6 +12,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.AttributeKey;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.model.HttpObject;
@@ -19,6 +20,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.serialization.WebSocketMessageSerializer;
 import org.mockserver.serialization.model.WebSocketClientIdDTO;
 import org.mockserver.serialization.model.WebSocketErrorDTO;
+import org.slf4j.event.Level;
 
 import javax.net.ssl.SSLException;
 import java.net.InetSocketAddress;
@@ -34,10 +36,10 @@ import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELA
 public class WebSocketClient<T extends HttpObject> {
 
     static final AttributeKey<SettableFuture<String>> REGISTRATION_FUTURE = AttributeKey.valueOf("REGISTRATION_FUTURE");
-    private final MockServerLogger mockServerLogger = new MockServerLogger(this.getClass());
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(WebSocketClient.class);
     private final Semaphore availableWebSocketCallbackRegistrations;
     private Channel channel;
-    private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer(new MockServerLogger());
+    private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer(MOCK_SERVER_LOGGER);
     private ExpectationCallback<T> expectationCallback;
 
     public WebSocketClient(Semaphore availableWebSocketCallbackRegistrations) {
@@ -115,7 +117,13 @@ public class WebSocketClient<T extends HttpObject> {
                         result.withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId);
                         channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(result)));
                     } catch (Throwable throwable) {
-                        mockServerLogger.error("Exception thrown while handling callback", throwable);
+                        MOCK_SERVER_LOGGER.logEvent(
+                            new LogEntry()
+                                .setType(LogEntry.LogMessageType.EXCEPTION)
+                                .setLogLevel(Level.ERROR)
+                                .setMessageFormat("Exception thrown while handling callback")
+                                .setThrowable(throwable)
+                        );
                         channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(
                             new WebSocketErrorDTO()
                                 .setMessage(throwable.getMessage())

@@ -36,11 +36,7 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
     }
 
     public boolean greaterThenZero() {
-        if (unlimited || remainingTimes > 0) {
-            return true;
-        } else {
-            return false;
-        }
+        return unlimited || remainingTimes > 0;
     }
 
     public Times decrement() {

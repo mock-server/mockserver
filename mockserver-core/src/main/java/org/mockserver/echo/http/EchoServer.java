@@ -10,11 +10,13 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.AttributeKey;
-import org.mockserver.filters.MockServerEventLog;
+import org.mockserver.log.MockServerEventLog;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.stop.Stoppable;
+import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -25,13 +27,13 @@ import java.util.concurrent.TimeUnit;
 
 public class EchoServer implements Stoppable {
 
-    static final MockServerLogger mockServerLogger = new MockServerLogger(EchoServer.class);
     static final AttributeKey<MockServerEventLog> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     static final AttributeKey<NextResponse> NEXT_RESPONSE = AttributeKey.valueOf("NEXT_RESPONSE");
     static final AttributeKey<OnlyResponse> ONLY_RESPONSE = AttributeKey.valueOf("ONLY_RESPONSE");
+    private static final MockServerLogger mockServerLogger = new MockServerLogger(EchoServer.class);
 
     private final Scheduler scheduler = new Scheduler();
-    private final MockServerEventLog logFilter = new MockServerEventLog(mockServerLogger, scheduler);
+    private final MockServerEventLog logFilter = new MockServerEventLog(mockServerLogger, scheduler, true);
     private final NextResponse nextResponse = new NextResponse();
     private final OnlyResponse onlyResponse = new OnlyResponse();
     private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
@@ -44,32 +46,29 @@ public class EchoServer implements Stoppable {
     }
 
     public EchoServer(final boolean secure, final Error error) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                bossGroup = new NioEventLoopGroup(1);
-                workerGroup = new NioEventLoopGroup();
-                new ServerBootstrap().group(bossGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class)
-                    .option(ChannelOption.SO_BACKLOG, 100)
-                    .handler(new LoggingHandler(EchoServer.class))
-                    .childHandler(new EchoServerInitializer(mockServerLogger, secure, error))
-                    .childAttr(LOG_FILTER, logFilter)
-                    .childAttr(NEXT_RESPONSE, nextResponse)
-                    .childAttr(ONLY_RESPONSE, onlyResponse)
-                    .bind(0)
-                    .addListener(new ChannelFutureListener() {
-                        @Override
-                        public void operationComplete(ChannelFuture future) throws Exception {
-                            if (future.isSuccess()) {
-                                boundPort.set(((InetSocketAddress) future.channel().localAddress()).getPort());
-                            } else {
-                                boundPort.setException(future.cause());
-                                eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-                            }
+        new Thread(() -> {
+            bossGroup = new NioEventLoopGroup(1);
+            workerGroup = new NioEventLoopGroup();
+            new ServerBootstrap().group(bossGroup, workerGroup)
+                .channel(NioServerSocketChannel.class)
+                .option(ChannelOption.SO_BACKLOG, 100)
+                .handler(new LoggingHandler(EchoServer.class))
+                .childHandler(new EchoServerInitializer(mockServerLogger, secure, error))
+                .childAttr(LOG_FILTER, logFilter)
+                .childAttr(NEXT_RESPONSE, nextResponse)
+                .childAttr(ONLY_RESPONSE, onlyResponse)
+                .bind(0)
+                .addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture future) throws Exception {
+                        if (future.isSuccess()) {
+                            boundPort.set(((InetSocketAddress) future.channel().localAddress()).getPort());
+                        } else {
+                            boundPort.setException(future.cause());
+                            eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                         }
-                    });
-            }
+                    }
+                });
         }, "MockServer EchoServer Thread").start();
 
         try {
@@ -77,7 +76,13 @@ public class EchoServer implements Stoppable {
             boundPort.get();
             TimeUnit.MILLISECONDS.sleep(5);
         } catch (Exception e) {
-            mockServerLogger.error("Exception while waiting for proxy to complete starting up", e);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception while waiting for proxy to complete starting up")
+                    .setThrowable(e)
+            );
         }
     }
 

@@ -6,6 +6,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import static io.netty.handler.codec.http.HttpMethod.OPTIONS;
+import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly;
 
 /**
@@ -18,9 +19,13 @@ public class CORSHeaders {
 
     public static boolean isPreflightRequest(HttpRequest request) {
         final Headers headers = request.getHeaders();
-        return request.getMethod().getValue().equals(OPTIONS.name()) &&
+        boolean isPreflightRequest = request.getMethod().getValue().equals(OPTIONS.name()) &&
             headers.containsEntry(HttpHeaderNames.ORIGIN.toString()) &&
             headers.containsEntry(HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD.toString());
+        if (isPreflightRequest) {
+            enableCORSForAPI(true);
+        }
+        return isPreflightRequest;
     }
 
     public void addCORSHeaders(HttpRequest request, HttpResponse response) {
@@ -42,9 +47,6 @@ public class CORSHeaders {
         setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS.toString(), allowHeaders);
         setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS.toString(), defaultHeaders);
         setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_MAX_AGE.toString(), "300");
-        if (!enableCORSForAPIHasBeenSetExplicitly()) {
-            setHeaderIfNotAlreadyExists(response, "x-cors", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.enableCORSForAPI=false");
-        }
     }
 
     private void setHeaderIfNotAlreadyExists(HttpResponse response, String name, String value) {

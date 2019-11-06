@@ -3,9 +3,11 @@ package org.mockserver.mock.action;
 import com.google.common.util.concurrent.SettableFuture;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.filters.HopByHopHeaderFilter;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
@@ -28,9 +30,16 @@ public abstract class HttpForwardAction {
 
     protected HttpForwardActionResult sendRequest(HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) {
         try {
-            return new HttpForwardActionResult(httpRequest, httpClient.sendRequest(hopByHopHeaderFilter.onRequest(httpRequest), remoteAddress));
+            return new HttpForwardActionResult(httpRequest, httpClient.sendRequest(hopByHopHeaderFilter.onRequest(httpRequest), remoteAddress), remoteAddress);
         } catch (Exception e) {
-            mockServerLogger.error(httpRequest, e, "Exception forwarding request " + httpRequest);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setHttpRequest(httpRequest)
+                    .setMessageFormat("Exception forwarding request " + httpRequest)
+                    .setThrowable(e)
+            );
         }
         return notFoundFuture(httpRequest);
     }

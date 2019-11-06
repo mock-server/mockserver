@@ -23,19 +23,19 @@ import static org.mockserver.model.HttpResponse.response;
 public class ServletResponseWriter extends ResponseWriter {
     private final HttpServletResponse httpServletResponse;
     private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder = new MockServerResponseToHttpServletResponseEncoder();
-    private CORSHeaders addCORSHeaders = new CORSHeaders();
+    private static final CORSHeaders CORS_HEADERS = new CORSHeaders();
 
     public ServletResponseWriter(HttpServletResponse httpServletResponse) {
         this.httpServletResponse = httpServletResponse;
     }
 
     @Override
-    public void writeResponse(HttpRequest request, HttpResponseStatus responseStatus) {
+    public void writeResponse(final HttpRequest request, final HttpResponseStatus responseStatus) {
         writeResponse(request, responseStatus, "", "application/json");
     }
 
     @Override
-    public void writeResponse(HttpRequest request, HttpResponseStatus responseStatus, String body, String contentType) {
+    public void writeResponse(final HttpRequest request, final HttpResponseStatus responseStatus, final String body, final String contentType) {
         HttpResponse response = response()
             .withStatusCode(responseStatus.code())
             .withReasonPhrase(responseStatus.reasonPhrase())
@@ -47,14 +47,14 @@ public class ServletResponseWriter extends ResponseWriter {
     }
 
     @Override
-    public void writeResponse(HttpRequest request, HttpResponse response, boolean apiResponse) {
+    public void writeResponse(final HttpRequest request, HttpResponse response, final boolean apiResponse) {
         if (response == null) {
             response = notFoundResponse();
         }
         if (enableCORSForAllResponses()) {
-            addCORSHeaders.addCORSHeaders(request, response);
+            CORS_HEADERS.addCORSHeaders(request, response);
         } else if (apiResponse && enableCORSForAPI()) {
-            addCORSHeaders.addCORSHeaders(request, response);
+            CORS_HEADERS.addCORSHeaders(request, response);
         }
         if (apiResponse) {
             response.withHeader("version", org.mockserver.Version.getVersion());
@@ -65,9 +65,7 @@ public class ServletResponseWriter extends ResponseWriter {
             }
         }
 
-        addConnectionHeader(request, response);
-
-        mockServerResponseToHttpServletResponseEncoder.mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
+        mockServerResponseToHttpServletResponseEncoder.mapMockServerResponseToHttpServletResponse(addConnectionHeader(request, response), httpServletResponse);
     }
 
 }
