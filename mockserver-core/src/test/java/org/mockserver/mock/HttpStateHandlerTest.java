@@ -79,7 +79,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldRetrieveLogEntries() throws InterruptedException {
+    public void shouldRetrieveLogEntries() {
         // given
         httpStateHandler.log(
             new LogEntry()
@@ -126,7 +126,6 @@ public class HttpStateHandlerTest {
                 .setMessageFormat("some random {} message")
                 .setArguments("argument_one")
         );
-        MILLISECONDS.sleep(100);
 
         // when
         HttpResponse response = httpStateHandler
@@ -231,13 +230,18 @@ public class HttpStateHandlerTest {
                     NEW_LINE +
                     "\targument_one" + NEW_LINE +
                     NEW_LINE +
-                    " message" + NEW_LINE,
+                    " message" + NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\t{ }" + NEW_LINE +
+                    NEW_LINE,
                 PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
     }
 
     @Test
-    public void shouldRetrieveLogEntriesWithRequestMatcher() throws InterruptedException {
+    public void shouldRetrieveLogEntriesWithRequestMatcher() {
         // given
         httpStateHandler.log(
             new LogEntry()
@@ -283,7 +287,6 @@ public class HttpStateHandlerTest {
                 .setMessageFormat("some random {} message")
                 .setArguments("argument_one")
         );
-        MILLISECONDS.sleep(100);
 
         // when
         HttpResponse response = httpStateHandler
@@ -334,6 +337,13 @@ public class HttpStateHandlerTest {
                     "\t    \"body\" : \"response_two\"" + NEW_LINE +
                     "\t  }" + NEW_LINE +
                     "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                    "\t}" + NEW_LINE +
                     NEW_LINE,
                 PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
@@ -381,7 +391,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldClearLogsAndExpectations() throws InterruptedException {
+    public void shouldClearLogsAndExpectations() {
         // given
         httpStateHandler.add(
             new Expectation(request("request_one"))
@@ -396,7 +406,6 @@ public class HttpStateHandlerTest {
                 .setMessageFormat("some random {} message")
                 .setArguments("argument_one")
         );
-        MILLISECONDS.sleep(100);
 
         // when
         httpStateHandler
@@ -404,7 +413,6 @@ public class HttpStateHandlerTest {
                 request()
                     .withQueryStringParameter("type", "all")
             );
-        MILLISECONDS.sleep(100);
 
         // then - retrieves correct state
         assertThat(
@@ -417,6 +425,11 @@ public class HttpStateHandlerTest {
                     LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
                     NEW_LINE +
                     "\t{}" + NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{ }" + NEW_LINE +
                     NEW_LINE,
                 PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
@@ -432,7 +445,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldClearLogsAndExpectationsWithRequestMatcher() throws InterruptedException {
+    public void shouldClearLogsAndExpectationsWithRequestMatcher() {
         // given
         httpStateHandler.add(
             new Expectation(request("request_one"))
@@ -459,7 +472,6 @@ public class HttpStateHandlerTest {
                 .setMessageFormat("some random {} message")
                 .setArguments("argument_four")
         );
-        MILLISECONDS.sleep(100);
 
         // when
         httpStateHandler
@@ -468,7 +480,6 @@ public class HttpStateHandlerTest {
                     .withQueryStringParameter("type", "all")
                     .withBody(httpRequestSerializer.serialize(request("request_four")))
             );
-        MILLISECONDS.sleep(100);
 
         // then - retrieves correct state
         assertThat(
@@ -509,7 +520,12 @@ public class HttpStateHandlerTest {
                     "\t{" + NEW_LINE +
                     "\t  \"path\" : \"request_four\"" + NEW_LINE +
                     "\t}" + NEW_LINE +
-                    "" + NEW_LINE,
+                    "" + NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\t{ }" + NEW_LINE +
+                    NEW_LINE,
                 PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
         assertThat(
@@ -551,7 +567,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldClearLogsOnly() throws InterruptedException {
+    public void shouldClearLogsOnly() {
         // given
         httpStateHandler.add(
             new Expectation(request("request_one"))
@@ -566,7 +582,6 @@ public class HttpStateHandlerTest {
                 .setMessageFormat("some random {} message")
                 .setArguments("argument_one")
         );
-        MILLISECONDS.sleep(100);
 
         // when
         httpStateHandler
@@ -574,7 +589,6 @@ public class HttpStateHandlerTest {
                 request()
                     .withQueryStringParameter("type", "log")
             );
-        MILLISECONDS.sleep(100);
 
         // then - retrieves correct state
         assertThat(
@@ -587,6 +601,11 @@ public class HttpStateHandlerTest {
                     LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing logs that match:" + NEW_LINE +
                     NEW_LINE +
                     "\t{}" + NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\t{ }" + NEW_LINE +
                     NEW_LINE,
                 PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
@@ -641,7 +660,6 @@ public class HttpStateHandlerTest {
                 .setHttpError(error().withResponseBytes("response_two" .getBytes(UTF_8)))
                 .setType(EXPECTATION_RESPONSE)
         );
-        MILLISECONDS.sleep(100);
 
         // when
         httpStateHandler
@@ -650,7 +668,6 @@ public class HttpStateHandlerTest {
                     .withQueryStringParameter("type", "expectations")
                     .withBody(httpRequestSerializer.serialize(request("request_one")))
             );
-        MILLISECONDS.sleep(100);
 
         // then - correct log entries removed
         HttpResponse retrieve = httpStateHandler
@@ -685,7 +702,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldRetrieveRecordedRequestsAsJson() throws InterruptedException {
+    public void shouldRetrieveRecordedRequestsAsJson() {
         // given
         httpStateHandler.log(
             new LogEntry()
@@ -702,7 +719,6 @@ public class HttpStateHandlerTest {
                 .setHttpRequest(request("request_one"))
                 .setType(RECEIVED_REQUEST)
         );
-        MILLISECONDS.sleep(100);
 
         // when
         HttpResponse response = httpStateHandler
@@ -750,7 +766,6 @@ public class HttpStateHandlerTest {
                     .setMessageFormat("received request:{}")
                     .setArguments(request("request_one"))
             );
-        MILLISECONDS.sleep(100);
 
         // when
         HttpResponse response = httpStateHandler
@@ -780,7 +795,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldRetrieveRecordedRequestsAsJava() throws InterruptedException {
+    public void shouldRetrieveRecordedRequestsAsJava() {
         // given
         httpStateHandler.log(
             new LogEntry()
@@ -797,7 +812,6 @@ public class HttpStateHandlerTest {
                 .setHttpRequest(request("request_one"))
                 .setType(RECEIVED_REQUEST)
         );
-        MILLISECONDS.sleep(100);
 
         // when
         HttpResponse response = httpStateHandler
@@ -817,7 +831,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldRetrieveRecordedRequestResponsesAsJson() throws InterruptedException {
+    public void shouldRetrieveRecordedRequestResponsesAsJson() {
         // given
         httpStateHandler.log(
             new LogEntry()
@@ -837,7 +851,6 @@ public class HttpStateHandlerTest {
                 .setMessageFormat("returning error:{}for request:{}for action:{}")
                 .setArguments(request("request_two"), response("response_two"), response("response_two"))
         );
-        MILLISECONDS.sleep(100);
 
         // when
         HttpResponse response = httpStateHandler
@@ -872,7 +885,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldRetrieveRecordedRequestsResponsesAsLogEntries() throws InterruptedException {
+    public void shouldRetrieveRecordedRequestsResponsesAsLogEntries() {
         // given
         httpStateHandler.log(
             new LogEntry()
@@ -892,7 +905,6 @@ public class HttpStateHandlerTest {
                 .setMessageFormat("returning error:{}for request:{}for action:{}")
                 .setArguments(request("request_two"), response("response_two"), response("response_two"))
         );
-        MILLISECONDS.sleep(100);
 
         // when
         HttpResponse response = httpStateHandler
@@ -905,81 +917,81 @@ public class HttpStateHandlerTest {
 
         // then
         assertThat(response,
-            is(response().withBody("[\n" +
-                "  {\n" +
-                "    \"logLevel\" : \"INFO\",\n" +
-                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\",\n" +
-                "    \"type\" : \"EXPECTATION_NOT_MATCHED_RESPONSE\",\n" +
-                "    \"httpRequest\" : {\n" +
-                "      \"path\" : \"request_one\"\n" +
-                "    },\n" +
-                "    \"expectation\" : {\n" +
-                "      \"httpRequest\" : {\n" +
-                "        \"path\" : \"request_one\"\n" +
-                "      },\n" +
-                "      \"times\" : {\n" +
-                "        \"unlimited\" : true\n" +
-                "      },\n" +
-                "      \"timeToLive\" : {\n" +
-                "        \"unlimited\" : true\n" +
-                "      },\n" +
-                "      \"httpResponse\" : {\n" +
-                "        \"statusCode\" : 200,\n" +
-                "        \"reasonPhrase\" : \"OK\",\n" +
-                "        \"body\" : \"response_two\"\n" +
-                "      }\n" +
-                "    },\n" +
-                "    \"message\" : [\n" +
-                "      \"no expectation for:\",\n" +
-                "      \"\",\n" +
-                "      \"   {\",\n" +
-                "      \"     \\\"path\\\" : \\\"request_one\\\"\",\n" +
-                "      \"   }\",\n" +
-                "      \"\",\n" +
-                "      \" returning response:\",\n" +
-                "      \"\",\n" +
-                "      \"   {\",\n" +
-                "      \"     \\\"statusCode\\\" : 404,\",\n" +
-                "      \"     \\\"reasonPhrase\\\" : \\\"Not Found\\\"\",\n" +
-                "      \"   }\"\n" +
-                "    ]\n" +
-                "  },\n" +
-                "  {\n" +
-                "    \"logLevel\" : \"INFO\",\n" +
-                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\",\n" +
-                "    \"type\" : \"EXPECTATION_RESPONSE\",\n" +
-                "    \"httpRequest\" : {\n" +
-                "      \"path\" : \"request_two\"\n" +
-                "    },\n" +
-                "    \"httpResponse\" : {\n" +
-                "      \"statusCode\" : 200,\n" +
-                "      \"reasonPhrase\" : \"OK\",\n" +
-                "      \"body\" : \"response_two\"\n" +
-                "    },\n" +
-                "    \"message\" : [\n" +
-                "      \"returning error:\",\n" +
-                "      \"\",\n" +
-                "      \"   {\",\n" +
-                "      \"     \\\"path\\\" : \\\"request_two\\\"\",\n" +
-                "      \"   }\",\n" +
-                "      \"\",\n" +
-                "      \" for request:\",\n" +
-                "      \"\",\n" +
-                "      \"   {\",\n" +
-                "      \"     \\\"statusCode\\\" : 200,\",\n" +
-                "      \"     \\\"reasonPhrase\\\" : \\\"OK\\\",\",\n" +
-                "      \"     \\\"body\\\" : \\\"response_two\\\"\",\n" +
-                "      \"   }\",\n" +
-                "      \"\",\n" +
-                "      \" for action:\",\n" +
-                "      \"\",\n" +
-                "      \"   {\",\n" +
-                "      \"     \\\"statusCode\\\" : 200,\",\n" +
-                "      \"     \\\"reasonPhrase\\\" : \\\"OK\\\",\",\n" +
-                "      \"     \\\"body\\\" : \\\"response_two\\\"\",\n" +
-                "      \"   }\"\n" +
-                "    ]\n" +
-                "  }\n" +
+            is(response().withBody("[" + NEW_LINE +
+                "  {" + NEW_LINE +
+                "    \"logLevel\" : \"INFO\"," + NEW_LINE +
+                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
+                "    \"type\" : \"EXPECTATION_NOT_MATCHED_RESPONSE\"," + NEW_LINE +
+                "    \"httpRequest\" : {" + NEW_LINE +
+                "      \"path\" : \"request_one\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"expectation\" : {" + NEW_LINE +
+                "      \"httpRequest\" : {" + NEW_LINE +
+                "        \"path\" : \"request_one\"" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"times\" : {" + NEW_LINE +
+                "        \"unlimited\" : true" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"timeToLive\" : {" + NEW_LINE +
+                "        \"unlimited\" : true" + NEW_LINE +
+                "      }," + NEW_LINE +
+                "      \"httpResponse\" : {" + NEW_LINE +
+                "        \"statusCode\" : 200," + NEW_LINE +
+                "        \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "        \"body\" : \"response_two\"" + NEW_LINE +
+                "      }" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"message\" : [" + NEW_LINE +
+                "      \"no expectation for:\"," + NEW_LINE +
+                "      \"\"," + NEW_LINE +
+                "      \"   {\"," + NEW_LINE +
+                "      \"     \\\"path\\\" : \\\"request_one\\\"\"," + NEW_LINE +
+                "      \"   }\"," + NEW_LINE +
+                "      \"\"," + NEW_LINE +
+                "      \" returning response:\"," + NEW_LINE +
+                "      \"\"," + NEW_LINE +
+                "      \"   {\"," + NEW_LINE +
+                "      \"     \\\"statusCode\\\" : 404,\"," + NEW_LINE +
+                "      \"     \\\"reasonPhrase\\\" : \\\"Not Found\\\"\"," + NEW_LINE +
+                "      \"   }\"" + NEW_LINE +
+                "    ]" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  {" + NEW_LINE +
+                "    \"logLevel\" : \"INFO\"," + NEW_LINE +
+                "    \"timestamp\" : \"" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + "\"," + NEW_LINE +
+                "    \"type\" : \"EXPECTATION_RESPONSE\"," + NEW_LINE +
+                "    \"httpRequest\" : {" + NEW_LINE +
+                "      \"path\" : \"request_two\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"httpResponse\" : {" + NEW_LINE +
+                "      \"statusCode\" : 200," + NEW_LINE +
+                "      \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "      \"body\" : \"response_two\"" + NEW_LINE +
+                "    }," + NEW_LINE +
+                "    \"message\" : [" + NEW_LINE +
+                "      \"returning error:\"," + NEW_LINE +
+                "      \"\"," + NEW_LINE +
+                "      \"   {\"," + NEW_LINE +
+                "      \"     \\\"path\\\" : \\\"request_two\\\"\"," + NEW_LINE +
+                "      \"   }\"," + NEW_LINE +
+                "      \"\"," + NEW_LINE +
+                "      \" for request:\"," + NEW_LINE +
+                "      \"\"," + NEW_LINE +
+                "      \"   {\"," + NEW_LINE +
+                "      \"     \\\"statusCode\\\" : 200,\"," + NEW_LINE +
+                "      \"     \\\"reasonPhrase\\\" : \\\"OK\\\",\"," + NEW_LINE +
+                "      \"     \\\"body\\\" : \\\"response_two\\\"\"," + NEW_LINE +
+                "      \"   }\"," + NEW_LINE +
+                "      \"\"," + NEW_LINE +
+                "      \" for action:\"," + NEW_LINE +
+                "      \"\"," + NEW_LINE +
+                "      \"   {\"," + NEW_LINE +
+                "      \"     \\\"statusCode\\\" : 200,\"," + NEW_LINE +
+                "      \"     \\\"reasonPhrase\\\" : \\\"OK\\\",\"," + NEW_LINE +
+                "      \"     \\\"body\\\" : \\\"response_two\\\"\"," + NEW_LINE +
+                "      \"   }\"" + NEW_LINE +
+                "    ]" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "]", JSON_UTF_8).withStatusCode(200))
         );
     }
@@ -1000,7 +1012,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldRetrieveRecordedExpectationsAsJson() throws InterruptedException {
+    public void shouldRetrieveRecordedExpectationsAsJson() {
         // given
         httpStateHandler.log(
             new LogEntry()
@@ -1016,7 +1028,6 @@ public class HttpStateHandlerTest {
                 .setHttpRequest(request("request_two"))
                 .setHttpResponse(response("response_two"))
         );
-        MILLISECONDS.sleep(100);
 
         // when
         HttpResponse response = httpStateHandler
@@ -1036,7 +1047,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldRetrieveRecordedExpectationsAsJava() throws InterruptedException {
+    public void shouldRetrieveRecordedExpectationsAsJava() {
         // given
         httpStateHandler.log(
             new LogEntry()
@@ -1052,7 +1063,6 @@ public class HttpStateHandlerTest {
                 .setHttpRequest(request("request_two"))
                 .setHttpResponse(response("response_two"))
         );
-        MILLISECONDS.sleep(100);
 
         // when
         HttpResponse response = httpStateHandler
@@ -1072,7 +1082,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldRetrieveRecordedExpectationsAsJavaWithRequestMatcher() throws InterruptedException {
+    public void shouldRetrieveRecordedExpectationsAsJavaWithRequestMatcher() {
         // given
         httpStateHandler.log(
             new LogEntry()
@@ -1088,7 +1098,6 @@ public class HttpStateHandlerTest {
                 .setHttpRequest(request("request_two"))
                 .setHttpResponse(response("response_two"))
         );
-        MILLISECONDS.sleep(100);
 
         // when
         HttpResponse response = httpStateHandler
@@ -1163,7 +1172,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldReset() throws InterruptedException {
+    public void shouldReset() {
         // given
         httpStateHandler.add(
             new Expectation(request("request_one"))
@@ -1178,11 +1187,9 @@ public class HttpStateHandlerTest {
                 .setMessageFormat("some random {} message")
                 .setArguments("argument_one")
         );
-        MILLISECONDS.sleep(100);
 
         // when
         httpStateHandler.reset();
-        MILLISECONDS.sleep(100);
 
         // then - retrieves correct state
         assertThat(
@@ -1192,7 +1199,12 @@ public class HttpStateHandlerTest {
                         .withQueryStringParameter("type", "logs")
                 ),
             is(response().withBody("" +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - resetting all expectations and request logs" + NEW_LINE,
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - resetting all expectations and request logs" + NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\t{ }" + NEW_LINE +
+                    NEW_LINE,
                 PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
         assertThat(

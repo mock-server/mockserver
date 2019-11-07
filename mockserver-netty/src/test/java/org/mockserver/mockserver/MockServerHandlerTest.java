@@ -4,11 +4,13 @@ import com.google.common.collect.ImmutableSet;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockserver.lifecycle.LifeCycle;
+import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -28,6 +30,7 @@ import org.mockserver.serialization.PortBindingSerializer;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
@@ -40,6 +43,7 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.mockserver.MockServerHandler.LOCAL_HOST_HEADERS;
@@ -64,6 +68,11 @@ public class MockServerHandlerTest {
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
+
+    @BeforeClass
+    public static void fixTime() {
+        TimeService.fixedTime = true;
+    }
 
     @Before
     public void setupFixture() {
@@ -221,8 +230,6 @@ public class MockServerHandlerTest {
     public void shouldRetrieveLogMessages() throws InterruptedException {
         // given
         httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
-        MILLISECONDS.sleep(100);
-
         // when
         HttpRequest retrieveLogRequest = request("/mockserver/retrieve")
             .withMethod("PUT")
@@ -237,7 +244,7 @@ public class MockServerHandlerTest {
         assertThat(response.getStatusCode(), is(200));
         assertThat(
             response.getBodyAsString(),
-            is(endsWith("creating expectation:" + NEW_LINE +
+            is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"httpRequest\" : {" + NEW_LINE +
@@ -254,6 +261,13 @@ public class MockServerHandlerTest {
                 "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
                 "\t    \"body\" : \"response_one\"" + NEW_LINE +
                 "\t  }" + NEW_LINE +
+                "\t}" + NEW_LINE +
+                NEW_LINE +
+                "------------------------------------" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                "" + NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"path\" : \"request_one\"" + NEW_LINE +
                 "\t}" + NEW_LINE +
                 NEW_LINE))
         );

@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
+import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -24,6 +25,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.Collections;
+import java.util.Date;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -36,6 +38,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -93,8 +96,6 @@ public class ProxyServletTest {
                 .setHttpRequest(request("request_one"))
                 .setType(RECEIVED_REQUEST)
         );
-        MILLISECONDS.sleep(100);
-
         // when
         proxyServlet
             .service(
@@ -199,8 +200,6 @@ public class ProxyServletTest {
                 .setHttpResponse(response("response_one"))
                 .setType(FORWARDED_REQUEST)
         );
-        MILLISECONDS.sleep(100);
-
         // when
         MockHttpServletRequest expectationRetrieveExpectationsRequest = buildHttpServletRequest(
             "PUT",
@@ -227,8 +226,6 @@ public class ProxyServletTest {
                 .setMessageFormat("received request:{}")
                 .setArguments(request("request_one"))
         );
-        MILLISECONDS.sleep(100);
-
         // when
         MockHttpServletRequest retrieveLogRequest = buildHttpServletRequest(
             "PUT",
@@ -242,12 +239,19 @@ public class ProxyServletTest {
         assertThat(response.getStatus(), is(200));
         assertThat(
             new String(response.getContentAsByteArray(), UTF_8),
-            is(endsWith("received request:" + NEW_LINE +
-                NEW_LINE +
+            is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - received request:" + NEW_LINE +
+                "" + NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"path\" : \"request_one\"" + NEW_LINE +
                 "\t}" + NEW_LINE +
-                NEW_LINE))
+                "" + NEW_LINE +
+                "------------------------------------" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                "" + NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                "\t}" + NEW_LINE +
+                "" + NEW_LINE))
         );
     }
 

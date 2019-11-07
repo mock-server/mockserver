@@ -3,7 +3,11 @@ package org.mockserver.dashboard;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import io.netty.channel.*;
+import com.google.common.util.concurrent.SettableFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.*;
@@ -13,6 +17,7 @@ import org.mockserver.collections.CircularHashMap;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.HttpRequest;
@@ -24,7 +29,10 @@ import org.mockserver.ui.MockServerMatcherListener;
 import org.mockserver.ui.model.ValueWithKey;
 import org.slf4j.event.Level;
 
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static com.google.common.net.HttpHeaders.HOST;
@@ -169,15 +177,34 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         }
     }
 
+    private Future<List<Expectation>> retrieveRecordedExpectations(HttpRequest httpRequest) {
+        SettableFuture<List<Expectation>> settableFuture = SettableFuture.create();
+        mockServerLog.retrieveRecordedExpectations(httpRequest, settableFuture::set);
+        return settableFuture;
+    }
+
+    private Future<List<LogEntry>> retrieveRequestLogEntries(HttpRequest httpRequest) {
+        SettableFuture<List<LogEntry>> settableFuture = SettableFuture.create();
+        mockServerLog.retrieveRequestLogEntries(httpRequest, settableFuture::set);
+        return settableFuture;
+    }
+
+    private Future<List<LogEntry>> retrieveMessageLogEntries(HttpRequest httpRequest) {
+        SettableFuture<List<LogEntry>> future = SettableFuture.create();
+        mockServerLog.retrieveMessageLogEntries(httpRequest, future::set);
+        return future;
+    }
+
     private void sendUpdate(HttpRequest httpRequest, ChannelHandlerContext channelHandlerContext) {
         try {
+            // TODO(jamesdbloom) migrate this to a single Future to avoid three separate Futures
             sendMessage(channelHandlerContext, ImmutableMap.of(
                 "activeExpectations", mockServerMatcher.retrieveActiveExpectations(httpRequest).stream().map(ValueWithKey::new).collect(Collectors.toList()),
-                "recordedExpectations", mockServerLog.retrieveRecordedExpectations(httpRequest).stream().map(ValueWithKey::new).collect(Collectors.toList()),
-                "recordedRequests", mockServerLog.retrieveRequestLogEntries(httpRequest).stream().map(ValueWithKey::new).collect(Collectors.toList()),
-                "logMessages", mockServerLog.retrieveMessageLogEntries(httpRequest).stream().map(messageLogEntry -> new ValueWithKey(logEventJsonSerializer.serialize(messageLogEntry), messageLogEntry.key())).collect(Collectors.toList())
+                "recordedExpectations", retrieveRecordedExpectations(httpRequest).get().stream().map(ValueWithKey::new).collect(Collectors.toList()),
+                "recordedRequests", retrieveRequestLogEntries(httpRequest).get().stream().map(ValueWithKey::new).collect(Collectors.toList()),
+                "logMessages", retrieveMessageLogEntries(httpRequest).get().stream().map(messageLogEntry -> new ValueWithKey(logEventJsonSerializer.serialize(messageLogEntry), messageLogEntry.key())).collect(Collectors.toList())
             ));
-        } catch (JsonProcessingException jpe) {
+        } catch (JsonProcessingException | InterruptedException | ExecutionException jpe) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)

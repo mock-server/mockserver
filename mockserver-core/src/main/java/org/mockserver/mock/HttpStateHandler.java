@@ -2,6 +2,7 @@ package org.mockserver.mock;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.SettableFuture;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.log.MockServerEventLog;
@@ -21,6 +22,10 @@ import org.slf4j.event.Level;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static com.google.common.net.MediaType.*;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -182,32 +187,16 @@ public class HttpStateHandler {
     }
 
     public HttpResponse retrieve(HttpRequest request) {
-        HttpResponse response = response();
+        SettableFuture<HttpResponse> httpResponseSettableFuture = SettableFuture.create();
+        HttpResponse response = response().withStatusCode(200);
         if (request != null) {
-            HttpRequest httpRequest = null;
-            if (isNotBlank(request.getBodyAsString())) {
-                httpRequest = httpRequestSerializer.deserialize(request.getBodyAsString());
-            }
             try {
+                final HttpRequest httpRequest = isNotBlank(request.getBodyAsString()) ? httpRequestSerializer.deserialize(request.getBodyAsString()) : null;
                 Format format = Format.valueOf(StringUtils.defaultIfEmpty(request.getFirstQueryStringParameter("format").toUpperCase(), "JSON"));
                 RetrieveType retrieveType = RetrieveType.valueOf(StringUtils.defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "REQUESTS"));
                 switch (retrieveType) {
                     case LOGS: {
                         final Object[] arguments = new Object[]{(httpRequest == null ? request() : httpRequest)};
-                        List<LogEntry> logEntries = mockServerLog.retrieveMessageLogEntries(httpRequest);
-                        StringBuilder stringBuffer = new StringBuilder();
-                        for (int i = 0; i < logEntries.size(); i++) {
-                            LogEntry messageLogEntry = logEntries.get(i);
-                            stringBuffer
-                                .append(messageLogEntry.getTimestamp())
-                                .append(" - ")
-                                .append(messageLogEntry.getMessage());
-                            if (i < logEntries.size() - 1) {
-                                stringBuffer.append(LOG_SEPARATOR);
-                            }
-                        }
-                        stringBuffer.append(NEW_LINE);
-                        response.withBody(stringBuffer.toString(), PLAIN_TEXT_UTF_8);
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(RETRIEVED)
@@ -216,6 +205,22 @@ public class HttpStateHandler {
                                 .setMessageFormat("retrieving logs that match:{}")
                                 .setArguments(arguments)
                         );
+                        mockServerLog.retrieveMessageLogEntries(httpRequest, (List<LogEntry> logEntries) -> {
+                            StringBuilder stringBuffer = new StringBuilder();
+                            for (int i = 0; i < logEntries.size(); i++) {
+                                LogEntry messageLogEntry = logEntries.get(i);
+                                stringBuffer
+                                    .append(messageLogEntry.getTimestamp())
+                                    .append(" - ")
+                                    .append(messageLogEntry.getMessage());
+                                if (i < logEntries.size() - 1) {
+                                    stringBuffer.append(LOG_SEPARATOR);
+                                }
+                            }
+                            stringBuffer.append(NEW_LINE);
+                            response.withBody(stringBuffer.toString(), PLAIN_TEXT_UTF_8);
+                            httpResponseSettableFuture.set(response);
+                        });
                         break;
                     }
                     case REQUESTS: {
@@ -230,13 +235,43 @@ public class HttpStateHandler {
                         );
                         switch (format) {
                             case JAVA:
-                                response.withBody(httpRequestToJavaSerializer.serialize(mockServerLog.retrieveRequests(httpRequest)), create("application", "java").withCharset(UTF_8));
+                                mockServerLog
+                                    .retrieveRequests(
+                                        httpRequest,
+                                        requests -> {
+                                            response.withBody(
+                                                httpRequestToJavaSerializer.serialize(requests),
+                                                create("application", "java").withCharset(UTF_8)
+                                            );
+                                            httpResponseSettableFuture.set(response);
+                                        }
+                                    );
                                 break;
                             case JSON:
-                                response.withBody(httpRequestSerializer.serialize(mockServerLog.retrieveRequests(httpRequest)), JSON_UTF_8);
+                                mockServerLog
+                                    .retrieveRequests(
+                                        httpRequest,
+                                        requests -> {
+                                            response.withBody(
+                                                httpRequestSerializer.serialize(requests),
+                                                JSON_UTF_8
+                                            );
+                                            httpResponseSettableFuture.set(response);
+                                        }
+                                    );
                                 break;
                             case LOG_ENTRIES:
-                                response.withBody(logEntrySerializer.serialize(mockServerLog.retrieveRequestLogEntries(httpRequest)), JSON_UTF_8);
+                                mockServerLog
+                                    .retrieveRequestLogEntries(
+                                        httpRequest,
+                                        logEntries -> {
+                                            response.withBody(
+                                                logEntrySerializer.serialize(logEntries),
+                                                JSON_UTF_8
+                                            );
+                                            httpResponseSettableFuture.set(response);
+                                        }
+                                    );
                                 break;
                         }
                         break;
@@ -254,12 +289,33 @@ public class HttpStateHandler {
                         switch (format) {
                             case JAVA:
                                 response.withBody("JAVA not supported for REQUEST_RESPONSES", create("text", "plain").withCharset(UTF_8));
+                                httpResponseSettableFuture.set(response);
                                 break;
                             case JSON:
-                                response.withBody(httpRequestResponseSerializer.serialize(mockServerLog.retrieveRequestResponses(httpRequest)), JSON_UTF_8);
+                                mockServerLog
+                                    .retrieveRequestResponses(
+                                        httpRequest,
+                                        requests -> {
+                                            response.withBody(
+                                                httpRequestResponseSerializer.serialize(requests),
+                                                JSON_UTF_8
+                                            );
+                                            httpResponseSettableFuture.set(response);
+                                        }
+                                    );
                                 break;
                             case LOG_ENTRIES:
-                                response.withBody(logEntrySerializer.serialize(mockServerLog.retrieveRequestResponseMessageLogEntries(httpRequest)), JSON_UTF_8);
+                                mockServerLog
+                                    .retrieveRequestResponseMessageLogEntries(
+                                        httpRequest,
+                                        logEntries -> {
+                                            response.withBody(
+                                                logEntrySerializer.serialize(logEntries),
+                                                JSON_UTF_8
+                                            );
+                                            httpResponseSettableFuture.set(response);
+                                        }
+                                    );
                                 break;
                         }
                         break;
@@ -276,13 +332,43 @@ public class HttpStateHandler {
                         );
                         switch (format) {
                             case JAVA:
-                                response.withBody(expectationToJavaSerializer.serialize(mockServerLog.retrieveRecordedExpectations(httpRequest)), create("application", "java").withCharset(UTF_8));
+                                mockServerLog
+                                    .retrieveRecordedExpectations(
+                                        httpRequest,
+                                        requests -> {
+                                            response.withBody(
+                                                expectationToJavaSerializer.serialize(requests),
+                                                create("application", "java").withCharset(UTF_8)
+                                            );
+                                            httpResponseSettableFuture.set(response);
+                                        }
+                                    );
                                 break;
                             case JSON:
-                                response.withBody(expectationSerializer.serialize(mockServerLog.retrieveRecordedExpectations(httpRequest)), JSON_UTF_8);
+                                mockServerLog
+                                    .retrieveRecordedExpectations(
+                                        httpRequest,
+                                        requests -> {
+                                            response.withBody(
+                                                expectationSerializer.serialize(requests),
+                                                JSON_UTF_8
+                                            );
+                                            httpResponseSettableFuture.set(response);
+                                        }
+                                    );
                                 break;
                             case LOG_ENTRIES:
-                                response.withBody(logEntrySerializer.serialize(mockServerLog.retrieveRecordedExpectationLogEntries(httpRequest)), JSON_UTF_8);
+                                mockServerLog
+                                    .retrieveRecordedExpectationLogEntries(
+                                        httpRequest,
+                                        logEntries -> {
+                                            response.withBody(
+                                                logEntrySerializer.serialize(logEntries),
+                                                JSON_UTF_8
+                                            );
+                                            httpResponseSettableFuture.set(response);
+                                        }
+                                    );
                                 break;
                         }
                         break;
@@ -309,37 +395,51 @@ public class HttpStateHandler {
                                 response.withBody("LOG_ENTRIES not supported for ACTIVE_EXPECTATIONS", create("text", "plain").withCharset(UTF_8));
                                 break;
                         }
+                        httpResponseSettableFuture.set(response);
                         break;
                     }
                 }
+
+                try {
+                    return httpResponseSettableFuture.get();
+                } catch (ExecutionException | InterruptedException e) {
+                    throw new RuntimeException("Exception retrieving state for " + request, e);
+                }
             } catch (IllegalArgumentException iae) {
                 if (iae.getMessage().contains(RetrieveType.class.getSimpleName())) {
-                    throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Lists.transform(Arrays.asList(RetrieveType.values()), new Function<RetrieveType, String>() {
-                        public String apply(RetrieveType input) {
-                            return input.name().toLowerCase();
-                        }
-                    }));
+                    throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Arrays.stream(RetrieveType.values()).map(input -> input.name().toLowerCase()).collect(Collectors.toList()));
                 } else {
-                    throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("format") + "\" is not a valid value for \"format\" parameter, only the following values are supported " + Lists.transform(Arrays.asList(Format.values()), new Function<Format, String>() {
-                        public String apply(Format input) {
-                            return input.name().toLowerCase();
-                        }
-                    }));
+                    throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("format") + "\" is not a valid value for \"format\" parameter, only the following values are supported " + Arrays.stream(Format.values()).map(input -> input.name().toLowerCase()).collect(Collectors.toList()));
                 }
             }
+        } else {
+            return response().withStatusCode(200);
         }
-        return response.withStatusCode(200);
     }
 
-    public String verify(Verification verification) {
-        return mockServerLog.verify(verification);
+    public Future<String> verify(Verification verification) {
+        SettableFuture<String> result = SettableFuture.create();
+        mockServerLog.verify(verification, result::set);
+        return result;
     }
 
-    public String verify(VerificationSequence verification) {
-        return mockServerLog.verify(verification);
+    public void verify(Verification verification, Consumer<String> resultConsumer) {
+        mockServerLog.verify(verification, resultConsumer);
+    }
+
+    public Future<String> verify(VerificationSequence verification) {
+        SettableFuture<String> result = SettableFuture.create();
+        mockServerLog.verify(verification, result::set);
+        return result;
+    }
+
+    public void verify(VerificationSequence verification, Consumer<String> resultConsumer) {
+        mockServerLog.verify(verification, resultConsumer);
     }
 
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
+        SettableFuture<Boolean> canHandle = SettableFuture.create();
+
         mockServerLogger.logEvent(
             new LogEntry()
                 .setType(LogEntry.LogMessageType.TRACE)
@@ -357,20 +457,24 @@ public class HttpStateHandler {
                 }
             }
             responseWriter.writeResponse(request, CREATED);
+            canHandle.set(true);
 
         } else if (request.matches("PUT", PATH_PREFIX + "/clear", "/clear")) {
 
             clear(request);
             responseWriter.writeResponse(request, OK);
+            canHandle.set(true);
 
         } else if (request.matches("PUT", PATH_PREFIX + "/reset", "/reset")) {
 
             reset();
             responseWriter.writeResponse(request, OK);
+            canHandle.set(true);
 
         } else if (request.matches("PUT", PATH_PREFIX + "/retrieve", "/retrieve")) {
 
             responseWriter.writeResponse(request, retrieve(request), true);
+            canHandle.set(true);
 
         } else if (request.matches("PUT", PATH_PREFIX + "/verify", "/verify")) {
 
@@ -383,12 +487,15 @@ public class HttpStateHandler {
                     .setMessageFormat("verifying requests that match:{}")
                     .setArguments(verification)
             );
-            String result = verify(verification);
-            if (StringUtils.isEmpty(result)) {
-                responseWriter.writeResponse(request, ACCEPTED);
-            } else {
-                responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
-            }
+            verify(verification, result -> {
+                if (StringUtils.isEmpty(result)) {
+                    responseWriter.writeResponse(request, ACCEPTED);
+
+                } else {
+                    responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
+                }
+                canHandle.set(true);
+            });
 
         } else if (request.matches("PUT", PATH_PREFIX + "/verifySequence", "/verifySequence")) {
 
@@ -401,17 +508,24 @@ public class HttpStateHandler {
                     .setMessageFormat("verifying sequence that match:{}")
                     .setArguments(verificationSequence)
             );
-            String result = verify(verificationSequence);
-            if (StringUtils.isEmpty(result)) {
-                responseWriter.writeResponse(request, ACCEPTED);
-            } else {
-                responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
-            }
+            verify(verificationSequence, result -> {
+                if (StringUtils.isEmpty(result)) {
+                    responseWriter.writeResponse(request, ACCEPTED);
+                } else {
+                    responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
+                }
+                canHandle.set(true);
+            });
 
         } else {
+            canHandle.set(false);
+        }
+
+        try {
+            return canHandle.get();
+        } catch (InterruptedException | ExecutionException ignore) {
             return false;
         }
-        return true;
     }
 
     private boolean validateSupportedFeatures(Expectation expectation, HttpRequest request, ResponseWriter responseWriter) {

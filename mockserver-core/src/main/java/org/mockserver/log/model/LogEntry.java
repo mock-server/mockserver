@@ -15,6 +15,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.model.HttpRequest.request;
@@ -34,6 +37,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     private HttpError httpError;
     private Expectation expectation;
     private Throwable throwable;
+    private Runnable consumer;
 
     private String messageFormat;
     private Object[] arguments;
@@ -52,6 +56,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         httpError = null;
         expectation = null;
         throwable = null;
+        consumer = null;
         messageFormat = null;
         arguments = null;
         message = null;
@@ -111,7 +116,11 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     }
 
     public HttpRequest getHttpRequest() {
-        return httpRequests.get(0);
+        if (httpRequests != null) {
+            return httpRequests.get(0);
+        } else {
+            return null;
+        }
     }
 
     public HttpResponse getHttpResponse() {
@@ -147,6 +156,15 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     public LogEntry setThrowable(Throwable throwable) {
         this.throwable = throwable;
+        return this;
+    }
+
+    public Runnable getConsumer() {
+        return consumer;
+    }
+
+    public LogEntry setConsumer(Runnable consumer) {
+        this.consumer = consumer;
         return this;
     }
 
@@ -192,7 +210,8 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
             .setExpectation(getExpectation())
             .setMessageFormat(getMessageFormat())
             .setArguments(getArguments())
-            .setThrowable(getThrowable());
+            .setThrowable(getThrowable())
+            .setConsumer(getConsumer());
     }
 
     @Override
@@ -207,11 +226,13 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
             .setExpectation(getExpectation())
             .setMessageFormat(getMessageFormat())
             .setArguments(getArguments())
-            .setThrowable(getThrowable());
+            .setThrowable(getThrowable())
+            .setConsumer(getConsumer());
         clear();
     }
 
     public enum LogMessageType {
+        RUNNABLE,
         TRACE,
         DEBUG,
         INFO,

@@ -233,8 +233,6 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             )
         );
 
-        MILLISECONDS.sleep(100);
-
         // then - verify request
         mockServerClient
             .verify(

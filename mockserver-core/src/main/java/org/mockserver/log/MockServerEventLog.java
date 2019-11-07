@@ -1,5 +1,6 @@
 package org.mockserver.log;
 
+import com.google.common.util.concurrent.SettableFuture;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -24,16 +25,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockserver.configuration.ConfigurationProperties.requestLogSize;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.logging.MockServerLogger.writeToSystemOut;
@@ -113,7 +116,11 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         disruptor.setDefaultExceptionHandler(errorHandler);
 
         disruptor.handleEventsWith((logEntry, sequence, endOfBatch) -> {
-            processLogEntry(logEntry);
+            if (logEntry.getType() != RUNNABLE) {
+                processLogEntry(logEntry);
+            } else {
+                logEntry.getConsumer().run();
+            }
         });
 
         disruptor.start();
@@ -131,157 +138,227 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public void reset() {
-        requestLog.clear();
-        notifyListeners(this);
+        SettableFuture<String> future = SettableFuture.create();
+        disruptor.publishEvent(new LogEntry()
+            .setType(RUNNABLE)
+            .setConsumer(() -> {
+                requestLog.clear();
+                future.set("done");
+                notifyListeners(this);
+            })
+        );
+        try {
+            future.get(2, SECONDS);
+        } catch (ExecutionException | InterruptedException | TimeoutException ignore) {
+        }
     }
 
     public void clear(HttpRequest httpRequest) {
-        if (httpRequest != null) {
-            HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-            for (LogEntry logEntry : new LinkedList<>(requestLog)) {
-                List<HttpRequest> requests = logEntry.getHttpRequests();
-                boolean matches = false;
-                for (HttpRequest request : requests) {
-                    if (requestMatcher.matches(request)) {
-                        matches = true;
-                    }
-                }
-                if (matches) {
-                    requestLog.remove(logEntry);
-                }
-            }
-        } else {
-            reset();
-        }
-        notifyListeners(this);
-    }
-
-    public List<LogEntry> retrieveMessageLogEntries(HttpRequest httpRequest) {
-        return retrieveLogEntries(httpRequest, logEntry -> true);
-    }
-
-    public List<LogEntry> retrieveRequestLogEntries(HttpRequest httpRequest) {
-        return retrieveLogEntries(httpRequest, requestLogPredicate);
-    }
-
-    public List<HttpRequest> retrieveRequests(HttpRequest httpRequest) {
-        List<HttpRequest> httpRequests = new ArrayList<>();
-        retrieveLogEntries(httpRequest, requestLogPredicate, logEntryToRequest).forEach(httpRequests::addAll);
-        return httpRequests;
-    }
-
-    public List<LogEntry> retrieveRequestResponseMessageLogEntries(HttpRequest httpRequest) {
-        return retrieveLogEntries(httpRequest, requestResponseLogPredicate);
-    }
-
-    public List<HttpRequestAndHttpResponse> retrieveRequestResponses(HttpRequest httpRequest) {
-        return retrieveLogEntries(httpRequest, requestResponseLogPredicate, logEntryToHttpRequestAndHttpResponse);
-    }
-
-    public List<LogEntry> retrieveRecordedExpectationLogEntries(HttpRequest httpRequest) {
-        return retrieveLogEntries(httpRequest, recordedExpectationLogPredicate);
-    }
-
-    public List<Expectation> retrieveRecordedExpectations(HttpRequest httpRequest) {
-        return retrieveLogEntries(httpRequest, recordedExpectationLogPredicate, logEntryToExpectation);
-    }
-
-    private List<LogEntry> retrieveLogEntries(HttpRequest httpRequest, Predicate<LogEntry> logEntryPredicate) {
-        HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-        return this.requestLog
-            .stream()
-            .filter(logEntry ->
-                logEntry
-                    .getHttpRequests()
-                    .stream()
-                    .anyMatch(request -> logEntryPredicate.test(logEntry) && httpRequestMatcher.matches(request))
-            )
-            .collect(Collectors.toList());
-    }
-
-    private <T> List<T> retrieveLogEntries(HttpRequest httpRequest, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper) {
-        HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-        try {
-            //TODO(jamesdbloom) fix wait for disruptor to update here
-            MILLISECONDS.sleep(10);
-        } catch (InterruptedException ignore) {
-            // ignore
-        }
-        return this.requestLog
-            .stream()
-            .filter(logEntry ->
-                logEntry
-                    .getHttpRequests()
-                    .stream()
-                    .anyMatch(request -> logEntryPredicate.test(logEntry) && httpRequestMatcher.matches(request))
-            )
-            .map(logEntryMapper)
-            .collect(Collectors.toList());
-    }
-
-    public String verify(Verification verification) {
-        String failureMessage = "";
-
-        if (verification != null) {
-            if (!verification.getTimes().matches(retrieveRequests(verification.getHttpRequest()).size())) {
-                List<HttpRequest> allRequestsArray = retrieveRequests(null);
-                String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verification.getHttpRequest());
-                String serializedAllRequestInLog = allRequestsArray.size() == 1 ? httpRequestSerializer.serialize(true, allRequestsArray.get(0)) : httpRequestSerializer.serialize(true, allRequestsArray);
-                failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
-                final Object[] arguments = new Object[]{verification.getHttpRequest(), allRequestsArray.size() == 1 ? allRequestsArray.get(0) : allRequestsArray};
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(VERIFICATION_FAILED)
-                        .setLogLevel(Level.INFO)
-                        .setHttpRequest(verification.getHttpRequest())
-                        .setMessageFormat("request not found " + verification.getTimes() + ", expected:{}but was:{}")
-                        .setArguments(arguments)
-                );
-            }
-        }
-
-        return failureMessage;
-    }
-
-    public String verify(VerificationSequence verificationSequence) {
-        List<HttpRequest> requestLog = retrieveRequests(null);
-
-        String failureMessage = "";
-
-        if (verificationSequence != null) {
-
-            int requestLogCounter = 0;
-
-            for (HttpRequest verificationHttpRequest : verificationSequence.getHttpRequests()) {
-                if (verificationHttpRequest != null) {
-                    HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verificationHttpRequest);
-                    boolean foundRequest = false;
-                    for (; !foundRequest && requestLogCounter < requestLog.size(); requestLogCounter++) {
-                        if (httpRequestMatcher.matches(requestLog.get(requestLogCounter))) {
-                            // move on to next request
-                            foundRequest = true;
+        SettableFuture<String> future = SettableFuture.create();
+        disruptor.publishEvent(new LogEntry()
+            .setType(RUNNABLE)
+            .setConsumer(() -> {
+                if (httpRequest != null) {
+                    HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+                    for (LogEntry logEntry : new LinkedList<>(requestLog)) {
+                        List<HttpRequest> requests = logEntry.getHttpRequests();
+                        boolean matches = false;
+                        for (HttpRequest request : requests) {
+                            if (requestMatcher.matches(request)) {
+                                matches = true;
+                            }
+                        }
+                        if (matches) {
+                            requestLog.remove(logEntry);
                         }
                     }
-                    if (!foundRequest) {
-                        String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verificationSequence.getHttpRequests());
-                        String serializedAllRequestInLog = requestLog.size() == 1 ? httpRequestSerializer.serialize(true, requestLog.get(0)) : httpRequestSerializer.serialize(true, requestLog);
-                        failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
-                        final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), requestLog.size() == 1 ? requestLog.get(0) : requestLog};
+                } else {
+                    requestLog.clear();
+                }
+                future.set("done");
+                notifyListeners(this);
+            })
+        );
+        try {
+            future.get(2, SECONDS);
+        } catch (ExecutionException | InterruptedException | TimeoutException ignore) {
+        }
+    }
+
+    public void retrieveMessageLogEntries(HttpRequest httpRequest, Consumer<List<LogEntry>> listConsumer) {
+        retrieveLogEntries(
+            httpRequest,
+            logEntry -> true,
+            (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.collect(Collectors.toList()))
+        );
+    }
+
+    public void retrieveRequestLogEntries(HttpRequest httpRequest, Consumer<List<LogEntry>> listConsumer) {
+        retrieveLogEntries(
+            httpRequest,
+            requestLogPredicate,
+            (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.collect(Collectors.toList()))
+        );
+    }
+
+    public void retrieveRequests(HttpRequest httpRequest, Consumer<List<HttpRequest>> listConsumer) {
+        retrieveLogEntries(
+            httpRequest,
+            requestLogPredicate,
+            logEntryToRequest,
+            logEventStream -> listConsumer.accept(logEventStream.flatMap(Collection::stream).collect(Collectors.toList()))
+        );
+    }
+
+    public void retrieveRequestResponseMessageLogEntries(HttpRequest httpRequest, Consumer<List<LogEntry>> listConsumer) {
+        retrieveLogEntries(
+            httpRequest,
+            requestResponseLogPredicate,
+            (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.collect(Collectors.toList()))
+        );
+    }
+
+    public void retrieveRequestResponses(HttpRequest httpRequest, Consumer<List<HttpRequestAndHttpResponse>> listConsumer) {
+        retrieveLogEntries(
+            httpRequest,
+            requestResponseLogPredicate,
+            logEntryToHttpRequestAndHttpResponse,
+            logEventStream -> listConsumer.accept(logEventStream.collect(Collectors.toList()))
+        );
+    }
+
+    public void retrieveRecordedExpectationLogEntries(HttpRequest httpRequest, Consumer<List<LogEntry>> listConsumer) {
+        retrieveLogEntries(
+            httpRequest,
+            recordedExpectationLogPredicate,
+            (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.collect(Collectors.toList()))
+        );
+    }
+
+    public void retrieveRecordedExpectations(HttpRequest httpRequest, Consumer<List<Expectation>> listConsumer) {
+        retrieveLogEntries(
+            httpRequest,
+            recordedExpectationLogPredicate,
+            logEntryToExpectation,
+            logEventStream -> listConsumer.accept(logEventStream.collect(Collectors.toList()))
+        );
+    }
+
+    private void retrieveLogEntries(HttpRequest httpRequest, Predicate<LogEntry> logEntryPredicate, Consumer<Stream<LogEntry>> consumer) {
+        disruptor.publishEvent(new LogEntry()
+            .setType(RUNNABLE)
+            .setConsumer(() -> {
+                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+                consumer.accept(this.requestLog
+                    .stream()
+                    .filter(logItem ->
+                        logItem
+                            .getHttpRequests()
+                            .stream()
+                            .anyMatch(httpRequestMatcher::matches)
+                    )
+                    .filter(logEntryPredicate)
+                );
+            })
+        );
+    }
+
+    private <T> void retrieveLogEntries(HttpRequest httpRequest, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Stream<T>> consumer) {
+        disruptor.publishEvent(new LogEntry()
+            .setType(RUNNABLE)
+            .setConsumer(() -> {
+                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+                consumer.accept(this.requestLog
+                    .stream()
+                    .filter(logItem ->
+                        logItem
+                            .getHttpRequests()
+                            .stream()
+                            .anyMatch(httpRequestMatcher::matches)
+                    )
+                    .filter(logEntryPredicate)
+                    .map(logEntryMapper)
+                );
+            })
+        );
+    }
+
+    public Future<String> verify(Verification verification) {
+        SettableFuture<String> result = SettableFuture.create();
+        verify(verification, result::set);
+        return result;
+    }
+
+    public void verify(Verification verification, Consumer<String> resultConsumer) {
+        if (verification != null) {
+            retrieveRequests(verification.getHttpRequest(), httpRequests -> {
+                if (!verification.getTimes().matches(httpRequests.size())) {
+                    retrieveRequests(null, allRequestsArray -> {
+                        String failureMessage = "";
+                        String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verification.getHttpRequest());
+                        String serializedAllRequestInLog = allRequestsArray.size() == 1 ? httpRequestSerializer.serialize(true, allRequestsArray.get(0)) : httpRequestSerializer.serialize(true, allRequestsArray);
+                        failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                        final Object[] arguments = new Object[]{verification.getHttpRequest(), allRequestsArray.size() == 1 ? allRequestsArray.get(0) : allRequestsArray};
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(VERIFICATION_FAILED)
                                 .setLogLevel(Level.INFO)
-                                .setHttpRequests(verificationSequence.getHttpRequests())
-                                .setMessageFormat("request sequence not found, expected:{}but was:{}")
+                                .setHttpRequest(verification.getHttpRequest())
+                                .setMessageFormat("request not found " + verification.getTimes() + ", expected:{}but was:{}")
                                 .setArguments(arguments)
                         );
-                        break;
+                        resultConsumer.accept(failureMessage);
+                    });
+                } else {
+                    resultConsumer.accept("");
+                }
+            });
+        } else {
+            resultConsumer.accept("");
+        }
+    }
+
+    public Future<String> verify(VerificationSequence verification) {
+        SettableFuture<String> result = SettableFuture.create();
+        verify(verification, result::set);
+        return result;
+    }
+
+    public void verify(VerificationSequence verificationSequence, Consumer<String> resultConsumer) {
+        retrieveRequests(null, requestLog -> {
+            String failureMessage = "";
+            if (verificationSequence != null) {
+                int requestLogCounter = 0;
+                for (HttpRequest verificationHttpRequest : verificationSequence.getHttpRequests()) {
+                    if (verificationHttpRequest != null) {
+                        HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verificationHttpRequest);
+                        boolean foundRequest = false;
+                        for (; !foundRequest && requestLogCounter < requestLog.size(); requestLogCounter++) {
+                            if (httpRequestMatcher.matches(requestLog.get(requestLogCounter))) {
+                                // move on to next request
+                                foundRequest = true;
+                            }
+                        }
+                        if (!foundRequest) {
+                            String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verificationSequence.getHttpRequests());
+                            String serializedAllRequestInLog = requestLog.size() == 1 ? httpRequestSerializer.serialize(true, requestLog.get(0)) : httpRequestSerializer.serialize(true, requestLog);
+                            failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
+                            final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), requestLog.size() == 1 ? requestLog.get(0) : requestLog};
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(VERIFICATION_FAILED)
+                                    .setLogLevel(Level.INFO)
+                                    .setHttpRequests(verificationSequence.getHttpRequests())
+                                    .setMessageFormat("request sequence not found, expected:{}but was:{}")
+                                    .setArguments(arguments)
+                            );
+                            break;
+                        }
                     }
                 }
             }
-        }
-
-        return failureMessage;
+            resultConsumer.accept(failureMessage);
+        });
     }
 
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
