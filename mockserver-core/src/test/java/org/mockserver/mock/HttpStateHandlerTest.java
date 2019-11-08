@@ -644,7 +644,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldClearExpectationsOnly() throws InterruptedException, JsonProcessingException {
+    public void shouldClearExpectationsOnly() {
         // given
         httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
         httpStateHandler.add(new Expectation(request("request_two")).thenRespond(response("response_two")));
@@ -737,7 +737,7 @@ public class HttpStateHandlerTest {
     }
 
     @Test
-    public void shouldRetrieveRecordedRequestsAsLogEntries() throws JsonProcessingException, InterruptedException {
+    public void shouldRetrieveRecordedRequestsAsLogEntries() {
         // given
         httpStateHandler
             .log(

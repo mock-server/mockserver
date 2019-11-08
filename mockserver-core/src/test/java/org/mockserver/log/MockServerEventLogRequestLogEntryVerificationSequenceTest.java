@@ -20,7 +20,7 @@ import static org.mockserver.model.HttpRequest.request;
 /**
  * @author jamesdbloom
  */
-public class LogFilterRequestLogEntryVerificationSequenceTest {
+public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
 
     private static Scheduler scheduler = new Scheduler(new MockServerLogger());
     private MockServerEventLog mockServerEventLog;
