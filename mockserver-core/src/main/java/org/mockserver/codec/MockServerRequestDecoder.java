@@ -27,11 +27,14 @@ import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
  */
 public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRequest> {
 
-    public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerResponseEncoder.class);
+    private final MockServerLogger mockServerLogger;
     private final boolean isSecure;
+    private final BodyDecoderEncoder bodyDecoderEncoder;
 
-    public MockServerRequestDecoder(boolean isSecure) {
+    public MockServerRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure) {
+        this.mockServerLogger = mockServerLogger;
         this.isSecure = isSecure;
+        this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
     }
 
     @Override
@@ -58,7 +61,7 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
                 httpRequest.withSecure(isSecure);
             }
         } catch (Throwable throwable) {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
@@ -83,7 +86,7 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         try {
             parameters.withEntries(queryStringDecoder.parameters());
         } catch (IllegalArgumentException iae) {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
@@ -120,6 +123,6 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
     }
 
     private void setBody(HttpRequest httpRequest, FullHttpRequest fullHttpRequest) {
-        httpRequest.withBody(BodyDecoderEncoder.byteBufToBody(fullHttpRequest.content(), fullHttpRequest.headers().get(CONTENT_TYPE)));
+        httpRequest.withBody(bodyDecoderEncoder.byteBufToBody(fullHttpRequest.content(), fullHttpRequest.headers().get(CONTENT_TYPE)));
     }
 }

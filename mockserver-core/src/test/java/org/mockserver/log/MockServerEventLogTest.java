@@ -43,8 +43,8 @@ public class MockServerEventLogTest {
     @Before
     public void setupTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
-        HttpStateHandler httpStateHandler = new HttpStateHandler(scheduler);
-        mockServerLogger = new MockServerLogger(httpStateHandler);
+        HttpStateHandler httpStateHandler = new HttpStateHandler(new MockServerLogger(), scheduler);
+        mockServerLogger = httpStateHandler.getMockServerLogger();
         mockServerEventLog = httpStateHandler.getMockServerLog();
     }
 

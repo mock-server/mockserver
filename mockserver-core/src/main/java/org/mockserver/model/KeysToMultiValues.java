@@ -5,6 +5,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import org.apache.commons.lang3.ArrayUtils;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
+import org.mockserver.logging.MockServerLogger;
 
 import java.util.*;
 
@@ -18,8 +19,8 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     private final ListMultimap<NottableString, NottableString> listMultimap = LinkedListMultimap.create();
     private final K k = (K) this;
 
-    private CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(final List<T> entries) {
-        CaseInsensitiveRegexMultiMap caseInsensitiveRegexMultiMap = new CaseInsensitiveRegexMultiMap();
+    private CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, final List<T> entries) {
+        CaseInsensitiveRegexMultiMap caseInsensitiveRegexMultiMap = new CaseInsensitiveRegexMultiMap(mockServerLogger);
         if (entries != null) {
             for (KeyToMultiValue keyToMultiValue : entries) {
                 for (NottableString value : keyToMultiValue.getValues()) {
@@ -212,8 +213,8 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         return false;
     }
 
-    public CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap() {
-        return toCaseInsensitiveRegexMultiMap(this.getEntries());
+    public CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger) {
+        return toCaseInsensitiveRegexMultiMap(mockServerLogger, this.getEntries());
     }
 
     public boolean isEmpty() {

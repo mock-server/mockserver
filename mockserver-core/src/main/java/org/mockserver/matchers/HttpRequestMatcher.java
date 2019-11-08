@@ -44,7 +44,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private BooleanMatcher sslMatcher = null;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
-    public HttpRequestMatcher(HttpRequest httpRequest, MockServerLogger mockServerLogger) {
+    public HttpRequestMatcher(MockServerLogger mockServerLogger, HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
         this.mockServerLogger = mockServerLogger;
         if (httpRequest != null) {

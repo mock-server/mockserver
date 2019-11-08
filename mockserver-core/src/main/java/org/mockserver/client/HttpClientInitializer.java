@@ -64,7 +64,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
         pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-        pipeline.addLast(new MockServerClientCodec());
+        pipeline.addLast(new MockServerClientCodec(mockServerLogger));
 
         pipeline.addLast(httpClientHandler);
     }

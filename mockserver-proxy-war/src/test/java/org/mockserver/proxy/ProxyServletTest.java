@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.Date;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.codec.Charsets.UTF_8;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -55,7 +54,7 @@ public class ProxyServletTest {
 
     private HttpStateHandler httpStateHandler;
     private ActionHandler mockActionHandler;
-    private MockServerLogger mockLogFormatter;
+    private MockServerLogger mockServerLogger;
     private Scheduler scheduler;
 
     @InjectMocks
@@ -66,10 +65,10 @@ public class ProxyServletTest {
     @Before
     public void setupFixture() {
         mockActionHandler = mock(ActionHandler.class);
-        mockLogFormatter = mock(MockServerLogger.class);
+        mockServerLogger = mock(MockServerLogger.class);
         scheduler = mock(Scheduler.class);
 
-        httpStateHandler = spy(new HttpStateHandler(scheduler));
+        httpStateHandler = spy(new HttpStateHandler(new MockServerLogger(), scheduler));
         response = new MockHttpServletResponse();
         proxyServlet = new ProxyServlet();
 

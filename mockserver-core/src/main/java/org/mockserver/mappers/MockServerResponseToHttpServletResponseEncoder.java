@@ -2,6 +2,7 @@ package org.mockserver.mappers;
 
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.Base64Converter;
 import org.mockserver.model.*;
 import org.mockserver.streams.IOStreamUtils;
@@ -17,6 +18,11 @@ import static io.netty.handler.codec.http.HttpHeaderNames.*;
 public class MockServerResponseToHttpServletResponseEncoder {
 
     private final Base64Converter base64Converter = new Base64Converter();
+    private final ContentTypeMapper contentTypeMapper;
+
+    public MockServerResponseToHttpServletResponseEncoder(MockServerLogger mockServerLogger) {
+        contentTypeMapper = new ContentTypeMapper(mockServerLogger);
+    }
 
     public void mapMockServerResponseToHttpServletResponse(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         setStatusCode(httpResponse, httpServletResponse);
@@ -67,7 +73,7 @@ public class MockServerResponseToHttpServletResponseEncoder {
             if (httpResponse.getBody() instanceof BinaryBody) {
                 IOStreamUtils.writeToOutputStream(base64Converter.base64StringToBytes(httpResponse.getBodyAsString()), httpServletResponse);
             } else {
-                Charset bodyCharset = httpResponse.getBody().getCharset(ContentTypeMapper.getCharsetFromContentTypeHeader(httpResponse.getFirstHeader(CONTENT_TYPE.toString())));
+                Charset bodyCharset = httpResponse.getBody().getCharset(contentTypeMapper.getCharsetFromContentTypeHeader(httpResponse.getFirstHeader(CONTENT_TYPE.toString())));
                 IOStreamUtils.writeToOutputStream(httpResponse.getBodyAsString().getBytes(bodyCharset), httpServletResponse);
             }
         }

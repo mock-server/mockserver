@@ -64,7 +64,7 @@ public class MockServerServletTest {
     public void setupFixture() {
         mockActionHandler = mock(ActionHandler.class);
         scheduler = mock(Scheduler.class);
-        httpStateHandler = spy(new HttpStateHandler(scheduler));
+        httpStateHandler = spy(new HttpStateHandler(new MockServerLogger(), scheduler));
         response = new MockHttpServletResponse();
         mockServerServlet = new MockServerServlet();
 

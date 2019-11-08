@@ -5,6 +5,7 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.codec.mappers.MockServerHttpRequestToFullHttpRequest;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
@@ -23,6 +24,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * @author jamesdbloom
  */
 public class HttpRequestToCurlSerializer {
+
+    private final MockServerLogger mockServerLogger;
+
+    public HttpRequestToCurlSerializer(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+    }
 
     public String toCurl(HttpRequest request) {
         return toCurl(request, null);
@@ -75,7 +82,7 @@ public class HttpRequestToCurlSerializer {
     }
 
     private String getUri(HttpRequest request) {
-        String uri = new MockServerHttpRequestToFullHttpRequest().getURI(request);
+        String uri = new MockServerHttpRequestToFullHttpRequest(mockServerLogger).getURI(request);
         if (isBlank(uri)) {
             uri = "/";
         } else if (!StringUtils.startsWith(uri, "/")) {

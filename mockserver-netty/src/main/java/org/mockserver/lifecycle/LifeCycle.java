@@ -9,6 +9,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
@@ -39,11 +40,12 @@ public abstract class LifeCycle implements Stoppable {
     protected HttpStateHandler httpStateHandler;
     protected ServerBootstrap serverServerBootstrap;
     private List<Future<Channel>> serverChannelFutures = new ArrayList<>();
-    private Scheduler scheduler = new Scheduler();
+    private Scheduler scheduler;
 
     protected LifeCycle() {
-        this.httpStateHandler = new HttpStateHandler(scheduler);
-        this.mockServerLogger = httpStateHandler.getMockServerLogger();
+        this.mockServerLogger =  new MockServerLogger(MockServerEventLog.class);
+        this.scheduler = new Scheduler(this.mockServerLogger);
+        this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
     }
 
     public void stop() {

@@ -26,7 +26,7 @@ import static org.mockserver.verify.VerificationTimes.exactly;
  */
 public class LogFilterRequestLogEntryVerificationTest {
 
-    private static Scheduler scheduler = new Scheduler();
+    private static Scheduler scheduler = new Scheduler(new MockServerLogger());
     private MockServerEventLog mockServerEventLog;
 
     @Before

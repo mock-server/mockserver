@@ -40,6 +40,7 @@ import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpTemplate.template;
 import static org.slf4j.event.Level.INFO;
@@ -75,7 +76,7 @@ public class ActionHandlerTest {
     @Mock
     private MockServerLogger mockServerLogger;
     @Spy
-    private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+    private HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
     @Mock
     private NettyHttpClient mockNettyHttpClient;
     private HttpStateHandler mockHttpStateHandler;
@@ -101,7 +102,7 @@ public class ActionHandlerTest {
     @Before
     public void setupMocks() {
         mockHttpStateHandler = mock(HttpStateHandler.class);
-        scheduler = spy(new Scheduler());
+        scheduler = spy(new Scheduler(mockServerLogger));
         when(mockHttpStateHandler.getScheduler()).thenReturn(scheduler);
         when(mockHttpStateHandler.getUniqueLoopPreventionHeaderValue()).thenReturn("MockServer_" + UUID.randomUUID().toString());
         actionHandler = new ActionHandler(null, mockHttpStateHandler, null);
@@ -166,7 +167,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
 
         // then
         verify(mockHttpResponseTemplateActionHandler).handle(template, request);
@@ -192,6 +193,49 @@ public class ActionHandlerTest {
     }
 
     @Test
+    public void shouldHandleResponseTemplateActionException() {
+        // given
+        HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "some_template").withDelay(milliseconds(1));
+        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(template);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        RuntimeException throwable = new RuntimeException("TEST_EXCEPTION");
+        when(mockHttpResponseTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenThrow(throwable);
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then
+        verify(mockHttpResponseTemplateActionHandler).handle(template, request);
+        verify(mockResponseWriter).writeResponse(request, notFoundResponse(), false);
+        InetSocketAddress remoteAddress = httpForwardActionResult.getRemoteAddress();
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("received request:{}")
+                .setArguments(request)
+        );
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(EXPECTATION_RESPONSE)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setHttpResponse(notFoundResponse())
+                .setMessageFormat("returning response:{}for request:{}for action:{}")
+                .setArguments(notFoundResponse(), request, expectation.getAction())
+        );
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(WARN)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat(throwable.getMessage())
+                .setThrowable(throwable)
+        );
+    }
+
+    @Test
     public void shouldProcessResponseClassCallbackAction() {
         // given
         HttpClassCallback callback = callback("some_class").withDelay(milliseconds(1));
@@ -199,7 +243,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
 
         // then
         verify(mockHttpResponseClassCallbackActionHandler).handle(callback, request);
@@ -233,7 +277,7 @@ public class ActionHandlerTest {
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
 
         // then
         verify(mockHttpResponseObjectCallbackActionHandler).handle(any(ActionHandler.class), same(callback), same(request), same(mockResponseWriter), eq(true));
@@ -257,7 +301,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
 
         // then
         verify(mockHttpForwardActionHandler).handle(forward, request);
@@ -291,7 +335,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
 
         // then
         verify(mockHttpForwardTemplateActionHandler).handle(template, request);
@@ -318,6 +362,49 @@ public class ActionHandlerTest {
     }
 
     @Test
+    public void shouldHandleForwardTemplateActionException() {
+        // given
+        HttpTemplate template = template(HttpTemplate.TemplateType.JAVASCRIPT, "some_template");
+        expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenForward(template);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        RuntimeException throwable = new RuntimeException("TEST_EXCEPTION");
+        when(mockHttpForwardTemplateActionHandler.handle(any(HttpTemplate.class), any(HttpRequest.class))).thenThrow(throwable);
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then
+        verify(mockHttpForwardTemplateActionHandler).handle(template, request);
+        verify(mockResponseWriter).writeResponse(request, notFoundResponse(), false);
+        InetSocketAddress remoteAddress = httpForwardActionResult.getRemoteAddress();
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat("received request:{}")
+                .setArguments(request)
+        );
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(EXPECTATION_RESPONSE)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setHttpResponse(notFoundResponse())
+                .setMessageFormat("returning response:{}for request:{}for action:{}")
+                .setArguments(notFoundResponse(), request, expectation.getAction())
+        );
+        verify(mockServerLogger).logEvent(
+            new LogEntry()
+                .setType(WARN)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request)
+                .setMessageFormat(throwable.getMessage())
+                .setThrowable(throwable)
+        );
+    }
+
+    @Test
     public void shouldProcessForwardClassCallbackAction() {
         // given
         HttpClassCallback callback = callback("some_class");
@@ -325,7 +412,7 @@ public class ActionHandlerTest {
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
 
         // then
         verify(mockHttpForwardClassCallbackActionHandler).handle(callback, request);
@@ -360,7 +447,7 @@ public class ActionHandlerTest {
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
 
         // then
         verify(mockHttpForwardObjectCallbackActionHandler).handle(any(ActionHandler.class), same(callback), same(request), same(mockResponseWriter), eq(true));
@@ -383,7 +470,7 @@ public class ActionHandlerTest {
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<String>(), false, true);
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
 
         // then
         verify(mockHttpOverrideForwardedRequestActionHandler).handle(httpOverrideForwardedRequest, request);
@@ -418,7 +505,7 @@ public class ActionHandlerTest {
         ChannelHandlerContext mockChannelHandlerContext = mock(ChannelHandlerContext.class);
 
         // when
-        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), false, true);
+        actionHandler.processAction(request, mockResponseWriter, mockChannelHandlerContext, new HashSet<>(), false, true);
 
         // then
         verify(mockHttpErrorActionHandler).handle(error, mockChannelHandlerContext);
@@ -460,7 +547,7 @@ public class ActionHandlerTest {
         when(mockNettyHttpClient.sendRequest(requestBeingForwarded, remoteAddress, ConfigurationProperties.socketConnectionTimeout())).thenReturn(responseFuture);
 
         // when
-        actionHandler.processAction(request("request_one"), mockResponseWriter, mockChannelHandlerContext, new HashSet<String>(), true, true);
+        actionHandler.processAction(request("request_one"), mockResponseWriter, mockChannelHandlerContext, new HashSet<>(), true, true);
 
         // then
         verify(mockNettyHttpClient).sendRequest(requestBeingForwarded, remoteAddress, ConfigurationProperties.socketConnectionTimeout());

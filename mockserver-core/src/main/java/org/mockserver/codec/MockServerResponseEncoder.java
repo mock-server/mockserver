@@ -24,7 +24,6 @@ import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.mockserver.codec.BodyDecoderEncoder.bodyToByteBuf;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 
 /**
@@ -32,7 +31,15 @@ import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
  */
 public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpResponse> {
 
-    public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerResponseEncoder.class);
+    private final MockServerLogger mockServerLogger;
+    private final BodyDecoderEncoder bodyDecoderEncoder;
+    private final ContentTypeMapper contentTypeMapper;
+
+    public MockServerResponseEncoder(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
+        this.contentTypeMapper = new ContentTypeMapper(mockServerLogger);
+    }
 
     @Override
     protected void encode(ChannelHandlerContext ctx, HttpResponse response, List<Object> out) {
@@ -50,7 +57,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
             setCookies(httpResponse, defaultFullHttpResponse);
             return defaultFullHttpResponse;
         } catch (Throwable throwable) {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
@@ -72,7 +79,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
     }
 
     private ByteBuf getBody(HttpResponse httpResponse) {
-        return bodyToByteBuf(httpResponse.getBody(), httpResponse.getFirstHeader(CONTENT_TYPE.toString()));
+        return bodyDecoderEncoder.bodyToByteBuf(httpResponse.getBody(), httpResponse.getFirstHeader(CONTENT_TYPE.toString()));
     }
 
     private void setHeaders(HttpResponse httpResponse, DefaultFullHttpResponse response) {
@@ -102,7 +109,7 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
                 byte[] bodyBytes = new byte[0];
                 if (body != null) {
                     Object bodyContents = body.getValue();
-                    Charset bodyCharset = body.getCharset(ContentTypeMapper.getCharsetFromContentTypeHeader(httpResponse.getFirstHeader(CONTENT_TYPE.toString())));
+                    Charset bodyCharset = body.getCharset(contentTypeMapper.getCharsetFromContentTypeHeader(httpResponse.getFirstHeader(CONTENT_TYPE.toString())));
                     if (bodyContents instanceof byte[]) {
                         bodyBytes = (byte[]) bodyContents;
                     } else if (bodyContents instanceof String) {

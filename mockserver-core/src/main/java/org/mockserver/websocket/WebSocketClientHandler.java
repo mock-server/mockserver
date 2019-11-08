@@ -31,9 +31,12 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     private final WebSocketClient webSocketClient;
     private final WebSocketClientHandshaker handshaker;
-    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(WebSocketClientHandler.class);
+    private final MockServerLogger mockServerLogger;
+    private final ContentTypeMapper contentTypeMapper;
 
-    WebSocketClientHandler(InetSocketAddress serverAddress, String contextPath, WebSocketClient webSocketClient) throws URISyntaxException {
+    WebSocketClientHandler(MockServerLogger mockServerLogger, InetSocketAddress serverAddress, String contextPath, WebSocketClient webSocketClient) throws URISyntaxException {
+        this.mockServerLogger = mockServerLogger;
+        this.contentTypeMapper = new ContentTypeMapper(mockServerLogger);
         this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(
             new URI("ws://" + serverAddress.getHostName() + ":" + serverAddress.getPort() + cleanContextPath(contextPath) + "/_mockserver_callback_websocket"),
             WebSocketVersion.V13,
@@ -60,7 +63,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        MOCK_SERVER_LOGGER.logEvent(
+        mockServerLogger.logEvent(
             new LogEntry()
                 .setType(LogEntry.LogMessageType.TRACE)
                 .setLogLevel(TRACE)
@@ -78,7 +81,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                 handshaker.finishHandshake(ch, httpResponse);
                 final String clientRegistrationId = httpResponse.headers().get("X-CLIENT-REGISTRATION-ID");
                 registrationFuture.set(clientRegistrationId);
-                MOCK_SERVER_LOGGER.logEvent(
+                mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
@@ -87,14 +90,14 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             } else if (httpResponse.status().equals(HttpResponseStatus.NOT_IMPLEMENTED)) {
                 String message = readRequestBody(httpResponse);
                 registrationFuture.setException(new WebSocketException(message));
-                MOCK_SERVER_LOGGER.logEvent(
+                mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.WARN)
                         .setLogLevel(WARN)
                         .setMessageFormat(message)
                 );
             } else {
-                registrationFuture.setException(new WebSocketException("Unsupported web socket message " + new FullHttpResponseToMockServerResponse().mapMockServerResponseToFullHttpResponse(httpResponse)));
+                registrationFuture.setException(new WebSocketException("Unsupported web socket message " + new FullHttpResponseToMockServerResponse(mockServerLogger).mapMockServerResponseToFullHttpResponse(httpResponse)));
             }
         } else if (msg instanceof WebSocketFrame) {
             WebSocketFrame frame = (WebSocketFrame) msg;
@@ -103,7 +106,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             } else if (frame instanceof PingWebSocketFrame) {
                 ctx.write(new PongWebSocketFrame(frame.content().retain()));
             } else if (frame instanceof CloseWebSocketFrame) {
-                MOCK_SERVER_LOGGER.logEvent(
+                mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
@@ -118,7 +121,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         if (fullHttpResponse.content().readableBytes() > 0) {
             byte[] bodyBytes = new byte[fullHttpResponse.content().readableBytes()];
             fullHttpResponse.content().readBytes(bodyBytes);
-            Charset requestCharset = ContentTypeMapper.getCharsetFromContentTypeHeader(fullHttpResponse.headers().get(CONTENT_TYPE));
+            Charset requestCharset = contentTypeMapper.getCharsetFromContentTypeHeader(fullHttpResponse.headers().get(CONTENT_TYPE));
             return new String(bodyBytes, requestCharset);
         }
         return "";
@@ -126,7 +129,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        MOCK_SERVER_LOGGER.logEvent(
+        mockServerLogger.logEvent(
             new LogEntry()
                 .setType(LogEntry.LogMessageType.EXCEPTION)
                 .setLogLevel(Level.ERROR)

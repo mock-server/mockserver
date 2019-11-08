@@ -24,10 +24,7 @@ public class MockServerMatcherOverlappingRequestsTest {
 
     private HttpResponse[] httpResponse;
 
-    private MockServerLogger mockLogFormatter;
-
-    private static Scheduler scheduler = new Scheduler();
-    private WebSocketClientRegistry webSocketClientRegistry;
+    private static Scheduler scheduler = new Scheduler(new MockServerLogger());
 
     @Before
     public void prepareTestFixture() {
@@ -35,8 +32,8 @@ public class MockServerMatcherOverlappingRequestsTest {
                 new HttpResponse(),
                 new HttpResponse()
         };
-        mockLogFormatter = mock(MockServerLogger.class);
-        webSocketClientRegistry = mock(WebSocketClientRegistry.class);
+        MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
+        WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
         mockServerMatcher = new MockServerMatcher(mockLogFormatter, scheduler, webSocketClientRegistry);
     }
 

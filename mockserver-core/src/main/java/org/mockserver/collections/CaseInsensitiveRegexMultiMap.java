@@ -1,6 +1,8 @@
 package org.mockserver.collections;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.RegexStringMatcher;
 import org.mockserver.model.NottableString;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
@@ -16,10 +18,18 @@ import static org.mockserver.model.NottableString.strings;
  * @author jamesdbloom
  */
 public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHashCodeToString implements Map<NottableString, NottableString> {
-    private final CaseInsensitiveNottableRegexListHashMap backingMap = new CaseInsensitiveNottableRegexListHashMap();
+    private final CaseInsensitiveNottableRegexListHashMap backingMap;
 
+    private final RegexStringMatcher regexStringMatcher;
+
+    public CaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger) {
+        regexStringMatcher = new RegexStringMatcher(mockServerLogger);
+        backingMap = new CaseInsensitiveNottableRegexListHashMap(mockServerLogger);
+    }
+
+    @VisibleForTesting
     public static CaseInsensitiveRegexMultiMap multiMap(String[]... keyAndValues) {
-        CaseInsensitiveRegexMultiMap multiMap = new CaseInsensitiveRegexMultiMap();
+        CaseInsensitiveRegexMultiMap multiMap = new CaseInsensitiveRegexMultiMap(new MockServerLogger());
         for (String[] keyAndValue : keyAndValues) {
             for (int i = 1; i < keyAndValue.length; i++) {
                 multiMap.put(keyAndValue[0], keyAndValue[i]);
@@ -28,8 +38,9 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         return multiMap;
     }
 
+    @VisibleForTesting
     public static CaseInsensitiveRegexMultiMap multiMap(NottableString[]... keyAndValues) {
-        CaseInsensitiveRegexMultiMap multiMap = new CaseInsensitiveRegexMultiMap();
+        CaseInsensitiveRegexMultiMap multiMap = new CaseInsensitiveRegexMultiMap(new MockServerLogger());
         for (NottableString[] keyAndValue : keyAndValues) {
             for (int i = 1; i < keyAndValue.length; i++) {
                 multiMap.put(keyAndValue[0], keyAndValue[i]);
@@ -80,7 +91,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     public synchronized boolean containsKeyValue(NottableString key, NottableString value) {
         if (!isEmpty()) {
             for (NottableString valueToMatch : getAll(key)) {
-                if (RegexStringMatcher.matches(value, valueToMatch, true)) {
+                if (regexStringMatcher.matches(value, valueToMatch, true)) {
                     return true;
                 }
             }
@@ -91,8 +102,8 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     private synchronized Entry<NottableString, NottableString> retrieveEntry(NottableString key, NottableString value) {
         if (!isEmpty()) {
             for (Entry<NottableString, NottableString> matcherEntry : entryList()) {
-                if (RegexStringMatcher.matches(value, matcherEntry.getValue(), true)
-                    && RegexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
+                if (regexStringMatcher.matches(value, matcherEntry.getValue(), true)
+                    && regexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
                     return matcherEntry;
                 }
             }
@@ -112,7 +123,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
                 for (NottableString key : backingMap.keySet()) {
                     for (List<NottableString> allKeyValues : backingMap.getAll(key)) {
                         for (NottableString keyValue : allKeyValues) {
-                            if (RegexStringMatcher.matches(keyValue, (NottableString) value, false)) {
+                            if (regexStringMatcher.matches(keyValue, (NottableString) value, false)) {
                                 return true;
                             }
                         }

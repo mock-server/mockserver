@@ -47,7 +47,7 @@ public class MockServerLogger {
     }
 
     private final Logger logger;
-    private final HttpStateHandler httpStateHandler;
+    private HttpStateHandler httpStateHandler;
 
     @VisibleForTesting
     public MockServerLogger() {
@@ -68,6 +68,11 @@ public class MockServerLogger {
     public MockServerLogger(final @Nullable HttpStateHandler httpStateHandler) {
         this.logger = null;
         this.httpStateHandler = httpStateHandler;
+    }
+
+    public MockServerLogger setHttpStateHandler(HttpStateHandler httpStateHandler) {
+        this.httpStateHandler = httpStateHandler;
+        return this;
     }
 
     public void logEvent(LogEntry logEntry) {

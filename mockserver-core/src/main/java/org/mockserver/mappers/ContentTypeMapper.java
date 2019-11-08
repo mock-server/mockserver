@@ -31,7 +31,6 @@ public class ContentTypeMapper {
      * </pre>
      */
     public static final Charset DEFAULT_HTTP_CHARACTER_SET = CharsetUtil.ISO_8859_1;
-    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ContentTypeMapper.class);
 
     private static final Set<String> UTF_8_CONTENT_TYPES = ImmutableSet.<String>builder()
         .add("application/atom+xml")
@@ -99,7 +98,13 @@ public class ContentTypeMapper {
         return binary;
     }
 
-    public static Charset getCharsetFromContentTypeHeader(String contentType) {
+    private final MockServerLogger mockServerLogger;
+
+    public ContentTypeMapper(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+    }
+
+    public Charset getCharsetFromContentTypeHeader(String contentType) {
         Charset charset = DEFAULT_HTTP_CHARACTER_SET;
         if (contentType != null) {
             String charsetName = StringUtils.substringAfterLast(contentType, CHARSET.toString() + (char) HttpConstants.EQUALS).replaceAll("\"", "");
@@ -107,7 +112,7 @@ public class ContentTypeMapper {
                 try {
                     charset = Charset.forName(charsetName);
                 } catch (UnsupportedCharsetException uce) {
-                    MOCK_SERVER_LOGGER.logEvent(
+                    mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.WARN)
                             .setLogLevel(WARN)
@@ -115,7 +120,7 @@ public class ContentTypeMapper {
                             .setArguments(StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType)
                     );
                 } catch (IllegalCharsetNameException icne) {
-                    MOCK_SERVER_LOGGER.logEvent(
+                    mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.WARN)
                             .setLogLevel(WARN)

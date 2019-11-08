@@ -5,6 +5,7 @@ import com.google.common.net.MediaType;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
@@ -40,19 +41,22 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
     private MockServerLogger mockServerLogger;
     // generic handling
     private HttpStateHandler httpStateHandler;
-    private Scheduler scheduler = new Scheduler();
+    private Scheduler scheduler;
     // serializers
     private PortBindingSerializer portBindingSerializer;
     // mappers
-    private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder();
+    private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder(new MockServerLogger());
     // mockserver
     private ActionHandler actionHandler;
     private EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
 
+    @SuppressWarnings("WeakerAccess")
     public ProxyServlet() {
-        this.httpStateHandler = new HttpStateHandler(scheduler);
+        this.mockServerLogger =  new MockServerLogger(MockServerEventLog.class);
+        this.scheduler = new Scheduler(mockServerLogger);
+        this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
-        portBindingSerializer = new PortBindingSerializer(mockServerLogger);
+        this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
         this.actionHandler = new ActionHandler(workerGroup, httpStateHandler, null);
     }
 
@@ -70,7 +74,7 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
     @Override
     public void service(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
-        ResponseWriter responseWriter = new ServletResponseWriter(httpServletResponse);
+        ResponseWriter responseWriter = new ServletResponseWriter(new MockServerLogger(), httpServletResponse);
         HttpRequest request = null;
         try {
 

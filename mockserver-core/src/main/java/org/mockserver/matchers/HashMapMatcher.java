@@ -19,7 +19,7 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
     public HashMapMatcher(MockServerLogger mockServerLogger, KeysAndValues keysAndValues) {
         this.mockServerLogger = mockServerLogger;
         if (keysAndValues != null) {
-            this.hashMap = keysAndValues.toCaseInsensitiveRegexMultiMap();
+            this.hashMap = keysAndValues.toCaseInsensitiveRegexMultiMap(mockServerLogger);
         } else {
             this.hashMap = null;
         }
@@ -32,7 +32,7 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
             result = true;
         } else if (values == null || values.isEmpty()) {
             result = hashMap.allKeysNotted();
-        } else if (values.toCaseInsensitiveRegexMultiMap().containsAll(hashMap)) {
+        } else if (values.toCaseInsensitiveRegexMultiMap(mockServerLogger).containsAll(hashMap)) {
             result = true;
         } else {
             mockServerLogger.logEvent(

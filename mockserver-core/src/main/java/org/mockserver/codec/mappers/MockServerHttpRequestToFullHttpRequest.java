@@ -2,6 +2,7 @@ package org.mockserver.codec.mappers;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.*;
+import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Header;
@@ -18,14 +19,19 @@ import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static io.netty.handler.codec.http.HttpHeaderValues.*;
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.codec.BodyDecoderEncoder.bodyToByteBuf;
 
 /**
  * @author jamesdbloom
  */
 public class MockServerHttpRequestToFullHttpRequest {
 
-    public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerHttpRequestToFullHttpRequest.class);
+    private final MockServerLogger mockServerLogger;
+    private final BodyDecoderEncoder bodyDecoderEncoder;
+
+    public MockServerHttpRequestToFullHttpRequest(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
+    }
 
     public FullHttpRequest mapMockServerResponseToHttpServletResponse(HttpRequest httpRequest) {
         // method
@@ -42,7 +48,7 @@ public class MockServerHttpRequestToFullHttpRequest {
 
             return request;
         } catch (Throwable throwable) {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
@@ -69,7 +75,7 @@ public class MockServerHttpRequestToFullHttpRequest {
     }
 
     private ByteBuf getBody(HttpRequest httpRequest) {
-        return bodyToByteBuf(httpRequest.getBody(), httpRequest.getFirstHeader(CONTENT_TYPE.toString()));
+        return bodyDecoderEncoder.bodyToByteBuf(httpRequest.getBody(), httpRequest.getFirstHeader(CONTENT_TYPE.toString()));
     }
 
     private void setCookies(HttpRequest httpRequest, FullHttpRequest request) {

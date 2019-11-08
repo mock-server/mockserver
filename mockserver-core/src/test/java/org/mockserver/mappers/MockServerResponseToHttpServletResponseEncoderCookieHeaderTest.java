@@ -1,6 +1,7 @@
 package org.mockserver.mappers;
 
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
@@ -39,7 +40,7 @@ public class MockServerResponseToHttpServletResponseEncoderCookieHeaderTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when
-        new MockServerResponseToHttpServletResponseEncoder().mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        new MockServerResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
         assertEquals(HttpStatusCode.OK_200.code(), httpServletResponse.getStatus());

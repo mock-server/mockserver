@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -33,7 +34,7 @@ public class ServletResponseWriterTest {
     @Before
     public void setupTestFixture() {
         httpServletResponse = new MockHttpServletResponse();
-        servletResponseWriter = new ServletResponseWriter(httpServletResponse);
+        servletResponseWriter = new ServletResponseWriter(new MockServerLogger(), httpServletResponse);
         initMocks(this);
     }
 

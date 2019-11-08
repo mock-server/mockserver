@@ -95,10 +95,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     private void initialiseRingBuffer() {
-        EventFactory<LogEntry> eventFactory = LogEntry::new;
-        ThreadFactory threadFactory = runnable -> new Thread();
-
-        disruptor = new Disruptor<>(eventFactory, ConfigurationProperties.ringBufferSize(), DaemonThreadFactory.INSTANCE);
+        disruptor = new Disruptor<>(LogEntry::new, ConfigurationProperties.ringBufferSize(), DaemonThreadFactory.INSTANCE);
 
         final ExceptionHandler<LogEntry> errorHandler = new ExceptionHandler<LogEntry>() {
             @Override

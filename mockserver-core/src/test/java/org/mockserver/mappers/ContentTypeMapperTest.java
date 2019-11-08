@@ -1,22 +1,18 @@
 package org.mockserver.mappers;
 
 import com.google.common.net.MediaType;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpMessage;
 import io.netty.util.CharsetUtil;
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 
-import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.mockserver.model.HttpResponse.response;
 
 public class ContentTypeMapperTest {
@@ -102,10 +98,12 @@ public class ContentTypeMapperTest {
             "video/x-sgi-movie"
     );
 
+    private final MockServerLogger mockServerLogger = new MockServerLogger();
+
     @Test
     public void shouldNotDetectAsBinaryBody() {
         for (String contentType : utf8ContentTypes) {
-            assertThat(contentType + " should not be binary", new ContentTypeMapper().isBinary(contentType), is(false));
+            assertThat(contentType + " should not be binary", ContentTypeMapper.isBinary(contentType), is(false));
         }
     }
 
@@ -124,7 +122,7 @@ public class ContentTypeMapperTest {
     @Test
     public void shouldDetermineCharsetFromResponseContentType() {
         // when
-        Charset charset = ContentTypeMapper.getCharsetFromContentTypeHeader(MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString());
+        Charset charset = new ContentTypeMapper(mockServerLogger).getCharsetFromContentTypeHeader(MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString());
 
         // then
         assertThat(charset, is(StandardCharsets.UTF_16));
@@ -132,7 +130,7 @@ public class ContentTypeMapperTest {
 
     @Test
     public void shouldDetermineUTFCharsetWhenFileTypeIsUtf(){
-        Charset charset = ContentTypeMapper.getCharsetFromContentTypeHeader("application/json");
+        Charset charset = new ContentTypeMapper(mockServerLogger).getCharsetFromContentTypeHeader("application/json");
 
         assertThat(charset,is(CharsetUtil.UTF_8));
     }
@@ -140,7 +138,7 @@ public class ContentTypeMapperTest {
     @Test
     public void shouldDetermineCharsetWhenIllegalContentTypeHeader() {
         // when
-        Charset charset = ContentTypeMapper.getCharsetFromContentTypeHeader("some_rubbish");
+        Charset charset = new ContentTypeMapper(mockServerLogger).getCharsetFromContentTypeHeader("some_rubbish");
 
         // then
         assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
@@ -149,16 +147,16 @@ public class ContentTypeMapperTest {
     @Test
     public void shouldDetermineCharsetWithQuotes() {
         // when
-        Charset charset = ContentTypeMapper.getCharsetFromContentTypeHeader("text/html; charset=\"utf-8\"");
+        Charset charset = new ContentTypeMapper(mockServerLogger).getCharsetFromContentTypeHeader("text/html; charset=\"utf-8\"");
 
         // then
-        assertThat(charset, is(Charset.forName("utf-8")));
+        assertThat(charset, is(StandardCharsets.UTF_8));
     }
 
     @Test
     public void shouldDetermineCharsetWhenUnsupportedCharset() {
         // when
-        Charset charset = ContentTypeMapper.getCharsetFromContentTypeHeader("text/plain; charset=some_rubbish");
+        Charset charset = new ContentTypeMapper(mockServerLogger).getCharsetFromContentTypeHeader("text/plain; charset=some_rubbish");
 
         // then
         assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
@@ -167,7 +165,7 @@ public class ContentTypeMapperTest {
     @Test
     public void shouldDetermineCharsetWhenNoContentTypeHeader() {
         // when
-        Charset charset = ContentTypeMapper.getCharsetFromContentTypeHeader(null);
+        Charset charset = new ContentTypeMapper(mockServerLogger).getCharsetFromContentTypeHeader(null);
 
         // then
         assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));

@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockserver.lifecycle.LifeCycle;
+import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -80,7 +81,7 @@ public class MockServerHandlerTest {
         when(server.getScheduler()).thenReturn(mock(Scheduler.class));
         mockActionHandler = mock(ActionHandler.class);
 
-        httpStateHandler = new HttpStateHandler(mock(Scheduler.class));
+        httpStateHandler = new HttpStateHandler(new MockServerLogger(), mock(Scheduler.class));
         mockServerHandler = new MockServerHandler(server, httpStateHandler, null);
 
         initMocks(this);

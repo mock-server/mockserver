@@ -22,7 +22,7 @@ import static org.mockserver.model.HttpRequest.request;
  */
 public class LogFilterRequestLogEntryVerificationSequenceTest {
 
-    private static Scheduler scheduler = new Scheduler();
+    private static Scheduler scheduler = new Scheduler(new MockServerLogger());
     private MockServerEventLog mockServerEventLog;
 
     @Before

@@ -39,7 +39,7 @@ public class MockServerRequestDecoderTest {
 
     @Before
     public void setupFixture() {
-        mockServerRequestDecoder = new MockServerRequestDecoder(false);
+        mockServerRequestDecoder = new MockServerRequestDecoder(new MockServerLogger(), false);
         output = new ArrayList<>();
     }
 

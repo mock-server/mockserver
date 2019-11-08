@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import org.mockserver.codec.MockServerResponseEncoder;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BodyWithContentType;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -25,12 +26,14 @@ import static org.slf4j.event.Level.INFO;
 public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
     private final EchoServer.Error error;
+    private final MockServerLogger mockServerLogger;
     private final MockServerEventLog mockServerEventLog;
     private final EchoServer.NextResponse nextResponse;
     private final EchoServer.OnlyResponse onlyResponse;
 
-    EchoServerHandler(EchoServer.Error error, MockServerEventLog mockServerEventLog, EchoServer.NextResponse nextResponse, EchoServer.OnlyResponse onlyResponse) {
+    EchoServerHandler(EchoServer.Error error, MockServerLogger mockServerLogger, MockServerEventLog mockServerEventLog, EchoServer.NextResponse nextResponse, EchoServer.OnlyResponse onlyResponse) {
         this.error = error;
+        this.mockServerLogger = mockServerLogger;
         this.mockServerEventLog = mockServerEventLog;
         this.nextResponse = nextResponse;
         this.onlyResponse = onlyResponse;
@@ -49,11 +52,11 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
         if (onlyResponse.httpResponse != null) {
             // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
-            DefaultFullHttpResponse httpResponse = new MockServerResponseEncoder().encode(onlyResponse.httpResponse);
+            DefaultFullHttpResponse httpResponse = new MockServerResponseEncoder(mockServerLogger).encode(onlyResponse.httpResponse);
             ctx.writeAndFlush(httpResponse);
         } else if (!nextResponse.httpResponse.isEmpty()) {
             // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
-            DefaultFullHttpResponse httpResponse = new MockServerResponseEncoder().encode(nextResponse.httpResponse.remove());
+            DefaultFullHttpResponse httpResponse = new MockServerResponseEncoder(mockServerLogger).encode(nextResponse.httpResponse.remove());
             ctx.writeAndFlush(httpResponse);
         } else {
             HttpResponse httpResponse =

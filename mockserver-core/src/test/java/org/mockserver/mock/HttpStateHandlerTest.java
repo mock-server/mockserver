@@ -9,6 +9,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
+import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -59,7 +60,6 @@ public class HttpStateHandlerTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
-    private LogEntrySerializer logEntrySerializer = new LogEntrySerializer(new MockServerLogger());
     private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
     private ExpectationSerializer httpExpectationSerializer = new ExpectationSerializer(new MockServerLogger());
     private ExpectationToJavaSerializer httpExpectationToJavaSerializer = new ExpectationToJavaSerializer();
@@ -74,7 +74,7 @@ public class HttpStateHandlerTest {
     @Before
     public void prepareTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
-        httpStateHandler = new HttpStateHandler(scheduler);
+        httpStateHandler = new HttpStateHandler(new MockServerLogger(), scheduler);
         initMocks(this);
     }
 

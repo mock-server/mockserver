@@ -3,6 +3,7 @@ package org.mockserver.client;
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.client.MockServerEventBus.SubscriberHandler;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.mock.action.ExpectationForwardCallback;
@@ -19,11 +20,13 @@ import java.util.concurrent.Semaphore;
  */
 public class ForwardChainExpectation {
 
+    private final MockServerLogger mockServerLogger;
     private final MockServerClient mockServerClient;
     private final Expectation expectation;
     private final Semaphore availableWebSocketCallbackRegistrations;
 
-    ForwardChainExpectation(MockServerClient mockServerClient, Expectation expectation, Semaphore availableWebSocketCallbackRegistrations) {
+    ForwardChainExpectation(MockServerLogger mockServerLogger, MockServerClient mockServerClient, Expectation expectation, Semaphore availableWebSocketCallbackRegistrations) {
+        this.mockServerLogger = mockServerLogger;
         this.mockServerClient = mockServerClient;
         this.expectation = expectation;
         this.availableWebSocketCallbackRegistrations = availableWebSocketCallbackRegistrations;
@@ -158,7 +161,7 @@ public class ForwardChainExpectation {
 
     private <T extends HttpObject> String registerWebSocketClient(ExpectationCallback<T> expectationCallback) {
         try {
-            final WebSocketClient<T> webSocketClient = new WebSocketClient<>(availableWebSocketCallbackRegistrations);
+            final WebSocketClient<T> webSocketClient = new WebSocketClient<>(mockServerLogger, availableWebSocketCallbackRegistrations);
             final Future<String> register = webSocketClient.registerExpectationCallback(
                 expectationCallback,
                 mockServerClient.getEventLoopGroup(),

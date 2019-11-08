@@ -43,7 +43,7 @@ import static org.slf4j.event.Level.WARN;
  */
 public class MockServerClient implements Stoppable {
 
-    protected static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClient.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClient.class);
     private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
     private final Semaphore availableWebSocketCallbackRegistrations = new Semaphore(1);
     private final String host;
@@ -562,7 +562,7 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times) {
-        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, TimeToLive.unlimited()), availableWebSocketCallbackRegistrations);
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, this, new Expectation(httpRequest, times, TimeToLive.unlimited()), availableWebSocketCallbackRegistrations);
     }
 
     /**
@@ -590,7 +590,7 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
-        return new ForwardChainExpectation(this, new Expectation(httpRequest, times, timeToLive), availableWebSocketCallbackRegistrations);
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, this, new Expectation(httpRequest, times, timeToLive), availableWebSocketCallbackRegistrations);
     }
 
     /**

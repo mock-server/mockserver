@@ -37,12 +37,14 @@ public class WebSocketClient<T extends HttpObject> {
 
     static final AttributeKey<SettableFuture<String>> REGISTRATION_FUTURE = AttributeKey.valueOf("REGISTRATION_FUTURE");
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(WebSocketClient.class);
+    private final MockServerLogger mockServerLogger;
     private final Semaphore availableWebSocketCallbackRegistrations;
     private Channel channel;
     private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer(MOCK_SERVER_LOGGER);
     private ExpectationCallback<T> expectationCallback;
 
-    public WebSocketClient(Semaphore availableWebSocketCallbackRegistrations) {
+    public WebSocketClient(MockServerLogger mockServerLogger, Semaphore availableWebSocketCallbackRegistrations) {
+        this.mockServerLogger = mockServerLogger;
         this.availableWebSocketCallbackRegistrations = availableWebSocketCallbackRegistrations;
     }
 
@@ -76,7 +78,7 @@ public class WebSocketClient<T extends HttpObject> {
                                 .addLast(
                                     new HttpClientCodec(),
                                     new HttpObjectAggregator(Integer.MAX_VALUE),
-                                    new WebSocketClientHandler(serverAddress, contextPath, WebSocketClient.this)
+                                    new WebSocketClientHandler(mockServerLogger, serverAddress, contextPath, WebSocketClient.this)
                                 );
                         }
                     })

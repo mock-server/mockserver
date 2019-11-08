@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.websocket.WebSocketClient;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -39,7 +40,7 @@ public class ForwardChainExpectationTest {
         mockAbstractClient = mock(MockServerClient.class);
         mockExpectation = mock(Expectation.class);
         Semaphore availableWebSocketCallbackRegistrations = new Semaphore(1);
-        forwardChainExpectation = new ForwardChainExpectation(mockAbstractClient, mockExpectation, availableWebSocketCallbackRegistrations);
+        forwardChainExpectation = new ForwardChainExpectation(new MockServerLogger(), mockAbstractClient, mockExpectation, availableWebSocketCallbackRegistrations);
         initMocks(this);
     }
 

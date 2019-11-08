@@ -17,7 +17,13 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
  */
 public class FullHttpResponseToMockServerResponse {
 
-    public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(FullHttpResponseToMockServerResponse.class);
+    private final MockServerLogger mockServerLogger;
+    private final BodyDecoderEncoder bodyDecoderEncoder;
+
+    public FullHttpResponseToMockServerResponse(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
+    }
 
     public HttpResponse mapMockServerResponseToFullHttpResponse(FullHttpResponse fullHttpResponse) {
         HttpResponse httpResponse = new HttpResponse();
@@ -29,7 +35,7 @@ public class FullHttpResponseToMockServerResponse {
                 setBody(httpResponse, fullHttpResponse);
             }
         } catch (Throwable throwable) {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
@@ -84,6 +90,6 @@ public class FullHttpResponseToMockServerResponse {
     }
 
     private void setBody(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {
-        httpResponse.withBody(BodyDecoderEncoder.byteBufToBody(fullHttpResponse.content(), fullHttpResponse.headers().get(CONTENT_TYPE)));
+        httpResponse.withBody(bodyDecoderEncoder.byteBufToBody(fullHttpResponse.content(), fullHttpResponse.headers().get(CONTENT_TYPE)));
     }
 }

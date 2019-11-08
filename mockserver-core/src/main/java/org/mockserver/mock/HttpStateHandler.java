@@ -51,22 +51,31 @@ public class HttpStateHandler {
     private final Scheduler scheduler;
     // mockserver
     private MockServerMatcher mockServerMatcher;
-    private MockServerLogger mockServerLogger = new MockServerLogger(this);
+    private final MockServerLogger mockServerLogger;
     private WebSocketClientRegistry webSocketClientRegistry = new WebSocketClientRegistry();
     // serializers
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
-    private HttpRequestResponseSerializer httpRequestResponseSerializer = new HttpRequestResponseSerializer(mockServerLogger);
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(mockServerLogger);
-    private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
-    private ExpectationToJavaSerializer expectationToJavaSerializer = new ExpectationToJavaSerializer();
-    private VerificationSerializer verificationSerializer = new VerificationSerializer(mockServerLogger);
-    private VerificationSequenceSerializer verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
-    private LogEntrySerializer logEntrySerializer = new LogEntrySerializer(mockServerLogger);
+    private HttpRequestSerializer httpRequestSerializer;
+    private HttpRequestResponseSerializer httpRequestResponseSerializer;
+    private ExpectationSerializer expectationSerializer;
+    private HttpRequestToJavaSerializer httpRequestToJavaSerializer;
+    private ExpectationToJavaSerializer expectationToJavaSerializer;
+    private VerificationSerializer verificationSerializer;
+    private VerificationSequenceSerializer verificationSequenceSerializer;
+    private LogEntrySerializer logEntrySerializer;
 
-    public HttpStateHandler(Scheduler scheduler) {
+    public HttpStateHandler(MockServerLogger mockServerLogger, Scheduler scheduler) {
+        this.mockServerLogger = mockServerLogger.setHttpStateHandler(this);
         this.scheduler = scheduler;
         mockServerLog = new MockServerEventLog(mockServerLogger, scheduler, true);
         mockServerMatcher = new MockServerMatcher(mockServerLogger, scheduler, webSocketClientRegistry);
+        httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
+        httpRequestResponseSerializer = new HttpRequestResponseSerializer(mockServerLogger);
+        expectationSerializer = new ExpectationSerializer(mockServerLogger);
+        httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
+        expectationToJavaSerializer = new ExpectationToJavaSerializer();
+        verificationSerializer = new VerificationSerializer(mockServerLogger);
+        verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
+        logEntrySerializer = new LogEntrySerializer(mockServerLogger);
         addExpectationsFromInitializer();
     }
 

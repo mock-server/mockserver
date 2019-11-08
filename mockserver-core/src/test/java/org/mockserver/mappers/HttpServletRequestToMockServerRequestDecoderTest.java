@@ -2,6 +2,7 @@ package org.mockserver.mappers;
 
 import com.google.common.collect.Lists;
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -35,7 +36,7 @@ public class HttpServletRequestToMockServerRequestDecoderTest {
         httpServletRequest.setContent("bodyParameterNameOne=bodyParameterValueOne_One&bodyParameterNameOne=bodyParameterValueOne_Two&bodyParameterNameTwo=bodyParameterValueTwo_One".getBytes(UTF_8));
 
         // when
-        HttpRequest httpRequest = new HttpServletRequestToMockServerRequestDecoder().mapHttpServletRequestToMockServerRequest(httpServletRequest);
+        HttpRequest httpRequest = new HttpServletRequestToMockServerRequestDecoder(new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
 
         // then
         assertEquals(string("/requestURI"), httpRequest.getPath());
@@ -67,7 +68,7 @@ public class HttpServletRequestToMockServerRequestDecoderTest {
         httpServletRequest.setContent("".getBytes(UTF_8));
 
         // when
-        HttpRequest httpRequest = new HttpServletRequestToMockServerRequestDecoder().mapHttpServletRequestToMockServerRequest(httpServletRequest);
+        HttpRequest httpRequest = new HttpServletRequestToMockServerRequestDecoder(new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
 
         // then
         assertEquals(string("/pathInfo"), httpRequest.getPath());
@@ -86,6 +87,6 @@ public class HttpServletRequestToMockServerRequestDecoderTest {
         when(httpServletRequest.getInputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        new HttpServletRequestToMockServerRequestDecoder().mapHttpServletRequestToMockServerRequest(httpServletRequest);
+        new HttpServletRequestToMockServerRequestDecoder(new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
     }
 }

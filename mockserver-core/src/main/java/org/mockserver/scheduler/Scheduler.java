@@ -2,12 +2,18 @@ package org.mockserver.scheduler;
 
 import org.mockserver.client.SocketCommunicationException;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.HttpForwardActionResult;
 import org.mockserver.model.Delay;
+import org.mockserver.model.HttpError;
+import org.slf4j.event.Level;
 
 import java.util.concurrent.*;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_RESPONSE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
 
 /**
  * @author jamesdbloom
@@ -15,6 +21,11 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 public class Scheduler {
 
     private final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(poolSize(), new ThreadPoolExecutor.CallerRunsPolicy());
+    private final MockServerLogger mockServerLogger;
+
+    public Scheduler(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+    }
 
     private int poolSize() {
         return Math.max(10, Runtime.getRuntime().availableProcessors() * 2);
@@ -29,18 +40,32 @@ public class Scheduler {
         }
     }
 
+    private void run(Runnable command) {
+        try {
+            command.run();
+        } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(WARN)
+                    .setLogLevel(Level.INFO)
+                    .setMessageFormat(throwable.getMessage())
+                    .setThrowable(throwable)
+            );
+        }
+    }
+
     public void schedule(Runnable command, boolean synchronous, Delay... delays) {
         Delay delay = addDelays(delays);
         if (synchronous) {
             if (delay != null) {
                 delay.applyDelay();
             }
-            command.run();
+            run(command);
         } else {
             if (delay != null) {
-                scheduler.schedule(command, delay.getValue(), delay.getTimeUnit());
+                scheduler.schedule(() -> run(command), delay.getValue(), delay.getTimeUnit());
             } else {
-                command.run();
+                run(command);
             }
         }
     }
@@ -69,10 +94,9 @@ public class Scheduler {
 
     public void submit(Runnable command, boolean synchronous) {
         if (synchronous) {
-            command.run();
+            run(command);
         } else {
-            scheduler.submit(command);
-//            scheduler.schedule(command, 0, NANOSECONDS);
+            scheduler.submit(() -> run(command));
         }
     }
 
@@ -86,7 +110,7 @@ public class Scheduler {
                 } catch (InterruptedException | ExecutionException ex) {
                     future.getHttpResponse().setException(ex);
                 }
-                command.run();
+                run(command);
             } else {
                 future.getHttpResponse().addListener(command, scheduler);
             }

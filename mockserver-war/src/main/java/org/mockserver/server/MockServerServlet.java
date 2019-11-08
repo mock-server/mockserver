@@ -5,6 +5,7 @@ import com.google.common.net.MediaType;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
@@ -39,19 +40,22 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
     private MockServerLogger mockServerLogger;
     // generic handling
     private HttpStateHandler httpStateHandler;
-    private Scheduler scheduler = new Scheduler();
+    private Scheduler scheduler = new Scheduler(mockServerLogger);
     // serializers
     private PortBindingSerializer portBindingSerializer;
     // mappers
-    private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder();
+    private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder(new MockServerLogger());
     // mockserver
     private ActionHandler actionHandler;
     private EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
 
+    @SuppressWarnings("WeakerAccess")
     public MockServerServlet() {
-        this.httpStateHandler = new HttpStateHandler(scheduler);
+        this.mockServerLogger =  new MockServerLogger(MockServerEventLog.class);
+        this.scheduler = new Scheduler(mockServerLogger);
+        this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
-        portBindingSerializer = new PortBindingSerializer(mockServerLogger);
+        this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
         this.actionHandler = new ActionHandler(workerGroup, httpStateHandler, null);
     }
 
@@ -69,7 +73,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
     @Override
     public void service(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
-        ResponseWriter responseWriter = new ServletResponseWriter(httpServletResponse);
+        ResponseWriter responseWriter = new ServletResponseWriter(new MockServerLogger(), httpServletResponse);
         HttpRequest request = null;
         try {
 

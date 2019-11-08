@@ -32,7 +32,7 @@ public class EchoServer implements Stoppable {
     static final AttributeKey<OnlyResponse> ONLY_RESPONSE = AttributeKey.valueOf("ONLY_RESPONSE");
     private static final MockServerLogger mockServerLogger = new MockServerLogger(EchoServer.class);
 
-    private final Scheduler scheduler = new Scheduler();
+    private final Scheduler scheduler = new Scheduler(mockServerLogger);
     private final MockServerEventLog logFilter = new MockServerEventLog(mockServerLogger, scheduler, true);
     private final NextResponse nextResponse = new NextResponse();
     private final OnlyResponse onlyResponse = new OnlyResponse();

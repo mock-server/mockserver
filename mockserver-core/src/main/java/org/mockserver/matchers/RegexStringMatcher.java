@@ -22,6 +22,11 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     private final MockServerLogger mockServerLogger;
     private final NottableString matcher;
 
+    public RegexStringMatcher(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        this.matcher = null;
+    }
+
     public RegexStringMatcher(MockServerLogger mockServerLogger, String matcher) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = string(matcher);
@@ -32,7 +37,32 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         this.matcher = matcher;
     }
 
-    public static boolean matches(NottableString matcher, NottableString matched, boolean ignoreCase) {
+    public boolean matches(String matched) {
+        return matches(null, string(matched));
+    }
+
+    public boolean matches(final HttpRequest context, NottableString matched) {
+        boolean result = false;
+
+        if (matches(matcher.getValue(), matched.getValue(), false)) {
+            result = true;
+        }
+
+        if (!result) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setHttpRequest(context)
+                    .setMessageFormat("Failed to match [{}] with [{}]")
+                    .setArguments(matched, this.matcher)
+            );
+        }
+
+        return matched.isNot() != (matcher.isNot() != (not != result));
+    }
+
+    public boolean matches(NottableString matcher, NottableString matched, boolean ignoreCase) {
         if (matcher.isNot() && matched.isNot()) {
             // mutual notted control plane match
             return matchesInternal(matcher, matched, ignoreCase);
@@ -42,7 +72,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         }
     }
 
-    private static boolean matchesInternal(NottableString matcher, NottableString matched, boolean ignoreCase) {
+    private boolean matchesInternal(NottableString matcher, NottableString matched, boolean ignoreCase) {
 
         if (matcher.isBlank()) {
             return true;
@@ -114,8 +144,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         return false;
     }
 
-    public static boolean matches(String matcher, String matched, boolean ignoreCase) {
-
+    public boolean matches(String matcher, String matched, boolean ignoreCase) {
         if (isBlank(matcher)) {
             return true;
         } else if (matched != null) {
@@ -184,31 +213,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         }
 
         return false;
-    }
-
-    public boolean matches(String matched) {
-        return matches(null, string(matched));
-    }
-
-    public boolean matches(final HttpRequest context, NottableString matched) {
-        boolean result = false;
-
-        if (matches(matcher.getValue(), matched.getValue(), false)) {
-            result = true;
-        }
-
-        if (!result) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
-                    .setLogLevel(TRACE)
-                    .setHttpRequest(context)
-                    .setMessageFormat("Failed to match [{}] with [{}]")
-                    .setArguments(matched, this.matcher)
-            );
-        }
-
-        return matched.isNot() != (matcher.isNot() != (not != result));
     }
 
     @Override

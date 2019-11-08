@@ -20,7 +20,7 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
     public MultiValueMapMatcher(MockServerLogger mockServerLogger, KeysToMultiValues keysToMultiValues) {
         this.mockServerLogger = mockServerLogger;
         if (keysToMultiValues != null) {
-            this.multiMap = keysToMultiValues.toCaseInsensitiveRegexMultiMap();
+            this.multiMap = keysToMultiValues.toCaseInsensitiveRegexMultiMap(mockServerLogger);
         } else {
             this.multiMap = null;
         }
@@ -33,7 +33,7 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
             result = true;
         } else if (values == null || values.isEmpty()) {
             result = multiMap.allKeysNotted();
-        } else if (values.toCaseInsensitiveRegexMultiMap().containsAll(multiMap)) {
+        } else if (values.toCaseInsensitiveRegexMultiMap(mockServerLogger).containsAll(multiMap)) {
             result = true;
         } else {
             mockServerLogger.logEvent(
