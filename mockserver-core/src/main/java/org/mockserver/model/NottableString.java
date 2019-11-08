@@ -40,7 +40,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
 
     private NottableString(String value) {
         this.isBlank = StringUtils.isBlank(value);
-        if (!isBlank && value.charAt(0) == NOT_CHAR) {
+        if (!this.isBlank && value.charAt(0) == NOT_CHAR) {
             this.value = value.substring(1);
             this.not = Boolean.TRUE;
         } else {

@@ -74,7 +74,7 @@ public class HttpServletRequestToMockServerRequestDecoder {
             while (headerValues.hasMoreElements()) {
                 mappedHeaderValues.add(headerValues.nextElement());
             }
-            headers.withEntry(new Header(headerName, mappedHeaderValues.toArray(new String[mappedHeaderValues.size()])));
+            headers.withEntry(headerName, mappedHeaderValues);
         }
         httpRequest.withHeaders(headers);
     }

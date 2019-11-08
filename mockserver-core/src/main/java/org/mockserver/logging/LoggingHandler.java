@@ -20,7 +20,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 @Sharable
 public class LoggingHandler extends ChannelDuplexHandler {
 
-    private static final String NEWLINE = String.format("%n");
+    private static final String NEWLINE = "\n";
     private static final String[] BYTE2HEX = new String[256];
     private static final String[] HEXPADDING = new String[16];
     private static final String[] BYTEPADDING = new String[16];

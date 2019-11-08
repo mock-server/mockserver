@@ -70,7 +70,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         return false;
     }
 
-    public static Set<String> getLocalAddresses(ChannelHandlerContext ctx) {
+    private static Set<String> getLocalAddresses(ChannelHandlerContext ctx) {
         if (ctx != null &&
             ctx.channel().attr(LOCAL_HOST_HEADERS) != null &&
             ctx.channel().attr(LOCAL_HOST_HEADERS).get() != null) {

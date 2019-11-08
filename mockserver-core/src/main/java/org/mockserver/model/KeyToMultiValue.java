@@ -10,14 +10,25 @@ import static org.mockserver.model.NottableString.*;
 public class KeyToMultiValue extends ObjectWithJsonToString {
     private final NottableString name;
     private final List<NottableString> values;
-    private int hashCode;
+    private Integer hashCode;
 
     KeyToMultiValue(final String name, final String... values) {
         this(string(name), strings(values));
     }
 
+    @SuppressWarnings({"UseBulkOperation", "ManualArrayToCollectionCopy"})
     KeyToMultiValue(final NottableString name, final NottableString... values) {
-        this(name, Arrays.asList(values));
+        this.name = name;
+        if (values == null || values.length == 0) {
+            this.values = Collections.singletonList(string(".*"));
+        } else if (values.length == 1) {
+            this.values = Collections.singletonList(values[0]);
+        } else {
+            this.values = new LinkedList<>();
+            for (NottableString value : values) {
+                this.values.add(value);
+            }
+        }
     }
 
     KeyToMultiValue(final String name, final Collection<String> values) {
@@ -29,7 +40,7 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
         if (values == null || values.isEmpty()) {
             this.values = Collections.singletonList(string(".*"));
         } else {
-            this.values = new ArrayList<>(values);
+            this.values = new LinkedList<>(values);
         }
         this.hashCode = Objects.hash(this.name, this.values);
     }
@@ -93,6 +104,9 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
 
     @Override
     public int hashCode() {
+        if (hashCode == null) {
+            this.hashCode = Objects.hash(this.name, this.values);
+        }
         return hashCode;
     }
 }

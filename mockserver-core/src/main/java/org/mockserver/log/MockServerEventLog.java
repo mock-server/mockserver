@@ -25,11 +25,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -55,7 +58,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         || input.getType() == FORWARDED_REQUEST;
     private static final Predicate<LogEntry> recordedExpectationLogPredicate = input
         -> input.getType() == FORWARDED_REQUEST;
-    private static final Function<LogEntry, List<HttpRequest>> logEntryToRequest = LogEntry::getHttpRequests;
+    private static final Function<LogEntry, HttpRequest[]> logEntryToRequest = LogEntry::getHttpRequests;
     private static final Function<LogEntry, Expectation> logEntryToExpectation = logEntry -> {
         if (logEntry.getExpectation() != null) {
             return logEntry.getExpectation();
@@ -161,7 +164,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 if (httpRequest != null) {
                     HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
                     for (LogEntry logEntry : new LinkedList<>(requestLog)) {
-                        List<HttpRequest> requests = logEntry.getHttpRequests();
+                        HttpRequest[] requests = logEntry.getHttpRequests();
                         boolean matches = false;
                         for (HttpRequest request : requests) {
                             if (requestMatcher.matches(request)) {
@@ -206,7 +209,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             httpRequest,
             requestLogPredicate,
             logEntryToRequest,
-            logEventStream -> listConsumer.accept(logEventStream.flatMap(Collection::stream).collect(Collectors.toList()))
+            logEventStream -> listConsumer.accept(logEventStream.flatMap(Arrays::stream).collect(Collectors.toList()))
         );
     }
 
@@ -251,11 +254,9 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
                 consumer.accept(this.requestLog
                     .stream()
-                    .filter(logItem ->
-                        logItem
-                            .getHttpRequests()
-                            .stream()
-                            .anyMatch(httpRequestMatcher::matches)
+                    .filter(logItem -> Arrays
+                        .stream(logItem.getHttpRequests())
+                        .anyMatch(httpRequestMatcher::matches)
                     )
                     .filter(logEntryPredicate)
                 );
@@ -270,11 +271,9 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
                 consumer.accept(this.requestLog
                     .stream()
-                    .filter(logItem ->
-                        logItem
-                            .getHttpRequests()
-                            .stream()
-                            .anyMatch(httpRequestMatcher::matches)
+                    .filter(logItem -> Arrays
+                        .stream(logItem.getHttpRequests())
+                        .anyMatch(httpRequestMatcher::matches)
                     )
                     .filter(logEntryPredicate)
                     .map(logEntryMapper)
@@ -348,7 +347,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                                 new LogEntry()
                                     .setType(VERIFICATION_FAILED)
                                     .setLogLevel(Level.INFO)
-                                    .setHttpRequests(verificationSequence.getHttpRequests())
+                                    .setHttpRequests(verificationSequence.getHttpRequests().toArray(new HttpRequest[0]))
                                     .setMessageFormat("request sequence not found, expected:{}but was:{}")
                                     .setArguments(arguments)
                             );

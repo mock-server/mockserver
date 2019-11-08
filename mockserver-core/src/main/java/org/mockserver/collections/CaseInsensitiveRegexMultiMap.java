@@ -149,7 +149,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
 
     public synchronized List<NottableString> getAll(NottableString key) {
         if (!isEmpty()) {
-            List<NottableString> all = new ArrayList<NottableString>();
+            List<NottableString> all = new ArrayList<>();
             for (List<NottableString> subList : backingMap.getAll(key)) {
                 all.addAll(subList);
             }
@@ -278,7 +278,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
 
     public synchronized List<Entry<NottableString, NottableString>> entryList() {
         if (!isEmpty()) {
-            List<Entry<NottableString, NottableString>> entrySet = new ArrayList<Entry<NottableString, NottableString>>();
+            List<Entry<NottableString, NottableString>> entrySet = new ArrayList<>();
             for (Entry<NottableString, List<NottableString>> entry : backingMap.entrySet()) {
                 for (NottableString value : entry.getValue()) {
                     entrySet.add(new ImmutableEntry(entry.getKey(), value));

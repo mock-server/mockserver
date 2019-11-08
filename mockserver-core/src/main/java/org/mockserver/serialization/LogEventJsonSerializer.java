@@ -29,10 +29,10 @@ public class LogEventJsonSerializer implements Serializer<LogEntry> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat(String.format("Exception while serializing messageLogEntry to JSON with value %s", messageLogEntry))
+                    .setMessageFormat("Exception while serializing messageLogEntry to JSON with value " + messageLogEntry)
                     .setThrowable(e)
             );
-            throw new RuntimeException(String.format("Exception while serializing messageLogEntry to JSON with value %s", messageLogEntry), e);
+            throw new RuntimeException("Exception while serializing messageLogEntry to JSON with value " + messageLogEntry, e);
         }
     }
 

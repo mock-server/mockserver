@@ -8,7 +8,10 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.*;
+import org.mockserver.model.Cookies;
+import org.mockserver.model.Headers;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.Parameters;
 import org.mockserver.url.URLParser;
 import org.slf4j.event.Level;
 
@@ -18,8 +21,6 @@ import java.util.Set;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.COOKIE;
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
-import static org.mockserver.model.NottableString.string;
-import static org.mockserver.model.NottableString.strings;
 
 /**
  * @author jamesdbloom
@@ -98,7 +99,7 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         Headers headers = new Headers();
         HttpHeaders httpHeaders = fullHttpResponse.headers();
         for (String headerName : httpHeaders.names()) {
-            headers.withEntry(new Header(headerName, httpHeaders.getAll(headerName)));
+            headers.withEntry(headerName, httpHeaders.getAll(headerName));
         }
         httpRequest.withHeaders(headers);
     }
@@ -109,10 +110,10 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
             Set<io.netty.handler.codec.http.cookie.Cookie> decodedCookies =
                 ServerCookieDecoder.LAX.decode(cookieHeader);
             for (io.netty.handler.codec.http.cookie.Cookie decodedCookie : decodedCookies) {
-                cookies.withEntry(new Cookie(
+                cookies.withEntry(
                     decodedCookie.name(),
                     decodedCookie.value()
-                ));
+                );
             }
         }
         httpRequest.withCookies(cookies);

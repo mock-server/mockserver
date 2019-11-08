@@ -1,6 +1,5 @@
 package org.mockserver.ui;
 
-import com.google.common.collect.ImmutableList;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.scheduler.Scheduler;
@@ -25,7 +24,7 @@ public class MockServerEventLogNotifier extends ObjectWithReflectiveEqualsHashCo
     protected void notifyListeners(final MockServerEventLog notifier) {
         if (listenerAdded && !listeners.isEmpty()) {
             scheduler.submit(() -> {
-                for (MockServerLogListener listener : ImmutableList.copyOf(listeners)) {
+                for (MockServerLogListener listener : listeners.toArray(new MockServerLogListener[0])) {
                     listener.updated(notifier);
                 }
             });

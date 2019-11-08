@@ -230,7 +230,7 @@ public class HttpStateHandler {
                                 .setType(RETRIEVED)
                                 .setLogLevel(Level.INFO)
                                 .setHttpRequest(httpRequest)
-                                .setMessageFormat(String.format("retrieving requests in %s that match:{}", format.name().toLowerCase()))
+                                .setMessageFormat("retrieving requests in " + format.name().toLowerCase() + " that match:{}")
                                 .setArguments(arguments)
                         );
                         switch (format) {
@@ -283,7 +283,7 @@ public class HttpStateHandler {
                                 .setType(RETRIEVED)
                                 .setLogLevel(Level.INFO)
                                 .setHttpRequest(httpRequest)
-                                .setMessageFormat(String.format("retrieving requests and responses in %s that match:{}", format.name().toLowerCase()))
+                                .setMessageFormat("retrieving requests and responses in " + format.name().toLowerCase() + " that match:{}")
                                 .setArguments(arguments)
                         );
                         switch (format) {
@@ -327,7 +327,7 @@ public class HttpStateHandler {
                                 .setType(RETRIEVED)
                                 .setLogLevel(Level.INFO)
                                 .setHttpRequest(httpRequest)
-                                .setMessageFormat(String.format("retrieving recorded expectations in %s that match:{}", format.name().toLowerCase()))
+                                .setMessageFormat("retrieving recorded expectations in " + format.name().toLowerCase() + " that match:{}")
                                 .setArguments(arguments)
                         );
                         switch (format) {
@@ -380,7 +380,7 @@ public class HttpStateHandler {
                                 .setType(RETRIEVED)
                                 .setLogLevel(Level.INFO)
                                 .setHttpRequest(httpRequest)
-                                .setMessageFormat(String.format("retrieving active expectations in %s that match:{}", format.name().toLowerCase()))
+                                .setMessageFormat("retrieving active expectations in " + format.name().toLowerCase() + " that match:{}")
                                 .setArguments(arguments)
                         );
                         List<Expectation> expectations = mockServerMatcher.retrieveActiveExpectations(httpRequest);
@@ -504,7 +504,7 @@ public class HttpStateHandler {
                 new LogEntry()
                     .setType(VERIFICATION)
                     .setLogLevel(Level.INFO)
-                    .setHttpRequests(verificationSequence.getHttpRequests())
+                    .setHttpRequests(verificationSequence.getHttpRequests().toArray(new HttpRequest[0]))
                     .setMessageFormat("verifying sequence that match:{}")
                     .setArguments(verificationSequence)
             );

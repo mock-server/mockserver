@@ -6,20 +6,21 @@ import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
-import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.ContentTypeMapper;
-import org.mockserver.model.*;
+import org.mockserver.model.Body;
+import org.mockserver.model.ConnectionOptions;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.model.NottableString;
 import org.slf4j.event.Level;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -75,11 +76,9 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
     }
 
     private void setHeaders(HttpResponse httpResponse, DefaultFullHttpResponse response) {
-        if (httpResponse.getHeaderList() != null) {
-            for (Header header : httpResponse.getHeaderList()) {
-                for (NottableString value : header.getValues()) {
-                    response.headers().add(header.getName().getValue(), value.getValue());
-                }
+        if (httpResponse.getHeaderMultimap() != null) {
+            for (Map.Entry<NottableString, NottableString> header : httpResponse.getHeaderMultimap().entries()) {
+                response.headers().add(header.getKey().getValue(), header.getValue().getValue());
             }
         }
 
@@ -118,15 +117,11 @@ public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpRespo
     }
 
     private void setCookies(HttpResponse httpResponse, DefaultFullHttpResponse response) {
-        if (httpResponse.getCookieList() != null) {
-            List<Cookie> cookieValues = new ArrayList<Cookie>();
-            for (org.mockserver.model.Cookie cookie : httpResponse.getCookieList()) {
-                if (!httpResponse.cookieHeaderAlreadyExists(cookie)) {
-                    cookieValues.add(new DefaultCookie(cookie.getName().getValue(), cookie.getValue().getValue()));
+        if (httpResponse.getCookieMap() != null) {
+            for (Map.Entry<NottableString, NottableString> cookie : httpResponse.getCookieMap().entrySet()) {
+                if (httpResponse.cookieHeadeDoesNotAlreadyExists(cookie.getKey().getValue(), cookie.getValue().getValue())) {
+                    response.headers().add(SET_COOKIE, ServerCookieEncoder.LAX.encode(new DefaultCookie(cookie.getKey().getValue(), cookie.getValue().getValue())));
                 }
-            }
-            for (Cookie cookieValue : cookieValues) {
-                response.headers().add(SET_COOKIE, ServerCookieEncoder.LAX.encode(cookieValue));
             }
         }
     }

@@ -1,6 +1,5 @@
 package org.mockserver.ui;
 
-import com.google.common.collect.ImmutableList;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.scheduler.Scheduler;
@@ -25,7 +24,7 @@ public class MockServerMatcherNotifier extends ObjectWithReflectiveEqualsHashCod
     protected void notifyListeners(final MockServerMatcher notifier) {
         if (listenerAdded && !listeners.isEmpty()) {
             scheduler.submit(() -> {
-                for (MockServerMatcherListener listener : ImmutableList.copyOf(listeners)) {
+                for (MockServerMatcherListener listener : listeners.toArray(new MockServerMatcherListener[0])) {
                     listener.updated(notifier);
                 }
             });

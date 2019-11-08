@@ -1,7 +1,6 @@
 package org.mockserver.log.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.ImmutableList;
 import com.lmax.disruptor.EventTranslator;
 import org.mockserver.log.TimeService;
 import org.mockserver.mock.Expectation;
@@ -14,10 +13,6 @@ import org.slf4j.event.Level;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.model.HttpRequest.request;
@@ -32,7 +27,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     private long epochTime = TimeService.currentTimeMillis();
     private String timestamp;
     private LogEntry.LogMessageType type;
-    private List<HttpRequest> httpRequests;
+    private HttpRequest[] httpRequests;
     private HttpResponse httpResponse;
     private HttpError httpError;
     private Expectation expectation;
@@ -50,7 +45,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     public void clear() {
         logLevel = Level.INFO;
         epochTime = -1;
-        httpRequests = ImmutableList.of(request());
+        httpRequests = new HttpRequest[]{request()};
         timestamp = null;
         httpResponse = null;
         httpError = null;
@@ -97,27 +92,27 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     }
 
     @JsonIgnore
-    public List<HttpRequest> getHttpRequests() {
+    public HttpRequest[] getHttpRequests() {
         return httpRequests;
     }
 
-    public LogEntry setHttpRequests(List<HttpRequest> httpRequests) {
+    public LogEntry setHttpRequests(HttpRequest[] httpRequests) {
         this.httpRequests = httpRequests;
         return this;
     }
 
     public LogEntry setHttpRequest(HttpRequest httpRequest) {
         if (httpRequest != null) {
-            this.httpRequests = ImmutableList.of(httpRequest);
+            this.httpRequests = new HttpRequest[]{httpRequest};
         } else {
-            this.httpRequests = ImmutableList.of(request());
+            this.httpRequests = new HttpRequest[]{request()};
         }
         return this;
     }
 
     public HttpRequest getHttpRequest() {
-        if (httpRequests != null) {
-            return httpRequests.get(0);
+        if (httpRequests != null && httpRequests.length > 0) {
+            return httpRequests[0];
         } else {
             return null;
         }

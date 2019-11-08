@@ -1,12 +1,14 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Multimap;
 import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
 import static org.mockserver.model.Header.header;
@@ -282,6 +284,14 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
         }
     }
 
+    public Multimap<NottableString, NottableString> getHeaderMultimap() {
+        if (this.headers != null) {
+            return this.headers.getMultimap();
+        } else {
+            return null;
+        }
+    }
+
     public List<String> getHeader(String name) {
         if (this.headers != null) {
             return this.headers.getValues(name);
@@ -425,16 +435,36 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
         }
     }
 
-    public boolean cookieHeaderAlreadyExists(Cookie cookieValue) {
+    public Map<NottableString, NottableString> getCookieMap() {
+        if (this.cookies != null) {
+            return this.cookies.getMap();
+        } else {
+            return null;
+        }
+    }
+
+    public boolean cookieHeadeDoesNotAlreadyExists(Cookie cookieValue) {
         List<String> setCookieHeaders = getHeader(SET_COOKIE.toString());
         for (String setCookieHeader : setCookieHeaders) {
             String existingCookieName = ClientCookieDecoder.LAX.decode(setCookieHeader).name();
             String existingCookieValue = ClientCookieDecoder.LAX.decode(setCookieHeader).value();
             if (existingCookieName.equalsIgnoreCase(cookieValue.getName().getValue()) && existingCookieValue.equalsIgnoreCase(cookieValue.getValue().getValue())) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
+    }
+
+    public boolean cookieHeadeDoesNotAlreadyExists(String name, String value) {
+        List<String> setCookieHeaders = getHeader(SET_COOKIE.toString());
+        for (String setCookieHeader : setCookieHeaders) {
+            String existingCookieName = ClientCookieDecoder.LAX.decode(setCookieHeader).name();
+            String existingCookieValue = ClientCookieDecoder.LAX.decode(setCookieHeader).value();
+            if (existingCookieName.equalsIgnoreCase(name) && existingCookieValue.equalsIgnoreCase(value)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

@@ -392,13 +392,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     " because:" + NEW_LINE +
                     NEW_LINE +
                     "\tmethod matched," + NEW_LINE +
-                    "\tpath didn't match," + NEW_LINE +
-                    "\tquery matched," + NEW_LINE +
-                    "\tbody matched," + NEW_LINE +
-                    "\theaders matched," + NEW_LINE +
-                    "\tcookies matched," + NEW_LINE +
-                    "\tkeep-alive matched," + NEW_LINE +
-                    "\tssl matched" + NEW_LINE
+                    "\tpath didn't match" + NEW_LINE
             },
             new String[]{
                 "no expectation for:" + NEW_LINE +

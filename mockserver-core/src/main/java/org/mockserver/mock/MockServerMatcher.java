@@ -1,6 +1,5 @@
 package org.mockserver.mock;
 
-import com.google.common.collect.ImmutableList;
 import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.collections.CircularLinkedList;
 import org.mockserver.logging.MockServerLogger;
@@ -43,8 +42,8 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
         }
     }
 
-    private List<HttpRequestMatcher> cloneMatchers() {
-        return ImmutableList.copyOf(httpRequestMatchers);
+    private HttpRequestMatcher[] cloneMatchers() {
+        return httpRequestMatchers.toArray(new HttpRequestMatcher[0]);
     }
 
     public void reset() {

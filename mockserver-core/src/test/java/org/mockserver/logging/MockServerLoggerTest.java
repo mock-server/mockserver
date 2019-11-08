@@ -11,8 +11,6 @@ import org.mockserver.model.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
 
-import java.util.Collections;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsArrayContainingInOrder.arrayContaining;
@@ -62,7 +60,7 @@ public class MockServerLoggerTest {
             verify(mockHttpStateHandler, times(1)).log(captor.capture());
 
             LogEntry messageLogEntry = captor.getValue();
-            assertThat(messageLogEntry.getHttpRequests(), is(Collections.singletonList(request)));
+            assertThat(messageLogEntry.getHttpRequests(), is(new HttpRequest[]{request}));
             assertThat(messageLogEntry.getMessage(), containsString("some random message with " + NEW_LINE +
                 NEW_LINE +
                 "\tsome" + NEW_LINE +

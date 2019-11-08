@@ -42,15 +42,15 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat(String.format("Exception while serializing httpResponse to JSON with value %s", httpResponse))
+                    .setMessageFormat("Exception while serializing httpResponse to JSON with value " + httpResponse)
                     .setThrowable(e)
             );
-            throw new RuntimeException(String.format("Exception while serializing httpResponse to JSON with value %s", httpResponse), e);
+            throw new RuntimeException("Exception while serializing httpResponse to JSON with value " + httpResponse, e);
         }
     }
 
     public String serialize(List<HttpResponse> httpResponses) {
-        return serialize(httpResponses.toArray(new HttpResponse[httpResponses.size()]));
+        return serialize(httpResponses.toArray(new HttpResponse[0]));
     }
 
     public String serialize(HttpResponse... httpResponses) {

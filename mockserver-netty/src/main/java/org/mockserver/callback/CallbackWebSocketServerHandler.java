@@ -107,7 +107,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
         } else if (frame instanceof PingWebSocketFrame) {
             ctx.write(new PongWebSocketFrame(frame.content().retain()));
         } else {
-            throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
+            throw new UnsupportedOperationException(frame.getClass().getName() + " frame types not supported");
         }
     }
 

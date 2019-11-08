@@ -27,10 +27,10 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat(String.format("Exception while serializing portBinding to JSON with value %s", portBinding))
+                    .setMessageFormat("Exception while serializing portBinding to JSON with value " + portBinding)
                     .setThrowable(e)
             );
-            throw new RuntimeException(String.format("Exception while serializing portBinding to JSON with value %s", portBinding), e);
+            throw new RuntimeException("Exception while serializing portBinding to JSON with value " + portBinding, e);
         }
     }
 

@@ -29,9 +29,9 @@ public class LogEntrySerializer extends StdSerializer<LogEntry> {
             jgen.writeObjectField("type", logEntry.getType());
         }
         if (logEntry.getHttpRequests() != null) {
-            if (logEntry.getHttpRequests().size() > 1) {
+            if (logEntry.getHttpRequests().length > 1) {
                 jgen.writeObjectField("httpRequests", logEntry.getHttpRequests());
-            } else if (logEntry.getHttpRequests().size() == 1) {
+            } else if (logEntry.getHttpRequests().length == 1) {
                 jgen.writeObjectField("httpRequest", logEntry.getHttpRequest());
             }
         }

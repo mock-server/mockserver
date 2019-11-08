@@ -41,15 +41,15 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat(String.format("Exception while serializing expectation to JSON with value %s", expectation))
+                    .setMessageFormat("Exception while serializing expectation to JSON with value " + expectation)
                     .setThrowable(e)
             );
-            throw new RuntimeException(String.format("Exception while serializing expectation to JSON with value %s", expectation), e);
+            throw new RuntimeException("Exception while serializing expectation to JSON with value " + expectation, e);
         }
     }
 
     public String serialize(List<Expectation> expectations) {
-        return serialize(expectations.toArray(new Expectation[expectations.size()]));
+        return serialize(expectations.toArray(new Expectation[0]));
     }
 
     public String serialize(Expectation... expectations) {

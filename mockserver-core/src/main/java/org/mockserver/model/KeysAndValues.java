@@ -69,6 +69,10 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
         }
     }
 
+    public Map<NottableString, NottableString> getMap() {
+        return map;
+    }
+
     public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap() {
         return toCaseInsensitiveRegexMultiMap(this.getEntries());
     }

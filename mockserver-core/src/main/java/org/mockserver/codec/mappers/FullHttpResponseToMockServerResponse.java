@@ -50,7 +50,7 @@ public class FullHttpResponseToMockServerResponse {
     private void setHeaders(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {
         Headers headers = new Headers();
         for (String headerName : fullHttpResponse.headers().names()) {
-            headers.withEntry(new Header(headerName, fullHttpResponse.headers().getAll(headerName)));
+            headers.withEntry(headerName, fullHttpResponse.headers().getAll(headerName));
         }
         if (!headers.isEmpty()) {
             httpResponse.withHeaders(headers);

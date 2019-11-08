@@ -87,10 +87,10 @@ public class IOStreamUtils {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat(String.format("IOException while writing [%s] to HttpServletResponse output stream", new String(data)))
+                    .setMessageFormat("IOException while writing [" + new String(data) + "] to HttpServletResponse output stream")
                     .setThrowable(ioe)
             );
-            throw new RuntimeException(String.format("IOException while writing [%s] to HttpServletResponse output stream", new String(data)), ioe);
+            throw new RuntimeException("IOException while writing [" + new String(data) + "] to HttpServletResponse output stream", ioe);
         }
     }
 
