@@ -18,6 +18,8 @@ public abstract class ObjectWithReflectiveEqualsHashCodeToString {
         ReflectionToStringBuilder.setDefaultStyle(ToStringStyle.SHORT_PREFIX_STYLE);
     }
 
+    private final String key = UUID.randomUUID().toString();
+
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
         return null;
     }
@@ -39,6 +41,6 @@ public abstract class ObjectWithReflectiveEqualsHashCodeToString {
 
     @JsonIgnore
     public String key() {
-        return UUID.randomUUID().toString();
+        return key;
     }
 }

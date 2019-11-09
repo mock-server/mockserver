@@ -13,6 +13,7 @@ import static org.mockserver.model.HttpRequest.request;
 
 public class LogEntryDTO extends ObjectWithJsonToString {
 
+    private String key;
     private Level logLevel;
     private long epochTime;
     private String timestamp;
@@ -28,6 +29,7 @@ public class LogEntryDTO extends ObjectWithJsonToString {
     private String message;
 
     public LogEntryDTO(LogEntry logEntry) {
+        setKey(logEntry.key());
         setLogLevel(logEntry.getLogLevel());
         setTimestamp(logEntry.getTimestamp());
         setEpochTime(logEntry.getEpochTime());
@@ -40,6 +42,14 @@ public class LogEntryDTO extends ObjectWithJsonToString {
         setArguments(logEntry.getArguments());
         setMessage(logEntry.getMessage());
         setThrowable(logEntry.getThrowable());
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public Level getLogLevel() {

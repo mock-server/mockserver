@@ -15,6 +15,7 @@ import io.netty.util.ReferenceCountUtil;
 import org.mockserver.collections.CircularHashMap;
 import org.mockserver.dashboard.model.LogEntryDTO;
 import org.mockserver.dashboard.serializers.LogEntryDTOSerializer;
+import org.mockserver.dashboard.serializers.ThrowableSerializer;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -34,7 +35,6 @@ import java.util.stream.Collectors;
 import static com.google.common.net.HttpHeaders.HOST;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
-import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -59,7 +59,8 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     private CircularHashMap<ChannelHandlerContext, HttpRequest> clientRegistry = new CircularHashMap<>(100);
     private HttpRequestSerializer httpRequestSerializer;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper(
-        new LogEntryDTOSerializer()
+        new LogEntryDTOSerializer(),
+        new ThrowableSerializer()
     );
     private MockServerMatcher mockServerMatcher;
     private MockServerEventLog mockServerLog;

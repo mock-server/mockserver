@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.dashboard.model.LogEntryDTO;
 
 import java.io.IOException;
+import java.util.Base64;
 
 /**
  * @author jamesdbloom
@@ -19,7 +20,7 @@ public class LogEntryDTOSerializer extends StdSerializer<LogEntryDTO> {
     @Override
     public void serialize(LogEntryDTO logEntry, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
-        jgen.writeObjectField("key", logEntry.key());
+        jgen.writeObjectField("key", logEntry.getKey());
         jgen.writeObjectFieldStart("value");
         if (logEntry.getLogLevel() != null) {
             jgen.writeObjectField("logLevel", logEntry.getLogLevel());
