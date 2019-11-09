@@ -46,7 +46,7 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
     // serializers
     private PortBindingSerializer portBindingSerializer;
     // mappers
-    private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder(new MockServerLogger());
+    private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder;
     // mockserver
     private ActionHandler actionHandler;
     private EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
@@ -54,6 +54,7 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
     @SuppressWarnings("WeakerAccess")
     public ProxyServlet() {
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
+        this.httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder(this.mockServerLogger);
         this.scheduler = new Scheduler(mockServerLogger);
         this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
