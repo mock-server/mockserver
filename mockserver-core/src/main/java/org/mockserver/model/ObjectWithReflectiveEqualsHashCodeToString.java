@@ -1,11 +1,11 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.bouncycastle.util.Arrays;
 
 import java.util.UUID;
 
@@ -19,6 +19,7 @@ public abstract class ObjectWithReflectiveEqualsHashCodeToString {
     }
 
     private final String key = UUID.randomUUID().toString();
+    private final String[] fieldsExcludedFromEqualsAndHashCode = fieldsExcludedFromEqualsAndHashCode() == null ? new String[]{"key"} : Arrays.append(fieldsExcludedFromEqualsAndHashCode(), "key");
 
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
         return null;
@@ -26,17 +27,17 @@ public abstract class ObjectWithReflectiveEqualsHashCodeToString {
 
     @Override
     public String toString() {
-        return ReflectionToStringBuilder.toStringExclude(this, fieldsExcludedFromEqualsAndHashCode());
+        return ReflectionToStringBuilder.toStringExclude(this, fieldsExcludedFromEqualsAndHashCode);
     }
 
     @Override
     public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other, fieldsExcludedFromEqualsAndHashCode());
+        return EqualsBuilder.reflectionEquals(this, other, fieldsExcludedFromEqualsAndHashCode);
     }
 
     @Override
     public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this, fieldsExcludedFromEqualsAndHashCode());
+        return HashCodeBuilder.reflectionHashCode(this, fieldsExcludedFromEqualsAndHashCode);
     }
 
     @JsonIgnore
