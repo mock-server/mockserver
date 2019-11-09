@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -39,11 +40,15 @@ public class ObjectMapperFactory {
 
     private static final ObjectMapper OBJECT_MAPPER = buildObjectMapper();
 
-    public static ObjectMapper createObjectMapper() {
-        return OBJECT_MAPPER;
+    public static ObjectMapper createObjectMapper(JsonSerializer... additionJsonSerializers) {
+        if (additionJsonSerializers == null || additionJsonSerializers.length == 0) {
+            return OBJECT_MAPPER;
+        } else {
+            return buildObjectMapper(additionJsonSerializers);
+        }
     }
 
-    private static ObjectMapper buildObjectMapper() {
+    private static ObjectMapper buildObjectMapper(JsonSerializer... additionJsonSerializers) {
         ObjectMapper objectMapper = new ObjectMapper();
 
         // ignore failures
@@ -78,7 +83,11 @@ public class ObjectMapperFactory {
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 
         // register our own module with our serializers and deserializers
-        objectMapper.registerModule(new Module());
+        Module module = new Module();
+        for (JsonSerializer additionJsonSerializer : additionJsonSerializers) {
+            module.addSerializer(additionJsonSerializer);
+        }
+        objectMapper.registerModule(module);
         return objectMapper;
     }
 

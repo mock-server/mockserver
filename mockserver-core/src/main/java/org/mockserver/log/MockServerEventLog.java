@@ -1,7 +1,6 @@
 package org.mockserver.log;
 
 import com.google.common.util.concurrent.SettableFuture;
-import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.util.DaemonThreadFactory;
@@ -25,17 +24,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -274,6 +270,33 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                     )
                     .filter(logEntryPredicate)
                     .map(logEntryMapper)
+                );
+            })
+        );
+    }
+
+    public <T> void retrieveLogEntriesInReverse(HttpRequest httpRequest, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Deque<T>> consumer) {
+        disruptor.publishEvent(new LogEntry()
+            .setType(RUNNABLE)
+            .setConsumer(() -> {
+                HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+                consumer.accept(
+                    this.requestLog
+                        .stream()
+                        .filter(logItem -> Arrays
+                            .stream(logItem.getHttpRequests())
+                            .anyMatch(httpRequestMatcher::matches)
+                        )
+                        .filter(logEntryPredicate)
+                        .map(logEntryMapper)
+                        .collect(Collector.of(
+                            ArrayDeque::new,
+                            ArrayDeque::addFirst,
+                            (d1, d2) -> {
+                                d2.addAll(d1);
+                                return d2;
+                            }
+                        ))
                 );
             })
         );

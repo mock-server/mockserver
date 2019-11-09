@@ -3,7 +3,6 @@ package org.mockserver.dashboard;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -14,29 +13,28 @@ import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import org.mockserver.collections.CircularHashMap;
+import org.mockserver.dashboard.model.LogEntryDTO;
+import org.mockserver.dashboard.serializers.LogEntryDTOSerializer;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.serialization.HttpRequestSerializer;
-import org.mockserver.serialization.LogEventJsonSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.ui.MockServerLogListener;
 import org.mockserver.ui.MockServerMatcherListener;
-import org.mockserver.ui.model.ValueWithKey;
 import org.slf4j.event.Level;
 
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.google.common.net.HttpHeaders.HOST;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
+import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -45,6 +43,14 @@ import static org.mockserver.model.HttpRequest.request;
 @ChannelHandler.Sharable
 public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapter implements MockServerLogListener, MockServerMatcherListener {
 
+    private static final Predicate<LogEntryDTO> requestLogPredicate = input
+        -> input.getType() == RECEIVED_REQUEST;
+    private static final Predicate<LogEntryDTO> requestResponseLogPredicate = input
+        -> input.getType() == EXPECTATION_RESPONSE
+        || input.getType() == EXPECTATION_NOT_MATCHED_RESPONSE
+        || input.getType() == FORWARDED_REQUEST;
+    private static final Predicate<LogEntryDTO> recordedExpectationLogPredicate = input
+        -> input.getType() == FORWARDED_REQUEST;
     private static final AttributeKey<Boolean> CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET = AttributeKey.valueOf("CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET");
     private static final String UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI = "/_mockserver_ui_websocket";
     private final MockServerLogger mockServerLogger;
@@ -52,18 +58,17 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     private WebSocketServerHandshaker handshaker;
     private CircularHashMap<ChannelHandlerContext, HttpRequest> clientRegistry = new CircularHashMap<>(100);
     private HttpRequestSerializer httpRequestSerializer;
-    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper(
+        new LogEntryDTOSerializer()
+    );
     private MockServerMatcher mockServerMatcher;
     private MockServerEventLog mockServerLog;
-    private LogEventJsonSerializer logEventJsonSerializer;
 
     public DashboardWebSocketServerHandler(HttpStateHandler httpStateHandler) {
         this.httpStateHandler = httpStateHandler;
         this.mockServerMatcher = httpStateHandler.getMockServerMatcher();
-        this.mockServerLog = httpStateHandler.getMockServerLog();
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
-        this.logEventJsonSerializer = new LogEventJsonSerializer(mockServerLogger);
     }
 
     @Override
@@ -159,7 +164,9 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         mockServerMatcher.unregisterListener(this);
-        mockServerLog.unregisterListener(this);
+        if (mockServerLog != null) {
+            mockServerLog.unregisterListener(this);
+        }
         ctx.fireChannelInactive();
     }
 
@@ -177,41 +184,46 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         }
     }
 
-    private Future<List<Expectation>> retrieveRecordedExpectations(HttpRequest httpRequest) {
-        SettableFuture<List<Expectation>> settableFuture = SettableFuture.create();
-        mockServerLog.retrieveRecordedExpectations(httpRequest, settableFuture::set);
-        return settableFuture;
-    }
-
-    private Future<List<LogEntry>> retrieveRequestLogEntries(HttpRequest httpRequest) {
-        SettableFuture<List<LogEntry>> settableFuture = SettableFuture.create();
-        mockServerLog.retrieveRequestLogEntries(httpRequest, settableFuture::set);
-        return settableFuture;
-    }
-
-    private Future<List<LogEntry>> retrieveMessageLogEntries(HttpRequest httpRequest) {
-        SettableFuture<List<LogEntry>> future = SettableFuture.create();
-        mockServerLog.retrieveMessageLogEntries(httpRequest, future::set);
-        return future;
-    }
-
     private void sendUpdate(HttpRequest httpRequest, ChannelHandlerContext channelHandlerContext) {
-        try {
-            // TODO(jamesdbloom) migrate this to a single Future to avoid three separate Futures
-            sendMessage(channelHandlerContext, ImmutableMap.of(
-                "activeExpectations", mockServerMatcher.retrieveActiveExpectations(httpRequest).stream().map(ValueWithKey::new).collect(Collectors.toList()),
-                "recordedExpectations", retrieveRecordedExpectations(httpRequest).get().stream().map(ValueWithKey::new).collect(Collectors.toList()),
-                "recordedRequests", retrieveRequestLogEntries(httpRequest).get().stream().map(ValueWithKey::new).collect(Collectors.toList()),
-                "logMessages", retrieveMessageLogEntries(httpRequest).get().stream().map(messageLogEntry -> new ValueWithKey(logEventJsonSerializer.serialize(messageLogEntry), messageLogEntry.key())).collect(Collectors.toList())
-            ));
-        } catch (JsonProcessingException | InterruptedException | ExecutionException jpe) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
-                    .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while updating UI")
-                    .setThrowable(jpe)
-            );
-        }
+        mockServerLog.retrieveLogEntriesInReverse(
+            httpRequest,
+            logEntry -> true,
+            LogEntryDTO::new,
+            logEventStream -> {
+                try {
+                    sendMessage(channelHandlerContext, ImmutableMap.of(
+                        "activeExpectations", mockServerMatcher
+                            .retrieveActiveExpectations(httpRequest)
+                            .stream()
+                            .map(expectation -> ImmutableMap.of(
+                                "key", expectation.key(),
+                                "value", expectation
+                            ))
+                            .collect(Collectors.toList()),
+                        "recordedExpectations", logEventStream
+                            .stream()
+                            .filter(recordedExpectationLogPredicate)
+                            .collect(Collectors.toList()),
+                        "recordedRequests", logEventStream
+                            .stream()
+                            .filter(requestLogPredicate)
+                            .collect(Collectors.toList()),
+                        "recordedRequestResponses", logEventStream
+                            .stream()
+                            .filter(requestResponseLogPredicate)
+                            .collect(Collectors.toList()),
+                        "logMessages", logEventStream
+                    ));
+                } catch (JsonProcessingException jpe) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.EXCEPTION)
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("Exception while updating UI")
+                            .setThrowable(jpe)
+                    );
+                }
+            }
+        );
     }
 }
