@@ -3,7 +3,6 @@ package org.mockserver.log;
 import com.google.common.util.concurrent.SettableFuture;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.util.DaemonThreadFactory;
 import org.mockserver.collections.BoundedConcurrentLinkedQueue;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
@@ -35,6 +34,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockserver.configuration.ConfigurationProperties.requestLogSize;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
@@ -80,18 +80,22 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         this.matcherBuilder = new MatcherBuilder(mockServerLogger);
         this.httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
         this.asynchronousEventProcessing = asynchronousEventProcessing;
-        initialiseRingBuffer();
+        startRingBuffer();
     }
 
-    @SuppressWarnings("DuplicatedCode")
-    private void processLogEntry(LogEntry logEntry) {
-        requestLog.add(logEntry);
-        notifyListeners(this);
-        writeToSystemOut(logger, logEntry);
+    public void add(LogEntry logEntry) {
+        if (asynchronousEventProcessing) {
+            // only try to publish so if it fails log is lost
+            if (!disruptor.getRingBuffer().tryPublishEvent(logEntry)) {
+                logger.error("Failed to add event too log ring buffer, for event: " + logEntry);
+            }
+        } else {
+            processLogEntry(logEntry);
+        }
     }
 
-    private void initialiseRingBuffer() {
-        disruptor = new Disruptor<>(LogEntry::new, ConfigurationProperties.ringBufferSize(), DaemonThreadFactory.INSTANCE);
+    private void startRingBuffer() {
+        disruptor = new Disruptor<>(LogEntry::new, ConfigurationProperties.ringBufferSize(), new Scheduler.SchedulerThreadFactory("EventLog"));
 
         final ExceptionHandler<LogEntry> errorHandler = new ExceptionHandler<LogEntry>() {
             @Override
@@ -122,14 +126,22 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         disruptor.start();
     }
 
-    public void add(LogEntry logEntry) {
-        if (asynchronousEventProcessing) {
-            // only try to publish so if it fails log is lost
-            if (!disruptor.getRingBuffer().tryPublishEvent(logEntry)) {
-                logger.error("Failed to add event too log ring buffer, for event: " + logEntry);
-            }
-        } else {
-            processLogEntry(logEntry);
+    @SuppressWarnings("DuplicatedCode")
+    private void processLogEntry(LogEntry logEntry) {
+        requestLog.add(logEntry);
+        notifyListeners(this);
+        writeToSystemOut(logger, logEntry);
+    }
+
+    public void stop() {
+        try {
+            disruptor.shutdown(500, MILLISECONDS);
+        } catch (Throwable throwable) {
+            writeToSystemOut(logger, new LogEntry()
+                .setLogLevel(Level.WARN)
+                .setMessageFormat("Exception while shutting down log ring buffer")
+                .setThrowable(throwable)
+            );
         }
     }
 

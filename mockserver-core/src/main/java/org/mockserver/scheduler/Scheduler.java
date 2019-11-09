@@ -6,13 +6,11 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.HttpForwardActionResult;
 import org.mockserver.model.Delay;
-import org.mockserver.model.HttpError;
 import org.slf4j.event.Level;
 
 import java.util.concurrent.*;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_RESPONSE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
 
 /**
@@ -20,7 +18,31 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
  */
 public class Scheduler {
 
-    private final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(poolSize(), new ThreadPoolExecutor.CallerRunsPolicy());
+    private final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(
+        poolSize(),
+        new SchedulerThreadFactory("Scheduler"),
+        new ThreadPoolExecutor.CallerRunsPolicy()
+    );
+
+    public static class SchedulerThreadFactory implements ThreadFactory {
+
+        private final String name;
+        private static int threadInitNumber;
+
+        public SchedulerThreadFactory(String name) {
+            this.name = name;
+        }
+
+        @Override
+        @SuppressWarnings("NullableProblems")
+        public Thread newThread(Runnable runnable) {
+            Thread thread = new Thread(runnable);
+            thread.setName("MockServer-" + name + threadInitNumber++);
+            thread.setDaemon(true);
+            return thread;
+        }
+    }
+
     private final MockServerLogger mockServerLogger;
 
     public Scheduler(MockServerLogger mockServerLogger) {
@@ -32,11 +54,13 @@ public class Scheduler {
     }
 
     public synchronized void shutdown() {
-        scheduler.shutdown();
-        try {
-            scheduler.awaitTermination(500, MILLISECONDS);
-        } catch (InterruptedException ignore) {
-            // ignore interrupted exception
+        if (!scheduler.isShutdown()) {
+            scheduler.shutdown();
+            try {
+                scheduler.awaitTermination(500, MILLISECONDS);
+            } catch (InterruptedException ignore) {
+                // ignore interrupted exception
+            }
         }
     }
 

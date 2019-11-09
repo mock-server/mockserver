@@ -26,7 +26,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.rtsp.RtspResponseStatuses.NOT_IMPLEMENTED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
@@ -40,7 +42,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
     private MockServerLogger mockServerLogger;
     // generic handling
     private HttpStateHandler httpStateHandler;
-    private Scheduler scheduler = new Scheduler(mockServerLogger);
+    private Scheduler scheduler;
     // serializers
     private PortBindingSerializer portBindingSerializer;
     // mappers
@@ -51,12 +53,17 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
 
     @SuppressWarnings("WeakerAccess")
     public MockServerServlet() {
-        this.mockServerLogger =  new MockServerLogger(MockServerEventLog.class);
+        this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
         this.scheduler = new Scheduler(mockServerLogger);
         this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
         this.actionHandler = new ActionHandler(workerGroup, httpStateHandler, null);
+    }
+
+    @Override
+    public void destroy() {
+        shutdown();
     }
 
     @Override
@@ -66,8 +73,15 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
+        shutdown();
+    }
+
+    private void shutdown() {
         this.scheduler.shutdown();
-        this.workerGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+        if (!this.workerGroup.isShuttingDown()) {
+            this.workerGroup.shutdownGracefully(100, 750, MILLISECONDS).syncUninterruptibly();
+        }
+        this.httpStateHandler.getMockServerLog().stop();
     }
 
     @Override

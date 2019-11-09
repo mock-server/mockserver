@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
@@ -86,7 +87,7 @@ public class MockServerClientIntegrationTest {
         SettableFuture<List<HttpRequest>> result = SettableFuture.create();
         mockServerEventLog.retrieveRequests(httpRequest, result::set);
         try {
-            return result.get();
+            return result.get(10, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
             return null;
@@ -97,7 +98,7 @@ public class MockServerClientIntegrationTest {
         SettableFuture<String> result = SettableFuture.create();
         mockServerEventLog.verify(verification, result::set);
         try {
-            return result.get();
+            return result.get(10, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
             return null;
@@ -108,7 +109,7 @@ public class MockServerClientIntegrationTest {
         SettableFuture<String> result = SettableFuture.create();
         mockServerEventLog.verify(verificationSequence, result::set);
         try {
-            return result.get();
+            return result.get(10, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
             return null;

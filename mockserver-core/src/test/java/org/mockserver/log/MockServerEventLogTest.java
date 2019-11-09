@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
@@ -63,7 +64,7 @@ public class MockServerEventLogTest {
         SettableFuture<List<HttpRequest>> result = SettableFuture.create();
         mockServerEventLog.retrieveRequests(httpRequest, result::set);
         try {
-            return result.get();
+            return result.get(10, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
             return null;

@@ -11,6 +11,7 @@ import org.mockserver.scheduler.Scheduler;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -43,7 +44,7 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
         SettableFuture<String> result = SettableFuture.create();
         mockServerEventLog.verify(verification, result::set);
         try {
-            return result.get();
+            return result.get(10, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
             return null;
@@ -54,7 +55,7 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
         SettableFuture<String> result = SettableFuture.create();
         mockServerEventLog.verify(verificationSequence, result::set);
         try {
-            return result.get();
+            return result.get(10, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
             return null;

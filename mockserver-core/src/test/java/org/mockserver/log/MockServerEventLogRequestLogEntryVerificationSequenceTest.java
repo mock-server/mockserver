@@ -10,6 +10,9 @@ import org.mockserver.scheduler.Scheduler;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 
+import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -39,7 +42,7 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
         SettableFuture<String> result = SettableFuture.create();
         mockServerEventLog.verify(verification, result::set);
         try {
-            return result.get();
+            return result.get(10, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
             return null;
@@ -50,7 +53,7 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
         SettableFuture<String> result = SettableFuture.create();
         mockServerEventLog.verify(verificationSequence, result::set);
         try {
-            return result.get();
+            return result.get(10, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
             return null;
@@ -130,7 +133,7 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldPassVerificationSequenceWithOneRequest() throws InterruptedException {
+    public void shouldPassVerificationSequenceWithOneRequest() {
         // when
         mockServerEventLog.add(
             new LogEntry()
@@ -190,7 +193,7 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldPassVerificationSequenceWithTwoRequests() throws InterruptedException {
+    public void shouldPassVerificationSequenceWithTwoRequests() {
         // when
         mockServerEventLog.add(
             new LogEntry()
@@ -287,7 +290,7 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldFailVerificationSequenceWithOneRequest() throws InterruptedException {
+    public void shouldFailVerificationSequenceWithOneRequest() {
         // when
         mockServerEventLog.add(
             new LogEntry()
@@ -338,7 +341,7 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldFailVerificationSequenceWithTwoRequestsWrongOrder() throws InterruptedException {
+    public void shouldFailVerificationSequenceWithTwoRequestsWrongOrder() {
         // when
         mockServerEventLog.add(
             new LogEntry()
@@ -481,7 +484,7 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldFailVerificationSequenceWithTwoRequestsFirstIncorrect() throws InterruptedException {
+    public void shouldFailVerificationSequenceWithTwoRequestsFirstIncorrect() {
         // when
         mockServerEventLog.add(
             new LogEntry()
@@ -579,7 +582,7 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldFailVerificationSequenceWithTwoRequestsSecondIncorrect() throws InterruptedException {
+    public void shouldFailVerificationSequenceWithTwoRequestsSecondIncorrect() {
         // when
         mockServerEventLog.add(
             new LogEntry()
@@ -677,7 +680,7 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldFailVerificationSequenceWithThreeRequestsWrongOrder() throws InterruptedException {
+    public void shouldFailVerificationSequenceWithThreeRequestsWrongOrder() {
         // when
         mockServerEventLog.add(
             new LogEntry()
@@ -811,7 +814,7 @@ public class MockServerEventLogRequestLogEntryVerificationSequenceTest {
     }
 
     @Test
-    public void shouldFailVerificationSequenceWithThreeRequestsDuplicateMissing() throws InterruptedException {
+    public void shouldFailVerificationSequenceWithThreeRequestsDuplicateMissing() {
         // when
         mockServerEventLog.add(
             new LogEntry()

@@ -50,6 +50,7 @@ public abstract class LifeCycle implements Stoppable {
 
     public void stop() {
         scheduler.shutdown();
+        httpStateHandler.getMockServerLog().stop();
 
         // Shut down all event loops to terminate all threads.
         bossGroup.shutdownGracefully(5, 5, MILLISECONDS);

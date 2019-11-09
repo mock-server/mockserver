@@ -30,6 +30,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.rtsp.RtspResponseStatuses.NOT_IMPLEMENTED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
 
@@ -52,12 +53,17 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
 
     @SuppressWarnings("WeakerAccess")
     public ProxyServlet() {
-        this.mockServerLogger =  new MockServerLogger(MockServerEventLog.class);
+        this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
         this.scheduler = new Scheduler(mockServerLogger);
         this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
         this.actionHandler = new ActionHandler(workerGroup, httpStateHandler, null);
+    }
+
+    @Override
+    public void destroy() {
+        shutdown();
     }
 
     @Override
@@ -67,8 +73,15 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
+        shutdown();
+    }
+
+    private void shutdown() {
         this.scheduler.shutdown();
-        this.workerGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+        if (!this.workerGroup.isShuttingDown()) {
+            this.workerGroup.shutdownGracefully(100, 750, MILLISECONDS).syncUninterruptibly();
+        }
+        this.httpStateHandler.getMockServerLog().stop();
     }
 
     @Override
@@ -84,15 +97,19 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
 
             if (!httpStateHandler.handle(request, responseWriter, true)) {
 
-                if (request.matches("PUT", "/status")) {
+                if (request.getPath().getValue().equals("/_mockserver_callback_websocket")) {
+
+                    responseWriter.writeResponse(request, NOT_IMPLEMENTED, "ExpectationResponseCallback and ExpectationForwardCallback is not supported by MockServer deployed as a WAR", "text/plain");
+
+                } else if (request.matches("PUT", PATH_PREFIX + "/status", "/status")) {
 
                     responseWriter.writeResponse(request, OK, portBindingSerializer.serialize(portBinding(httpServletRequest.getLocalPort())), "application/json");
 
-                } else if (request.matches("PUT", "/bind")) {
+                } else if (request.matches("PUT", PATH_PREFIX + "/bind", "/bind")) {
 
                     responseWriter.writeResponse(request, NOT_IMPLEMENTED);
 
-                } else if (request.matches("PUT", "/stop")) {
+                } else if (request.matches("PUT", PATH_PREFIX + "/stop", "/stop")) {
 
                     responseWriter.writeResponse(request, NOT_IMPLEMENTED);
 
