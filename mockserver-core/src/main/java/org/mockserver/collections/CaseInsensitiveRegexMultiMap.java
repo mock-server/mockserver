@@ -184,7 +184,7 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
         }
         List<NottableString> list = Collections.synchronizedList(new ArrayList<NottableString>());
         for (Entry<NottableString, NottableString> entry : entryList()) {
-            if (EqualsBuilder.reflectionEquals(entry.getKey(), key)) {
+            if (EqualsBuilder.reflectionEquals(entry.getKey(), key, "key")) {
                 list.add(entry.getValue());
             }
         }
