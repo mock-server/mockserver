@@ -54,6 +54,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
     @SuppressWarnings("WeakerAccess")
     public MockServerServlet() {
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
+        this.httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder(this.mockServerLogger);
         this.scheduler = new Scheduler(mockServerLogger);
         this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
