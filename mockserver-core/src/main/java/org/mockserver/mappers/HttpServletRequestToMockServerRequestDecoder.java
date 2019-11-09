@@ -23,9 +23,11 @@ import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SE
 public class HttpServletRequestToMockServerRequestDecoder {
 
     private final ContentTypeMapper contentTypeMapper;
+    private final IOStreamUtils ioStreamUtils;
 
     public HttpServletRequestToMockServerRequestDecoder(MockServerLogger mockServerLogger) {
         this.contentTypeMapper = new ContentTypeMapper(mockServerLogger);
+        ioStreamUtils = new IOStreamUtils(mockServerLogger);
     }
 
     public HttpRequest mapHttpServletRequestToMockServerRequest(HttpServletRequest httpServletRequest) {
@@ -61,7 +63,7 @@ public class HttpServletRequestToMockServerRequestDecoder {
     }
 
     private void setBody(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        byte[] bodyBytes = IOStreamUtils.readInputStreamToByteArray(httpServletRequest);
+        byte[] bodyBytes = ioStreamUtils.readInputStreamToByteArray(httpServletRequest);
         if (bodyBytes.length > 0) {
             if (ContentTypeMapper.isBinary(httpServletRequest.getHeader(CONTENT_TYPE.toString()))) {
                 httpRequest.withBody(new BinaryBody(bodyBytes));

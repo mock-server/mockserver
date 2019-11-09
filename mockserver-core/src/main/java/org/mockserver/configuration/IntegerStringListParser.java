@@ -22,7 +22,7 @@ public class IntegerStringListParser {
         return integerList.toArray(new Integer[0]);
     }
 
-    public List<Integer> toList(String integers) {
+    List<Integer> toList(String integers) {
         List<Integer> integerList = new ArrayList<Integer>();
         for (String integer : Splitter.on(",").split(integers)) {
             try {

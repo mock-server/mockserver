@@ -14,6 +14,7 @@ import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.socket.tls.NettySslContextFactory;
 import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
@@ -23,7 +24,6 @@ import java.util.concurrent.Future;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.mockserver.MockServerHandler.PROXYING;
-import static org.mockserver.socket.tls.NettySslContextFactory.nettySslContextFactory;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledDownstream;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledUpstream;
 import static org.slf4j.event.Level.DEBUG;
@@ -64,7 +64,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                 ChannelPipeline downstreamPipeline = clientCtx.channel().pipeline();
 
                                 if (isSslEnabledDownstream(serverCtx.channel())) {
-                                    downstreamPipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(clientCtx.alloc(), host, port));
+                                    downstreamPipeline.addLast(new NettySslContextFactory(mockServerLogger).createClientSslContext().newHandler(clientCtx.alloc(), host, port));
                                 }
 
                                 if (mockServerLogger.isEnabled(Level.TRACE)) {
@@ -84,10 +84,10 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                 ChannelPipeline upstreamPipeline = serverCtx.channel().pipeline();
 
                                 if (isSslEnabledUpstream(serverCtx.channel())) {
-                                    upstreamPipeline.addLast(nettySslContextFactory().createServerSslContext().newHandler(serverCtx.alloc()));
+                                    upstreamPipeline.addLast(new NettySslContextFactory(mockServerLogger).createServerSslContext().newHandler(serverCtx.alloc()));
                                 }
 
-                                if (mockServerLogger.isEnabled(Level.TRACE)) {
+                                if (MockServerLogger.isEnabled(Level.TRACE)) {
                                     upstreamPipeline.addLast(new LoggingHandler("upstream <-- "));
                                 }
 

@@ -9,6 +9,7 @@ import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.server.AbstractBasicMockingIntegrationTest;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 
@@ -37,7 +38,7 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasic
         tomcat.setPort(SERVER_HTTP_PORT);
 
         // add https connector
-        KeyStoreFactory.keyStoreFactory().loadOrCreateKeyStore();
+        new KeyStoreFactory(new MockServerLogger()).loadOrCreateKeyStore();
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);
         httpsConnector.setSecure(true);

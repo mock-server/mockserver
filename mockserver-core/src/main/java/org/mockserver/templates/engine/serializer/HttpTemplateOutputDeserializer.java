@@ -28,8 +28,8 @@ public class HttpTemplateOutputDeserializer {
 
     public HttpTemplateOutputDeserializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        httpRequestValidator = jsonSchemaHttpRequestValidator();
-        httpResponseValidator = jsonSchemaHttpResponseValidator();
+        httpRequestValidator = jsonSchemaHttpRequestValidator(mockServerLogger);
+        httpResponseValidator = jsonSchemaHttpResponseValidator(mockServerLogger);
     }
 
     public <T> T deserializer(HttpRequest request, String json, Class<? extends DTO<T>> dtoClass) {

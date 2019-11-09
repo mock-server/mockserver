@@ -23,6 +23,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.client.NettyHttpClient;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.tls.KeyStoreFactory;
@@ -75,7 +76,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     private HttpClient createHttpClient() {
         return HttpClients
             .custom()
-            .setSSLSocketFactory(new SSLConnectionSocketFactory(KeyStoreFactory.keyStoreFactory().sslContext(), NoopHostnameVerifier.INSTANCE))
+            .setSSLSocketFactory(new SSLConnectionSocketFactory(new KeyStoreFactory(new MockServerLogger()).sslContext(), NoopHostnameVerifier.INSTANCE))
             .setRoutePlanner(new DefaultProxyRoutePlanner(
                 new HttpHost(
                     System.getProperty("http.proxyHost", "localhost"),
@@ -842,7 +843,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToClear() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())
@@ -865,7 +866,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToVerify() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())
@@ -887,7 +888,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToVerifySequence() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())

@@ -9,21 +9,27 @@ import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.PlatformDependent;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.logging.MockServerLogger;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.socket.tls.NettySslContextFactory.nettySslContextFactory;
 
 /**
  * @author jamesdbloom
  */
 public class SniHandler extends AbstractSniHandler<SslContext> {
 
+    private final MockServerLogger mockServerLogger;
+
+    public SniHandler(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+    }
+
     @Override
     protected Future<SslContext> lookup(ChannelHandlerContext ctx, String hostname) {
         if (isNotBlank(hostname)) {
             ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostname);
         }
-        return ctx.executor().newSucceededFuture(nettySslContextFactory().createServerSslContext());
+        return ctx.executor().newSucceededFuture(new NettySslContextFactory(mockServerLogger).createServerSslContext());
     }
 
     @Override

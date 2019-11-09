@@ -9,9 +9,9 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.codec.MockServerServerCodec;
+import org.mockserver.socket.tls.NettySslContextFactory;
 
 import static org.mockserver.echo.http.EchoServer.*;
-import static org.mockserver.socket.tls.NettySslContextFactory.nettySslContextFactory;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -32,7 +32,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         this.error = error;
     }
 
-    public void initChannel(SocketChannel channel) throws Exception {
+    public void initChannel(SocketChannel channel) {
         ChannelPipeline pipeline = channel.pipeline();
 
         if (error != null) {
@@ -40,7 +40,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         }
 
         if (secure) {
-            pipeline.addLast(nettySslContextFactory().createServerSslContext().newHandler(channel.alloc()));
+            pipeline.addLast(new NettySslContextFactory(mockServerLogger).createServerSslContext().newHandler(channel.alloc()));
         }
 
         if (MockServerLogger.isEnabled(TRACE)) {

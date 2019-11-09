@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.ObjectMapperFactory;
 
 /**

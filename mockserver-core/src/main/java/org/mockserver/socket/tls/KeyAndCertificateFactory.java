@@ -40,7 +40,7 @@ import java.util.*;
  */
 public class KeyAndCertificateFactory {
 
-    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(KeyAndCertificateFactory.class);
+    private final MockServerLogger mockServerLogger;
 
     private static final String PROVIDER_NAME = BouncyCastleProvider.PROVIDER_NAME;
     private static final String SIGNATURE_ALGORITHM = "SHA256WithRSAEncryption";
@@ -67,7 +67,6 @@ public class KeyAndCertificateFactory {
      * Hundred years in the future from starting the proxy should be enough.
      */
     private static final Date NOT_AFTER = new Date(System.currentTimeMillis() + 86400000L * 365 * 100);
-    private static final KeyAndCertificateFactory KEY_AND_CERTIFICATE_FACTORY = new KeyAndCertificateFactory();
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -76,12 +75,8 @@ public class KeyAndCertificateFactory {
     private String mockServerCertificatePEMFile;
     private String mockServerPrivateKeyPEMFile;
 
-    private KeyAndCertificateFactory() {
-
-    }
-
-    static KeyAndCertificateFactory keyAndCertificateFactory() {
-        return KEY_AND_CERTIFICATE_FACTORY;
+    KeyAndCertificateFactory(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
     }
 
     public static void addSubjectAlternativeName(String host) {
@@ -110,7 +105,7 @@ public class KeyAndCertificateFactory {
     }
 
     public static void main(String[] args) throws Exception {
-        keyAndCertificateFactory().buildAndSaveCertificateAuthorityCertificates();
+        new KeyAndCertificateFactory(new MockServerLogger()).buildAndSaveCertificateAuthorityCertificates();
     }
 
     /**
@@ -245,7 +240,7 @@ public class KeyAndCertificateFactory {
             mockServerCertificatePEMFile = saveCertificateAsPEMFile(mockServerCert, "MockServerCertificate" + randomUUID + ".pem", true);
             mockServerPrivateKeyPEMFile = saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey" + randomUUID + ".pem", true);
         } catch (Exception e) {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)

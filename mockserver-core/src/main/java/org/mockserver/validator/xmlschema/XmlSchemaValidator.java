@@ -1,19 +1,21 @@
 package org.mockserver.validator.xmlschema;
 
 import org.mockserver.file.FileReader;
+import org.mockserver.formatting.StringFormatter;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.validator.Validator;
 import org.slf4j.event.Level;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
 import java.io.StringReader;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -24,14 +26,16 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  */
 public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
-    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(XmlSchemaValidator.class);
-    private static final SchemaFactory schemaFactory = buildSchemaFactory();
+    private static SchemaFactory schemaFactory;
     private final MockServerLogger mockServerLogger;
     private final Schema schema;
 
     public XmlSchemaValidator(MockServerLogger mockServerLogger, String schema) {
         this.mockServerLogger = mockServerLogger;
         try {
+            if (schemaFactory == null) {
+                schemaFactory = buildSchemaFactory();
+            }
             if (schema.trim().endsWith(">") || isBlank(schema)) {
                 this.schema = schemaFactory.newSchema(new StreamSource(new StringReader(schema)));
             } else if (schema.trim().endsWith(".xsd")) {
@@ -39,27 +43,23 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
             } else {
                 throw new IllegalArgumentException("Schema must either be a path reference to a *.xsd file or an xml string");
             }
-        } catch (SAXException e) {
-            throw new IllegalArgumentException("Schema is not valid", e);
-        } catch (FileNotFoundException e) {
-            throw new IllegalArgumentException("Schema file not found", e);
-        }
-    }
-
-    private static SchemaFactory buildSchemaFactory() {
-        SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        try {
-            schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "all");
-            schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "all");
         } catch (Exception e) {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("exception configuring schema factory")
+                    .setMessageFormat("exception parsing schema {}")
+                    .setArguments(schema)
                     .setThrowable(e)
             );
+            throw new RuntimeException(StringFormatter.formatLogMessage("exception parsing schema {}", schema), e);
         }
+    }
+
+    private SchemaFactory buildSchemaFactory() throws SAXNotRecognizedException, SAXNotSupportedException {
+        SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "all");
+        schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "all");
         return schemaFactory;
     }
 

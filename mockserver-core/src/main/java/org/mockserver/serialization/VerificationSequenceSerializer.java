@@ -23,7 +23,7 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
 
     public VerificationSequenceSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        verificationSequenceValidator = new JsonSchemaVerificationSequenceValidator();
+        verificationSequenceValidator = new JsonSchemaVerificationSequenceValidator(mockServerLogger);
     }
 
     public String serialize(VerificationSequence verificationSequence) {

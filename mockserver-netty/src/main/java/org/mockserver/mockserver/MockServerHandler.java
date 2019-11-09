@@ -46,7 +46,6 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
     public static final AttributeKey<Boolean> PROXYING = AttributeKey.valueOf("PROXYING");
     public static final AttributeKey<Set> LOCAL_HOST_HEADERS = AttributeKey.valueOf("LOCAL_HOST_HEADERS");
-    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerHandler.class);
     private MockServerLogger mockServerLogger;
     private HttpStateHandler httpStateHandler;
     private PortBindingSerializer portBindingSerializer;
@@ -183,7 +182,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)

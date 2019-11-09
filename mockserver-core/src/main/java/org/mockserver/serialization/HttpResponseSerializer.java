@@ -29,7 +29,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
 
     public HttpResponseSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        httpResponseValidator = jsonSchemaHttpResponseValidator();
+        httpResponseValidator = jsonSchemaHttpResponseValidator(mockServerLogger);
     }
 
     public String serialize(HttpResponse httpResponse) {

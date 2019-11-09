@@ -14,7 +14,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator
 public class JsonSchemaExpectationValidatorIntegrationTest {
 
     // given
-    private JsonSchemaValidator jsonSchemaValidator = jsonSchemaExpectationValidator();
+    private JsonSchemaValidator jsonSchemaValidator = jsonSchemaExpectationValidator(new MockServerLogger());
 
     @Test
     public void shouldValidateValidCompleteExpectationWithHttpResponse() {

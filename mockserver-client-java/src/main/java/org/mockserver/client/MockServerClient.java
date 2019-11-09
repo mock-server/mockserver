@@ -1,5 +1,6 @@
 package org.mockserver.client;
 
+import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.commons.lang3.StringUtils;
@@ -12,6 +13,7 @@ import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.*;
 import org.mockserver.stop.Stoppable;
 import org.mockserver.verify.Verification;
@@ -28,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.mock.HttpStateHandler.LOG_SEPARATOR;
@@ -35,8 +38,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.PortBinding.portBinding;
 import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationTimes.exactly;
-import static org.slf4j.event.Level.TRACE;
-import static org.slf4j.event.Level.WARN;
+import static org.slf4j.event.Level.*;
 
 /**
  * @author jamesdbloom
@@ -52,7 +54,7 @@ public class MockServerClient implements Stoppable {
     protected Future<Integer> portFuture;
     private Boolean secure;
     private Integer port;
-    private NettyHttpClient nettyHttpClient = new NettyHttpClient(eventLoopGroup, null);
+    private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null);
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(MOCK_SERVER_LOGGER);
     private HttpRequestResponseSerializer httpRequestResponseSerializer = new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER);
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(MOCK_SERVER_LOGGER);
@@ -228,43 +230,64 @@ public class MockServerClient implements Stoppable {
     /**
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
-    public void stop() {
-        stop(true);
+    public Future<MockServerClient> stopAsync() {
+        return stop(true);
     }
 
     /**
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
-    public MockServerClient stop(boolean ignoreFailure) {
-        MockServerEventBus.getInstance().publish(EventType.STOP);
+    public void stop() {
         try {
-            sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
-            if (isRunning()) {
-                for (int i = 0; isRunning() && i < 50; i++) {
-                    TimeUnit.MILLISECONDS.sleep(5);
-                }
-            }
-        } catch (RejectedExecutionException ree) {
+            stopAsync().get(10, SECONDS);
+        } catch (Throwable throwable) {
             MOCK_SERVER_LOGGER.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
-                    .setLogLevel(TRACE)
-                    .setMessageFormat("Request rejected because closing down but logging at trace level for information just in case due to some other actual error " + ree)
+                    .setLogLevel(DEBUG)
+                    .setMessageFormat("Exception while stopping - " + throwable.getMessage())
+                    .setArguments(throwable)
             );
-        } catch (Exception e) {
-            if (!ignoreFailure) {
+        }
+    }
+
+    /**
+     * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
+     */
+    public Future<MockServerClient> stop(boolean ignoreFailure) {
+        SettableFuture<MockServerClient> stopFuture = SettableFuture.create();
+        new Scheduler.SchedulerThreadFactory("ClientStop").newThread(() -> {
+            MockServerEventBus.getInstance().publish(EventType.STOP);
+            try {
+                sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
+                if (isRunning()) {
+                    for (int i = 0; isRunning() && i < 50; i++) {
+                        TimeUnit.MILLISECONDS.sleep(5);
+                    }
+                }
+            } catch (RejectedExecutionException ree) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.WARN)
-                        .setLogLevel(WARN)
-                        .setMessageFormat("Failed to send stop request to MockServer " + e.getMessage())
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("Request rejected because closing down but logging at trace level for information just in case due to some other actual error " + ree)
                 );
+            } catch (Exception e) {
+                if (!ignoreFailure) {
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.WARN)
+                            .setLogLevel(WARN)
+                            .setMessageFormat("Failed to send stop request to MockServer " + e.getMessage())
+                    );
+                }
             }
-        }
-        if (!eventLoopGroup.isShuttingDown()) {
-            eventLoopGroup.shutdownGracefully();
-        }
-        return clientClass.cast(this);
+            if (!eventLoopGroup.isShuttingDown()) {
+                eventLoopGroup.shutdownGracefully();
+            }
+            stopFuture.set(clientClass.cast(this));
+        }).start();
+        return stopFuture;
     }
 
     @Override

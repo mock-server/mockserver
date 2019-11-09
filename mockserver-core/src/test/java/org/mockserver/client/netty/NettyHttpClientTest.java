@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 
 import java.net.InetSocketAddress;
@@ -33,6 +34,7 @@ public class NettyHttpClientTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
     private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
+    private final MockServerLogger mockServerLogger = new MockServerLogger();
 
     @BeforeClass
     public static void startEchoServer() {
@@ -52,7 +54,7 @@ public class NettyHttpClientTest {
     @Test
     public void shouldSendBasicRequest() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient(clientEventLoopGroup, null);
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "0.0.0.0:" + echoServer.getPort()))
@@ -73,7 +75,7 @@ public class NettyHttpClientTest {
     @Test
     public void shouldSendBasicRequestToAnotherIpAndPort() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient(clientEventLoopGroup, null);
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(request().withHeader("Host", "www.google.com"), new InetSocketAddress("0.0.0.0", echoServer.getPort()))
@@ -94,7 +96,7 @@ public class NettyHttpClientTest {
     @Test
     public void shouldSendBasicRequestToAnotherIpAndPortWithNoHostHeader() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient(clientEventLoopGroup, null);
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(request(), new InetSocketAddress("0.0.0.0", echoServer.getPort()))
@@ -114,7 +116,7 @@ public class NettyHttpClientTest {
     @Test
     public void shouldSendComplexRequest() throws Exception {
         // given
-        NettyHttpClient nettyHttpClient = new NettyHttpClient(clientEventLoopGroup, null);
+        NettyHttpClient nettyHttpClient = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null);
 
         // when
         HttpResponse httpResponse = nettyHttpClient.sendRequest(

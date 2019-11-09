@@ -20,13 +20,17 @@ import org.slf4j.event.Level;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeoutException;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.model.HttpRequest.request;
+import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -48,22 +52,41 @@ public abstract class LifeCycle implements Stoppable {
         this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
     }
 
+    public Future stopAsync() {
+        SettableFuture<String> stopFuture = SettableFuture.create();
+        new Scheduler.SchedulerThreadFactory("Stop").newThread(() -> {
+            scheduler.shutdown();
+            httpStateHandler.getMockServerLog().stop();
+
+            // Shut down all event loops to terminate all threads.
+            bossGroup.shutdownGracefully(5, 5, MILLISECONDS);
+            workerGroup.shutdownGracefully(5, 5, MILLISECONDS);
+
+            // Wait until all threads are terminated.
+            bossGroup.terminationFuture().syncUninterruptibly();
+            workerGroup.terminationFuture().syncUninterruptibly();
+
+            try {
+                GlobalEventExecutor.INSTANCE.awaitInactivity(2, SECONDS);
+            } catch (InterruptedException ignore) {
+                // ignore interruption
+            }
+            stopFuture.set("done");
+        }).start();
+        return stopFuture;
+    }
+
     public void stop() {
-        scheduler.shutdown();
-        httpStateHandler.getMockServerLog().stop();
-
-        // Shut down all event loops to terminate all threads.
-        bossGroup.shutdownGracefully(5, 5, MILLISECONDS);
-        workerGroup.shutdownGracefully(5, 5, MILLISECONDS);
-
-        // Wait until all threads are terminated.
-        bossGroup.terminationFuture().syncUninterruptibly();
-        workerGroup.terminationFuture().syncUninterruptibly();
-
         try {
-            GlobalEventExecutor.INSTANCE.awaitInactivity(2, SECONDS);
-        } catch (InterruptedException ignore) {
-            // ignore interruption
+            stopAsync().get(10, SECONDS);
+        } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(DEBUG)
+                    .setMessageFormat("Exception while stopping - " + throwable.getMessage())
+                    .setArguments(throwable)
+            );
         }
     }
 
@@ -104,13 +127,13 @@ public abstract class LifeCycle implements Stoppable {
         for (Future<Channel> channelOpened : channelFutures) {
             try {
                 return ((InetSocketAddress) channelOpened.get(2, SECONDS).localAddress()).getPort();
-            } catch (Exception e) {
+            } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
-                        .setLogLevel(TRACE)
-                        .setMessageFormat("Exception while retrieving port from channel future, ignoring port for this channel")
-                        .setArguments(e)
+                        .setLogLevel(DEBUG)
+                        .setMessageFormat("Exception while retrieving port from channel future, ignoring port for this channel - " + throwable.getMessage())
+                        .setArguments(throwable)
                 );
             }
         }

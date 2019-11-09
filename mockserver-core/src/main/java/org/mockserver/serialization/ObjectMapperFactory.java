@@ -2,13 +2,13 @@ package org.mockserver.serialization;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 import org.mockserver.serialization.deserializers.body.BodyDTODeserializer;

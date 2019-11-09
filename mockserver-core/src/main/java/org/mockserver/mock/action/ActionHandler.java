@@ -23,7 +23,6 @@ import org.slf4j.event.Level;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.Set;
-import java.util.concurrent.Callable;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
@@ -65,7 +64,7 @@ public class ActionHandler {
         this.httpStateHandler = httpStateHandler;
         this.scheduler = httpStateHandler.getScheduler();
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
-        this.httpClient = new NettyHttpClient(eventLoopGroup, proxyConfiguration);
+        this.httpClient = new NettyHttpClient(mockServerLogger, eventLoopGroup, proxyConfiguration);
     }
 
     public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyingRequest, final boolean synchronous) {

@@ -162,7 +162,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
 
     private void enableSsl(ChannelHandlerContext ctx, ByteBuf msg) {
         ChannelPipeline pipeline = ctx.pipeline();
-        pipeline.addFirst(new SniHandler());
+        pipeline.addFirst(new SniHandler(mockServerLogger));
         enableSslUpstreamAndDownstream(ctx.channel());
 
         // re-unify (with SSL enabled)

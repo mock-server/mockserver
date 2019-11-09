@@ -31,12 +31,13 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
     private static final Map<String, String> schemaCache = new ConcurrentHashMap<>();
-    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(JsonSchemaValidator.class);
+    private final MockServerLogger mockServerLogger;
     private final String schema;
     private final JsonValidator validator = JsonSchemaFactory.byDefault().getValidator();
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
-    public JsonSchemaValidator(String schema) {
+    public JsonSchemaValidator(MockServerLogger mockServerLogger, String schema) {
+        this.mockServerLogger = mockServerLogger;
         if (schema.trim().endsWith(".json")) {
             this.schema = FileReader.readFileFromClassPathOrPath(schema);
         } else if (schema.trim().endsWith("}")) {
@@ -46,7 +47,8 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
         }
     }
 
-    public JsonSchemaValidator(String routePath, String mainSchemeFile, String... referenceFiles) {
+    public JsonSchemaValidator(MockServerLogger mockServerLogger, String routePath, String mainSchemeFile, String... referenceFiles) {
+        this.mockServerLogger = mockServerLogger;
         if (!schemaCache.containsKey(mainSchemeFile)) {
             schemaCache.put(mainSchemeFile, addReferencesIntoSchema(routePath, mainSchemeFile, referenceFiles));
         }
@@ -76,7 +78,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(jsonSchema);
         } catch (Exception e) {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
@@ -104,7 +106,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     validationResult = formatProcessingReport(processingReport);
                 }
             } catch (Exception e) {
-                MOCK_SERVER_LOGGER.logEvent(
+                mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)

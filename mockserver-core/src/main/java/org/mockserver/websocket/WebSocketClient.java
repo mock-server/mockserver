@@ -36,15 +36,15 @@ import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELA
 public class WebSocketClient<T extends HttpObject> {
 
     static final AttributeKey<SettableFuture<String>> REGISTRATION_FUTURE = AttributeKey.valueOf("REGISTRATION_FUTURE");
-    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(WebSocketClient.class);
     private final MockServerLogger mockServerLogger;
     private final Semaphore availableWebSocketCallbackRegistrations;
     private Channel channel;
-    private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer(MOCK_SERVER_LOGGER);
+    private WebSocketMessageSerializer webSocketMessageSerializer;
     private ExpectationCallback<T> expectationCallback;
 
     public WebSocketClient(MockServerLogger mockServerLogger, Semaphore availableWebSocketCallbackRegistrations) {
         this.mockServerLogger = mockServerLogger;
+        this.webSocketMessageSerializer = new WebSocketMessageSerializer(mockServerLogger);
         this.availableWebSocketCallbackRegistrations = availableWebSocketCallbackRegistrations;
     }
 
@@ -119,7 +119,7 @@ public class WebSocketClient<T extends HttpObject> {
                         result.withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId);
                         channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(result)));
                     } catch (Throwable throwable) {
-                        MOCK_SERVER_LOGGER.logEvent(
+                        mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)

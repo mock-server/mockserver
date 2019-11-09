@@ -94,7 +94,7 @@ public abstract class AbstractMockingIntegrationTestBase {
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
         clientEventLoopGroup = new NioEventLoopGroup();
-        httpClient = new NettyHttpClient(clientEventLoopGroup, null);
+        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
     }
 
     @AfterClass

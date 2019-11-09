@@ -8,6 +8,7 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.socket.PortFactory;
 import org.slf4j.event.Level;
@@ -77,7 +78,7 @@ public class MainTest {
                 "-proxyRemotePort", String.valueOf(echoServer.getPort()),
                 "-proxyRemoteHost", "127.0.0.1"
             );
-            final HttpResponse response = new NettyHttpClient(clientEventLoopGroup, null)
+            final HttpResponse response = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null)
                 .sendRequest(
                     request()
                         .withHeader(HOST.toString(), "127.0.0.1:" + freePort),
@@ -107,7 +108,7 @@ public class MainTest {
                 "-serverPort", String.valueOf(freePort),
                 "-proxyRemotePort", String.valueOf(echoServer.getPort())
             );
-            final HttpResponse response = new NettyHttpClient(clientEventLoopGroup, null)
+            final HttpResponse response = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null)
                 .sendRequest(
                     request()
                         .withHeader(HOST.toString(), "127.0.0.1:" + freePort),

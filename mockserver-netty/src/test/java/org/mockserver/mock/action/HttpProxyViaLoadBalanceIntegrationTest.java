@@ -8,6 +8,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 
 import java.net.InetSocketAddress;
@@ -35,7 +36,7 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
 
     private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
 
-    private static NettyHttpClient httpClient = new NettyHttpClient(clientEventLoopGroup, null);
+    private static NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
 
     @BeforeClass
     public static void startServer() {

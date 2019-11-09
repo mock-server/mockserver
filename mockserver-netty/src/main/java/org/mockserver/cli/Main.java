@@ -57,7 +57,7 @@ public class Main {
         "                                                                                                                                                                 " + NEW_LINE;
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(Main.class);
     private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
-    public static PrintStream systemOut = System.out;
+    static PrintStream systemOut = System.out;
 
     /**
      * Run the MockServer directly providing the arguments as specified below.

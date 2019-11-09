@@ -5,6 +5,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.*;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -43,7 +44,7 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
                         .withBody(request.getBodyAsString());
                 }
             });
-        httpClient = new NettyHttpClient(clientEventLoopGroup, null);
+        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
     }
 
     @AfterClass

@@ -28,7 +28,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
 
     public ExpectationSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        expectationValidator = jsonSchemaExpectationValidator();
+        expectationValidator = jsonSchemaExpectationValidator(mockServerLogger);
     }
 
     public String serialize(Expectation expectation) {

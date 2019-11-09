@@ -18,7 +18,6 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
-import static org.mockserver.socket.tls.KeyAndCertificateFactory.keyAndCertificateFactory;
 import static org.slf4j.event.Level.*;
 
 /**
@@ -30,7 +29,7 @@ public class KeyStoreFactory {
     public static final String CERTIFICATE_DOMAIN = "localhost";
     public static final String KEY_STORE_CERT_ALIAS = "mockserver-client-cert";
 
-    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(KeyStoreFactory.class);
+    private final MockServerLogger mockServerLogger;
     private static final String KEY_STORE_CA_ALIAS = "mockserver-ca-cert";
 
     /**
@@ -49,15 +48,12 @@ public class KeyStoreFactory {
      * to support the following standard SSLContext protocol: TLSv1
      */
     private static final String SSL_CONTEXT_FALLBACK_PROTOCOL = "TLSv1";
-    private static final KeyStoreFactory SSL_FACTORY = new KeyStoreFactory();
     private static SSLContext sslContext;
+    private final KeyAndCertificateFactory keyAndCertificateFactory;
 
-    private KeyStoreFactory() {
-
-    }
-
-    public static KeyStoreFactory keyStoreFactory() {
-        return SSL_FACTORY;
+    public KeyStoreFactory(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        keyAndCertificateFactory = new KeyAndCertificateFactory(mockServerLogger);
     }
 
     public static String defaultKeyStoreFileName() {
@@ -75,7 +71,7 @@ public class KeyStoreFactory {
     /**
      * Save X509Certificate in KeyStore file.
      */
-    private static KeyStore saveCertificateAsKeyStore(KeyStore existingKeyStore, boolean deleteOnExit, String keyStoreFileName, String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain, X509Certificate caCert) {
+    private KeyStore saveCertificateAsKeyStore(KeyStore existingKeyStore, boolean deleteOnExit, String keyStoreFileName, String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain, X509Certificate caCert) {
         try {
             KeyStore keyStore = existingKeyStore;
             if (keyStore == null) {
@@ -104,7 +100,7 @@ public class KeyStoreFactory {
             String keyStoreFileAbsolutePath = new File(keyStoreFileName).getAbsolutePath();
             try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFileAbsolutePath)) {
                 keyStore.store(fileOutputStream, keyStorePassword);
-                MOCK_SERVER_LOGGER.logEvent(
+                mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
@@ -139,7 +135,7 @@ public class KeyStoreFactory {
 
     private SSLContext getSSLContextInstance() throws NoSuchAlgorithmException {
         try {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(SERVER_CONFIGURATION)
                     .setLogLevel(DEBUG)
@@ -148,7 +144,7 @@ public class KeyStoreFactory {
             );
             return SSLContext.getInstance(SSL_CONTEXT_PROTOCOL);
         } catch (NoSuchAlgorithmException e) {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.WARN)
                     .setLogLevel(WARN)
@@ -175,20 +171,20 @@ public class KeyStoreFactory {
     }
 
     private KeyStore populateKeyStore(KeyStore keyStore) {
-        keyAndCertificateFactory().buildAndSaveCertificates();
+        keyAndCertificateFactory.buildAndSaveCertificates();
 
-        return KeyStoreFactory.saveCertificateAsKeyStore(
+        return saveCertificateAsKeyStore(
             keyStore,
             ConfigurationProperties.deleteGeneratedKeyStoreOnExit(),
             ConfigurationProperties.javaKeyStoreFilePath(),
             KEY_STORE_CERT_ALIAS,
-            keyAndCertificateFactory().mockServerPrivateKey(),
+            keyAndCertificateFactory.mockServerPrivateKey(),
             ConfigurationProperties.javaKeyStorePassword().toCharArray(),
             new X509Certificate[]{
-                keyAndCertificateFactory().mockServerX509Certificate(),
-                keyAndCertificateFactory().mockServerCertificateAuthorityX509Certificate()
+                keyAndCertificateFactory.mockServerX509Certificate(),
+                keyAndCertificateFactory.mockServerCertificateAuthorityX509Certificate()
             },
-            keyAndCertificateFactory().mockServerCertificateAuthorityX509Certificate()
+            keyAndCertificateFactory.mockServerCertificateAuthorityX509Certificate()
         );
     }
 

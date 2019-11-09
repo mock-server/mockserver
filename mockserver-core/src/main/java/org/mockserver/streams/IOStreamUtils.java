@@ -21,7 +21,11 @@ import static org.mockserver.character.Character.NEW_LINE;
  * @author jamesdbloom
  */
 public class IOStreamUtils {
-    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(IOStreamUtils.class);
+    private final MockServerLogger mockServerLogger;
+
+    public IOStreamUtils(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+    }
 
     public static String readInputStreamToString(Socket socket) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -47,11 +51,11 @@ public class IOStreamUtils {
         return result.toString();
     }
 
-    public static String readInputStreamToString(ServletRequest request) {
+    public String readInputStreamToString(ServletRequest request) {
         try {
             return IOUtils.toString(request.getInputStream(), UTF_8.name());
         } catch (IOException ioe) {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
@@ -62,11 +66,11 @@ public class IOStreamUtils {
         }
     }
 
-    public static byte[] readInputStreamToByteArray(ServletRequest request) {
+    public byte[] readInputStreamToByteArray(ServletRequest request) {
         try {
             return IOUtils.toByteArray(request.getInputStream());
         } catch (IOException ioe) {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
@@ -77,13 +81,13 @@ public class IOStreamUtils {
         }
     }
 
-    public static void writeToOutputStream(byte[] data, ServletResponse response) {
+    public void writeToOutputStream(byte[] data, ServletResponse response) {
         try {
             OutputStream output = response.getOutputStream();
             output.write(data);
             output.close();
         } catch (IOException ioe) {
-            MOCK_SERVER_LOGGER.logEvent(
+            mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
