@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.mockserver.dashboard.model.LogEntryDTO;
 
 import java.io.IOException;
-import java.util.Base64;
 
 /**
  * @author jamesdbloom
