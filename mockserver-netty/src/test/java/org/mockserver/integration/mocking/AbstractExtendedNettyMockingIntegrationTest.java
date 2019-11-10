@@ -462,7 +462,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // then
             assertThat(response.getStatusCode(), is(400));
-            assertThat(response.getBodyAsString(), is("Exception while binding MockServer to port " + newPort));
+            assertThat(response.getBodyAsString(), containsString("Exception while binding MockServer to port " + newPort));
 
         } finally {
             if (server != null) {
