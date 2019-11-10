@@ -7,7 +7,7 @@ subsection: true
 sitemap:
   priority: 0.7
   changefreq: 'monthly'
-  lastmod: 2018-11-16T16:00:00+01:00
+  lastmod: 2019-11-10T08:00:00+01:00
 ---
 
 <p>MockServer and the proxy has support for CORS.  By default CORS support is enabled for the REST API and disabled for all other requests (such as when expectations are matched).</p>
@@ -31,7 +31,7 @@ X-CORS: "MockServer CORS support enabled by default, to disable ConfigurationPro
     </div>
     <button class="accordion inner">Command Line</button>
     <div class="panel">
-        <pre class="prettyprint lang-bash code"><code class="code">java -Dmockserver.enableCORSForAllResponses=true -jar "~/Downloads/mockserver-netty-5.7.0-jar-with-dependencies.jar" -serverPort 1080</code></pre>
+        <pre class="prettyprint lang-bash code"><code class="code">java -Dmockserver.enableCORSForAllResponses=true -jar "~/Downloads/mockserver-netty-5.7.1-jar-with-dependencies.jar" -serverPort 1080</code></pre>
     </div>
     <button class="accordion inner">JavaScript: mockserver-node</button>
     <div class="panel">
@@ -54,7 +54,7 @@ mockserver.start_mockserver({
     </div>
     <button class="accordion inner">Command Line</button>
     <div class="panel">
-        <pre class="prettyprint lang-bash code"><code class="code">java -Dmockserver.enableCORSForAPI=false -jar "~/Downloads/mockserver-netty-5.7.0-jar-with-dependencies.jar" -serverPort 1080</code></pre>
+        <pre class="prettyprint lang-bash code"><code class="code">java -Dmockserver.enableCORSForAPI=false -jar "~/Downloads/mockserver-netty-5.7.1-jar-with-dependencies.jar" -serverPort 1080</code></pre>
     </div>
     <button class="accordion inner">JavaScript: mockserver-node</button>
     <div class="panel">

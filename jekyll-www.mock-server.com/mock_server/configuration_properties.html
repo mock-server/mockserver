@@ -7,7 +7,7 @@ subsection: true
 sitemap:
 priority: 0.8
 changefreq: 'monthly'
-lastmod: 2018-11-16T16:00:00+01:00
+lastmod: 2019-11-10T08:00:00+01:00
 ---
 
 <h2>Settings Properties</h2>
@@ -299,6 +299,49 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslSubjectAlternativeNameIps="127.0.0.1,0.0.0.0"</code></pre>
 </div>
 
+<button id="button_configuration_prevent_dynamic_tls_update" class="accordion title"><strong>Prevent Dynamic TLS Certificate Update</strong></button>
+<div class="panel title">
+    <p>MockServer dynamically updates the Subject Alternative Name (SAN) values for its TLS certificate to add domain names and IP addresses from request Host headers and Host headers in expectations,
+        this configuration setting disables this automatic update and only uses SAN value provided in <strong>TLS Subject Alternative Name Domains</strong> and <strong>TLS Subject Alternative Name IPs</strong> configuration properties.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.preventCertificateDynamicUpdate(boolean prevent)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.preventCertificateDynamicUpdate=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.preventCertificateDynamicUpdate=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.preventCertificateDynamicUpdate="true"</code></pre>
+</div>
+
+<button id="button_configuration_disable_request_audit" class="accordion title"><strong>TLS Certificate Authority Private Key</strong></button>
+<div class="panel title">
+    <p>Location of custom file for Certificate Authority for TLS, the private key must be a PEM file and must match the <strong>TLS Certificate Authority X509 Certificate</strong>.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.certificateAuthorityPrivateKey(String certificateAuthorityPrivateKey)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.certificateAuthorityPrivateKey=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.certificateAuthorityPrivateKey=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.certificateAuthorityPrivateKey="true"</code></pre>
+</div>
+
+<button id="button_configuration_tls_certificate_authority_certificate" class="accordion title"><strong>TLS Certificate Authority X509 Certificate</strong></button>
+<div class="panel title">
+    <p>Location of custom file for Certificate Authority for TLS, the certificate must be a X509 PEM file and must match the <strong>TLS Certificate Authority Private Key</strong>.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.certificateAuthorityCertificate(String certificateAuthorityCertificate)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.certificateAuthorityCertificate=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.certificateAuthorityCertificate=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.certificateAuthorityCertificate="true"</code></pre>
+</div>
+
 <button id="button_configuration_log_level" class="accordion title"><strong>Log Level</strong></button>
 <div class="panel title">
     <p>The log level, note if this is lower then INFO then verification logic does not work because no log events are captured to enable verification</p>
@@ -310,23 +353,9 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.logLevel</code></pre>
 
-    <p>The log level, which can be TRACE, DEBUG, INFO, WARN, ERROR, OFF</p>
+    <p>The log level, which can be TRACE, DEBUG, INFO, WARN, ERROR, OFF, FINEST, FINE, INFO, WARNING, SEVERE</p>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.logLevel="DEBUG"</code></pre>
-</div>
-
-<button id="button_configuration_disable_request_audit" class="accordion title"><strong>Disable Request Audit Log</strong></button>
-<div class="panel title">
-    <p>Disable requests audit logging to improve performance, note if this is disabled then verification logic does not work because no log events are captured to enable verification</p>
-    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
-    <p>Java Code:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.disableRequestAudit(boolean disableRequestAudit)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableRequestAudit=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.disableRequestAudit=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.disableRequestAudit="true"</code></pre>
 </div>
 
 <button id="button_configuration_disable_system_out" class="accordion title"><strong>Disable System Out Log Output</strong></button>

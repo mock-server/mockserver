@@ -1,0 +1,125 @@
+---
+title: Scalability & Latency
+layout: page
+pageOrder: 13
+section: 'Mock Server'
+subsection: true
+sitemap:
+priority: 0.8
+changefreq: 'monthly'
+lastmod: 2019-11-10T08:00:00+01:00
+---
+
+<p>The MockServer is build to support massive scale from a single instance.  The following frameworks / tools are used to maximise scalability:</p>
+<ul>
+    <li><a href="https://netty.io">Netty</a> an asynchronous event-driven network application framework to maximise the scalability of HTTP and TLS</li>
+    <li><a href="https://lmax-exchange.github.io/disruptor">LMAX Disruptor</a> a high performance inter-thread messaging library to maximise the scalability of recording events (i.e. state) and logging</li>
+    <li><a href="https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ScheduledThreadPoolExecutor.html">ScheduledThreadPoolExecutor</a> a thread pool that can scheduled delayed tasks is used to execute delay response to avoid blocking threads</li>
+</ul>
+
+<p>The MockServer has been performance tested using <a href="https://locust.io">locust</a> using the following scenario:</p>
+<ul>
+    <li>four basic expectations, including method, path and headers</li>
+    <li>basic GET request matching third expectation (i.e. three matches are attempted for each request)</li>
+</ul>
+
+<p>The code for the performance test is in github in <a href="https://github.com/jamesdbloom/mockserver-performance-test">mockserver-performance-test</a>.</p>
+
+<p>The results are as follows:</p>
+
+<table class="results">
+    <thead>
+    <tr>
+        <th>req/s</th>
+        <th>Min</th>
+        <th>Avg</th>
+        <th>Max</th>
+        <th>50%</th>
+        <th>66%</th>
+        <th>75%</th>
+        <th>80%</th>
+        <th>90%</th>
+        <th>95%</th>
+        <th>98%</th>
+        <th>99%</th>
+        <th>100%</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>50</td>
+        <td>1</td>
+        <td>2</td>
+        <td>12</td>
+        <td>2</td>
+        <td>3</td>
+        <td>3</td>
+        <td>3</td>
+        <td>3</td>
+        <td>4</td>
+        <td>5</td>
+        <td>5</td>
+        <td>12</td>
+    </tr>
+    <tr>
+        <td>99</td>
+        <td>0</td>
+        <td>4</td>
+        <td>18</td>
+        <td>3</td>
+        <td>4</td>
+        <td>5</td>
+        <td>5</td>
+        <td>6</td>
+        <td>7</td>
+        <td>8</td>
+        <td>9</td>
+        <td>18</td>
+    </tr>
+    <tr>
+        <td>496</td>
+        <td>0</td>
+        <td>7</td>
+        <td>65</td>
+        <td>6</td>
+        <td>7</td>
+        <td>9</td>
+        <td>10</td>
+        <td>12</td>
+        <td>15</td>
+        <td>19</td>
+        <td>22</td>
+        <td>65</td>
+    </tr>
+    <tr>
+        <td>995</td>
+        <td>0</td>
+        <td>20</td>
+        <td>236</td>
+        <td>6</td>
+        <td>13</td>
+        <td>19</td>
+        <td>25</td>
+        <td>57</td>
+        <td>97</td>
+        <td>140</td>
+        <td>160</td>
+        <td>240</td>
+    </tr>
+    <tr>
+        <td>1243</td>
+        <td>0</td>
+        <td>113</td>
+        <td>434</td>
+        <td>110</td>
+        <td>140</td>
+        <td>160</td>
+        <td>170</td>
+        <td>210</td>
+        <td>250</td>
+        <td>290</td>
+        <td>300</td>
+        <td>430</td>
+    </tr>
+    </tbody>
+</table>
