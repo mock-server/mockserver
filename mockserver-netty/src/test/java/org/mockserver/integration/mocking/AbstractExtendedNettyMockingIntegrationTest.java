@@ -4,12 +4,10 @@ import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.server.AbstractExtendedSameJVMMockingIntegrationTest;
+import org.mockserver.integration.server.AbstractMockingIntegrationTestBase;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
-import org.mockserver.mock.action.ExpectationForwardCallback;
-import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.Delay;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -35,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -56,7 +53,8 @@ import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpStatusCode.*;
+import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
+import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
 
@@ -129,27 +127,24 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("object_callback"))
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        HttpRequest expectation = request()
-                            .withPath(calculatePath("object_callback"))
-                            .withMethod("POST")
+                httpRequest -> {
+                    HttpRequest expectation = request()
+                        .withPath(calculatePath("object_callback"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body")
+                        )
+                        .withBody("an_example_body_http");
+                    if (new MatcherBuilder(mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
+                        return response()
+                            .withStatusCode(ACCEPTED_202.code())
+                            .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                             .withHeaders(
-                                header("x-test", "test_headers_and_body")
+                                header("x-object-callback", "test_object_callback_header")
                             )
-                            .withBody("an_example_body_http");
-                        if (new MatcherBuilder(mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
-                            return response()
-                                .withStatusCode(ACCEPTED_202.code())
-                                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                                .withHeaders(
-                                    header("x-object-callback", "test_object_callback_header")
-                                )
-                                .withBody("an_object_callback_response");
-                        } else {
-                            return notFoundResponse();
-                        }
+                            .withBody("an_object_callback_response");
+                    } else {
+                        return notFoundResponse();
                     }
                 }
             );
@@ -200,7 +195,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     }
 
     @Test
-    public void shouldRespondByObjectCallbackAndVerifyRequests() throws InterruptedException {
+    public void shouldRespondByObjectCallbackAndVerifyRequests() {
         // when
         mockServerClient
             .when(
@@ -209,15 +204,10 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 exactly(1)
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        return response()
-                            .withStatusCode(ACCEPTED_202.code())
-                            .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                            .withBody("an_object_callback_response");
-                    }
-                }
+                httpRequest -> response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withBody("an_object_callback_response")
             );
 
         // then - return response
@@ -263,13 +253,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("object_callback"))
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        return response()
-                            .withBody(veryLargeString);
-                    }
-                }
+                httpRequest -> response()
+                    .withBody(veryLargeString)
             );
 
         // then
@@ -314,16 +299,11 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("echo"))
             )
             .forward(
-                new ExpectationForwardCallback() {
-                    @Override
-                    public HttpRequest handle(HttpRequest httpRequest) {
-                        return request()
-                            .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
-                            .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
-                            .withBody("some_overridden_body")
-                            .withSecure(httpRequest.isSecure());
-                    }
-                }
+                httpRequest -> request()
+                    .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
+                    .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                    .withBody("some_overridden_body")
+                    .withSecure(httpRequest.isSecure())
             );
 
         // then
@@ -470,23 +450,19 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             server = new ServerSocket(0);
             int newPort = server.getLocalPort();
 
+            // when
+            HttpResponse response = makeRequest(
+                request()
+                    .withPath(calculatePath("mockserver/bind"))
+                    .withMethod("PUT")
+                    .withBody("{" + NEW_LINE +
+                        "  \"ports\" : [ " + newPort + " ]" + NEW_LINE +
+                        "}"),
+                headersToIgnore);
+
             // then
-            // - in http
-            assertEquals(
-                response()
-                    .withStatusCode(BAD_REQUEST_400.code())
-                    .withReasonPhrase(BAD_REQUEST_400.reasonPhrase())
-                    .withHeader(CONTENT_TYPE.toString(), "text/plain; charset=utf-8")
-                    .withBody("Exception while binding MockServer to port " + newPort + " port already in use", MediaType.PLAIN_TEXT_UTF_8),
-                makeRequest(
-                    request()
-                        .withPath(calculatePath("mockserver/bind"))
-                        .withMethod("PUT")
-                        .withBody("{" + NEW_LINE +
-                            "  \"ports\" : [ " + newPort + " ]" + NEW_LINE +
-                            "}"),
-                    headersToIgnore)
-            );
+            assertThat(response.getStatusCode(), is(400));
+            assertThat(response.getBodyAsString(), is("Exception while binding MockServer to port " + newPort));
 
         } finally {
             if (server != null) {
@@ -500,7 +476,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     @Test
     public void shouldReturnResponseWithConnectionOptionsAndKeepAliveFalseAndContentLengthOverride() {
         // given
-        List<String> headersToIgnore = new ArrayList<String>(this.headersToIgnore);
+        List<String> headersToIgnore = new ArrayList<>(AbstractMockingIntegrationTestBase.headersToIgnore);
         headersToIgnore.remove("connection");
         headersToIgnore.remove("content-length");
 
@@ -637,7 +613,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     @Test
     public void shouldReturnResponseWithConnectionOptionsAndKeepAliveTrueAndContentLengthOverride() {
         // given
-        List<String> headersToIgnore = new ArrayList<String>(this.headersToIgnore);
+        List<String> headersToIgnore = new ArrayList<>(AbstractMockingIntegrationTestBase.headersToIgnore);
         headersToIgnore.remove("connection");
         headersToIgnore.remove("content-length");
 
@@ -709,10 +685,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
         // then
         // - in http
-        Socket socket = null;
-        try {
+        try (Socket socket = new Socket("localhost", this.getServerPort())) {
             // given
-            socket = new Socket("localhost", this.getServerPort());
             OutputStream output = socket.getOutputStream();
 
             // when
@@ -753,17 +727,11 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     containsString("Software caused connection abort")
                 ));
             }
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
         }
 
         // and
         // - in https
-        SSLSocket sslSocket = null;
-        try {
-            sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", this.getServerPort()));
+        try (SSLSocket sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", this.getServerPort()))) {
             OutputStream output = sslSocket.getOutputStream();
 
             // when
@@ -780,10 +748,6 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 "content-type: audio/*" + NEW_LINE +
                 "connection: close" + NEW_LINE
             ));
-        } finally {
-            if (sslSocket != null) {
-                sslSocket.close();
-            }
         }
     }
 
@@ -802,10 +766,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
         // then
         // - in http
-        Socket socket = null;
-        try {
+        try (Socket socket = new Socket("localhost", this.getServerPort())) {
             // given
-            socket = new Socket("localhost", this.getServerPort());
             OutputStream output = socket.getOutputStream();
 
             // when
@@ -818,17 +780,11 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // then
             assertThat(IOUtils.toString(socket.getInputStream(), StandardCharsets.UTF_8.name()), is("some_random_bytes"));
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
         }
 
         // and
         // - in https
-        SSLSocket sslSocket = null;
-        try {
-            sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", this.getServerPort()));
+        try (SSLSocket sslSocket = sslSocketFactory().wrapSocket(new Socket("localhost", this.getServerPort()))) {
             OutputStream output = sslSocket.getOutputStream();
 
             // when
@@ -841,10 +797,6 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // then
             assertThat(IOUtils.toString(sslSocket.getInputStream(), StandardCharsets.UTF_8.name()), is("some_random_bytes"));
-        } finally {
-            if (sslSocket != null) {
-                sslSocket.close();
-            }
         }
     }
 
@@ -862,10 +814,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             );
 
         // then
-        Socket socket = null;
-        try {
+        try (Socket socket = new Socket("localhost", this.getServerPort())) {
             // given
-            socket = new Socket("localhost", this.getServerPort());
             OutputStream output = socket.getOutputStream();
 
             // when
@@ -878,10 +828,6 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
 
             // then
             assertThat(IOUtils.toString(socket.getInputStream(), StandardCharsets.UTF_8.name()), is("some_random_bytes"));
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
         }
 
         // then - verify request
@@ -979,27 +925,24 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("object_callback"))
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        HttpRequest expectation = request()
-                            .withPath(calculatePath("object_callback"))
-                            .withMethod("POST")
+                httpRequest -> {
+                    HttpRequest expectation = request()
+                        .withPath(calculatePath("object_callback"))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body")
+                        )
+                        .withBody("an_example_body_http");
+                    if (new MatcherBuilder(mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
+                        return response()
+                            .withStatusCode(ACCEPTED_202.code())
+                            .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                             .withHeaders(
-                                header("x-test", "test_headers_and_body")
+                                header("x-object-callback", "test_object_callback_header")
                             )
-                            .withBody("an_example_body_http");
-                        if (new MatcherBuilder(mock(MockServerLogger.class)).transformsToMatcher(expectation).matches(null, httpRequest)) {
-                            return response()
-                                .withStatusCode(ACCEPTED_202.code())
-                                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                                .withHeaders(
-                                    header("x-object-callback", "test_object_callback_header")
-                                )
-                                .withBody("an_object_callback_response");
-                        } else {
-                            return notFoundResponse();
-                        }
+                            .withBody("an_object_callback_response");
+                    } else {
+                        return notFoundResponse();
                     }
                 },
                 new Delay(SECONDS, 3)
@@ -1042,16 +985,11 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withPath(calculatePath("echo"))
             )
             .forward(
-                new ExpectationForwardCallback() {
-                    @Override
-                    public HttpRequest handle(HttpRequest httpRequest) {
-                        return request()
-                            .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
-                            .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
-                            .withBody("some_overridden_body")
-                            .withSecure(httpRequest.isSecure());
-                    }
-                },
+                httpRequest -> request()
+                    .withHeader("Host", "localhost:" + (httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort()))
+                    .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                    .withBody("some_overridden_body")
+                    .withSecure(httpRequest.isSecure()),
                 new Delay(SECONDS, 3)
             );
 

@@ -22,6 +22,12 @@ import static org.mockserver.model.HttpRequest.request;
  */
 public class LogEntry extends ObjectWithJsonToString implements EventTranslator<LogEntry> {
 
+    private static final String[] EXCLUDED_FIELDS = {
+        "key",
+        "timestamp",
+        "message",
+        "throwable"
+    };
     private Level logLevel = Level.INFO;
     public static final DateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private long epochTime = TimeService.currentTimeMillis();
@@ -250,10 +256,6 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     @Override
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{
-            "timestamp",
-            "message",
-            "throwable"
-        };
+        return EXCLUDED_FIELDS;
     }
 }

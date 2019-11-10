@@ -67,7 +67,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                                     downstreamPipeline.addLast(new NettySslContextFactory(mockServerLogger).createClientSslContext().newHandler(clientCtx.alloc(), host, port));
                                 }
 
-                                if (mockServerLogger.isEnabled(Level.TRACE)) {
+                                if (MockServerLogger.isEnabled(Level.TRACE)) {
                                     downstreamPipeline.addLast(new LoggingHandler("downstream                -->"));
                                 }
 

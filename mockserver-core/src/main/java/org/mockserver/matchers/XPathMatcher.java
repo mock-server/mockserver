@@ -18,7 +18,7 @@ import static org.slf4j.event.Level.WARN;
  * @author jamesdbloom
  */
 public class XPathMatcher extends BodyMatcher<String> {
-    private static final String[] excludedFields = {"mockServerLogger", "xpathExpression"};
+    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger", "xpathExpression"};
     private final MockServerLogger mockServerLogger;
     private final String matcher;
     private final StringToXmlDocumentParser stringToXmlDocumentParser = new StringToXmlDocumentParser();
@@ -97,6 +97,6 @@ public class XPathMatcher extends BodyMatcher<String> {
     @Override
     @JsonIgnore
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return excludedFields;
+        return EXCLUDED_FIELDS;
     }
 }

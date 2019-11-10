@@ -13,6 +13,12 @@ import static org.mockserver.model.HttpRequest.request;
 
 public class LogEntryDTO extends ObjectWithJsonToString {
 
+    private static final String[] EXCLUDED_FIELDS = {
+        "key",
+        "timestamp",
+        "message",
+        "throwable"
+    };
     private String key;
     private Level logLevel;
     private long epochTime;
@@ -179,10 +185,6 @@ public class LogEntryDTO extends ObjectWithJsonToString {
 
     @Override
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{
-            "timestamp",
-            "message",
-            "throwable"
-        };
+        return EXCLUDED_FIELDS;
     }
 }

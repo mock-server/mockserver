@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
 
-    private static final String[] excludedFields = {"endDate"};
+    private static final String[] EXCLUDED_FIELDS = {"key", "endDate"};
     private static final TimeToLive TIME_TO_LIVE_UNLIMITED = new TimeToLive(null, null, true) {
         public boolean stillAlive() {
             return true;
@@ -62,6 +62,6 @@ public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
     @Override
     @JsonIgnore
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return excludedFields;
+        return EXCLUDED_FIELDS;
     }
 }

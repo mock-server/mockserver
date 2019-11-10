@@ -13,7 +13,7 @@ import static org.slf4j.event.Level.TRACE;
  * @author jamesdbloom
  */
 public class ParameterStringMatcher extends BodyMatcher<String> {
-    private static final String[] excludedFields = {"mockServerLogger"};
+    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final MultiValueMapMatcher matcher;
 
@@ -50,6 +50,6 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
     @Override
     @JsonIgnore
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return excludedFields;
+        return EXCLUDED_FIELDS;
     }
 }

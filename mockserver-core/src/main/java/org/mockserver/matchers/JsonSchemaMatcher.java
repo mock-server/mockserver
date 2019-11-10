@@ -14,7 +14,7 @@ import static org.slf4j.event.Level.TRACE;
  * @author jamesdbloom
  */
 public class JsonSchemaMatcher extends BodyMatcher<String> {
-    private static final String[] excludedFields = {"mockServerLogger", "jsonSchemaValidator"};
+    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger", "jsonSchemaValidator"};
     private final MockServerLogger mockServerLogger;
     private String schema;
     private JsonSchemaValidator jsonSchemaValidator;
@@ -60,7 +60,7 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
     @Override
     @JsonIgnore
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return excludedFields;
+        return EXCLUDED_FIELDS;
     }
 
 }

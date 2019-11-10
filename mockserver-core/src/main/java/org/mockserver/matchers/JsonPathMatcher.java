@@ -2,8 +2,8 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jayway.jsonpath.JsonPath;
-import org.apache.commons.lang3.StringUtils;
 import net.minidev.json.JSONArray;
+import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -16,7 +16,7 @@ import static org.slf4j.event.Level.TRACE;
  * @author jamesdbloom
  */
 public class JsonPathMatcher extends BodyMatcher<String> {
-    private static final String[] excludedFields = {"mockServerLogger", "jsonPath"};
+    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger", "jsonPath"};
     private final MockServerLogger mockServerLogger;
     private final String matcher;
     private JsonPath jsonPath;
@@ -83,7 +83,7 @@ public class JsonPathMatcher extends BodyMatcher<String> {
     @Override
     @JsonIgnore
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return excludedFields;
+        return EXCLUDED_FIELDS;
     }
 
 }

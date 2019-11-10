@@ -5,7 +5,6 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.bouncycastle.util.Arrays;
 
 import java.util.UUID;
 
@@ -14,34 +13,38 @@ import java.util.UUID;
  */
 public abstract class ObjectWithReflectiveEqualsHashCodeToString {
 
+    private static final String[] IGNORE_KEY_FIELD = {"key"};
+
     static {
         ReflectionToStringBuilder.setDefaultStyle(ToStringStyle.SHORT_PREFIX_STYLE);
     }
 
-    private final String key = UUID.randomUUID().toString();
-    private final String[] fieldsExcludedFromEqualsAndHashCode = fieldsExcludedFromEqualsAndHashCode() == null ? new String[]{"key"} : Arrays.append(fieldsExcludedFromEqualsAndHashCode(), "key");
+    private String key;
 
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return null;
+        return IGNORE_KEY_FIELD;
     }
 
     @Override
     public String toString() {
-        return ReflectionToStringBuilder.toStringExclude(this, fieldsExcludedFromEqualsAndHashCode);
+        return ReflectionToStringBuilder.toStringExclude(this, fieldsExcludedFromEqualsAndHashCode());
     }
 
     @Override
     public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other, fieldsExcludedFromEqualsAndHashCode);
+        return EqualsBuilder.reflectionEquals(this, other, fieldsExcludedFromEqualsAndHashCode());
     }
 
     @Override
     public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this, fieldsExcludedFromEqualsAndHashCode);
+        return HashCodeBuilder.reflectionHashCode(this, fieldsExcludedFromEqualsAndHashCode());
     }
 
     @JsonIgnore
     public String key() {
+        if (key == null) {
+            key = UUID.randomUUID().toString();
+        }
         return key;
     }
 }

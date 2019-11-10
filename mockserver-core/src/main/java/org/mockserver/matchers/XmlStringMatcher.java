@@ -22,7 +22,7 @@ import static org.slf4j.event.Level.TRACE;
  * @author jamesdbloom
  */
 public class XmlStringMatcher extends BodyMatcher<NottableString> {
-    private static final String[] excludedFields = {"mockServerLogger", "stringToXmlDocumentParser"};
+    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger", "stringToXmlDocumentParser"};
     private final MockServerLogger mockServerLogger;
     private DiffBuilder diffBuilder;
     private NottableString matcher = string("THIS SHOULD NEVER MATCH");
@@ -111,6 +111,6 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
     @Override
     @JsonIgnore
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return excludedFields;
+        return EXCLUDED_FIELDS;
     }
 }

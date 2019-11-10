@@ -13,6 +13,7 @@ import static org.slf4j.event.Level.TRACE;
  * @author jamesdbloom
  */
 public class XmlSchemaMatcher extends BodyMatcher<String> {
+    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger", "xmlSchemaValidator"};
     private final MockServerLogger mockServerLogger;
     private String schema;
     private XmlSchemaValidator xmlSchemaValidator;
@@ -24,7 +25,7 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
     }
 
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"logger", "xmlSchemaValidator"};
+        return EXCLUDED_FIELDS;
     }
 
     public boolean matches(final HttpRequest context, String matched) {

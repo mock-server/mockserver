@@ -67,6 +67,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .setHttpRequest(logEntry.getHttpRequest())
             .setHttpResponse(logEntry.getHttpResponse())
             .setTimestamp(logEntry.getTimestamp());
+    private static final String[] EXCLUDED_FIELDS = {"key", "disruptor"};
     private MockServerLogger mockServerLogger;
     private Queue<LogEntry> requestLog = new BoundedConcurrentLinkedQueue<>(requestLogSize());
     private MatcherBuilder matcherBuilder;
@@ -393,7 +394,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return new String[]{"disruptor"};
+        return EXCLUDED_FIELDS;
     }
 
 }

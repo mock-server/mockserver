@@ -17,8 +17,7 @@ import static org.slf4j.event.Level.TRACE;
  */
 public class RegexStringMatcher extends BodyMatcher<NottableString> {
 
-    public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(RegexStringMatcher.class);
-    private static final String[] excludedFields = {"mockServerLogger"};
+    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final NottableString matcher;
 
@@ -86,7 +85,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     return true;
                 }
             } catch (PatternSyntaxException pse) {
-                MOCK_SERVER_LOGGER.logEvent(
+                mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
@@ -99,7 +98,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     return true;
                 }
             } catch (PatternSyntaxException pse) {
-                MOCK_SERVER_LOGGER.logEvent(
+                mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
@@ -118,7 +117,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         return true;
                     }
                 } catch (PatternSyntaxException pse) {
-                    MOCK_SERVER_LOGGER.logEvent(
+                    mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
@@ -131,7 +130,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         return true;
                     }
                 } catch (PatternSyntaxException pse) {
-                    MOCK_SERVER_LOGGER.logEvent(
+                    mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
@@ -157,7 +156,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     return true;
                 }
             } catch (PatternSyntaxException pse) {
-                MOCK_SERVER_LOGGER.logEvent(
+                mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
@@ -170,7 +169,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     return true;
                 }
             } catch (PatternSyntaxException pse) {
-                MOCK_SERVER_LOGGER.logEvent(
+                mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
@@ -189,7 +188,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         return true;
                     }
                 } catch (PatternSyntaxException pse) {
-                    MOCK_SERVER_LOGGER.logEvent(
+                    mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
@@ -202,7 +201,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         return true;
                     }
                 } catch (PatternSyntaxException pse) {
-                    MOCK_SERVER_LOGGER.logEvent(
+                    mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
@@ -218,6 +217,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     @Override
     @JsonIgnore
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return excludedFields;
+        return EXCLUDED_FIELDS;
     }
 }

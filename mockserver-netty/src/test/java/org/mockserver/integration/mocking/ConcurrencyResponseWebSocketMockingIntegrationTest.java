@@ -17,6 +17,7 @@ import java.util.concurrent.*;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -72,11 +73,11 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
 
         List<ScheduledFuture> scheduledFutures = new ArrayList<>();
         for (int i = 0; i < parallelThreads; i++) {
-            scheduledFutures.add(executor.schedule(new Task(), 1L, TimeUnit.SECONDS));
+            scheduledFutures.add(executor.schedule(new Task(), 1L, SECONDS));
         }
 
         for (int i = 0; i < parallelThreads; i++) {
-            scheduledFutures.get(i).get(15L, TimeUnit.SECONDS);
+            scheduledFutures.get(i).get(25L, SECONDS);
         }
     }
 

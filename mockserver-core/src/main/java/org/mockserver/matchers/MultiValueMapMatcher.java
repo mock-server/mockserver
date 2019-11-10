@@ -13,7 +13,7 @@ import static org.slf4j.event.Level.TRACE;
  * @author jamesdbloom
  */
 public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
-    private static final String[] excludedFields = {"mockServerLogger"};
+    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final CaseInsensitiveRegexMultiMap multiMap;
 
@@ -53,6 +53,6 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
     @Override
     @JsonIgnore
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return excludedFields;
+        return EXCLUDED_FIELDS;
     }
 }

@@ -2,10 +2,7 @@ package org.mockserver.echo.http;
 
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
@@ -58,15 +55,12 @@ public class EchoServer implements Stoppable {
                 .childAttr(NEXT_RESPONSE, nextResponse)
                 .childAttr(ONLY_RESPONSE, onlyResponse)
                 .bind(0)
-                .addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) throws Exception {
-                        if (future.isSuccess()) {
-                            boundPort.set(((InetSocketAddress) future.channel().localAddress()).getPort());
-                        } else {
-                            boundPort.setException(future.cause());
-                            eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
-                        }
+                .addListener((ChannelFutureListener) future -> {
+                    if (future.isSuccess()) {
+                        boundPort.set(((InetSocketAddress) future.channel().localAddress()).getPort());
+                    } else {
+                        boundPort.setException(future.cause());
+                        eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                     }
                 });
         }, "MockServer EchoServer Thread").start();
