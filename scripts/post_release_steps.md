@@ -1,6 +1,9 @@
 Release Steps
-1. ./scripts/local_release.sh
-1. ./scripts/local_deploy_snapshot.sh
+1. publish RELEASE to maven central 
+   1. ./scripts/local_release.sh
+   1. https://oss.sonatype.org/index.html#stagingRepositories
+1. publish SNAPSHOT to sonatype 
+   1. ./scripts/local_deploy_snapshot.sh
 1. update mockserver-node
    1. delete package-lock.json
    1. rm -rf node_modules
