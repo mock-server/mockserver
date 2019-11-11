@@ -12,13 +12,9 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.verify.Verification;
-import org.mockserver.verify.VerificationSequence;
 
 import java.util.List;
-import java.util.concurrent.Future;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -105,7 +101,7 @@ public class MockServerEventLogTest {
     }
 
     @Test
-    public void shouldRetrieveLogEntriesWithNullRequestMatcher()  {
+    public void shouldRetrieveLogEntriesWithNullRequestMatcher() {
         // given
         mockServerLogger.logEvent(
             new LogEntry()
@@ -128,7 +124,7 @@ public class MockServerEventLogTest {
             new LogEntry()
                 .setLogLevel(INFO)
                 .setType(RECEIVED_REQUEST)
-                .setHttpRequest(request("request_two"))
+                .setHttpRequests(new HttpRequest[]{request("request_two"), request("request_three")})
                 .setMessageFormat("received request:{}")
                 .setArguments(request("request_two"))
         );
@@ -169,7 +165,8 @@ public class MockServerEventLogTest {
         // then
         assertThat(retrieveRequests(null), contains(
             request("request_one"),
-            request("request_two")
+            request("request_two"),
+            request("request_three")
         ));
         assertThat(retrieveRequestResponseMessageLogEntries(null), contains(
             new LogEntry()
@@ -214,7 +211,7 @@ public class MockServerEventLogTest {
             new LogEntry()
                 .setLogLevel(INFO)
                 .setType(RECEIVED_REQUEST)
-                .setHttpRequest(request("request_two"))
+                .setHttpRequests(new HttpRequest[]{request("request_two"), request("request_three")})
                 .setMessageFormat("received request:{}")
                 .setArguments(request("request_two")),
             new LogEntry()
@@ -246,7 +243,7 @@ public class MockServerEventLogTest {
     }
 
     @Test
-    public void shouldRetrieveLogEntriesWithRequestMatcher()  {
+    public void shouldRetrieveLogEntriesWithRequestMatcher() {
         // given
         mockServerLogger.logEvent(
             new LogEntry()
@@ -341,7 +338,7 @@ public class MockServerEventLogTest {
     }
 
     @Test
-    public void shouldClearWithNullRequestMatcher()  {
+    public void shouldClearWithNullRequestMatcher() {
         // given
         mockServerLogger.logEvent(
             new LogEntry()
@@ -400,7 +397,7 @@ public class MockServerEventLogTest {
     }
 
     @Test
-    public void shouldClearWithRequestMatcher()  {
+    public void shouldClearWithRequestMatcher() {
         // given
         mockServerLogger.logEvent(
             new LogEntry()
@@ -522,7 +519,7 @@ public class MockServerEventLogTest {
     }
 
     @Test
-    public void shouldReset()  {
+    public void shouldReset() {
         // given
         mockServerLogger.logEvent(
             new LogEntry()
