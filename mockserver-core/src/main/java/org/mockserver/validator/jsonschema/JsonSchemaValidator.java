@@ -120,7 +120,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
     }
 
     private String formatProcessingReport(ProcessingReport validate) {
-        List<String> validationErrors = new ArrayList<String>();
+        List<String> validationErrors = new ArrayList<>();
         for (ProcessingMessage processingMessage : validate) {
             String fieldPointer = "";
             if (processingMessage.asJson().get("instance") != null && processingMessage.asJson().get("instance").get("pointer") != null) {
