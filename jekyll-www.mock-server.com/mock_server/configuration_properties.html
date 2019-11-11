@@ -342,6 +342,20 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.certificateAuthorityCertificate="true"</code></pre>
 </div>
 
+<button id="button_configuration_directory_to_save_dynamic_ssl_certificates" class="accordion title"><strong>Directory To Save Dynamic TLS Certificates</strong></button>
+<div class="panel title">
+    <p>Location used to save dynamically generated certificates, by default this is saved as a temporary file by the JVM, for example: <strong>/var/folders/lz/_kbrwxrx4ss3brnc0y9ms2vc0000gn/T/MockServerCertificate75d431bb-cbf1-4cfe-b8a2-000ece2150e3.pem1048371440427200504.tmp</strong>.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">File.createTempFile(...)</span></p>
+    <p>Java Code:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.directoryToSaveDynamicSSLCertificate(String directoryToSaveDynamicSSLCertificate)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.directoryToSaveDynamicSSLCertificate=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.directoryToSaveDynamicSSLCertificate=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.directoryToSaveDynamicSSLCertificate="/some/existing/path"</code></pre>
+</div>
+
 <button id="button_configuration_log_level" class="accordion title"><strong>Log Level</strong></button>
 <div class="panel title">
     <p>The log level, note if this is lower then INFO then verification logic does not work because no log events are captured to enable verification</p>
