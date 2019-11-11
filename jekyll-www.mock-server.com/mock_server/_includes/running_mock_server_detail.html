@@ -443,7 +443,7 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <h2>Build & Run From Source</h2>
 
-<p>MockServer is now only built using maven as the use of gradle caused problems with the Travis CI environment so the gradle build was removed.</p>
+<p>MockServer is written in Java and built using maven.  The maven wrapper is used so maven does not need to be installed but Java JDK 8 or higher does need to be installed.</p>
 
 <p>First clone the repository as follows:</p>
 
@@ -452,7 +452,7 @@ cd mockserver</code></pre>
 
 <p>Next use <strong>maven</strong> to build an executable jar containing all dependencies as follows:</p>
 
-<pre><code class="code">mvn clean package</code></pre>
+<pre><code class="code">./mvnw clean package</code></pre>
 
 <p>This will produce a jar file under the target directory called, as follows:</p>
 
