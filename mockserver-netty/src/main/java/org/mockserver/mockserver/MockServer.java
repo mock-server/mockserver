@@ -5,10 +5,10 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.proxy.ProxyConfiguration;
-import org.mockserver.lifecycle.LifeCycle;
 import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
@@ -17,11 +17,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Collections.singletonList;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.proxy.ProxyConfiguration.proxyConfiguration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
 import static org.mockserver.mockserver.MockServerHandler.PROXYING;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.proxy.ProxyConfiguration.proxyConfiguration;
 
 /**
  * @author jamesdbloom
@@ -115,6 +115,13 @@ public class MockServer extends LifeCycle {
         try {
             bindServerPorts(portBindings);
         } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(SERVER_CONFIGURATION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception binding to port(s) " + portBindings)
+                    .setThrowable(throwable)
+            );
             stop();
             throw throwable;
         }
