@@ -12,10 +12,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.slf4j.event.Level;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -73,6 +70,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE = "mockserver.preventCertificateDynamicUpdate";
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "mockserver.certificateAuthorityPrivateKey";
     private static final String MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "mockserver.certificateAuthorityCertificate";
+    private static final String MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE = "mockserver.directoryToSaveDynamicSSLCertificate";
     private static final String MOCKSERVER_LOG_LEVEL = "mockserver.logLevel";
     private static final String MOCKSERVER_METRICS_ENABLED = "mockserver.metricsEnabled";
     private static final String MOCKSERVER_DISABLE_SYSTEM_OUT = "mockserver.disableSystemOut";
@@ -433,6 +431,23 @@ public class ConfigurationProperties {
      */
     public static void certificateAuthorityCertificate(String certificateAuthorityCertificate) {
         System.setProperty(MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE, certificateAuthorityCertificate);
+    }
+
+    public static String directoryToSaveDynamicSSLCertificate() {
+        return readPropertyHierarchically(MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE, "");
+    }
+
+    /**
+     * Override the default location used to save dynamically generated certificates, by default this is saved as a temporary file by the JVM,
+     * for example: /var/folders/lz/_kbrwxrx4ss3brnc0y9ms2vc0000gn/T/MockServerCertificate75d431bb-cbf1-4cfe-b8a2-000ece2150e3.pem1048371440427200504.tmp
+     *
+     * @param directoryToSaveDynamicSSLCertificate location to save private key and X509 certificate
+     */
+    public static void directoryToSaveDynamicSSLCertificate(String directoryToSaveDynamicSSLCertificate) {
+        if (!new File(directoryToSaveDynamicSSLCertificate).exists()) {
+            throw new RuntimeException(directoryToSaveDynamicSSLCertificate + " does not exist or is not accessible");
+        }
+        System.setProperty(MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE, directoryToSaveDynamicSSLCertificate);
     }
 
     public static Level logLevel() {

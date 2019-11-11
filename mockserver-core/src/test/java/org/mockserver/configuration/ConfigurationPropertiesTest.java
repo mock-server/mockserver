@@ -7,6 +7,7 @@ import org.junit.rules.ExpectedException;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.slf4j.event.Level;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -14,8 +15,7 @@ import java.security.KeyStore;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.Assert.*;
@@ -480,20 +480,6 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadCertificateAuthorityCertificate() {
-        // given
-        System.clearProperty("mockserver.certificateAuthorityCertificate");
-
-        // when
-        assertEquals("org/mockserver/socket/CertificateAuthorityCertificate.pem", ConfigurationProperties.certificateAuthorityCertificate());
-        ConfigurationProperties.certificateAuthorityCertificate("some/certificate.pem");
-
-        // then
-        assertEquals("some/certificate.pem", ConfigurationProperties.certificateAuthorityCertificate());
-        assertEquals("some/certificate.pem", System.getProperty("mockserver.certificateAuthorityCertificate"));
-    }
-
-    @Test
     public void shouldSetAndReadPreventCertificateDynamicUpdate() {
         // given
         System.clearProperty("mockserver.preventCertificateDynamicUpdate");
@@ -519,6 +505,44 @@ public class ConfigurationPropertiesTest {
         // then
         assertEquals("some/private_key.pem", ConfigurationProperties.certificateAuthorityPrivateKey());
         assertEquals("some/private_key.pem", System.getProperty("mockserver.certificateAuthorityPrivateKey"));
+    }
+
+    @Test
+    public void shouldSetAndReadCertificateAuthorityCertificate() {
+        // given
+        System.clearProperty("mockserver.certificateAuthorityCertificate");
+
+        // when
+        assertEquals("org/mockserver/socket/CertificateAuthorityCertificate.pem", ConfigurationProperties.certificateAuthorityCertificate());
+        ConfigurationProperties.certificateAuthorityCertificate("some/certificate.pem");
+
+        // then
+        assertEquals("some/certificate.pem", ConfigurationProperties.certificateAuthorityCertificate());
+        assertEquals("some/certificate.pem", System.getProperty("mockserver.certificateAuthorityCertificate"));
+    }
+
+    @Test
+    public void shouldSetAndReadDirectoryToSaveDynamicSSLCertificate() throws IOException {
+        // given
+        System.clearProperty("mockserver.directoryToSaveDynamicSSLCertificate");
+
+        // when
+        assertThat(ConfigurationProperties.directoryToSaveDynamicSSLCertificate(), is(""));
+        try {
+            ConfigurationProperties.directoryToSaveDynamicSSLCertificate("some/random/path");
+            fail();
+        } catch (Throwable throwable) {
+            assertThat(throwable, instanceOf(RuntimeException.class));
+            assertThat(throwable.getMessage(), is("some/random/path does not exist or is not accessible"));
+        }
+
+        // when
+        File tempFile = File.createTempFile("prefix", "suffix");
+        ConfigurationProperties.directoryToSaveDynamicSSLCertificate(tempFile.getAbsolutePath());
+
+        // then
+        assertThat(ConfigurationProperties.directoryToSaveDynamicSSLCertificate(), is(tempFile.getAbsolutePath()));
+        assertThat(System.getProperty("mockserver.directoryToSaveDynamicSSLCertificate"), is(tempFile.getAbsolutePath()));
     }
 
     @Test

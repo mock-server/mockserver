@@ -35,6 +35,11 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.configuration.ConfigurationProperties.directoryToSaveDynamicSSLCertificate;
+import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.WARN;
+
 /**
  * @author jamesdbloom, ganskef
  */
@@ -207,9 +212,9 @@ public class KeyAndCertificateFactory {
     private synchronized void buildAndSaveCertificateAuthorityCertificates() throws Exception {
         KeyPair caKeyPair = generateKeyPair(ROOT_KEYSIZE);
 
-        saveCertificateAsPEMFile(createCACert(caKeyPair.getPublic(), caKeyPair.getPrivate()), "CertificateAuthorityCertificate.pem", false);
-        saveCertificateAsPEMFile(caKeyPair.getPublic(), "CertificateAuthorityPublicKey.pem", false);
-        saveCertificateAsPEMFile(caKeyPair.getPrivate(), "CertificateAuthorityPrivateKey.pem", false);
+        saveCertificateAsPEMFile(createCACert(caKeyPair.getPublic(), caKeyPair.getPrivate()), "CertificateAuthorityCertificate.pem", false, "X509 key");
+        saveCertificateAsPEMFile(caKeyPair.getPublic(), "CertificateAuthorityPublicKey.pem", false, "public key");
+        saveCertificateAsPEMFile(caKeyPair.getPrivate(), "CertificateAuthorityPrivateKey.pem", false, "private key");
     }
 
     /**
@@ -237,8 +242,8 @@ public class KeyAndCertificateFactory {
                 ConfigurationProperties.sslSubjectAlternativeNameIps()
             );
             String randomUUID = UUID.randomUUID().toString();
-            mockServerCertificatePEMFile = saveCertificateAsPEMFile(mockServerCert, "MockServerCertificate" + randomUUID + ".pem", true);
-            mockServerPrivateKeyPEMFile = saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey" + randomUUID + ".pem", true);
+            mockServerCertificatePEMFile = saveCertificateAsPEMFile(mockServerCert, "MockServerCertificate" + randomUUID + ".pem", true, "X509 key");
+            mockServerPrivateKeyPEMFile = saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey" + randomUUID + ".pem", true, "private key");
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -253,8 +258,39 @@ public class KeyAndCertificateFactory {
     /**
      * Saves X509Certificate as Base-64 encoded PEM file.
      */
-    private String saveCertificateAsPEMFile(Object x509Certificate, String filename, boolean deleteOnExit) throws IOException {
-        File pemFile = File.createTempFile(filename, null);
+    private String saveCertificateAsPEMFile(Object x509Certificate, String filename, boolean deleteOnExit, String type) throws IOException {
+        File pemFile;
+        if (isNotBlank(directoryToSaveDynamicSSLCertificate()) && new File(directoryToSaveDynamicSSLCertificate()).exists()) {
+            pemFile = new File(new File(directoryToSaveDynamicSSLCertificate()), filename);
+            if (pemFile.exists()) {
+                boolean deletedFile = pemFile.delete();
+                if (!deletedFile) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.WARN)
+                            .setLogLevel(WARN)
+                            .setMessageFormat("Failed to delete dynamic TLS certificate " + type + " PEM file at " + pemFile.getAbsolutePath() + " prior to creating new version")
+                    );
+                }
+            }
+            boolean createFile = pemFile.createNewFile();
+            if (!createFile) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.WARN)
+                        .setLogLevel(WARN)
+                        .setMessageFormat("Failed to created dynamic TLS certificate " + type + " PEM file at " + pemFile.getAbsolutePath())
+                );
+            }
+        } else {
+            pemFile = File.createTempFile(filename, null);
+        }
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(LogEntry.LogMessageType.DEBUG)
+                .setLogLevel(DEBUG)
+                .setMessageFormat("Created dynamic TLS certificate " + type + " PEM file at " + pemFile.getAbsolutePath())
+        );
         try (FileWriter pemfileWriter = new FileWriter(pemFile)) {
             try (JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(pemfileWriter)) {
                 jcaPEMWriter.writeObject(x509Certificate);

@@ -54,7 +54,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         }
 
         // add logging
-        if (mockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE)) {
             pipeline.addLast(new LoggingHandler("NettyHttpClient -->"));
         }
 

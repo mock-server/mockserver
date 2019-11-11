@@ -7,7 +7,6 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 
 import javax.net.ssl.SSLException;
-import java.security.cert.X509Certificate;
 
 /**
  * @author jamesdbloom
@@ -43,15 +42,12 @@ public class NettySslContextFactory {
             || !ConfigurationProperties.preventCertificateDynamicUpdate() && ConfigurationProperties.rebuildServerKeyStore()) {
             try {
                 keyAndCertificateFactory.buildAndSaveCertificates();
-
                 serverSslContext = SslContextBuilder.forServer(
                     keyAndCertificateFactory.mockServerPrivateKey(),
                     // do we need this password??
                     ConfigurationProperties.javaKeyStorePassword(),
-                    new X509Certificate[]{
-                        keyAndCertificateFactory.mockServerX509Certificate(),
-                        keyAndCertificateFactory.mockServerCertificateAuthorityX509Certificate()
-                    }
+                    keyAndCertificateFactory.mockServerX509Certificate(),
+                    keyAndCertificateFactory.mockServerCertificateAuthorityX509Certificate()
                 ).build();
                 ConfigurationProperties.rebuildServerKeyStore(false);
             } catch (Exception e) {

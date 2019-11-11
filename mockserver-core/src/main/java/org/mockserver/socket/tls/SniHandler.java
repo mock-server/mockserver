@@ -18,10 +18,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  */
 public class SniHandler extends AbstractSniHandler<SslContext> {
 
-    private final MockServerLogger mockServerLogger;
+    private final NettySslContextFactory nettySslContextFactory;
 
-    public SniHandler(MockServerLogger mockServerLogger) {
-        this.mockServerLogger = mockServerLogger;
+    public SniHandler(NettySslContextFactory nettySslContextFactory) {
+        this.nettySslContextFactory = nettySslContextFactory;
     }
 
     @Override
@@ -29,7 +29,7 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
         if (isNotBlank(hostname)) {
             ConfigurationProperties.addSslSubjectAlternativeNameDomains(hostname);
         }
-        return ctx.executor().newSucceededFuture(new NettySslContextFactory(mockServerLogger).createServerSslContext());
+        return ctx.executor().newSucceededFuture(nettySslContextFactory.createServerSslContext());
     }
 
     @Override
