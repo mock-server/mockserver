@@ -11,6 +11,7 @@ import org.mockserver.serialization.model.*;
 import org.slf4j.event.Level;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
@@ -42,11 +43,13 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private BooleanMatcher keepAliveMatcher = null;
     private BodyDTO bodyDTOMatcher = null;
     private BooleanMatcher sslMatcher = null;
+    private final boolean controlPlaneMatcher;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     public HttpRequestMatcher(MockServerLogger mockServerLogger, HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
         this.mockServerLogger = mockServerLogger;
+        this.controlPlaneMatcher = true;
         if (httpRequest != null) {
             withMethod(httpRequest.getMethod());
             withPath(httpRequest.getPath());
@@ -59,10 +62,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         }
     }
 
-    HttpRequestMatcher(Expectation expectation, MockServerLogger mockServerLogger) {
+    public HttpRequestMatcher(MockServerLogger mockServerLogger, Expectation expectation) {
         this.expectation = expectation;
         this.httpRequest = expectation.getHttpRequest();
         this.mockServerLogger = mockServerLogger;
+        this.controlPlaneMatcher = false;
         if (httpRequest != null) {
             withMethod(httpRequest.getMethod());
             withPath(httpRequest.getPath());
@@ -172,18 +176,14 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         this.sslMatcher = new BooleanMatcher(mockServerLogger, isSsl);
     }
 
-    public boolean matches(final HttpRequest context, HttpRequest request) {
-        return matches(context, request, true);
+    public boolean matches(final HttpRequest request) {
+        return matches(null, request);
     }
 
-    public boolean matches(HttpRequest request) {
-        return matches(null, request, false);
-    }
-
-    private boolean matches(HttpRequest context, HttpRequest request, boolean logMatchResults) {
+    public boolean matches(final HttpRequest context, final HttpRequest request) {
         StringBuilder becauseBuilder = new StringBuilder();
-        boolean overallMatch = matches(context, request, becauseBuilder, logMatchResults);
-        if (logMatchResults) {
+        boolean overallMatch = matches(context, request, becauseBuilder);
+        if (!controlPlaneMatcher) {
             if (overallMatch) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -209,7 +209,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         return overallMatch;
     }
 
-    private boolean matches(HttpRequest context, HttpRequest request, StringBuilder becauseBuilder, boolean logMatchResults) {
+    private boolean matches(HttpRequest context, HttpRequest request, StringBuilder becauseBuilder) {
         if (isActive()) {
             if (request == this.httpRequest) {
                 return true;
@@ -218,42 +218,42 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             } else {
                 if (request != null) {
                     boolean methodMatches = isBlank(request.getMethod().getValue()) || matches(context, methodMatcher, request.getMethod());
-                    if (matchFailed(logMatchResults, request, becauseBuilder, methodMatches, "", "method ")) {
+                    if (matchFailed(request, becauseBuilder, methodMatches, "", "method ")) {
                         return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
                     }
 
                     boolean pathMatches = isBlank(request.getPath().getValue()) || matches(context, pathMatcher, request.getPath());
-                    if (matchFailed(logMatchResults, request, becauseBuilder, pathMatches, ",", "path ")) {
+                    if (matchFailed(request, becauseBuilder, pathMatches, ",", "path ")) {
                         return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
                     }
 
                     boolean bodyMatches = bodyMatches(context, request);
-                    if (matchFailed(logMatchResults, request, becauseBuilder, bodyMatches, ",", "body ")) {
+                    if (matchFailed(request, becauseBuilder, bodyMatches, ",", "body ")) {
                         return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
                     }
 
                     boolean headersMatch = matches(context, headerMatcher, request.getHeaders());
-                    if (matchFailed(logMatchResults, request, becauseBuilder, headersMatch, ",", "headers ")) {
+                    if (matchFailed(request, becauseBuilder, headersMatch, ",", "headers ")) {
                         return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
                     }
 
                     boolean cookiesMatch = matches(context, cookieMatcher, request.getCookies());
-                    if (matchFailed(logMatchResults, request, becauseBuilder, cookiesMatch, ",", "cookies ")) {
+                    if (matchFailed(request, becauseBuilder, cookiesMatch, ",", "cookies ")) {
                         return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
                     }
 
                     boolean queryStringParametersMatches = matches(context, queryStringParameterMatcher, request.getQueryStringParameters());
-                    if (matchFailed(logMatchResults, request, becauseBuilder, queryStringParametersMatches, ",", "query ")) {
+                    if (matchFailed(request, becauseBuilder, queryStringParametersMatches, ",", "query ")) {
                         return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
                     }
 
                     boolean keepAliveMatches = matches(context, keepAliveMatcher, request.isKeepAlive());
-                    if (matchFailed(logMatchResults, request, becauseBuilder, keepAliveMatches, ",", "keep-alive ")) {
+                    if (matchFailed(request, becauseBuilder, keepAliveMatches, ",", "keep-alive ")) {
                         return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
                     }
 
                     boolean sslMatches = matches(context, sslMatcher, request.isSecure());
-                    if (matchFailed(logMatchResults, request, becauseBuilder, sslMatches, ",", "sslMatches ")) {
+                    if (matchFailed(request, becauseBuilder, sslMatches, ",", "sslMatches ")) {
                         return combineResults(false, request.isNot(), this.httpRequest.isNot(), not);
                     }
 
@@ -274,13 +274,13 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         return count % 2 != 0;
     }
 
-    private boolean matchFailed(boolean logMatchResults, HttpRequest request, StringBuilder becauseBuilder, boolean testResult, String separator, String fieldName) {
+    private boolean matchFailed(HttpRequest request, StringBuilder becauseBuilder, boolean testResult, String separator, String fieldName) {
         boolean matchFailed = false;
-        if (logMatchResults) {
+        if (!controlPlaneMatcher) {
             becauseBuilder.append(separator).append(separator.length() > 0 ? NEW_LINE : "").append(fieldName).append((testResult ? MATCHED : DID_NOT_MATCH));
         }
         if (!testResult) {
-            if (logMatchResults) {
+            if (!controlPlaneMatcher) {
                 if (request.isNot()) {
                     becauseBuilder.append(",").append(NEW_LINE).append("request \'not\' operator is enabled");
                 }
@@ -300,7 +300,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private boolean bodyMatches(HttpRequest context, HttpRequest request) {
         boolean bodyMatches = true;
         String bodyAsString = request.getBody() != null ? new String(request.getBody().getRawBytes(), request.getBody().getCharset(DEFAULT_HTTP_CHARACTER_SET)) : "";
-        if (!bodyAsString.isEmpty()) {
+        if (isNotBlank(bodyAsString) || !controlPlaneMatcher) {
             if (bodyMatcher instanceof BinaryMatcher) {
                 bodyMatches = matches(context, bodyMatcher, request.getBodyAsRawBytes());
             } else {

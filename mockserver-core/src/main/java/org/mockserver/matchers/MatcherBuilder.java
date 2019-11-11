@@ -20,7 +20,7 @@ public class MatcherBuilder {
     }
 
     public HttpRequestMatcher transformsToMatcher(Expectation expectation) {
-        return new HttpRequestMatcher(expectation, mockServerLogger);
+        return new HttpRequestMatcher(mockServerLogger, expectation);
     }
 
 }

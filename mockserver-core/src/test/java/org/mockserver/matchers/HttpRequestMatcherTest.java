@@ -2,6 +2,7 @@ package org.mockserver.matchers;
 
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
 import org.mockserver.serialization.model.*;
@@ -377,6 +378,16 @@ public class HttpRequestMatcherTest {
     @Test
     public void doesNotMatchIncorrectBody() {
         assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(exact("somebody"))).matches(null, new HttpRequest().withBody("bodysome")));
+    }
+
+    @Test
+    public void doesNotMatchEmptyBody() {
+        assertFalse(new HttpRequestMatcher(mockServerLogger, new Expectation(new HttpRequest().withBody(exact("somebody")))).matches(null, new HttpRequest()));
+    }
+
+    @Test
+    public void doesNotMatchEmptyBodyForControlPlane() {
+        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(exact("somebody"))).matches(null, new HttpRequest()));
     }
 
     @Test
