@@ -103,7 +103,7 @@ public class Main {
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)
                         .setLogLevel(ConfigurationProperties.logLevel())
-                        .setMessageFormat("Logger level is " + ConfigurationProperties.logLevel() + ", configure using \"-logLevel\" command line argument, or set \"mockserver.logLevel\" system property or property value in \"mockserver.properties\"")
+                        .setMessageFormat("Logger level is " + ConfigurationProperties.logLevel() + ", change using:\n - \'ConfigurationProperties.logLevel(String level)\' in Java code,\n - \'-logLevel\' command line argument,\n - \'mockserver.logLevel\' JVM system property or,\n - \'mockserver.logLevel\' property value in \'mockserver.properties\'")
                 );
             }
 
