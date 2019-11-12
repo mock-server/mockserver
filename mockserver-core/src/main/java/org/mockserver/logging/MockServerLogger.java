@@ -10,7 +10,6 @@ import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.logging.LogManager;
 
@@ -18,6 +17,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.javaLoggerLogLevel;
 import static org.mockserver.configuration.ConfigurationProperties.logLevel;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
+import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.slf4j.event.Level.ERROR;
 
 /**
  * @author jamesdbloom
@@ -41,8 +42,14 @@ public class MockServerLogger {
                     "io.netty.handler.ssl.SslHandler.level=WARNING";
                 LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingConfiguration.getBytes(Charset.forName("UTF-8"))));
             }
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
+        } catch (Throwable throwable) {
+            new MockServerLogger().logEvent(
+                new LogEntry()
+                    .setType(SERVER_CONFIGURATION)
+                    .setLogLevel(ERROR)
+                    .setMessageFormat("Exception while configuring Java logging - " + throwable.getMessage())
+                    .setThrowable(throwable)
+            );
         }
     }
 
