@@ -16,7 +16,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.cli.Main.Arguments.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
-import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.*;
 
 /**
  * @author jamesdbloom
@@ -97,6 +97,16 @@ public class Main {
             } else {
                 showUsage();
             }
+
+            if (ConfigurationProperties.logLevel() != null) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(ConfigurationProperties.logLevel())
+                        .setMessageFormat("Logger level is " + ConfigurationProperties.logLevel() + ", configure using \"-logLevel\" command line argument, or set \"mockserver.logLevel\" system property or property value in \"mockserver.properties\"")
+                );
+            }
+
         } catch (IllegalArgumentException iae) {
             showUsage();
         }
