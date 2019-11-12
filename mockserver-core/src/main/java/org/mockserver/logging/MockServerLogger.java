@@ -32,7 +32,7 @@ public class MockServerLogger {
 
     public static void configureLogger() {
         try {
-            if (System.getProperty("java.util.logging.config.file") == null && System.getProperty("java.util.logging.config.class") == null) {
+            if (isNotBlank(javaLoggerLogLevel()) && System.getProperty("java.util.logging.config.file") == null && System.getProperty("java.util.logging.config.class") == null) {
                 String loggingConfiguration = "" +
                     "handlers=org.mockserver.logging.StandardOutConsoleHandler\n" +
                     "org.mockserver.logging.StandardOutConsoleHandler.level=ALL\n" +
