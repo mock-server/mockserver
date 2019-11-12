@@ -6,7 +6,7 @@
 #
 
 # pull base image
-FROM openjdk:8u151-jre-alpine3.7
+FROM openjdk:8-jdk-alpine
 
 # maintainer details
 MAINTAINER James Bloom "jamesdbloom@gmail.com"
@@ -22,5 +22,12 @@ WORKDIR /opt/mockserver
 # expose ports.
 EXPOSE 1080
 
-# define default command.
-CMD ["/opt/mockserver/run_mockserver.sh", "-logLevel", "INFO", "-serverPort", "1080"]
+# don't run MockServer as root
+RUN addgroup -g 1000 mockserver && \
+    adduser -H -D -u 1000 -G mockserver mockserver
+RUN chown -R mockserver:mockserver /opt/mockserver
+USER mockserver
+
+ENTRYPOINT ["/opt/mockserver/run_mockserver.sh"]
+
+CMD ["-logLevel", "INFO", "-serverPort", "1080"]
