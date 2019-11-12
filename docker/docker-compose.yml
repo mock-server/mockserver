@@ -3,4 +3,4 @@
    ports:
    - 1080:1080
    environment:
-   - LOG_LEVEL=INFO
+      LOG_LEVEL: "OFF"
