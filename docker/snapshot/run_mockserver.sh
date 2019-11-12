@@ -156,5 +156,5 @@ then
 fi
 
 prep_term
-runCommand "java ${JVM_OPTIONS} -Dfile.encoding=UTF-8 -jar /opt/mockserver/mockserver-netty-jar-with-dependencies.jar ${COMMAND_LINE_OPTS} &"
+runCommand "java -XX:+UseContainerSupport -XX:MaxRAMPercentage=90.0 ${JVM_OPTIONS} -Dfile.encoding=UTF-8 -jar /opt/mockserver/mockserver-netty-jar-with-dependencies.jar ${COMMAND_LINE_OPTS} &"
 wait_term
