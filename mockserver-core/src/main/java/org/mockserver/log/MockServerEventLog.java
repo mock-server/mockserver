@@ -172,10 +172,14 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                     for (LogEntry logEntry : new LinkedList<>(requestLog)) {
                         HttpRequest[] requests = logEntry.getHttpRequests();
                         boolean matches = false;
-                        for (HttpRequest request : requests) {
-                            if (requestMatcher.matches(request)) {
-                                matches = true;
+                        if (requests != null) {
+                            for (HttpRequest request : requests) {
+                                if (requestMatcher.matches(request)) {
+                                    matches = true;
+                                }
                             }
+                        } else {
+                            matches = true;
                         }
                         if (matches) {
                             requestLog.remove(logEntry);

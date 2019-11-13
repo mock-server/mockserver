@@ -81,20 +81,26 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                     new DefaultHttpHeaders().add("X-CLIENT-REGISTRATION-ID", clientId),
                     ctx.channel().newPromise()
                 )
-                .addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) {
-                        ctx.pipeline().remove(DashboardWebSocketServerHandler.class);
-                        ctx.pipeline().remove(MockServerServerCodec.class);
-                        ctx.pipeline().remove(MockServerHandler.class);
-                        webSocketClientRegistry.registerClient(clientId, ctx);
-                        future.channel().closeFuture().addListener(new ChannelFutureListener() {
-                            @Override
-                            public void operationComplete(ChannelFuture future) {
-                                webSocketClientRegistry.unregisterClient(clientId);
-                            }
-                        });
-                    }
+                .addListener((ChannelFutureListener) future -> {
+                    ctx.pipeline().remove(DashboardWebSocketServerHandler.class);
+                    ctx.pipeline().remove(MockServerServerCodec.class);
+                    ctx.pipeline().remove(MockServerHandler.class);
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.TRACE)
+                            .setLogLevel(Level.TRACE)
+                            .setMessageFormat("Registering client " + clientId)
+                    );
+                    webSocketClientRegistry.registerClient(clientId, ctx);
+                    future.channel().closeFuture().addListener((ChannelFutureListener) future1 -> {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(LogEntry.LogMessageType.TRACE)
+                                .setLogLevel(Level.TRACE)
+                                .setMessageFormat("Unregistering callback for client " + clientId)
+                        );
+                        webSocketClientRegistry.unregisterClient(clientId);
+                    });
                 });
         }
     }
