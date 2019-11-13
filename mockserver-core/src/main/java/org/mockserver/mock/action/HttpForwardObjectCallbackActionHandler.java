@@ -9,12 +9,11 @@ import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
-import org.slf4j.event.Level;
 
 import java.util.UUID;
 
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
-import static org.mockserver.model.HttpRequest.request;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -37,7 +36,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
-                        .setLogLevel(Level.TRACE)
+                        .setLogLevel(TRACE)
                         .setHttpRequest(request)
                         .setMessageFormat("Received response for request {} from client " + clientId)
                         .setArguments(request)
@@ -55,7 +54,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
         mockServerLogger.logEvent(
             new LogEntry()
                 .setType(LogEntry.LogMessageType.TRACE)
-                .setLogLevel(Level.TRACE)
+                .setLogLevel(TRACE)
                 .setHttpRequest(request)
                 .setMessageFormat("Sending request {} to client " + clientId)
                 .setArguments(request)

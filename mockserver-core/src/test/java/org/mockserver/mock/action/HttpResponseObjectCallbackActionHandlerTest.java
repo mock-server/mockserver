@@ -1,6 +1,7 @@
 package org.mockserver.mock.action;
 
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.callback.WebSocketResponseCallback;
 import org.mockserver.callback.WebSocketClientRegistry;
@@ -29,6 +30,7 @@ public class HttpResponseObjectCallbackActionHandlerTest {
         HttpRequest request = request().withBody("some_body");
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
         when(mockHttpStateHandler.getWebSocketClientRegistry()).thenReturn(mockWebSocketClientRegistry);
+        when(mockHttpStateHandler.getMockServerLogger()).thenReturn(new MockServerLogger());
 
         // when
         new HttpResponseObjectCallbackActionHandler(mockHttpStateHandler).handle(mock(ActionHandler.class), httpObjectCallback, request, mockResponseWriter, true);

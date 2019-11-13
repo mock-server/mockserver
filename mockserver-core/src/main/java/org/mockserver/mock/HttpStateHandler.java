@@ -53,7 +53,7 @@ public class HttpStateHandler {
     // mockserver
     private MockServerMatcher mockServerMatcher;
     private final MockServerLogger mockServerLogger;
-    private WebSocketClientRegistry webSocketClientRegistry = new WebSocketClientRegistry();
+    private WebSocketClientRegistry webSocketClientRegistry;
     // serializers
     private HttpRequestSerializer httpRequestSerializer;
     private HttpRequestResponseSerializer httpRequestResponseSerializer;
@@ -67,6 +67,7 @@ public class HttpStateHandler {
     public HttpStateHandler(MockServerLogger mockServerLogger, Scheduler scheduler) {
         this.mockServerLogger = mockServerLogger.setHttpStateHandler(this);
         this.scheduler = scheduler;
+        this.webSocketClientRegistry = new WebSocketClientRegistry(mockServerLogger);
         this.mockServerLog = new MockServerEventLog(mockServerLogger, scheduler, true);
         this.mockServerMatcher = new MockServerMatcher(mockServerLogger, scheduler, webSocketClientRegistry);
         this.httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
