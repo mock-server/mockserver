@@ -52,19 +52,16 @@ public class CallbackActionExamples {
                     .withPath("/some/path")
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        if (httpRequest.getMethod().getValue().equals("POST")) {
-                            return response()
-                                .withStatusCode(ACCEPTED_202.code())
-                                .withHeaders(
-                                    header("x-object-callback", "test_object_callback_header")
-                                )
-                                .withBody("an_object_callback_response");
-                        } else {
-                            return notFoundResponse();
-                        }
+                httpRequest -> {
+                    if (httpRequest.getMethod().getValue().equals("POST")) {
+                        return response()
+                            .withStatusCode(ACCEPTED_202.code())
+                            .withHeaders(
+                                header("x-object-callback", "test_object_callback_header")
+                            )
+                            .withBody("an_object_callback_response");
+                    } else {
+                        return notFoundResponse();
                     }
                 }
             );
@@ -72,16 +69,13 @@ public class CallbackActionExamples {
     }
 
     public void forwardObjectCallback() {
-new MockServerClient("localhost", 1080)
-    .when(
-        request()
-            .withPath("/some/path")
-    )
-    .forward(
-        new ExpectationForwardCallback() {
-            @Override
-            public HttpRequest handle(HttpRequest httpRequest) {
-                return request()
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .forward(
+                httpRequest -> request()
                     .withPath(httpRequest.getPath())
                     .withMethod("POST")
                     .withHeaders(
@@ -89,10 +83,8 @@ new MockServerClient("localhost", 1080)
                         header("Content-Length", "a_callback_request".getBytes(UTF_8).length),
                         header("Connection", "keep-alive")
                     )
-                    .withBody("a_callback_request");
-            }
-        }
-    );
+                    .withBody("a_callback_request")
+            );
 
     }
 
