@@ -37,7 +37,7 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to perform parameter match \"{}\" with \"{}\"")
+                    .setMessageFormat("Failed to perform parameter match {} with {}")
                     .setArguments(matched, this.matcher)
             );
         }

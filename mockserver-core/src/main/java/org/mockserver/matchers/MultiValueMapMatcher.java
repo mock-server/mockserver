@@ -43,7 +43,7 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("MultiMap \"{}\" is not a subset of \"{}\"")
+                    .setMessageFormat("MultiMap {} is not a subset of {}")
                     .setArguments(multiMap, values)
             );
             result = false;

@@ -86,7 +86,7 @@ public class XPathMatcher extends BodyMatcher<String> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
-                    .setMessageFormat("Failed to perform xpath match \"{}\" with \"{}\"")
+                    .setMessageFormat("Failed to perform xpath match {} with {}")
                     .setArguments(matched, this.matcher)
             );
         }

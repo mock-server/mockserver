@@ -62,7 +62,7 @@ public class SubStringMatcher extends BodyMatcher<NottableString> {
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to perform substring match \"{}\" with \"{}\"")
+                    .setMessageFormat("Failed to perform substring match {} with {}")
                     .setArguments(matched, this.matcher)
             );
         }

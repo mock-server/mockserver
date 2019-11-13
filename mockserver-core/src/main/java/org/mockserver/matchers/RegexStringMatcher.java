@@ -55,7 +55,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to perform regex match \"{}\" with \"{}\"")
+                    .setMessageFormat("Failed to perform regex match {} with {}")
                     .setArguments(matched, this.matcher)
             );
         }
