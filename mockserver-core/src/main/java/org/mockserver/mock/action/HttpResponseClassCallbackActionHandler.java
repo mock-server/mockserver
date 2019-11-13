@@ -10,6 +10,7 @@ import org.slf4j.event.Level;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 
 /**
@@ -80,7 +81,8 @@ public class HttpResponseClassCallbackActionHandler {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat(httpClassCallback.getCallbackClass() + " throw exception while executing handle callback method")
+                            .setHttpRequest(httpRequest)
+                            .setMessageFormat(httpClassCallback.getCallbackClass() + " throw exception while executing handle callback method - " + throwable.getMessage())
                             .setThrowable(throwable)
                     );
                     return notFoundResponse();

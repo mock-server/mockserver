@@ -123,7 +123,8 @@ public class WebSocketClient<T extends HttpObject> {
                             new LogEntry()
                                 .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
-                                .setMessageFormat("Exception thrown while handling callback")
+                                .setHttpRequest(httpRequest)
+                                .setMessageFormat("Exception thrown while handling callback - " + throwable.getMessage())
                                 .setThrowable(throwable)
                         );
                         channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(

@@ -10,6 +10,8 @@ import org.slf4j.event.Level;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
+
 /**
  * @author jamesdbloom
  */
@@ -70,7 +72,19 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
         if (httpRequest != null) {
             ExpectationForwardCallback expectationForwardCallback = instantiateCallback(httpClassCallback);
             if (expectationForwardCallback != null) {
-                return sendRequest(expectationForwardCallback.handle(httpRequest), null);
+                try {
+                    return sendRequest(expectationForwardCallback.handle(httpRequest), null);
+                } catch (Throwable throwable) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.EXCEPTION)
+                            .setLogLevel(Level.ERROR)
+                            .setHttpRequest(httpRequest)
+                            .setMessageFormat(httpClassCallback.getCallbackClass() + " throw exception while executing handle callback method - " + throwable.getMessage())
+                            .setThrowable(throwable)
+                    );
+                    return notFoundFuture(httpRequest);
+                }
             } else {
                 return notFoundFuture(httpRequest);
             }
