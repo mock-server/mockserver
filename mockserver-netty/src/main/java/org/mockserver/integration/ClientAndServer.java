@@ -15,15 +15,15 @@ public class ClientAndServer extends MockServerClient {
     private final MockServer mockServer;
 
     public ClientAndServer(Integer... ports) {
-        super(SettableFuture.<Integer>create());
+        super(SettableFuture.create());
         mockServer = new MockServer(ports);
-        ((SettableFuture) portFuture).set(mockServer.getLocalPort());
+        portFuture.set(mockServer.getLocalPort());
     }
 
     public ClientAndServer(String remoteHost, Integer remotePort, Integer... ports) {
-        super(SettableFuture.<Integer>create());
+        super(SettableFuture.create());
         mockServer = new MockServer(remotePort, remoteHost, ports);
-        ((SettableFuture) portFuture).set(mockServer.getLocalPort());
+        portFuture.set(mockServer.getLocalPort());
     }
 
     public ClientAndServer startClientAndServer(List<Integer> ports) {

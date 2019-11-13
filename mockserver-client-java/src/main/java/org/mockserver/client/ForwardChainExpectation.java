@@ -2,7 +2,6 @@ package org.mockserver.client;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.mockserver.client.MockServerEventBus.EventType;
-import org.mockserver.client.MockServerEventBus.SubscriberHandler;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.action.ExpectationCallback;
@@ -24,9 +23,11 @@ public class ForwardChainExpectation {
     private final MockServerClient mockServerClient;
     private final Expectation expectation;
     private final Semaphore availableWebSocketCallbackRegistrations;
+    private final MockServerEventBus mockServerEventBus;
 
-    ForwardChainExpectation(MockServerLogger mockServerLogger, MockServerClient mockServerClient, Expectation expectation, Semaphore availableWebSocketCallbackRegistrations) {
+    ForwardChainExpectation(MockServerLogger mockServerLogger, MockServerEventBus mockServerEventBus, MockServerClient mockServerClient, Expectation expectation, Semaphore availableWebSocketCallbackRegistrations) {
         this.mockServerLogger = mockServerLogger;
+        this.mockServerEventBus = mockServerEventBus;
         this.mockServerClient = mockServerClient;
         this.expectation = expectation;
         this.availableWebSocketCallbackRegistrations = availableWebSocketCallbackRegistrations;
@@ -169,12 +170,7 @@ public class ForwardChainExpectation {
                 mockServerClient.contextPath(),
                 mockServerClient.isSecure()
             );
-            MockServerEventBus.getInstance().subscribe(new SubscriberHandler() {
-                @Override
-                public void handle() {
-                    webSocketClient.stopClient();
-                }
-            }, EventType.STOP, EventType.RESET);
+            mockServerEventBus.subscribe(webSocketClient::stopClient, EventType.STOP, EventType.RESET);
             return register.get();
         } catch (Exception e) {
             if (e.getCause() instanceof WebSocketException) {

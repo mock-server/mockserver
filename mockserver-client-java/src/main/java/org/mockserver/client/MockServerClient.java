@@ -23,10 +23,8 @@ import org.mockserver.verify.VerificationTimes;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.Future;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.concurrent.*;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
@@ -43,17 +41,20 @@ import static org.slf4j.event.Level.*;
 /**
  * @author jamesdbloom
  */
-public class MockServerClient implements Stoppable {
+public class
+MockServerClient implements Stoppable {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClient.class);
+    private static final Map<Integer, MockServerEventBus> EVENT_BUS_MAP = new ConcurrentHashMap<>();
     private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
     private final Semaphore availableWebSocketCallbackRegistrations = new Semaphore(1);
     private final String host;
     private final String contextPath;
     private final Class<MockServerClient> clientClass;
-    protected Future<Integer> portFuture;
+    protected SettableFuture<Integer> portFuture;
     private Boolean secure;
     private Integer port;
+    private MockServerEventBus mockServerEventBus;
     private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null);
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(MOCK_SERVER_LOGGER);
     private HttpRequestResponseSerializer httpRequestResponseSerializer = new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER);
@@ -68,11 +69,19 @@ public class MockServerClient implements Stoppable {
      *
      * @param portFuture the port for the MockServer to communicate with
      */
-    public MockServerClient(Future<Integer> portFuture) {
+    public MockServerClient(SettableFuture<Integer> portFuture) {
         this.clientClass = MockServerClient.class;
         this.host = "127.0.0.1";
         this.portFuture = portFuture;
         this.contextPath = "";
+        this.portFuture.addListener(() -> {
+            try {
+                this.port = portFuture.get();
+                this.mockServerEventBus = getMockServerEventBus(this.port);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }, Executors.newSingleThreadExecutor());
     }
 
     /**
@@ -109,10 +118,18 @@ public class MockServerClient implements Stoppable {
         this.host = host;
         this.port = port;
         this.contextPath = contextPath;
+        this.mockServerEventBus = getMockServerEventBus(this.port);
     }
 
     EventLoopGroup getEventLoopGroup() {
         return eventLoopGroup;
+    }
+
+    private MockServerEventBus getMockServerEventBus(Integer port) {
+        if (EVENT_BUS_MAP.get(port) == null) {
+            EVENT_BUS_MAP.put(port, new MockServerEventBus());
+        }
+        return EVENT_BUS_MAP.get(port);
     }
 
     public boolean isSecure() {
@@ -257,7 +274,7 @@ public class MockServerClient implements Stoppable {
     public Future<MockServerClient> stop(boolean ignoreFailure) {
         SettableFuture<MockServerClient> stopFuture = SettableFuture.create();
         new Scheduler.SchedulerThreadFactory("ClientStop").newThread(() -> {
-            MockServerEventBus.getInstance().publish(EventType.STOP);
+            mockServerEventBus.publish(EventType.STOP);
             try {
                 sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
                 if (isRunning()) {
@@ -299,7 +316,7 @@ public class MockServerClient implements Stoppable {
      * Reset MockServer by clearing all expectations
      */
     public MockServerClient reset() {
-        MockServerEventBus.getInstance().publish(EventType.RESET);
+        mockServerEventBus.publish(EventType.RESET);
         sendRequest(request().withMethod("PUT").withPath(calculatePath("reset")));
         return clientClass.cast(this);
     }
@@ -585,7 +602,7 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, this, new Expectation(httpRequest, times, TimeToLive.unlimited()), availableWebSocketCallbackRegistrations);
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, mockServerEventBus, this, new Expectation(httpRequest, times, TimeToLive.unlimited()), availableWebSocketCallbackRegistrations);
     }
 
     /**
@@ -613,7 +630,7 @@ public class MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, this, new Expectation(httpRequest, times, timeToLive), availableWebSocketCallbackRegistrations);
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, mockServerEventBus, this, new Expectation(httpRequest, times, timeToLive), availableWebSocketCallbackRegistrations);
     }
 
     /**

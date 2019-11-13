@@ -9,19 +9,7 @@ import com.google.common.collect.Multimap;
  * @author albans
  */
 final class MockServerEventBus {
-    private static MockServerEventBus instance;
-
     private final Multimap<EventType, SubscriberHandler> subscribers = LinkedListMultimap.create();
-
-    private MockServerEventBus() {
-    }
-
-    public static MockServerEventBus getInstance() {
-        if (instance == null) {
-            instance = new MockServerEventBus();
-        }
-        return instance;
-    }
 
     void publish(EventType event) {
         for (SubscriberHandler subscriber : subscribers.get(event)) {
@@ -37,6 +25,16 @@ final class MockServerEventBus {
 
     enum EventType {
         STOP, RESET;
+    }
+
+    public static class Event {
+        private final EventType eventType;
+        private final String clientId;
+
+        public Event(EventType eventType, String clientId) {
+            this.eventType = eventType;
+            this.clientId = clientId;
+        }
     }
 
     interface SubscriberHandler {
