@@ -194,6 +194,58 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         );
     }
 
+    private int objectCallbackCounter = 0;
+
+    @Test
+    public void shouldRespondByMultipleParallelObjectCallbacks() {
+        // when
+        for (int i = 0; i < 250; i++) {
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("object_callback_" + objectCallbackCounter))
+                )
+                .respond(httpRequest -> {
+                        SECONDS.sleep(2);
+                        return response()
+                            .withStatusCode(ACCEPTED_202.code())
+                            .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                            .withHeaders(
+                                header("x-object-callback", "test_object_callback_header_" + objectCallbackCounter)
+                            )
+                            .withBody("an_object_callback_response_" + objectCallbackCounter);
+                    }
+                );
+            objectCallbackCounter++;
+        }
+
+        objectCallbackCounter = 0;
+
+        // then
+        for (int i = 0; i < 250; i++) {
+            new Thread(() -> assertEquals(
+                response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withHeaders(
+                        header("x-object-callback", "test_object_callback_header_" + objectCallbackCounter)
+                    )
+                    .withBody("an_object_callback_response_" + objectCallbackCounter),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("object_callback_" + objectCallbackCounter))
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-test", "test_headers_and_body")
+                        )
+                        .withBody("an_example_body_http"),
+                    headersToIgnore
+                )
+            )).start();
+            objectCallbackCounter++;
+        }
+    }
+
     @Test
     public void shouldRespondByObjectCallbackAndVerifyRequests() {
         // when

@@ -7,10 +7,6 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.integration.server.AbstractMockingIntegrationTestBase;
 import org.mockserver.metrics.Metrics;
-import org.mockserver.mock.action.ExpectationForwardCallback;
-import org.mockserver.mock.action.ExpectationResponseCallback;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.model.HttpRequest.request;
@@ -53,12 +49,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 request()
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        return response();
-                    }
-                }
+                httpRequest -> response()
             );
 
         // then
@@ -81,12 +72,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 request()
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        return response();
-                    }
-                }
+                httpRequest -> response()
             );
 
         try {
@@ -113,13 +99,10 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     .withPath(calculatePath("websocket_response_handler"))
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        // then
-                        return response()
-                            .withBody("websocket_response_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT));
-                    }
+                httpRequest -> {
+                    // then
+                    return response()
+                        .withBody("websocket_response_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT));
                 }
             );
 
@@ -153,14 +136,9 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     .withPath(calculatePath("websocket_forward_handler"))
             )
             .forward(
-                new ExpectationForwardCallback() {
-                    @Override
-                    public HttpRequest handle(HttpRequest httpRequest) {
-                        return request()
-                            .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
-                            .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT));
-                    }
-                }
+                httpRequest -> request()
+                    .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                    .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT))
             );
 
         // then
@@ -191,27 +169,21 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     .withPath(calculatePath("prevent_reentrant_websocketclient_registration"))
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        mockServerClient
-                            .when(
-                                request()
-                                    .withPath(calculatePath("reentrant_websocketclient_registration"))
-                            )
-                            .respond(
-                                new ExpectationResponseCallback() {
-                                    @Override
-                                    public HttpResponse handle(HttpRequest httpRequest) {
-                                        // then
-                                        return response()
-                                            .withBody("reentrant_websocketclient_registration");
-                                    }
-                                }
-                            );
-                        return response()
-                            .withBody("prevent_reentrant_websocketclient_registration");
-                    }
+                httpRequest -> {
+                    mockServerClient
+                        .when(
+                            request()
+                                .withPath(calculatePath("reentrant_websocketclient_registration"))
+                        )
+                        .respond(
+                            httpRequest1 -> {
+                                // then
+                                return response()
+                                    .withBody("reentrant_websocketclient_registration");
+                            }
+                        );
+                    return response()
+                        .withBody("prevent_reentrant_websocketclient_registration");
                 }
             );
 
@@ -238,27 +210,21 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     .withPath(calculatePath("prevent_reentrant_websocketclient_registration"))
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        new MockServerClient("localhost", getServerPort())
-                            .when(
-                                request()
-                                    .withPath(calculatePath("reentrant_websocketclient_registration"))
-                            )
-                            .respond(
-                                new ExpectationResponseCallback() {
-                                    @Override
-                                    public HttpResponse handle(HttpRequest httpRequest) {
-                                        // then
-                                        return response()
-                                            .withBody("reentrant_websocketclient_registration");
-                                    }
-                                }
-                            );
-                        return response()
-                            .withBody("prevent_reentrant_websocketclient_registration");
-                    }
+                httpRequest -> {
+                    new MockServerClient("localhost", getServerPort())
+                        .when(
+                            request()
+                                .withPath(calculatePath("reentrant_websocketclient_registration"))
+                        )
+                        .respond(
+                            httpRequest1 -> {
+                                // then
+                                return response()
+                                    .withBody("reentrant_websocketclient_registration");
+                            }
+                        );
+                    return response()
+                        .withBody("prevent_reentrant_websocketclient_registration");
                 }
             );
 
