@@ -54,7 +54,6 @@ MockServerClient implements Stoppable {
     protected SettableFuture<Integer> portFuture;
     private Boolean secure;
     private Integer port;
-    private MockServerEventBus mockServerEventBus;
     private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null);
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(MOCK_SERVER_LOGGER);
     private HttpRequestResponseSerializer httpRequestResponseSerializer = new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER);
@@ -74,14 +73,6 @@ MockServerClient implements Stoppable {
         this.host = "127.0.0.1";
         this.portFuture = portFuture;
         this.contextPath = "";
-        this.portFuture.addListener(() -> {
-            try {
-                this.port = portFuture.get();
-                this.mockServerEventBus = getMockServerEventBus(this.port);
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        }, Executors.newSingleThreadExecutor());
     }
 
     /**
@@ -118,18 +109,17 @@ MockServerClient implements Stoppable {
         this.host = host;
         this.port = port;
         this.contextPath = contextPath;
-        this.mockServerEventBus = getMockServerEventBus(this.port);
     }
 
     EventLoopGroup getEventLoopGroup() {
         return eventLoopGroup;
     }
 
-    private MockServerEventBus getMockServerEventBus(Integer port) {
-        if (EVENT_BUS_MAP.get(port) == null) {
-            EVENT_BUS_MAP.put(port, new MockServerEventBus());
+    private MockServerEventBus getMockServerEventBus() {
+        if (EVENT_BUS_MAP.get(this.port()) == null) {
+            EVENT_BUS_MAP.put(this.port(), new MockServerEventBus());
         }
-        return EVENT_BUS_MAP.get(port);
+        return EVENT_BUS_MAP.get(this.port());
     }
 
     public boolean isSecure() {
@@ -274,7 +264,7 @@ MockServerClient implements Stoppable {
     public Future<MockServerClient> stop(boolean ignoreFailure) {
         SettableFuture<MockServerClient> stopFuture = SettableFuture.create();
         new Scheduler.SchedulerThreadFactory("ClientStop").newThread(() -> {
-            mockServerEventBus.publish(EventType.STOP);
+            getMockServerEventBus().publish(EventType.STOP);
             try {
                 sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
                 if (isRunning()) {
@@ -316,7 +306,7 @@ MockServerClient implements Stoppable {
      * Reset MockServer by clearing all expectations
      */
     public MockServerClient reset() {
-        mockServerEventBus.publish(EventType.RESET);
+        getMockServerEventBus().publish(EventType.RESET);
         sendRequest(request().withMethod("PUT").withPath(calculatePath("reset")));
         return clientClass.cast(this);
     }
@@ -602,7 +592,7 @@ MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, mockServerEventBus, this, new Expectation(httpRequest, times, TimeToLive.unlimited()), availableWebSocketCallbackRegistrations);
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, TimeToLive.unlimited()), availableWebSocketCallbackRegistrations);
     }
 
     /**
@@ -630,7 +620,7 @@ MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, mockServerEventBus, this, new Expectation(httpRequest, times, timeToLive), availableWebSocketCallbackRegistrations);
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, timeToLive), availableWebSocketCallbackRegistrations);
     }
 
     /**
