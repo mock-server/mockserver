@@ -208,6 +208,7 @@ public class ActionHandler {
                                     .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
                                     .setLogLevel(Level.INFO)
                                     .setHttpRequest(request)
+                                    .setHttpResponse(notFoundResponse())
                                     .setMessageFormat("no expectation for:{}returning response:{}")
                                     .setArguments(request, notFoundResponse())
                             );
@@ -333,6 +334,7 @@ public class ActionHandler {
                     .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request)
+                    .setHttpResponse(notFoundResponse())
                     .setMessageFormat("no expectation for:{}returning response:{}")
                     .setArguments(request, notFoundResponse())
             );

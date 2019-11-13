@@ -113,11 +113,11 @@ public class JsonSchemaMatcherTest {
             assertFalse(jsonSchemaMatcher.matches(null, json));
 
             // then
-            verify(logger).trace("Failed to match JSON: " + NEW_LINE +
+            verify(logger).debug("Failed to perform json schema match of " + NEW_LINE +
                 NEW_LINE +
                 "\tsome_json" + NEW_LINE +
                 NEW_LINE +
-                " with schema: " + NEW_LINE +
+                " with " + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t    \"type\": \"object\"," + NEW_LINE +
@@ -157,7 +157,7 @@ public class JsonSchemaMatcherTest {
                 "\t    \"required\": [ \"enumField\", \"arrayField\" ]" + NEW_LINE +
                 "\t}" + NEW_LINE +
                 NEW_LINE +
-                " because: " + NEW_LINE +
+                " because " + NEW_LINE +
                 NEW_LINE +
                 "\tvalidator_error" + NEW_LINE,
                 (Throwable) null);
@@ -179,11 +179,11 @@ public class JsonSchemaMatcherTest {
             assertFalse(jsonSchemaMatcher.matches(null, json));
 
             // then
-            verify(logger).trace("Failed to match JSON: " + NEW_LINE +
+            verify(logger).debug("Failed to perform json schema match of " + NEW_LINE +
                 NEW_LINE +
                 "\tsome_json" + NEW_LINE +
                 NEW_LINE +
-                " with schema: " + NEW_LINE +
+                " with " + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t    \"type\": \"object\"," + NEW_LINE +
@@ -223,7 +223,7 @@ public class JsonSchemaMatcherTest {
                 "\t    \"required\": [ \"enumField\", \"arrayField\" ]" + NEW_LINE +
                 "\t}" + NEW_LINE +
                 NEW_LINE +
-                " because: " + NEW_LINE +
+                " because " + NEW_LINE +
                 NEW_LINE +
                 "\tTEST_EXCEPTION" + NEW_LINE,
                 (Throwable) null);

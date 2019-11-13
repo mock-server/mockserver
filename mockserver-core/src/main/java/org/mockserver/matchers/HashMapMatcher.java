@@ -5,7 +5,9 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.KeysAndValues;
+import org.slf4j.event.Level;
 
+import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -37,10 +39,10 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
         } else {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
-                    .setLogLevel(TRACE)
+                    .setType(LogEntry.LogMessageType.DEBUG)
+                    .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Map [{}] is not a subset of {}")
+                    .setMessageFormat("Map \"{}\" is not a subset of \"{}\"")
                     .setArguments(this.hashMap, values)
             );
             result = false;

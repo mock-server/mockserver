@@ -5,14 +5,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.slf4j.event.Level;
 
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import static org.slf4j.event.Level.TRACE;
-import static org.slf4j.event.Level.WARN;
+import static org.slf4j.event.Level.*;
 
 /**
  * @author jamesdbloom
@@ -84,10 +84,10 @@ public class XPathMatcher extends BodyMatcher<String> {
         if (!result) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
-                    .setLogLevel(TRACE)
-                    .setMessageFormat("Failed to match [{}] with [{}]")
-                    .setArguments(matched, matcher)
+                    .setType(LogEntry.LogMessageType.DEBUG)
+                    .setLogLevel(DEBUG)
+                    .setMessageFormat("Failed to perform xpath match \"{}\" with \"{}\"")
+                    .setArguments(matched, this.matcher)
             );
         }
 

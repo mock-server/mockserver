@@ -5,11 +5,13 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
+import org.slf4j.event.Level;
 
 import java.util.regex.PatternSyntaxException;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.model.NottableString.string;
+import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -50,15 +52,15 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         if (!result) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
-                    .setLogLevel(TRACE)
+                    .setType(LogEntry.LogMessageType.DEBUG)
+                    .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to match [{}] with [{}]")
+                    .setMessageFormat("Failed to perform regex match \"{}\" with \"{}\"")
                     .setArguments(matched, this.matcher)
             );
         }
 
-        return matched.isNot() != (matcher.isNot() != (not != result));
+        return matched.isNot() == (matcher.isNot() == (not != result));
     }
 
     public boolean matches(NottableString matcher, NottableString matched, boolean ignoreCase) {

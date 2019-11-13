@@ -7,6 +7,7 @@ import org.mockserver.model.HttpRequest;
 
 import java.util.Arrays;
 
+import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -32,11 +33,11 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
         if (!result) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
-                    .setLogLevel(TRACE)
+                    .setType(LogEntry.LogMessageType.DEBUG)
+                    .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to perform binary match [{}] with [{}] because {}")
-                    .setArguments((Object) matched)
+                    .setMessageFormat("Failed to perform binary match of {} with {}")
+                    .setArguments(matched, this.matcher)
             );
         }
 

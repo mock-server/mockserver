@@ -9,6 +9,7 @@ import org.skyscreamer.jsonassert.JSONCompareResult;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.skyscreamer.jsonassert.JSONCompare.compareJSON;
+import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -47,10 +48,10 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                 if (!result) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.TRACE)
-                            .setLogLevel(TRACE)
+                            .setType(LogEntry.LogMessageType.DEBUG)
+                            .setLogLevel(DEBUG)
                             .setHttpRequest(context)
-                            .setMessageFormat("Failed to perform JSON match \"{}\" with \"{}\" because {}")
+                            .setMessageFormat("Failed to perform json match of {} with {} because {}")
                             .setArguments(matched, this.matcher, jsonCompareResult.getMessage())
                     );
                 }
@@ -58,10 +59,10 @@ public class JsonStringMatcher extends BodyMatcher<String> {
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
-                    .setLogLevel(TRACE)
+                    .setType(LogEntry.LogMessageType.DEBUG)
+                    .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to perform JSON match \"{}\" with \"{}\" because {}")
+                    .setMessageFormat("Failed to perform json match \"{}\" with \"{}\" because {}")
                     .setArguments(matched, this.matcher, e.getMessage())
             );
         }

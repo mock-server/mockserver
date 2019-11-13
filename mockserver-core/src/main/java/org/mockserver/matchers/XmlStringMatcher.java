@@ -16,6 +16,7 @@ import javax.xml.transform.TransformerException;
 import java.io.IOException;
 
 import static org.mockserver.model.NottableString.string;
+import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -86,9 +87,9 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
                 if (!result) {
                     mockServerLogger.logEvent(
                         new LogEntry()
-                            .setType(LogEntry.LogMessageType.TRACE)
-                            .setLogLevel(TRACE)
-                            .setMessageFormat("Failed to match [{}] with schema [{}] because [{}]")
+                            .setType(LogEntry.LogMessageType.DEBUG)
+                            .setLogLevel(DEBUG)
+                            .setMessageFormat("Failed to perform xml schema match of {} with {} because {}")
                             .setArguments(matched, this.matcher, diff.toString())
                     );
                 }
@@ -96,16 +97,16 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
             } catch (Exception e) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
-                        .setLogLevel(TRACE)
+                        .setType(LogEntry.LogMessageType.DEBUG)
+                        .setLogLevel(DEBUG)
                         .setHttpRequest(context)
-                        .setMessageFormat("Failed to match [{}] with schema [{}] because [{}]")
+                        .setMessageFormat("Failed to perform xml schema match of {} with {} because {}")
                         .setArguments(matched, this.matcher, e.getMessage())
                 );
             }
         }
 
-        return matcher.isNot() != (not != result);
+        return matcher.isNot() == (not == result);
     }
 
     @Override

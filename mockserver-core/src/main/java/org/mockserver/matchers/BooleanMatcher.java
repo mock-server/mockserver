@@ -5,7 +5,9 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
+import org.slf4j.event.Level;
 
+import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -34,10 +36,10 @@ public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString i
         if (!result) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
-                    .setLogLevel(TRACE)
+                    .setType(LogEntry.LogMessageType.DEBUG)
+                    .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to match [{}] with [{}]")
+                    .setMessageFormat("Failed to perform boolean match of {} with {}")
                     .setArguments(matched, this.matcher)
             );
         }

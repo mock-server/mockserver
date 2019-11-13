@@ -8,6 +8,7 @@ import org.mockserver.model.NottableString;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.model.NottableString.string;
+import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;
 
 /**
@@ -59,15 +60,15 @@ public class ExactStringMatcher extends BodyMatcher<NottableString> {
         if (!result) {
             mockServerLogger.logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
-                    .setLogLevel(TRACE)
+                    .setType(LogEntry.LogMessageType.DEBUG)
+                    .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to match [{}] with [{}]")
+                    .setMessageFormat("Failed to perform exact string match of {} with {}")
                     .setArguments(matched, this.matcher)
             );
         }
 
-        return matched.isNot() != (matcher.isNot() != (not != result));
+        return matched.isNot() == (matcher.isNot() == (not != result));
     }
 
     @Override
