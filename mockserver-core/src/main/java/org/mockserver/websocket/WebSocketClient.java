@@ -41,6 +41,7 @@ public class WebSocketClient<T extends HttpObject> {
     private Channel channel;
     private WebSocketMessageSerializer webSocketMessageSerializer;
     private ExpectationCallback<T> expectationCallback;
+    private boolean isStopped = false;
 
     public WebSocketClient(MockServerLogger mockServerLogger, Semaphore availableWebSocketCallbackRegistrations) {
         this.mockServerLogger = mockServerLogger;
@@ -83,17 +84,14 @@ public class WebSocketClient<T extends HttpObject> {
                         }
                     })
                     .connect(serverAddress)
-                    .addListener(new ChannelFutureListener() {
-                        @Override
-                        public void operationComplete(ChannelFuture channelFuture) {
-                            channel = channelFuture.channel();
-                            channel.closeFuture().addListener(new ChannelFutureListener() {
-                                @Override
-                                public void operationComplete(ChannelFuture channelFuture) {
-
-                                }
-                            });
-                        }
+                    .addListener((ChannelFutureListener) connectChannelFuture -> {
+                        channel = connectChannelFuture.channel();
+                        channel.closeFuture().addListener((ChannelFutureListener) closeChannelFuture -> {
+                            if (!isStopped) {
+                                // attempt to re-connect
+                                register(eventLoopGroup, serverAddress, contextPath, isSecure);
+                            }
+                        });
                     });
             } catch (Exception e) {
                 registrationFuture.setException(new WebSocketException("Exception while starting web socket client", e));
@@ -145,6 +143,7 @@ public class WebSocketClient<T extends HttpObject> {
     }
 
     public void stopClient() {
+        isStopped = true;
         try {
             if (channel != null && channel.isOpen()) {
                 channel.close().sync();
