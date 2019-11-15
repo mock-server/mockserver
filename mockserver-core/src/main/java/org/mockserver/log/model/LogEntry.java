@@ -99,7 +99,11 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     @JsonIgnore
     public HttpRequest[] getHttpRequests() {
-        return httpRequests;
+        if (httpRequests == null) {
+            return new HttpRequest[0];
+        } else {
+            return httpRequests;
+        }
     }
 
     public LogEntry setHttpRequests(HttpRequest[] httpRequests) {

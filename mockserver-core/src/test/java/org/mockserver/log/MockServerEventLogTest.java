@@ -101,6 +101,44 @@ public class MockServerEventLogTest {
     }
 
     @Test
+    public void shouldRetrieveLogEntriesWithNulls() {
+        // given
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+        );
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+        );
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(EXPECTATION_MATCHED)
+        );
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(EXPECTATION_RESPONSE)
+        );
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(TRACE)
+        );
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(FORWARDED_REQUEST)
+        );
+
+        // then
+        assertThat(retrieveRequests(null), empty());
+        assertThat(retrieveRequestResponseMessageLogEntries(null), empty());
+        assertThat(retrieveRecordedExpectations(null), empty());
+    }
+
+    @Test
     public void shouldRetrieveLogEntriesWithNullRequestMatcher() {
         // given
         mockServerLogger.logEvent(
