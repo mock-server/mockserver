@@ -122,6 +122,10 @@ MockServerClient implements Stoppable {
         return EVENT_BUS_MAP.get(this.port());
     }
 
+    private void removeMockServerEventBus() {
+        EVENT_BUS_MAP.remove(this.port());
+    }
+
     public boolean isSecure() {
         return secure != null ? secure : false;
     }
@@ -262,9 +266,10 @@ MockServerClient implements Stoppable {
      * Stop MockServer gracefully (only support for Netty version, not supported for WAR version)
      */
     public Future<MockServerClient> stop(boolean ignoreFailure) {
+        getMockServerEventBus().publish(EventType.STOP);
+        removeMockServerEventBus();
         SettableFuture<MockServerClient> stopFuture = SettableFuture.create();
         new Scheduler.SchedulerThreadFactory("ClientStop").newThread(() -> {
-            getMockServerEventBus().publish(EventType.STOP);
             try {
                 sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
                 if (isRunning()) {

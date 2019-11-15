@@ -13,7 +13,9 @@ import org.mockserver.responsewriter.ResponseWriter;
 import java.util.UUID;
 
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
+import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.slf4j.event.Level.TRACE;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
@@ -51,15 +53,26 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 actionHandler.writeResponseActionResponse(httpResponse, responseWriter, request, httpObjectCallback, synchronous);
             }
         });
-        mockServerLogger.logEvent(
-            new LogEntry()
-                .setType(LogEntry.LogMessageType.TRACE)
-                .setLogLevel(TRACE)
-                .setHttpRequest(request)
-                .setMessageFormat("Sending request {} to client " + clientId)
-                .setArguments(request)
-        );
-        webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId));
+        if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId))) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.WARN)
+                    .setLogLevel(WARN)
+                    .setHttpRequest(request)
+                    .setMessageFormat("Returning {} because client " + clientId + " has closed web socket connection")
+                    .setArguments(notFoundResponse())
+            );
+            actionHandler.writeForwardActionResponse(notFoundFuture(request), responseWriter, request, httpObjectCallback, synchronous);
+        } else {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setHttpRequest(request)
+                    .setMessageFormat("Sending request {} to client " + clientId)
+                    .setArguments(request)
+            );
+        }
     }
 
 }

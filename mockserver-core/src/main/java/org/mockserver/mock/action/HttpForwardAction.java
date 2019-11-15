@@ -28,20 +28,20 @@ public abstract class HttpForwardAction {
         this.httpClient = httpClient;
     }
 
-    protected HttpForwardActionResult sendRequest(HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) {
+    protected HttpForwardActionResult sendRequest(HttpRequest request, @Nullable InetSocketAddress remoteAddress) {
         try {
-            return new HttpForwardActionResult(httpRequest, httpClient.sendRequest(hopByHopHeaderFilter.onRequest(httpRequest), remoteAddress), remoteAddress);
+            return new HttpForwardActionResult(request, httpClient.sendRequest(hopByHopHeaderFilter.onRequest(request), remoteAddress), remoteAddress);
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setHttpRequest(httpRequest)
-                    .setMessageFormat("Exception forwarding request " + httpRequest)
+                    .setHttpRequest(request)
+                    .setMessageFormat("Exception forwarding request " + request)
                     .setThrowable(e)
             );
         }
-        return notFoundFuture(httpRequest);
+        return notFoundFuture(request);
     }
 
     HttpForwardActionResult notFoundFuture(HttpRequest httpRequest) {

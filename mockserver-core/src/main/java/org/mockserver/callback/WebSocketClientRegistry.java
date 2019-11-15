@@ -114,10 +114,11 @@ public class WebSocketClientRegistry {
         Metrics.set(WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT, forwardCallbackRegistry.size());
     }
 
-    public void sendClientMessage(String clientId, HttpRequest httpRequest) {
+    public boolean sendClientMessage(String clientId, HttpRequest httpRequest) {
         try {
             if (clientRegistry.containsKey(clientId)) {
                 clientRegistry.get(clientId).channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(httpRequest)));
+                return true;
             } else {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -127,6 +128,7 @@ public class WebSocketClientRegistry {
                         .setMessageFormat("Client " + clientId + " not found for request {} client registry only contains {}")
                         .setArguments(httpRequest, clientRegistry)
                 );
+                return false;
             }
         } catch (Exception e) {
             throw new WebSocketException("Exception while sending web socket message " + httpRequest + " to client " + clientId, e);

@@ -6,10 +6,13 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.socket.tls.NettySslContextFactory;
+
+import java.util.ArrayList;
 
 import static org.mockserver.echo.http.EchoServer.*;
 import static org.slf4j.event.Level.TRACE;
@@ -22,14 +25,18 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
     private final MockServerLogger mockServerLogger;
     private final boolean secure;
     private final EchoServer.Error error;
+    private final ArrayList<TextWebSocketFrame> textWebSocketFrames;
+    private final ArrayList<String> registeredClients;
 
-    EchoServerInitializer(MockServerLogger mockServerLogger, boolean secure, EchoServer.Error error) {
+    EchoServerInitializer(MockServerLogger mockServerLogger, boolean secure, EchoServer.Error error, ArrayList<String> registeredClients, ArrayList<TextWebSocketFrame> textWebSocketFrames) {
         if (!secure && error == EchoServer.Error.CLOSE_CONNECTION) {
             throw new IllegalArgumentException("Error type CLOSE_CONNECTION is not supported in non-secure mode");
         }
         this.mockServerLogger = mockServerLogger;
         this.secure = secure;
         this.error = error;
+        this.registeredClients = registeredClients;
+        this.textWebSocketFrames = textWebSocketFrames;
     }
 
     public void initChannel(SocketChannel channel) {
@@ -52,6 +59,8 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast(new HttpContentDecompressor());
 
         pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+
+        pipeline.addLast(new WebSocketServerHandler(mockServerLogger, registeredClients, textWebSocketFrames));
 
         pipeline.addLast(new MockServerServerCodec(mockServerLogger, secure));
 

@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -197,16 +198,16 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     private int objectCallbackCounter = 0;
 
     @Test
-    public void shouldRespondByMultipleParallelObjectCallbacks() {
+    public void shouldRespondByMultipleParallelObjectCallbacks() throws InterruptedException {
         // when
-        for (int i = 0; i < 250; i++) {
+        for (int i = 0; i < 50; i++) {
             mockServerClient
                 .when(
                     request()
                         .withPath(calculatePath("object_callback_" + objectCallbackCounter))
                 )
                 .respond(httpRequest -> {
-                        SECONDS.sleep(2);
+                        MILLISECONDS.sleep(10);
                         return response()
                             .withStatusCode(ACCEPTED_202.code())
                             .withReasonPhrase(ACCEPTED_202.reasonPhrase())
@@ -222,8 +223,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         objectCallbackCounter = 0;
 
         // then
-        for (int i = 0; i < 250; i++) {
-            new Thread(() -> assertEquals(
+        for (int i = 0; i < 50; i++) {
+            assertEquals(
                 response()
                     .withStatusCode(ACCEPTED_202.code())
                     .withReasonPhrase(ACCEPTED_202.reasonPhrase())
@@ -241,7 +242,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                         .withBody("an_example_body_http"),
                     headersToIgnore
                 )
-            )).start();
+            );
             objectCallbackCounter++;
         }
     }

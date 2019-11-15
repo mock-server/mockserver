@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.SettableFuture;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.log.MockServerEventLog;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
@@ -18,10 +17,9 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -50,53 +48,56 @@ import static org.mockserver.verify.VerificationSequence.verificationSequence;
 public class MockServerClientIntegrationTest {
 
     public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClientIntegrationTest.class);
-    private static MockServerClient mockServerClient;
-    private static EchoServer echoServer;
-    private static MockServerEventLog mockServerEventLog;
+    private static MockServerClient mockServerClientOne;
+    private static MockServerClient mockServerClientTwo;
+    private static EchoServer echoServerOne;
+    private static EchoServer echoServerTwo;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
     @BeforeClass
     public static void startEchoServer() {
-        echoServer = new EchoServer(false);
-        mockServerEventLog = echoServer.requestLogFilter();
+        echoServerOne = new EchoServer(false);
+        echoServerTwo = new EchoServer(false);
     }
 
     @AfterClass
     public static void stopEchoServer() {
-        stopQuietly(echoServer);
+        stopQuietly(echoServerOne);
     }
 
     @Before
     public void createClient() {
-        mockServerClient = new MockServerClient("localhost", echoServer.getPort());
+        mockServerClientOne = new MockServerClient("localhost", echoServerOne.getPort());
+        mockServerClientTwo = new MockServerClient("localhost", echoServerTwo.getPort());
     }
 
     @Before
     public void clearRequestLog() {
-        mockServerEventLog.reset();
+        echoServerOne.requestLogFilter().reset();
+        echoServerTwo.requestLogFilter().reset();
     }
 
     @After
     public void stopClient() {
-        stopQuietly(mockServerClient);
+        stopQuietly(mockServerClientOne);
     }
 
     private List<HttpRequest> retrieveRequests(HttpRequest httpRequest) {
         SettableFuture<List<HttpRequest>> result = SettableFuture.create();
-        mockServerEventLog.retrieveRequests(httpRequest, result::set);
+        echoServerOne.requestLogFilter().retrieveRequests(httpRequest, result::set);
         try {
             return result.get(10, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
-            return null;
+            return new ArrayList<>();
         }
     }
 
     public String verify(Verification verification) {
         SettableFuture<String> result = SettableFuture.create();
-        mockServerEventLog.verify(verification, result::set);
+        echoServerOne.requestLogFilter().verify(verification, result::set);
         try {
             return result.get(10, SECONDS);
         } catch (Exception e) {
@@ -107,7 +108,7 @@ public class MockServerClientIntegrationTest {
 
     public String verify(VerificationSequence verificationSequence) {
         SettableFuture<String> result = SettableFuture.create();
-        mockServerEventLog.verify(verificationSequence, result::set);
+        echoServerOne.requestLogFilter().verify(verificationSequence, result::set);
         try {
             return result.get(10, SECONDS);
         } catch (Exception e) {
@@ -119,10 +120,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithResponse() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient
+        mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -141,7 +142,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -176,10 +177,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithResponseTemplate() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient
+        mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -197,7 +198,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -230,10 +231,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithResponseClassCallback() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient
+        mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -251,7 +252,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -283,19 +284,19 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithResponseObjectCallback() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
+        echoServerOne.getRegisteredClients().clear();
 
         // when
-        mockServerClient
+        mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
                     .withBody(new StringBody("some_request_body"))
             )
-            .respond(
-                callback()
-                    .withCallbackClass("some_class")
-            );
+            .respond(httpRequest -> {
+                return response();
+            });
 
         // then
         assertThat(retrieveRequests(request()).size(), is(1));
@@ -304,7 +305,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -317,8 +318,8 @@ public class MockServerClientIntegrationTest {
                     "    \"path\" : \"/some_path\"," + NEW_LINE +
                     "    \"body\" : \"some_request_body\"" + NEW_LINE +
                     "  }," + NEW_LINE +
-                    "  \"httpResponseClassCallback\" : {" + NEW_LINE +
-                    "    \"callbackClass\" : \"some_class\"" + NEW_LINE +
+                    "  \"httpResponseObjectCallback\" : {" + NEW_LINE +
+                    "    \"clientId\" : \"" + echoServerOne.getRegisteredClients().get(0) + "\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
@@ -334,12 +335,73 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
-    public void shouldSetupExpectationWithForward() {
+    public void shouldCloseWebsocketAfterStop() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
+        echoServerOne.getRegisteredClients().clear();
 
         // when
-        mockServerClient
+        mockServerClientOne
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .respond(httpRequest -> response());
+
+        // then
+        assertThat(echoServerOne.getRegisteredClients().size(), is(1));
+
+        // when
+        mockServerClientOne.stop();
+
+        // then
+        assertThat(echoServerOne.getRegisteredClients().size(), is(0));
+    }
+
+    @Test
+    public void shouldCloseWebsocketAfterStopWithMultipleClients() {
+        // given
+        echoServerOne.withNextResponse(response().withStatusCode(201));
+        echoServerOne.getRegisteredClients().clear();
+        echoServerTwo.withNextResponse(response().withStatusCode(201));
+        echoServerTwo.getRegisteredClients().clear();
+
+        // when
+        mockServerClientOne
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .respond(httpRequest -> response());
+        mockServerClientTwo
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .respond(httpRequest -> response());
+
+        // then
+        assertThat(echoServerOne.getRegisteredClients().size(), is(1));
+        assertThat(echoServerTwo.getRegisteredClients().size(), is(1));
+
+        // when
+        mockServerClientOne.stop();
+
+        // then
+        assertThat(echoServerOne.getRegisteredClients().size(), is(0));
+        assertThat(echoServerTwo.getRegisteredClients().size(), is(1));
+    }
+
+    @Test
+    public void shouldSetupExpectationWithForward() {
+        // given
+        echoServerOne.withNextResponse(response().withStatusCode(201));
+
+        // when
+        mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -359,7 +421,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -393,10 +455,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithForwardTemplate() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient
+        mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -414,7 +476,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -447,10 +509,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithForwardClassCallback() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient
+        mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -468,7 +530,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -500,10 +562,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithForwardObjectCallback() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient
+        mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -521,7 +583,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -553,10 +615,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithOverrideForwardedRequest() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient
+        mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -565,7 +627,7 @@ public class MockServerClientIntegrationTest {
             .forward(
                 forwardOverriddenRequest(
                     request()
-                        .withHeader("host", "localhost:" + echoServer.getPort())
+                        .withHeader("host", "localhost:" + echoServerOne.getPort())
                         .withBody("some_override_body")
                 )
             );
@@ -577,7 +639,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -593,7 +655,7 @@ public class MockServerClientIntegrationTest {
                     "  \"httpOverrideForwardedRequest\" : {" + NEW_LINE +
                     "    \"httpRequest\" : {" + NEW_LINE +
                     "      \"headers\" : {" + NEW_LINE +
-                    "        \"host\" : [ \"localhost:" + echoServer.getPort() + "\" ]" + NEW_LINE +
+                    "        \"host\" : [ \"localhost:" + echoServerOne.getPort() + "\" ]" + NEW_LINE +
                     "      }," + NEW_LINE +
                     "      \"body\" : \"some_override_body\"" + NEW_LINE +
                     "    }" + NEW_LINE +
@@ -614,10 +676,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSetupExpectationWithError() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient
+        mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -636,7 +698,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -669,10 +731,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSendExpectationRequestWithExactTimes() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient
+        mockServerClientOne
             .when(
                 request()
                     .withPath("/some_path")
@@ -692,7 +754,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/expectation")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -727,10 +789,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSendStopRequest() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient.stop();
+        mockServerClientOne.stop();
 
         // then
         String result = verify(verificationSequence().withRequests(
@@ -738,7 +800,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/stop")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive")
@@ -749,7 +811,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/status")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive")
@@ -765,10 +827,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldQueryRunningStatus() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(200));
+        echoServerOne.withNextResponse(response().withStatusCode(200));
 
         // when
-        boolean isRunning = mockServerClient.isRunning();
+        boolean isRunning = mockServerClientOne.isRunning();
 
         // then
         assertThat(isRunning, is(true));
@@ -778,7 +840,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/status")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive")
@@ -797,10 +859,10 @@ public class MockServerClientIntegrationTest {
         int numberOfRetries = 11;
         HttpResponse[] httpResponses = new HttpResponse[numberOfRetries];
         Arrays.fill(httpResponses, response().withStatusCode(404));
-        echoServer.withNextResponse(httpResponses);
+        echoServerOne.withNextResponse(httpResponses);
 
         // when
-        boolean isRunning = mockServerClient.isRunning();
+        boolean isRunning = mockServerClientOne.isRunning();
 
         // then
         assertThat(isRunning, is(false));
@@ -810,7 +872,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/status")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive")
@@ -826,10 +888,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSendResetRequest() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient.reset();
+        mockServerClientOne.reset();
 
         // then
         assertThat(retrieveRequests(request()).size(), is(1));
@@ -838,7 +900,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/reset")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive")
@@ -854,10 +916,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSendClearRequest() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient
+        mockServerClientOne
             .clear(
                 request()
                     .withPath("/some_path")
@@ -871,7 +933,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/clear")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -892,10 +954,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSendClearRequestWithType() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient
+        mockServerClientOne
             .clear(
                 request()
                     .withPath("/some_path")
@@ -910,7 +972,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/clear")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -931,10 +993,10 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldSendClearRequestForNullRequest() {
         // given
-        echoServer.withNextResponse(response().withStatusCode(201));
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
-        mockServerClient.clear(null);
+        mockServerClientOne.clear(null);
 
         // then
         assertThat(retrieveRequests(request()).size(), is(1));
@@ -943,7 +1005,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/clear")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive"),
@@ -960,7 +1022,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRequests() {
         // given
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(new HttpRequestSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
@@ -970,7 +1032,7 @@ public class MockServerClientIntegrationTest {
         );
 
         // when
-        HttpRequest[] actualResponse = mockServerClient.retrieveRecordedRequests(
+        HttpRequest[] actualResponse = mockServerClientOne.retrieveRecordedRequests(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body"))
@@ -989,7 +1051,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -1009,7 +1071,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRequestsWithNullRequest() {
         // given
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(new HttpRequestSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
@@ -1019,7 +1081,7 @@ public class MockServerClientIntegrationTest {
         );
 
         // when
-        HttpRequest[] actualResponse = mockServerClient.retrieveRecordedRequests(null);
+        HttpRequest[] actualResponse = mockServerClientOne.retrieveRecordedRequests(null);
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
@@ -1034,7 +1096,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive"),
@@ -1055,14 +1117,14 @@ public class MockServerClientIntegrationTest {
             request("/some_request_one"),
             request("/some_request_two")
         ));
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(serializedRequests))
         );
 
         // when
-        String recordedResponse = mockServerClient.retrieveRecordedRequests(
+        String recordedResponse = mockServerClientOne.retrieveRecordedRequests(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body")),
@@ -1079,7 +1141,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -1103,14 +1165,14 @@ public class MockServerClientIntegrationTest {
             request("/some_request_one"),
             request("/some_request_two")
         ));
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(serializedRequest))
         );
 
         // when
-        String actualResponse = mockServerClient.retrieveRecordedRequests(
+        String actualResponse = mockServerClientOne.retrieveRecordedRequests(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body")),
@@ -1127,7 +1189,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", Format.JAVA.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -1147,7 +1209,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRequestAndResponses() {
         // given
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
@@ -1161,7 +1223,7 @@ public class MockServerClientIntegrationTest {
         );
 
         // when
-        HttpRequestAndHttpResponse[] actualResponse = mockServerClient.retrieveRecordedRequestsAndResponses(
+        HttpRequestAndHttpResponse[] actualResponse = mockServerClientOne.retrieveRecordedRequestsAndResponses(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body"))
@@ -1184,7 +1246,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.REQUEST_RESPONSES.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -1204,7 +1266,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRequestAndResponsesWithNullRequest() {
         // given
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
@@ -1218,7 +1280,7 @@ public class MockServerClientIntegrationTest {
         );
 
         // when
-        HttpRequestAndHttpResponse[] actualResponse = mockServerClient.retrieveRecordedRequestsAndResponses(null);
+        HttpRequestAndHttpResponse[] actualResponse = mockServerClientOne.retrieveRecordedRequestsAndResponses(null);
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
@@ -1237,7 +1299,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.REQUEST_RESPONSES.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive"),
@@ -1262,14 +1324,14 @@ public class MockServerClientIntegrationTest {
                 .setHttpRequest(request("/some_request_two"))
                 .setHttpResponse(response("some_body_two"))
         ));
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(serializedRequests))
         );
 
         // when
-        String recordedResponse = mockServerClient.retrieveRecordedRequestsAndResponses(
+        String recordedResponse = mockServerClientOne.retrieveRecordedRequestsAndResponses(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body")),
@@ -1286,7 +1348,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.REQUEST_RESPONSES.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -1306,7 +1368,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveActiveExpectations() {
         // given
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
@@ -1316,7 +1378,7 @@ public class MockServerClientIntegrationTest {
         );
 
         // when
-        Expectation[] actualResponse = mockServerClient.retrieveActiveExpectations(
+        Expectation[] actualResponse = mockServerClientOne.retrieveActiveExpectations(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body"))
@@ -1335,7 +1397,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -1355,7 +1417,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveActiveExpectationsWithNullRequest() {
         // given
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
@@ -1365,7 +1427,7 @@ public class MockServerClientIntegrationTest {
         );
 
         // when
-        Expectation[] actualResponse = mockServerClient.retrieveActiveExpectations(null);
+        Expectation[] actualResponse = mockServerClientOne.retrieveActiveExpectations(null);
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
@@ -1380,7 +1442,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive"),
@@ -1401,14 +1463,14 @@ public class MockServerClientIntegrationTest {
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         );
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(serializeExpectations))
         );
 
         // when
-        String actualResponse = mockServerClient.retrieveActiveExpectations(
+        String actualResponse = mockServerClientOne.retrieveActiveExpectations(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body")),
@@ -1425,7 +1487,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -1449,14 +1511,14 @@ public class MockServerClientIntegrationTest {
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(serializedExpectations))
         );
 
         // when
-        String actualResponse = mockServerClient.retrieveActiveExpectations(
+        String actualResponse = mockServerClientOne.retrieveActiveExpectations(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body")),
@@ -1473,7 +1535,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JAVA.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -1493,7 +1555,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRecordedExpectations() {
         // given
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
@@ -1503,7 +1565,7 @@ public class MockServerClientIntegrationTest {
         );
 
         // when
-        Expectation[] actualResponse = mockServerClient.retrieveRecordedExpectations(
+        Expectation[] actualResponse = mockServerClientOne.retrieveRecordedExpectations(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body"))
@@ -1522,7 +1584,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -1542,7 +1604,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRecordedExpectationsWithNullRequest() {
         // given
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
@@ -1552,7 +1614,7 @@ public class MockServerClientIntegrationTest {
         );
 
         // when
-        Expectation[] actualResponse = mockServerClient.retrieveRecordedExpectations(null);
+        Expectation[] actualResponse = mockServerClientOne.retrieveRecordedExpectations(null);
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
@@ -1567,7 +1629,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive"),
@@ -1588,14 +1650,14 @@ public class MockServerClientIntegrationTest {
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         );
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(serializeExpectations))
         );
 
         // when
-        String actualResponse = mockServerClient.retrieveRecordedExpectations(
+        String actualResponse = mockServerClientOne.retrieveRecordedExpectations(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body")),
@@ -1612,7 +1674,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JSON.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -1636,14 +1698,14 @@ public class MockServerClientIntegrationTest {
             new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
             new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
         ));
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
                 .withBody(new StringBody(serializedExpectations))
         );
 
         // when
-        String actualResponse = mockServerClient.retrieveRecordedExpectations(
+        String actualResponse = mockServerClientOne.retrieveRecordedExpectations(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body")),
@@ -1660,7 +1722,7 @@ public class MockServerClientIntegrationTest {
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", Format.JAVA.name())
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -1680,13 +1742,13 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldVerifySingleRequestNoVerificationTimes() {
         // given
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
         );
 
         // when
-        mockServerClient.verify(
+        mockServerClientOne.verify(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body"))
@@ -1699,7 +1761,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/verifySequence")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -1722,13 +1784,13 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldVerifyMultipleRequestsNoVerificationTimes() {
         // given
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
         );
 
         // when
-        mockServerClient.verify(
+        mockServerClientOne.verify(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body")),
@@ -1744,7 +1806,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/verifySequence")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")
@@ -1770,13 +1832,13 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldVerifySingleRequestOnce() {
         // given
-        echoServer.withNextResponse(
+        echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
         );
 
         // when
-        mockServerClient.verify(
+        mockServerClientOne.verify(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body")),
@@ -1790,7 +1852,7 @@ public class MockServerClientIntegrationTest {
                 .withMethod("PUT")
                 .withPath("/mockserver/verify")
                 .withHeaders(
-                    new Header("host", "localhost:" + echoServer.getPort()),
+                    new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
                     new Header("content-type", "text/plain; charset=utf-8")

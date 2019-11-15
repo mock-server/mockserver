@@ -27,16 +27,6 @@ final class MockServerEventBus {
         STOP, RESET;
     }
 
-    public static class Event {
-        private final EventType eventType;
-        private final String clientId;
-
-        public Event(EventType eventType, String clientId) {
-            this.eventType = eventType;
-            this.clientId = clientId;
-        }
-    }
-
     interface SubscriberHandler {
         void handle();
     }
