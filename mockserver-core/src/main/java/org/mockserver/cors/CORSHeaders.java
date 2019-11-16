@@ -7,7 +7,6 @@ import org.mockserver.model.HttpResponse;
 
 import static io.netty.handler.codec.http.HttpMethod.OPTIONS;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
-import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly;
 
 /**
  * @author jamesdbloom

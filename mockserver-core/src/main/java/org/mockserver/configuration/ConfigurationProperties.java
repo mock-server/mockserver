@@ -53,6 +53,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_ENABLE_CORS_FOR_API = "mockserver.enableCORSForAPI";
     private static final String MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES = "mockserver.enableCORSForAllResponses";
     private static final String MOCKSERVER_MAX_EXPECTATIONS = "mockserver.maxExpectations";
+    private static final String MOCKSERVER_MAX_LOG_ENTRIES = "mockserver.maxLogEntries";
     private static final String MOCKSERVER_MAX_WEB_SOCKET_EXPECTATIONS = "mockserver.maxWebSocketExpectations";
     private static final String MOCKSERVER_MAX_INITIAL_LINE_LENGTH = "mockserver.maxInitialLineLength";
     private static final String MOCKSERVER_MAX_HEADER_SIZE = "mockserver.maxHeaderSize";
@@ -206,20 +207,20 @@ public class ConfigurationProperties {
         System.setProperty(MOCKSERVER_MAX_EXPECTATIONS, "" + count);
     }
 
-    public static int requestLogSize() {
-        return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, maxExpectations() * maxExpectations());
+    public static int maxLogEntries() {
+        return readIntegerProperty(MOCKSERVER_MAX_LOG_ENTRIES, maxExpectations() * maxExpectations());
     }
 
-    public static void requestLogSize(int count) {
-        System.setProperty(MOCKSERVER_MAX_EXPECTATIONS, "" + count);
+    public static void maxLogEntries(int count) {
+        System.setProperty(MOCKSERVER_MAX_LOG_ENTRIES, "" + count);
     }
 
     public static int ringBufferSize() {
-        if (requestLogSize() <= 1024) {
+        if (maxLogEntries() <= 1024) {
             return 1024;
-        } else if (requestLogSize() <= 2048) {
+        } else if (maxLogEntries() <= 2048) {
             return 2048;
-        } else if (requestLogSize() <= 4096) {
+        } else if (maxLogEntries() <= 4096) {
             return 4096;
         } else {
             return 8192;

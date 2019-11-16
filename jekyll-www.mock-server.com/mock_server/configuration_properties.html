@@ -99,6 +99,20 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxExpectations="2000"</code></pre>
 </div>
 
+<button id="button_configuration_request_log_size" class="accordion title"><strong>Maximum Log Entries To Hold In Memory</strong></button>
+<div class="panel title">
+    <p>Maximum number of log entries to hold in memory, this include recorded requests, expectation match failures and other log entries.  The lower the <a href="#button_configuration_log_level">log level</a> the more log entries will be captured, particularly at TRACE level logging.</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">maxExpectations * maxExpectations</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxLogEntries(int count)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxLogEntries=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.requesmaxLogEntriestLogSize=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxLogEntries="2000"</code></pre>
+</div>
+
 <button id="button_configuration_max_web_socket_expectations" class="accordion title"><strong>Maximum WebSocket For Object Callback Expectations</strong></button>
 <div class="panel title">
     <p>Maximum number of WebSockets held in the in-memory ring buffer</p>
@@ -358,7 +372,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 
 <button id="button_configuration_log_level" class="accordion title"><strong>Log Level</strong></button>
 <div class="panel title">
-    <p>The log level, note if this is lower then INFO then verification logic does not work because no log events are captured to enable verification</p>
+    <p>The the minimum level of logs to record in the event log and to output to system out (if <a href="#button_configuration_disable_system_out">system out log output</a> is not disabled).  The lower the log level the more log entries will be captured, particularly at TRACE level logging.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">INFO</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.logLevel(String level)</code></pre>

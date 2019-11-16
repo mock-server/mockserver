@@ -36,7 +36,7 @@ import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.mockserver.configuration.ConfigurationProperties.requestLogSize;
+import static org.mockserver.configuration.ConfigurationProperties.maxLogEntries;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.logging.MockServerLogger.writeToSystemOut;
 
@@ -69,7 +69,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .setTimestamp(logEntry.getTimestamp());
     private static final String[] EXCLUDED_FIELDS = {"key", "disruptor"};
     private MockServerLogger mockServerLogger;
-    private Queue<LogEntry> requestLog = new BoundedConcurrentLinkedQueue<>(requestLogSize());
+    private Queue<LogEntry> eventLog = new BoundedConcurrentLinkedQueue<>(ConfigurationProperties.maxLogEntries());
     private MatcherBuilder matcherBuilder;
     private HttpRequestSerializer httpRequestSerializer;
     private final boolean asynchronousEventProcessing;
@@ -129,7 +129,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
 
     @SuppressWarnings("DuplicatedCode")
     private void processLogEntry(LogEntry logEntry) {
-        requestLog.add(logEntry);
+        eventLog.add(logEntry);
         notifyListeners(this);
         writeToSystemOut(logger, logEntry);
     }
@@ -151,7 +151,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
-                requestLog.clear();
+                eventLog.clear();
                 future.set("done");
                 notifyListeners(this);
             })
@@ -169,7 +169,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .setConsumer(() -> {
                 if (httpRequest != null) {
                     HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-                    for (LogEntry logEntry : new LinkedList<>(requestLog)) {
+                    for (LogEntry logEntry : new LinkedList<>(eventLog)) {
                         HttpRequest[] requests = logEntry.getHttpRequests();
                         boolean matches = false;
                         if (requests != null) {
@@ -182,11 +182,11 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                             matches = true;
                         }
                         if (matches) {
-                            requestLog.remove(logEntry);
+                            eventLog.remove(logEntry);
                         }
                     }
                 } else {
-                    requestLog.clear();
+                    eventLog.clear();
                 }
                 future.set("done");
                 notifyListeners(this);
@@ -267,7 +267,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .setType(RUNNABLE)
             .setConsumer(() -> {
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-                consumer.accept(this.requestLog
+                consumer.accept(this.eventLog
                     .stream()
                     .filter(logItem -> Arrays
                         .stream(logItem.getHttpRequests())
@@ -284,7 +284,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .setType(RUNNABLE)
             .setConsumer(() -> {
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-                consumer.accept(this.requestLog
+                consumer.accept(this.eventLog
                     .stream()
                     .filter(logItem -> logItem
                         .getHttpRequests(httpRequestMatcher)
@@ -304,7 +304,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .setConsumer(() -> {
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
                 consumer.accept(
-                    this.requestLog
+                    this.eventLog
                         .stream()
                         .filter(logItem -> Arrays
                             .stream(logItem.getHttpRequests())
