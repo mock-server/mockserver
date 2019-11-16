@@ -338,7 +338,7 @@ public class MockServerClientIntegrationTest {
     }
 
     @Test
-    public void shouldReconnectWebSocketIfClosed() {
+    public void shouldReconnectWebSocketIfClosed() throws InterruptedException {
         // given
         echoServerOne.withNextResponse(response().withStatusCode(201));
         echoServerOne.getRegisteredClients().clear();
@@ -354,6 +354,8 @@ public class MockServerClientIntegrationTest {
         assertThat(echoServerOne.getWebsocketChannels().size(), is(1));
         Channel initialChannel = echoServerOne.getWebsocketChannels().get(0);
         echoServerOne.getWebsocketChannels().forEach(ChannelOutboundInvoker::close);
+
+        SECONDS.sleep(1);
 
         // then
         assertThat(retrieveRequests(request()).size(), is(1));
