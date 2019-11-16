@@ -335,12 +335,12 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         if (verification != null) {
             retrieveRequests(verification.getHttpRequest(), httpRequests -> {
                 if (!verification.getTimes().matches(httpRequests.size())) {
-                    retrieveRequests(null, allRequestsArray -> {
+                    retrieveRequests(null, allRequests -> {
                         String failureMessage = "";
                         String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verification.getHttpRequest());
-                        String serializedAllRequestInLog = allRequestsArray.size() == 1 ? httpRequestSerializer.serialize(true, allRequestsArray.get(0)) : httpRequestSerializer.serialize(true, allRequestsArray);
+                        String serializedAllRequestInLog = allRequests.size() == 1 ? httpRequestSerializer.serialize(true, allRequests.get(0)) : httpRequestSerializer.serialize(true, allRequests);
                         failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
-                        final Object[] arguments = new Object[]{verification.getHttpRequest(), allRequestsArray.size() == 1 ? allRequestsArray.get(0) : allRequestsArray};
+                        final Object[] arguments = new Object[]{verification.getHttpRequest(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(VERIFICATION_FAILED)
@@ -367,7 +367,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public void verify(VerificationSequence verificationSequence, Consumer<String> resultConsumer) {
-        retrieveRequests(null, requestLog -> {
+        retrieveRequests(null, allRequests -> {
             String failureMessage = "";
             if (verificationSequence != null) {
                 int requestLogCounter = 0;
@@ -375,17 +375,17 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                     if (verificationHttpRequest != null) {
                         HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(verificationHttpRequest);
                         boolean foundRequest = false;
-                        for (; !foundRequest && requestLogCounter < requestLog.size(); requestLogCounter++) {
-                            if (httpRequestMatcher.matches(requestLog.get(requestLogCounter))) {
+                        for (; !foundRequest && requestLogCounter < allRequests.size(); requestLogCounter++) {
+                            if (httpRequestMatcher.matches(allRequests.get(requestLogCounter))) {
                                 // move on to next request
                                 foundRequest = true;
                             }
                         }
                         if (!foundRequest) {
                             String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verificationSequence.getHttpRequests());
-                            String serializedAllRequestInLog = requestLog.size() == 1 ? httpRequestSerializer.serialize(true, requestLog.get(0)) : httpRequestSerializer.serialize(true, requestLog);
+                            String serializedAllRequestInLog = allRequests.size() == 1 ? httpRequestSerializer.serialize(true, allRequests.get(0)) : httpRequestSerializer.serialize(true, allRequests);
                             failureMessage = "Request sequence not found, expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";
-                            final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), requestLog.size() == 1 ? requestLog.get(0) : requestLog};
+                            final Object[] arguments = new Object[]{verificationSequence.getHttpRequests(), allRequests.size() == 1 ? allRequests.get(0) : allRequests};
                             mockServerLogger.logEvent(
                                 new LogEntry()
                                     .setType(VERIFICATION_FAILED)
