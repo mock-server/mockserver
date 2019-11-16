@@ -219,7 +219,12 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             httpRequest,
             requestLogPredicate,
             logEntryToRequest,
-            logEventStream -> listConsumer.accept(logEventStream.flatMap(Arrays::stream).collect(Collectors.toList()))
+            logEventStream
+                -> listConsumer
+                .accept(logEventStream
+                    .flatMap(Arrays::stream)
+                    .collect(Collectors.toList())
+                )
         );
     }
 
@@ -281,8 +286,9 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
                 consumer.accept(this.requestLog
                     .stream()
-                    .filter(logItem -> Arrays
-                        .stream(logItem.getHttpRequests())
+                    .filter(logItem -> logItem
+                        .getHttpRequests(httpRequestMatcher)
+                        .stream()
                         .anyMatch(httpRequestMatcher::matches)
                     )
                     .filter(logEntryPredicate)

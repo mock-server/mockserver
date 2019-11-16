@@ -3,6 +3,7 @@ package org.mockserver.log.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lmax.disruptor.EventTranslator;
 import org.mockserver.log.TimeService;
+import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpError;
 import org.mockserver.model.HttpRequest;
@@ -12,7 +13,9 @@ import org.slf4j.event.Level;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.model.HttpRequest.request;
@@ -104,6 +107,19 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         } else {
             return httpRequests;
         }
+    }
+
+    @JsonIgnore
+    public List<HttpRequest> getHttpRequests(HttpRequestMatcher matcher) {
+        List<HttpRequest> matchingRequests = new ArrayList<>();
+        if (httpRequests != null) {
+            for (HttpRequest httpRequest : httpRequests) {
+                if (matcher == null || matcher.matches(httpRequest)) {
+                    matchingRequests.add(httpRequest);
+                }
+            }
+        }
+        return matchingRequests;
     }
 
     public LogEntry setHttpRequests(HttpRequest[] httpRequests) {
