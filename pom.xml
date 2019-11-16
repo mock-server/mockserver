@@ -54,7 +54,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
-        <jetty.version>9.3.28.v20191105</jetty.version>
+        <jetty.version>9.4.22.v20191022</jetty.version>
         <slf4j.version>1.7.29</slf4j.version>
         <jackson.version>2.10.1</jackson.version>
         <velocity.version>2.1</velocity.version>
