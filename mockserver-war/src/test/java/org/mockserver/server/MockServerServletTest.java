@@ -53,7 +53,6 @@ public class MockServerServletTest {
 
     private HttpStateHandler httpStateHandler;
     private ActionHandler mockActionHandler;
-    private Scheduler scheduler;
 
     @InjectMocks
     private MockServerServlet mockServerServlet;
@@ -63,7 +62,7 @@ public class MockServerServletTest {
     @Before
     public void setupFixture() {
         mockActionHandler = mock(ActionHandler.class);
-        scheduler = mock(Scheduler.class);
+        Scheduler scheduler = mock(Scheduler.class);
         httpStateHandler = spy(new HttpStateHandler(new MockServerLogger(), scheduler));
         response = new MockHttpServletResponse();
         mockServerServlet = new MockServerServlet();

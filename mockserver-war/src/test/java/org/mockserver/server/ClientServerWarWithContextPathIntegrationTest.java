@@ -36,6 +36,8 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasic
 
         // add http port
         tomcat.setPort(SERVER_HTTP_PORT);
+        Connector defaultConnector = tomcat.getConnector();
+        defaultConnector.setRedirectPort(SERVER_HTTPS_PORT);
 
         // add https connector
         new KeyStoreFactory(new MockServerLogger()).loadOrCreateKeyStore();
@@ -51,9 +53,6 @@ public class ClientServerWarWithContextPathIntegrationTest extends AbstractBasic
 
         Service service = tomcat.getService();
         service.addConnector(httpsConnector);
-
-        Connector defaultConnector = tomcat.getConnector();
-        defaultConnector.setRedirectPort(SERVER_HTTPS_PORT);
 
         // add servlet
         Context ctx = tomcat.addContext("/" + servletContext, new File(".").getAbsolutePath());

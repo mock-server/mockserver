@@ -261,7 +261,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             output.flush();
 
             // then
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 404 Not Found");
+            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 404");
         }
 
         // and

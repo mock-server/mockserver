@@ -54,8 +54,6 @@ public class ProxyServletTest {
 
     private HttpStateHandler httpStateHandler;
     private ActionHandler mockActionHandler;
-    private MockServerLogger mockServerLogger;
-    private Scheduler scheduler;
 
     @InjectMocks
     private ProxyServlet proxyServlet;
@@ -65,8 +63,7 @@ public class ProxyServletTest {
     @Before
     public void setupFixture() {
         mockActionHandler = mock(ActionHandler.class);
-        mockServerLogger = mock(MockServerLogger.class);
-        scheduler = mock(Scheduler.class);
+        Scheduler scheduler = mock(Scheduler.class);
 
         httpStateHandler = spy(new HttpStateHandler(new MockServerLogger(), scheduler));
         response = new MockHttpServletResponse();

@@ -66,7 +66,7 @@ public class VerificationSequenceSerializationErrorsTest {
         } catch (IllegalArgumentException iae) {
             // then
             assertThat(iae.getMessage(), is("JsonParseException - Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
-                " at [Source: (String)\"requestBytes\"; line: 1, column: 25]"));
+                " at [Source: (String)\"requestBytes\"; line: 1, column: 13]"));
         }
     }
 

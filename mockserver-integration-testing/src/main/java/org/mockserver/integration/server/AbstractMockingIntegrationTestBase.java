@@ -4,12 +4,14 @@ import com.google.common.collect.ImmutableList;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.model.*;
@@ -23,8 +25,10 @@ import java.util.concurrent.TimeUnit;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.Header.header;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
@@ -81,7 +85,17 @@ public abstract class AbstractMockingIntegrationTestBase {
 
     @Before
     public void resetServer() {
-        mockServerClient.reset();
+        try {
+            mockServerClient.reset();
+        } catch (Throwable throwable) {
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.WARN)
+                    .setLogLevel(WARN)
+                    .setMessageFormat("Exception while resetting - " + throwable.getMessage())
+                    .setArguments(throwable)
+            );
+        }
     }
 
     protected String calculatePath(String path) {
@@ -151,6 +165,11 @@ public abstract class AbstractMockingIntegrationTestBase {
                 }
             }
             httpResponse.withHeaders(headers);
+            httpResponse.withReasonPhrase(
+                isBlank(httpResponse.getReasonPhrase()) ?
+                    HttpResponseStatus.valueOf(httpResponse.getStatusCode()).reasonPhrase() :
+                    httpResponse.getReasonPhrase()
+            );
             return httpResponse;
         } catch (Exception ex) {
             throw new RuntimeException(ex);

@@ -87,7 +87,7 @@ public class NettyHttpClient {
         try {
             return sendRequest(httpRequest).get(timeout, unit);
         } catch (TimeoutException e) {
-            throw new SocketCommunicationException("Response was not received from MockServer after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
+            throw new SocketCommunicationException("Response was not received from MockServer after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
         } catch (InterruptedException | ExecutionException ex) {
             Throwable cause = ex.getCause();
             if (cause instanceof SocketConnectionException) {
