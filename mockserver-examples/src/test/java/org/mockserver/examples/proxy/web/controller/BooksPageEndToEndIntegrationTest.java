@@ -9,7 +9,6 @@ import org.mockserver.examples.proxy.web.controller.pageobjects.BookPage;
 import org.mockserver.examples.proxy.web.controller.pageobjects.BooksPage;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.Parameter;
-import org.mockserver.socket.PortFactory;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -17,11 +16,6 @@ import org.springframework.web.context.WebApplicationContext;
 
 import javax.annotation.Resource;
 
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assume.assumeThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.verify.VerificationTimes.exactly;
@@ -50,10 +44,14 @@ public abstract class BooksPageEndToEndIntegrationTest {
     }
 
     @AfterClass
-    public static void stopProxy() throws Exception {
+    public static void stopProxy() {
         stopQuietly(proxy);
         System.clearProperty("http.proxyHost");
         System.clearProperty("http.proxyPort");
+    }
+
+    public void testProxyTypeEnabled() {
+
     }
 
     @Before
@@ -63,11 +61,8 @@ public abstract class BooksPageEndToEndIntegrationTest {
 
     @Test
     public void shouldLoadListOfBooks() throws Exception {
-        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
-            startsWith("1.7."), equalTo("1.7"),
-            startsWith("7."), equalTo("7"),
-            startsWith("1.8."), equalTo("1.8"),
-            startsWith("8."), equalTo("8"))));
+        // given
+        testProxyTypeEnabled();
 
         // when
         MvcResult response = mockMvc.perform(get("/books").accept(MediaType.TEXT_HTML))
@@ -87,11 +82,8 @@ public abstract class BooksPageEndToEndIntegrationTest {
 
     @Test
     public void shouldLoadSingleBook() throws Exception {
-        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
-            startsWith("1.7."), equalTo("1.7"),
-            startsWith("7."), equalTo("7"),
-            startsWith("1.8."), equalTo("1.8"),
-            startsWith("8."), equalTo("8"))));
+        // given
+        testProxyTypeEnabled();
 
         // when
         MvcResult response = mockMvc.perform(get("/book/1").accept(MediaType.TEXT_HTML))

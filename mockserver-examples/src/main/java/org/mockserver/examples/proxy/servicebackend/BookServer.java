@@ -71,7 +71,6 @@ public class BookServer {
             }
         }
         serverBootstrap.bind(httpPort);
-        System.gc();
         TimeUnit.SECONDS.sleep(3);
     }
 
@@ -101,7 +100,7 @@ public class BookServer {
 
         @Override
         public void channelReadComplete(ChannelHandlerContext ctx) {
-//            ctx.flush();
+            ctx.flush();
         }
 
         @Override

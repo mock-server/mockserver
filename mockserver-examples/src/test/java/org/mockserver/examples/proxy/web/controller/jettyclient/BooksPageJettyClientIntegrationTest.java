@@ -1,6 +1,5 @@
 package org.mockserver.examples.proxy.web.controller.jettyclient;
 
-import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.mockserver.examples.proxy.configuration.RootConfiguration;
 import org.mockserver.examples.proxy.web.configuration.WebMvcConfiguration;
@@ -18,20 +17,19 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
 @ContextHierarchy({
-        @ContextConfiguration(
-                classes = {
-                        RootConfiguration.class
-                },
-                initializers = PropertyMockingApplicationContextInitializer.class
-        ),
-        @ContextConfiguration(
-                classes = {
-                        WebMvcConfiguration.class
-                }
-        )
+    @ContextConfiguration(
+        classes = {
+            RootConfiguration.class
+        },
+        initializers = PropertyMockingApplicationContextInitializer.class
+    ),
+    @ContextConfiguration(
+        classes = {
+            WebMvcConfiguration.class
+        }
+    )
 })
 @ActiveProfiles(profiles = {"jettyClient"})
-@Ignore
 public class BooksPageJettyClientIntegrationTest extends BooksPageIntegrationTest {
 
 }

@@ -13,7 +13,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.net.*;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -44,7 +43,7 @@ public class BookServiceGoogleHttpClient implements BookService {
             ProxySelector.setDefault(new ProxySelector() {
                 @Override
                 public List<Proxy> select(URI uri) {
-                    return Collections.singletonList(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
+                    return Collections.singletonList(new Proxy(Proxy.Type.valueOf(System.getProperty("http.proxyType")), new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
                 }
 
                 @Override
@@ -60,20 +59,26 @@ public class BookServiceGoogleHttpClient implements BookService {
         }
     }
 
+    @Override
     public Book[] getAllBooks() {
         try {
+            logger.info("Sending request to http://" + host + ":" + port + "/get_books");
             HttpResponse httpResponse = sendRequestViaProxy(new URL("http://" + host + ":" + port + "/get_books"), HttpMethods.GET, null);
             return objectMapper.readValue(httpResponse.getContent(), Book[].class);
         } catch (Exception e) {
+            logger.info("Exception sending request to http://" + host + ":" + port + "/get_books", e);
             throw new RuntimeException("Exception making request to retrieve all books", e);
         }
     }
 
+    @Override
     public Book getBook(String id) {
         try {
+            logger.info("Sending request to http://" + host + ":" + port + "/get_book?id=" + id);
             HttpResponse httpResponse = sendRequestViaProxy(new URL("http://" + host + ":" + port + "/get_book?id=" + id), HttpMethods.GET, null);
             return objectMapper.readValue(httpResponse.getContent(), Book.class);
         } catch (Exception e) {
+            logger.info("Exception sending request to http://" + host + ":" + port + "/get_books", e);
             throw new RuntimeException("Exception making request to retrieve a book with id [" + id + "]", e);
         }
     }

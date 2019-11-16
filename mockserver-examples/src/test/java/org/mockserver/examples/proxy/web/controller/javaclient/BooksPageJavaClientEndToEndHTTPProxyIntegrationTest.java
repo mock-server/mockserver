@@ -1,5 +1,6 @@
 package org.mockserver.examples.proxy.web.controller.javaclient;
 
+import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.mockserver.examples.proxy.configuration.RootConfiguration;
 import org.mockserver.examples.proxy.web.configuration.WebMvcConfiguration;
@@ -30,6 +31,11 @@ import org.springframework.test.context.web.WebAppConfiguration;
         )
 })
 @ActiveProfiles(profiles = {"backend", "javaClient"})
-public class BooksPageJavaClientEndToEndIntegrationTest extends BooksPageEndToEndIntegrationTest {
+public class BooksPageJavaClientEndToEndHTTPProxyIntegrationTest extends BooksPageEndToEndIntegrationTest {
+
+    @BeforeClass
+    public static void setProxyType() {
+        System.setProperty("http.proxyType", "HTTP");
+    }
 
 }

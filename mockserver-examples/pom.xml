@@ -15,6 +15,11 @@
     <description>An example project demonstration tests using the mock server and proxy</description>
     <url>http://www.mock-server.com</url>
 
+    <properties>
+        <jersey.version>2.29.1</jersey.version>
+        <google-http-client.version>1.33.0</google-http-client.version>
+    </properties>
+
     <dependencies>
         <!-- mockserver -->
         <dependency>
@@ -67,34 +72,39 @@
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
-            <version>2.0.1</version>
+            <version>2.1.1</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
-            <version>2.6</version>
+            <version>${jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>
-            <version>2.6</version>
+            <version>${jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.connectors</groupId>
             <artifactId>jersey-apache-connector</artifactId>
-            <version>2.6</version>
+            <version>${jersey.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <version>${jersey.version}</version>
         </dependency>
 
         <!-- Google HTTP Client -->
         <dependency>
             <groupId>com.google.http-client</groupId>
             <artifactId>google-http-client</artifactId>
-            <version>1.20.0</version>
+            <version>${google-http-client.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.http-client</groupId>
             <artifactId>google-http-client-jackson2</artifactId>
-            <version>1.20.0</version>
+            <version>${google-http-client.version}</version>
         </dependency>
 
         <!-- html -->

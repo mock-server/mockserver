@@ -72,8 +72,15 @@ public abstract class BooksPageIntegrationTest {
         stopQuietly(mockServer);
     }
 
+    public void testProxyTypeEnabled() {
+
+    }
+
     @Test
     public void shouldLoadListOfBooks() throws Exception {
+        // given
+        testProxyTypeEnabled();
+
         // given
         mockServer
                 .when(
@@ -132,6 +139,9 @@ public abstract class BooksPageIntegrationTest {
 
     @Test
     public void shouldLoadSingleBook() throws Exception {
+        // given
+        testProxyTypeEnabled();
+
         // given
         mockServer
                 .when(

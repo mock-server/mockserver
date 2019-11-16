@@ -68,11 +68,23 @@ public class BookServiceSpringRestTemplateClient implements BookService {
 
     @Override
     public Book[] getAllBooks() {
-        return restTemplate.getForObject("http://" + host + ":" + port + "/get_books", Book[].class);
+        try {
+            logger.info("Sending request to http://" + host + ":" + port + "/get_books");
+            return restTemplate.getForObject("http://" + host + ":" + port + "/get_books", Book[].class);
+        } catch (Exception e) {
+            logger.info("Exception sending request to http://" + host + ":" + port + "/get_books", e);
+            throw new RuntimeException("Exception making request to retrieve all books", e);
+        }
     }
 
     @Override
     public Book getBook(String id) {
-        return restTemplate.getForObject("http://" + host + ":" + port + "/get_book?id=" + id, Book.class);
+        try {
+            logger.info("Sending request to http://" + host + ":" + port + "/get_book?id=" + id);
+            return restTemplate.getForObject("http://" + host + ":" + port + "/get_book?id=" + id, Book.class);
+        } catch (Exception e) {
+            logger.info("Exception sending request to http://" + host + ":" + port + "/get_books", e);
+            throw new RuntimeException("Exception making request to retrieve a book with id [" + id + "]", e);
+        }
     }
 }

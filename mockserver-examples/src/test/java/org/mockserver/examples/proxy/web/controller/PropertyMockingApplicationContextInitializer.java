@@ -15,4 +15,5 @@ public class PropertyMockingApplicationContextInitializer implements Application
         MockPropertySource mockEnvVars = new MockPropertySource().withProperty("bookService.port", PortFactory.findFreePort());
         propertySources.replace(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, mockEnvVars);
     }
+
 }

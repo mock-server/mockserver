@@ -24,14 +24,12 @@ public class BookServiceJerseyClient implements BookService {
     @Resource
     private Environment environment;
     private Integer port;
-    private Integer proxyPort;
     private String host;
     private Client client;
 
     @PostConstruct
     private void initialise() {
         port = environment.getProperty("bookService.port", Integer.class);
-        proxyPort = environment.getProperty("bookService.proxyPort", Integer.class);
         host = environment.getProperty("bookService.host", "localhost");
         client = createHttpClient();
     }
@@ -43,26 +41,32 @@ public class BookServiceJerseyClient implements BookService {
                 .property(ClientProperties.PROXY_URI, "http://" + System.getProperty("http.proxyHost") + ":" + System.getProperty("http.proxyPort")));
     }
 
+    @Override
     public Book[] getAllBooks() {
         try {
+            logger.info("Sending request to http://" + host + ":" + port + "/get_books");
             return client.target("http://" + host + ":" + port)
                     .path("get_books")
                     .queryParam("greeting", "Hi World!")
                     .request(MediaType.APPLICATION_JSON)
                     .get(Book[].class);
         } catch (Exception e) {
+            logger.info("Exception sending request to http://" + host + ":" + port + "/get_books", e);
             throw new RuntimeException("Exception making request to retrieve all books", e);
         }
     }
 
+    @Override
     public Book getBook(String id) {
         try {
+            logger.info("Sending request to http://" + host + ":" + port + "/get_book?id=" + id);
             return client.target("http://localhost:" + port)
                     .path("get_book")
                     .queryParam("id", id)
                     .request(MediaType.APPLICATION_JSON)
                     .get(Book.class);
         } catch (Exception e) {
+            logger.info("Exception sending request to http://" + host + ":" + port + "/get_books", e);
             throw new RuntimeException("Exception making request to retrieve a book with id [" + id + "]", e);
         }
     }

@@ -24,7 +24,6 @@ public class BookServiceJettyHttpClient implements BookService {
     @Resource
     private Environment environment;
     private Integer port;
-    private Integer proxyPort;
     private String host;
     private ObjectMapper objectMapper;
     private HttpClient httpClient;
@@ -32,7 +31,6 @@ public class BookServiceJettyHttpClient implements BookService {
     @PostConstruct
     private void initialise() {
         port = environment.getProperty("bookService.port", Integer.class);
-        proxyPort = environment.getProperty("bookService.proxyPort", Integer.class);
         host = environment.getProperty("bookService.host", "localhost");
         objectMapper = createObjectMapper();
         httpClient = createHttpClient();
@@ -41,7 +39,7 @@ public class BookServiceJettyHttpClient implements BookService {
     private HttpClient createHttpClient() {
         HttpClient httpClient = new HttpClient();
         try {
-            new HttpProxy(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")));
+            httpClient.getProxyConfiguration().getProxies().add(new HttpProxy(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort"))));
             httpClient.start();
         } catch (Exception e) {
             throw new RuntimeException("Exception creating HttpClient", e);
@@ -61,8 +59,10 @@ public class BookServiceJettyHttpClient implements BookService {
     @Override
     public Book[] getAllBooks() {
         try {
+            logger.info("Sending request to http://" + host + ":" + port + "/get_books");
             return objectMapper.readValue(httpClient.GET("http://" + host + ":" + port + "/get_books").getContentAsString(), Book[].class);
         } catch (Exception e) {
+            logger.info("Exception sending request to http://" + host + ":" + port + "/get_books", e);
             throw new RuntimeException("Exception making request to retrieve all books", e);
         }
     }
@@ -70,8 +70,10 @@ public class BookServiceJettyHttpClient implements BookService {
     @Override
     public Book getBook(String id) {
         try {
+            logger.info("Sending request to http://" + host + ":" + port + "/get_book?id=" + id);
             return objectMapper.readValue(httpClient.GET("http://" + host + ":" + port + "/get_book" + "?id=" + id).getContentAsString(), Book.class);
         } catch (Exception e) {
+            logger.info("Exception sending request to http://" + host + ":" + port + "/get_books", e);
             throw new RuntimeException("Exception making request to retrieve a book with id [" + id + "]", e);
         }
     }
