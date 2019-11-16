@@ -84,13 +84,13 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
         // and - logs hide proxied request
         String[] loadBalancerLogMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
         String[] targetLogMessages = targetClientAndServer.retrieveLogMessagesArray(null);
-        assertThat(loadBalancerLogMessages[3], containsString("no expectation for:" + NEW_LINE +
+        assertThat(loadBalancerLogMessages[2], containsString("no expectation for:" + NEW_LINE +
             "" + NEW_LINE +
             "\t{" + NEW_LINE +
             "\t  \"method\" : \"GET\"," + NEW_LINE +
             "\t  \"path\" : \"/some_path\"")
         );
-        assertThat(loadBalancerLogMessages[3], containsString(" returning response:" + NEW_LINE +
+        assertThat(loadBalancerLogMessages[2], containsString(" returning response:" + NEW_LINE +
             "" + NEW_LINE +
             "\t{" + NEW_LINE +
             "\t  \"statusCode\" : 404," + NEW_LINE +

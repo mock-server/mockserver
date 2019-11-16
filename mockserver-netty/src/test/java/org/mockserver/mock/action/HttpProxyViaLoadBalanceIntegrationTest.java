@@ -25,6 +25,7 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.stop.Stop.stopQuietly;
+import static org.mockserver.verify.VerificationTimes.once;
 
 /**
  * @author jamesdbloom
@@ -76,7 +77,8 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
         assertThat(responseSettableFuture.get(10, TimeUnit.MINUTES).getStatusCode(), is(404));
 
         // and - verify request received by proxy (not possible for target due to loop prevention)
-        loadBalancerClientAndServer.verify(request().withPath("/some_path"));
+        loadBalancerClientAndServer.verify(request().withPath("/some_path"), once());
+        targetClientAndServer.verify(request().withPath("/some_path"), once());
 
         // and - logs hide proxied request
         String[] loadBalancerLogMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);

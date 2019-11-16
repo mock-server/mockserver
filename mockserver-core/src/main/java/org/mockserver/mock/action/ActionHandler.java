@@ -68,14 +68,16 @@ public class ActionHandler {
     }
 
     public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyingRequest, final boolean synchronous) {
-        mockServerLogger.logEvent(
-            new LogEntry()
-                .setType(RECEIVED_REQUEST)
-                .setLogLevel(Level.INFO)
-                .setHttpRequest(request)
-                .setMessageFormat("received request:{}")
-                .setArguments(request)
-        );
+        if (request.getHeaders() == null || !request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(RECEIVED_REQUEST)
+                    .setLogLevel(Level.INFO)
+                    .setHttpRequest(request)
+                    .setMessageFormat("received request:{}")
+                    .setArguments(request)
+            );
+        }
         final Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
         final boolean potentiallyHttpProxy = !StringUtils.isEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString()));
 
