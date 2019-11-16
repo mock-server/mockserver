@@ -1,10 +1,7 @@
 
 package org.mockserver.echo.http;
 
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.*;
@@ -30,12 +27,14 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
     private static final String UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI = "/_mockserver_callback_websocket";
     private final MockServerLogger mockServerLogger;
     private final List<String> registeredClients;
+    private final List<Channel> websocketChannels;
     private final List<TextWebSocketFrame> textWebSocketFrames;
     private WebSocketServerHandshaker handshaker;
 
-    WebSocketServerHandler(MockServerLogger mockServerLogger, List<String> registeredClients, List<TextWebSocketFrame> textWebSocketFrames) {
+    WebSocketServerHandler(MockServerLogger mockServerLogger, List<String> registeredClients, List<Channel> websocketChannels, List<TextWebSocketFrame> textWebSocketFrames) {
         this.mockServerLogger = mockServerLogger;
         this.registeredClients = registeredClients;
+        this.websocketChannels = websocketChannels;
         this.textWebSocketFrames = textWebSocketFrames;
     }
 
@@ -93,6 +92,7 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
                             .setMessageFormat("Registering client " + clientId)
                     );
                     registeredClients.add(clientId);
+                    websocketChannels.add(future.channel());
                     future.channel().closeFuture().addListener((ChannelFutureListener) future1 -> {
                         mockServerLogger.logEvent(
                             new LogEntry()
@@ -101,6 +101,7 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
                                 .setMessageFormat("Unregistering callback for client " + clientId)
                         );
                         registeredClients.remove(clientId);
+                        websocketChannels.remove(future.channel());
                     });
                 });
         }

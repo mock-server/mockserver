@@ -1,5 +1,6 @@
 package org.mockserver.echo.http;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -13,6 +14,7 @@ import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.socket.tls.NettySslContextFactory;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockserver.echo.http.EchoServer.*;
 import static org.slf4j.event.Level.TRACE;
@@ -25,10 +27,11 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
     private final MockServerLogger mockServerLogger;
     private final boolean secure;
     private final EchoServer.Error error;
-    private final ArrayList<TextWebSocketFrame> textWebSocketFrames;
-    private final ArrayList<String> registeredClients;
+    private final List<TextWebSocketFrame> textWebSocketFrames;
+    private final List<Channel> websocketChannels;
+    private final List<String> registeredClients;
 
-    EchoServerInitializer(MockServerLogger mockServerLogger, boolean secure, EchoServer.Error error, ArrayList<String> registeredClients, ArrayList<TextWebSocketFrame> textWebSocketFrames) {
+    EchoServerInitializer(MockServerLogger mockServerLogger, boolean secure, EchoServer.Error error, List<String> registeredClients, List<Channel> websocketChannels, List<TextWebSocketFrame> textWebSocketFrames) {
         if (!secure && error == EchoServer.Error.CLOSE_CONNECTION) {
             throw new IllegalArgumentException("Error type CLOSE_CONNECTION is not supported in non-secure mode");
         }
@@ -36,6 +39,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
         this.secure = secure;
         this.error = error;
         this.registeredClients = registeredClients;
+        this.websocketChannels = websocketChannels;
         this.textWebSocketFrames = textWebSocketFrames;
     }
 
@@ -60,7 +64,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
 
         pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-        pipeline.addLast(new WebSocketServerHandler(mockServerLogger, registeredClients, textWebSocketFrames));
+        pipeline.addLast(new WebSocketServerHandler(mockServerLogger, registeredClients, websocketChannels, textWebSocketFrames));
 
         pipeline.addLast(new MockServerServerCodec(mockServerLogger, secure));
 

@@ -2,6 +2,7 @@ package org.mockserver.echo.http;
 
 import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -19,10 +20,7 @@ import org.mockserver.stop.Stoppable;
 import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
@@ -39,8 +37,9 @@ public class EchoServer implements Stoppable {
     private final OnlyResponse onlyResponse = new OnlyResponse();
     private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
     private final SettableFuture<Integer> boundPort = SettableFuture.create();
-    private final ArrayList<String> registeredClients;
-    private final ArrayList<TextWebSocketFrame> textWebSocketFrames;
+    private final List<String> registeredClients;
+    private final List<Channel> websocketChannels;
+    private final List<TextWebSocketFrame> textWebSocketFrames;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
@@ -50,6 +49,7 @@ public class EchoServer implements Stoppable {
 
     public EchoServer(final boolean secure, final Error error) {
         registeredClients = new ArrayList<>();
+        websocketChannels = new ArrayList<>();
         textWebSocketFrames = new ArrayList<>();
         new Thread(() -> {
             bossGroup = new NioEventLoopGroup(1);
@@ -58,7 +58,7 @@ public class EchoServer implements Stoppable {
                 .channel(NioServerSocketChannel.class)
                 .option(ChannelOption.SO_BACKLOG, 100)
                 .handler(new LoggingHandler(EchoServer.class))
-                .childHandler(new EchoServerInitializer(mockServerLogger, secure, error, registeredClients, textWebSocketFrames))
+                .childHandler(new EchoServerInitializer(mockServerLogger, secure, error, registeredClients, websocketChannels, textWebSocketFrames))
                 .childAttr(LOG_FILTER, logFilter)
                 .childAttr(NEXT_RESPONSE, nextResponse)
                 .childAttr(ONLY_RESPONSE, onlyResponse)
@@ -124,11 +124,15 @@ public class EchoServer implements Stoppable {
         return this;
     }
 
-    public ArrayList<String> getRegisteredClients() {
+    public List<String> getRegisteredClients() {
         return registeredClients;
     }
 
-    public ArrayList<TextWebSocketFrame> getTextWebSocketFrames() {
+    public List<Channel> getWebsocketChannels() {
+        return websocketChannels;
+    }
+
+    public List<TextWebSocketFrame> getTextWebSocketFrames() {
         return textWebSocketFrames;
     }
 

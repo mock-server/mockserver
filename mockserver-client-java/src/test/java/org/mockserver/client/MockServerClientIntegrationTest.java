@@ -1,6 +1,9 @@
 package org.mockserver.client;
 
 import com.google.common.util.concurrent.SettableFuture;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelOutboundInvoker;
+import org.hamcrest.core.IsNot;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockserver.echo.http.EchoServer;
@@ -17,6 +20,7 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,6 +31,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.same;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.unlimited;
@@ -294,9 +299,7 @@ public class MockServerClientIntegrationTest {
                     .withPath("/some_path")
                     .withBody(new StringBody("some_request_body"))
             )
-            .respond(httpRequest -> {
-                return response();
-            });
+            .respond(httpRequest -> response());
 
         // then
         assertThat(retrieveRequests(request()).size(), is(1));
@@ -332,6 +335,30 @@ public class MockServerClientIntegrationTest {
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
         }
+    }
+
+    @Test
+    public void shouldReconnectWebSocketIfClosed() {
+        // given
+        echoServerOne.withNextResponse(response().withStatusCode(201));
+        echoServerOne.getRegisteredClients().clear();
+        mockServerClientOne
+            .when(
+                request()
+                    .withPath("/some_path")
+                    .withBody(new StringBody("some_request_body"))
+            )
+            .respond(httpRequest -> response());
+
+        // when
+        assertThat(echoServerOne.getWebsocketChannels().size(), is(1));
+        Channel initialChannel = echoServerOne.getWebsocketChannels().get(0);
+        echoServerOne.getWebsocketChannels().forEach(ChannelOutboundInvoker::close);
+
+        // then
+        assertThat(retrieveRequests(request()).size(), is(1));
+        assertThat(echoServerOne.getWebsocketChannels().size(), is(1));
+        assertThat(echoServerOne.getWebsocketChannels().get(0), IsNot.not(same(initialChannel)));
     }
 
     @Test
