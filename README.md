@@ -42,6 +42,7 @@ Docker Hub contains the following artifacts:
 ### Helm Chart
 
 * [MockServer Helm Chart](helm/mockserver/README.md) - a Helm Chart that installs MockServer to a Kubernetes cluster, available versions:
+  * [5.7.2](http://www.mock-server.com/mockserver-5.7.2.tgz) 
   * [5.7.1](http://www.mock-server.com/mockserver-5.7.1.tgz) 
   * [5.7.0](http://www.mock-server.com/mockserver-5.7.0.tgz) 
   * [5.6.1](http://www.mock-server.com/mockserver-5.6.1.tgz) 
@@ -61,6 +62,7 @@ Docker Hub contains the following artifacts:
 ### Document
 Version | Date        | Git & Docker Tag / Git Hash                                                                                                                                                                 | Documentation                                                         | Java API                                                              | REST API
 :-------|:------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------- |:--------------------------------------------------------------------- |:---------------------------------------------------------------------------------
+5.7.2   | 17 Nov 2019 | [mockserver-5.7.2](https://github.com/jamesdbloom/mockserver/tree/mockserver-5.7.2) / [7c9fc5](https://github.com/jamesdbloom/mockserver/commit/7c9fc5e5e831feac71dd68d0341ff089f37cec1e)   | [Documentation](http://mock-server.com)	                            | [Java API](http://mock-server.com/versions/5.7.2/apidocs/index.html)  | [5.7.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.7.x)
 5.7.1   | 01 Nov 2019 | [mockserver-5.7.1](https://github.com/jamesdbloom/mockserver/tree/mockserver-5.7.1) / [0ca353](https://github.com/jamesdbloom/mockserver/commit/0ca3537023e9e0f9abcb09c92279891cbc0527c7)   | [Documentation](http://mock-server.com)	                            | [Java API](http://mock-server.com/versions/5.7.1/apidocs/index.html)  | [5.7.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.7.x)
 5.7.0   | 01 Nov 2019 | [mockserver-5.7.0](https://github.com/jamesdbloom/mockserver/tree/mockserver-5.7.0) / [b58bc5](https://github.com/jamesdbloom/mockserver/commit/b58bc589efbc76272a2053a64e774a001f1bb0a2)   | [Documentation](http://mock-server.com)	                            | [Java API](http://mock-server.com/versions/5.7.0/apidocs/index.html)  | [5.7.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.7.x)
 5.6.1   | 26 Jul 2019 | [mockserver-5.6.1](https://github.com/jamesdbloom/mockserver/tree/mockserver-5.6.1) / [aec1fb](https://github.com/jamesdbloom/mockserver/commit/aec1fbf1e826dc59fe4a19c3331ab6802ec4c3c7)   | [Documentation](https://5-6.mock-server.com)	                        | [Java API](http://mock-server.com/versions/5.6.0/apidocs/index.html)  | [5.6.x REST API](https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.6.x)
