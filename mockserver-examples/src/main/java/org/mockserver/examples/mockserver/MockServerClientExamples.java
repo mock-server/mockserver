@@ -35,6 +35,26 @@ public class MockServerClientExamples {
             );
     }
 
+    public void createExpectationOverTLSMockServerClient() {
+        new MockServerClient("localhost", 1080)
+            .withSecure(true)
+            .when(
+                request()
+                    .withMethod("GET")
+                    .withPath("/view/cart")
+                    .withCookies(
+                        cookie("session", "4930456C-C718-476F-971F-CB8E047AB349")
+                    )
+                    .withQueryStringParameters(
+                        param("cartId", "055CA455-1DF7-45BB-8535-4F83E7266092")
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
     public void createExpectationClientAndServer() {
         new ClientAndServer(1080)
             .when(

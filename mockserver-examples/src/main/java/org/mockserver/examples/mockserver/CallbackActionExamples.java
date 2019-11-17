@@ -68,6 +68,36 @@ public class CallbackActionExamples {
 
     }
 
+    public void createExpectationWithinObjectCallback() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .respond(
+                httpRequest -> {
+                    if (httpRequest.getMethod().getValue().equals("POST")) {
+                        // inside a callback method use new client to guarantee no possibility of deadlock
+                        new MockServerClient("localhost", 1080)
+                            .when(
+                                request()
+                                    .withPath("/some/otherPath")
+                            )
+                            .respond(
+                                response()
+                                    .withBody(httpRequest.getBodyAsString())
+                            );
+                        return response()
+                            .withStatusCode(ACCEPTED_202.code())
+                            .withBody("request processed");
+                    } else {
+                        return notFoundResponse();
+                    }
+                }
+            );
+
+    }
+
     public void forwardObjectCallback() {
         new MockServerClient("localhost", 1080)
             .when(

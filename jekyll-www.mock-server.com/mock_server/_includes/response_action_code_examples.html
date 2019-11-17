@@ -935,3 +935,115 @@ mockServerClient("localhost", 1080)
     );</code></pre>
     </div>
 </div>
+<button id="button_response_create_expecation_within_closure_callback" class="accordion">create expectation within closure callback</button>
+<div class="panel">
+    <button class="accordion inner">Java 7</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .respond(
+        new ExpectationResponseCallback() {
+            @Override
+            public HttpResponse handle(HttpRequest httpRequest) {
+                if (httpRequest.getMethod().getValue().equals("POST")) {
+                    // inside a callback method use new client to guarantee no possibility of deadlock
+                    new MockServerClient("localhost", 1080)
+                        .when(
+                            request()
+                                .withPath("/some/otherPath")
+                        )
+                        .respond(
+                            response()
+                                .withBody(httpRequest.getBodyAsString())
+                        );
+                    return response()
+                        .withStatusCode(ACCEPTED_202.code())
+                        .withBody("request processed");
+                } else {
+                    return notFoundResponse();
+                }
+            }
+        }
+    );</code></pre>
+    </div>
+    <button class="accordion inner">Java 8+</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .respond(
+        httpRequest -> {
+            if (httpRequest.getMethod().getValue().equals("POST")) {
+                // inside a callback method use new client to guarantee no possibility of deadlock
+                new MockServerClient("localhost", 1080)
+                    .when(
+                        request()
+                            .withPath("/some/otherPath")
+                    )
+                    .respond(
+                        response()
+                            .withBody(httpRequest.getBodyAsString())
+                    );
+                return response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withBody("request processed");
+            } else {
+                return notFoundResponse();
+            }
+        }
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+var callback = function (request) {
+    if (request.method === 'POST') {
+        mockServerClient("localhost", 1080)
+            .mockAnyResponse({
+                "httpRequest": {
+                    "path": "/some/otherPath"
+                },
+                "httpResponse": {
+                    "body": request.body.string
+                }
+            })
+            .then(
+                function () {
+                    console.log("chained expectation created");
+                },
+                function (error) {
+                    console.log(error);
+                }
+            );
+        return {
+            'statusCode': 202,
+            'body': "request processed"
+        };
+    } else {
+        return {
+            'statusCode': 404
+        };
+    }
+};
+mockServerClient("localhost", 1080)
+    .mockWithCallback(
+        {
+            'path': '/some/path'
+        },
+        callback
+    )
+    .then(
+        function () {
+            console.log("expectation created");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+    </div>
+</div>

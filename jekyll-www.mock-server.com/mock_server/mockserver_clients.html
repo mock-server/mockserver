@@ -188,6 +188,95 @@ mockServerClient("localhost", 1080)
   }
 }'</code></pre>
         </div>
+    </div><div class="panel title">
+    <button id="button_client_create_expectation_over_tls" class="accordion">create expectation over TLS</button>
+    <div class="panel">
+        <button class="accordion inner">Java: MockServerClient</button>
+        <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .withSecure(true)
+    .when(
+        request()
+            .withMethod("GET")
+            .withPath("/view/cart")
+            .withCookies(
+                cookie("session", "4930456C-C718-476F-971F-CB8E047AB349")
+            )
+            .withQueryStringParameters(
+                param("cartId", "055CA455-1DF7-45BB-8535-4F83E7266092")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">Java: ClientAndServer</button>
+        <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new ClientAndServer(1080)
+    .withSecure(true)
+    .when(
+        request()
+            .withMethod("GET")
+            .withPath("/view/cart")
+            .withCookies(
+                cookie("session", "4930456C-C718-476F-971F-CB8E047AB349")
+            )
+            .withQueryStringParameters(
+                param("cartId", "055CA455-1DF7-45BB-8535-4F83E7266092")
+            )
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+    );</code></pre>
+        </div>
+        <button class="accordion inner">JavaScript: Node.js mockserver-client</button>
+        <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080, undefined, true)
+  .mockAnyResponse({
+    "httpRequest": {
+      "method": "GET",
+      "path": "/view/cart",
+      "queryStringParameters": {
+        "cartId": ["055CA455-1DF7-45BB-8535-4F83E7266092"]
+      },
+      "cookies": {
+        "session": "4930456C-C718-476F-971F-CB8E047AB349"
+      }
+    },
+    "httpResponse": {
+      "body": "some_response_body"
+    }
+  })
+  .then(
+    function () {
+      console.log("expectation created");
+    },
+    function (error) {
+      console.log(error);
+    }
+  );</code></pre>
+        </div>
+        <button class="accordion inner">REST API</button>
+        <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -k -X PUT "https://localhost:1080/mockserver/expectation" -d '{
+  "httpRequest" : {
+    "method" : "GET",
+    "path" : "/view/cart",
+    "queryStringParameters" : {
+      "cartId" : [ "055CA455-1DF7-45BB-8535-4F83E7266092" ]
+    },
+    "cookies" : {
+      "session" : "4930456C-C718-476F-971F-CB8E047AB349"
+    }
+  },
+  "httpResponse" : {
+    "body" : "some_response_body"
+  }
+}'</code></pre>
+        </div>
     </div>
     <button id="button_client_verify_reqs" class="accordion">verify requests</button>
     <div class="panel">
