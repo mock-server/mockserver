@@ -4565,6 +4565,22 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldVerifyReceivedRequestsWithNoMatchingExpectation() {
+        // when
+        makeRequest(
+            request()
+                .withPath(calculatePath("some_path")),
+            headersToIgnore);
+
+        mockServerClient.verify(request()
+            .withPath(calculatePath("some_path")));
+        mockServerClient.verify(request()
+            .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
+        mockServerClient.verify(request()
+            .withPath(calculatePath("some_path")), VerificationTimes.once());
+    }
+
+    @Test
     public void shouldVerifyTooManyRequestsReceived() {
         // when
         mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response().withBody("some_body"));
