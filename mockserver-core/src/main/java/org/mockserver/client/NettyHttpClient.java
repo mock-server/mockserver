@@ -65,15 +65,12 @@ public class NettyHttpClient {
                 .attr(RESPONSE_FUTURE, httpResponseSettableFuture)
                 .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger))
                 .connect(remoteAddress)
-                .addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) {
-                        if (future.isSuccess()) {
-                            // send the HTTP request
-                            future.channel().writeAndFlush(httpRequest);
-                        } else {
-                            httpResponseSettableFuture.setException(future.cause());
-                        }
+                .addListener((ChannelFutureListener) future -> {
+                    if (future.isSuccess()) {
+                        // send the HTTP request
+                        future.channel().writeAndFlush(httpRequest);
+                    } else {
+                        httpResponseSettableFuture.setException(future.cause());
                     }
                 });
 
