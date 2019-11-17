@@ -954,8 +954,10 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
-        "type": "REGEX",
-        "body": "starts_with_.*"
+        "body": {
+            "type": "REGEX",
+            "body": "starts_with_.*"
+        }
     },
     "httpResponse": {
         "body": "some_response_body"
@@ -972,9 +974,11 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
-  "httpRequest" : {
-    "type": "REGEX",
-    "body" : "starts_with_.*"
+  "httpRequest": {
+    "body": {
+      "type": "REGEX",
+      "body": "starts_with_.*"
+    }
   },
   "httpResponse" : {
     "body" : "some_response_body"
