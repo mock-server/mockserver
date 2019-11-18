@@ -7,11 +7,9 @@ mock server <join.mock.server@gmail.com>
 
 # Documentation
 
-For usage guide please see: [www.mock-server.com](http://www.mock-server.com/)
+For usage guide please see: [www.mock-server.com](http://www.mock-server.com/) 
 
-The chat room has moving to <a height="40px" href="https://join-mock-server-slack.herokuapp.com"> 
-    <img height="40px" style="max-width:100%;position:relative;vertical-align:top;top:-15px;height: 35px;" src="https://camo.githubusercontent.com/229f0d09b4027eeecafb6111e4e5c68441b8e15d/687474703a2f2f6d6f636b2d7365727665722e636f6d2f696d616765732f736c61636b2d6c6f676f2e706e67" alt="Join Slack"> (previously [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jamesdbloom/mockserver?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge))
-</a>
+Join discussion: <a height="40px" href="https://join-mock-server-slack.herokuapp.com"><img height="40px" src="http://mock-server.com/images/slack-logo-slim.png" alt="Join Slack"></a>
 
 # Versions
 
