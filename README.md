@@ -9,7 +9,7 @@ mock server <join.mock.server@gmail.com>
 
 For usage guide please see: [www.mock-server.com](http://www.mock-server.com/) 
 
-Join discussion on: <a height="40px" href="https://join-mock-server-slack.herokuapp.com"><img height="40px" src="http://mock-server.com/images/slack-logo-slim.png" alt="Join Slack"></a>
+Join discussion on: <a height="40px" href="https://join-mock-server-slack.herokuapp.com"><img height="40px" src="http://mock-server.com/images/slack-logo-slim.png" alt="Join Slack"></a> (recently migrated from gitter)
 
 # Versions
 
