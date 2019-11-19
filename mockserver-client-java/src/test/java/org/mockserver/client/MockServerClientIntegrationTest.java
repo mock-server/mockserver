@@ -20,7 +20,6 @@ import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
-import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,8 +29,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
+import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.same;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.matchers.Times.unlimited;
@@ -360,7 +359,7 @@ public class MockServerClientIntegrationTest {
         // then
         assertThat(retrieveRequests(request()).size(), is(1));
         assertThat(echoServerOne.getWebsocketChannels().size(), is(1));
-        assertThat(echoServerOne.getWebsocketChannels().get(0), IsNot.not(same(initialChannel)));
+        assertThat(echoServerOne.getWebsocketChannels().get(0), IsNot.not(sameInstance(initialChannel)));
     }
 
     @Test
