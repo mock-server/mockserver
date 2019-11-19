@@ -122,6 +122,21 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         return matchingRequests;
     }
 
+    @JsonIgnore
+    public boolean matches(HttpRequestMatcher matcher) {
+        if (matcher == null) {
+            return true;
+        }
+        if (httpRequests != null) {
+            for (HttpRequest httpRequest : httpRequests) {
+                if (matcher.matches(httpRequest)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public LogEntry setHttpRequests(HttpRequest[] httpRequests) {
         this.httpRequests = httpRequests;
         return this;

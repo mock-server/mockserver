@@ -98,9 +98,4 @@ public class IOStreamUtils {
         }
     }
 
-    public static ByteBuffer createBasicByteBuffer(String input) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(input.length()).put(input.getBytes(UTF_8));
-        byteBuffer.flip();
-        return byteBuffer;
-    }
 }

@@ -180,7 +180,8 @@ public class IOStreamUtilsTest {
     @Test
     public void shouldCreateBasicByteBuffer() {
         // when
-        ByteBuffer byteBuffer = IOStreamUtils.createBasicByteBuffer("byte_buffer");
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect("byte_buffer".length()).put("byte_buffer".getBytes(UTF_8));
+        byteBuffer.flip();
 
         // then
         byte[] content = new byte[byteBuffer.limit()];

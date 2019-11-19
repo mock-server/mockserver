@@ -19,6 +19,9 @@ import org.mockserver.dashboard.serializers.ThrowableSerializer;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
+import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.HttpRequest;
@@ -28,7 +31,13 @@ import org.mockserver.ui.MockServerLogListener;
 import org.mockserver.ui.MockServerMatcherListener;
 import org.slf4j.event.Level;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -53,6 +62,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         -> input.getType() == FORWARDED_REQUEST;
     private static final AttributeKey<Boolean> CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET = AttributeKey.valueOf("CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET");
     private static final String UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI = "/_mockserver_ui_websocket";
+    private static final int UI_UPDATE_ITEM_LIMIT = 150;
     private final MockServerLogger mockServerLogger;
     private final HttpStateHandler httpStateHandler;
     private WebSocketServerHandshaker handshaker;
@@ -63,13 +73,43 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         new ThrowableSerializer()
     );
     private MockServerMatcher mockServerMatcher;
-    private MockServerEventLog mockServerLog;
+    private MockServerEventLog mockServerEventLog;
+    private ThreadPoolExecutor scheduler;
+
 
     public DashboardWebSocketServerHandler(HttpStateHandler httpStateHandler) {
         this.httpStateHandler = httpStateHandler;
         this.mockServerMatcher = httpStateHandler.getMockServerMatcher();
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
+    }
+
+    @Override
+    public void handlerAdded(ChannelHandlerContext ctx) {
+        try {
+            scheduler = new ThreadPoolExecutor(
+                1,
+                1,
+                0L,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(1),
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.DiscardOldestPolicy()
+            );
+        } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception creating scheduler " + throwable.getMessage())
+                    .setThrowable(throwable)
+            );
+        }
+    }
+
+    @Override
+    public void handlerRemoved(ChannelHandlerContext ctx) {
+        scheduler.shutdown();
     }
 
     @Override
@@ -100,9 +140,9 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     }
 
     private void upgradeChannel(final ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
-        if (mockServerLog == null) {
-            mockServerLog = httpStateHandler.getMockServerLog();
-            mockServerLog.registerListener(this);
+        if (mockServerEventLog == null) {
+            mockServerEventLog = httpStateHandler.getMockServerLog();
+            mockServerEventLog.registerListener(this);
             mockServerMatcher = httpStateHandler.getMockServerMatcher();
             mockServerMatcher.registerListener(this);
         }
@@ -142,10 +182,22 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         }
     }
 
-    private void sendMessage(ChannelHandlerContext ctx, ImmutableMap<String, Object> message) throws JsonProcessingException {
-        ctx.writeAndFlush(new TextWebSocketFrame(
-            objectMapper.writeValueAsString(message)
-        ));
+    private void sendMessage(ChannelHandlerContext ctx, ImmutableMap<String, Object> message) {
+        scheduler.submit(() -> {
+            try {
+                ctx.writeAndFlush(new TextWebSocketFrame(
+                    objectMapper.writeValueAsString(message)
+                ));
+            } catch (JsonProcessingException jpe) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("Exception will serialising UI data " + jpe.getMessage())
+                        .setThrowable(jpe)
+                );
+            }
+        });
     }
 
     @Override
@@ -165,8 +217,8 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         mockServerMatcher.unregisterListener(this);
-        if (mockServerLog != null) {
-            mockServerLog.unregisterListener(this);
+        if (mockServerEventLog != null) {
+            mockServerEventLog.unregisterListener(this);
         }
         ctx.fireChannelInactive();
     }
@@ -186,45 +238,61 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     }
 
     private void sendUpdate(HttpRequest httpRequest, ChannelHandlerContext channelHandlerContext) {
-        mockServerLog.retrieveLogEntriesInReverse(
-            httpRequest,
-            logEntry -> true,
-            LogEntryDTO::new,
-            logEventStream -> {
-                try {
+        mockServerEventLog
+            .retrieveLogEntriesInReverse(
+                httpRequest,
+                logEntry -> true,
+                LogEntryDTO::new,
+                reverseLogEventsStream -> {
+                    List<Map<String, Object>> recordedExpectations = new ArrayList<>();
+                    List<Map<String, Object>> recordedRequests = new ArrayList<>();
+                    List<LogEntryDTO> recordedRequestResponses = new ArrayList<>();
+                    List<LogEntryDTO> logMessages = new ArrayList<>();
+                    reverseLogEventsStream
+                        .forEach(logEntryDTO -> {
+                            if (recordedExpectationLogPredicate.test(logEntryDTO)
+                                && recordedExpectations.size() < UI_UPDATE_ITEM_LIMIT) {
+                                recordedExpectations.add(
+                                    ImmutableMap.of(
+                                        "key", logEntryDTO.key(),
+                                        "value", new Expectation(logEntryDTO.getHttpRequest(), Times.once(), TimeToLive.unlimited())
+                                            .thenRespond(logEntryDTO.getHttpResponse())
+                                    )
+                                );
+                            }
+                            if (requestLogPredicate.test(logEntryDTO)
+                                && recordedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
+                                for (HttpRequest request : logEntryDTO.getHttpRequests()) {
+                                    recordedRequests.add(ImmutableMap.of(
+                                        "key", logEntryDTO.key(),
+                                        "value", request
+                                    ));
+                                }
+                            }
+                            if (requestResponseLogPredicate.test(logEntryDTO)
+                                && recordedRequestResponses.size() < UI_UPDATE_ITEM_LIMIT) {
+                                recordedRequestResponses.add(logEntryDTO);
+                            }
+                            if (logMessages.size() < UI_UPDATE_ITEM_LIMIT) {
+                                logMessages.add(logEntryDTO);
+                            }
+                        });
                     sendMessage(channelHandlerContext, ImmutableMap.of(
                         "activeExpectations", mockServerMatcher
                             .retrieveActiveExpectations(httpRequest)
                             .stream()
+                            .limit(UI_UPDATE_ITEM_LIMIT)
                             .map(expectation -> ImmutableMap.of(
                                 "key", expectation.key(),
                                 "value", expectation
                             ))
                             .collect(Collectors.toList()),
-                        "recordedExpectations", logEventStream
-                            .stream()
-                            .filter(recordedExpectationLogPredicate)
-                            .collect(Collectors.toList()),
-                        "recordedRequests", logEventStream
-                            .stream()
-                            .filter(requestLogPredicate)
-                            .collect(Collectors.toList()),
-                        "recordedRequestResponses", logEventStream
-                            .stream()
-                            .filter(requestResponseLogPredicate)
-                            .collect(Collectors.toList()),
-                        "logMessages", logEventStream
+                        "recordedExpectations", recordedExpectations,
+                        "recordedRequests", recordedRequests,
+                        "recordedRequestResponses", recordedRequestResponses,
+                        "logMessages", logMessages
                     ));
-                } catch (JsonProcessingException jpe) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(LogEntry.LogMessageType.EXCEPTION)
-                            .setLogLevel(Level.ERROR)
-                            .setMessageFormat("Exception while updating UI")
-                            .setThrowable(jpe)
-                    );
                 }
-            }
-        );
+            );
     }
 }

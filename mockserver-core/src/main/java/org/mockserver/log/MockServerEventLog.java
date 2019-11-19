@@ -3,7 +3,7 @@ package org.mockserver.log;
 import com.google.common.util.concurrent.SettableFuture;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
-import org.mockserver.collections.BoundedConcurrentLinkedQueue;
+import org.mockserver.collections.BoundedConcurrentLinkedDeque;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -30,13 +30,12 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.mockserver.configuration.ConfigurationProperties.maxLogEntries;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.logging.MockServerLogger.writeToSystemOut;
 
@@ -69,7 +68,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .setTimestamp(logEntry.getTimestamp());
     private static final String[] EXCLUDED_FIELDS = {"key", "disruptor"};
     private MockServerLogger mockServerLogger;
-    private Queue<LogEntry> eventLog = new BoundedConcurrentLinkedQueue<>(ConfigurationProperties.maxLogEntries());
+    private Deque<LogEntry> eventLog = new BoundedConcurrentLinkedDeque<>(ConfigurationProperties.maxLogEntries());
     private MatcherBuilder matcherBuilder;
     private HttpRequestSerializer httpRequestSerializer;
     private final boolean asynchronousEventProcessing;
@@ -269,10 +268,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
                 consumer.accept(this.eventLog
                     .stream()
-                    .filter(logItem -> Arrays
-                        .stream(logItem.getHttpRequests())
-                        .anyMatch(httpRequestMatcher::matches)
-                    )
+                    .filter(logItem -> logItem.matches(httpRequestMatcher))
                     .filter(logEntryPredicate)
                 );
             })
@@ -286,11 +282,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
                 consumer.accept(this.eventLog
                     .stream()
-                    .filter(logItem -> logItem
-                        .getHttpRequests(httpRequestMatcher)
-                        .stream()
-                        .anyMatch(httpRequestMatcher::matches)
-                    )
+                    .filter(logItem -> logItem.matches(httpRequestMatcher))
                     .filter(logEntryPredicate)
                     .map(logEntryMapper)
                 );
@@ -298,28 +290,17 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         );
     }
 
-    public <T> void retrieveLogEntriesInReverse(HttpRequest httpRequest, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Deque<T>> consumer) {
+    public <T> void retrieveLogEntriesInReverse(HttpRequest httpRequest, Predicate<LogEntry> logEntryPredicate, Function<LogEntry, T> logEntryMapper, Consumer<Stream<T>> consumer) {
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
                 HttpRequestMatcher httpRequestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
                 consumer.accept(
-                    this.eventLog
-                        .stream()
-                        .filter(logItem -> Arrays
-                            .stream(logItem.getHttpRequests())
-                            .anyMatch(httpRequestMatcher::matches)
-                        )
+                    StreamSupport
+                        .stream(Spliterators.spliteratorUnknownSize(this.eventLog.descendingIterator(), 0), false)
+                        .filter(logItem -> logItem.matches(httpRequestMatcher))
                         .filter(logEntryPredicate)
                         .map(logEntryMapper)
-                        .collect(Collector.of(
-                            ArrayDeque::new,
-                            ArrayDeque::addFirst,
-                            (d1, d2) -> {
-                                d2.addAll(d1);
-                                return d2;
-                            }
-                        ))
                 );
             })
         );

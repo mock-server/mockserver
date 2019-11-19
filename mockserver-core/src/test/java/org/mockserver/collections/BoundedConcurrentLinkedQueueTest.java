@@ -17,7 +17,7 @@ public class BoundedConcurrentLinkedQueueTest {
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAdd() {
         // given
-        BoundedConcurrentLinkedQueue<String> concurrentLinkedQueue = new BoundedConcurrentLinkedQueue<String>(3);
+        BoundedConcurrentLinkedDeque<String> concurrentLinkedQueue = new BoundedConcurrentLinkedDeque<String>(3);
 
         // when
         concurrentLinkedQueue.add("1");
@@ -34,7 +34,7 @@ public class BoundedConcurrentLinkedQueueTest {
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAddAll() {
         // given
-        BoundedConcurrentLinkedQueue<String> concurrentLinkedQueue = new BoundedConcurrentLinkedQueue<String>(3);
+        BoundedConcurrentLinkedDeque<String> concurrentLinkedQueue = new BoundedConcurrentLinkedDeque<String>(3);
 
         // when
         concurrentLinkedQueue.addAll(Arrays.asList("1", "2", "3", "4"));
