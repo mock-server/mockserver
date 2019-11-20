@@ -14,7 +14,9 @@ public class JsonSchemaHttpRequestValidator extends JsonSchemaValidator {
             "httpRequest",
             "body",
             "keyToMultiValue",
-            "keyToValue");
+            "keyToValue",
+            "socketAddress"
+        );
     }
 
     private static JsonSchemaHttpRequestValidator jsonSchemaHttpRequestValidator;

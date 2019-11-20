@@ -16,6 +16,7 @@ public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
     private Headers headers;
     private Boolean keepAlive = null;
     private Boolean secure = null;
+    private SocketAddressDTO socketAddress = null;
 
     public HttpRequestDTO(HttpRequest httpRequest) {
         this(httpRequest, false);
@@ -36,6 +37,9 @@ public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
             body = BodyDTO.createDTO(httpRequest.getBody());
             keepAlive = httpRequest.isKeepAlive();
             secure = httpRequest.isSecure();
+            if (httpRequest.getSocketAddress() != null) {
+                socketAddress = new SocketAddressDTO(httpRequest.getSocketAddress());
+            }
         }
     }
 
@@ -48,7 +52,8 @@ public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
             .withHeaders(headers)
             .withCookies(cookies)
             .withSecure(secure)
-            .withKeepAlive(keepAlive);
+            .withKeepAlive(keepAlive)
+            .withSocketAddress(socketAddress != null ? socketAddress.buildObject() : null);
     }
 
     public NottableString getMethod() {
@@ -120,6 +125,15 @@ public class HttpRequestDTO extends NotDTO implements DTO<HttpRequest> {
 
     public HttpRequestDTO setSecure(Boolean secure) {
         this.secure = secure;
+        return this;
+    }
+
+    public SocketAddressDTO getSocketAddress() {
+        return socketAddress;
+    }
+
+    public HttpRequestDTO setSocketAddress(SocketAddressDTO socketAddress) {
+        this.socketAddress = socketAddress;
         return this;
     }
 }

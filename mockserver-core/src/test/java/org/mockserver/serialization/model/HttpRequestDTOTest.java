@@ -96,6 +96,12 @@ public class HttpRequestDTOTest {
         String path = "path";
         Parameters queryStringParameters = new Parameters().withEntries(param("name", "value"));
         HttpRequest httpRequest = new HttpRequest();
+        SocketAddressDTO socketAddress = new SocketAddressDTO(
+            new SocketAddress()
+                .withHost("someHost")
+                .withPort(1234)
+                .withScheme(SocketAddress.Scheme.HTTPS)
+        );
 
         // when
         HttpRequestDTO httpRequestDTO = new HttpRequestDTO(httpRequest);
@@ -107,6 +113,7 @@ public class HttpRequestDTOTest {
         httpRequestDTO.setQueryStringParameters(queryStringParameters);
         httpRequestDTO.setKeepAlive(Boolean.TRUE);
         httpRequestDTO.setSecure(Boolean.TRUE);
+        httpRequestDTO.setSocketAddress(socketAddress);
 
         // then
         assertThat(httpRequestDTO.getBody(), is(body));
@@ -117,6 +124,7 @@ public class HttpRequestDTOTest {
         assertThat(httpRequestDTO.getQueryStringParameters(), is(queryStringParameters));
         assertThat(httpRequestDTO.getKeepAlive(), is(Boolean.TRUE));
         assertThat(httpRequestDTO.getSecure(), is(Boolean.TRUE));
+        assertThat(httpRequestDTO.getSocketAddress(), is(socketAddress));
     }
 
 

@@ -27,6 +27,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
     private Cookies cookies;
     private Boolean keepAlive = null;
     private Boolean secure = null;
+    private SocketAddress socketAddress;
 
     public static HttpRequest request() {
         return new HttpRequest();
@@ -61,6 +62,21 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      */
     public HttpRequest withSecure(Boolean isSsl) {
         this.secure = isSsl;
+        return this;
+    }
+
+    public SocketAddress getSocketAddress() {
+        return socketAddress;
+    }
+
+    /**
+     * Specify remote address if the remote address can't be derived from the host header,
+     * if no value is specified the host header will be used to determine remote address
+     *
+     * @param socketAddress the remote address to send request to
+     */
+    public HttpRequest withSocketAddress(SocketAddress socketAddress) {
+        this.socketAddress = socketAddress;
         return this;
     }
 

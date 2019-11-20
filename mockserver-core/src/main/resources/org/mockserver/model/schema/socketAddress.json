@@ -1,0 +1,21 @@
+{
+    "title": "remote address to send request to",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "host": {
+            "type": "string"
+        },
+        "port": {
+            "type": "integer"
+        },
+        "scheme": {
+            "enum": [
+                "HTTP",
+                "HTTPS"
+            ]
+        }
+    },
+    "definitions": {
+    }
+}

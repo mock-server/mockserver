@@ -8,10 +8,11 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.serialization.model.HttpRequestDTO;
-import org.mockserver.serialization.model.StringBodyDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.mockserver.serialization.model.HttpRequestDTO;
+import org.mockserver.serialization.model.SocketAddressDTO;
+import org.mockserver.serialization.model.StringBodyDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 
 import java.io.IOException;
@@ -43,6 +44,12 @@ public class HttpRequestSerializerTest {
             .withHeaders(new Header("headerName", "headerValue"))
             .withCookies(new Cookie("cookieName", "cookieValue"))
             .withSecure(true)
+            .withSocketAddress(
+                new SocketAddress()
+                    .withHost("someHost")
+                    .withPort(1234)
+                    .withScheme(SocketAddress.Scheme.HTTPS)
+            )
             .withKeepAlive(true);
     private final HttpRequestDTO fullHttpRequestDTO =
         new HttpRequestDTO()
@@ -60,6 +67,12 @@ public class HttpRequestSerializerTest {
                 cookie("cookieName", "cookieValue")
             ))
             .setSecure(true)
+            .setSocketAddress(new SocketAddressDTO(
+                new SocketAddress()
+                    .withHost("someHost")
+                    .withPort(1234)
+                    .withScheme(SocketAddress.Scheme.HTTPS)
+            ))
             .setKeepAlive(true);
     @Rule
     public ExpectedException thrown = ExpectedException.none();

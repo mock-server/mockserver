@@ -2,8 +2,8 @@ package org.mockserver.serialization.java;
 
 import com.google.common.base.Strings;
 import org.apache.commons.text.StringEscapeUtils;
-import org.mockserver.serialization.Base64Converter;
 import org.mockserver.model.*;
+import org.mockserver.serialization.Base64Converter;
 
 import java.util.List;
 
@@ -52,6 +52,13 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
             if (request.isKeepAlive() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withKeepAlive(").append(request.isKeepAlive().toString()).append(")");
+            }
+            if (request.getSocketAddress() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
+                output.append(".withSocketAddress(");
+                output.append(new SocketAddressToJavaSerializer().serialize(numberOfSpacesToIndent + 2, request.getSocketAddress()));
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
+                output.append(")");
             }
             if (request.getBody() != null) {
                 if (request.getBody() instanceof JsonBody) {

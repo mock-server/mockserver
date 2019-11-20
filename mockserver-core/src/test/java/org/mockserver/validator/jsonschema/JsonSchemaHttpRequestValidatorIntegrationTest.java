@@ -52,7 +52,12 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
             "    \"headers\" : [ {" + NEW_LINE +
             "      \"name\" : \"someHeaderName\"," + NEW_LINE +
             "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
-            "    } ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "  \"socketAddress\" : {" + NEW_LINE +
+            "    \"host\" : \"someHost\"," + NEW_LINE +
+            "    \"port\" : 1234," + NEW_LINE +
+            "    \"scheme\" : \"HTTPS\"" + NEW_LINE +
+            "  }" + NEW_LINE +
             "  }"), is(""));
     }
 

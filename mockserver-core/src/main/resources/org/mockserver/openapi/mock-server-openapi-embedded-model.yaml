@@ -304,6 +304,8 @@ components:
           type: boolean
         keepAlive:
           type: boolean
+        socketAddress:
+          $ref: "#/components/schemas/SocketAddress"
     HttpResponse:
       title: "response to return"
       type: object
@@ -451,6 +453,19 @@ components:
           # patternProperties:
           #   "^\\S+$":
           #     type: string
+    SocketAddress:
+      title: remote address to send request to
+      type: object
+      additionalProperties: false
+      properties:
+        host:
+          type: string
+        port:
+          type: integer
+        scheme:
+          enum:
+            - HTTP
+            - HTTPS
     Body:
       description: "request body matcher"
       anyOf:
