@@ -27,7 +27,9 @@ public class JsonSchemaExpectationValidator extends JsonSchemaValidator {
             "delay",
             "connectionOptions",
             "keyToMultiValue",
-            "keyToValue");
+            "keyToValue",
+            "socketAddress"
+        );
     }
 
     private static JsonSchemaExpectationValidator jsonSchemaExpectationValidator;

@@ -3,6 +3,7 @@ package org.mockserver.examples.mockserver;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpTemplate;
+import org.mockserver.model.SocketAddress;
 
 import java.util.concurrent.TimeUnit;
 
@@ -45,33 +46,49 @@ public class ForwardActionExamples {
     }
 
     public void forwardOverridden() {
-new MockServerClient("localhost", 1080)
-    .when(
-        request()
-            .withPath("/some/path")
-    )
-    .forward(
-        forwardOverriddenRequest(
-            request()
-                .withPath("/some/other/path")
-                .withHeader("Host", "target.host.com")
-        )
-    );
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withPath("/some/other/path")
+                        .withHeader("Host", "target.host.com")
+                )
+            );
+    }
+
+    public void forwardOverriddenWithSocketAddress() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withPath("/some/other/path")
+                        .withHeader("Host", "any.host.com")
+                        .withSocketAddress("target.host.com", 1234, SocketAddress.Scheme.HTTPS)
+                )
+            );
     }
 
     public void forwardOverriddenWithDelay() {
-new MockServerClient("localhost", 1080)
-    .when(
-        request()
-            .withPath("/some/path")
-    )
-    .forward(
-        forwardOverriddenRequest(
-            request()
-                .withHeader("Host", "target.host.com")
-                .withBody("some_overridden_body")
-        ).withDelay(MILLISECONDS, 10)
-    );
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "target.host.com")
+                        .withBody("some_overridden_body")
+                ).withDelay(MILLISECONDS, 10)
+            );
     }
 
     public void javascriptTemplatedForward() {

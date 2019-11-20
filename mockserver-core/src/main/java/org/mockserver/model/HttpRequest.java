@@ -81,6 +81,22 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
     }
 
     /**
+     * Specify remote address if the remote address can't be derived from the host header,
+     * if no value is specified the host header will be used to determine remote address
+     *
+     * @param host the remote host or ip to send request to
+     * @param port the remote port to send request to
+     * @param scheme the scheme to use for remote socket
+     */
+    public HttpRequest withSocketAddress(String host, Integer port, SocketAddress.Scheme scheme) {
+        this.socketAddress = new SocketAddress()
+            .withHost(host)
+            .withPort(port)
+            .withScheme(scheme);
+        return this;
+    }
+
+    /**
      * The HTTP method to match on such as "GET" or "POST"
      *
      * @param method the HTTP method such as "GET" or "POST"
@@ -634,7 +650,10 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
     }
 
     public InetSocketAddress socketAddressFromHostHeader() {
-        if (isNotBlank(getFirstHeader(HOST.toString()))) {
+        if (socketAddress != null && socketAddress.getHost() != null) {
+            boolean isSsl = socketAddress.getScheme() != null && socketAddress.getScheme().equals(SocketAddress.Scheme.HTTPS);
+            return new InetSocketAddress(socketAddress.getHost(), socketAddress.getPort() != null ? socketAddress.getPort() : isSsl ? 443 : 80);
+        } else if (isNotBlank(getFirstHeader(HOST.toString()))) {
             boolean isSsl = isSecure() != null && isSecure();
             String[] hostHeaderParts = getFirstHeader(HOST.toString()).split(":");
             return new InetSocketAddress(hostHeaderParts[0], hostHeaderParts.length > 1 ? Integer.parseInt(hostHeaderParts[1]) : isSsl ? 443 : 80);
@@ -652,7 +671,8 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
             .withHeaders(headers != null ? headers.clone() : null)
             .withCookies(cookies != null ? cookies.clone() : null)
             .withKeepAlive(keepAlive)
-            .withSecure(secure);
+            .withSecure(secure)
+            .withSocketAddress(socketAddress);
     }
 
     public HttpRequest update(HttpRequest replaceRequest) {
@@ -679,6 +699,9 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
         }
         if (replaceRequest.isKeepAlive() != null) {
             withKeepAlive(replaceRequest.isKeepAlive());
+        }
+        if (replaceRequest.getSocketAddress() != null) {
+            withSocketAddress(replaceRequest.getSocketAddress());
         }
         return this;
     }

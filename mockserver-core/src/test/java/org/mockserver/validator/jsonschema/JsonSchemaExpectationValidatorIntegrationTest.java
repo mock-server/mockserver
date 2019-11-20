@@ -2,10 +2,19 @@ package org.mockserver.validator.jsonschema;
 
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.Times;
+import org.mockserver.model.*;
+import org.mockserver.serialization.model.*;
 
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.model.Cookie.cookie;
+import static org.mockserver.model.Header.header;
+import static org.mockserver.model.NottableString.string;
+import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator.jsonSchemaExpectationValidator;
 
 /**
@@ -15,6 +24,60 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
 
     // given
     private JsonSchemaValidator jsonSchemaValidator = jsonSchemaExpectationValidator(new MockServerLogger());
+
+    @Test
+    public void shouldValidateSerialisedCompleteDTO() {
+        assertThat(jsonSchemaValidator.isValid(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setMethod(string("someMethod"))
+                    .setPath(string("somePath"))
+                    .setQueryStringParameters(new Parameters().withEntries(
+                        param("queryStringParameterNameOne", "queryStringParameterValueOne_One", "queryStringParameterValueOne_Two"),
+                        param("queryStringParameterNameTwo", "queryStringParameterValueTwo_One")
+                    ))
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+                    .setSocketAddress(new SocketAddressDTO(
+                        new SocketAddress()
+                            .withHost("someHost")
+                            .withPort(1234)
+                            .withScheme(SocketAddress.Scheme.HTTPS)
+                    ))
+            )
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setStatusCode(304)
+                    .setBody(new StringBodyDTO(exact("someBody")))
+                    .setHeaders(new Headers().withEntries(
+                        header("someHeaderName", "someHeaderValue")
+                    ))
+                    .setCookies(new Cookies().withEntries(
+                        cookie("someCookieName", "someCookieValue")
+                    ))
+                    .setDelay(
+                        new DelayDTO()
+                            .setTimeUnit(MICROSECONDS)
+                            .setValue(1)
+                    )
+                    .setConnectionOptions(
+                        new ConnectionOptionsDTO(
+                            new ConnectionOptions()
+                                .withSuppressContentLengthHeader(true)
+                                .withContentLengthHeaderOverride(50)
+                                .withSuppressConnectionHeader(true)
+                                .withKeepAliveOverride(true)
+                                .withCloseSocket(true)
+                        )
+                    )
+            )
+            .setTimes(new TimesDTO(Times.exactly(5))).buildObject().toString()), is(""));
+    }
 
     @Test
     public void shouldValidateValidCompleteExpectationWithHttpResponse() {
@@ -41,7 +104,12 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
             "    \"headers\" : [ {" + NEW_LINE +
             "      \"name\" : \"someHeaderName\"," + NEW_LINE +
             "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
-            "    } ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "    \"socketAddress\" : {" + NEW_LINE +
+            "      \"host\" : \"someHost\"," + NEW_LINE +
+            "      \"port\" : 1234," + NEW_LINE +
+            "      \"scheme\" : \"HTTPS\"" + NEW_LINE +
+            "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +
             "    \"statusCode\" : 304," + NEW_LINE +
@@ -498,7 +566,7 @@ public class JsonSchemaExpectationValidatorIntegrationTest {
                 "}"),
             is(
                 "1 error:" + NEW_LINE +
-                " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but 0 found"
+                    " - oneOf of the following must be specified [\"httpResponse\", \"httpResponseTemplate\", \"httpResponseObjectCallback\", \"httpResponseClassCallback\", \"httpForward\", \"httpForwardTemplate\", \"httpForwardObjectCallback\", \"httpForwardClassCallback\", \"httpOverrideForwardedRequest\", \"httpError\"] but 0 found"
             ));
     }
 

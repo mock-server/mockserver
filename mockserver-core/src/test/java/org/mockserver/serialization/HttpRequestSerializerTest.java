@@ -44,12 +44,7 @@ public class HttpRequestSerializerTest {
             .withHeaders(new Header("headerName", "headerValue"))
             .withCookies(new Cookie("cookieName", "cookieValue"))
             .withSecure(true)
-            .withSocketAddress(
-                new SocketAddress()
-                    .withHost("someHost")
-                    .withPort(1234)
-                    .withScheme(SocketAddress.Scheme.HTTPS)
-            )
+            .withSocketAddress("someHost", 1234, SocketAddress.Scheme.HTTPS)
             .withKeepAlive(true);
     private final HttpRequestDTO fullHttpRequestDTO =
         new HttpRequestDTO()

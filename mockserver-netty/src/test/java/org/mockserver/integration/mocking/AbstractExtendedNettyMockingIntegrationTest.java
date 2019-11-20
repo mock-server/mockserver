@@ -8,10 +8,7 @@ import org.mockserver.integration.server.AbstractExtendedSameJVMMockingIntegrati
 import org.mockserver.integration.server.AbstractMockingIntegrationTestBase;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
-import org.mockserver.model.Delay;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.HttpStatusCode;
+import org.mockserver.model.*;
 import org.mockserver.server.TestClasspathTestExpectationResponseCallback;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.streams.IOStreamUtils;
@@ -357,6 +354,70 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
                     .withBody("some_overridden_body")
                     .withSecure(httpRequest.isSecure())
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body_https")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body_https")
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldForwardByObjectCallbackWithSocketAddress() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                httpRequest -> request()
+                    .withHeader("Host", "incorrect_host:1234")
+                    .withHeader("x-test", httpRequest.getFirstHeader("x-test"))
+                    .withBody("some_overridden_body")
+                    .withSecure(httpRequest.isSecure())
+                .withSocketAddress(
+                    "localhost",
+                    httpRequest.isSecure() ? secureEchoServer.getPort() : insecureEchoServer.getPort(),
+                    httpRequest.isSecure() ? SocketAddress.Scheme.HTTPS : SocketAddress.Scheme.HTTP
+                )
             );
 
         // then
