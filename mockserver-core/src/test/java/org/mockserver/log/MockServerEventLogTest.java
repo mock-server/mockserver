@@ -228,11 +228,13 @@ public class MockServerEventLogTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_five"))
                 .setHttpResponse(response("response_five"))
+                .setExpectation(new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five")))
         ));
         assertThat(retrieveRecordedExpectations(null), contains(
             new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five"))
         ));
-        assertThat(retrieveMessageLogEntries(null), contains(
+        List<LogEntry> actual = retrieveMessageLogEntries(null);
+        assertThat(actual, contains(
             new LogEntry()
                 .setLogLevel(INFO)
                 .setType(RECEIVED_REQUEST)
@@ -277,6 +279,7 @@ public class MockServerEventLogTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_five"))
                 .setHttpResponse(response("response_five"))
+                .setExpectation(new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five")))
         ));
     }
 
@@ -517,11 +520,13 @@ public class MockServerEventLogTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_five"))
                 .setHttpResponse(response("response_five"))
+                .setExpectation(new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five")))
         ));
         assertThat(retrieveRecordedExpectations(null), contains(
             new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five"))
         ));
-        assertThat(retrieveMessageLogEntries(null), contains(
+        List<LogEntry> actual = retrieveMessageLogEntries(null);
+        assertThat(actual, contains(
             new LogEntry()
                 .setLogLevel(INFO)
                 .setType(RECEIVED_REQUEST)
@@ -553,6 +558,7 @@ public class MockServerEventLogTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_five"))
                 .setHttpResponse(response("response_five"))
+                .setExpectation(new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five")))
         ));
     }
 

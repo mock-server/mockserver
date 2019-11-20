@@ -9,7 +9,6 @@ import java.util.List;
  * @author jamesdbloom
  */
 public class CircularLinkedList<V> extends LinkedList<V> {
-    static final long serialVersionUID = -8190199206751953870L;
     private final int maxSize;
 
     public CircularLinkedList(int maxSize) {

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lmax.disruptor.EventTranslator;
 import org.mockserver.log.TimeService;
 import org.mockserver.matchers.HttpRequestMatcher;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpError;
 import org.mockserver.model.HttpRequest;
@@ -18,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
+import static org.mockserver.log.model.LogEntry.LogMessageType.FORWARDED_REQUEST;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -81,6 +84,7 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     public LogEntry setEpochTime(long epochTime) {
         this.epochTime = epochTime;
+        this.timestamp = null;
         return this;
     }
 
@@ -178,6 +182,9 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
     }
 
     public Expectation getExpectation() {
+        if (getType() == FORWARDED_REQUEST && expectation == null) {
+            expectation = new Expectation(getHttpRequest(), Times.once(), TimeToLive.unlimited()).thenRespond(httpResponse);
+        }
         return expectation;
     }
 

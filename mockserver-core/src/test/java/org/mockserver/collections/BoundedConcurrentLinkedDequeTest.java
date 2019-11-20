@@ -12,7 +12,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author jamesdbloom
  */
-public class BoundedConcurrentLinkedQueueTest {
+public class BoundedConcurrentLinkedDequeTest {
 
     @Test
     public void shouldNotAllowAddingMoreThenMaximumNumberOfEntriesWhenUsingAdd() {

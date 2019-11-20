@@ -2,13 +2,11 @@ package org.mockserver.collections;
 
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author jamesdbloom
  */
 public class BoundedConcurrentLinkedDeque<E> extends ConcurrentLinkedDeque<E> {
-    static final long serialVersionUID = -8190199206751953870L;
     private final int maxSize;
 
     public BoundedConcurrentLinkedDeque(int maxSize) {

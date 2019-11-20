@@ -54,13 +54,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     private static final Predicate<LogEntry> recordedExpectationLogPredicate = input
         -> input.getType() == FORWARDED_REQUEST;
     private static final Function<LogEntry, HttpRequest[]> logEntryToRequest = LogEntry::getHttpRequests;
-    private static final Function<LogEntry, Expectation> logEntryToExpectation = logEntry -> {
-        if (logEntry.getExpectation() != null) {
-            return logEntry.getExpectation();
-        } else {
-            return new Expectation(logEntry.getHttpRequest(), Times.once(), TimeToLive.unlimited()).thenRespond(logEntry.getHttpResponse());
-        }
-    };
+    private static final Function<LogEntry, Expectation> logEntryToExpectation = LogEntry::getExpectation;
     private static final Function<LogEntry, HttpRequestAndHttpResponse> logEntryToHttpRequestAndHttpResponse =
         logEntry -> new HttpRequestAndHttpResponse()
             .setHttpRequest(logEntry.getHttpRequest())

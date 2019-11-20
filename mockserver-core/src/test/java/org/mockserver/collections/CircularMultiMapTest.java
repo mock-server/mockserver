@@ -93,8 +93,6 @@ public class CircularMultiMapTest {
         // when
         circularMultiMap.put("1", "1_1");
         circularMultiMap.putAll(new HashMap<String, String>() {
-            private static final long serialVersionUID = -580164440676146851L;
-
             {
                 put("1", "1_2");
                 put("2", "2");
