@@ -9,6 +9,13 @@ mock server <join.mock.server@gmail.com>
 
 For usage guide please see: [www.mock-server.com](http://www.mock-server.com/) 
 
+# Community
+
+* Backlog:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://trello.com/b/dsfTCP46/mockserver" target="_blank"><img height="20px" src="http://mock-server.com/images/trello_badge.png" alt="Trello Backlog"></a>
+* Freature Requests:&nbsp;&nbsp;<a href="https://github.com/jamesdbloom/mockserver/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo.png" alt="Github Issues"></a>
+* Issues / Bugs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/jamesdbloom/mockserver/issues"><img height="20px" src="http://mock-server.com/images/GitHub_Logo.png" alt="Github Issues"></a>
+* Chat:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://join-mock-server-slack.herokuapp.com" target="_blank"><img height="20px" src="http://mock-server.com/images/slack-logo-slim.png" alt="Join Slack"></a>
+
 # Versions
 
 ### Maven Central [![mockserver](https://maven-badges.herokuapp.com/maven-central/org.mock-server/mockserver-netty/badge.svg?style=flat)](http://search.maven.org/#search%7Cga%7C1%7Cmockserver)
