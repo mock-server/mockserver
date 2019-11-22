@@ -1,7 +1,5 @@
 package org.mockserver.mock.action;
 
-import com.google.common.util.concurrent.SettableFuture;
-import org.hamcrest.core.Is;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockserver.callback.WebSocketClientRegistry;
@@ -13,6 +11,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -72,8 +71,8 @@ public class HttpForwardObjectCallbackActionHandlerTest {
     }
 
     private HttpForwardActionResult notFoundFuture(HttpRequest httpRequest) {
-        SettableFuture<HttpResponse> notFoundFuture = SettableFuture.create();
-        notFoundFuture.set(notFoundResponse());
-        return new HttpForwardActionResult(httpRequest, notFoundFuture);
+        CompletableFuture<HttpResponse> notFoundFuture = new CompletableFuture<>();
+        notFoundFuture.complete(notFoundResponse());
+        return new HttpForwardActionResult(httpRequest, notFoundFuture, null);
     }
 }

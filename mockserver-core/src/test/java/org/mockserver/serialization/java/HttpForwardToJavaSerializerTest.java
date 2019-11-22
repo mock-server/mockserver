@@ -15,7 +15,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class HttpForwardToJavaSerializerTest {
 
     @Test
-    public void shouldSerializeFullObjectWithForwardAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithForwardAsJava() {
         assertEquals(NEW_LINE +
                         "        forward()" + NEW_LINE +
                         "                .withHost(\"some_host\")" + NEW_LINE +

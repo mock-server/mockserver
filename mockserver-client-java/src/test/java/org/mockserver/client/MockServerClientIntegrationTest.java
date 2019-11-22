@@ -1,6 +1,5 @@
 package org.mockserver.client;
 
-import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOutboundInvoker;
 import org.hamcrest.core.IsNot;
@@ -23,6 +22,7 @@ import org.mockserver.verify.VerificationTimes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -89,8 +89,8 @@ public class MockServerClientIntegrationTest {
     }
 
     private List<HttpRequest> retrieveRequests(HttpRequest httpRequest) {
-        SettableFuture<List<HttpRequest>> result = SettableFuture.create();
-        echoServerOne.requestLogFilter().retrieveRequests(httpRequest, result::set);
+        CompletableFuture<List<HttpRequest>> result = new CompletableFuture<>();
+        echoServerOne.requestLogFilter().retrieveRequests(httpRequest, result::complete);
         try {
             return result.get(10, SECONDS);
         } catch (Exception e) {
@@ -100,8 +100,8 @@ public class MockServerClientIntegrationTest {
     }
 
     public String verify(Verification verification) {
-        SettableFuture<String> result = SettableFuture.create();
-        echoServerOne.requestLogFilter().verify(verification, result::set);
+        CompletableFuture<String> result = new CompletableFuture<>();
+        echoServerOne.requestLogFilter().verify(verification, result::complete);
         try {
             return result.get(10, SECONDS);
         } catch (Exception e) {
@@ -111,8 +111,8 @@ public class MockServerClientIntegrationTest {
     }
 
     public String verify(VerificationSequence verificationSequence) {
-        SettableFuture<String> result = SettableFuture.create();
-        echoServerOne.requestLogFilter().verify(verificationSequence, result::set);
+        CompletableFuture<String> result = new CompletableFuture<>();
+        echoServerOne.requestLogFilter().verify(verificationSequence, result::complete);
         try {
             return result.get(10, SECONDS);
         } catch (Exception e) {
@@ -1242,11 +1242,11 @@ public class MockServerClientIntegrationTest {
                 .withStatusCode(201)
                 .withBody(new StringBody(new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
                     new HttpRequestAndHttpResponse()
-                        .setHttpRequest(request("/some_request_one"))
-                        .setHttpResponse(response("some_body_one")),
+                        .withHttpRequest(request("/some_request_one"))
+                        .withHttpResponse(response("some_body_one")),
                     new HttpRequestAndHttpResponse()
-                        .setHttpRequest(request("/some_request_two"))
-                        .setHttpResponse(response("some_body_two"))
+                        .withHttpRequest(request("/some_request_two"))
+                        .withHttpResponse(response("some_body_two"))
                 ))))
         );
 
@@ -1260,11 +1260,11 @@ public class MockServerClientIntegrationTest {
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
             new HttpRequestAndHttpResponse()
-                .setHttpRequest(request("/some_request_one"))
-                .setHttpResponse(response("some_body_one")),
+                .withHttpRequest(request("/some_request_one"))
+                .withHttpResponse(response("some_body_one")),
             new HttpRequestAndHttpResponse()
-                .setHttpRequest(request("/some_request_two"))
-                .setHttpResponse(response("some_body_two"))
+                .withHttpRequest(request("/some_request_two"))
+                .withHttpResponse(response("some_body_two"))
         ));
         assertThat(retrieveRequests(request()).size(), is(1));
         String result = verify(verification().withRequest(
@@ -1299,11 +1299,11 @@ public class MockServerClientIntegrationTest {
                 .withStatusCode(201)
                 .withBody(new StringBody(new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
                     new HttpRequestAndHttpResponse()
-                        .setHttpRequest(request("/some_request_one"))
-                        .setHttpResponse(response("some_body_one")),
+                        .withHttpRequest(request("/some_request_one"))
+                        .withHttpResponse(response("some_body_one")),
                     new HttpRequestAndHttpResponse()
-                        .setHttpRequest(request("/some_request_two"))
-                        .setHttpResponse(response("some_body_two"))
+                        .withHttpRequest(request("/some_request_two"))
+                        .withHttpResponse(response("some_body_two"))
                 ))))
         );
 
@@ -1313,11 +1313,11 @@ public class MockServerClientIntegrationTest {
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
             new HttpRequestAndHttpResponse()
-                .setHttpRequest(request("/some_request_one"))
-                .setHttpResponse(response("some_body_one")),
+                .withHttpRequest(request("/some_request_one"))
+                .withHttpResponse(response("some_body_one")),
             new HttpRequestAndHttpResponse()
-                .setHttpRequest(request("/some_request_two"))
-                .setHttpResponse(response("some_body_two"))
+                .withHttpRequest(request("/some_request_two"))
+                .withHttpResponse(response("some_body_two"))
         ));
         assertThat(retrieveRequests(request()).size(), is(1));
         String result = verify(verification().withRequest(
@@ -1346,11 +1346,11 @@ public class MockServerClientIntegrationTest {
         // given
         String serializedRequests = new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
             new HttpRequestAndHttpResponse()
-                .setHttpRequest(request("/some_request_one"))
-                .setHttpResponse(response("some_body_one")),
+                .withHttpRequest(request("/some_request_one"))
+                .withHttpResponse(response("some_body_one")),
             new HttpRequestAndHttpResponse()
-                .setHttpRequest(request("/some_request_two"))
-                .setHttpResponse(response("some_body_two"))
+                .withHttpRequest(request("/some_request_two"))
+                .withHttpResponse(response("some_body_two"))
         ));
         echoServerOne.withNextResponse(
             response()

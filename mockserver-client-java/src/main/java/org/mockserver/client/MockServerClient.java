@@ -1,6 +1,5 @@
 package org.mockserver.client;
 
-import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.commons.lang3.StringUtils;
@@ -51,7 +50,7 @@ MockServerClient implements Stoppable {
     private final String host;
     private final String contextPath;
     private final Class<MockServerClient> clientClass;
-    protected SettableFuture<Integer> portFuture;
+    protected CompletableFuture<Integer> portFuture;
     private Boolean secure;
     private Integer port;
     private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null);
@@ -68,7 +67,7 @@ MockServerClient implements Stoppable {
      *
      * @param portFuture the port for the MockServer to communicate with
      */
-    public MockServerClient(SettableFuture<Integer> portFuture) {
+    public MockServerClient(CompletableFuture<Integer> portFuture) {
         this.clientClass = MockServerClient.class;
         this.host = "127.0.0.1";
         this.portFuture = portFuture;
@@ -268,7 +267,7 @@ MockServerClient implements Stoppable {
     public Future<MockServerClient> stop(boolean ignoreFailure) {
         getMockServerEventBus().publish(EventType.STOP);
         removeMockServerEventBus();
-        SettableFuture<MockServerClient> stopFuture = SettableFuture.create();
+        CompletableFuture<MockServerClient> stopFuture = new CompletableFuture<>();
         new Scheduler.SchedulerThreadFactory("ClientStop").newThread(() -> {
             try {
                 sendRequest(request().withMethod("PUT").withPath(calculatePath("stop")));
@@ -297,7 +296,7 @@ MockServerClient implements Stoppable {
             if (!eventLoopGroup.isShuttingDown()) {
                 eventLoopGroup.shutdownGracefully();
             }
-            stopFuture.set(clientClass.cast(this));
+            stopFuture.complete(clientClass.cast(this));
         }).start();
         return stopFuture;
     }

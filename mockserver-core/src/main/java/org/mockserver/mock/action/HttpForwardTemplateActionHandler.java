@@ -36,7 +36,7 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
         if (templateEngine != null) {
             HttpRequest templatedRequest = templateEngine.executeTemplate(httpTemplate.getTemplate(), originalRequest, HttpRequestDTO.class);
             if (templatedRequest != null) {
-                return sendRequest(templatedRequest, null);
+                return sendRequest(templatedRequest, null, null);
             }
         }
 

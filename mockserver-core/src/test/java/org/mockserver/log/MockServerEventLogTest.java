@@ -1,6 +1,5 @@
 package org.mockserver.log;
 
-import com.google.common.util.concurrent.SettableFuture;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,6 +13,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -46,8 +46,8 @@ public class MockServerEventLogTest {
     }
 
     private List<LogEntry> retrieveMessageLogEntries(HttpRequest httpRequest) {
-        SettableFuture<List<LogEntry>> future = SettableFuture.create();
-        mockServerEventLog.retrieveMessageLogEntries(httpRequest, future::set);
+        CompletableFuture<List<LogEntry>> future = new CompletableFuture<>();
+        mockServerEventLog.retrieveMessageLogEntries(httpRequest, future::complete);
         try {
             return future.get();
         } catch (Exception e) {
@@ -57,8 +57,8 @@ public class MockServerEventLogTest {
     }
 
     private List<HttpRequest> retrieveRequests(HttpRequest httpRequest) {
-        SettableFuture<List<HttpRequest>> result = SettableFuture.create();
-        mockServerEventLog.retrieveRequests(httpRequest, result::set);
+        CompletableFuture<List<HttpRequest>> result = new CompletableFuture<>();
+        mockServerEventLog.retrieveRequests(httpRequest, result::complete);
         try {
             return result.get(10, SECONDS);
         } catch (Exception e) {
@@ -68,8 +68,8 @@ public class MockServerEventLogTest {
     }
 
     private List<LogEntry> retrieveRequestLogEntries(HttpRequest httpRequest) {
-        SettableFuture<List<LogEntry>> future = SettableFuture.create();
-        mockServerEventLog.retrieveRequestLogEntries(httpRequest, future::set);
+        CompletableFuture<List<LogEntry>> future = new CompletableFuture<>();
+        mockServerEventLog.retrieveRequestLogEntries(httpRequest, future::complete);
         try {
             return future.get();
         } catch (Exception e) {
@@ -79,8 +79,8 @@ public class MockServerEventLogTest {
     }
 
     private List<LogEntry> retrieveRequestResponseMessageLogEntries(HttpRequest httpRequest) {
-        SettableFuture<List<LogEntry>> future = SettableFuture.create();
-        mockServerEventLog.retrieveRequestResponseMessageLogEntries(httpRequest, future::set);
+        CompletableFuture<List<LogEntry>> future = new CompletableFuture<>();
+        mockServerEventLog.retrieveRequestResponseMessageLogEntries(httpRequest, future::complete);
         try {
             return future.get();
         } catch (Exception e) {
@@ -90,8 +90,8 @@ public class MockServerEventLogTest {
     }
 
     private List<Expectation> retrieveRecordedExpectations(HttpRequest httpRequest) {
-        SettableFuture<List<Expectation>> future = SettableFuture.create();
-        mockServerEventLog.retrieveRecordedExpectations(httpRequest, future::set);
+        CompletableFuture<List<Expectation>> future = new CompletableFuture<>();
+        mockServerEventLog.retrieveRecordedExpectations(httpRequest, future::complete);
         try {
             return future.get();
         } catch (Exception e) {

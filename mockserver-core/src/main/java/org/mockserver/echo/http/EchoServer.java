@@ -1,6 +1,5 @@
 package org.mockserver.echo.http;
 
-import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -21,6 +20,7 @@ import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 
@@ -36,7 +36,7 @@ public class EchoServer implements Stoppable {
     private final NextResponse nextResponse = new NextResponse();
     private final OnlyResponse onlyResponse = new OnlyResponse();
     private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
-    private final SettableFuture<Integer> boundPort = SettableFuture.create();
+    private final CompletableFuture<Integer> boundPort = new CompletableFuture<>();
     private final List<String> registeredClients;
     private final List<Channel> websocketChannels;
     private final List<TextWebSocketFrame> textWebSocketFrames;
@@ -65,9 +65,9 @@ public class EchoServer implements Stoppable {
                 .bind(0)
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {
-                        boundPort.set(((InetSocketAddress) future.channel().localAddress()).getPort());
+                        boundPort.complete(((InetSocketAddress) future.channel().localAddress()).getPort());
                     } else {
-                        boundPort.setException(future.cause());
+                        boundPort.completeExceptionally(future.cause());
                         eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                     }
                 });

@@ -41,9 +41,9 @@ public class HttpRequestAndHttpResponseDTO extends ObjectWithJsonToString implem
             httpResponse = this.httpResponse.buildObject();
         }
         return new HttpRequestAndHttpResponse()
-            .setHttpRequest(httpRequest)
-            .setHttpResponse(httpResponse)
-            .setTimestamp(timestamp);
+            .withHttpRequest(httpRequest)
+            .withHttpResponse(httpResponse)
+            .withTimestamp(timestamp);
     }
 
     public String getTimestamp() {

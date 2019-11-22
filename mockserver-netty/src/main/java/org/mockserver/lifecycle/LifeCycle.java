@@ -1,9 +1,7 @@
 package org.mockserver.lifecycle;
 
-import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -20,6 +18,7 @@ import org.slf4j.event.Level;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -44,13 +43,13 @@ public abstract class LifeCycle implements Stoppable {
     private Scheduler scheduler;
 
     protected LifeCycle() {
-        this.mockServerLogger =  new MockServerLogger(MockServerEventLog.class);
+        this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
         this.scheduler = new Scheduler(this.mockServerLogger);
         this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
     }
 
     public Future stopAsync() {
-        SettableFuture<String> stopFuture = SettableFuture.create();
+        CompletableFuture<String> stopFuture = new CompletableFuture<>();
         new Scheduler.SchedulerThreadFactory("Stop").newThread(() -> {
             scheduler.shutdown();
             httpStateHandler.getMockServerLog().stop();
@@ -68,7 +67,7 @@ public abstract class LifeCycle implements Stoppable {
             } catch (InterruptedException ignore) {
                 // ignore interruption
             }
-            stopFuture.set("done");
+            stopFuture.complete("done");
         }).start();
         return stopFuture;
     }
@@ -164,35 +163,29 @@ public abstract class LifeCycle implements Stoppable {
         final String localBoundIP = ConfigurationProperties.localBoundIP();
         for (final Integer portToBind : requestedPortBindings) {
             try {
-                final SettableFuture<Channel> channelOpened = SettableFuture.create();
+                final CompletableFuture<Channel> channelOpened = new CompletableFuture<>();
                 channelFutures.add(channelOpened);
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            InetSocketAddress inetSocketAddress;
-                            if (isBlank(localBoundIP)) {
-                                inetSocketAddress = new InetSocketAddress(portToBind);
-                            } else {
-                                inetSocketAddress = new InetSocketAddress(localBoundIP, portToBind);
-                            }
-                            serverBootstrap
-                                .bind(inetSocketAddress)
-                                .addListener(new ChannelFutureListener() {
-                                    @Override
-                                    public void operationComplete(ChannelFuture future) {
-                                        if (future.isSuccess()) {
-                                            channelOpened.set(future.channel());
-                                        } else {
-                                            channelOpened.setException(future.cause());
-                                        }
-                                    }
-                                })
-                                .channel().closeFuture().syncUninterruptibly();
-
-                        } catch (Exception e) {
-                            channelOpened.setException(new RuntimeException("Exception while binding MockServer to port " + portToBind, e));
+                new Thread(() -> {
+                    try {
+                        InetSocketAddress inetSocketAddress;
+                        if (isBlank(localBoundIP)) {
+                            inetSocketAddress = new InetSocketAddress(portToBind);
+                        } else {
+                            inetSocketAddress = new InetSocketAddress(localBoundIP, portToBind);
                         }
+                        serverBootstrap
+                            .bind(inetSocketAddress)
+                            .addListener((ChannelFutureListener) future -> {
+                                if (future.isSuccess()) {
+                                    channelOpened.complete(future.channel());
+                                } else {
+                                    channelOpened.completeExceptionally(future.cause());
+                                }
+                            })
+                            .channel().closeFuture().syncUninterruptibly();
+
+                    } catch (Exception e) {
+                        channelOpened.completeExceptionally(new RuntimeException("Exception while binding MockServer to port " + portToBind, e));
                     }
                 }, "MockServer thread for port: " + portToBind).start();
 

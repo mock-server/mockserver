@@ -13,7 +13,7 @@ public class HttpRequestAndHttpResponse extends ObjectWithJsonToString {
         return timestamp;
     }
 
-    public HttpRequestAndHttpResponse setTimestamp(String timestamp) {
+    public HttpRequestAndHttpResponse withTimestamp(String timestamp) {
         this.timestamp = timestamp;
         return this;
     }
@@ -22,7 +22,7 @@ public class HttpRequestAndHttpResponse extends ObjectWithJsonToString {
         return httpRequest;
     }
 
-    public HttpRequestAndHttpResponse setHttpRequest(HttpRequest httpRequest) {
+    public HttpRequestAndHttpResponse withHttpRequest(HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
         return this;
     }
@@ -31,7 +31,7 @@ public class HttpRequestAndHttpResponse extends ObjectWithJsonToString {
         return httpResponse;
     }
 
-    public HttpRequestAndHttpResponse setHttpResponse(HttpResponse httpResponse) {
+    public HttpRequestAndHttpResponse withHttpResponse(HttpResponse httpResponse) {
         this.httpResponse = httpResponse;
         return this;
     }

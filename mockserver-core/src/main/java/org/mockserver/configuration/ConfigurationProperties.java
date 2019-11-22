@@ -33,7 +33,7 @@ import static org.slf4j.event.Level.DEBUG;
  */
 public class ConfigurationProperties {
 
-    public static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ConfigurationProperties.class);
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ConfigurationProperties.class);
     private static final String DEFAULT_LOG_LEVEL = "INFO";
     private static final long DEFAULT_MAX_TIMEOUT = 20;
     private static final int DEFAULT_CONNECT_TIMEOUT = 20000;
@@ -713,7 +713,7 @@ public class ConfigurationProperties {
             Enumeration<?> propertyNames = properties.propertyNames();
 
             StringBuilder propertiesLogDump = new StringBuilder();
-            propertiesLogDump.append("Reading properties from property file [").append(propertyFile()).append("]:" + NEW_LINE);
+            propertiesLogDump.append("Reading properties from property file [").append(propertyFile()).append("]:").append(NEW_LINE);
             while (propertyNames.hasMoreElements()) {
                 String propertyName = String.valueOf(propertyNames.nextElement());
                 propertiesLogDump.append("\t").append(propertyName).append(" = ").append(properties.getProperty(propertyName)).append(NEW_LINE);

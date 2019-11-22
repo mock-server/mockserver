@@ -522,22 +522,23 @@ public class ExpectationToJavaSerializerTest {
                 "        .forward(" + NEW_LINE +
                 "                forwardOverriddenRequest()" + NEW_LINE +
                 "                        .withRequest(" + NEW_LINE +
-                "                        request()" + NEW_LINE +
-                "                                .withMethod(\"GET\")" + NEW_LINE +
-                "                                .withPath(\"somePath\")" + NEW_LINE +
-                "                                .withHeaders(" + NEW_LINE +
-                "                                        new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
-                "                                        new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
-                "                                )" + NEW_LINE +
-                "                                .withCookies(" + NEW_LINE +
-                "                                        new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
-                "                                        new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
-                "                                )" + NEW_LINE +
-                "                                .withQueryStringParameters(" + NEW_LINE +
-                "                                        new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
-                "                                        new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
-                "                                )" + NEW_LINE +
-                "                                .withBody(new StringBody(\"somebody\")))" + NEW_LINE +
+                "                                request()" + NEW_LINE +
+                "                                        .withMethod(\"GET\")" + NEW_LINE +
+                "                                        .withPath(\"somePath\")" + NEW_LINE +
+                "                                        .withHeaders(" + NEW_LINE +
+                "                                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                                        )" + NEW_LINE +
+                "                                        .withCookies(" + NEW_LINE +
+                "                                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                                        )" + NEW_LINE +
+                "                                        .withQueryStringParameters(" + NEW_LINE +
+                "                                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                                        )" + NEW_LINE +
+                "                                        .withBody(new StringBody(\"somebody\"))" + NEW_LINE +
+                "                        )" + NEW_LINE +
                 "                        .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))" + NEW_LINE +
                 "        );",
             new ExpectationToJavaSerializer().serialize(1,

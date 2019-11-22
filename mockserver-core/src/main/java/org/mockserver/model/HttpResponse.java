@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
 import static org.mockserver.model.HttpStatusCode.OK_200;
@@ -497,5 +498,27 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
             .withCookies(cookies != null ? cookies.clone() : null)
             .withDelay(getDelay())
             .withConnectionOptions(connectionOptions);
+    }
+
+    public HttpResponse update(HttpResponse replaceResponse) {
+        if (replaceResponse.getStatusCode() != null) {
+            withStatusCode(replaceResponse.getStatusCode());
+        }
+        if (replaceResponse.getReasonPhrase() != null) {
+            withReasonPhrase(replaceResponse.getReasonPhrase());
+        }
+        for (Header header : replaceResponse.getHeaderList()) {
+            getHeaders().replaceEntry(header);
+        }
+        for (Cookie cookie : replaceResponse.getCookieList()) {
+            withCookie(cookie);
+        }
+        if (replaceResponse.getBody() != null) {
+            withBody(replaceResponse.getBody());
+        }
+        if (replaceResponse.getConnectionOptions() != null) {
+            withConnectionOptions(replaceResponse.getConnectionOptions());
+        }
+        return this;
     }
 }

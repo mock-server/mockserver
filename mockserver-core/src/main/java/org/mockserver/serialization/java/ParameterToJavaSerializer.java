@@ -18,9 +18,9 @@ public class ParameterToJavaSerializer implements MultiValueToJavaSerializer<Par
     public String serialize(int numberOfSpacesToIndent, Parameter parameter) {
         StringBuilder output = new StringBuilder();
         output.append(NEW_LINE).append(Strings.padStart("", numberOfSpacesToIndent * INDENT_SIZE, ' '));
-        output.append("new Parameter(").append(NottableStringToJavaSerializer.serializeNottableString(parameter.getName()));
+        output.append("new Parameter(").append(NottableStringToJavaSerializer.serialize(parameter.getName()));
         for (NottableString value : parameter.getValues()) {
-            output.append(", ").append(NottableStringToJavaSerializer.serializeNottableString(value));
+            output.append(", ").append(NottableStringToJavaSerializer.serialize(value));
         }
         output.append(")");
         return output.toString();

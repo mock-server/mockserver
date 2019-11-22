@@ -1,8 +1,10 @@
 package org.mockserver.websocket;
 
-import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.HttpClientCodec;
@@ -25,6 +27,7 @@ import org.slf4j.event.Level;
 import javax.net.ssl.SSLException;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
@@ -35,7 +38,7 @@ import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELA
  */
 public class WebSocketClient<T extends HttpObject> {
 
-    static final AttributeKey<SettableFuture<String>> REGISTRATION_FUTURE = AttributeKey.valueOf("REGISTRATION_FUTURE");
+    static final AttributeKey<CompletableFuture<String>> REGISTRATION_FUTURE = AttributeKey.valueOf("REGISTRATION_FUTURE");
     private final MockServerLogger mockServerLogger;
     private final Semaphore availableWebSocketCallbackRegistrations;
     private Channel channel;
@@ -50,7 +53,7 @@ public class WebSocketClient<T extends HttpObject> {
     }
 
     private Future<String> register(final EventLoopGroup eventLoopGroup, final InetSocketAddress serverAddress, final String contextPath, final boolean isSecure) {
-        SettableFuture<String> registrationFuture = SettableFuture.create();
+        CompletableFuture<String> registrationFuture = new CompletableFuture<>();
         if (availableWebSocketCallbackRegistrations.tryAcquire()) {
             try {
                 new Bootstrap()
@@ -94,12 +97,12 @@ public class WebSocketClient<T extends HttpObject> {
                         });
                     });
             } catch (Exception e) {
-                registrationFuture.setException(new WebSocketException("Exception while starting web socket client", e));
+                registrationFuture.completeExceptionally(new WebSocketException("Exception while starting web socket client", e));
             } finally {
                 availableWebSocketCallbackRegistrations.release();
             }
         } else {
-            registrationFuture.setException(new WebSocketException("It is not possible to re-use the same MockServerClient instance to register a new object callback while responding to an object callback, please use a separate instance of the MockServerClient inside a callback"));
+            registrationFuture.completeExceptionally(new WebSocketException("It is not possible to re-use the same MockServerClient instance to register a new object callback while responding to an object callback, please use a separate instance of the MockServerClient inside a callback"));
         }
         return registrationFuture;
     }

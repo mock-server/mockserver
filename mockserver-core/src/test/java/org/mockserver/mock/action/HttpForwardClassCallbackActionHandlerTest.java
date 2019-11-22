@@ -1,6 +1,5 @@
 package org.mockserver.mock.action;
 
-import com.google.common.util.concurrent.SettableFuture;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
@@ -10,6 +9,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.CompletableFuture;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -41,13 +41,15 @@ public class HttpForwardClassCallbackActionHandlerTest {
     @Test
     public void shouldHandleInvalidClass() throws Exception {
         // given
-        SettableFuture<HttpResponse> httpResponse = SettableFuture.create();
-        httpResponse.set(notFoundResponse());
+        CompletableFuture<HttpResponse> httpResponse = new CompletableFuture<>();
+        httpResponse.complete(notFoundResponse());
 
         HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.FooBar");
 
         // when
-        SettableFuture<HttpResponse> actualHttpRequest = httpForwardClassCallbackActionHandler.handle(httpClassCallback, request().withBody("some_body")).getHttpResponse();
+        CompletableFuture<HttpResponse> actualHttpRequest = httpForwardClassCallbackActionHandler
+            .handle(httpClassCallback, request().withBody("some_body"))
+            .getHttpResponse();
 
         // then
         assertThat(actualHttpRequest.get(), is(notFoundResponse()));
@@ -57,14 +59,16 @@ public class HttpForwardClassCallbackActionHandlerTest {
     @Test
     public void shouldHandleValidLocalClass() throws Exception {
         // given
-        SettableFuture<HttpResponse> httpResponse = SettableFuture.create();
-        httpResponse.set(response("some_response_body"));
+        CompletableFuture<HttpResponse> httpResponse = new CompletableFuture<>();
+        httpResponse.complete(response("some_response_body"));
         when(mockHttpClient.sendRequest(any(HttpRequest.class), isNull(InetSocketAddress.class))).thenReturn(httpResponse);
 
         HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.HttpForwardClassCallbackActionHandlerTest$TestCallback");
 
         // when
-        SettableFuture<HttpResponse> actualHttpRequest = httpForwardClassCallbackActionHandler.handle(httpClassCallback, request().withBody("some_body")).getHttpResponse();
+        CompletableFuture<HttpResponse> actualHttpRequest = httpForwardClassCallbackActionHandler
+            .handle(httpClassCallback, request().withBody("some_body"))
+            .getHttpResponse();
 
         // then
         assertThat(actualHttpRequest.get(), is(httpResponse.get()));

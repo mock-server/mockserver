@@ -59,7 +59,7 @@ public class ProxyToInvalidSocketIntegrationTest {
     @Test
     public void shouldNotForwardRequestWithInvalidHostHead() throws Exception {
         // when
-        Future<HttpResponse> responseSettableFuture =
+        Future<HttpResponse> responseFuture =
             httpClient.sendRequest(
                 request()
                     .withPath("/some_path")
@@ -68,13 +68,13 @@ public class ProxyToInvalidSocketIntegrationTest {
             );
 
         // then
-        assertThat(responseSettableFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
+        assertThat(responseFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
     }
 
     @Test
     public void shouldVerifyReceivedRequests() throws Exception {
         // given
-        Future<HttpResponse> responseSettableFuture =
+        Future<HttpResponse> responseFuture =
             httpClient.sendRequest(
                 request()
                     .withPath("/some_path")
@@ -83,7 +83,7 @@ public class ProxyToInvalidSocketIntegrationTest {
             );
 
         // then
-        assertThat(responseSettableFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
+        assertThat(responseFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
 
         // then
         clientAndServer.verify(request()

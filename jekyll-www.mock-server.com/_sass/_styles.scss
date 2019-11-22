@@ -424,7 +424,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     }
 
     .build_tag img {
-        width: 80px;
+        max-width: 80px;
         height: 18px;
     }
 
@@ -450,7 +450,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 @media (max-width: 568px) {
 
     .build_tag img {
-        width: 80px;
+        max-width: 80px;
         height: 18px;
     }
 

@@ -38,7 +38,7 @@ public class ForwardChainExpectation {
      *
      * @param httpResponse response to return
      */
-    public void respond(HttpResponse httpResponse) {
+    public void respond(final HttpResponse httpResponse) {
         expectation.thenRespond(httpResponse);
         mockServerClient.sendExpectation(expectation);
     }
@@ -49,7 +49,7 @@ public class ForwardChainExpectation {
      *
      * @param httpTemplate Velocity or JavaScript template used to generate response
      */
-    public void respond(HttpTemplate httpTemplate) {
+    public void respond(final HttpTemplate httpTemplate) {
         expectation.thenRespond(httpTemplate);
         mockServerClient.sendExpectation(expectation);
     }
@@ -65,7 +65,7 @@ public class ForwardChainExpectation {
      *
      * @param httpClassCallback class to callback as a fully qualified class name, i.e. "com.foo.MyExpectationResponseCallback"
      */
-    public void respond(HttpClassCallback httpClassCallback) {
+    public void respond(final HttpClassCallback httpClassCallback) {
         expectation.thenRespond(httpClassCallback);
         mockServerClient.sendExpectation(expectation);
     }
@@ -102,7 +102,7 @@ public class ForwardChainExpectation {
      *
      * @param httpForward host and port to forward to
      */
-    public void forward(HttpForward httpForward) {
+    public void forward(final HttpForward httpForward) {
         expectation.thenForward(httpForward);
         mockServerClient.sendExpectation(expectation);
     }
@@ -113,7 +113,7 @@ public class ForwardChainExpectation {
      *
      * @param httpTemplate Velocity or JavaScript template used to generate response
      */
-    public void forward(HttpTemplate httpTemplate) {
+    public void forward(final HttpTemplate httpTemplate) {
         expectation.thenForward(httpTemplate);
         mockServerClient.sendExpectation(expectation);
     }
@@ -129,7 +129,7 @@ public class ForwardChainExpectation {
      *
      * @param httpClassCallback class to callback as a fully qualified class name, i.e. "com.foo.MyExpectationResponseCallback"
      */
-    public void forward(HttpClassCallback httpClassCallback) {
+    public void forward(final HttpClassCallback httpClassCallback) {
         expectation.thenForward(httpClassCallback);
         mockServerClient.sendExpectation(expectation);
     }
@@ -160,6 +160,28 @@ public class ForwardChainExpectation {
         mockServerClient.sendExpectation(expectation);
     }
 
+    /**
+     * Override fields, headers, and cookies etc in request being forwarded with
+     * specified fields, headers and cookies, etc in the specified request
+     * when expectation is matched
+     *
+     * @param httpOverrideForwardedRequest contains request to override request being forwarded
+     */
+    public void forward(final HttpOverrideForwardedRequest httpOverrideForwardedRequest) {
+        expectation.thenForward(httpOverrideForwardedRequest);
+        mockServerClient.sendExpectation(expectation);
+    }
+
+    /**
+     * Return error when expectation is matched
+     *
+     * @param httpError error to return
+     */
+    public void error(final HttpError httpError) {
+        expectation.thenError(httpError);
+        mockServerClient.sendExpectation(expectation);
+    }
+
     private <T extends HttpObject> String registerWebSocketClient(ExpectationCallback<T> expectationCallback) {
         try {
             final WebSocketClient<T> webSocketClient = new WebSocketClient<>(mockServerLogger, availableWebSocketCallbackRegistrations);
@@ -179,28 +201,6 @@ public class ForwardChainExpectation {
                 throw new ClientException("Unable to retrieve client registration id", e);
             }
         }
-    }
-
-    /**
-     * Override fields, headers, and cookies etc in request being forwarded with
-     * specified fields, headers and cookies, etc in the specified request
-     * when expectation is matched
-     *
-     * @param httpOverrideForwardedRequest contains request to override request being forwarded
-     */
-    public void forward(HttpOverrideForwardedRequest httpOverrideForwardedRequest) {
-        expectation.thenForward(httpOverrideForwardedRequest);
-        mockServerClient.sendExpectation(expectation);
-    }
-
-    /**
-     * Return error when expectation is matched
-     *
-     * @param httpError error to return
-     */
-    public void error(HttpError httpError) {
-        expectation.thenError(httpError);
-        mockServerClient.sendExpectation(expectation);
     }
 
     @VisibleForTesting

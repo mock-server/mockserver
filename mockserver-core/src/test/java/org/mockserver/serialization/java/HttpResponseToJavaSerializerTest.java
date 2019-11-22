@@ -23,7 +23,7 @@ public class HttpResponseToJavaSerializerTest {
     private final Base64Converter base64Converter = new Base64Converter();
 
     @Test
-    public void shouldSerializeFullObjectWithResponseAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithResponseAsJava() {
         assertEquals(NEW_LINE +
                 "        response()" + NEW_LINE +
                 "                .withStatusCode(304)" + NEW_LINE +
@@ -57,7 +57,7 @@ public class HttpResponseToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeObjectWithBinaryBodyResponseAsJava() throws IOException {
+    public void shouldSerializeObjectWithBinaryBodyResponseAsJava() {
         // when
         assertEquals(NEW_LINE +
                 "        response()" + NEW_LINE +
@@ -70,7 +70,7 @@ public class HttpResponseToJavaSerializerTest {
     }
 
     @Test
-    public void shouldEscapeJSONBodies() throws IOException {
+    public void shouldEscapeJSONBodies() {
         assertEquals("" + NEW_LINE +
                 "        response()" + NEW_LINE +
                 "                .withStatusCode(304)" + NEW_LINE +
@@ -107,7 +107,7 @@ public class HttpResponseToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeMinimalObjectAsJava() throws IOException {
+    public void shouldSerializeMinimalObjectAsJava() {
         assertEquals(NEW_LINE +
                 "        response()" + NEW_LINE +
                 "                .withStatusCode(304)" + NEW_LINE +

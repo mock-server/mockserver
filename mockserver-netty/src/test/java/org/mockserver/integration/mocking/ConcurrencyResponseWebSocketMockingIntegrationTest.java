@@ -73,7 +73,7 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
 
         List<ScheduledFuture> scheduledFutures = new ArrayList<>();
         for (int i = 0; i < parallelThreads; i++) {
-            scheduledFutures.add(executor.schedule(new Task(), 1L, SECONDS));
+            scheduledFutures.add(executor.schedule(new Task(), 500L, MILLISECONDS));
         }
 
         for (int i = 0; i < parallelThreads; i++) {

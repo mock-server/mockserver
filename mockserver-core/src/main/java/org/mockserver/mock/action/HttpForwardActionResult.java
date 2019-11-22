@@ -1,23 +1,33 @@
 package org.mockserver.mock.action;
 
-import com.google.common.util.concurrent.SettableFuture;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import java.net.InetSocketAddress;
+import java.util.Date;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.mockserver.model.HttpResponse.response;
+import static org.slf4j.event.Level.WARN;
 
 public class HttpForwardActionResult {
     private final HttpRequest httpRequest;
-    private final SettableFuture<HttpResponse> httpResponse;
+    private final CompletableFuture<HttpResponse> httpResponse;
+    private final HttpResponse overriddenHttpResponse;
     private final InetSocketAddress remoteAddress;
 
-    HttpForwardActionResult(HttpRequest httpRequest, SettableFuture<HttpResponse> httpResponse) {
-        this(httpRequest, httpResponse, null);
+    HttpForwardActionResult(HttpRequest httpRequest, CompletableFuture<HttpResponse> httpResponse, HttpResponse overriddenHttpResponse) {
+        this(httpRequest, httpResponse, overriddenHttpResponse, null);
     }
 
-    HttpForwardActionResult(HttpRequest httpRequest, SettableFuture<HttpResponse> httpResponse, InetSocketAddress remoteAddress) {
+    HttpForwardActionResult(HttpRequest httpRequest, CompletableFuture<HttpResponse> httpResponse, HttpResponse overriddenHttpResponse, InetSocketAddress remoteAddress) {
         this.httpRequest = httpRequest;
         this.httpResponse = httpResponse;
+        this.overriddenHttpResponse = overriddenHttpResponse;
         this.remoteAddress = remoteAddress;
     }
 
@@ -25,8 +35,22 @@ public class HttpForwardActionResult {
         return httpRequest;
     }
 
-    public SettableFuture<HttpResponse> getHttpResponse() {
-        return httpResponse;
+    public CompletableFuture<HttpResponse> getHttpResponse() {
+        if (overriddenHttpResponse == null) {
+            return httpResponse;
+        } else {
+            return httpResponse.thenApply(response -> {
+                if (response != null) {
+                    return response.update(overriddenHttpResponse);
+                } else {
+                    return null;
+                }
+            });
+        }
+    }
+
+    HttpResponse getOverriddenHttpResponse() {
+        return overriddenHttpResponse;
     }
 
     public InetSocketAddress getRemoteAddress() {

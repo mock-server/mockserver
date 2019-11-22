@@ -1,13 +1,12 @@
 package org.mockserver.templates.engine.model;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import org.mockserver.serialization.model.BodyDTO;
 import org.mockserver.model.*;
+import org.mockserver.serialization.model.BodyDTO;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author jamesdbloom
@@ -27,21 +26,13 @@ public class HttpRequestTemplateObject extends ObjectWithJsonToString {
             method = httpRequest.getMethod().getValue();
             path = httpRequest.getPath().getValue();
             for (Header header : httpRequest.getHeaderList()) {
-                headers.put(header.getName().getValue(), Lists.transform(header.getValues(), new Function<NottableString, String>() {
-                    public String apply(NottableString input) {
-                        return input.getValue();
-                    }
-                }));
+                headers.put(header.getName().getValue(), header.getValues().stream().map(NottableString::getValue).collect(Collectors.toList()));
             }
             for (Cookie cookie : httpRequest.getCookieList()) {
                 cookies.put(cookie.getName().getValue(), cookie.getValue().getValue());
             }
             for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
-                queryStringParameters.put(parameter.getName().getValue(), Lists.transform(parameter.getValues(), new Function<NottableString, String>() {
-                    public String apply(NottableString input) {
-                        return input.getValue();
-                    }
-                }));
+                queryStringParameters.put(parameter.getName().getValue(), parameter.getValues().stream().map(NottableString::getValue).collect(Collectors.toList()));
             }
             body = BodyDTO.createDTO(httpRequest.getBody());
             keepAlive = httpRequest.isKeepAlive();

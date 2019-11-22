@@ -1,6 +1,5 @@
 package org.mockserver.websocket;
 
-import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -18,6 +17,7 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.concurrent.CompletableFuture;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.UPGRADE;
@@ -76,11 +76,11 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         Channel ch = ctx.channel();
         if (msg instanceof FullHttpResponse) {
             FullHttpResponse httpResponse = (FullHttpResponse) msg;
-            final SettableFuture<String> registrationFuture = ch.attr(REGISTRATION_FUTURE).get();
+            final CompletableFuture<String> registrationFuture = ch.attr(REGISTRATION_FUTURE).get();
             if (httpResponse.headers().contains(UPGRADE, WEBSOCKET, true) && !handshaker.isHandshakeComplete()) {
                 handshaker.finishHandshake(ch, httpResponse);
                 final String clientRegistrationId = httpResponse.headers().get("X-CLIENT-REGISTRATION-ID");
-                registrationFuture.set(clientRegistrationId);
+                registrationFuture.complete(clientRegistrationId);
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
@@ -89,7 +89,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                 );
             } else if (httpResponse.status().equals(HttpResponseStatus.NOT_IMPLEMENTED)) {
                 String message = readRequestBody(httpResponse);
-                registrationFuture.setException(new WebSocketException(message));
+                registrationFuture.completeExceptionally(new WebSocketException(message));
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.WARN)
@@ -97,7 +97,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                         .setMessageFormat(message)
                 );
             } else {
-                registrationFuture.setException(new WebSocketException("Unsupported web socket message " + new FullHttpResponseToMockServerResponse(mockServerLogger).mapMockServerResponseToFullHttpResponse(httpResponse)));
+                registrationFuture.completeExceptionally(new WebSocketException("Unsupported web socket message " + new FullHttpResponseToMockServerResponse(mockServerLogger).mapMockServerResponseToFullHttpResponse(httpResponse)));
             }
         } else if (msg instanceof WebSocketFrame) {
             WebSocketFrame frame = (WebSocketFrame) msg;
@@ -136,9 +136,9 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                 .setMessageFormat("web socket client caught exception")
                 .setThrowable(cause)
         );
-        final SettableFuture<String> registrationFuture = ctx.channel().attr(REGISTRATION_FUTURE).get();
+        final CompletableFuture<String> registrationFuture = ctx.channel().attr(REGISTRATION_FUTURE).get();
         if (!registrationFuture.isDone()) {
-            registrationFuture.setException(cause);
+            registrationFuture.completeExceptionally(cause);
         }
         ctx.close();
     }

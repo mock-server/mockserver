@@ -380,6 +380,8 @@ components:
           $ref: "#/components/schemas/Delay"
         httpRequest:
           $ref: "#/components/schemas/HttpRequest"
+        httpResponse:
+          $ref: "#/components/schemas/HttpResponse"
     HttpError:
       title: error behaviour
       type: object

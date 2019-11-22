@@ -196,12 +196,15 @@ public class ActionHandler {
 
                 final InetSocketAddress remoteAddress = ctx != null ? ctx.channel().attr(REMOTE_SOCKET).get() : null;
                 final HttpRequest clonedRequest = hopByHopHeaderFilter.onRequest(request).withHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue());
-                final HttpForwardActionResult responseFuture = new HttpForwardActionResult(clonedRequest, httpClient.sendRequest(clonedRequest, remoteAddress, potentiallyHttpProxy ? 1000 : ConfigurationProperties.socketConnectionTimeout()), remoteAddress);
+                final HttpForwardActionResult responseFuture = new HttpForwardActionResult(clonedRequest, httpClient.sendRequest(clonedRequest, remoteAddress, potentiallyHttpProxy ? 1000 : ConfigurationProperties.socketConnectionTimeout()), null, remoteAddress);
                 scheduler.submit(responseFuture, () -> {
                     try {
                         HttpResponse response = responseFuture.getHttpResponse().get();
                         if (response == null) {
                             response = notFoundResponse();
+                        }
+                        if (responseFuture.getOverriddenHttpResponse() != null) {
+                            response.update(responseFuture.getOverriddenHttpResponse());
                         }
                         if (response.containsHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
                             response.removeHeader(httpStateHandler.getUniqueLoopPreventionHeaderName());
@@ -295,6 +298,9 @@ public class ActionHandler {
         scheduler.submit(responseFuture, () -> {
             try {
                 HttpResponse response = responseFuture.getHttpResponse().get();
+                if (responseFuture.getOverriddenHttpResponse() != null) {
+                    response.update(responseFuture.getOverriddenHttpResponse());
+                }
                 responseWriter.writeResponse(request, response, false);
                 mockServerLogger.logEvent(
                     new LogEntry()

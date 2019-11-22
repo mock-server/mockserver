@@ -66,7 +66,7 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
     @Test
     public void shouldNotForwardInLoopIndefinitely() throws Exception {
         // when
-        Future<HttpResponse> responseSettableFuture =
+        Future<HttpResponse> responseFuture =
             httpClient.sendRequest(
                 request()
                     .withPath("/some_path")
@@ -75,7 +75,7 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
             );
 
         // then - returns 404
-        assertThat(responseSettableFuture.get(10, TimeUnit.MINUTES).getStatusCode(), is(404));
+        assertThat(responseFuture.get(10, TimeUnit.MINUTES).getStatusCode(), is(404));
 
         // and - both proxy and target verify request received
         loadBalancerClientAndServer.verify(request().withPath("/some_path"));
@@ -127,7 +127,7 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
             );
 
         // when
-        Future<HttpResponse> responseSettableFuture =
+        Future<HttpResponse> responseFuture =
             httpClient.sendRequest(
                 request()
                     .withPath("/target")
@@ -136,7 +136,7 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
             );
 
         // then - returns 404
-        HttpResponse httpResponse = responseSettableFuture.get(10, TimeUnit.MINUTES);
+        HttpResponse httpResponse = responseFuture.get(10, TimeUnit.MINUTES);
         assertThat(httpResponse.getStatusCode(), is(200));
         assertThat(httpResponse.getBodyAsString(), is("target_response"));
 
@@ -170,7 +170,7 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
     @Test
     public void shouldVerifyReceivedRequests() throws Exception {
         // given
-        Future<HttpResponse> responseSettableFuture =
+        Future<HttpResponse> responseFuture =
             httpClient.sendRequest(
                 request()
                     .withPath("/some_path")
@@ -179,7 +179,7 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
             );
 
         // then
-        assertThat(responseSettableFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
+        assertThat(responseFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
 
         // then
         targetClientAndServer.verify(request()

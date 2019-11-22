@@ -1,8 +1,5 @@
 package org.mockserver.mock;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.SettableFuture;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.log.MockServerEventLog;
@@ -22,6 +19,7 @@ import org.slf4j.event.Level;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -144,11 +142,7 @@ public class HttpStateHandler {
                     break;
             }
         } catch (IllegalArgumentException iae) {
-            throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Lists.transform(Arrays.asList(ClearType.values()), new Function<ClearType, String>() {
-                public String apply(ClearType input) {
-                    return input.name().toLowerCase();
-                }
-            }));
+            throw new IllegalArgumentException("\"" + request.getFirstQueryStringParameter("type") + "\" is not a valid value for \"type\" parameter, only the following values are supported " + Arrays.stream(ClearType.values()).map(input -> input.name().toLowerCase()).collect(Collectors.toList()));
         }
     }
 
@@ -199,7 +193,7 @@ public class HttpStateHandler {
     }
 
     public HttpResponse retrieve(HttpRequest request) {
-        SettableFuture<HttpResponse> httpResponseSettableFuture = SettableFuture.create();
+        CompletableFuture<HttpResponse> httpResponseFuture = new CompletableFuture<>();
         HttpResponse response = response().withStatusCode(200);
         if (request != null) {
             try {
@@ -231,7 +225,7 @@ public class HttpStateHandler {
                             }
                             stringBuffer.append(NEW_LINE);
                             response.withBody(stringBuffer.toString(), PLAIN_TEXT_UTF_8);
-                            httpResponseSettableFuture.set(response);
+                            httpResponseFuture.complete(response);
                         });
                         break;
                     }
@@ -255,7 +249,7 @@ public class HttpStateHandler {
                                                 httpRequestToJavaSerializer.serialize(requests),
                                                 create("application", "java").withCharset(UTF_8)
                                             );
-                                            httpResponseSettableFuture.set(response);
+                                            httpResponseFuture.complete(response);
                                         }
                                     );
                                 break;
@@ -268,7 +262,7 @@ public class HttpStateHandler {
                                                 httpRequestSerializer.serialize(requests),
                                                 JSON_UTF_8
                                             );
-                                            httpResponseSettableFuture.set(response);
+                                            httpResponseFuture.complete(response);
                                         }
                                     );
                                 break;
@@ -281,7 +275,7 @@ public class HttpStateHandler {
                                                 logEntrySerializer.serialize(logEntries),
                                                 JSON_UTF_8
                                             );
-                                            httpResponseSettableFuture.set(response);
+                                            httpResponseFuture.complete(response);
                                         }
                                     );
                                 break;
@@ -301,7 +295,7 @@ public class HttpStateHandler {
                         switch (format) {
                             case JAVA:
                                 response.withBody("JAVA not supported for REQUEST_RESPONSES", create("text", "plain").withCharset(UTF_8));
-                                httpResponseSettableFuture.set(response);
+                                httpResponseFuture.complete(response);
                                 break;
                             case JSON:
                                 mockServerLog
@@ -312,7 +306,7 @@ public class HttpStateHandler {
                                                 httpRequestResponseSerializer.serialize(requests),
                                                 JSON_UTF_8
                                             );
-                                            httpResponseSettableFuture.set(response);
+                                            httpResponseFuture.complete(response);
                                         }
                                     );
                                 break;
@@ -325,7 +319,7 @@ public class HttpStateHandler {
                                                 logEntrySerializer.serialize(logEntries),
                                                 JSON_UTF_8
                                             );
-                                            httpResponseSettableFuture.set(response);
+                                            httpResponseFuture.complete(response);
                                         }
                                     );
                                 break;
@@ -352,7 +346,7 @@ public class HttpStateHandler {
                                                 expectationToJavaSerializer.serialize(requests),
                                                 create("application", "java").withCharset(UTF_8)
                                             );
-                                            httpResponseSettableFuture.set(response);
+                                            httpResponseFuture.complete(response);
                                         }
                                     );
                                 break;
@@ -365,7 +359,7 @@ public class HttpStateHandler {
                                                 expectationSerializer.serialize(requests),
                                                 JSON_UTF_8
                                             );
-                                            httpResponseSettableFuture.set(response);
+                                            httpResponseFuture.complete(response);
                                         }
                                     );
                                 break;
@@ -378,7 +372,7 @@ public class HttpStateHandler {
                                                 logEntrySerializer.serialize(logEntries),
                                                 JSON_UTF_8
                                             );
-                                            httpResponseSettableFuture.set(response);
+                                            httpResponseFuture.complete(response);
                                         }
                                     );
                                 break;
@@ -407,13 +401,13 @@ public class HttpStateHandler {
                                 response.withBody("LOG_ENTRIES not supported for ACTIVE_EXPECTATIONS", create("text", "plain").withCharset(UTF_8));
                                 break;
                         }
-                        httpResponseSettableFuture.set(response);
+                        httpResponseFuture.complete(response);
                         break;
                     }
                 }
 
                 try {
-                    return httpResponseSettableFuture.get();
+                    return httpResponseFuture.get();
                 } catch (ExecutionException | InterruptedException e) {
                     throw new RuntimeException("Exception retrieving state for " + request, e);
                 }
@@ -430,8 +424,8 @@ public class HttpStateHandler {
     }
 
     public Future<String> verify(Verification verification) {
-        SettableFuture<String> result = SettableFuture.create();
-        mockServerLog.verify(verification, result::set);
+        CompletableFuture<String> result = new CompletableFuture<>();
+        mockServerLog.verify(verification, result::complete);
         return result;
     }
 
@@ -440,8 +434,8 @@ public class HttpStateHandler {
     }
 
     public Future<String> verify(VerificationSequence verification) {
-        SettableFuture<String> result = SettableFuture.create();
-        mockServerLog.verify(verification, result::set);
+        CompletableFuture<String> result = new CompletableFuture<>();
+        mockServerLog.verify(verification, result::complete);
         return result;
     }
 
@@ -450,7 +444,7 @@ public class HttpStateHandler {
     }
 
     public boolean handle(HttpRequest request, ResponseWriter responseWriter, boolean warDeployment) {
-        SettableFuture<Boolean> canHandle = SettableFuture.create();
+        CompletableFuture<Boolean> canHandle = new CompletableFuture<>();
 
         mockServerLogger.logEvent(
             new LogEntry()
@@ -469,24 +463,24 @@ public class HttpStateHandler {
                 }
             }
             responseWriter.writeResponse(request, CREATED);
-            canHandle.set(true);
+            canHandle.complete(true);
 
         } else if (request.matches("PUT", PATH_PREFIX + "/clear", "/clear")) {
 
             clear(request);
             responseWriter.writeResponse(request, OK);
-            canHandle.set(true);
+            canHandle.complete(true);
 
         } else if (request.matches("PUT", PATH_PREFIX + "/reset", "/reset")) {
 
             reset();
             responseWriter.writeResponse(request, OK);
-            canHandle.set(true);
+            canHandle.complete(true);
 
         } else if (request.matches("PUT", PATH_PREFIX + "/retrieve", "/retrieve")) {
 
             responseWriter.writeResponse(request, retrieve(request), true);
-            canHandle.set(true);
+            canHandle.complete(true);
 
         } else if (request.matches("PUT", PATH_PREFIX + "/verify", "/verify")) {
 
@@ -506,7 +500,7 @@ public class HttpStateHandler {
                 } else {
                     responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
                 }
-                canHandle.set(true);
+                canHandle.complete(true);
             });
 
         } else if (request.matches("PUT", PATH_PREFIX + "/verifySequence", "/verifySequence")) {
@@ -526,11 +520,11 @@ public class HttpStateHandler {
                 } else {
                     responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
                 }
-                canHandle.set(true);
+                canHandle.complete(true);
             });
 
         } else {
-            canHandle.set(false);
+            canHandle.complete(false);
         }
 
         try {

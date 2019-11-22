@@ -59,7 +59,7 @@ public class OverridePreFlightRequestIntegrationTest {
     @Test
     public void shouldReturnDefaultPreFlightResponse() throws Exception {
         // when
-        Future<HttpResponse> responseSettableFuture =
+        Future<HttpResponse> responseFuture =
             httpClient.sendRequest(
                 request()
                     .withMethod("OPTIONS")
@@ -71,7 +71,7 @@ public class OverridePreFlightRequestIntegrationTest {
             );
 
         // then
-        HttpResponse response = responseSettableFuture.get(10, TimeUnit.SECONDS);
+        HttpResponse response = responseFuture.get(10, TimeUnit.SECONDS);
         assertThat(response.getStatusCode(), is(200));
         assertThat(response.getHeader("access-control-allow-origin"), containsInAnyOrder("*"));
         assertThat(response.getHeader("access-control-allow-methods"), containsInAnyOrder("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"));
@@ -99,7 +99,7 @@ public class OverridePreFlightRequestIntegrationTest {
             );
 
         // when
-        Future<HttpResponse> responseSettableFuture =
+        Future<HttpResponse> responseFuture =
             httpClient.sendRequest(
                 request()
                     .withMethod("OPTIONS")
@@ -111,7 +111,7 @@ public class OverridePreFlightRequestIntegrationTest {
             );
 
         // then
-        HttpResponse response = responseSettableFuture.get(10, TimeUnit.SECONDS);
+        HttpResponse response = responseFuture.get(10, TimeUnit.SECONDS);
         assertThat(response.getStatusCode(), is(200));
         assertThat(response.getHeader("access-control-allow-origin"), containsInAnyOrder("*"));
         assertThat(response.getHeader("access-control-allow-methods"), containsInAnyOrder("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"));

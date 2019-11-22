@@ -14,10 +14,10 @@ import static org.mockserver.character.Character.NEW_LINE;
 /**
  * @author jamesdbloom
  */
-public class HttpResponseTemplateToJavaSerializerTest {
+public class HttpTemplateToJavaSerializerTest {
 
     @Test
-    public void shouldSerializeFullObjectWithCallbackAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithCallbackAsJava() {
         assertEquals(NEW_LINE +
                         "        template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
                         "                .withTemplate(\"" +

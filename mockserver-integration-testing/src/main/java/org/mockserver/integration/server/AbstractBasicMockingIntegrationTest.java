@@ -228,6 +228,90 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
+    public void shouldForwardOverriddenRequestWithOverriddenResponse() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                        .withBody("some_overridden_body"),
+                    response()
+                        .withHeader("extra_header", "some_value")
+                        .withHeader("content-length", "29")
+                        .withBody("some_overridden_response_body")
+                ).withDelay(MILLISECONDS, 10)
+            );
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "localhost:" + secureEchoServer.getPort())
+                        .withBody("some_overridden_body"),
+                    response()
+                        .withHeader("extra_header", "some_value")
+                        .withHeader("content-length", "29")
+                        .withBody("some_overridden_response_body")
+                ).withDelay(MILLISECONDS, 10)
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body"),
+                    header("extra_header", "some_value")
+                )
+                .withBody("some_overridden_response_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+
+            )
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body_https"),
+                    header("extra_header", "some_value")
+                )
+                .withBody("some_overridden_response_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body_https")
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldForwardOverriddenRequestWithSocketAddress() {
         // when
         mockServerClient
@@ -257,8 +341,13 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             .forward(
                 forwardOverriddenRequest(
                     request()
-                        .withHeader("Host", "localhost:" + secureEchoServer.getPort())
+                        .withHeader("Host", "incorrect_host:1234")
                         .withBody("some_overridden_body")
+                        .withSocketAddress(
+                            "localhost",
+                            secureEchoServer.getPort(),
+                            SocketAddress.Scheme.HTTPS
+                        )
                 ).withDelay(MILLISECONDS, 10)
             );
 

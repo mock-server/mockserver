@@ -1,6 +1,5 @@
 package org.mockserver.log;
 
-import com.google.common.util.concurrent.SettableFuture;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.mockserver.collections.BoundedConcurrentLinkedDeque;
@@ -9,8 +8,6 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
-import org.mockserver.matchers.TimeToLive;
-import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpRequestAndHttpResponse;
@@ -24,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
@@ -57,9 +55,9 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     private static final Function<LogEntry, Expectation> logEntryToExpectation = LogEntry::getExpectation;
     private static final Function<LogEntry, HttpRequestAndHttpResponse> logEntryToHttpRequestAndHttpResponse =
         logEntry -> new HttpRequestAndHttpResponse()
-            .setHttpRequest(logEntry.getHttpRequest())
-            .setHttpResponse(logEntry.getHttpResponse())
-            .setTimestamp(logEntry.getTimestamp());
+            .withHttpRequest(logEntry.getHttpRequest())
+            .withHttpResponse(logEntry.getHttpResponse())
+            .withTimestamp(logEntry.getTimestamp());
     private static final String[] EXCLUDED_FIELDS = {"key", "disruptor"};
     private MockServerLogger mockServerLogger;
     private Deque<LogEntry> eventLog = new BoundedConcurrentLinkedDeque<>(ConfigurationProperties.maxLogEntries());
@@ -140,12 +138,12 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public void reset() {
-        SettableFuture<String> future = SettableFuture.create();
+        CompletableFuture<String> future = new CompletableFuture<>();
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
                 eventLog.clear();
-                future.set("done");
+                future.complete("done");
                 notifyListeners(this);
             })
         );
@@ -156,7 +154,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public void clear(HttpRequest httpRequest) {
-        SettableFuture<String> future = SettableFuture.create();
+        CompletableFuture<String> future = new CompletableFuture<>();
         disruptor.publishEvent(new LogEntry()
             .setType(RUNNABLE)
             .setConsumer(() -> {
@@ -181,7 +179,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 } else {
                     eventLog.clear();
                 }
-                future.set("done");
+                future.complete("done");
                 notifyListeners(this);
             })
         );
@@ -301,8 +299,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public Future<String> verify(Verification verification) {
-        SettableFuture<String> result = SettableFuture.create();
-        verify(verification, result::set);
+        CompletableFuture<String> result = new CompletableFuture<>();
+        verify(verification, result::complete);
         return result;
     }
 
@@ -336,8 +334,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     }
 
     public Future<String> verify(VerificationSequence verification) {
-        SettableFuture<String> result = SettableFuture.create();
-        verify(verification, result::set);
+        CompletableFuture<String> result = new CompletableFuture<>();
+        verify(verification, result::complete);
         return result;
     }
 

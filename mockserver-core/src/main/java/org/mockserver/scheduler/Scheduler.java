@@ -130,13 +130,13 @@ public class Scheduler {
                 try {
                     future.getHttpResponse().get(ConfigurationProperties.maxSocketTimeout(), MILLISECONDS);
                 } catch (TimeoutException e) {
-                    future.getHttpResponse().setException(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
+                    future.getHttpResponse().completeExceptionally(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
                 } catch (InterruptedException | ExecutionException ex) {
-                    future.getHttpResponse().setException(ex);
+                    future.getHttpResponse().completeExceptionally(ex);
                 }
                 run(command);
             } else {
-                future.getHttpResponse().addListener(command, scheduler);
+                future.getHttpResponse().whenCompleteAsync((httpResponse, throwable) -> command.run(), scheduler);
             }
         }
     }

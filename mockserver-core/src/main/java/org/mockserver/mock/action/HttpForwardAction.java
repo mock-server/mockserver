@@ -1,6 +1,5 @@
 package org.mockserver.mock.action;
 
-import com.google.common.util.concurrent.SettableFuture;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.LogEntry;
@@ -11,6 +10,7 @@ import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 
@@ -28,9 +28,9 @@ public abstract class HttpForwardAction {
         this.httpClient = httpClient;
     }
 
-    protected HttpForwardActionResult sendRequest(HttpRequest request, @Nullable InetSocketAddress remoteAddress) {
+    protected HttpForwardActionResult sendRequest(HttpRequest request, @Nullable InetSocketAddress remoteAddress, HttpResponse overriddenHttpResponse) {
         try {
-            return new HttpForwardActionResult(request, httpClient.sendRequest(hopByHopHeaderFilter.onRequest(request), remoteAddress), remoteAddress);
+            return new HttpForwardActionResult(request, httpClient.sendRequest(hopByHopHeaderFilter.onRequest(request), remoteAddress), overriddenHttpResponse, remoteAddress);
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -45,8 +45,8 @@ public abstract class HttpForwardAction {
     }
 
     HttpForwardActionResult notFoundFuture(HttpRequest httpRequest) {
-        SettableFuture<HttpResponse> notFoundFuture = SettableFuture.create();
-        notFoundFuture.set(notFoundResponse());
-        return new HttpForwardActionResult(httpRequest, notFoundFuture);
+        CompletableFuture<HttpResponse> notFoundFuture = new CompletableFuture<>();
+        notFoundFuture.complete(notFoundResponse());
+        return new HttpForwardActionResult(httpRequest, notFoundFuture, null);
     }
 }

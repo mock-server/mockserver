@@ -1,6 +1,5 @@
 package org.mockserver.log;
 
-import com.google.common.util.concurrent.SettableFuture;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,6 +9,8 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
+
+import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.is;
@@ -41,8 +42,8 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
     }
 
     public String verify(Verification verification) {
-        SettableFuture<String> result = SettableFuture.create();
-        mockServerEventLog.verify(verification, result::set);
+        CompletableFuture<String> result = new CompletableFuture<>();
+        mockServerEventLog.verify(verification, result::complete);
         try {
             return result.get(10, SECONDS);
         } catch (Exception e) {
@@ -52,8 +53,8 @@ public class MockServerEventLogRequestLogEntryVerificationTest {
     }
 
     public String verify(VerificationSequence verificationSequence) {
-        SettableFuture<String> result = SettableFuture.create();
-        mockServerEventLog.verify(verificationSequence, result::set);
+        CompletableFuture<String> result = new CompletableFuture<>();
+        mockServerEventLog.verify(verificationSequence, result::complete);
         try {
             return result.get(10, SECONDS);
         } catch (Exception e) {

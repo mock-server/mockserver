@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
+import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
@@ -217,5 +218,56 @@ public class HttpResponseTest {
         // then
         assertThat(responseOne, not(sameInstance(responseTwo)));
         assertThat(responseOne, is(responseTwo));
+    }
+
+
+    @Test
+    public void shouldUpdate() {
+        // given
+        HttpResponse responseOne = response()
+            .withStatusCode(123)
+            .withReasonPhrase("someReasonPhrase")
+            .withBody("some_body")
+            .withHeader("some_header", "some_header_value")
+            .withCookie("some_cookie", "some_cookie_value")
+            .withConnectionOptions(
+                connectionOptions()
+                    .withContentLengthHeaderOverride(10)
+                    .withCloseSocket(true)
+                    .withKeepAliveOverride(true)
+            );
+        HttpResponse responseTwo = response()
+            .withStatusCode(321)
+            .withReasonPhrase("someReasonPhrase_two")
+            .withBody("some_body_two")
+            .withHeader("some_header_two", "some_header_value_two")
+            .withCookie("some_cookie_two", "some_cookie_value_two")
+            .withConnectionOptions(
+                connectionOptions()
+                    .withContentLengthHeaderOverride(100)
+                    .withCloseSocket(false)
+                    .withKeepAliveOverride(false)
+            );
+
+        // when
+        responseOne.update(responseTwo);
+
+        // then
+        assertThat(responseOne, is(
+            response()
+                .withStatusCode(321)
+                .withReasonPhrase("someReasonPhrase_two")
+                .withBody("some_body_two")
+                .withHeader("some_header", "some_header_value")
+                .withHeader("some_header_two", "some_header_value_two")
+                .withCookie("some_cookie", "some_cookie_value")
+                .withCookie("some_cookie_two", "some_cookie_value_two")
+                .withConnectionOptions(
+                    connectionOptions()
+                        .withContentLengthHeaderOverride(100)
+                        .withCloseSocket(false)
+                        .withKeepAliveOverride(false)
+                )
+        ));
     }
 }

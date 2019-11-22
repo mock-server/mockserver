@@ -1,6 +1,5 @@
 package org.mockserver.mock.action;
 
-import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.Attribute;
@@ -29,6 +28,7 @@ import org.slf4j.event.Level;
 import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -82,7 +82,7 @@ public class ActionHandlerTest {
     private HttpStateHandler mockHttpStateHandler;
     private HttpRequest request;
     private HttpResponse response;
-    private SettableFuture<HttpResponse> responseFuture;
+    private CompletableFuture<HttpResponse> responseFuture;
     private HttpRequest forwardedHttpRequest;
     private HttpForwardActionResult httpForwardActionResult;
     private Expectation expectation;
@@ -110,10 +110,10 @@ public class ActionHandlerTest {
         initMocks(this);
         request = request("some_path");
         response = response("some_body").withDelay(milliseconds(0));
-        responseFuture = SettableFuture.create();
-        responseFuture.set(response);
+        responseFuture = new CompletableFuture<>();
+        responseFuture.complete(response);
         forwardedHttpRequest = mock(HttpRequest.class);
-        httpForwardActionResult = new HttpForwardActionResult(forwardedHttpRequest, responseFuture, new InetSocketAddress(1234));
+        httpForwardActionResult = new HttpForwardActionResult(forwardedHttpRequest, responseFuture, null, new InetSocketAddress(1234));
         expectation = new Expectation(request, Times.unlimited(), TimeToLive.unlimited()).thenRespond(response);
 
         when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);

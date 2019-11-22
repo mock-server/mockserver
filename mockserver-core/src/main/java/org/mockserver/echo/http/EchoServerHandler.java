@@ -80,6 +80,16 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 httpResponse.replaceHeader(CONTENT_LENGTH.toString(), String.valueOf(length));
             }
 
+            mockServerEventLog.add(
+                new LogEntry()
+                    .setLogLevel(INFO)
+                    .setType(LogEntry.LogMessageType.INFO)
+                    .setHttpRequest(request)
+                    .setHttpResponse(httpResponse)
+                    .setMessageFormat("EchoServer returning response {} for request {}")
+                    .setArguments(httpResponse, request)
+            );
+
             // write and flush
             ctx.writeAndFlush(httpResponse);
 

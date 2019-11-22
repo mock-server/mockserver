@@ -11,6 +11,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpTemplate.template;
 
 /**
@@ -56,6 +57,23 @@ public class ForwardActionExamples {
                     request()
                         .withPath("/some/other/path")
                         .withHeader("Host", "target.host.com")
+                )
+            );
+    }
+
+    public void forwardOverriddenRequestAndResponse() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withPath("/some/other/path")
+                        .withHeader("Host", "target.host.com"),
+                    response()
+                        .withBody("some_overridden_body")
                 )
             );
     }

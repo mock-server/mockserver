@@ -65,7 +65,7 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
     @Test
     public void shouldNotForwardInLoopIndefinitely() throws Exception {
         // when
-        Future<HttpResponse> responseSettableFuture =
+        Future<HttpResponse> responseFuture =
             httpClient.sendRequest(
                 request()
                     .withPath("/some_path")
@@ -74,7 +74,7 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
             );
 
         // then - returns 404
-        assertThat(responseSettableFuture.get(10, TimeUnit.MINUTES).getStatusCode(), is(404));
+        assertThat(responseFuture.get(10, TimeUnit.MINUTES).getStatusCode(), is(404));
 
         // and - verify request received by proxy (not possible for target due to loop prevention)
         loadBalancerClientAndServer.verify(request().withPath("/some_path"), once());
@@ -125,7 +125,7 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
             );
 
         // when
-        Future<HttpResponse> responseSettableFuture =
+        Future<HttpResponse> responseFuture =
             httpClient.sendRequest(
                 request()
                     .withPath("/target")
@@ -134,7 +134,7 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
             );
 
         // then - returns 404
-        HttpResponse httpResponse = responseSettableFuture.get(10, TimeUnit.MINUTES);
+        HttpResponse httpResponse = responseFuture.get(10, TimeUnit.MINUTES);
         assertThat(httpResponse.getStatusCode(), is(200));
         assertThat(httpResponse.getBodyAsString(), is("target_response"));
 
