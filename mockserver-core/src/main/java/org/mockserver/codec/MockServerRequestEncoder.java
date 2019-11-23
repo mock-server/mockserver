@@ -15,7 +15,7 @@ public class MockServerRequestEncoder extends MessageToMessageEncoder<HttpReques
 
     private final MockServerLogger mockServerLogger;
 
-    public MockServerRequestEncoder(MockServerLogger mockServerLogger) {
+    MockServerRequestEncoder(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
     }
 

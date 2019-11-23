@@ -15,7 +15,7 @@ public class MockServerResponseDecoder extends MessageToMessageDecoder<FullHttpR
 
     private final MockServerLogger mockServerLogger;
 
-    public MockServerResponseDecoder(MockServerLogger mockServerLogger) {
+    MockServerResponseDecoder(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
     }
 

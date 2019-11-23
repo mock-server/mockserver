@@ -155,7 +155,7 @@ public abstract class AbstractMockingIntegrationTestBase {
                     if (header.getName().getValue().equalsIgnoreCase(CONTENT_TYPE.toString())) {
                         // this fixes Tomcat which removes the space between
                         // media type and charset in the Content-Type header
-                        for (NottableString value : new ArrayList<NottableString>(header.getValues())) {
+                        for (NottableString value : new ArrayList<>(header.getValues())) {
                             header.getValues().clear();
                             header.addValues(value.getValue().replace(";charset", "; charset"));
                         }
