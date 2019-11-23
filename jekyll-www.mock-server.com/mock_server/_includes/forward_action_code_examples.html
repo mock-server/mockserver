@@ -158,7 +158,73 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 }'</code></pre>
     </div>
 </div>
-<button id="button_forward_overridden_with_socket_address" class="accordion">forward overridden request and update host and port</button>
+<button id="button_forward_overridden_with_response" class="accordion">forward overridden request and change response</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        forwardOverriddenRequest(
+            request()
+                .withPath("/some/other/path")
+                .withHeader("Host", "target.host.com"),
+            response()
+                .withBody("some_overridden_body")
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpOverrideForwardedRequest": {
+        "httpRequest": {
+            "path": "/some/other/path",
+            "headers": {
+                "Host": ["target.host.com"]
+            }
+        },
+        "httpResponse": {
+            "body": "some_overridden_body"
+        }
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/some/path"
+    },
+    "httpOverrideForwardedRequest": {
+        "httpRequest": {
+            "path": "/some/other/path",
+            "headers": {
+                "Host": ["target.host.com"]
+            }
+        },
+        "httpResponse": {
+            "body": "some_overridden_body"
+        }
+    }
+}'</code></pre>
+    </div>
+</div>
+<button id="button_forward_overridden_with_socket_address" class="accordion">forward overridden request and change host and port</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
