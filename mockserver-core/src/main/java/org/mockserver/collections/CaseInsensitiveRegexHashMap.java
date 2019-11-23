@@ -18,10 +18,8 @@ import static org.mockserver.model.NottableString.string;
 public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, NottableString> implements Map<NottableString, NottableString> {
 
     private final RegexStringMatcher regexStringMatcher;
-    private final MockServerLogger mockServerLogger;
 
     public CaseInsensitiveRegexHashMap(MockServerLogger mockServerLogger) {
-        this.mockServerLogger = mockServerLogger;
         regexStringMatcher = new RegexStringMatcher(mockServerLogger);
     }
 
