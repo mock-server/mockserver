@@ -35,7 +35,7 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
             result = true;
         } else if (values == null || values.isEmpty()) {
             result = multiMap.allKeysNotted();
-        } else if (values.toCaseInsensitiveRegexMultiMap(mockServerLogger, true).containsAll(multiMap)) {
+        } else if (values.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher).containsAll(multiMap)) {
             result = true;
         } else {
             mockServerLogger.logEvent(

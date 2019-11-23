@@ -166,18 +166,18 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
         return isBlank;
     }
 
-    public boolean matches(String regex) {
+    public boolean matches(String input) {
         if (pattern == null) {
             pattern = Pattern.compile(getValue());
         }
-        return pattern.matcher(regex).matches();
+        return pattern.matcher(input).matches();
     }
 
-    public boolean matchesIgnoreCase(String regex) {
+    public boolean matchesIgnoreCase(String input) {
         if (lowercasePattern == null) {
             lowercasePattern = Pattern.compile(getValue().toLowerCase());
         }
-        return pattern.matcher(regex.toLowerCase()).matches();
+        return lowercasePattern.matcher(input.toLowerCase()).matches();
     }
 
     @Override

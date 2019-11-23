@@ -71,7 +71,6 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     }
 
     private boolean matchesInternal(NottableString matcher, NottableString matched, boolean ignoreCase) {
-
         if (matcher.isBlank()) {
             return true;
         } else if (matched.getValue() != null) {
@@ -79,8 +78,10 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             if (matched.getValue().equals(matcher.getValue())) {
                 return true;
             }
+
+            // match as regex - matcher -> matched (data plane or control plane)
             try {
-                if (matched.matches(matcher.getValue())) {
+                if (matcher.matches(matched.getValue())) {
                     return true;
                 }
             } catch (PatternSyntaxException pse) {
@@ -91,9 +92,9 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         .setMessageFormat("Error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
                 );
             }
-            // match as regex - matched -> matcher
+            // match as regex - matched -> matcher (control plane only)
             try {
-                if (matcher.matches(matched.getValue())) {
+                if (controlPlaneMatcher && matched.matches(matcher.getValue())) {
                     return true;
                 }
             } catch (PatternSyntaxException pse) {
@@ -107,12 +108,12 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             // case insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
             if (ignoreCase) {
                 // match as exact string lower-case
-                if (matched.getValue().equalsIgnoreCase(matcher.getValue())) {
+                if (matcher.getValue().equalsIgnoreCase(matched.getValue())) {
                     return true;
                 }
-                // match as regex - matcher -> matched
+                // match as regex - matcher -> matched (data plane or control plane)
                 try {
-                    if (matched.matchesIgnoreCase(matcher.getValue())) {
+                    if (matcher.matchesIgnoreCase(matched.getValue())) {
                         return true;
                     }
                 } catch (PatternSyntaxException pse) {
@@ -123,9 +124,9 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                             .setMessageFormat("Error while matching regex [" + matcher + "] for string [" + matched + "] and ignoring case " + pse.getMessage())
                     );
                 }
-                // match as regex - matched -> matcher
+                // match as regex - matched -> matcher (control plane only)
                 try {
-                    if (matcher.matchesIgnoreCase(matched.getValue())) {
+                    if (controlPlaneMatcher && matched.matchesIgnoreCase(matcher.getValue())) {
                         return true;
                     }
                 } catch (PatternSyntaxException pse) {
@@ -150,6 +151,8 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
             if (matched.equals(matcher)) {
                 return true;
             }
+
+            // match as regex - matcher -> matched (data plane or control plane)
             try {
                 if (matched.matches(matcher)) {
                     return true;
@@ -162,9 +165,9 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         .setMessageFormat("Error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
                 );
             }
-            // match as regex - matched -> matcher
+            // match as regex - matched -> matcher (control plane only)
             try {
-                if (matcher.matches(matched)) {
+                if (controlPlaneMatcher && matcher.matches(matched)) {
                     return true;
                 }
             } catch (PatternSyntaxException pse) {
@@ -181,7 +184,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                 if (matched.equalsIgnoreCase(matcher)) {
                     return true;
                 }
-                // match as regex - matcher -> matched
+                // match as regex - matcher -> matched (data plane or control plane)
                 try {
                     if (matched.toLowerCase().matches(matcher.toLowerCase())) {
                         return true;
@@ -194,9 +197,9 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                             .setMessageFormat("Error while matching regex [" + matcher.toLowerCase() + "] for string [" + matched.toLowerCase() + "] " + pse.getMessage())
                     );
                 }
-                // match as regex - matched -> matcher
+                // match as regex - matched -> matcher (control plane only)
                 try {
-                    if (matcher.toLowerCase().matches(matched.toLowerCase())) {
+                    if (controlPlaneMatcher && matcher.toLowerCase().matches(matched.toLowerCase())) {
                         return true;
                     }
                 } catch (PatternSyntaxException pse) {

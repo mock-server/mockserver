@@ -5611,7 +5611,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body1"),
             makeRequest(
                 request()
-                    .withBody(params(param("bodyParameterName.*", "bodyParameterValue.*"))),
+                    .withBody(params(param("bodyParameterNameOne", "bodyParameterValueOne"))),
                 headersToIgnore)
         );
 
@@ -5642,19 +5642,17 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body2"),
             makeRequest(
                 request()
-                    .withBody(params(param("bodyParameterName.*", "bodyParameterValue.*"))),
+                    .withBody(params(param("bodyParameterNameTwo", "bodyParameterValueTwo"))),
                 headersToIgnore)
         );
         // - in https
         assertEquals(
             response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body2"),
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
             makeRequest(
                 request()
-                    .withSecure(true)
-                    .withBody(params(param("bodyParameterName.*", "bodyParameterValue.*"))),
+                    .withBody(params(param("bodyParameterNameOne", "bodyParameterValueOne"))),
                 headersToIgnore)
         );
     }

@@ -12,14 +12,14 @@ import static org.mockserver.model.NottableString.not;
 /**
  * @author jamesdbloom
  */
-public class HeaderMatcherTest {
+public class HeaderMatcherControlPlaneTest {
 
     @Test
     public void shouldMatchMatchingHeader() {
         assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -29,7 +29,7 @@ public class HeaderMatcherTest {
 
         assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("header.*", "header.*")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -43,7 +43,7 @@ public class HeaderMatcherTest {
         assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOne.*", "headerOne.*", "headerOneValueTwo"),
             new Header("headerT.*Name", "headerT.*Value")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -53,7 +53,7 @@ public class HeaderMatcherTest {
 
         assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("header.*", "header.*")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -68,7 +68,7 @@ public class HeaderMatcherTest {
         assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -92,7 +92,7 @@ public class HeaderMatcherTest {
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header(not("headerTwoName"), not("headerTwoValue"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -104,7 +104,7 @@ public class HeaderMatcherTest {
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header(not("headerOneName"), not("headerOneValue")),
             new Header(not("headerTwoName"), not("headerTwoValue"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValue"),
@@ -131,7 +131,7 @@ public class HeaderMatcherTest {
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header(not("headerTwoName"), not("headerTwoValue"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -144,7 +144,7 @@ public class HeaderMatcherTest {
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue"),
             new Header(not("headerThree"), not("headerThreeValueOne"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -155,7 +155,7 @@ public class HeaderMatcherTest {
         // not single header
         assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header(not("headerThree"), not("headerThreeValueOne"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -167,7 +167,7 @@ public class HeaderMatcherTest {
         assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header(not("headerOneName"), not("headerOneValue")),
             new Header(not("headerTwoName"), not("headerTwoValue"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("notHeaderOneName", "notHeaderOneValue"),
@@ -178,7 +178,7 @@ public class HeaderMatcherTest {
         // not all headers (but matching)
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header(not("header.*"), not(".*"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -189,7 +189,7 @@ public class HeaderMatcherTest {
         // not all headers (but not matching name)
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header(not("header.*"), not("header.*"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("notHeaderOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -200,7 +200,7 @@ public class HeaderMatcherTest {
         // not all headers (but not matching value)
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header(not("header.*"), not("header.*"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "notHeaderOneValueOne", "notHeaderOneValueTwo"),
@@ -213,7 +213,7 @@ public class HeaderMatcherTest {
     public void shouldMatchMatchingHeaderWithOnlyHeader() {
         assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header(not("headerThree"), not("headerThreeValueOne"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -223,7 +223,7 @@ public class HeaderMatcherTest {
 
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerThree", "headerThreeValueOne")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -233,7 +233,7 @@ public class HeaderMatcherTest {
 
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header(not("headerOneName"), not("headerOneValueOne"), not("headerOneValueTwo"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -242,7 +242,7 @@ public class HeaderMatcherTest {
         ));
         assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -253,7 +253,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchMatchingHeaderWithOnlyHeaderForEmptyList() {
-        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers(), false).matches(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers(), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerThree", "headerThreeValueOne")
@@ -262,14 +262,14 @@ public class HeaderMatcherTest {
 
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerThree", "headerThreeValueOne")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers()
         ));
 
         assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header(not("headerThree"), not("headerThreeValueOne"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers()
         ));
@@ -277,10 +277,10 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldNotMatchMatchingRegexControlPlaneHeader() {
-        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOne.*", "headerOne.*", "headerOneValueTwo"),
@@ -288,10 +288,10 @@ public class HeaderMatcherTest {
             )
         ));
 
-        assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("header.*", "header.*")
@@ -304,7 +304,7 @@ public class HeaderMatcherTest {
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header(not("headerTwoName"), not("headerTwoValue"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -317,7 +317,7 @@ public class HeaderMatcherTest {
     public void shouldNotMatchMatchingHeaderWithOnlyNotHeader() {
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header(not("headerTwoName"), not("headerTwoValue"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -330,7 +330,7 @@ public class HeaderMatcherTest {
     public void shouldNotMatchMatchingHeaderWithOnlyNotHeaderForBodyWithSingleHeader() {
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header(not("headerTwoName"), not("headerTwoValue"))
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerTwoName", "headerTwoValue")
@@ -340,7 +340,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchNullExpectation() {
-        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), null, false).matches(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), null, true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -363,7 +363,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchEmptyExpectation() {
-        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers(), false).matches(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers(), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -389,7 +389,7 @@ public class HeaderMatcherTest {
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -417,7 +417,7 @@ public class HeaderMatcherTest {
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -445,7 +445,7 @@ public class HeaderMatcherTest {
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -472,12 +472,12 @@ public class HeaderMatcherTest {
     public void shouldMatchNullHeaderValue() {
         assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
-            new Header("headerTwoName")
-        ), false).matches(
+            new Header("headerTwoName", "headerTwoValue")
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
-                new Header("headerTwoName", "headerTwoValue")
+                new Header("headerTwoName")
             )
         ));
     }
@@ -501,7 +501,7 @@ public class HeaderMatcherTest {
         assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
@@ -515,7 +515,7 @@ public class HeaderMatcherTest {
         assertFalse(new MultiValueMapMatcher(new MockServerLogger(), new Headers().withEntries(
             new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo"),
             new Header("headerTwoName", "headerTwoValue")
-        ), false).matches(
+        ), true).matches(
             null,
             new Headers().withEntries(
                 new Header("headerOneName", "headerOneValueOne", "headerOneValueTwo")
@@ -538,7 +538,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchNullTest() {
-        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers(), false).matches(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers(), true).matches(
             null,
             new Headers()
         ));
@@ -554,7 +554,7 @@ public class HeaderMatcherTest {
 
     @Test
     public void shouldMatchEmptyTest() {
-        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers(), false).matches(
+        assertTrue(new MultiValueMapMatcher(new MockServerLogger(), new Headers(), true).matches(
             null,
             new Headers()
         ));

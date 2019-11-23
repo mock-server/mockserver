@@ -52,8 +52,7 @@ import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
-import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
 
@@ -708,13 +707,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         // - in http
         assertEquals(
             response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("content-type", "application/json; charset=utf-8"),
-                    header("Cache-Control", "no-cache, no-store")
-                )
-                .withBody("[{\"_id\":\"f26b3bfe-a6c2-4aa4-8376-bbba44b75ae6\",\"_applicationId\":\"43d05a04-eb1d-462e-933e-3b3b4592e1c8\",\"name\":\"You can't connect the pixel without programming the redundant RAM system!\",\"url\":\"https://jeremie.info\"}]", MediaType.create("application", "json").withCharset(StandardCharsets.UTF_8)),
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
             makeRequest(
                 request()
                     .withMethod("GET")
@@ -726,13 +720,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         // - in https
         assertEquals(
             response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("content-type", "application/json; charset=utf-8"),
-                    header("Cache-Control", "no-cache, no-store")
-                )
-                .withBody("[{\"_id\":\"f26b3bfe-a6c2-4aa4-8376-bbba44b75ae6\",\"_applicationId\":\"43d05a04-eb1d-462e-933e-3b3b4592e1c8\",\"name\":\"You can't connect the pixel without programming the redundant RAM system!\",\"url\":\"https://jeremie.info\"}]", MediaType.create("application", "json").withCharset(StandardCharsets.UTF_8)),
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
             makeRequest(
                 request()
                     .withMethod("GET")
