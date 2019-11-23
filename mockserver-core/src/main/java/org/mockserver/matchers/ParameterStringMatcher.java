@@ -6,10 +6,8 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Parameters;
-import org.slf4j.event.Level;
 
 import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -19,9 +17,9 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
     private final MockServerLogger mockServerLogger;
     private final MultiValueMapMatcher matcher;
 
-    public ParameterStringMatcher(MockServerLogger mockServerLogger, Parameters parameters) {
+    ParameterStringMatcher(MockServerLogger mockServerLogger, Parameters parameters, boolean controlPlaneMatcher) {
         this.mockServerLogger = mockServerLogger;
-        this.matcher = new MultiValueMapMatcher(mockServerLogger, parameters);
+        this.matcher = new MultiValueMapMatcher(mockServerLogger, parameters, controlPlaneMatcher);
     }
 
     public boolean matches(final HttpRequest context, String matched) {

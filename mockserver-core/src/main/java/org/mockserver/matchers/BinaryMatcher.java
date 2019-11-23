@@ -18,7 +18,7 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
     private final MockServerLogger mockServerLogger;
     private final byte[] matcher;
 
-    public BinaryMatcher(MockServerLogger mockServerLogger, byte[] matcher) {
+    BinaryMatcher(MockServerLogger mockServerLogger, byte[] matcher) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
     }

@@ -20,7 +20,7 @@ public class JsonSchemaMatcher extends BodyMatcher<String> {
     private String schema;
     private JsonSchemaValidator jsonSchemaValidator;
 
-    public JsonSchemaMatcher(MockServerLogger mockServerLogger, String schema) {
+    JsonSchemaMatcher(MockServerLogger mockServerLogger, String schema) {
         this.mockServerLogger = mockServerLogger;
         this.schema = schema;
         jsonSchemaValidator = new JsonSchemaValidator(mockServerLogger, schema);

@@ -19,12 +19,12 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), string("keyOne_valueOne")}
+            true, new NottableString[]{not("notKeyOne"), string("keyOne_valueOne")}
         )), is(true));
     }
 
@@ -32,12 +32,12 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForNottedValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")}
+            true, new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")}
         )), is(true));
     }
 
@@ -45,12 +45,12 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndSingleValueForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")}
+            true, new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")}
         )), is(true));
     }
 
@@ -58,14 +58,14 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllSubSetSingleKeyAndSingleValueForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), string("keyOne_valueOne")}
+            true, new NottableString[]{not("notKeyOne"), string("keyOne_valueOne")}
         )), is(true));
     }
 
@@ -73,14 +73,14 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllSubSetSingleKeyAndSingleValueForNottedValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")}
+            true, new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")}
         )), is(true));
     }
 
@@ -88,14 +88,14 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllSubSetSingleKeyAndSingleValueForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")}
+            true, new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")}
         )), is(true));
     }
 
@@ -103,12 +103,12 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndMultipleValuesForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
+            true, new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
     }
 
@@ -116,18 +116,18 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndMultipleValuesForNottedValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
+            true, new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
+            true, new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
+            true, new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
     }
 
@@ -135,18 +135,18 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndMultipleValuesForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
+            true, new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
+            true, new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
+            true, new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
     }
 
@@ -154,14 +154,14 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllSubSetSingleKeyAndMultipleValuesForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
+            true, new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
     }
 
@@ -169,20 +169,20 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllSubSetSingleKeyAndMultipleValuesForNottedValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
+            true, new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
+            true, new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
+            true, new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
     }
 
@@ -190,20 +190,20 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllSubSetSingleKeyAndMultipleValuesForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
+            true, new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
+            true, new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
+            true, new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
     }
 
@@ -211,21 +211,21 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllExactMatchMultipleKeyAndMultipleValuesForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-            new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
             new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), string("keyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
     }
@@ -234,37 +234,37 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllExactMatchMultipleKeyAndMultipleValuesForNottedValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
     }
@@ -273,37 +273,37 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllExactMatchMultipleKeyAndMultipleValuesForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
     }
@@ -312,22 +312,22 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllSubSetMultipleKeyAndMultipleValuesForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), string("keyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
     }
@@ -336,38 +336,38 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllSubSetMultipleKeyAndMultipleValuesForNottedValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
     }
@@ -376,64 +376,64 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldContainAllSubSetMultipleKeyAndMultipleValuesForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
 
         // and then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), not("keyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), not("keyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("keyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{not("keyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), not("keyTwo_valueOne"), not("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("keyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("notKeyOne"), not("keyOne_valueOne")},
+            true, new NottableString[]{not("notKeyOne"), not("keyOne_valueOne")},
                 new NottableString[]{not("notKeyTwo"), not("keyTwo_valueOne"), not("keyTwo_valueTwo")}
         )), is(true));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("keyOne"), not("notKeyOne_valueOne")},
+            true, new NottableString[]{not("keyOne"), not("notKeyOne_valueOne")},
                 new NottableString[]{not("keyTwo"), not("notKeyTwo_valueOne"), not("notKeyTwo_valueTwo")}
         )), is(true));
     }
@@ -442,12 +442,12 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldNotContainAllNotMatchSingleKeySingleEntry() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("keyOne"), string("keyOne_valueOne")}
+            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")}
         )), is(false));
     }
 
@@ -455,12 +455,12 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldNotContainAllNotMatchSingleValueSingleEntry() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), not("keyOne_valueOne")}
+            true, new NottableString[]{string("keyOne"), not("keyOne_valueOne")}
         )), is(false));
     }
 
@@ -468,14 +468,14 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldNotContainAllNotMatchSingleKeyMultipleEntries() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("keyOne"), string("keyOne_valueOne")}
+            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")}
         )), is(false));
     }
 
@@ -483,17 +483,17 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldNotContainAllNotMatchSingleValueMultipleEntries() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), not("keyOne_valueOne")}
+            true, new NottableString[]{string("keyOne"), not("keyOne_valueOne")}
         )), is(false));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), not("keyTwo.*")}
+            true, new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), not("keyTwo.*")}
         )), is(false));
     }
 
@@ -501,18 +501,18 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldNotContainAllNotMatchMultipleKeysMultipleEntries() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         )), is(false));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("keyTwo"), string("key.*")}
         )), is(false));
     }
@@ -521,14 +521,14 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldNotContainAllNotMatchMultipleKeysAndValuesMultipleEntries() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{not("keyOne"), not("keyOne_valueOne")},
+            true, new NottableString[]{not("keyOne"), not("keyOne_valueOne")},
                 new NottableString[]{not("keyTwo"), not("key.*")}
         )), is(false));
     }
@@ -537,18 +537,18 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsAll {
     public void shouldNotContainAllNotMatchMultipleValuesMultipleEntries() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyOne"), not("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), not("keyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), not("keyTwo_valueTwo")}
         )), is(false));
         assertThat(multiMap.containsAll(multiMap(
-                new NottableString[]{string("keyTwo"), not("keyTwo.*")}
+            true, new NottableString[]{string("keyTwo"), not("keyTwo.*")}
         )), is(false));
     }
 }

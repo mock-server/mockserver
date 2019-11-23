@@ -1,5 +1,6 @@
 package org.mockserver.integration.server;
 
+import com.google.common.net.MediaType;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -8,6 +9,7 @@ import org.mockserver.model.*;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.verify.VerificationTimes;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -30,6 +32,7 @@ import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverridde
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.model.Parameter.param;
@@ -607,8 +610,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // - in http
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withHeaders(
                     header("x-callback", "test_callback_header")
                 )
@@ -628,8 +631,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // - in https
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withHeaders(
                     header("x-callback", "test_callback_header")
                 )
@@ -889,8 +892,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -898,8 +901,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // - in http
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -916,8 +919,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // - in https
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -952,8 +955,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -1017,8 +1020,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -1975,8 +1978,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // and
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withHeaders(
                     header("x-callback", "test_callback_header")
                 )

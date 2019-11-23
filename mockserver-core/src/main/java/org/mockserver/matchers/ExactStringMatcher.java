@@ -19,12 +19,7 @@ public class ExactStringMatcher extends BodyMatcher<NottableString> {
     private final MockServerLogger mockServerLogger;
     private final NottableString matcher;
 
-    public ExactStringMatcher(MockServerLogger mockServerLogger, String matcher) {
-        this.mockServerLogger = mockServerLogger;
-        this.matcher = string(matcher);
-    }
-
-    public ExactStringMatcher(MockServerLogger mockServerLogger, NottableString matcher) {
+    ExactStringMatcher(MockServerLogger mockServerLogger, NottableString matcher) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
     }

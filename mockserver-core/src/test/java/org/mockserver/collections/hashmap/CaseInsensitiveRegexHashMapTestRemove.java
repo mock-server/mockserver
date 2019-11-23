@@ -18,7 +18,7 @@ public class CaseInsensitiveRegexHashMapTestRemove {
     public void shouldRemoveFromMapWithSingleEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // when
@@ -33,7 +33,7 @@ public class CaseInsensitiveRegexHashMapTestRemove {
     public void shouldRemoveFromMapWithMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new String[]{"keyOne", "keyOneValue"},
+            true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
         );
@@ -52,7 +52,7 @@ public class CaseInsensitiveRegexHashMapTestRemove {
     public void shouldRemoveNoMatchingEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new String[]{"keyOne", "keyOneValue"},
+            true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
         );

@@ -19,8 +19,8 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
     private final ListMultimap<NottableString, NottableString> listMultimap = LinkedListMultimap.create();
     private final K k = (K) this;
 
-    private CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, final List<T> entries) {
-        CaseInsensitiveRegexMultiMap caseInsensitiveRegexMultiMap = new CaseInsensitiveRegexMultiMap(mockServerLogger);
+    private CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, final List<T> entries, boolean controlPlaneMatcher) {
+        CaseInsensitiveRegexMultiMap caseInsensitiveRegexMultiMap = new CaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher);
         if (entries != null) {
             for (KeyToMultiValue keyToMultiValue : entries) {
                 for (NottableString value : keyToMultiValue.getValues()) {
@@ -213,8 +213,8 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         return false;
     }
 
-    public CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger) {
-        return toCaseInsensitiveRegexMultiMap(mockServerLogger, this.getEntries());
+    public CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
+        return toCaseInsensitiveRegexMultiMap(mockServerLogger, this.getEntries(), controlPlaneMatcher);
     }
 
     public boolean isEmpty() {

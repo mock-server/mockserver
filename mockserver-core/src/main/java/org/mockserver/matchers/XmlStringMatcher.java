@@ -29,11 +29,11 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
     private NottableString matcher = string("THIS SHOULD NEVER MATCH");
     private StringToXmlDocumentParser stringToXmlDocumentParser = new StringToXmlDocumentParser();
 
-    public XmlStringMatcher(MockServerLogger mockServerLogger, final String matcher) {
+    XmlStringMatcher(MockServerLogger mockServerLogger, final String matcher) {
         this(mockServerLogger, string(matcher));
     }
 
-    public XmlStringMatcher(MockServerLogger mockServerLogger, final NottableString matcher) {
+    XmlStringMatcher(MockServerLogger mockServerLogger, final NottableString matcher) {
         this.mockServerLogger = mockServerLogger;
         try {
             this.matcher = normaliseXmlNottableString(matcher);

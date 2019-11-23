@@ -22,7 +22,7 @@ public class JsonPathMatcher extends BodyMatcher<String> {
     private final String matcher;
     private JsonPath jsonPath;
 
-    public JsonPathMatcher(MockServerLogger mockServerLogger, String matcher) {
+    JsonPathMatcher(MockServerLogger mockServerLogger, String matcher) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
         if (StringUtils.isNotBlank(matcher)) {

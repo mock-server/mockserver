@@ -19,7 +19,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsValue {
     public void singleValuedMapShouldContainValueForSingleValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{string("keyOne"), not("keyOneValue")}
+            true, new NottableString[]{string("keyOne"), not("keyOneValue")}
         );
 
         // then
@@ -31,7 +31,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsValue {
     public void multiValuedMapShouldContainValueForSingleValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{string("keyOne"), not("keyOneValue")},
+            true, new NottableString[]{string("keyOne"), not("keyOneValue")},
             new NottableString[]{string("keyTwo"), string("keyTwoValue")}
         );
 
@@ -44,7 +44,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsValue {
     public void singleValuedMapShouldNotContainValueForSingleValueWithValueMismatch() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{string("keyOne"), not("keyOneValue")}
+            true, new NottableString[]{string("keyOne"), not("keyOneValue")}
         );
 
         // then
@@ -55,7 +55,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsValue {
     public void singleValuedMapShouldNotContainValueForMultipleValuesWithValueMismatch() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{string("keyOne"), not("keyOneValue")}
+            true, new NottableString[]{string("keyOne"), not("keyOneValue")}
         );
 
         // then
@@ -67,7 +67,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsValue {
     public void multiValuedMapShouldNotContainValueForMultipleValuesWithValueMismatch() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{string("keyOne"), not("keyOneValue")},
+            true, new NottableString[]{string("keyOne"), not("keyOneValue")},
             new NottableString[]{string("keyTwo"), not("keyTwoValue")}
         );
 

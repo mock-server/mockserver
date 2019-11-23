@@ -18,7 +18,7 @@ public class CaseInsensitiveRegexHashMapTestNottableGet {
     public void shouldGetSingeValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new String[]{"keyOne", "keyOneValue"},
+            true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"}
         );
 
@@ -30,7 +30,7 @@ public class CaseInsensitiveRegexHashMapTestNottableGet {
     public void shouldGetFirstMultiValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new String[]{"keyOne", "keyOneValue"},
+            true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"}
         );
 

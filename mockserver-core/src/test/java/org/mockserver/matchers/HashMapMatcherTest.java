@@ -15,7 +15,7 @@ public class HashMapMatcherTest {
     @Test
     public void shouldMatchSingleKeyAndValueForEmptyListMatcher() {
         // given
-        HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies());
+        HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies(), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(
@@ -26,7 +26,7 @@ public class HashMapMatcherTest {
     @Test
     public void shouldMatchMultipleKeyAndValueForEmptyListMatcher() {
         // given
-        HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies());
+        HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies(), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(
@@ -41,7 +41,7 @@ public class HashMapMatcherTest {
         // given
         HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie(not("keyOne"), string("keyOneValue"))
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies()), is(true));
@@ -54,7 +54,7 @@ public class HashMapMatcherTest {
             new Cookie(not("keyOne"), string("keyOneValue")),
             new Cookie(not("keyTwo"), string("keyTwoValue")),
             new Cookie(not("keyThree"), string("keyThreeValue"))
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies()), is(true));
@@ -67,7 +67,7 @@ public class HashMapMatcherTest {
             new Cookie(not("keyOne"), string("keyOneValue")),
             new Cookie(not("keyTwo"), string("keyTwoValue")),
             new Cookie(string("keyThree"), string("keyThreeValue"))
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies()), is(false));
@@ -78,7 +78,7 @@ public class HashMapMatcherTest {
         // given
         HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie("keyOne", "keyOneValue")
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(
@@ -91,7 +91,7 @@ public class HashMapMatcherTest {
         // given
         HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie("keyOne", "keyOneValue")
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(
@@ -107,7 +107,7 @@ public class HashMapMatcherTest {
         HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie("keyOne", "keyOneValue"),
             new Cookie("keyTwo", "keyTwoValue")
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(
@@ -124,7 +124,7 @@ public class HashMapMatcherTest {
             new Cookie("keyOne", "keyOneValue"),
             new Cookie("keyTwo", "keyTwoValue"),
             new Cookie("keyThree", "keyThreeValue")
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(

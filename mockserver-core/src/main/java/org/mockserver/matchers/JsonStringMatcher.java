@@ -21,7 +21,7 @@ public class JsonStringMatcher extends BodyMatcher<String> {
     private final String matcher;
     private final MatchType matchType;
 
-    public JsonStringMatcher(MockServerLogger mockServerLogger, String matcher, MatchType matchType) {
+    JsonStringMatcher(MockServerLogger mockServerLogger, String matcher, MatchType matchType) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
         this.matchType = matchType;

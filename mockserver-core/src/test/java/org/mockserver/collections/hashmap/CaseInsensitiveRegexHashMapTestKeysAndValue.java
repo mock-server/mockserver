@@ -18,7 +18,7 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnKeysForMapWithSingleEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -29,7 +29,7 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnKeysForMapWithMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new String[]{"keyOne", "keyOneValue"},
+            true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"}
         );
 
@@ -41,7 +41,7 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnValuesForMapWithSingleEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -52,7 +52,7 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnValuesForMapWithMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new String[]{"keyOne", "keyOneValue"},
+            true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"}
         );
 
@@ -64,7 +64,7 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnEntrySet() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new String[]{"keyOne", "keyOneValue"},
+            true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"}
         );
 

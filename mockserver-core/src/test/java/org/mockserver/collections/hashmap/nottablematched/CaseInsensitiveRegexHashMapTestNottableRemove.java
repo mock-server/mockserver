@@ -20,7 +20,7 @@ public class CaseInsensitiveRegexHashMapTestNottableRemove {
     public void shouldRemoveEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new String[]{"keyOne", "keyOneValue"},
+            true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
         );
@@ -39,7 +39,7 @@ public class CaseInsensitiveRegexHashMapTestNottableRemove {
     public void shouldRemoveNotMatchingEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new String[]{"keyOne", "keyOneValue"},
+            true, new String[]{"keyOne", "keyOneValue"},
             new String[]{"keyTwo", "keyTwoValue"},
             new String[]{"keyThree", "keyThreeValue"}
         );

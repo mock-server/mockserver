@@ -5,7 +5,6 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableString;
-import org.slf4j.event.Level;
 
 import java.util.regex.PatternSyntaxException;
 
@@ -22,19 +21,17 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final NottableString matcher;
+    private final boolean controlPlaneMatcher;
 
-    public RegexStringMatcher(MockServerLogger mockServerLogger) {
+    public RegexStringMatcher(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
         this.mockServerLogger = mockServerLogger;
+        this.controlPlaneMatcher = controlPlaneMatcher;
         this.matcher = null;
     }
 
-    public RegexStringMatcher(MockServerLogger mockServerLogger, String matcher) {
+    RegexStringMatcher(MockServerLogger mockServerLogger, NottableString matcher, boolean controlPlaneMatcher) {
         this.mockServerLogger = mockServerLogger;
-        this.matcher = string(matcher);
-    }
-
-    public RegexStringMatcher(MockServerLogger mockServerLogger, NottableString matcher) {
-        this.mockServerLogger = mockServerLogger;
+        this.controlPlaneMatcher = controlPlaneMatcher;
         this.matcher = matcher;
     }
 

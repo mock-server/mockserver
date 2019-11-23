@@ -22,14 +22,14 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
 
     private final RegexStringMatcher regexStringMatcher;
 
-    public CaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger) {
-        regexStringMatcher = new RegexStringMatcher(mockServerLogger);
-        backingMap = new CaseInsensitiveNottableRegexListHashMap(mockServerLogger);
+    public CaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
+        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
+        backingMap = new CaseInsensitiveNottableRegexListHashMap(mockServerLogger, controlPlaneMatcher);
     }
 
     @VisibleForTesting
-    public static CaseInsensitiveRegexMultiMap multiMap(String[]... keyAndValues) {
-        CaseInsensitiveRegexMultiMap multiMap = new CaseInsensitiveRegexMultiMap(new MockServerLogger());
+    public static CaseInsensitiveRegexMultiMap multiMap(boolean controlPlaneMatcher, String[]... keyAndValues) {
+        CaseInsensitiveRegexMultiMap multiMap = new CaseInsensitiveRegexMultiMap(new MockServerLogger(), controlPlaneMatcher);
         for (String[] keyAndValue : keyAndValues) {
             for (int i = 1; i < keyAndValue.length; i++) {
                 multiMap.put(keyAndValue[0], keyAndValue[i]);
@@ -39,8 +39,8 @@ public class CaseInsensitiveRegexMultiMap extends ObjectWithReflectiveEqualsHash
     }
 
     @VisibleForTesting
-    public static CaseInsensitiveRegexMultiMap multiMap(NottableString[]... keyAndValues) {
-        CaseInsensitiveRegexMultiMap multiMap = new CaseInsensitiveRegexMultiMap(new MockServerLogger());
+    public static CaseInsensitiveRegexMultiMap multiMap(boolean controlPlaneMatcher, NottableString[]... keyAndValues) {
+        CaseInsensitiveRegexMultiMap multiMap = new CaseInsensitiveRegexMultiMap(new MockServerLogger(), controlPlaneMatcher);
         for (NottableString[] keyAndValue : keyAndValues) {
             for (int i = 1; i < keyAndValue.length; i++) {
                 multiMap.put(keyAndValue[0], keyAndValue[i]);

@@ -62,7 +62,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         }
     }
 
-    public HttpRequestMatcher(MockServerLogger mockServerLogger, Expectation expectation) {
+    HttpRequestMatcher(MockServerLogger mockServerLogger, Expectation expectation) {
         this.expectation = expectation;
         this.httpRequest = expectation.getHttpRequest();
         this.mockServerLogger = mockServerLogger;
@@ -84,15 +84,15 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     }
 
     private void withMethod(NottableString method) {
-        this.methodMatcher = new RegexStringMatcher(mockServerLogger, method);
+        this.methodMatcher = new RegexStringMatcher(mockServerLogger, method, controlPlaneMatcher);
     }
 
     private void withPath(NottableString path) {
-        this.pathMatcher = new RegexStringMatcher(mockServerLogger, path);
+        this.pathMatcher = new RegexStringMatcher(mockServerLogger, path, controlPlaneMatcher);
     }
 
     private void withQueryStringParameters(Parameters parameters) {
-        this.queryStringParameterMatcher = new MultiValueMapMatcher(mockServerLogger, parameters);
+        this.queryStringParameterMatcher = new MultiValueMapMatcher(mockServerLogger, parameters, controlPlaneMatcher);
     }
 
     private void withBody(Body body) {
@@ -110,12 +110,12 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
                 case REGEX:
                     RegexBody regexBody = (RegexBody) body;
                     bodyDTOMatcher = new RegexBodyDTO(regexBody);
-                    this.bodyMatcher = new RegexStringMatcher(mockServerLogger, string(regexBody.getValue()));
+                    this.bodyMatcher = new RegexStringMatcher(mockServerLogger, string(regexBody.getValue()), controlPlaneMatcher);
                     break;
                 case PARAMETERS:
                     ParameterBody parameterBody = (ParameterBody) body;
                     bodyDTOMatcher = new ParameterBodyDTO(parameterBody);
-                    this.bodyMatcher = new ParameterStringMatcher(mockServerLogger, parameterBody.getValue());
+                    this.bodyMatcher = new ParameterStringMatcher(mockServerLogger, parameterBody.getValue(), controlPlaneMatcher);
                     break;
                 case XPATH:
                     XPathBody xPathBody = (XPathBody) body;
@@ -161,11 +161,11 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     }
 
     private void withHeaders(Headers headers) {
-        this.headerMatcher = new MultiValueMapMatcher(mockServerLogger, headers);
+        this.headerMatcher = new MultiValueMapMatcher(mockServerLogger, headers, controlPlaneMatcher);
     }
 
     private void withCookies(Cookies cookies) {
-        this.cookieMatcher = new HashMapMatcher(mockServerLogger, cookies);
+        this.cookieMatcher = new HashMapMatcher(mockServerLogger, cookies, controlPlaneMatcher);
     }
 
     private void withKeepAlive(Boolean keepAlive) {

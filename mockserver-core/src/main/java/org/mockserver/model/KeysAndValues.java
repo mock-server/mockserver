@@ -14,8 +14,8 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
 
     private Map<NottableString, NottableString> map = new LinkedHashMap<>();
 
-    public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, List<T> entries) {
-        CaseInsensitiveRegexHashMap caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap(mockServerLogger);
+    public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, List<T> entries, boolean controlPlaneMatcher) {
+        CaseInsensitiveRegexHashMap caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap(mockServerLogger, controlPlaneMatcher);
         if (entries != null) {
             for (KeyAndValue keyToMultiValue : entries) {
                 caseInsensitiveRegexHashMap.put(keyToMultiValue.getName(), keyToMultiValue.getValue());
@@ -74,8 +74,8 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
         return map;
     }
 
-    public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger) {
-        return toCaseInsensitiveRegexMultiMap(mockServerLogger, this.getEntries());
+    public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
+        return toCaseInsensitiveRegexMultiMap(mockServerLogger, this.getEntries(), controlPlaneMatcher);
     }
 
     public boolean isEmpty() {

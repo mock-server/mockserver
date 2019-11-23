@@ -20,7 +20,7 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
     private String schema;
     private XmlSchemaValidator xmlSchemaValidator;
 
-    public XmlSchemaMatcher(MockServerLogger mockServerLogger, String schema) {
+    XmlSchemaMatcher(MockServerLogger mockServerLogger, String schema) {
         this.mockServerLogger = mockServerLogger;
         this.schema = schema;
         xmlSchemaValidator = new XmlSchemaValidator(mockServerLogger, schema);

@@ -16,42 +16,42 @@ public class SubStringMatcherTest {
 
     @Test
     public void shouldMatchMatchingString() {
-        assertTrue(new SubStringMatcher(new MockServerLogger(), "me_val").matches(null, "some_value"));
+        assertTrue(new SubStringMatcher(new MockServerLogger(), string("me_val")).matches(null, "some_value"));
         assertTrue(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val")).matches(null, NottableString.not("some_value")));
-        assertTrue(not(new SubStringMatcher(new MockServerLogger(), "me_val")).matches(null, NottableString.not("some_value")));
+        assertTrue(not(new SubStringMatcher(new MockServerLogger(), string("me_val"))).matches(null, NottableString.not("some_value")));
         assertTrue(not(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val"))).matches(null, "some_value"));
 
-        assertFalse(new SubStringMatcher(new MockServerLogger(), "me_val").matches(null, NottableString.not("some_value")));
-        assertFalse(not(new SubStringMatcher(new MockServerLogger(), "me_val")).matches(null, "some_value"));
+        assertFalse(new SubStringMatcher(new MockServerLogger(), string("me_val")).matches(null, NottableString.not("some_value")));
+        assertFalse(not(new SubStringMatcher(new MockServerLogger(), string("me_val"))).matches(null, "some_value"));
         assertFalse(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val")).matches(null, "some_value"));
         assertFalse(not(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val"))).matches(null, NottableString.not("some_value")));
     }
 
     @Test
     public void shouldMatchNotMatchingString() {
-        assertFalse(new SubStringMatcher(new MockServerLogger(), "me_val").matches(null, "some_other_value"));
+        assertFalse(new SubStringMatcher(new MockServerLogger(), string("me_val")).matches(null, "some_other_value"));
         assertFalse(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val")).matches(null, NottableString.not("some_other_value")));
-        assertFalse(not(new SubStringMatcher(new MockServerLogger(), "me_val")).matches(null, NottableString.not("some_other_value")));
+        assertFalse(not(new SubStringMatcher(new MockServerLogger(), string("me_val"))).matches(null, NottableString.not("some_other_value")));
         assertFalse(not(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val"))).matches(null, "some_other_value"));
 
-        assertTrue(new SubStringMatcher(new MockServerLogger(), "me_val").matches(null, NottableString.not("some_other_value")));
-        assertTrue(not(new SubStringMatcher(new MockServerLogger(), "me_val")).matches(null, "some_other_value"));
+        assertTrue(new SubStringMatcher(new MockServerLogger(), string("me_val")).matches(null, NottableString.not("some_other_value")));
+        assertTrue(not(new SubStringMatcher(new MockServerLogger(), string("me_val"))).matches(null, "some_other_value"));
         assertTrue(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val")).matches(null, "some_other_value"));
         assertTrue(not(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val"))).matches(null, NottableString.not("some_other_value")));
     }
 
     @Test
     public void shouldMatchNullMatcher() {
-        assertTrue(new SubStringMatcher(new MockServerLogger(), (String) null).matches(null, "some_value"));
+        assertTrue(new SubStringMatcher(new MockServerLogger(), string((String) null)).matches(null, "some_value"));
         assertTrue(new SubStringMatcher(new MockServerLogger(), string(null)).matches(null, "some_value"));
         assertTrue(new SubStringMatcher(new MockServerLogger(), NottableString.not(null)).matches(null, NottableString.not("some_value")));
-        assertTrue(not(new SubStringMatcher(new MockServerLogger(), (String) null)).matches(null, NottableString.not("some_value")));
+        assertTrue(not(new SubStringMatcher(new MockServerLogger(), string((String) null))).matches(null, NottableString.not("some_value")));
         assertTrue(not(new SubStringMatcher(new MockServerLogger(), string(null))).matches(null, NottableString.not("some_value")));
         assertTrue(not(new SubStringMatcher(new MockServerLogger(), NottableString.not(null))).matches(null, "some_value"));
 
-        assertFalse(new SubStringMatcher(new MockServerLogger(), (String) null).matches(null, NottableString.not("some_value")));
+        assertFalse(new SubStringMatcher(new MockServerLogger(), string((String) null)).matches(null, NottableString.not("some_value")));
         assertFalse(new SubStringMatcher(new MockServerLogger(), string(null)).matches(null, NottableString.not("some_value")));
-        assertFalse(not(new SubStringMatcher(new MockServerLogger(), (String) null)).matches(null, "some_value"));
+        assertFalse(not(new SubStringMatcher(new MockServerLogger(), string((String) null))).matches(null, "some_value"));
         assertFalse(not(new SubStringMatcher(new MockServerLogger(), string(null))).matches(null, "some_value"));
         assertFalse(new SubStringMatcher(new MockServerLogger(), NottableString.not(null)).matches(null, "some_value"));
         assertFalse(not(new SubStringMatcher(new MockServerLogger(), NottableString.not(null))).matches(null, NottableString.not("some_value")));
@@ -59,16 +59,16 @@ public class SubStringMatcherTest {
 
     @Test
     public void shouldMatchNullMatched() {
-        assertFalse(new SubStringMatcher(new MockServerLogger(), "me_val").matches(null, (String) null));
-        assertFalse(new SubStringMatcher(new MockServerLogger(), "me_val").matches(null, string(null)));
+        assertFalse(new SubStringMatcher(new MockServerLogger(), string("me_val")).matches(null, (String) null));
+        assertFalse(new SubStringMatcher(new MockServerLogger(), string("me_val")).matches(null, string(null)));
         assertFalse(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val")).matches(null, NottableString.not(null)));
-        assertFalse(not(new SubStringMatcher(new MockServerLogger(), "me_val")).matches(null, NottableString.not(null)));
+        assertFalse(not(new SubStringMatcher(new MockServerLogger(), string("me_val"))).matches(null, NottableString.not(null)));
         assertFalse(not(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val"))).matches(null, (String) null));
         assertFalse(not(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val"))).matches(null, string(null)));
 
-        assertTrue(new SubStringMatcher(new MockServerLogger(), "me_val").matches(null, NottableString.not(null)));
-        assertTrue(not(new SubStringMatcher(new MockServerLogger(), "me_val")).matches(null, (String) null));
-        assertTrue(not(new SubStringMatcher(new MockServerLogger(), "me_val")).matches(null, string(null)));
+        assertTrue(new SubStringMatcher(new MockServerLogger(), string("me_val")).matches(null, NottableString.not(null)));
+        assertTrue(not(new SubStringMatcher(new MockServerLogger(), string("me_val"))).matches(null, (String) null));
+        assertTrue(not(new SubStringMatcher(new MockServerLogger(), string("me_val"))).matches(null, string(null)));
         assertTrue(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val")).matches(null, (String) null));
         assertTrue(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val")).matches(null, string(null)));
         assertTrue(not(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val"))).matches(null, NottableString.not(null)));
@@ -76,16 +76,16 @@ public class SubStringMatcherTest {
 
     @Test
     public void shouldMatchEmptyMatcher() {
-        assertTrue(new SubStringMatcher(new MockServerLogger(), "").matches(null, "some_value"));
+        assertTrue(new SubStringMatcher(new MockServerLogger(), string("")).matches(null, "some_value"));
         assertTrue(new SubStringMatcher(new MockServerLogger(), string("")).matches(null, "some_value"));
         assertTrue(new SubStringMatcher(new MockServerLogger(), NottableString.not("")).matches(null, NottableString.not("some_value")));
-        assertTrue(not(new SubStringMatcher(new MockServerLogger(), "")).matches(null, NottableString.not("some_value")));
+        assertTrue(not(new SubStringMatcher(new MockServerLogger(), string(""))).matches(null, NottableString.not("some_value")));
         assertTrue(not(new SubStringMatcher(new MockServerLogger(), string(""))).matches(null, NottableString.not("some_value")));
         assertTrue(not(new SubStringMatcher(new MockServerLogger(), NottableString.not(""))).matches(null, "some_value"));
 
-        assertFalse(new SubStringMatcher(new MockServerLogger(), "").matches(null, NottableString.not("some_value")));
         assertFalse(new SubStringMatcher(new MockServerLogger(), string("")).matches(null, NottableString.not("some_value")));
-        assertFalse(not(new SubStringMatcher(new MockServerLogger(), "")).matches(null, "some_value"));
+        assertFalse(new SubStringMatcher(new MockServerLogger(), string("")).matches(null, NottableString.not("some_value")));
+        assertFalse(not(new SubStringMatcher(new MockServerLogger(), string(""))).matches(null, "some_value"));
         assertFalse(not(new SubStringMatcher(new MockServerLogger(), string(""))).matches(null, "some_value"));
         assertFalse(new SubStringMatcher(new MockServerLogger(), NottableString.not("")).matches(null, "some_value"));
         assertFalse(not(new SubStringMatcher(new MockServerLogger(), NottableString.not(""))).matches(null, NottableString.not("some_value")));
@@ -93,13 +93,13 @@ public class SubStringMatcherTest {
 
     @Test
     public void shouldMatchEmptyMatched() {
-        assertFalse(new SubStringMatcher(new MockServerLogger(), "me_val").matches(null, ""));
+        assertFalse(new SubStringMatcher(new MockServerLogger(), string("me_val")).matches(null, ""));
         assertFalse(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val")).matches(null, NottableString.not("")));
-        assertFalse(not(new SubStringMatcher(new MockServerLogger(), "me_val")).matches(null, NottableString.not("")));
+        assertFalse(not(new SubStringMatcher(new MockServerLogger(), string("me_val"))).matches(null, NottableString.not("")));
         assertFalse(not(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val"))).matches(null, ""));
 
-        assertTrue(new SubStringMatcher(new MockServerLogger(), "me_val").matches(null, NottableString.not("")));
-        assertTrue(not(new SubStringMatcher(new MockServerLogger(), "me_val")).matches(null, ""));
+        assertTrue(new SubStringMatcher(new MockServerLogger(), string("me_val")).matches(null, NottableString.not("")));
+        assertTrue(not(new SubStringMatcher(new MockServerLogger(), string("me_val"))).matches(null, ""));
         assertTrue(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val")).matches(null, ""));
         assertTrue(not(new SubStringMatcher(new MockServerLogger(), NottableString.not("me_val"))).matches(null, NottableString.not("")));
     }

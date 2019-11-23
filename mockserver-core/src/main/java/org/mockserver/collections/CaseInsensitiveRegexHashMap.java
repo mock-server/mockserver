@@ -19,13 +19,13 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
 
     private final RegexStringMatcher regexStringMatcher;
 
-    public CaseInsensitiveRegexHashMap(MockServerLogger mockServerLogger) {
-        regexStringMatcher = new RegexStringMatcher(mockServerLogger);
+    public CaseInsensitiveRegexHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
+        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
     }
 
     @VisibleForTesting
-    public static CaseInsensitiveRegexHashMap hashMap(String[]... keyAndValues) {
-        CaseInsensitiveRegexHashMap hashMap = new CaseInsensitiveRegexHashMap(new MockServerLogger());
+    public static CaseInsensitiveRegexHashMap hashMap(boolean controlPlaneMatcher, String[]... keyAndValues) {
+        CaseInsensitiveRegexHashMap hashMap = new CaseInsensitiveRegexHashMap(new MockServerLogger(), controlPlaneMatcher);
         for (String[] keyAndValue : keyAndValues) {
             if (keyAndValue.length >= 2) {
                 hashMap.put(keyAndValue[0], keyAndValue[1]);
@@ -35,8 +35,8 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
     }
 
     @VisibleForTesting
-    public static CaseInsensitiveRegexHashMap hashMap(NottableString[]... keyAndValues) {
-        CaseInsensitiveRegexHashMap hashMap = new CaseInsensitiveRegexHashMap(new MockServerLogger());
+    public static CaseInsensitiveRegexHashMap hashMap(boolean controlPlaneMatcher, NottableString[]... keyAndValues) {
+        CaseInsensitiveRegexHashMap hashMap = new CaseInsensitiveRegexHashMap(new MockServerLogger(), controlPlaneMatcher);
         for (NottableString[] keyAndValue : keyAndValues) {
             if (keyAndValue.length >= 2) {
                 hashMap.put(keyAndValue[0], keyAndValue[1]);

@@ -6,10 +6,8 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.KeysToMultiValues;
-import org.slf4j.event.Level;
 
 import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -18,11 +16,13 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
     private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final CaseInsensitiveRegexMultiMap multiMap;
+    private final boolean controlPlaneMatcher;
 
-    public MultiValueMapMatcher(MockServerLogger mockServerLogger, KeysToMultiValues keysToMultiValues) {
+    MultiValueMapMatcher(MockServerLogger mockServerLogger, KeysToMultiValues keysToMultiValues, boolean controlPlaneMatcher) {
         this.mockServerLogger = mockServerLogger;
+        this.controlPlaneMatcher = controlPlaneMatcher;
         if (keysToMultiValues != null) {
-            this.multiMap = keysToMultiValues.toCaseInsensitiveRegexMultiMap(mockServerLogger);
+            this.multiMap = keysToMultiValues.toCaseInsensitiveRegexMultiMap(mockServerLogger, controlPlaneMatcher);
         } else {
             this.multiMap = null;
         }
@@ -35,7 +35,7 @@ public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
             result = true;
         } else if (values == null || values.isEmpty()) {
             result = multiMap.allKeysNotted();
-        } else if (values.toCaseInsensitiveRegexMultiMap(mockServerLogger).containsAll(multiMap)) {
+        } else if (values.toCaseInsensitiveRegexMultiMap(mockServerLogger, true).containsAll(multiMap)) {
             result = true;
         } else {
             mockServerLogger.logEvent(

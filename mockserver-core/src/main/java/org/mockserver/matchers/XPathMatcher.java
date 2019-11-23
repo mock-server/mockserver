@@ -24,7 +24,7 @@ public class XPathMatcher extends BodyMatcher<String> {
     private final StringToXmlDocumentParser stringToXmlDocumentParser = new StringToXmlDocumentParser();
     private XPathExpression xpathExpression = null;
 
-    public XPathMatcher(MockServerLogger mockServerLogger, String matcher) {
+    XPathMatcher(MockServerLogger mockServerLogger, String matcher) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
         if (StringUtils.isNotBlank(matcher)) {

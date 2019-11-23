@@ -18,7 +18,7 @@ public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString i
     private final MockServerLogger mockServerLogger;
     private final Boolean matcher;
 
-    public BooleanMatcher(MockServerLogger mockServerLogger, Boolean matcher) {
+    BooleanMatcher(MockServerLogger mockServerLogger, Boolean matcher) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
     }

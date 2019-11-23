@@ -19,12 +19,7 @@ public class SubStringMatcher extends BodyMatcher<NottableString> {
     private final MockServerLogger mockServerLogger;
     private final NottableString matcher;
 
-    public SubStringMatcher(MockServerLogger mockServerLogger, String matcher) {
-        this.mockServerLogger = mockServerLogger;
-        this.matcher = string(matcher);
-    }
-
-    public SubStringMatcher(MockServerLogger mockServerLogger, NottableString matcher) {
+    SubStringMatcher(MockServerLogger mockServerLogger, NottableString matcher) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
     }

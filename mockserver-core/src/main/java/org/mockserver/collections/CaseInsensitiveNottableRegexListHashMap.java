@@ -17,8 +17,8 @@ class CaseInsensitiveNottableRegexListHashMap extends LinkedHashMap<NottableStri
 
     private final RegexStringMatcher regexStringMatcher;
 
-    CaseInsensitiveNottableRegexListHashMap(MockServerLogger mockServerLogger) {
-        regexStringMatcher = new RegexStringMatcher(mockServerLogger);
+    CaseInsensitiveNottableRegexListHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
+        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
     }
 
     @Override

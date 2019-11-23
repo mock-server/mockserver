@@ -20,7 +20,7 @@ public class CaseInsensitiveRegexHashMapTestNottableRemove {
     public void shouldRemoveSingleValueEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{not("keyOne"), string("keyOneValue")},
+            true, new NottableString[]{not("keyOne"), string("keyOneValue")},
             new NottableString[]{not("keyTwo"), string("keyTwoValue")},
             new NottableString[]{not("keyThree"), string("keyThreeValue")}
         );
@@ -39,7 +39,7 @@ public class CaseInsensitiveRegexHashMapTestNottableRemove {
     public void shouldRemoveSingleValueEntryWithNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{not("keyOne"), string("keyOneValue")},
+            true, new NottableString[]{not("keyOne"), string("keyOneValue")},
             new NottableString[]{not("keyTwo"), string("keyTwoValue")},
             new NottableString[]{not("keyThree"), string("keyThreeValue")}
         );
@@ -58,7 +58,7 @@ public class CaseInsensitiveRegexHashMapTestNottableRemove {
     public void shouldRemoveNotMatchingEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{not("keyOne"), string("keyOneValue")},
+            true, new NottableString[]{not("keyOne"), string("keyOneValue")},
             new NottableString[]{not("keyTwo"), string("keyTwoValue")},
             new NottableString[]{not("keyThree"), string("keyThreeValue")}
         );
@@ -77,7 +77,7 @@ public class CaseInsensitiveRegexHashMapTestNottableRemove {
     public void shouldRemoveNotMatchingEntryWithNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-            new NottableString[]{not("keyOne"), string("keyOneValue")},
+            true, new NottableString[]{not("keyOne"), string("keyOneValue")},
             new NottableString[]{not("keyTwo"), string("keyTwoValue")},
             new NottableString[]{not("keyThree"), string("keyThreeValue")}
         );

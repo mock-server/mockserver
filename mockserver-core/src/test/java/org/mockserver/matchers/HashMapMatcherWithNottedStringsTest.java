@@ -17,7 +17,7 @@ public class HashMapMatcherWithNottedStringsTest {
         // given
         HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie(not("keyOne"), string("keyOneValue"))
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(
@@ -30,7 +30,7 @@ public class HashMapMatcherWithNottedStringsTest {
         // given
         HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie(string("keyOne"), not("keyOneValue"))
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(
@@ -43,7 +43,7 @@ public class HashMapMatcherWithNottedStringsTest {
         // given
         HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie(not("keyOne"), not("keyOneValue"))
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(
@@ -56,7 +56,7 @@ public class HashMapMatcherWithNottedStringsTest {
         // given
         HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie(not("keyOne"), string("keyOneValue"))
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(
@@ -71,7 +71,7 @@ public class HashMapMatcherWithNottedStringsTest {
         // given
         HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie(string("keyOne"), not("keyOneValue"))
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(
@@ -86,7 +86,7 @@ public class HashMapMatcherWithNottedStringsTest {
         // given
         HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie(not("keyOne"), not("keyOneValue"))
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(
@@ -102,7 +102,7 @@ public class HashMapMatcherWithNottedStringsTest {
         HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie(not("keyOne"), string("keyOneValue")),
             new Cookie(not("keyTwo"), string("keyTwoValue"))
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(
@@ -118,7 +118,7 @@ public class HashMapMatcherWithNottedStringsTest {
         HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie(string("keyOne"), not("keyOneValue")),
             new Cookie(string("keyTwo"), not("keyTwoValue"))
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(
@@ -134,7 +134,7 @@ public class HashMapMatcherWithNottedStringsTest {
         HashMapMatcher hashMapMatcher = new HashMapMatcher(new MockServerLogger(), new Cookies().withEntries(
             new Cookie(not("keyOne"), not("keyOneValue")),
             new Cookie(not("keyTwo"), not("keyTwoValue"))
-        ));
+        ), true);
 
         // then
         assertThat(hashMapMatcher.matches(null, new Cookies().withEntries(

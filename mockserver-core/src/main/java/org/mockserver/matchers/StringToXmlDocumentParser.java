@@ -25,7 +25,7 @@ import java.io.StringWriter;
  */
 public class StringToXmlDocumentParser extends ObjectWithReflectiveEqualsHashCodeToString {
 
-    public String normaliseXmlString(String matched, ErrorLogger errorLogger)
+    String normaliseXmlString(String matched, ErrorLogger errorLogger)
         throws IOException, SAXException, ParserConfigurationException, TransformerException {
         return prettyPrintXmlDocument(buildDocument(matched, errorLogger));
     }
