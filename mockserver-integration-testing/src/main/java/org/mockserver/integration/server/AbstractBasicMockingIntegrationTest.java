@@ -1867,7 +1867,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("some_overridden_body"),
             httpResponse
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(2)));
     }
 
     @Test
@@ -1944,7 +1944,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("some_body1"),
             httpResponse
         );
-        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(3)));
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(2)));
     }
 
     @Test
