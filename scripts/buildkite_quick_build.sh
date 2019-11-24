@@ -15,4 +15,8 @@ if test "$BUILDKITE_BRANCH" = "master"; then
 else
     echo "BRANCH: $CURRENT_BRANCH"
 fi
+
+echo "whoami: "
+whoami
+
 ./mvnw clean install $1 -Djava.security.egd=file:/dev/./urandom
