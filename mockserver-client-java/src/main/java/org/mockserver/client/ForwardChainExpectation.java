@@ -22,15 +22,13 @@ public class ForwardChainExpectation {
     private final MockServerLogger mockServerLogger;
     private final MockServerClient mockServerClient;
     private final Expectation expectation;
-    private final Semaphore availableWebSocketCallbackRegistrations;
     private final MockServerEventBus mockServerEventBus;
 
-    ForwardChainExpectation(MockServerLogger mockServerLogger, MockServerEventBus mockServerEventBus, MockServerClient mockServerClient, Expectation expectation, Semaphore availableWebSocketCallbackRegistrations) {
+    ForwardChainExpectation(MockServerLogger mockServerLogger, MockServerEventBus mockServerEventBus, MockServerClient mockServerClient, Expectation expectation) {
         this.mockServerLogger = mockServerLogger;
         this.mockServerEventBus = mockServerEventBus;
         this.mockServerClient = mockServerClient;
         this.expectation = expectation;
-        this.availableWebSocketCallbackRegistrations = availableWebSocketCallbackRegistrations;
     }
 
     /**
@@ -184,7 +182,7 @@ public class ForwardChainExpectation {
 
     private <T extends HttpObject> String registerWebSocketClient(ExpectationCallback<T> expectationCallback) {
         try {
-            final WebSocketClient<T> webSocketClient = new WebSocketClient<>(mockServerLogger, availableWebSocketCallbackRegistrations);
+            final WebSocketClient<T> webSocketClient = new WebSocketClient<>(mockServerLogger);
             final Future<String> register = webSocketClient.registerExpectationCallback(
                 expectationCallback,
                 mockServerClient.getEventLoopGroup(),

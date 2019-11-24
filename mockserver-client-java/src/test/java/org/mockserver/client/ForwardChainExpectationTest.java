@@ -40,7 +40,7 @@ public class ForwardChainExpectationTest {
         mockAbstractClient = mock(MockServerClient.class);
         mockExpectation = mock(Expectation.class);
         Semaphore availableWebSocketCallbackRegistrations = new Semaphore(1);
-        forwardChainExpectation = new ForwardChainExpectation(new MockServerLogger(), new MockServerEventBus(), mockAbstractClient, mockExpectation, availableWebSocketCallbackRegistrations);
+        forwardChainExpectation = new ForwardChainExpectation(new MockServerLogger(), new MockServerEventBus(), mockAbstractClient, mockExpectation);
         initMocks(this);
     }
 

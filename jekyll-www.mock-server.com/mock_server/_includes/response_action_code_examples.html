@@ -939,7 +939,8 @@ mockServerClient("localhost", 1080)
 <div class="panel">
     <button class="accordion inner">Java 7</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+        <pre class="prettyprint lang-java code"><code class="code">MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+mockServerClient
     .when(
         request()
             .withPath("/some/path")
@@ -947,10 +948,9 @@ mockServerClient("localhost", 1080)
     .respond(
         new ExpectationResponseCallback() {
             @Override
-            public HttpResponse handle(HttpRequest httpRequest) {
+            public HttpResponse handle(HttpRequest httpRequest) throws Exception {
                 if (httpRequest.getMethod().getValue().equals("POST")) {
-                    // inside a callback method use new client to guarantee no possibility of deadlock
-                    new MockServerClient("localhost", 1080)
+                    mockServerClient
                         .when(
                             request()
                                 .withPath("/some/otherPath")
@@ -971,7 +971,8 @@ mockServerClient("localhost", 1080)
     </div>
     <button class="accordion inner">Java 8+</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+        <pre class="prettyprint lang-java code"><code class="code">MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+mockServerClient
     .when(
         request()
             .withPath("/some/path")
@@ -979,8 +980,7 @@ mockServerClient("localhost", 1080)
     .respond(
         httpRequest -> {
             if (httpRequest.getMethod().getValue().equals("POST")) {
-                // inside a callback method use new client to guarantee no possibility of deadlock
-                new MockServerClient("localhost", 1080)
+                mockServerClient
                     .when(
                         request()
                             .withPath("/some/otherPath")

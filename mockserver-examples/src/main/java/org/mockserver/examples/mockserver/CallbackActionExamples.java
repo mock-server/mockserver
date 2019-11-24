@@ -69,7 +69,8 @@ public class CallbackActionExamples {
     }
 
     public void createExpectationWithinObjectCallback() {
-        new MockServerClient("localhost", 1080)
+        MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+        mockServerClient
             .when(
                 request()
                     .withPath("/some/path")
@@ -77,8 +78,7 @@ public class CallbackActionExamples {
             .respond(
                 httpRequest -> {
                     if (httpRequest.getMethod().getValue().equals("POST")) {
-                        // inside a callback method use new client to guarantee no possibility of deadlock
-                        new MockServerClient("localhost", 1080)
+                        mockServerClient
                             .when(
                                 request()
                                     .withPath("/some/otherPath")
@@ -95,7 +95,6 @@ public class CallbackActionExamples {
                     }
                 }
             );
-
     }
 
     public void forwardObjectCallback() {

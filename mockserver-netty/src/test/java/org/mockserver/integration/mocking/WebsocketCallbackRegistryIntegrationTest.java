@@ -8,10 +8,12 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.integration.server.AbstractMockingIntegrationTestBase;
 import org.mockserver.metrics.Metrics;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
+import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.stop.Stop.stopQuietly;
 
@@ -160,45 +162,61 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
         Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT), CoreMatchers.is(0));
     }
 
+    private int objectCallbackCounter = 0;
+
     @Test
-    public void shouldNotAllowUseOfWebsocketClientInsideCallback() {
+    public void shouldRespondByMultipleParallelObjectCallbacks() {
         // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("prevent_reentrant_websocketclient_registration"))
-            )
-            .respond(
-                httpRequest -> {
-                    mockServerClient
-                        .when(
-                            request()
-                                .withPath(calculatePath("reentrant_websocketclient_registration"))
-                        )
-                        .respond(
-                            httpRequest1 -> {
-                                // then
-                                return response()
-                                    .withBody("reentrant_websocketclient_registration");
-                            }
-                        );
-                    return response()
-                        .withBody("prevent_reentrant_websocketclient_registration");
-                }
+        for (int i = 0; i < 50; i++) {
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter))
+                )
+                .respond(
+                    httpRequest -> {
+                        mockServerClient
+                            .when(
+                                request()
+                                    .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter))
+                            )
+                            .respond(innerRequest ->
+                                response()
+                                    .withBody("inner_websocket_client_registration_" + objectCallbackCounter)
+                            );
+                        return response()
+                            .withBody("outer_websocket_client_registration_" + objectCallbackCounter);
+                    }
+                );
+            objectCallbackCounter++;
+        }
+
+        objectCallbackCounter = 0;
+
+        // then
+        for (int i = 0; i < 50; i++) {
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withBody("outer_websocket_client_registration_" + objectCallbackCounter),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter)),
+                    headersToIgnore)
             );
-
-        // when
-        assertEquals(
-            response()
-                .withStatusCode(NOT_FOUND_404.code())
-                .withReasonPhrase(NOT_FOUND_404.reasonPhrase())
-                .withBody("It is not possible to re-use the same MockServerClient instance to register a new object callback while responding to an object callback, please use a separate instance of the MockServerClient inside a callback"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("prevent_reentrant_websocketclient_registration")),
-                headersToIgnore)
-        );
-
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withBody("inner_websocket_client_registration_" + objectCallbackCounter),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter)),
+                    headersToIgnore)
+            );
+            objectCallbackCounter++;
+        }
     }
 
     @Test

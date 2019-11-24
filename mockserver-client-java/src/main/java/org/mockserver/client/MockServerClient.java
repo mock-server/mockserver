@@ -46,7 +46,6 @@ MockServerClient implements Stoppable {
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClient.class);
     private static final Map<Integer, MockServerEventBus> EVENT_BUS_MAP = new ConcurrentHashMap<>();
     private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
-    private final Semaphore availableWebSocketCallbackRegistrations = new Semaphore(1);
     private final String host;
     private final String contextPath;
     private final Class<MockServerClient> clientClass;
@@ -596,7 +595,7 @@ MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, TimeToLive.unlimited()), availableWebSocketCallbackRegistrations);
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, TimeToLive.unlimited()));
     }
 
     /**
@@ -624,7 +623,7 @@ MockServerClient implements Stoppable {
      * @return an Expectation object that can be used to specify the response
      */
     public ForwardChainExpectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
-        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, timeToLive), availableWebSocketCallbackRegistrations);
+        return new ForwardChainExpectation(MOCK_SERVER_LOGGER, getMockServerEventBus(), this, new Expectation(httpRequest, times, timeToLive));
     }
 
     /**

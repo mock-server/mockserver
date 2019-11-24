@@ -195,7 +195,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     private int objectCallbackCounter = 0;
 
     @Test
-    public void shouldRespondByMultipleParallelObjectCallbacks() throws InterruptedException {
+    public void shouldRespondByMultipleParallelObjectCallbacks() {
         // when
         for (int i = 0; i < 50; i++) {
             mockServerClient
