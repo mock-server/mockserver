@@ -2,8 +2,8 @@
 
 set -e
 
-export MAVEN_OPTS="$MAVEN_OPTS -Xmx2048m"
-export JAVA_OPTS="$JAVA_OPTS -Xmx2048m"
+export MAVEN_OPTS="$MAVEN_OPTS -Xmx3072m"
+export JAVA_OPTS="$JAVA_OPTS -Xmx3072m"
 echo
 java -version
 echo
