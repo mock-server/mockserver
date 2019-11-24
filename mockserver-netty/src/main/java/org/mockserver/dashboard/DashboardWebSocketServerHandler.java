@@ -63,6 +63,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     private static final int UI_UPDATE_ITEM_LIMIT = 50;
     private static ObjectMapper objectMapper;
     private final MockServerLogger mockServerLogger;
+    private final boolean sslEnabledUpstream;
     private final HttpStateHandler httpStateHandler;
     private HttpRequestSerializer httpRequestSerializer;
     private WebSocketServerHandshaker handshaker;
@@ -73,9 +74,10 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     private ScheduledExecutorService throttleExecutorService;
     private Semaphore semaphore;
 
-    public DashboardWebSocketServerHandler(HttpStateHandler httpStateHandler) {
+    public DashboardWebSocketServerHandler(HttpStateHandler httpStateHandler, boolean sslEnabledUpstream) {
         this.httpStateHandler = httpStateHandler;
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
+        this.sslEnabledUpstream = sslEnabledUpstream;
     }
 
     @Override
@@ -145,8 +147,15 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
             mockServerMatcher = httpStateHandler.getMockServerMatcher();
             mockServerMatcher.registerListener(this);
         }
+        String webSocketURL = (sslEnabledUpstream ? "wss" : "ws") + "://" + httpRequest.headers().get(HOST) + UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI;
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(DEBUG)
+                .setLogLevel(Level.DEBUG)
+                .setMessageFormat("Upgraded dashboard connection to support web sockets on url " + webSocketURL)
+        );
         handshaker = new WebSocketServerHandshakerFactory(
-            "ws://" + httpRequest.headers().get(HOST) + UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI,
+            webSocketURL,
             null,
             true,
             Integer.MAX_VALUE

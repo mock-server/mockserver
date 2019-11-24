@@ -187,7 +187,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             addLastIfNotPresent(pipeline, loggingHandler);
         }
         addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpStateHandler));
-        addLastIfNotPresent(pipeline, new DashboardWebSocketServerHandler(httpStateHandler));
+        addLastIfNotPresent(pipeline, new DashboardWebSocketServerHandler(httpStateHandler, isSslEnabledUpstream(ctx.channel())));
         addLastIfNotPresent(pipeline, new MockServerServerCodec(mockServerLogger, isSslEnabledUpstream(ctx.channel())));
         addLastIfNotPresent(pipeline, new MockServerHandler(server, httpStateHandler, actionHandler));
         pipeline.remove(this);
