@@ -14,7 +14,7 @@ Release Steps
    1. git tag mockserver-x.x.x 
    1. git push origin --tags
    1. npm login
-   1. npm publish
+   1. npm publish --access=public
 1. update mockserver-client-node
    1. delete package-lock.json
    1. rm -rf node_modules
@@ -25,7 +25,7 @@ Release Steps
    1. git tag mockserver-x.x.x 
    1. git push origin --tags
    1. npm login (not required if done recently)
-   1. npm publish
+   1. npm publish --access=public
 1. update mockserver-maven-plugin
    1. update parent pom SNAPSHOT version to RELEASE version
    1. update jar-with-dependencies SNAPSHOT version to RELEASE version
