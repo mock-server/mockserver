@@ -2,8 +2,8 @@
 
 set -e
 
-export MAVEN_OPTS="$MAVEN_OPTS -XX:MaxPermSize=1024m -Xmx2048m"
-export JAVA_OPTS="$JAVA_OPTS -XX:MaxPermSize=1024m -Xmx2048m"
+export MAVEN_OPTS="$MAVEN_OPTS -Xmx2048m"
+export JAVA_OPTS="$JAVA_OPTS -Xmx2048m"
 echo
 java -version
 echo
