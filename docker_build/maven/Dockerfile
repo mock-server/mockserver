@@ -34,4 +34,8 @@ COPY settings.xml /etc/maven/settings.xml
 
 # pre-fetch maven dependencies
 RUN git clone https://github.com/jamesdbloom/mockserver.git
-RUN cd mockserver && ./mvnw -s /etc/maven/settings.xml dependency:go-offline && cd .. && rm -rf mockserver
+RUN cd mockserver && \
+    ./mvnw -s /etc/maven/settings.xml dependency:go-offline && \
+    ./mvnw -s /etc/maven/settings.xml package -DskipTests && \
+    cd .. && \
+    rm -rf mockserver
