@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
 import static org.mockserver.model.HttpStatusCode.OK_200;
@@ -20,7 +19,6 @@ import static org.mockserver.model.HttpStatusCode.OK_200;
  * @author jamesdbloom
  */
 public class HttpResponse extends Action<HttpResponse> implements HttpObject<HttpResponse, BodyWithContentType> {
-    private static final HttpResponse NOT_FOUND_RESPONSE = new HttpResponse().withStatusCode(NOT_FOUND_404.code()).withReasonPhrase(NOT_FOUND_404.reasonPhrase());
     private Integer statusCode;
     private String reasonPhrase;
     private BodyWithContentType body;
@@ -48,7 +46,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      * Static builder to create a not found response.
      */
     public static HttpResponse notFoundResponse() {
-        return NOT_FOUND_RESPONSE;
+        return new HttpResponse().withStatusCode(NOT_FOUND_404.code()).withReasonPhrase(NOT_FOUND_404.reasonPhrase());
     }
 
     /**
