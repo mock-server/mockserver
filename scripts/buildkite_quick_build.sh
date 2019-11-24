@@ -12,8 +12,7 @@ echo
 
 if test "$BUILDKITE_BRANCH" = "master"; then
     echo "BRANCH: MASTER"
-    ./mvnw -s /etc/maven/settings.xml clean install $1 -Djava.security.egd=file:/dev/./urandom
 else
     echo "BRANCH: $CURRENT_BRANCH"
-    ./mvnw -s /etc/maven/settings.xml clean install $1 -Djava.security.egd=file:/dev/./urandom
 fi
+./mvnw clean install $1 -Djava.security.egd=file:/dev/./urandom
