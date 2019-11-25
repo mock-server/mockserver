@@ -117,6 +117,7 @@ public class MockServerLogger {
     }
 
     public static boolean isEnabled(final Level level) {
-        return logLevel() != null && level.toInt() >= logLevel().toInt();
+        return (logLevel() == null && level.toInt() >= Level.WARN.toInt())
+            || (logLevel() != null && level.toInt() >= logLevel().toInt());
     }
 }
