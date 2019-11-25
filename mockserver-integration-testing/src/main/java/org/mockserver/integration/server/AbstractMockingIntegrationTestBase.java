@@ -134,7 +134,7 @@ public abstract class AbstractMockingIntegrationTestBase {
         } else {
             for (int i = 0; i < httpRequestMatchers.length; i++) {
                 if (!new HttpRequestMatcher(MOCK_SERVER_LOGGER, httpRequestMatchers[i]).matches(null, httpRequests[i])) {
-                    throw new AssertionError("Request does not match request matcher, expected:<" + httpRequestMatchers[i] + "> but was:<" + httpRequests[i] + ">");
+                    throw new AssertionError("Request does not match request matcher, expected <" + httpRequestMatchers[i] + "> but was:<" + httpRequests[i] + ">, full list requests is: " + httpRequestMatchers);
                 }
             }
         }
