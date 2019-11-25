@@ -1287,7 +1287,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
-    public void shouldRetrieveRecordedExpectations() {
+    public void shouldRetrieveRecordedExpectations() throws InterruptedException {
         mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).forward(
             forward()
                 .withHost("127.0.0.1")
@@ -1319,6 +1319,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 headersToIgnore
             )
         );
+
+        MILLISECONDS.sleep(500);
 
         // then
         Expectation[] recordedExpectations = mockServerClient.retrieveRecordedExpectations(request().withPath(calculatePath("some_path_one")));
