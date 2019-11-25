@@ -1,18 +1,18 @@
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "mockserver.name" . }}
+  name: {{ template "chart.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "mockserver.name" . }}
-    chart: {{ template "mockserver.chart" . }}
+    app: {{ template "chart.name" . }}
+    chart: {{ template "chart.name_version" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ template "mockserver.name" . }}
+      app: {{ template "chart.name" . }}
       release: {{ .Release.Name }}
   template:
     metadata:
@@ -21,13 +21,13 @@ spec:
       annotations:
 {{ toYaml .Values.podAnnotations | indent 8 }}
 {{- end }}
-      name: {{ template "mockserver.name" . }}
+      name: {{ template "chart.name" . }}
       labels:
-        app: {{ template "mockserver.name" . }}
+        app: {{ template "chart.name" . }}
         release: {{ .Release.Name }}
     spec:
       containers:
-        - name: {{ template "mockserver.name" . }}
+        - name: {{ template "chart.name" . }}
           image: {{ .Values.image.repository }}/mockserver:mockserver-{{- if .Values.image.snapshot }}snapshot{{- else }}{{ .Chart.Version }}{{- end }}
 {{- if .Values.image.snapshot }}
           imagePullPolicy: Always
@@ -69,17 +69,38 @@ spec:
             - name: JVM_OPTIONS
               value: {{ .Values.app.jvmOptions | quote }}
 {{- end }}
+{{- if .Values.app.mapConfigDirectory }}
+            - name: MOCKSERVER_PROPERTY_FILE
+              value: /config/mockserver.properties
+{{- if .Values.app.initializationJsonFileName }}
+            - name: MOCKSERVER_INITIALIZATION_JSON_PATH
+              value: /config/{{ .Values.app.initializationJsonFileName }}
+{{- end }}
+{{- end }}
+{{- if .Values.app.mapConfigDirectory }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+{{- end }}
+{{- if .Values.app.resources }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
-    {{- with .Values.nodeSelector }}
+{{- end }}
+{{- if .Values.app.mapConfigDirectory }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ template "chart.fullname" . }}-config
+{{- end }}
+{{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.affinity }}
+{{- end }}
+{{- with .Values.affinity }}
       affinity:
 {{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
+{{- end }}
+{{- with .Values.tolerations }}
       tolerations:
 {{ toYaml . | indent 8 }}
-    {{- end }}
+{{- end }}

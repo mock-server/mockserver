@@ -30,7 +30,6 @@ TODO.md
 # Runtime artifacts #
 #####################
 mockserver_keystore.jks
-mockserver.properties
 
 # OS generated files #
 ######################

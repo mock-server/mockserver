@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "chart.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "chart.name" . }}
+    chart: {{ template "chart.name_version" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+  mockserver.properties: |
+{{ .Files.Get "static/mockserver.properties" | printf "%s" | indent 4 }}
+  initializerJson.json: |
+{{ .Files.Get "static/initializerJson.json" | printf "%s" | indent 4 }}

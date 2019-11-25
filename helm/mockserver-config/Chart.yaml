@@ -1,0 +1,24 @@
+name: mockserver-config
+version: "5.7.2"
+appVersion: "5.7.2"
+description: Chart to provide config to MockServer
+keywords:
+  - mocking
+  - mock-server
+  - http-mock
+  - http
+  - test
+  - test-server
+  - proxy
+  - http-proxy
+  - socks-proxy
+  - https-proxy
+home: "http://mock-server.com"
+sources:
+  - "https://github.com/jamesdbloom/mockserver"
+  - "https://hub.docker.com/r/jamesdbloom/mockserver"
+maintainers:
+  - name: James D Bloom
+    email: jamesdbloom+mockserver@gmail.com
+engine: gotpl
+icon: http://mock-server.com/apple-touch-icon.png

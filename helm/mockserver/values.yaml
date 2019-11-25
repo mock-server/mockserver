@@ -3,9 +3,11 @@ replicaCount: 1
 app:
   logLevel: "INFO"
   serverPort: "1080"
+  mapConfigDirectory: false
+  initializationJsonFileName: "initializerJson.json"
 
 image:
-  repository: jamesdbloom
+  repository: mockserver
   snapshot: false
   pullPolicy: IfNotPresent
 

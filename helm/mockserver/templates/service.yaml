@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "mockserver.fullname" . }}
+  name: {{ template "chart.fullname" . }}
 {{- if .Values.service.annotations }}
   annotations:
 {{ toYaml .Values.service.annotations | indent 4 }}
 {{- end }}
   labels:
-    app: {{ template "mockserver.name" . }}
-    chart: {{ template "mockserver.chart" . }}
+    app: {{ template "chart.name" . }}
+    chart: {{ template "chart.name_version" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
@@ -34,5 +34,5 @@ spec:
       nodePort: {{ .Values.service.nodePort }}
       {{- end }}
   selector:
-    app: {{ template "mockserver.name" . }}
+    app: {{ template "chart.name" . }}
     release: {{ .Release.Name }}
