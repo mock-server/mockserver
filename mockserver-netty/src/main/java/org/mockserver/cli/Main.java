@@ -17,6 +17,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.cli.Main.Arguments.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.ERROR;
 
 /**
  * @author jamesdbloom
@@ -110,6 +111,14 @@ public class Main {
 
         } catch (IllegalArgumentException iae) {
             showUsage();
+        } catch (Throwable throwable) {
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(SERVER_CONFIGURATION)
+                    .setLogLevel(ERROR)
+                    .setMessageFormat("Exception while starting: {}")
+                    .setThrowable(throwable)
+            );
         }
     }
 
