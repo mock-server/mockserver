@@ -13,7 +13,7 @@ public class PortFactory {
 
     public static int findFreePort() {
         int[] freePorts = findFreePorts(1);
-        return freePorts[random.nextInt(freePorts.length - 1)];
+        return freePorts[random.nextInt(freePorts.length)];
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -30,7 +30,7 @@ public class PortFactory {
                 serverSocket.close();
             }
             // allow time for the socket to be released
-            TimeUnit.MILLISECONDS.sleep(500);
+            TimeUnit.MILLISECONDS.sleep(250);
         } catch (Exception e) {
             throw new RuntimeException("Exception while trying to find a free port", e);
         }
