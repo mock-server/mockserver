@@ -1,6 +1,5 @@
 package org.mockserver.integration.server;
 
-import com.google.common.net.MediaType;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
@@ -9,7 +8,6 @@ import org.mockserver.model.*;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.verify.VerificationTimes;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -1288,17 +1286,17 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
 
     @Test
     public void shouldRetrieveRecordedExpectations() throws InterruptedException {
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).forward(
-            forward()
-                .withHost("127.0.0.1")
-                .withPort(insecureEchoServer.getPort())
-        );
-        HttpRequest complexRequest = request()
-            .withPath(calculatePath("some_path_one"))
-            .withHeader("some", "header")
-            .withQueryStringParameter("some", "parameter")
-            .withCookie("some", "parameter")
-            .withBody("some_body_one");
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path.*")),
+                exactly(4)
+            )
+            .forward(
+                forward()
+                    .withHost("127.0.0.1")
+                    .withPort(insecureEchoServer.getPort())
+            );
         assertEquals(
             response("some_body_one")
                 .withHeader("some", "header")
@@ -1306,7 +1304,12 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withHeader("set-cookie", "some=parameter")
                 .withCookie("some", "parameter"),
             makeRequest(
-                complexRequest,
+                request()
+                    .withPath(calculatePath("some_path_one"))
+                    .withHeader("some", "header")
+                    .withQueryStringParameter("some", "parameter")
+                    .withCookie("some", "parameter")
+                    .withBody("some_body_one"),
                 headersToIgnore
             )
         );
