@@ -30,7 +30,7 @@ public class PortFactory {
                 serverSocket.close();
             }
             // allow time for the socket to be released
-            TimeUnit.MILLISECONDS.sleep(250);
+            TimeUnit.MILLISECONDS.sleep(500);
         } catch (Exception e) {
             throw new RuntimeException("Exception while trying to find a free port", e);
         }
