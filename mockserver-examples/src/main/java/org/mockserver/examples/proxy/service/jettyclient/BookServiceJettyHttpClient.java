@@ -13,7 +13,6 @@ import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 
 import static org.mockserver.examples.proxy.json.ObjectMapperFactory.createObjectMapper;
-import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
@@ -30,7 +29,7 @@ public class BookServiceJettyHttpClient implements BookService {
 
     @PostConstruct
     private void initialise() {
-        port = environment.getProperty("bookService.port", Integer.class);
+        port = Integer.parseInt(System.getProperty("bookService.port"));
         host = environment.getProperty("bookService.host", "localhost");
         objectMapper = createObjectMapper();
         httpClient = createHttpClient();

@@ -32,7 +32,7 @@ public class BookServiceGoogleHttpClient implements BookService {
 
     @PostConstruct
     private void initialise() {
-        port = environment.getProperty("bookService.port", Integer.class);
+        port = Integer.parseInt(System.getProperty("bookService.port"));
         host = environment.getProperty("bookService.host", "localhost");
         objectMapper = createObjectMapper();
     }

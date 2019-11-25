@@ -37,7 +37,7 @@ public class BookServer {
     private final int httpPort;
     private final boolean secure;
 
-    public BookServer(int httpPort, boolean secure) {
+    BookServer(int httpPort, boolean secure) {
         this.httpPort = httpPort;
         this.secure = secure;
     }
@@ -70,12 +70,13 @@ public class BookServer {
                 throw new RuntimeException("Exception starting BookServer", e);
             }
         }
+        System.out.println("starting service on port: " + httpPort);
         serverBootstrap.bind(httpPort);
         TimeUnit.SECONDS.sleep(3);
     }
 
     private Map<String, Book> createBookData() {
-        Map<String, Book> booksDB = new HashMap<String, Book>();
+        Map<String, Book> booksDB = new HashMap<>();
         booksDB.put("1", new Book(1, "Xenophon's imperial fiction : on the education of Cyrus", "James Tatum", "0691067570", "1989"));
         booksDB.put("2", new Book(2, "You are here : personal geographies and other maps of the imagination", "Katharine A. Harmon", "1568984308", "2004"));
         booksDB.put("3", new Book(3, "You just don't understand : women and men in conversation", "Deborah Tannen", "0345372050", "1990"));
@@ -92,8 +93,8 @@ public class BookServer {
     }
 
     @PreDestroy
-    public void stopServer() throws Exception {
-
+    public void stopServer() {
+        System.out.println("stopping service on port: " + httpPort);
     }
 
     private class BookHandler extends SimpleChannelInboundHandler<FullHttpRequest> {

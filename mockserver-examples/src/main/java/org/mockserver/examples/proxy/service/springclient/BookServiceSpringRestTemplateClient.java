@@ -30,15 +30,13 @@ public class BookServiceSpringRestTemplateClient implements BookService {
     @Resource
     private Environment environment;
     private Integer port;
-    private Integer proxyPort;
     private String host;
     private ObjectMapper objectMapper;
     private RestTemplate restTemplate;
 
     @PostConstruct
     private void initialise() {
-        port = environment.getProperty("bookService.port", Integer.class);
-        proxyPort = environment.getProperty("bookService.proxyPort", Integer.class);
+        port = Integer.parseInt(System.getProperty("bookService.port"));
         host = environment.getProperty("bookService.host", "localhost");
         objectMapper = createObjectMapper();
         restTemplate = createRestTemplate();
