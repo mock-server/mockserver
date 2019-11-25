@@ -36,6 +36,12 @@ public class BooksPageGoogleClientSOCKSProxyIntegrationTest extends BooksPageInt
 
     @BeforeClass
     public static void setProxyType() {
+        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
+            startsWith("1.7."), equalTo("1.7"),
+            startsWith("7."), equalTo("7"),
+            startsWith("1.8."), equalTo("1.8"),
+            startsWith("8."), equalTo("8"))
+        ));
         System.setProperty("http.proxyType", "SOCKS");
     }
 
