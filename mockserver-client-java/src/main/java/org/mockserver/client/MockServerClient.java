@@ -53,6 +53,7 @@ MockServerClient implements Stoppable {
     private Boolean secure;
     private Integer port;
     private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null);
+    private HttpRequestEnhancer httpRequestEnhancer = new EmptyHttpRequestEnhancer();
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(MOCK_SERVER_LOGGER);
     private HttpRequestResponseSerializer httpRequestResponseSerializer = new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER);
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(MOCK_SERVER_LOGGER);
@@ -107,6 +108,14 @@ MockServerClient implements Stoppable {
         this.host = host;
         this.port = port;
         this.contextPath = contextPath;
+    }
+
+    public void setHttpRequestEnhancer(HttpRequestEnhancer httpRequestEnhancer) {
+        if (httpRequestEnhancer == null) {
+            throw new IllegalArgumentException("httpRequestEnhancer can not be null");
+        } else {
+            this.httpRequestEnhancer = httpRequestEnhancer;
+        }
     }
 
     EventLoopGroup getEventLoopGroup() {
@@ -165,6 +174,7 @@ MockServerClient implements Stoppable {
     }
 
     private HttpResponse sendRequest(HttpRequest request) {
+        request = httpRequestEnhancer.enhance(request);
         try {
             if (secure != null) {
                 request.withSecure(secure);
