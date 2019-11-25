@@ -18,7 +18,7 @@ public class CaseInsensitiveRegexMultiMapTestGet {
     public void shouldGetSingeValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
@@ -30,7 +30,7 @@ public class CaseInsensitiveRegexMultiMapTestGet {
     public void shouldGetFirstMultiValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
@@ -42,7 +42,7 @@ public class CaseInsensitiveRegexMultiMapTestGet {
     public void shouldGetAllSingeValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
@@ -54,7 +54,7 @@ public class CaseInsensitiveRegexMultiMapTestGet {
     public void shouldGetAllMultiValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 

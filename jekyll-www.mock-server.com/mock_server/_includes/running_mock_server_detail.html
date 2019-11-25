@@ -7,7 +7,7 @@
 <pre><code class="code xml">&lt;<span class="element">plugin</span>&gt;
     &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
     &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-    &lt;<span class="element">version</span>&gt;<span class="element_value">5.5.1</span>&lt;/<span class="element">version</span>&gt;
+    &lt;<span class="element">version</span>&gt;<span class="element_value">5.7.2</span>&lt;/<span class="element">version</span>&gt;
     &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
@@ -41,7 +41,7 @@
 <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">5.5.1</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">5.7.2</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
@@ -139,7 +139,7 @@
 		<strong>timeout</strong> - How long to block waiting for MockServer, after the timeout the plugin will shutdown MockServer, used by <strong>run</strong> goal, 0 means wait indefinitely (required: false, default: 0)
 	</li>
 	<li>
-		<strong>logLevel</strong> - The logging level (required: false, default: WARN)
+		<strong>logLevel</strong> - The logging level (required: false, default: INFO)
 	</li>
 	<li>
 		<strong>skip</strong> - Prevent the plugin from running (required: false, default: false)
@@ -164,7 +164,7 @@
 &lt;<span class="element">dependency</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;<span class="element">/groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-netty</span>&lt;<span class="element">/artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">5.5.1</span>&lt;<span class="element">/version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">5.7.2</span>&lt;<span class="element">/version</span>&gt;
 &lt;<span class="element">/dependency</span>&gt;</code></pre>
 
 <p>To start the server or proxy create a client, for example by using one of the start factory methods <span class="inline_code">ClientAndServer.startClientAndServer</span> as follows:</p>
@@ -211,7 +211,7 @@
 <pre class="prettyprint lang-xml code"><code class="code">&lt;dependency&gt;
     &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
     &lt;artifactId&gt;mockserver-netty&lt;/artifactId&gt;
-    &lt;version&gt;5.5.1&lt;/version&gt;
+    &lt;version&gt;5.7.2&lt;/version&gt;
 &lt;/dependency&gt;</code></pre>
 
 <p>Any test method can now use the <strong>mockServerClient</strong> field to <a href="/mock_server/getting_started.html#setup_expectations">create expectation</a> or <a href="/mock_server/verification.html">verify</a> requests.</p>
@@ -240,23 +240,22 @@
  * Start the proxy prior to test execution and stop the proxy after the tests have completed.
  * This constructor dynamically create a proxy that accepts HTTP(S) requests on the specified port
  *
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the HTTP(S) port for the proxy
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the HTTP(S) port for the proxy
  */</span>
-<span class="keyword">public</span> MockServerRule(Integer port, Object target);
+<span class="keyword">public</span> MockServerRule(Object target, Integer... ports);
 
 <span class="comment">/**
  * Start the proxy prior to test execution and stop the proxy after the tests have completed.
  * This constructor dynamically create a proxy that accepts HTTP(S) requests on the specified port
  *
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the HTTP(S) port for the proxy
- * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">httpsPort</span> the HTTPS port for the proxy
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">target</span> an instance of the test being executed
  * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">perTestSuite</span> indicates how many instances of MockServer are created
+ * <span class="javadoc_param_annotation">@param</span> <span class="javadoc_param_name">port</span> the HTTP(S) port for the proxy
  *                     if true a single MockServer is created per JVM
  *                     if false one instance per test class is created
  */</span>
-<span class="keyword">public</span> MockServerRule(Integer port, Object target, <span class="keyword">boolean</span> per TestSuite);</code></pre>
+<span class="keyword">public</span> MockServerRule(Object target, <span class="keyword">boolean</span> per TestSuite, Integer... ports);</code></pre>
 
 <a name="running_from_command_line" class="anchor" href="#running_from_command_line">&nbsp;</a>
 
@@ -266,9 +265,9 @@
 
 <ul>
 	<li><a href="#running_from_command_line_using_homebrew">using homebrew</a> i.e. <strong>brew install mockserver && mockserver</strong></li>
-	<li><a href="#running_from_command_line_using_java">using java directly</a> i.e. <strong>java -jar mockserver-netty-5.5.1-jar-with-dependencies.jar</strong></li>
-	<li><a href="#running_from_command_line_using_maven_plugin">using maven plugin</a> i.e. <strong>mvn org.mock-server:mockserver-maven-plugin:5.5.1:runForked</strong></li>
-	<li><a href="#docker_container">using docker</a> i.e. <strong>docker run -d -P jamesdbloom/mockserver</strong></li>
+	<li><a href="#running_from_command_line_using_java">using java directly</a> i.e. <strong>java -jar mockserver-netty-5.7.2-jar-with-dependencies.jar</strong></li>
+	<li><a href="#running_from_command_line_using_maven_plugin">using maven plugin</a> i.e. <strong>mvn org.mock-server:mockserver-maven-plugin:5.7.2:runForked</strong></li>
+	<li><a href="#docker_container">using docker</a> i.e. <strong>docker run -d --rm -p jamesdbloom/mockserver</strong></li>
 </ul>
 
 <a name="running_from_command_line_using_homebrew" class="anchor" href="#running_from_command_line_using_homebrew">&nbsp;</a>
@@ -316,9 +315,10 @@
                                  proxyRemotePort has been specified,
                                  proxyRemoteHost will default to \"localhost\".
 
-    -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>            Optionally specify log level as TRACE, DEBUG,
-                                 INFO, WARN, ERROR or OFF. If not specified
-                                 default is INFO
+    -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>            Optionally specify log level using SLF4J levels:
+                                 TRACE, DEBUG, INFO, WARN, ERROR, OFF or Java
+                                 Logger levels: FINEST, FINE, INFO, WARNING,
+                                 SEVERE or OFF. If not specified default is INFO
 
     -jvmOptions <span class="command_line_argument_placeholder">&lt;level&gt;</span>          Specified generic JVM options or system properties.
 
@@ -328,13 +328,6 @@ i.e. mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080,10
 
 <pre><code class="code">mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080</span></code></pre>
 
-<h3>Logging</h3>
-
-<p>When MockServer is installed via Homebrew a log directory is created at <strong>/usr/local/var/log/mockserver</strong>. All logs are written into this directory, this includes normal application logs, which are are written in
-	<strong>/usr/local/var/log/mockserver/mockserver.log</strong>, and request logs, which are written into <strong>/usr/local/var/log/mockserver/mockserver_request.log</strong> (when a <strong>dumpToLog</strong> request is received).</p>
-
-<p>The amount of logs written into the application log <strong>/usr/local/var/log/mockserver/mockserver.log</strong> can be controlled using the <strong>-logLevel</strong> command as detailed above.</p>
-
 <a name="running_from_command_line_using_java" class="anchor" href="#running_from_command_line_using_java">&nbsp;</a>
 
 <h3>Running From Command Line - Using Java</h3>
@@ -342,9 +335,9 @@ i.e. mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080,10
 <p>MockServer can be run directly from the command line using java directly as follow:</p>
 
 <ol>
-	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/5.5.1/mockserver-netty-5.5.1-jar-with-dependencies.jar">mockserver-netty-5.5.1-jar-with-dependencies.jar</a> from Maven Central</p></li>
+	<li><p>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/5.7.2/mockserver-netty-5.7.2-jar-with-dependencies.jar">mockserver-netty-5.7.2-jar-with-dependencies.jar</a> from Maven Central</p></li>
 	<li>
-		<code class="code inline">java -jar <span class="command_line_argument_placeholder">&lt;path to mockserver-netty-5.5.1-jar-with-dependencies.jar&gt;</span> -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span></code>
+		<code class="code inline">java -jar <span class="command_line_argument_placeholder">&lt;path to mockserver-netty-5.7.2-jar-with-dependencies.jar&gt;</span> -serverPort <span class="command_line_argument_placeholder">&lt;port&gt;</span></code>
 	</li>
 </ol>
 
@@ -375,38 +368,20 @@ i.e. mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080,10
                                  proxyRemotePort has been specified,
                                  proxyRemoteHost will default to \"localhost\".
 
-    -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>            Optionally specify log level as TRACE, DEBUG,
-                                 INFO, WARN, ERROR or OFF. If not specified
-                                 default is INFO
+    -logLevel <span class="command_line_argument_placeholder">&lt;level&gt;</span>            Optionally specify log level using SLF4J levels:
+                                 TRACE, DEBUG, INFO, WARN, ERROR, OFF or Java
+                                 Logger levels: FINEST, FINE, INFO, WARNING,
+                                 SEVERE or OFF. If not specified default is INFO
 
 i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
 
 <p>For example:</p>
 
-<pre><code class="code">java -jar ~/Downloads/mockserver-netty-5.5.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080,1081</span> -logLevel INFO</code></pre>
+<pre><code class="code">java -jar ~/Downloads/mockserver-netty-5.7.2-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080,1081</span> -logLevel INFO</code></pre>
 
-<p>All interactions with the MockServer are logged including setting up expectations, matching expectations, clearing expectations and verifying requests.  The when running from the command line, Maven plugin, npm module or Grunt plugin the log is written to a file called <strong>mockserver.log</strong> in the current working directory where the MockServer is running. This log can be particularly helpful when trying to debug why a test is failing or expectations are not being matched.</p>
+<p>All interactions with the MockServer are logged including setting up expectations, matching expectations, clearing expectations and verifying requests.  This log information can be particularly helpful when trying to debug why a test is failing or expectations are not being matched.</p>
 
-<p>The argument <span class="inline_code">logLevel</span> can be used to set the <a href="/mock_server/debugging_issues.html#logging-levels">log level</a>, as shown above.</p>
-
-<p>It is also possible to specify a custom <a href="http://logback.qos.ch">logback</a> configuration file to override the default MockServer or MockServer Proxy logging settings. An example <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-netty/src/main/resources/example_logback.xml">logback configuration file</a> is available in github.</p>
-
-<p>A custom <a href="http://logback.qos.ch">logback</a> configuration file can be specified using the <span class="inline_code">logback.configurationFile</span> system property with an absolute or relative file path or a classpath, as follows:</p>
-
-<pre><code class="code">java -Droot.logLevel=WARN -Dlogback.configurationFile=example_logback.xml -jar ~/Downloads/mockserver-netty-5.5.1-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080,1081</span> -logLevel INFO</code></pre>
-
-<p>A custom <a href="http://logback.qos.ch">logback</a> configuration file will also be automatically picked up if it is called <strong>logback.xml</strong> and is in the root of the classpath, however, the jar-with-dependencies already contains a <strong>logback.xml</strong> file, so to override this, the overriding <strong>logback.xml</strong> file must be higher (i.e. earlier) in the classpath.</p>
-
-<h3>Disabling Logging</h3>
-
-<p>To disable logging the following system properties can be used:</p>
-
-<ul>
-	<li><code class="code inline">-Dmockserver.logLevel=OFF</code> - to disable logging from the MockServer and MockServer Proxy classes, this is equivalent to using the command line argument <code>-logLevel OFF</code></li>
-	<li><code class="code inline">-Droot.logLevel=OFF</code> - to disable all logging from all other classes (i.e. all none MockServer and MockServer Proxy classes)</li>
-</ul>
-
-<p>If logging is disabled then no log file will be created.  This is because the log files are only created when the first item is written to the log file.</p>
+<p>The argument <span class="inline_code">logLevel</span> can be used to set the <a href="/mock_server/debugging_issues.html#logging-levels">log level</a>, as shown above. It is also possible to further customise where loggers send log events by overriding the default <a href="/mock_server/debugging_issues.html#configure_java_logger">logging configuration</a>.</p>
 
 <a name="running_from_command_line_using_maven_plugin" class="anchor" href="#running_from_command_line_using_maven_plugin">&nbsp;</a>
 
@@ -414,7 +389,7 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <p>MockServer can be run directly from the command line and using the <strong>mockserver-maven-plugin</strong> as follow:</p>
 
-<pre><code class="code">mvn -Dmockserver.serverPort=<span class="numeric_literal">1080</span> -Dmockserver.logLevel=INFO org.mock-server:mockserver-maven-plugin:5.5.1:runForked</code></pre>
+<pre><code class="code">mvn -Dmockserver.serverPort=<span class="numeric_literal">1080</span> -Dmockserver.logLevel=INFO org.mock-server:mockserver-maven-plugin:5.7.2:runForked</code></pre>
 
 <p>When run from the command line the Maven plugin can be configured with the following properties:</p>
 
@@ -423,13 +398,13 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 		<strong>mockserver.serverPort</strong> - The port the MockServer listens for incoming request. Port unification is used to support both HTTP and HTTPS and proxying on the same port (required: false)
 	</li>
 	<li>
-		<strong>mockserver.logLevel</strong> - The logging level (required: false, default: WARN)
+		<strong>mockserver.logLevel</strong> - The logging level (required: false, default: INFO)
 	</li>
 </ul>
 
 <p>The <span class="annotation">runForked</span> goal of the <strong>mockserver-maven-plugin</strong> will fork a JVM process containing the Netty based MockServer. To stop the forked JVM process use the <span class="annotation">stopForked</span> goal, as follows:</p>
 
-<pre><code class="code">mvn -Dmockserver.serverPort=<span class="numeric_literal">1080</span> org.mock-server:mockserver-maven-plugin:5.5.1:stopForked</code></pre>
+<pre><code class="code">mvn -Dmockserver.serverPort=<span class="numeric_literal">1080</span> org.mock-server:mockserver-maven-plugin:5.7.2:stopForked</code></pre>
 
 <p>For more information on the <strong>mockserver-maven-plugin</strong> see the section on <a href="#maven_plugin">MockServer Maven Plugin</a></p>
 
@@ -440,8 +415,8 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 <p>To run as a WAR deployed on any JEE web server:</p>
 
 <ol>
-	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/5.5.1/mockserver-war-5.5.1.war">mockserver-war-5.5.1.war</a> from Maven Central</li>
-	<li>deploy <strong>mockserver-war-5.5.1.war</strong> to any JEE web server</li>
+	<li>download <a href="http://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-war/5.7.2/mockserver-war-5.7.2.war">mockserver-war-5.7.2.war</a> from Maven Central</li>
+	<li>deploy <strong>mockserver-war-5.7.2.war</strong> to any JEE web server</li>
 </ol>
 
 <p><strong>WAR Context Path</strong></p>
@@ -468,7 +443,7 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <h2>Build & Run From Source</h2>
 
-<p>MockServer is now only built using maven as the use of gradle caused problems with the Travis CI environment so the gradle build was removed.</p>
+<p>MockServer is written in Java and built using maven.  The maven wrapper is used so maven does not need to be installed but Java JDK 8 or higher does need to be installed.</p>
 
 <p>First clone the repository as follows:</p>
 
@@ -477,10 +452,10 @@ cd mockserver</code></pre>
 
 <p>Next use <strong>maven</strong> to build an executable jar containing all dependencies as follows:</p>
 
-<pre><code class="code">mvn clean package</code></pre>
+<pre><code class="code">./mvnw clean package</code></pre>
 
 <p>This will produce a jar file under the target directory called, as follows:</p>
 
-<pre><code class="code">mockserver-netty/target/mockserver-netty-5.5.1-jar-with-dependencies.jar</code></pre>
+<pre><code class="code">mockserver-netty/target/mockserver-netty-5.7.2-jar-with-dependencies.jar</code></pre>
 
 <p>Run MockServer then using the executable jar as per the instruction above in <a href="#running_from_command_line">Running From The Command Line</a></p>

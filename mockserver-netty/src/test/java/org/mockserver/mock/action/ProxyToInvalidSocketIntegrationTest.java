@@ -8,6 +8,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.verify.VerificationTimes;
@@ -33,7 +34,7 @@ public class ProxyToInvalidSocketIntegrationTest {
 
     private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
 
-    private static NettyHttpClient httpClient = new NettyHttpClient(clientEventLoopGroup, null);
+    private static NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
 
     @BeforeClass
     public static void startServer() {
@@ -58,7 +59,7 @@ public class ProxyToInvalidSocketIntegrationTest {
     @Test
     public void shouldNotForwardRequestWithInvalidHostHead() throws Exception {
         // when
-        Future<HttpResponse> responseSettableFuture =
+        Future<HttpResponse> responseFuture =
             httpClient.sendRequest(
                 request()
                     .withPath("/some_path")
@@ -67,13 +68,13 @@ public class ProxyToInvalidSocketIntegrationTest {
             );
 
         // then
-        assertThat(responseSettableFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
+        assertThat(responseFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
     }
 
     @Test
     public void shouldVerifyReceivedRequests() throws Exception {
         // given
-        Future<HttpResponse> responseSettableFuture =
+        Future<HttpResponse> responseFuture =
             httpClient.sendRequest(
                 request()
                     .withPath("/some_path")
@@ -82,7 +83,7 @@ public class ProxyToInvalidSocketIntegrationTest {
             );
 
         // then
-        assertThat(responseSettableFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
+        assertThat(responseFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
 
         // then
         clientAndServer.verify(request()

@@ -16,6 +16,6 @@ public interface ExpectationResponseCallback extends ExpectationCallback<HttpRes
      * @param httpRequest the request that satisfied the expectation condition
      * @return the response that will be returned
      */
-    HttpResponse handle(HttpRequest httpRequest);
+    HttpResponse handle(HttpRequest httpRequest) throws Exception;
 
 }

@@ -116,8 +116,8 @@ public class HttpResponseDTOTest {
 
         // then
         assertThat(httpResponseDTO.getBody(), is(nullValue()));
-        assertTrue(httpResponseDTO.getCookies().isEmpty());
-        assertTrue(httpResponseDTO.getHeaders().isEmpty());
+        assertThat(httpResponseDTO.getCookies(), is(nullValue()));
+        assertThat(httpResponseDTO.getHeaders(), is(nullValue()));
         assertThat(httpResponseDTO.getStatusCode(), is(nullValue()));
         assertThat(httpResponseDTO.getReasonPhrase(), is(nullValue()));
         assertThat(httpResponseDTO.getConnectionOptions(), is(nullValue()));
@@ -130,8 +130,8 @@ public class HttpResponseDTOTest {
 
         // then
         assertThat(httpResponseDTO.getBody(), is(nullValue()));
-        assertTrue(httpResponseDTO.getCookies().isEmpty());
-        assertTrue(httpResponseDTO.getHeaders().isEmpty());
+        assertThat(httpResponseDTO.getCookies(), is(nullValue()));
+        assertThat(httpResponseDTO.getHeaders(), is(nullValue()));
         assertThat(httpResponseDTO.getStatusCode(), is(nullValue()));
         assertThat(httpResponseDTO.getReasonPhrase(), is(nullValue()));
         assertThat(httpResponseDTO.getConnectionOptions(), is(nullValue()));

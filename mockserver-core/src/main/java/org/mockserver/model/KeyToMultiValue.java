@@ -10,26 +10,37 @@ import static org.mockserver.model.NottableString.*;
 public class KeyToMultiValue extends ObjectWithJsonToString {
     private final NottableString name;
     private final List<NottableString> values;
-    private int hashCode;
+    private Integer hashCode;
 
-    public KeyToMultiValue(String name, String... values) {
+    KeyToMultiValue(final String name, final String... values) {
         this(string(name), strings(values));
     }
 
-    public KeyToMultiValue(NottableString name, NottableString... values) {
-        this(name, Arrays.asList(values));
+    @SuppressWarnings({"UseBulkOperation", "ManualArrayToCollectionCopy"})
+    KeyToMultiValue(final NottableString name, final NottableString... values) {
+        this.name = name;
+        if (values == null || values.length == 0) {
+            this.values = Collections.singletonList(string(".*"));
+        } else if (values.length == 1) {
+            this.values = Collections.singletonList(values[0]);
+        } else {
+            this.values = new LinkedList<>();
+            for (NottableString value : values) {
+                this.values.add(value);
+            }
+        }
     }
 
-    public KeyToMultiValue(String name, Collection<String> values) {
+    KeyToMultiValue(final String name, final Collection<String> values) {
         this(string(name), strings(values));
     }
 
-    public KeyToMultiValue(NottableString name, Collection<NottableString> values) {
+    KeyToMultiValue(final NottableString name, final Collection<NottableString> values) {
         this.name = name;
         if (values == null || values.isEmpty()) {
             this.values = Collections.singletonList(string(".*"));
         } else {
-            this.values = new ArrayList<>(values);
+            this.values = new LinkedList<>(values);
         }
         this.hashCode = Objects.hash(this.name, this.values);
     }
@@ -42,22 +53,22 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
         return values;
     }
 
-    public void addValue(String value) {
+    public void addValue(final String value) {
         addValue(string(value));
     }
 
-    public void addValue(NottableString value) {
+    private void addValue(final NottableString value) {
         if (values != null && !values.contains(value)) {
             values.add(value);
         }
         this.hashCode = Objects.hash(name, values);
     }
 
-    public void addValues(List<String> values) {
+    private void addValues(final List<String> values) {
         addNottableValues(deserializeNottableStrings(values));
     }
 
-    public void addNottableValues(List<NottableString> values) {
+    private void addNottableValues(final List<NottableString> values) {
         if (this.values != null) {
             for (NottableString value : values) {
                 if (!this.values.contains(value)) {
@@ -67,16 +78,16 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
         }
     }
 
-    public void addValues(String... values) {
+    public void addValues(final String... values) {
         addValues(Arrays.asList(values));
     }
 
-    public void addValues(NottableString... values) {
+    public void addValues(final NottableString... values) {
         addNottableValues(Arrays.asList(values));
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
@@ -93,6 +104,9 @@ public class KeyToMultiValue extends ObjectWithJsonToString {
 
     @Override
     public int hashCode() {
+        if (hashCode == null) {
+            this.hashCode = Objects.hash(this.name, this.values);
+        }
         return hashCode;
     }
 }

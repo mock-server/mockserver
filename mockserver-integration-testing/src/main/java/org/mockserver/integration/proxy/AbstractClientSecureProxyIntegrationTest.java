@@ -13,6 +13,7 @@ import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
@@ -145,7 +146,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
         // given
         HttpClient httpClient = HttpClients
                 .custom()
-                .setSSLSocketFactory(new SSLConnectionSocketFactory(KeyStoreFactory.keyStoreFactory().sslContext(), NoopHostnameVerifier.INSTANCE))
+                .setSSLSocketFactory(new SSLConnectionSocketFactory(new KeyStoreFactory(new MockServerLogger()).sslContext(), NoopHostnameVerifier.INSTANCE))
                 .setRoutePlanner(
                         new DefaultProxyRoutePlanner(
                                 new HttpHost(

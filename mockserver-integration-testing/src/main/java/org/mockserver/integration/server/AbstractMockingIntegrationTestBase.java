@@ -1,16 +1,17 @@
 package org.mockserver.integration.server;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.mockserver.client.NettyHttpClient;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.client.NettyHttpClient;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.model.*;
@@ -24,24 +25,17 @@ import java.util.concurrent.TimeUnit;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.mockserver.model.Cookie.cookie;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.Header.header;
-import static org.mockserver.model.HttpClassCallback.callback;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpTemplate.template;
-import static org.mockserver.model.Parameter.param;
-import static org.mockserver.model.StringBody.exact;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
  */
 public abstract class AbstractMockingIntegrationTestBase {
 
+    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(AbstractMockingIntegrationTestBase.class);
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
     protected static List<String> headersToIgnore = ImmutableList.of(
@@ -91,7 +85,17 @@ public abstract class AbstractMockingIntegrationTestBase {
 
     @Before
     public void resetServer() {
-        mockServerClient.reset();
+        try {
+            mockServerClient.reset();
+        } catch (Throwable throwable) {
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.WARN)
+                    .setLogLevel(WARN)
+                    .setMessageFormat("Exception while resetting - " + throwable.getMessage())
+                    .setArguments(throwable)
+            );
+        }
     }
 
     protected String calculatePath(String path) {
@@ -104,7 +108,7 @@ public abstract class AbstractMockingIntegrationTestBase {
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
         clientEventLoopGroup = new NioEventLoopGroup();
-        httpClient = new NettyHttpClient(clientEventLoopGroup, null);
+        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
     }
 
     @AfterClass
@@ -114,7 +118,7 @@ public abstract class AbstractMockingIntegrationTestBase {
 
     String addContextToPath(String path) {
         String cleanedPath = path;
-        if (!Strings.isNullOrEmpty(servletContext)) {
+        if (isNotBlank(servletContext)) {
             cleanedPath =
                 (!servletContext.startsWith("/") ? "/" : "") +
                     servletContext +
@@ -129,7 +133,7 @@ public abstract class AbstractMockingIntegrationTestBase {
             throw new AssertionError("Number of request matchers does not match number of requests, expected:<" + httpRequestMatchers.length + "> but was:<" + httpRequests.length + ">");
         } else {
             for (int i = 0; i < httpRequestMatchers.length; i++) {
-                if (!new HttpRequestMatcher(httpRequestMatchers[i], new MockServerLogger(this.getClass())).matches(null, httpRequests[i])) {
+                if (!new HttpRequestMatcher(MOCK_SERVER_LOGGER, httpRequestMatchers[i]).matches(null, httpRequests[i])) {
                     throw new AssertionError("Request does not match request matcher, expected:<" + httpRequestMatchers[i] + "> but was:<" + httpRequests[i] + ">");
                 }
             }
@@ -151,7 +155,7 @@ public abstract class AbstractMockingIntegrationTestBase {
                     if (header.getName().getValue().equalsIgnoreCase(CONTENT_TYPE.toString())) {
                         // this fixes Tomcat which removes the space between
                         // media type and charset in the Content-Type header
-                        for (NottableString value : new ArrayList<NottableString>(header.getValues())) {
+                        for (NottableString value : new ArrayList<>(header.getValues())) {
                             header.getValues().clear();
                             header.addValues(value.getValue().replace(";charset", "; charset"));
                         }
@@ -161,6 +165,11 @@ public abstract class AbstractMockingIntegrationTestBase {
                 }
             }
             httpResponse.withHeaders(headers);
+            httpResponse.withReasonPhrase(
+                isBlank(httpResponse.getReasonPhrase()) ?
+                    HttpResponseStatus.valueOf(httpResponse.getStatusCode()).reasonPhrase() :
+                    httpResponse.getReasonPhrase()
+            );
             return httpResponse;
         } catch (Exception ex) {
             throw new RuntimeException(ex);

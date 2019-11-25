@@ -4,6 +4,7 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.ClearType;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpRequestAndHttpResponse;
 import org.mockserver.verify.VerificationTimes;
 
 import java.util.List;
@@ -17,6 +18,26 @@ public class MockServerClientExamples {
 
     public void createExpectationMockServerClient() {
         new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withMethod("GET")
+                    .withPath("/view/cart")
+                    .withCookies(
+                        cookie("session", "4930456C-C718-476F-971F-CB8E047AB349")
+                    )
+                    .withQueryStringParameters(
+                        param("cartId", "055CA455-1DF7-45BB-8535-4F83E7266092")
+                    )
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+    }
+
+    public void createExpectationOverTLSMockServerClient() {
+        new MockServerClient("localhost", 1080)
+            .withSecure(true)
             .when(
                 request()
                     .withMethod("GET")
@@ -77,6 +98,15 @@ public class MockServerClientExamples {
     public void retrieveRecordedRequests() {
         HttpRequest[] recordedRequests = new MockServerClient("localhost", 1080)
             .retrieveRecordedRequests(
+                request()
+                    .withPath("/some/path")
+                    .withMethod("POST")
+            );
+    }
+
+    public void retrieveRecordedRequestResponses() {
+        HttpRequestAndHttpResponse[] httpRequestAndHttpResponse = new MockServerClient("localhost", 1080)
+            .retrieveRecordedRequestsAndResponses(
                 request()
                     .withPath("/some/path")
                     .withMethod("POST")

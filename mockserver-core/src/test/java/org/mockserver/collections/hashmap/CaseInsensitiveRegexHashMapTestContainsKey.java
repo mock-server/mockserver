@@ -16,7 +16,7 @@ public class CaseInsensitiveRegexHashMapTestContainsKey {
     public void singleValuedMapShouldContainKeyForSingleValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -27,9 +27,9 @@ public class CaseInsensitiveRegexHashMapTestContainsKey {
     public void multiValuedMapShouldContainKeyForSingleValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            true, new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
@@ -40,7 +40,7 @@ public class CaseInsensitiveRegexHashMapTestContainsKey {
     public void singleValuedMapShouldNotContainKeyForSingleValueWithKeyMismatch() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -51,9 +51,9 @@ public class CaseInsensitiveRegexHashMapTestContainsKey {
     public void multiValuedMapShouldNotContainKeyForSingleValueWithKeyMismatch() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            true, new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then

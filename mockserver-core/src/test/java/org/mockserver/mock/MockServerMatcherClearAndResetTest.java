@@ -6,23 +6,26 @@ import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
-import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
+import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.Parameter;
 import org.mockserver.scheduler.Scheduler;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.matchers.TimeToLive.unlimited;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
@@ -31,42 +34,70 @@ public class MockServerMatcherClearAndResetTest {
 
     private MockServerMatcher mockServerMatcher;
     private MockServerLogger logFormatter;
-    private Scheduler scheduler;
-    private WebSocketClientRegistry webSocketClientRegistry;
 
     @Before
     public void prepareTestFixture() {
-        logFormatter = mock(MockServerLogger.class);
-        scheduler = mock(Scheduler.class);
-        webSocketClientRegistry = mock(WebSocketClientRegistry.class);
+        logFormatter = new MockServerLogger();
+        Scheduler scheduler = mock(Scheduler.class);
+        WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
         mockServerMatcher = new MockServerMatcher(logFormatter, scheduler, webSocketClientRegistry);
     }
 
     @Test
     public void shouldRemoveExpectationWhenNoMoreTimes() {
         // given
-        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
-        Expectation expectation = new Expectation(new HttpRequest().withPath("somepath"), Times.exactly(2), TimeToLive.unlimited()).thenRespond(httpResponse);
+        Expectation expectation = new Expectation(
+            request()
+                .withPath("somepath"),
+            Times.exactly(2),
+            unlimited()
+        ).thenRespond(
+            response()
+                .withBody("somebody")
+        );
 
         // when
         mockServerMatcher.add(expectation);
 
+        // and
+        assertEquals(expectation, mockServerMatcher.firstMatchingExpectation(request().withPath("somepath")));
+        assertEquals(expectation, mockServerMatcher.firstMatchingExpectation(request().withPath("somepath")));
+
         // then
-        assertEquals(expectation, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
-        assertEquals(expectation, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
         assertThat(mockServerMatcher.httpRequestMatchers, is(empty()));
-        assertEquals(null, mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")));
+        assertNull(mockServerMatcher.firstMatchingExpectation(request().withPath("somepath")));
     }
 
     @Test
     public void shouldClearAllExpectations() {
         // given
-        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
-        mockServerMatcher.add(new Expectation(new HttpRequest().withPath("somepath"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse));
-        mockServerMatcher.add(new Expectation(new HttpRequest().withPath("somepath"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse));
+        // given
+        String pathToMatchOn = "somePath";
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withPath(pathToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withPath(pathToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
 
         // when
-        mockServerMatcher.clear(new HttpRequest().withPath("somepath"));
+        mockServerMatcher.clear(request().withPath(pathToMatchOn));
 
         // then
         assertThat(mockServerMatcher.httpRequestMatchers, is(empty()));
@@ -75,9 +106,28 @@ public class MockServerMatcherClearAndResetTest {
     @Test
     public void shouldResetAllExpectationsWhenHttpRequestNull() {
         // given
-        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
-        mockServerMatcher.add(new Expectation(new HttpRequest().withPath("somepath"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse));
-        mockServerMatcher.add(new Expectation(new HttpRequest().withPath("somepath"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse));
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withPath("abc"),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withPath("def"),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
 
         // when
         mockServerMatcher.clear(null);
@@ -89,9 +139,28 @@ public class MockServerMatcherClearAndResetTest {
     @Test
     public void shouldResetAllExpectations() {
         // given
-        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
-        mockServerMatcher.add(new Expectation(new HttpRequest().withPath("somepath"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse));
-        mockServerMatcher.add(new Expectation(new HttpRequest().withPath("somepath"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse));
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withPath("abc"),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withPath("def"),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
 
         // when
         mockServerMatcher.reset();
@@ -103,56 +172,681 @@ public class MockServerMatcherClearAndResetTest {
     @Test
     public void shouldClearMatchingExpectationsByPathOnly() {
         // given
-        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
-        mockServerMatcher.add(new Expectation(new HttpRequest().withPath("abc"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse));
-        Expectation expectation = new Expectation(new HttpRequest().withPath("def"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse);
-        mockServerMatcher.add(expectation);
+        String pathToMatchOn = "abc";
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withPath(pathToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withPath("def"),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
 
         // when
-        mockServerMatcher.clear(new HttpRequest().withPath("abc"));
+        mockServerMatcher.clear(request().withPath(pathToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers, hasItems(new MatcherBuilder(logFormatter).transformsToMatcher(expectation)));
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[1])));
     }
 
     @Test
     public void shouldClearMatchingExpectationsByMethodOnly() {
         // given
-        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
-        mockServerMatcher.add(new Expectation(new HttpRequest().withMethod("GET").withPath("abc"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse));
-        mockServerMatcher.add(new Expectation(new HttpRequest().withMethod("GET").withPath("def"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse));
-        Expectation expectation = new Expectation(new HttpRequest().withMethod("POST").withPath("def"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse);
-        mockServerMatcher.add(expectation);
+        String methodToMatchOn = "GET";
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod(methodToMatchOn)
+                    .withPath("abc"),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod(methodToMatchOn)
+                    .withPath("def"),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("POST")
+                    .withPath("def"),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[2]);
 
         // when
-        mockServerMatcher.clear(new HttpRequest().withMethod("GET"));
+        mockServerMatcher.clear(request().withMethod(methodToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers, hasItems(new MatcherBuilder(logFormatter).transformsToMatcher(expectation)));
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
     }
 
     @Test
     public void shouldClearMatchingExpectationsByHeaderOnly() {
         // given
-        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
-        mockServerMatcher.add(new Expectation(new HttpRequest().withMethod("GET").withPath("abc").withHeader(new Header("headerOneName", "headerOneValue")), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse));
-        mockServerMatcher.add(new Expectation(new HttpRequest().withMethod("PUT").withPath("def").withHeaders(new Header("headerOneName", "headerOneValue")), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse));
-        Expectation expectation = new Expectation(new HttpRequest().withMethod("POST").withPath("def"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse);
-        mockServerMatcher.add(expectation);
+        Header headerToMatchOn = new Header("headerOneName", "headerOneValue");
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withHeader(headerToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("PUT")
+                    .withPath("def")
+                    .withHeaders(headerToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("POST")
+                    .withPath("def"),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[2]);
 
         // when
-        mockServerMatcher.clear(new HttpRequest().withHeader(new Header("headerOneName", "headerOneValue")));
+        mockServerMatcher.clear(request().withHeader(headerToMatchOn));
 
         // then
-        assertThat(mockServerMatcher.httpRequestMatchers, hasItems(new MatcherBuilder(logFormatter).transformsToMatcher(expectation)));
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
     }
+
+    @Test
+    public void shouldClearMatchingExpectationsWithNottedHeaders() {
+        // given
+        Header headerToMatchOn = new Header("!headerOneName", "!headerOneValue");
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withHeader(headerToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("PUT")
+                    .withPath("def")
+                    .withHeaders(headerToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("POST")
+                    .withPath("def")
+                    .withHeaders(new Header("headerOneName", "headerOneValue")),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[2]);
+
+        // when
+        mockServerMatcher.clear(request().withHeader(headerToMatchOn));
+
+        // then
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+    }
+
+    @Test
+    public void shouldClearAllMatchingExpectationsWithNottedHeaders() {
+        // given
+        Header headerToMatchOn = new Header("!headerOneName", "!headerOneValue");
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withHeader(headerToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withHeader(headerToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("POST")
+                    .withPath("def"),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[2]);
+
+        // when
+        mockServerMatcher.clear(request().withHeader(headerToMatchOn));
+
+        // then
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
+    }
+
+    @Test
+    public void shouldClearMatchingExpectationsWithHeadersAndNottedHeaders() {
+        // given
+        Header[] headersToMatchOn = new Header[]{
+            new Header("!headerOneName", "!headerOneValue"),
+            new Header("headerTwoName", "headerTwoName")
+        };
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withHeaders(headersToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("PUT")
+                    .withPath("def")
+                    .withHeaders(headersToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("POST")
+                    .withPath("def")
+                    .withHeaders(
+                        new Header("headerOneName", "headerOneValue")
+                    ),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[2]);
+
+        // when
+        mockServerMatcher.clear(request().withHeaders(headersToMatchOn));
+
+        // then
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+    }
+
+    @Test
+    public void shouldClearAllMatchingExpectationsWithHeadersAndNottedHeaders() {
+        // given
+        Header[] headersToMatchOn = new Header[]{
+            new Header("!headerOneName", "!headerOneValue"),
+            new Header("headerTwoName", "headerTwoName")
+        };
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withHeaders(headersToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withHeaders(headersToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("POST")
+                    .withPath("def")
+                    .withHeaders(
+                        new Header("headerTwoName", "headerTwoName")
+                    ),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[2]);
+
+        // when
+        mockServerMatcher.clear(request().withHeaders(headersToMatchOn));
+
+        // then
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
+    }
+
+    @Test
+    public void shouldClearMatchingExpectationsWithMultipleNottedHeaders() {
+        // given
+        Header[] headersToMatchOn = new Header[]{
+            new Header("!headerOneName", "!headerOneValue"),
+            new Header("!headerTwoName", "!headerTwoName")
+        };
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withHeaders(headersToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("PUT")
+                    .withPath("def")
+                    .withHeaders(headersToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("POST")
+                    .withPath("def")
+                    .withHeaders(
+                        new Header("headerOneName", "headerOneValue"),
+                        new Header("headerTwoName", "headerTwoName")
+                    ),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[2]);
+
+        // when
+        mockServerMatcher.clear(request().withHeaders(headersToMatchOn));
+
+        // then
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+    }
+
+    @Test
+    public void shouldClearAllMatchingExpectationsWithMultipleNottedHeaders() {
+        // given
+        Header[] headersToMatchOn = new Header[]{
+            new Header("!headerOneName", "!headerOneValue"),
+            new Header("!headerTwoName", "!headerTwoName")
+        };
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withHeaders(headersToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withHeaders(headersToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("POST")
+                    .withPath("def"),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[2]);
+
+        // when
+        mockServerMatcher.clear(request().withHeaders(headersToMatchOn));
+
+        // then
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
+    }
+
+    @Test
+    public void shouldClearMatchingExpectationsWithMultipleNottedCookies() {
+        // given
+        Cookie[] cookiesToMatchOn = new Cookie[]{
+            new Cookie("!cookieOneName", "!cookieOneValue"),
+            new Cookie("!cookieTwoName", "!cookieTwoName")
+        };
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withCookies(cookiesToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("PUT")
+                    .withPath("def")
+                    .withCookies(cookiesToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("POST")
+                    .withPath("def")
+                    .withCookies(
+                        new Cookie("cookieOneName", "cookieOneValue"),
+                        new Cookie("cookieTwoName", "cookieTwoName")
+                    ),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[2]);
+
+        // when
+        mockServerMatcher.clear(request().withCookies(cookiesToMatchOn));
+
+        // then
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+    }
+
+    @Test
+    public void shouldClearAllMatchingExpectationsWithMultipleNottedCookies() {
+        // given
+        Cookie[] cookiesToMatchOn = new Cookie[]{
+            new Cookie("!cookieOneName", "!cookieOneValue"),
+            new Cookie("!cookieTwoName", "!cookieTwoName")
+        };
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withCookies(cookiesToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withCookies(cookiesToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("POST")
+                    .withPath("def"),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[2]);
+
+        // when
+        mockServerMatcher.clear(request().withCookies(cookiesToMatchOn));
+
+        // then
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
+    }
+
+    @Test
+    public void shouldClearMatchingExpectationsWithMultipleNottedParameters() {
+        // given
+        Parameter[] parametersToMatchOn = new Parameter[]{
+            new Parameter("!parameterOneName", "!parameterOneValue"),
+            new Parameter("!parameterTwoName", "!parameterTwoName")
+        };
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withQueryStringParameters(parametersToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("PUT")
+                    .withPath("def")
+                    .withQueryStringParameters(parametersToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("POST")
+                    .withPath("def")
+                    .withQueryStringParameters(
+                        new Parameter("parameterOneName", "parameterOneValue"),
+                        new Parameter("parameterTwoName", "parameterTwoName")
+                    ),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[2]);
+
+        // when
+        mockServerMatcher.clear(request().withQueryStringParameters(parametersToMatchOn));
+
+        // then
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
+        assertThat(mockServerMatcher.httpRequestMatchers, containsInAnyOrder(new MatcherBuilder(logFormatter).transformsToMatcher(expectation[2])));
+    }
+
+    @Test
+    public void shouldClearAllMatchingExpectationsWithMultipleNottedParameters() {
+        // given
+        Parameter[] parametersToMatchOn = new Parameter[]{
+            new Parameter("!parameterOneName", "!parameterOneValue"),
+            new Parameter("!parameterTwoName", "!parameterTwoName")
+        };
+        Expectation[] expectation = {
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withQueryStringParameters(parametersToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("GET")
+                    .withPath("abc")
+                    .withQueryStringParameters(parametersToMatchOn),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            ),
+            new Expectation(
+                request()
+                    .withMethod("POST")
+                    .withPath("def"),
+                Times.unlimited(),
+                unlimited()
+            ).thenRespond(
+                response()
+                    .withBody("somebody")
+            )
+        };
+        mockServerMatcher.add(expectation[0]);
+        mockServerMatcher.add(expectation[1]);
+        mockServerMatcher.add(expectation[2]);
+
+        // when
+        mockServerMatcher.clear(request().withQueryStringParameters(parametersToMatchOn));
+
+        // then
+        assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
+    }
+
     @Test
     public void shouldClearNoExpectations() {
         // given
-        HttpResponse httpResponse = new HttpResponse().withBody("somebody");
+        HttpResponse httpResponse = response().withBody("somebody");
         Expectation[] expectations = new Expectation[]{
-                new Expectation(new HttpRequest().withPath("somepath"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse),
-                new Expectation(new HttpRequest().withPath("somepath"), Times.unlimited(), TimeToLive.unlimited()).thenRespond(httpResponse)
+            new Expectation(request().withPath("somepath"), Times.unlimited(), unlimited()).thenRespond(httpResponse),
+            new Expectation(request().withPath("somepath"), Times.unlimited(), unlimited()).thenRespond(httpResponse)
         };
         for (Expectation expectation : expectations) {
             mockServerMatcher.add(expectation);
@@ -160,7 +854,7 @@ public class MockServerMatcherClearAndResetTest {
         List<HttpRequestMatcher> httpRequestMatchers = new ArrayList<>(mockServerMatcher.httpRequestMatchers);
 
         // when
-        mockServerMatcher.clear(new HttpRequest().withPath("foobar"));
+        mockServerMatcher.clear(request().withPath("foobar"));
 
         // then
         assertThat(mockServerMatcher.httpRequestMatchers, is(httpRequestMatchers));

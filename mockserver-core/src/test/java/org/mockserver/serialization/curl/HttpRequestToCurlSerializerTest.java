@@ -1,6 +1,7 @@
 package org.mockserver.serialization.curl;
 
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 
@@ -14,10 +15,12 @@ import static org.mockserver.model.Parameter.param;
 
 public class HttpRequestToCurlSerializerTest {
 
+    private final MockServerLogger mockServerLogger = new MockServerLogger();
+
     @Test
     public void shouldGenerateCurlForSimpleRequest() {
         // given
-        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
@@ -32,7 +35,7 @@ public class HttpRequestToCurlSerializerTest {
     @Test
     public void shouldGenerateCurlForRequestWithPOST() {
         // given
-        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
@@ -48,7 +51,7 @@ public class HttpRequestToCurlSerializerTest {
     @Test
     public void shouldGenerateCurlForRequestWithGETAndSocketAddress() {
         // given
-        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
@@ -64,7 +67,7 @@ public class HttpRequestToCurlSerializerTest {
     @Test
     public void shouldGenerateCurlForRequestWithGETAndNullSocketAddress() {
         // given
-        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
@@ -81,7 +84,7 @@ public class HttpRequestToCurlSerializerTest {
     @Test
     public void shouldGenerateCurlForRequestWithGETAndNullSocketAddressAndNoHostHeader() {
         // given
-        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
@@ -97,7 +100,7 @@ public class HttpRequestToCurlSerializerTest {
     @Test
     public void shouldGenerateCurlForRequestWithParameter() {
         // given
-        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
@@ -116,7 +119,7 @@ public class HttpRequestToCurlSerializerTest {
     @Test
     public void shouldGenerateCurlForRequestWithHeaders() {
         // given
-        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
@@ -135,7 +138,7 @@ public class HttpRequestToCurlSerializerTest {
     @Test
     public void shouldGenerateCurlForRequestWithCookies() {
         // given
-        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
@@ -155,7 +158,7 @@ public class HttpRequestToCurlSerializerTest {
     @Test
     public void shouldGenerateCurlForRequestWithPOSTParameterHeadersAndCookies() {
         // given
-        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(
@@ -191,7 +194,7 @@ public class HttpRequestToCurlSerializerTest {
     @Test
     public void shouldHandleNullWhenGeneratingCurl() {
         // given
-        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer();
+        HttpRequestToCurlSerializer httpRequestToCurlSerializer = new HttpRequestToCurlSerializer(mockServerLogger);
 
         // when
         String curl = httpRequestToCurlSerializer.toCurl(null, null);

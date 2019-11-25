@@ -1,11 +1,11 @@
 package org.mockserver.integration;
 
-import com.google.common.util.concurrent.SettableFuture;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.mockserver.MockServer;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author jamesdbloom
@@ -15,15 +15,19 @@ public class ClientAndServer extends MockServerClient {
     private final MockServer mockServer;
 
     public ClientAndServer(Integer... ports) {
-        super(SettableFuture.<Integer>create());
+        super(new CompletableFuture<>());
         mockServer = new MockServer(ports);
-        ((SettableFuture) portFuture).set(mockServer.getLocalPort());
+        portFuture.complete(mockServer.getLocalPort());
     }
 
     public ClientAndServer(String remoteHost, Integer remotePort, Integer... ports) {
-        super(SettableFuture.<Integer>create());
+        super(new CompletableFuture<>());
         mockServer = new MockServer(remotePort, remoteHost, ports);
-        ((SettableFuture) portFuture).set(mockServer.getLocalPort());
+        portFuture.complete(mockServer.getLocalPort());
+    }
+
+    public ClientAndServer startClientAndServer(List<Integer> ports) {
+        return startClientAndServer(ports.toArray(new Integer[0]));
     }
 
     public static ClientAndServer startClientAndServer(Integer... port) {

@@ -1,6 +1,5 @@
 package org.mockserver.collections.multimap.nottablematcher;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.model.NottableString;
@@ -20,7 +19,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKey {
     public void singleValuedMapShouldContainValueForSingleValueForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new NottableString[]{not("keyOne"), string("keyOne_valueOne")}
+            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")}
         );
 
         // then
@@ -32,7 +31,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKey {
     public void multiValuedMapShouldContainValueForSingleValueForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{string("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         );
 
@@ -45,7 +44,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKey {
     public void singleValuedMapShouldContainValueForMultipleValuesForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
+            true, new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         );
 
         // then
@@ -57,7 +56,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKey {
     public void multiValuedMapShouldContainValueForMultipleValuesForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
                 new NottableString[]{string("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
@@ -71,7 +70,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKey {
     public void singleValuedMapShouldNotContainValueForSingleValueWithValueMismatchForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new NottableString[]{not("keyOne"), string("keyOne_valueOne")}
+            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")}
         );
 
         // then
@@ -83,7 +82,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKey {
     public void singleValuedMapShouldNotContainValueForMultipleValuesWithValueMismatchForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
+            true, new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         );
 
         // then
@@ -95,7 +94,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKey {
     public void multiValuedMapShouldNotContainValueForMultipleValuesWithValueMismatchForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{string("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
                 new NottableString[]{string("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );

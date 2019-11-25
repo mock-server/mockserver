@@ -2,8 +2,8 @@ package org.mockserver.callback;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import org.mockserver.websocket.WebSocketException;
 import org.mockserver.collections.CircularHashMap;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.metrics.Metrics;
 import org.mockserver.model.HttpRequest;
@@ -11,10 +11,12 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.WebSocketMessageSerializer;
 import org.mockserver.serialization.model.WebSocketClientIdDTO;
 import org.mockserver.serialization.model.WebSocketErrorDTO;
+import org.mockserver.websocket.WebSocketException;
 
 import static org.mockserver.configuration.ConfigurationProperties.maxWebSocketExpectations;
 import static org.mockserver.metrics.Metrics.Name.*;
 import static org.mockserver.model.HttpResponse.response;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
@@ -22,10 +24,16 @@ import static org.mockserver.model.HttpResponse.response;
 public class WebSocketClientRegistry {
 
     public static final String WEB_SOCKET_CORRELATION_ID_HEADER_NAME = "WebSocketCorrelationId";
-    private WebSocketMessageSerializer webSocketMessageSerializer = new WebSocketMessageSerializer(new MockServerLogger());
-    private CircularHashMap<String, ChannelHandlerContext> clientRegistry = new CircularHashMap<>(maxWebSocketExpectations());
-    private CircularHashMap<String, WebSocketResponseCallback> responseCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
-    private CircularHashMap<String, WebSocketRequestCallback> forwardCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
+    private final MockServerLogger mockServerLogger;
+    private final WebSocketMessageSerializer webSocketMessageSerializer;
+    private final CircularHashMap<String, ChannelHandlerContext> clientRegistry = new CircularHashMap<>(maxWebSocketExpectations());
+    private final CircularHashMap<String, WebSocketResponseCallback> responseCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
+    private final CircularHashMap<String, WebSocketRequestCallback> forwardCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
+
+    public WebSocketClientRegistry(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        this.webSocketMessageSerializer = new WebSocketMessageSerializer(mockServerLogger);
+    }
 
     void receivedTextWebSocketFrame(TextWebSocketFrame textWebSocketFrame) {
         try {
@@ -73,7 +81,7 @@ public class WebSocketClientRegistry {
 
     void registerClient(String clientId, ChannelHandlerContext ctx) {
         try {
-            ctx.channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(new WebSocketClientIdDTO().setClientId(clientId))));
+            ctx.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(new WebSocketClientIdDTO().setClientId(clientId))));
         } catch (Exception e) {
             throw new WebSocketException("Exception while sending web socket registration client id message to client " + clientId, e);
         }
@@ -106,10 +114,21 @@ public class WebSocketClientRegistry {
         Metrics.set(WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT, forwardCallbackRegistry.size());
     }
 
-    public void sendClientMessage(String clientId, HttpRequest httpRequest) {
+    public boolean sendClientMessage(String clientId, HttpRequest httpRequest) {
         try {
             if (clientRegistry.containsKey(clientId)) {
                 clientRegistry.get(clientId).channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(httpRequest)));
+                return true;
+            } else {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.WARN)
+                        .setLogLevel(WARN)
+                        .setHttpRequest(httpRequest)
+                        .setMessageFormat("Client " + clientId + " not found for request {} client registry only contains {}")
+                        .setArguments(httpRequest, clientRegistry)
+                );
+                return false;
             }
         } catch (Exception e) {
             throw new WebSocketException("Exception while sending web socket message " + httpRequest + " to client " + clientId, e);

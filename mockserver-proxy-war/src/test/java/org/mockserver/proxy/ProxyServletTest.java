@@ -5,12 +5,10 @@ import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
-import org.mockserver.serialization.ExpectationSerializer;
-import org.mockserver.serialization.HttpRequestSerializer;
-import org.mockserver.serialization.PortBindingSerializer;
-import org.mockserver.log.model.RequestLogEntry;
-import org.mockserver.log.model.RequestResponseLogEntry;
+import org.mockserver.log.TimeService;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
@@ -18,11 +16,16 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.serialization.ExpectationSerializer;
+import org.mockserver.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.servlet.responsewriter.ServletResponseWriter;
+import org.slf4j.event.Level;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.Collections;
+import java.util.Date;
 
 import static com.google.common.net.MediaType.JSON_UTF_8;
 import static org.apache.commons.codec.Charsets.UTF_8;
@@ -34,6 +37,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.LogEntry.LOG_DATE_FORMAT;
+import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -49,8 +54,6 @@ public class ProxyServletTest {
 
     private HttpStateHandler httpStateHandler;
     private ActionHandler mockActionHandler;
-    private MockServerLogger mockLogFormatter;
-    private Scheduler scheduler;
 
     @InjectMocks
     private ProxyServlet proxyServlet;
@@ -60,10 +63,9 @@ public class ProxyServletTest {
     @Before
     public void setupFixture() {
         mockActionHandler = mock(ActionHandler.class);
-        mockLogFormatter = mock(MockServerLogger.class);
-        scheduler = mock(Scheduler.class);
+        Scheduler scheduler = mock(Scheduler.class);
 
-        httpStateHandler = spy(new HttpStateHandler(scheduler));
+        httpStateHandler = spy(new HttpStateHandler(new MockServerLogger(), scheduler));
         response = new MockHttpServletResponse();
         proxyServlet = new ProxyServlet();
 
@@ -83,17 +85,23 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldRetrieveRequests() {
+    public void shouldRetrieveRequests() throws InterruptedException {
         // given
-        MockHttpServletRequest expectationRetrieveRequestsRequest = buildHttpServletRequest(
-            "PUT",
-            "/mockserver/retrieve",
-            httpRequestSerializer.serialize(request("request_one"))
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setType(RECEIVED_REQUEST)
         );
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
-
         // when
-        proxyServlet.service(expectationRetrieveRequestsRequest, response);
+        proxyServlet
+            .service(
+                buildHttpServletRequest(
+                    "PUT",
+                    "/mockserver/retrieve",
+                    httpRequestSerializer.serialize(request("request_one"))
+                ),
+                response
+            );
 
         // then
         assertResponse(response, 200, httpRequestSerializer.serialize(Collections.singletonList(
@@ -105,7 +113,11 @@ public class ProxyServletTest {
     public void shouldClear() {
         // given
         httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
-        httpStateHandler.log(new RequestLogEntry(request("request_one")));
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setType(EXPECTATION_MATCHED)
+        );
         MockHttpServletRequest clearRequest = buildHttpServletRequest(
             "PUT",
             "/mockserver/clear",
@@ -176,53 +188,66 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldRetrieveRecordedExpectations() {
+    public void shouldRetrieveRecordedExpectations() throws InterruptedException {
         // given
-        httpStateHandler.log(new RequestResponseLogEntry(
-            request("request_one"),
-            response("response_one")
-        ));
+        httpStateHandler.log(
+            new LogEntry()
+                .setHttpRequest(request("request_one"))
+                .setHttpResponse(response("response_one"))
+                .setType(FORWARDED_REQUEST)
+        );
+        // when
         MockHttpServletRequest expectationRetrieveExpectationsRequest = buildHttpServletRequest(
             "PUT",
             "/mockserver/retrieve",
             httpRequestSerializer.serialize(request("request_one"))
         );
         expectationRetrieveExpectationsRequest.setQueryString("type=" + RetrieveType.RECORDED_EXPECTATIONS.name());
-
-        // when
         proxyServlet.service(expectationRetrieveExpectationsRequest, response);
 
         // then
         assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
-            new Expectation(request("request_one"), Times.once(), null).thenRespond(response("response_one"))
+            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one"))
         )));
     }
 
     @Test
-    public void shouldRetrieveLogMessages() {
+    public void shouldRetrieveLogMessages() throws InterruptedException {
         // given
+        httpStateHandler.log(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(request("request_one"))
+                .setMessageFormat("received request:{}")
+                .setArguments(request("request_one"))
+        );
+        // when
         MockHttpServletRequest retrieveLogRequest = buildHttpServletRequest(
             "PUT",
             "/mockserver/retrieve",
             httpRequestSerializer.serialize(request("request_one"))
         );
         retrieveLogRequest.setQueryString("type=" + RetrieveType.LOGS.name());
-
-        // when
         proxyServlet.service(retrieveLogRequest, response);
 
         // then
         assertThat(response.getStatus(), is(200));
-        String[] splitBody = new String(response.getContentAsByteArray(), UTF_8).split(NEW_LINE + "------------------------------------" + NEW_LINE);
-        assertThat(splitBody.length, is(1));
         assertThat(
-            splitBody[0],
-            is(endsWith("retrieving logs that match:" + NEW_LINE +
-                NEW_LINE +
+            new String(response.getContentAsByteArray(), UTF_8),
+            is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - received request:" + NEW_LINE +
+                "" + NEW_LINE +
                 "\t{" + NEW_LINE +
                 "\t  \"path\" : \"request_one\"" + NEW_LINE +
                 "\t}" + NEW_LINE +
-                NEW_LINE))
+                "" + NEW_LINE +
+                "------------------------------------" + NEW_LINE +
+                LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - retrieving logs that match:" + NEW_LINE +
+                "" + NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"path\" : \"request_one\"" + NEW_LINE +
+                "\t}" + NEW_LINE +
+                "" + NEW_LINE))
         );
     }
 

@@ -7,10 +7,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
-import org.mockserver.serialization.model.BodyDTO;
-import org.mockserver.serialization.model.BodyWithContentTypeDTO;
-import org.mockserver.serialization.model.HttpRequestDTO;
-import org.mockserver.serialization.model.StringBodyDTO;
+import org.mockserver.serialization.model.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -261,7 +258,12 @@ public class HttpRequestSerializerIntegrationTest {
             "    \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
             "  } ]," + NEW_LINE +
             "  \"path\" : \"somePath\"," + NEW_LINE +
-            "  \"secure\" : true" + NEW_LINE +
+            "  \"secure\" : true," + NEW_LINE +
+            "  \"socketAddress\" : {" + NEW_LINE +
+            "    \"host\" : \"someHost\"," + NEW_LINE +
+            "    \"port\" : 1234," + NEW_LINE +
+            "    \"scheme\" : \"HTTPS\"" + NEW_LINE +
+            "  }" + NEW_LINE +
             "}";
 
         // when
@@ -283,6 +285,12 @@ public class HttpRequestSerializerIntegrationTest {
             ))
             .setSecure(true)
             .setKeepAlive(false)
+            .setSocketAddress(new SocketAddressDTO(
+                new SocketAddress()
+                    .withHost("someHost")
+                    .withPort(1234)
+                    .withScheme(SocketAddress.Scheme.HTTPS)
+            ))
             .buildObject(), httpRequest);
     }
 

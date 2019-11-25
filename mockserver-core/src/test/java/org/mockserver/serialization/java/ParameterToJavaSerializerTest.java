@@ -12,7 +12,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class ParameterToJavaSerializerTest {
 
     @Test
-    public void shouldSerializeParameter() throws IOException {
+    public void shouldSerializeParameter() {
         assertEquals(NEW_LINE +
                         "        new Parameter(\"requestParameterNameOne\", \"requestParameterValueOneOne\", \"requestParameterValueOneTwo\")",
                 new ParameterToJavaSerializer().serialize(1, new Parameter("requestParameterNameOne", "requestParameterValueOneOne", "requestParameterValueOneTwo"))
@@ -20,7 +20,7 @@ public class ParameterToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeMultipleParameters() throws IOException {
+    public void shouldSerializeMultipleParameters() {
         assertEquals(NEW_LINE +
                         "        new Parameter(\"requestParameterNameOne\", \"requestParameterValueOneOne\", \"requestParameterValueOneTwo\"),"        +
                         NEW_LINE +
@@ -30,7 +30,7 @@ public class ParameterToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeListOfParameters() throws IOException {
+    public void shouldSerializeListOfParameters() {
         assertEquals(NEW_LINE +
                         "        new Parameter(\"requestParameterNameOne\", \"requestParameterValueOneOne\", \"requestParameterValueOneTwo\"),"        +
                         NEW_LINE +

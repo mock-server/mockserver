@@ -1,10 +1,10 @@
 package org.mockserver.mappers;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import io.netty.handler.codec.http.HttpConstants;
 import io.netty.util.CharsetUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 
 import java.nio.charset.Charset;
@@ -13,6 +13,8 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderValues.CHARSET;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
@@ -29,7 +31,6 @@ public class ContentTypeMapper {
      * </pre>
      */
     public static final Charset DEFAULT_HTTP_CHARACTER_SET = CharsetUtil.ISO_8859_1;
-    private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ContentTypeMapper.class);
 
     private static final Set<String> UTF_8_CONTENT_TYPES = ImmutableSet.<String>builder()
         .add("application/atom+xml")
@@ -61,7 +62,7 @@ public class ContentTypeMapper {
 
     public static boolean isBinary(String contentTypeHeader) {
         boolean binary = false;
-        if (!Strings.isNullOrEmpty(contentTypeHeader)) {
+        if (isNotBlank(contentTypeHeader)) {
             String contentType = contentTypeHeader.toLowerCase();
             boolean utf8Body = contentType.contains("utf-8")
                 || contentType.contains("utf8")
@@ -97,17 +98,35 @@ public class ContentTypeMapper {
         return binary;
     }
 
-    public static Charset getCharsetFromContentTypeHeader(String contentType) {
+    private final MockServerLogger mockServerLogger;
+
+    public ContentTypeMapper(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+    }
+
+    public Charset getCharsetFromContentTypeHeader(String contentType) {
         Charset charset = DEFAULT_HTTP_CHARACTER_SET;
         if (contentType != null) {
             String charsetName = StringUtils.substringAfterLast(contentType, CHARSET.toString() + (char) HttpConstants.EQUALS).replaceAll("\"", "");
-            if (!Strings.isNullOrEmpty(charsetName)) {
+            if (isNotBlank(charsetName)) {
                 try {
                     charset = Charset.forName(charsetName);
                 } catch (UnsupportedCharsetException uce) {
-                    MOCK_SERVER_LOGGER.warn("Unsupported character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.WARN)
+                            .setLogLevel(WARN)
+                            .setMessageFormat("Unsupported character set {} in Content-Type header: {}.")
+                            .setArguments(StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType)
+                    );
                 } catch (IllegalCharsetNameException icne) {
-                    MOCK_SERVER_LOGGER.warn("Illegal character set {} in Content-Type header: {}.", StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType);
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.WARN)
+                            .setLogLevel(WARN)
+                            .setMessageFormat("Illegal character set {} in Content-Type header: {}.")
+                            .setArguments(StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType)
+                    );
                 }
             } else if (UTF_8_CONTENT_TYPES.contains(contentType)) {
                 charset = CharsetUtil.UTF_8;

@@ -2,6 +2,7 @@ package org.mockserver.serialization;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
+import org.mockserver.model.SocketAddress;
 import org.mockserver.serialization.model.*;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookies;
@@ -121,6 +122,11 @@ public class WebSocketMessageSerializerTest {
             "  }," + StringEscapeUtils.escapeJava(NEW_LINE) +
             "  \\\"keepAlive\\\" : false," + StringEscapeUtils.escapeJava(NEW_LINE) +
             "  \\\"secure\\\" : true," + StringEscapeUtils.escapeJava(NEW_LINE) +
+            "  \\\"socketAddress\\\" : {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+            "    \\\"host\\\" : \\\"someHost\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+            "    \\\"port\\\" : 1234," + StringEscapeUtils.escapeJava(NEW_LINE) +
+            "    \\\"scheme\\\" : \\\"HTTPS\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
+            "  }," + StringEscapeUtils.escapeJava(NEW_LINE) +
             "  \\\"body\\\" : \\\"somebody\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
             "}\"" + NEW_LINE +
             "}";
@@ -144,6 +150,12 @@ public class WebSocketMessageSerializerTest {
             ))
             .setSecure(true)
             .setKeepAlive(false)
+            .setSocketAddress(new SocketAddressDTO(
+                new SocketAddress()
+                    .withHost("someHost")
+                    .withPort(1234)
+                    .withScheme(SocketAddress.Scheme.HTTPS)
+            ))
             .buildObject(), httpRequest);
     }
 
@@ -166,6 +178,12 @@ public class WebSocketMessageSerializerTest {
                 ))
                 .setSecure(true)
                 .setKeepAlive(false)
+                .setSocketAddress(new SocketAddressDTO(
+                    new SocketAddress()
+                        .withHost("someHost")
+                        .withPort(1234)
+                        .withScheme(SocketAddress.Scheme.HTTPS)
+                ))
                 .buildObject()
         );
 
@@ -186,6 +204,11 @@ public class WebSocketMessageSerializerTest {
             "  }," + StringEscapeUtils.escapeJava(NEW_LINE) +
             "  \\\"keepAlive\\\" : false," + StringEscapeUtils.escapeJava(NEW_LINE) +
             "  \\\"secure\\\" : true," + StringEscapeUtils.escapeJava(NEW_LINE) +
+            "  \\\"socketAddress\\\" : {" + StringEscapeUtils.escapeJava(NEW_LINE) +
+            "    \\\"host\\\" : \\\"someHost\\\"," + StringEscapeUtils.escapeJava(NEW_LINE) +
+            "    \\\"port\\\" : 1234," + StringEscapeUtils.escapeJava(NEW_LINE) +
+            "    \\\"scheme\\\" : \\\"HTTPS\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
+            "  }," + StringEscapeUtils.escapeJava(NEW_LINE) +
             "  \\\"body\\\" : \\\"somebody\\\"" + StringEscapeUtils.escapeJava(NEW_LINE) +
             "}\"" + NEW_LINE +
             "}", jsonHttpRequest);

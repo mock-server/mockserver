@@ -19,7 +19,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKey {
     public void singleValuedMapShouldContainValueForSingleValueForNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), string("keyOneValue")}
+            true, new NottableString[]{not("keyOne"), string("keyOneValue")}
         );
 
         // then
@@ -31,8 +31,8 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKey {
     public void multiValuedMapShouldContainValueForSingleValueForNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), string("keyOneValue")},
-                new NottableString[]{string("keyTwo"), string("keyTwoValue")}
+            true, new NottableString[]{not("keyOne"), string("keyOneValue")},
+            new NottableString[]{string("keyTwo"), string("keyTwoValue")}
         );
 
         // then
@@ -44,7 +44,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKey {
     public void singleValuedMapShouldNotContainValueForSingleValueWithValueMismatchForNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), string("keyOneValue")}
+            true, new NottableString[]{not("keyOne"), string("keyOneValue")}
         );
 
         // then
@@ -56,8 +56,8 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKey {
     public void multiValuedMapShouldNotContainValueForMultipleValuesWithValueMismatchForNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new NottableString[]{not("keyOne"), string("keyOneValue")},
-                new NottableString[]{string("keyTwo"), string("keyTwoValue")}
+            true, new NottableString[]{not("keyOne"), string("keyOneValue")},
+            new NottableString[]{string("keyTwo"), string("keyTwoValue")}
         );
 
         // then

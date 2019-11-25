@@ -77,6 +77,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             <li><strong><a href="#button_match_request_by_body_with_xml_schema">XML Schema</a></strong></li>
             <li><strong><a href="#button_match_request_by_body_with_xpath">XPath</a></strong> - matches if at least one value returned by expression</li>
             <li><strong><a href="#button_match_request_by_form_submission_body">form fields</a></strong> (i.e. body parameters)</li>
+            <li><strong><a href="#button_match_request_by_binary_body">binary</a></strong></li>
             <li><strong><a href="#button_match_request_by_not_matching_body_with_xpath">negated matcher</a></strong></li>
         </ul>
     <li><strong>secure</strong> - true if the request was made using HTTPS</li>
@@ -104,7 +105,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li><strong><a href="#forward_action">forward</a></strong> - forwards requests defined by using
         <ul>
             <li>the <strong><a href="#button_forward_exactly">exact request received</a></strong></li>
-            <li>an <strong><a href="#button_forward_overridden">overridden request</a></strong></li>
+            <li>an <strong><a href="#button_forward_overridden">overridden request</a></strong> (or overridden response)</li>
             <li>a <strong><a href="#button_javascript_templated_forward">javascript template</a></strong></li>
             <li>a <strong><a href="#button_javascript_velocity_templated_forward">velocity template</a></strong></li>
             <li>a <strong><a href="#button_forward_class_callback">server side callback</a></strong> (via classpath)</li>
@@ -165,7 +166,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         </ul>
     </li>
     <li>
-        <p>or an <a href="#button_forward_overridden">overridden request</a>, with a <strong><a href="#button_forward_overridden_with_delay">delay</a></strong>, that allows any element of requests to be overridden before they are forwarded</p>
+        <p>or an <a href="#button_forward_overridden">overridden request</a> (or overridden response), with a <strong><a href="#button_forward_overridden_with_delay">delay</a></strong>, that allows any part of a request to be overridden before it is forwarded and allows any part of it's response to be overridden</p>
     </li>
     <li>
         <p>or a templated forwarder using <strong><a href="#button_javascript_templated_forward">javascript</a></strong> or <strong><a href="#button_javascript_velocity_templated_forward">velocity</a></strong>, with a <strong><a href="#button_javascript_templated_forward_with_delay">delay</a></strong>, that allows requests to be modified or completely re-written before they are forwarded</p>

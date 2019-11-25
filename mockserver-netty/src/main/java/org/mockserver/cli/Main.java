@@ -5,16 +5,18 @@ import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.configuration.IntegerStringListParser;
-import org.mockserver.log.model.MessageLogEntry;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mockserver.MockServer;
 
 import java.io.PrintStream;
 import java.util.*;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.cli.Main.Arguments.*;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.slf4j.event.Level.*;
 
 /**
  * @author jamesdbloom
@@ -46,15 +48,16 @@ public class Main {
         "                                     proxyRemotePort has been specified,                                                                                         " + NEW_LINE +
         "                                     proxyRemoteHost will default to \"localhost\".                                                                              " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE +
-        "        -logLevel <level>            Optionally specify log level as TRACE, DEBUG,                                                                               " + NEW_LINE +
-        "                                     INFO, WARN, ERROR or OFF. If not specified                                                                                  " + NEW_LINE +
-        "                                     default is INFO                                                                                                             " + NEW_LINE +
+        "        -logLevel <level>            Optionally specify log level using SLF4J levels:                                                                            " + NEW_LINE +
+        "                                     TRACE, DEBUG, INFO, WARN, ERROR, OFF or Java                                                                                " + NEW_LINE +
+        "                                     Logger levels: FINEST, FINE, INFO, WARNING,                                                                                 " + NEW_LINE +
+        "                                     SEVERE or OFF. If not specified default is INFO                                                                             " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE +
         "   i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort 1080 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -logLevel WARN          " + NEW_LINE +
         "                                                                                                                                                                 " + NEW_LINE;
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(Main.class);
     private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
-    public static PrintStream systemOut = System.out;
+    static PrintStream systemOut = System.out;
 
     /**
      * Run the MockServer directly providing the arguments as specified below.
@@ -69,7 +72,13 @@ public class Main {
         try {
             Map<String, String> parsedArguments = parseArguments(arguments);
 
-            MOCK_SERVER_LOGGER.debug(SERVER_CONFIGURATION, "Using command line options: {}", Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments));
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(SERVER_CONFIGURATION)
+                    .setLogLevel(DEBUG)
+                    .setMessageFormat("Using command line options: {}")
+                    .setArguments(Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments))
+            );
 
             if (parsedArguments.size() > 0 && parsedArguments.containsKey(serverPort.name())) {
                 if (parsedArguments.containsKey(logLevel.name())) {
@@ -78,7 +87,7 @@ public class Main {
                 Integer[] localPorts = INTEGER_STRING_LIST_PARSER.toArray(parsedArguments.get(serverPort.name()));
                 if (parsedArguments.containsKey(proxyRemotePort.name())) {
                     String remoteHost = parsedArguments.get(proxyRemoteHost.name());
-                    if (Strings.isNullOrEmpty(remoteHost)) {
+                    if (isBlank(remoteHost)) {
                         remoteHost = "localhost";
                     }
                     new MockServer(Integer.parseInt(parsedArguments.get(proxyRemotePort.name())), remoteHost, localPorts);
@@ -88,6 +97,16 @@ public class Main {
             } else {
                 showUsage();
             }
+
+            if (ConfigurationProperties.logLevel() != null) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(ConfigurationProperties.logLevel())
+                        .setMessageFormat("Logger level is " + ConfigurationProperties.logLevel() + ", change using:\n - \'ConfigurationProperties.logLevel(String level)\' in Java code,\n - \'-logLevel\' command line argument,\n - \'mockserver.logLevel\' JVM system property or,\n - \'mockserver.logLevel\' property value in \'mockserver.properties\'")
+                );
+            }
+
         } catch (IllegalArgumentException iae) {
             showUsage();
         }
@@ -127,8 +146,8 @@ public class Main {
                             }
                             break;
                         case logLevel:
-                            if (!Arrays.asList("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF").contains(argumentValue)) {
-                                errorMessage = argumentName + " value \"" + argumentValue + "\" is invalid, please specify one of \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\"";
+                            if (!Arrays.asList("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF", "FINEST", "FINE", "INFO", "WARNING", "SEVERE").contains(argumentValue)) {
+                                errorMessage = argumentName + " value \"" + argumentValue + "\" is invalid, please specify one of SL4J levels: \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\" or the Java Logger levels: \"FINEST\", \"FINE\", \"INFO\", \"WARNING\", \"SEVERE\", \"OFF\"";
                             }
                             break;
                     }

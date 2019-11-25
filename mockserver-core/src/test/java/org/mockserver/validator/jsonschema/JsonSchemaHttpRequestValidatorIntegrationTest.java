@@ -19,13 +19,14 @@ import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XPathBody.xpath;
 import static org.mockserver.model.XmlBody.xml;
 import static org.mockserver.model.XmlSchemaBody.xmlSchema;
+import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator.jsonSchemaHttpRequestValidator;
 
 /**
  * @author jamesdbloom
  */
 public class JsonSchemaHttpRequestValidatorIntegrationTest {
 
-    private JsonSchemaValidator jsonSchemaValidator = new JsonSchemaHttpRequestValidator(new MockServerLogger());
+    private JsonSchemaValidator jsonSchemaValidator = jsonSchemaHttpRequestValidator(new MockServerLogger());
 
     @Test
     public void shouldValidateValidCompleteRequestFromRawJson() {
@@ -51,7 +52,12 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
             "    \"headers\" : [ {" + NEW_LINE +
             "      \"name\" : \"someHeaderName\"," + NEW_LINE +
             "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
-            "    } ]" + NEW_LINE +
+            "    } ]," + NEW_LINE +
+            "  \"socketAddress\" : {" + NEW_LINE +
+            "    \"host\" : \"someHost\"," + NEW_LINE +
+            "    \"port\" : 1234," + NEW_LINE +
+            "    \"scheme\" : \"HTTPS\"" + NEW_LINE +
+            "  }" + NEW_LINE +
             "  }"), is(""));
     }
 
@@ -255,17 +261,14 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
     }
 
     @Test
-    public void shouldValidateInvalidBodyFields() {
+    public void shouldValidateInvalidBodyType() {
         // when
         assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
-                "    \"body\" : {" + NEW_LINE +
-                "      \"type\" : \"STRING\"," + NEW_LINE +
-                "      \"value\" : \"someBody\"" + NEW_LINE +
-                "    }" + NEW_LINE +
+                "    \"body\" : 1" + NEW_LINE +
                 "  }"),
             is(
                 "1 error:" + NEW_LINE +
-                    " - for field \"/body\" a plain string or one of the following example bodies must be specified " + NEW_LINE +
+                    " - for field \"/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
                     "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"BINARY\"," + NEW_LINE +

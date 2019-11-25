@@ -7,10 +7,12 @@ import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import org.mockserver.dashboard.DashboardWebSocketServerHandler;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mockserver.MockServerHandler;
 import org.mockserver.codec.MockServerServerCodec;
+import org.slf4j.event.Level;
 
 import java.util.UUID;
 
@@ -79,20 +81,26 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                     new DefaultHttpHeaders().add("X-CLIENT-REGISTRATION-ID", clientId),
                     ctx.channel().newPromise()
                 )
-                .addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) {
-                        ctx.pipeline().remove(DashboardWebSocketServerHandler.class);
-                        ctx.pipeline().remove(MockServerServerCodec.class);
-                        ctx.pipeline().remove(MockServerHandler.class);
-                        webSocketClientRegistry.registerClient(clientId, ctx);
-                        future.channel().closeFuture().addListener(new ChannelFutureListener() {
-                            @Override
-                            public void operationComplete(ChannelFuture future) {
-                                webSocketClientRegistry.unregisterClient(clientId);
-                            }
-                        });
-                    }
+                .addListener((ChannelFutureListener) future -> {
+                    ctx.pipeline().remove(DashboardWebSocketServerHandler.class);
+                    ctx.pipeline().remove(MockServerServerCodec.class);
+                    ctx.pipeline().remove(MockServerHandler.class);
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.TRACE)
+                            .setLogLevel(Level.TRACE)
+                            .setMessageFormat("Registering client " + clientId)
+                    );
+                    webSocketClientRegistry.registerClient(clientId, ctx);
+                    future.channel().closeFuture().addListener((ChannelFutureListener) future1 -> {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(LogEntry.LogMessageType.TRACE)
+                                .setLogLevel(Level.TRACE)
+                                .setMessageFormat("Unregistering callback for client " + clientId)
+                        );
+                        webSocketClientRegistry.unregisterClient(clientId);
+                    });
                 });
         }
     }
@@ -105,14 +113,20 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
         } else if (frame instanceof PingWebSocketFrame) {
             ctx.write(new PongWebSocketFrame(frame.content().retain()));
         } else {
-            throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
+            throw new UnsupportedOperationException(frame.getClass().getName() + " frame types not supported");
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            mockServerLogger.error("web socket server caught exception", cause);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("web socket server caught exception")
+                    .setThrowable(cause)
+            );
         }
         ctx.close();
     }

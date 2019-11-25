@@ -2,6 +2,7 @@ package org.mockserver.servlet.responsewriter;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.cors.CORSHeaders;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.MockServerResponseToHttpServletResponseEncoder;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -21,21 +22,22 @@ import static org.mockserver.model.HttpResponse.response;
  * @author jamesdbloom
  */
 public class ServletResponseWriter extends ResponseWriter {
+    private static final CORSHeaders CORS_HEADERS = new CORSHeaders();
     private final HttpServletResponse httpServletResponse;
-    private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder = new MockServerResponseToHttpServletResponseEncoder();
-    private CORSHeaders addCORSHeaders = new CORSHeaders();
+    private MockServerResponseToHttpServletResponseEncoder mockServerResponseToHttpServletResponseEncoder;
 
-    public ServletResponseWriter(HttpServletResponse httpServletResponse) {
+    public ServletResponseWriter(MockServerLogger mockServerLogger, HttpServletResponse httpServletResponse) {
         this.httpServletResponse = httpServletResponse;
+        this.mockServerResponseToHttpServletResponseEncoder = new MockServerResponseToHttpServletResponseEncoder(mockServerLogger);
     }
 
     @Override
-    public void writeResponse(HttpRequest request, HttpResponseStatus responseStatus) {
+    public void writeResponse(final HttpRequest request, final HttpResponseStatus responseStatus) {
         writeResponse(request, responseStatus, "", "application/json");
     }
 
     @Override
-    public void writeResponse(HttpRequest request, HttpResponseStatus responseStatus, String body, String contentType) {
+    public void writeResponse(final HttpRequest request, final HttpResponseStatus responseStatus, final String body, final String contentType) {
         HttpResponse response = response()
             .withStatusCode(responseStatus.code())
             .withReasonPhrase(responseStatus.reasonPhrase())
@@ -47,14 +49,14 @@ public class ServletResponseWriter extends ResponseWriter {
     }
 
     @Override
-    public void writeResponse(HttpRequest request, HttpResponse response, boolean apiResponse) {
+    public void writeResponse(final HttpRequest request, HttpResponse response, final boolean apiResponse) {
         if (response == null) {
             response = notFoundResponse();
         }
         if (enableCORSForAllResponses()) {
-            addCORSHeaders.addCORSHeaders(request, response);
+            CORS_HEADERS.addCORSHeaders(request, response);
         } else if (apiResponse && enableCORSForAPI()) {
-            addCORSHeaders.addCORSHeaders(request, response);
+            CORS_HEADERS.addCORSHeaders(request, response);
         }
         if (apiResponse) {
             response.withHeader("version", org.mockserver.Version.getVersion());
@@ -65,9 +67,7 @@ public class ServletResponseWriter extends ResponseWriter {
             }
         }
 
-        addConnectionHeader(request, response);
-
-        mockServerResponseToHttpServletResponseEncoder.mapMockServerResponseToHttpServletResponse(response, httpServletResponse);
+        mockServerResponseToHttpServletResponseEncoder.mapMockServerResponseToHttpServletResponse(addConnectionHeader(request, response), httpServletResponse);
     }
 
 }

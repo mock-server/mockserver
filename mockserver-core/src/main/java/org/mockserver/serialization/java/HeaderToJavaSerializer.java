@@ -18,9 +18,9 @@ public class HeaderToJavaSerializer implements MultiValueToJavaSerializer<Header
     public String serialize(int numberOfSpacesToIndent, Header header) {
         StringBuilder output = new StringBuilder();
         output.append(NEW_LINE).append(Strings.padStart("", numberOfSpacesToIndent * INDENT_SIZE, ' '));
-        output.append("new Header(").append(NottableStringToJavaSerializer.serializeNottableString(header.getName()));
+        output.append("new Header(").append(NottableStringToJavaSerializer.serialize(header.getName()));
         for (NottableString value : header.getValues()) {
-            output.append(", ").append(NottableStringToJavaSerializer.serializeNottableString(value));
+            output.append(", ").append(NottableStringToJavaSerializer.serialize(value));
         }
         output.append(")");
         return output.toString();

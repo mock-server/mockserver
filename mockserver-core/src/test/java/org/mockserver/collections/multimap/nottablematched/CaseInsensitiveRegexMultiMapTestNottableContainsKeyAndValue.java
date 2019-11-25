@@ -18,7 +18,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForSingleValueForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
@@ -29,7 +29,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForSingleValueForNottedValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
@@ -40,7 +40,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForSingleValueForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
@@ -51,7 +51,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForSingleValueForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
@@ -64,7 +64,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForSingleValueForNottedValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
@@ -77,7 +77,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForSingleValueForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
@@ -90,7 +90,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForMultipleValuesForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
@@ -102,7 +102,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForMultipleValuesForNottedValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
@@ -113,7 +113,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForMultipleValuesForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
@@ -124,7 +124,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForMultipleValuesForNottedKey() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
@@ -138,7 +138,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForMultipleValuesForNottedValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
@@ -151,7 +151,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForMultipleValuesForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
@@ -164,7 +164,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForSingleValueWithKeyMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
@@ -175,7 +175,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForSingleValueWithValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
@@ -186,7 +186,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForSingleValueWithKeyAndValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
@@ -197,7 +197,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForSingleValueWithKeyMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
@@ -210,7 +210,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForSingleValueWithValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
@@ -223,7 +223,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForMultipleValuesWithKeyMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
@@ -235,7 +235,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForMultipleValuesWithValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
@@ -246,7 +246,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForMultipleValuesWithKeyAndValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
@@ -257,7 +257,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForMultipleValuesWithKeyMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
@@ -271,7 +271,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForMultipleValuesWithValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
@@ -284,7 +284,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForMultipleValuesWithKeyAndValueMismatch() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );

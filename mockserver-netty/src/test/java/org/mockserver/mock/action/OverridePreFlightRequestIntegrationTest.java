@@ -8,6 +8,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 
 import java.net.InetSocketAddress;
@@ -33,7 +34,7 @@ public class OverridePreFlightRequestIntegrationTest {
 
     private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
 
-    private static NettyHttpClient httpClient = new NettyHttpClient(clientEventLoopGroup, null);
+    private static NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
 
     @BeforeClass
     public static void startServer() {
@@ -58,7 +59,7 @@ public class OverridePreFlightRequestIntegrationTest {
     @Test
     public void shouldReturnDefaultPreFlightResponse() throws Exception {
         // when
-        Future<HttpResponse> responseSettableFuture =
+        Future<HttpResponse> responseFuture =
             httpClient.sendRequest(
                 request()
                     .withMethod("OPTIONS")
@@ -70,14 +71,13 @@ public class OverridePreFlightRequestIntegrationTest {
             );
 
         // then
-        HttpResponse response = responseSettableFuture.get(10, TimeUnit.SECONDS);
+        HttpResponse response = responseFuture.get(10, TimeUnit.SECONDS);
         assertThat(response.getStatusCode(), is(200));
         assertThat(response.getHeader("access-control-allow-origin"), containsInAnyOrder("*"));
         assertThat(response.getHeader("access-control-allow-methods"), containsInAnyOrder("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"));
         assertThat(response.getHeader("access-control-allow-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
         assertThat(response.getHeader("access-control-expose-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
         assertThat(response.getHeader("access-control-max-age"), containsInAnyOrder("300"));
-        assertThat(response.getHeader("x-cors"), containsInAnyOrder("MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.enableCORSForAPI=false"));
         assertThat(response.getFirstHeader("version"), not(isEmptyString()));
     }
 
@@ -99,7 +99,7 @@ public class OverridePreFlightRequestIntegrationTest {
             );
 
         // when
-        Future<HttpResponse> responseSettableFuture =
+        Future<HttpResponse> responseFuture =
             httpClient.sendRequest(
                 request()
                     .withMethod("OPTIONS")
@@ -111,7 +111,7 @@ public class OverridePreFlightRequestIntegrationTest {
             );
 
         // then
-        HttpResponse response = responseSettableFuture.get(10, TimeUnit.SECONDS);
+        HttpResponse response = responseFuture.get(10, TimeUnit.SECONDS);
         assertThat(response.getStatusCode(), is(200));
         assertThat(response.getHeader("access-control-allow-origin"), containsInAnyOrder("*"));
         assertThat(response.getHeader("access-control-allow-methods"), containsInAnyOrder("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"));

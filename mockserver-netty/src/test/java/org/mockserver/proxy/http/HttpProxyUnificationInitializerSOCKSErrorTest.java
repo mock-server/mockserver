@@ -35,7 +35,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
         short localPort = 1234;
         final LifeCycle lifeCycle = mock(LifeCycle.class);
         when(lifeCycle.getScheduler()).thenReturn(mock(Scheduler.class));
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(lifeCycle, new HttpStateHandler(mock(Scheduler.class)), null));
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(lifeCycle, new HttpStateHandler(new MockServerLogger(), mock(Scheduler.class)), null));
 
         // and - no SOCKS handlers
         assertThat(embeddedChannel.pipeline().get(Socks5ProxyHandler.class), is(nullValue()));
@@ -105,7 +105,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
     public void shouldSwitchToHttp() {
         // given
         EmbeddedChannel embeddedChannel = new EmbeddedChannel();
-        embeddedChannel.pipeline().addLast(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpStateHandler(mock(Scheduler.class)), null));
+        embeddedChannel.pipeline().addLast(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpStateHandler(new MockServerLogger(), mock(Scheduler.class)), null));
 
         // and - no HTTP handlers
         assertThat(embeddedChannel.pipeline().get(HttpServerCodec.class), is(nullValue()));
@@ -147,7 +147,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
     @Test
     public void shouldSupportUnknownProtocol() {
         // given
-        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpStateHandler(mock(Scheduler.class)), null));
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpStateHandler(new MockServerLogger(), mock(Scheduler.class)), null));
 
         // and - channel open
         assertThat(embeddedChannel.isOpen(), is(true));

@@ -1,11 +1,13 @@
 package org.mockserver.integration.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.MediaType;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.netty.util.CharsetUtil;
 import org.apache.commons.io.IOUtils;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockserver.log.TimeService;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.TimeToLive;
@@ -13,14 +15,16 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.HttpRequestSerializer;
-import org.mockserver.serialization.JsonArraySerializer;
-import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.LogEntrySerializer;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.verify.VerificationTimes;
+import org.slf4j.event.Level;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.*;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
@@ -32,6 +36,7 @@ import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.matchers.Times.exactly;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Cookie.cookie;
@@ -40,8 +45,7 @@ import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
-import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.JsonPathBody.jsonPath;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
@@ -61,6 +65,11 @@ import static org.mockserver.model.XmlSchemaBody.xmlSchemaFromResource;
  * @author jamesdbloom
  */
 public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBasicMockingIntegrationTest {
+
+    @BeforeClass
+    public static void fixTime() {
+        TimeService.fixedTime = true;
+    }
 
     @Test
     public void shouldReturnResponseForRequestInSsl() {
@@ -580,6 +589,207 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldReturnResponseByMatchingNotRegexBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withBody(Body.not(regex("10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}")))
+            )
+            .respond(
+                response()
+                    .withBody("some_not_regex_body_response")
+            );
+
+        // then
+        // - in http
+        // should not match (because body matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withBody("10.2.3.123"),
+                headersToIgnore)
+        );
+        // should match (because body doesn't matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_not_regex_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withBody("10.2.3.1234"),
+                headersToIgnore)
+        );
+        // - in https
+        // should not match (because body matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withBody("10.2.3.123"),
+                headersToIgnore)
+        );
+        // should match (because body doesn't matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_not_regex_body_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withBody("10.2.3.1234"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingNotSubStringBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withBody(Body.not(subString("some_body")))
+            )
+            .respond(
+                response()
+                    .withBody("some_not_regex_body_response")
+            );
+
+        // then
+        // - in http
+        // should not match (because body matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withBody("some_body_full_string"),
+                headersToIgnore)
+        );
+        // should match (because body doesn't matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_not_regex_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withBody("some_other_body_full_string"),
+                headersToIgnore)
+        );
+        // - in https
+        // should not match (because body matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withBody("some_body_full_string"),
+                headersToIgnore)
+        );
+        // should match (because body doesn't matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_not_regex_body_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withBody("some_other_body_full_string"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingNotExactBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withBody(Body.not(exact("some_body")))
+            )
+            .respond(
+                response()
+                    .withBody("some_not_regex_body_response")
+            );
+
+        // then
+        // - in http
+        // should not match (because body matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withBody("some_body"),
+                headersToIgnore)
+        );
+        // should match (because body doesn't matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_not_regex_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withBody("some_other_body"),
+                headersToIgnore)
+        );
+        // - in https
+        // should not match (because body matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withBody("some_body"),
+                headersToIgnore)
+        );
+        // should match (because body doesn't matches regex)
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_not_regex_body_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withMethod("POST")
+                    .withBody("some_other_body"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingBodyWithXPath() {
         // when
         mockServerClient.when(request().withBody(xpath("/bookstore/book[price>30]/price")), exactly(2)).respond(response().withBody("some_body"));
@@ -934,8 +1144,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
             );
 
@@ -943,8 +1153,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body"),
             makeRequest(
                 request()
@@ -962,8 +1172,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body"),
             makeRequest(
                 request()
@@ -976,6 +1186,59 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "    \"name\": \"A green door\"," + NEW_LINE +
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
+                        "}"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingBodyWithJsonAsRawBody() {
+        // when
+        assertEquals(
+            response()
+                .withStatusCode(CREATED_201.code())
+                .withReasonPhrase(CREATED_201.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("mockserver/expectation"))
+                    .withMethod("PUT")
+                    .withBody("{" + NEW_LINE +
+                        "  \"httpRequest\" : {" + NEW_LINE +
+                        "    \"body\" : {" + NEW_LINE +
+                        "        \"id\": 1," + NEW_LINE +
+                        "        \"name\": \"A green door\"," + NEW_LINE +
+                        "        \"price\": 12.50," + NEW_LINE +
+                        "        \"tags\": [\"home\", \"green\"]" + NEW_LINE +
+                        "    }" + NEW_LINE +
+                        "  }," + NEW_LINE +
+                        "  \"httpResponse\" : {" + NEW_LINE +
+                        "    \"body\" : {" + NEW_LINE +
+                        "        \"id\": 1," + NEW_LINE +
+                        "        \"name\": \"A green door\"," + NEW_LINE +
+                        "        \"price\": 12.50," + NEW_LINE +
+                        "        \"tags\": [\"home\", \"green\"]" + NEW_LINE +
+                        "    }" + NEW_LINE +
+                        "  }" + NEW_LINE +
+                        "}"),
+                headersToIgnore)
+        );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader(CONTENT_TYPE.toString(), MediaType.create("application", "json").toString())
+                .withBody(exact("{\"id\":1,\"name\":\"A green door\",\"price\":12.5,\"tags\":[\"home\",\"green\"]}", MediaType.create("application", "json"))),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withBody("{" + NEW_LINE +
+                        "  \"id\" : 1," + NEW_LINE +
+                        "  \"name\" : \"A green door\"," + NEW_LINE +
+                        "  \"price\" : 12.5," + NEW_LINE +
+                        "  \"tags\" : [ \"home\", \"green\" ]" + NEW_LINE +
                         "}"),
                 headersToIgnore)
         );
@@ -997,8 +1260,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
             );
 
@@ -1006,8 +1269,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body"),
             makeRequest(
                 request()
@@ -1025,8 +1288,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body"),
             makeRequest(
                 request()
@@ -1060,8 +1323,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
             );
 
@@ -1069,8 +1332,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body"),
             makeRequest(
                 request()
@@ -1089,8 +1352,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body"),
             makeRequest(
                 request()
@@ -1255,29 +1518,29 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody(new StringBody("" +
-                        "{\n" +
-                        "    \"store\": {\n" +
-                        "        \"book\": [\n" +
-                        "            {\n" +
-                        "                \"category\": \"reference\",\n" +
-                        "                \"author\": \"Nigel Rees\",\n" +
-                        "                \"title\": \"Sayings of the Century\",\n" +
-                        "                \"price\": 8.95\n" +
-                        "            },\n" +
-                        "            {\n" +
-                        "                \"category\": \"fiction\",\n" +
-                        "                \"author\": \"Herman Melville\",\n" +
-                        "                \"title\": \"Moby Dick\",\n" +
-                        "                \"isbn\": \"0-553-21311-3\",\n" +
-                        "                \"price\": 8.99\n" +
-                        "            }\n" +
-                        "        ],\n" +
-                        "        \"bicycle\": {\n" +
-                        "            \"color\": \"red\",\n" +
-                        "            \"price\": 19.95\n" +
-                        "        }\n" +
-                        "    },\n" +
-                        "    \"expensive\": 10\n" +
+                        "{" + NEW_LINE +
+                        "    \"store\": {" + NEW_LINE +
+                        "        \"book\": [" + NEW_LINE +
+                        "            {" + NEW_LINE +
+                        "                \"category\": \"reference\"," + NEW_LINE +
+                        "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+                        "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+                        "                \"price\": 8.95" + NEW_LINE +
+                        "            }," + NEW_LINE +
+                        "            {" + NEW_LINE +
+                        "                \"category\": \"fiction\"," + NEW_LINE +
+                        "                \"author\": \"Herman Melville\"," + NEW_LINE +
+                        "                \"title\": \"Moby Dick\"," + NEW_LINE +
+                        "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+                        "                \"price\": 8.99" + NEW_LINE +
+                        "            }" + NEW_LINE +
+                        "        ]," + NEW_LINE +
+                        "        \"bicycle\": {" + NEW_LINE +
+                        "            \"color\": \"red\"," + NEW_LINE +
+                        "            \"price\": 19.95" + NEW_LINE +
+                        "        }" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"expensive\": 10" + NEW_LINE +
                         "}")),
                 headersToIgnore)
         );
@@ -1293,29 +1556,29 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody(new StringBody("" +
-                        "{\n" +
-                        "    \"store\": {\n" +
-                        "        \"book\": [\n" +
-                        "            {\n" +
-                        "                \"category\": \"reference\",\n" +
-                        "                \"author\": \"Nigel Rees\",\n" +
-                        "                \"title\": \"Sayings of the Century\",\n" +
-                        "                \"price\": 8.95\n" +
-                        "            },\n" +
-                        "            {\n" +
-                        "                \"category\": \"fiction\",\n" +
-                        "                \"author\": \"Herman Melville\",\n" +
-                        "                \"title\": \"Moby Dick\",\n" +
-                        "                \"isbn\": \"0-553-21311-3\",\n" +
-                        "                \"price\": 8.99\n" +
-                        "            }\n" +
-                        "        ],\n" +
-                        "        \"bicycle\": {\n" +
-                        "            \"color\": \"red\",\n" +
-                        "            \"price\": 19.95\n" +
-                        "        }\n" +
-                        "    },\n" +
-                        "    \"expensive\": 10\n" +
+                        "{" + NEW_LINE +
+                        "    \"store\": {" + NEW_LINE +
+                        "        \"book\": [" + NEW_LINE +
+                        "            {" + NEW_LINE +
+                        "                \"category\": \"reference\"," + NEW_LINE +
+                        "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+                        "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+                        "                \"price\": 8.95" + NEW_LINE +
+                        "            }," + NEW_LINE +
+                        "            {" + NEW_LINE +
+                        "                \"category\": \"fiction\"," + NEW_LINE +
+                        "                \"author\": \"Herman Melville\"," + NEW_LINE +
+                        "                \"title\": \"Moby Dick\"," + NEW_LINE +
+                        "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+                        "                \"price\": 8.99" + NEW_LINE +
+                        "            }" + NEW_LINE +
+                        "        ]," + NEW_LINE +
+                        "        \"bicycle\": {" + NEW_LINE +
+                        "            \"color\": \"red\"," + NEW_LINE +
+                        "            \"price\": 19.95" + NEW_LINE +
+                        "        }" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"expensive\": 10" + NEW_LINE +
                         "}")),
                 headersToIgnore)
         );
@@ -1566,8 +1829,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -1575,8 +1838,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -1586,8 +1849,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -1606,8 +1869,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -1615,8 +1878,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -1626,8 +1889,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -1648,8 +1911,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
             );
@@ -1658,8 +1921,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withHeaders(
                     header("headerNameResponse", "headerValueResponse")
@@ -1680,8 +1943,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withHeaders(
                     header("headerNameResponse", "headerValueResponse")
@@ -1717,8 +1980,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
             );
@@ -1727,8 +1990,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                 .withHeaders(
@@ -1749,8 +2012,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                 .withHeaders(
@@ -1786,8 +2049,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
             );
@@ -1796,8 +2059,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                 .withHeaders(
@@ -1817,8 +2080,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                 .withHeaders(
@@ -1853,8 +2116,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withCookies(
                         cookie("responseCookieNameOne", "responseCookieValueOne"),
@@ -1866,8 +2129,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http - cookie objects
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(
                     cookie("responseCookieNameOne", "responseCookieValueOne"),
@@ -1893,8 +2156,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http - cookie header
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(
                     cookie("responseCookieNameOne", "responseCookieValueOne"),
@@ -1916,8 +2179,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https - cookie objects
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(
                     cookie("responseCookieNameOne", "responseCookieValueOne"),
@@ -1943,8 +2206,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https - cookie header
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(
                     cookie("responseCookieNameOne", "responseCookieValueOne"),
@@ -1982,8 +2245,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
             );
 
@@ -1991,8 +2254,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http - url query string
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body"),
             makeRequest(
                 request()
@@ -2008,8 +2271,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https - query string parameter objects
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body"),
             makeRequest(
                 request()
@@ -2041,8 +2304,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -2052,8 +2315,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http - url query string
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                 .withHeaders(
@@ -2076,8 +2339,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http - query string parameter objects
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                 .withHeaders(
@@ -2100,8 +2363,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https - url string and query string parameter objects
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                 .withHeaders(
@@ -2138,8 +2401,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -2149,8 +2412,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http - body string
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                 .withHeaders(
@@ -2171,8 +2434,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http - body parameter objects
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                 .withHeaders(
@@ -2194,8 +2457,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in https - url string and query string parameter objects
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                 .withHeaders(
@@ -2232,8 +2495,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -2243,8 +2506,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http - body string
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                 .withHeaders(
@@ -2267,8 +2530,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // - in http - body parameter objects
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response")
                 .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
                 .withHeaders(
@@ -2304,8 +2567,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2313,8 +2576,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string parameter name
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2331,8 +2594,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string parameter name
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2348,8 +2611,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string parameter value
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2366,8 +2629,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string parameter value
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2397,8 +2660,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2406,8 +2669,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string parameter name
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2424,8 +2687,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string parameter name
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2455,8 +2718,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2464,8 +2727,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string parameter value
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2482,8 +2745,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string parameter value
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2513,8 +2776,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2522,8 +2785,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string parameter name
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2538,8 +2801,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string parameter value
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2568,8 +2831,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2577,8 +2840,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string parameter name
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2607,8 +2870,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2616,8 +2879,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string parameter value
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2646,8 +2909,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2655,8 +2918,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string cookie name
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2671,8 +2934,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string cookie value
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2701,8 +2964,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2710,8 +2973,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string cookie name
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2740,8 +3003,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2749,8 +3012,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string cookie value
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2779,8 +3042,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2788,8 +3051,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string header name
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2804,8 +3067,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string header value
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2834,8 +3097,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2843,8 +3106,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string header name
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2873,8 +3136,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -2882,8 +3145,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         // wrong query string header value
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -2961,8 +3224,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
             );
 
@@ -3338,29 +3601,29 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody(new StringBody("" +
-                        "{\n" +
-                        "    \"store\": {\n" +
-                        "        \"book\": [\n" +
-                        "            {\n" +
-                        "                \"category\": \"reference\",\n" +
-                        "                \"author\": \"Nigel Rees\",\n" +
-                        "                \"title\": \"Sayings of the Century\",\n" +
-                        "                \"price\": 8.95\n" +
-                        "            },\n" +
-                        "            {\n" +
-                        "                \"category\": \"fiction\",\n" +
-                        "                \"author\": \"Herman Melville\",\n" +
-                        "                \"title\": \"Moby Dick\",\n" +
-                        "                \"isbn\": \"0-553-21311-3\",\n" +
-                        "                \"price\": 8.99\n" +
-                        "            }\n" +
-                        "        ],\n" +
-                        "        \"bicycle\": {\n" +
-                        "            \"color\": \"red\",\n" +
-                        "            \"price\": 19.95\n" +
-                        "        }\n" +
-                        "    },\n" +
-                        "    \"expensive\": 10\n" +
+                        "{" + NEW_LINE +
+                        "    \"store\": {" + NEW_LINE +
+                        "        \"book\": [" + NEW_LINE +
+                        "            {" + NEW_LINE +
+                        "                \"category\": \"reference\"," + NEW_LINE +
+                        "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+                        "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+                        "                \"price\": 8.95" + NEW_LINE +
+                        "            }," + NEW_LINE +
+                        "            {" + NEW_LINE +
+                        "                \"category\": \"fiction\"," + NEW_LINE +
+                        "                \"author\": \"Herman Melville\"," + NEW_LINE +
+                        "                \"title\": \"Moby Dick\"," + NEW_LINE +
+                        "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+                        "                \"price\": 8.99" + NEW_LINE +
+                        "            }" + NEW_LINE +
+                        "        ]," + NEW_LINE +
+                        "        \"bicycle\": {" + NEW_LINE +
+                        "            \"color\": \"red\"," + NEW_LINE +
+                        "            \"price\": 19.95" + NEW_LINE +
+                        "        }" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"expensive\": 10" + NEW_LINE +
                         "}")),
                 headersToIgnore)
         );
@@ -3375,29 +3638,29 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody(new StringBody("" +
-                        "{\n" +
-                        "    \"store\": {\n" +
-                        "        \"book\": [\n" +
-                        "            {\n" +
-                        "                \"category\": \"reference\",\n" +
-                        "                \"author\": \"Nigel Rees\",\n" +
-                        "                \"title\": \"Sayings of the Century\",\n" +
-                        "                \"price\": 8.95\n" +
-                        "            },\n" +
-                        "            {\n" +
-                        "                \"category\": \"fiction\",\n" +
-                        "                \"author\": \"Herman Melville\",\n" +
-                        "                \"title\": \"Moby Dick\",\n" +
-                        "                \"isbn\": \"0-553-21311-3\",\n" +
-                        "                \"price\": 8.99\n" +
-                        "            }\n" +
-                        "        ],\n" +
-                        "        \"bicycle\": {\n" +
-                        "            \"color\": \"red\",\n" +
-                        "            \"price\": 19.95\n" +
-                        "        }\n" +
-                        "    },\n" +
-                        "    \"expensive\": 10\n" +
+                        "{" + NEW_LINE +
+                        "    \"store\": {" + NEW_LINE +
+                        "        \"book\": [" + NEW_LINE +
+                        "            {" + NEW_LINE +
+                        "                \"category\": \"reference\"," + NEW_LINE +
+                        "                \"author\": \"Nigel Rees\"," + NEW_LINE +
+                        "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
+                        "                \"price\": 8.95" + NEW_LINE +
+                        "            }," + NEW_LINE +
+                        "            {" + NEW_LINE +
+                        "                \"category\": \"fiction\"," + NEW_LINE +
+                        "                \"author\": \"Herman Melville\"," + NEW_LINE +
+                        "                \"title\": \"Moby Dick\"," + NEW_LINE +
+                        "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
+                        "                \"price\": 8.99" + NEW_LINE +
+                        "            }" + NEW_LINE +
+                        "        ]," + NEW_LINE +
+                        "        \"bicycle\": {" + NEW_LINE +
+                        "            \"color\": \"red\"," + NEW_LINE +
+                        "            \"price\": 19.95" + NEW_LINE +
+                        "        }" + NEW_LINE +
+                        "    }," + NEW_LINE +
+                        "    \"expensive\": 10" + NEW_LINE +
                         "}")),
                 headersToIgnore)
         );
@@ -3413,8 +3676,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3451,8 +3714,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3494,8 +3757,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -3552,8 +3815,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3608,8 +3871,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -3667,8 +3930,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -3713,8 +3976,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
                     .withHeaders(header("headerNameResponse", "headerValueResponse"))
                     .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
@@ -3756,8 +4019,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3812,8 +4075,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -3877,8 +4140,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -3939,8 +4202,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -3995,8 +4258,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -4060,8 +4323,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -4122,8 +4385,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -4299,6 +4562,22 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             .withPath(calculatePath("some_path")));
         mockServerClient.verify(request()
             .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
+    }
+
+    @Test
+    public void shouldVerifyReceivedRequestsWithNoMatchingExpectation() {
+        // when
+        makeRequest(
+            request()
+                .withPath(calculatePath("some_path")),
+            headersToIgnore);
+
+        mockServerClient.verify(request()
+            .withPath(calculatePath("some_path")));
+        mockServerClient.verify(request()
+            .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
+        mockServerClient.verify(request()
+            .withPath(calculatePath("some_path")), VerificationTimes.once());
     }
 
     @Test
@@ -4587,7 +4866,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
 
     @Test
     public void shouldRetrieveRecordedRequestsAsLogEntries() throws IOException {
-        // when
+        // given
         mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
         assertEquals(
             response("some_body"),
@@ -4607,44 +4886,42 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 request().withPath(calculatePath("some_path_three")),
                 headersToIgnore)
         );
-        final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
-        final JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
+
+        // when
+        String logEntriesActual = mockServerClient.retrieveRecordedRequests(request().withPath(calculatePath("some_path.*")), Format.LOG_ENTRIES);
+        HttpRequest requestOne = request("/some_path_one")
+            .withMethod("GET")
+            .withHeader("host", "localhost:" + this.getServerPort())
+            .withHeader("accept-encoding", "gzip,deflate")
+            .withHeader("content-length", "0")
+            .withHeader("connection", "keep-alive")
+            .withKeepAlive(true)
+            .withSecure(false);
+        HttpRequest requestTwo = request("/some_path_three")
+            .withMethod("GET")
+            .withHeader("host", "localhost:" + this.getServerPort())
+            .withHeader("accept-encoding", "gzip,deflate")
+            .withHeader("content-length", "0")
+            .withHeader("connection", "keep-alive")
+            .withKeepAlive(true)
+            .withSecure(false);
+        List<LogEntry> logEntriesExpected = Arrays.asList(
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(requestOne)
+                .setMessageFormat("received request:{}")
+                .setArguments(requestOne),
+            new LogEntry()
+                .setType(RECEIVED_REQUEST)
+                .setLogLevel(Level.INFO)
+                .setHttpRequest(requestTwo)
+                .setMessageFormat("received request:{}")
+                .setArguments(requestTwo)
+        );
 
         // then
-        List<String> logEntries = jsonArraySerializer.returnJSONObjects(mockServerClient.retrieveRecordedRequests(request().withPath(calculatePath("some_path.*")), Format.LOG_ENTRIES));
-        assertThat(logEntries.size(), is(2));
-        HashMap itemOne = objectMapper.readValue(logEntries.get(0), HashMap.class);
-        assertThat(new ArrayList<String>(itemOne.keySet()), containsInAnyOrder("httpRequest", "timestamp", "expectation"));
-        assertThat(String.valueOf(((LinkedHashMap) itemOne.get("httpRequest")).get("path")), is(calculatePath("some_path_one")));
-        HashMap itemTwo = objectMapper.readValue(logEntries.get(1), HashMap.class);
-        assertThat(new ArrayList<String>(itemTwo.keySet()), containsInAnyOrder("httpRequest", "timestamp", "expectation"));
-        assertThat(String.valueOf(((LinkedHashMap) itemTwo.get("httpRequest")).get("path")), is(calculatePath("some_path_three")));
-
-        logEntries = jsonArraySerializer.returnJSONObjects(mockServerClient.retrieveRecordedRequests(request(), Format.LOG_ENTRIES));
-        assertThat(logEntries.size(), is(3));
-        itemOne = objectMapper.readValue(logEntries.get(0), HashMap.class);
-        assertThat(new ArrayList<String>(itemOne.keySet()), containsInAnyOrder("httpRequest", "timestamp", "expectation"));
-        assertThat(String.valueOf(((LinkedHashMap) itemOne.get("httpRequest")).get("path")), is(calculatePath("some_path_one")));
-        itemTwo = objectMapper.readValue(logEntries.get(1), HashMap.class);
-        assertThat(itemTwo.containsKey("expectation"), is(false));
-        assertThat(new ArrayList<String>(itemTwo.keySet()), containsInAnyOrder("httpRequest", "timestamp"));
-        assertThat(String.valueOf(((LinkedHashMap) itemTwo.get("httpRequest")).get("path")), is(calculatePath("not_found")));
-        HashMap itemThree = objectMapper.readValue(logEntries.get(2), HashMap.class);
-        assertThat(new ArrayList<String>(itemThree.keySet()), containsInAnyOrder("httpRequest", "timestamp", "expectation"));
-        assertThat(String.valueOf(((LinkedHashMap) itemThree.get("httpRequest")).get("path")), is(calculatePath("some_path_three")));
-
-        logEntries = jsonArraySerializer.returnJSONObjects(mockServerClient.retrieveRecordedRequests(null, Format.LOG_ENTRIES));
-        assertThat(logEntries.size(), is(3));
-        itemOne = objectMapper.readValue(logEntries.get(0), HashMap.class);
-        assertThat(new ArrayList<String>(itemOne.keySet()), containsInAnyOrder("httpRequest", "timestamp", "expectation"));
-        assertThat(String.valueOf(((LinkedHashMap) itemOne.get("httpRequest")).get("path")), is(calculatePath("some_path_one")));
-        itemTwo = objectMapper.readValue(logEntries.get(1), HashMap.class);
-        assertThat(itemTwo.containsKey("expectation"), is(false));
-        assertThat(new ArrayList<String>(itemTwo.keySet()), containsInAnyOrder("httpRequest", "timestamp"));
-        assertThat(String.valueOf(((LinkedHashMap) itemTwo.get("httpRequest")).get("path")), is(calculatePath("not_found")));
-        itemThree = objectMapper.readValue(logEntries.get(2), HashMap.class);
-        assertThat(new ArrayList<String>(itemThree.keySet()), containsInAnyOrder("httpRequest", "timestamp", "expectation"));
-        assertThat(String.valueOf(((LinkedHashMap) itemThree.get("httpRequest")).get("path")), is(calculatePath("some_path_three")));
+        assertThat(logEntriesActual, is(new LogEntrySerializer(new MockServerLogger()).serialize(logEntriesExpected)));
     }
 
     @Test
@@ -5334,7 +5611,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body1"),
             makeRequest(
                 request()
-                    .withBody(params(param("bodyParameterName.*", "bodyParameterValue.*"))),
+                    .withBody(params(param("bodyParameterNameOne", "bodyParameterValueOne"))),
                 headersToIgnore)
         );
 
@@ -5365,25 +5642,23 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body2"),
             makeRequest(
                 request()
-                    .withBody(params(param("bodyParameterName.*", "bodyParameterValue.*"))),
+                    .withBody(params(param("bodyParameterNameTwo", "bodyParameterValueTwo"))),
                 headersToIgnore)
         );
         // - in https
         assertEquals(
             response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body2"),
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
             makeRequest(
                 request()
-                    .withSecure(true)
-                    .withBody(params(param("bodyParameterName.*", "bodyParameterValue.*"))),
+                    .withBody(params(param("bodyParameterNameOne", "bodyParameterValueOne"))),
                 headersToIgnore)
         );
     }
 
     @Test
-    public void shouldEnsureThatInterruptedRequestsAreVerifiable() throws Exception {
+    public void shouldEnsureThatInterruptedRequestsAreVerifiable() {
         mockServerClient
             .when(
                 request(calculatePath("delayed"))
@@ -5393,15 +5668,10 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withDelay(new Delay(TimeUnit.SECONDS, 3))
             );
 
-        Future<HttpResponse> delayedFuture = Executors.newSingleThreadExecutor().submit(new Callable<HttpResponse>() {
-            @Override
-            public HttpResponse call() throws Exception {
-                return httpClient.sendRequest(
-                    request(addContextToPath(calculatePath("delayed")))
-                        .withHeader(HOST.toString(), "localhost:" + getServerPort())
-                ).get(10, TimeUnit.SECONDS);
-            }
-        });
+        Future<HttpResponse> delayedFuture = Executors.newSingleThreadExecutor().submit(() -> httpClient.sendRequest(
+            request(addContextToPath(calculatePath("delayed")))
+                .withHeader(HOST.toString(), "localhost:" + getServerPort())
+        ).get(10, TimeUnit.SECONDS));
 
         Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS); // Let request reach server
 

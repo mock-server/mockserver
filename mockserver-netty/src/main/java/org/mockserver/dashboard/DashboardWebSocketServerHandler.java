@@ -2,34 +2,46 @@ package org.mockserver.dashboard;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
-import org.mockserver.serialization.HttpRequestSerializer;
-import org.mockserver.serialization.LogEventJsonSerializer;
-import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.collections.CircularHashMap;
-import org.mockserver.filters.MockServerEventLog;
-import org.mockserver.log.model.MessageLogEntry;
+import org.mockserver.dashboard.model.LogEntryDTO;
+import org.mockserver.dashboard.serializers.LogEntryDTOSerializer;
+import org.mockserver.dashboard.serializers.ThrowableSerializer;
+import org.mockserver.log.MockServerEventLog;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
+import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
+import org.mockserver.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.ui.MockServerLogListener;
 import org.mockserver.ui.MockServerMatcherListener;
-import org.mockserver.ui.model.ValueWithKey;
+import org.slf4j.event.Level;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.google.common.net.HttpHeaders.HOST;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
+import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
@@ -38,34 +50,71 @@ import static org.mockserver.model.HttpRequest.request;
 @ChannelHandler.Sharable
 public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapter implements MockServerLogListener, MockServerMatcherListener {
 
+    private static final Predicate<LogEntryDTO> requestLogPredicate = input
+        -> input.getType() == RECEIVED_REQUEST;
+    private static final Predicate<LogEntryDTO> requestResponseLogPredicate = input
+        -> input.getType() == EXPECTATION_RESPONSE
+        || input.getType() == EXPECTATION_NOT_MATCHED_RESPONSE
+        || input.getType() == FORWARDED_REQUEST;
+    private static final Predicate<LogEntryDTO> recordedExpectationLogPredicate = input
+        -> input.getType() == FORWARDED_REQUEST;
     private static final AttributeKey<Boolean> CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET = AttributeKey.valueOf("CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET");
     private static final String UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI = "/_mockserver_ui_websocket";
+    private static final int UI_UPDATE_ITEM_LIMIT = 50;
+    private static ObjectMapper objectMapper;
     private final MockServerLogger mockServerLogger;
+    private final boolean sslEnabledUpstream;
+    private final HttpStateHandler httpStateHandler;
+    private HttpRequestSerializer httpRequestSerializer;
     private WebSocketServerHandshaker handshaker;
     private CircularHashMap<ChannelHandlerContext, HttpRequest> clientRegistry = new CircularHashMap<>(100);
-    private HttpRequestSerializer httpRequestSerializer;
-    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private MockServerMatcher mockServerMatcher;
-    private MockServerEventLog mockServerLog;
-    private Function<ObjectWithReflectiveEqualsHashCodeToString, Object> wrapValueWithKey = new Function<ObjectWithReflectiveEqualsHashCodeToString, Object>() {
-        public ValueWithKey apply(ObjectWithReflectiveEqualsHashCodeToString input) {
-            return new ValueWithKey(input);
-        }
-    };
-    private LogEventJsonSerializer logEventJsonSerializer;
+    private MockServerEventLog mockServerEventLog;
+    private ThreadPoolExecutor scheduler;
+    private ScheduledExecutorService throttleExecutorService;
+    private Semaphore semaphore;
 
-    public DashboardWebSocketServerHandler(HttpStateHandler httpStateHandler) {
-        mockServerMatcher = httpStateHandler.getMockServerMatcher();
-        mockServerMatcher.registerListener(this);
-        mockServerLog = httpStateHandler.getMockServerLog();
-        mockServerLog.registerListener(this);
-        mockServerLogger = httpStateHandler.getMockServerLogger();
-        httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
-        logEventJsonSerializer = new LogEventJsonSerializer(mockServerLogger);
+    public DashboardWebSocketServerHandler(HttpStateHandler httpStateHandler, boolean sslEnabledUpstream) {
+        this.httpStateHandler = httpStateHandler;
+        this.mockServerLogger = httpStateHandler.getMockServerLogger();
+        this.sslEnabledUpstream = sslEnabledUpstream;
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void handlerAdded(ChannelHandlerContext ctx) {
+        try {
+            scheduler = new ThreadPoolExecutor(
+                1,
+                1,
+                0L,
+                SECONDS,
+                new LinkedBlockingQueue<>(1),
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.DiscardOldestPolicy()
+            );
+        } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception creating scheduler " + throwable.getMessage())
+                    .setThrowable(throwable)
+            );
+        }
+    }
+
+    @Override
+    public void handlerRemoved(ChannelHandlerContext ctx) {
+        if (this.scheduler != null) {
+            scheduler.shutdown();
+        }
+        if (this.throttleExecutorService != null) {
+            throttleExecutorService.shutdownNow();
+        }
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
         boolean release = true;
         try {
             if (msg instanceof FullHttpRequest && ((FullHttpRequest) msg).uri().equals(UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI)) {
@@ -92,8 +141,21 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     }
 
     private void upgradeChannel(final ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
+        if (mockServerEventLog == null) {
+            mockServerEventLog = httpStateHandler.getMockServerLog();
+            mockServerEventLog.registerListener(this);
+            mockServerMatcher = httpStateHandler.getMockServerMatcher();
+            mockServerMatcher.registerListener(this);
+        }
+        String webSocketURL = (sslEnabledUpstream ? "wss" : "ws") + "://" + httpRequest.headers().get(HOST) + UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI;
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(DEBUG)
+                .setLogLevel(Level.DEBUG)
+                .setMessageFormat("Upgraded dashboard connection to support web sockets on url " + webSocketURL)
+        );
         handshaker = new WebSocketServerHandshakerFactory(
-            "ws://" + httpRequest.headers().get(HOST) + UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI,
+            webSocketURL,
             null,
             true,
             Integer.MAX_VALUE
@@ -106,49 +168,102 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                 httpRequest,
                 new DefaultHttpHeaders(),
                 ctx.channel().newPromise()
-            ).addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture future) throws Exception {
-                    clientRegistry.put(ctx, request());
-                }
-            });
+            ).addListener((ChannelFutureListener) future -> clientRegistry.put(ctx, request()));
         }
+        if (objectMapper == null) {
+            objectMapper = ObjectMapperFactory.createObjectMapper(
+                new LogEntryDTOSerializer(),
+                new ThrowableSerializer()
+            );
+        }
+        if (httpRequestSerializer == null) {
+            httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
+        }
+        if (semaphore == null) {
+            semaphore = new Semaphore(1);
+        }
+        if (throttleExecutorService == null) {
+            throttleExecutorService = Executors.newScheduledThreadPool(1);
+        }
+        if (scheduler == null) {
+            scheduler = new ThreadPoolExecutor(
+                1,
+                1,
+                0L,
+                SECONDS,
+                new LinkedBlockingQueue<>(10),
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.DiscardOldestPolicy()
+            );
+        }
+        throttleExecutorService.scheduleAtFixedRate(() -> {
+            if (semaphore.availablePermits() == 0) {
+                semaphore.release(1);
+            }
+        }, 0, 1, SECONDS);
     }
 
-    private void handleWebSocketFrame(final ChannelHandlerContext ctx, WebSocketFrame frame) throws JsonProcessingException {
+    private void handleWebSocketFrame(final ChannelHandlerContext ctx, WebSocketFrame frame) {
         if (frame instanceof CloseWebSocketFrame) {
-            handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain()).addListener(new ChannelFutureListener() {
-                public void operationComplete(ChannelFuture future) {
-                    clientRegistry.remove(ctx);
-                }
-            });
+            handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain()).addListener((ChannelFutureListener) future -> clientRegistry.remove(ctx));
         } else if (frame instanceof TextWebSocketFrame) {
             try {
                 HttpRequest httpRequest = httpRequestSerializer.deserialize(((TextWebSocketFrame) frame).text());
                 clientRegistry.put(ctx, httpRequest);
                 sendUpdate(httpRequest, ctx);
             } catch (IllegalArgumentException iae) {
-                sendMessage(ctx, ImmutableMap.<String, Object>of("error", iae.getMessage()));
+                sendMessage(ctx, ImmutableMap.of("error", iae.getMessage()));
             }
         } else if (frame instanceof PingWebSocketFrame) {
             ctx.write(new PongWebSocketFrame(frame.content().retain()));
         } else {
-            throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
+            throw new UnsupportedOperationException(frame.getClass().getName() + " frame types not supported");
         }
     }
 
-    private void sendMessage(ChannelHandlerContext ctx, ImmutableMap<String, Object> message) throws JsonProcessingException {
-        ctx.channel().writeAndFlush(new TextWebSocketFrame(
-            objectMapper.writeValueAsString(message)
-        ));
+    private void sendMessage(ChannelHandlerContext ctx, ImmutableMap<String, Object> message) {
+        if (semaphore.tryAcquire()) {
+            scheduler.submit(() -> {
+                try {
+                    ctx.writeAndFlush(new TextWebSocketFrame(
+                        objectMapper.writeValueAsString(message)
+                    ));
+                } catch (JsonProcessingException jpe) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.EXCEPTION)
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("Exception will serialising UI data " + jpe.getMessage())
+                            .setThrowable(jpe)
+                    );
+                }
+            });
+        }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            mockServerLogger.error("web socket server caught exception", cause);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("web socket server caught exception")
+                    .setThrowable(cause)
+            );
         }
         ctx.close();
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        if (mockServerMatcher != null) {
+            mockServerMatcher.unregisterListener(this);
+        }
+        if (mockServerEventLog != null) {
+            mockServerEventLog.unregisterListener(this);
+        }
+        ctx.fireChannelInactive();
     }
 
     @Override
@@ -166,19 +281,61 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     }
 
     private void sendUpdate(HttpRequest httpRequest, ChannelHandlerContext channelHandlerContext) {
-        try {
-            sendMessage(channelHandlerContext, ImmutableMap.<String, Object>of(
-                "activeExpectations", Lists.transform(mockServerMatcher.retrieveExpectations(httpRequest), wrapValueWithKey),
-                "recordedExpectations", Lists.transform(mockServerLog.retrieveExpectations(httpRequest), wrapValueWithKey),
-                "recordedRequests", Lists.transform(mockServerLog.retrieveRequestLogEntries(httpRequest), wrapValueWithKey),
-                "logMessages", Lists.transform(mockServerLog.retrieveMessageLogEntries(httpRequest), new Function<MessageLogEntry, Object>() {
-                    public ValueWithKey apply(MessageLogEntry input) {
-                        return new ValueWithKey(logEventJsonSerializer.serialize(input), input.key());
-                    }
-                })
-            ));
-        } catch (JsonProcessingException jpe) {
-            mockServerLogger.error("Exception while updating UI", jpe);
-        }
+        mockServerEventLog
+            .retrieveLogEntriesInReverse(
+                httpRequest,
+                logEntry -> true,
+                LogEntryDTO::new,
+                reverseLogEventsStream -> {
+                    List<Map<String, Object>> recordedExpectations = new ArrayList<>();
+                    List<Map<String, Object>> recordedRequests = new ArrayList<>();
+                    List<LogEntryDTO> recordedRequestResponses = new ArrayList<>();
+                    List<LogEntryDTO> logMessages = new ArrayList<>();
+                    reverseLogEventsStream
+                        .forEach(logEntryDTO -> {
+                            if (recordedExpectationLogPredicate.test(logEntryDTO)
+                                && recordedExpectations.size() < UI_UPDATE_ITEM_LIMIT) {
+                                recordedExpectations.add(
+                                    ImmutableMap.of(
+                                        "key", logEntryDTO.key(),
+                                        "value", new Expectation(logEntryDTO.getHttpRequest(), Times.once(), TimeToLive.unlimited())
+                                            .thenRespond(logEntryDTO.getHttpResponse())
+                                    )
+                                );
+                            }
+                            if (requestLogPredicate.test(logEntryDTO)
+                                && recordedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
+                                for (HttpRequest request : logEntryDTO.getHttpRequests()) {
+                                    recordedRequests.add(ImmutableMap.of(
+                                        "key", logEntryDTO.key(),
+                                        "value", request
+                                    ));
+                                }
+                            }
+                            if (requestResponseLogPredicate.test(logEntryDTO)
+                                && recordedRequestResponses.size() < UI_UPDATE_ITEM_LIMIT) {
+                                recordedRequestResponses.add(logEntryDTO);
+                            }
+                            if (logMessages.size() < UI_UPDATE_ITEM_LIMIT) {
+                                logMessages.add(logEntryDTO);
+                            }
+                        });
+                    sendMessage(channelHandlerContext, ImmutableMap.of(
+                        "activeExpectations", mockServerMatcher
+                            .retrieveActiveExpectations(httpRequest)
+                            .stream()
+                            .limit(UI_UPDATE_ITEM_LIMIT)
+                            .map(expectation -> ImmutableMap.of(
+                                "key", expectation.key(),
+                                "value", expectation
+                            ))
+                            .collect(Collectors.toList()),
+                        "recordedExpectations", recordedExpectations,
+                        "recordedRequests", recordedRequests,
+                        "recordedRequestResponses", recordedRequestResponses,
+                        "logMessages", logMessages
+                    ));
+                }
+            );
     }
 }

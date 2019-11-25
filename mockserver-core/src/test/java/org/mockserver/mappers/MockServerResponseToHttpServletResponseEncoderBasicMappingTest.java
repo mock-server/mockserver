@@ -1,6 +1,7 @@
 package org.mockserver.mappers;
 
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
@@ -15,12 +16,6 @@ import java.util.Arrays;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.JsonBody.json;
-import static org.mockserver.model.JsonSchemaBody.jsonSchema;
-import static org.mockserver.model.Parameter.param;
-import static org.mockserver.model.ParameterBody.params;
-import static org.mockserver.model.RegexBody.regex;
 
 /**
  * @author jamesdbloom
@@ -41,7 +36,7 @@ public class MockServerResponseToHttpServletResponseEncoderBasicMappingTest {
         MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
 
         // when
-        new MockServerResponseToHttpServletResponseEncoder().mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        new MockServerResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
 
         // then
         assertEquals(HttpStatusCode.OK_200.code(), httpServletResponse.getStatus());
@@ -49,8 +44,8 @@ public class MockServerResponseToHttpServletResponseEncoderBasicMappingTest {
         assertEquals("headerValue1", httpServletResponse.getHeader("headerName1"));
         assertEquals("headerValue2", httpServletResponse.getHeader("headerName2"));
         assertEquals(Arrays.asList(
-                "cookieName1=cookieValue1",
-                "cookieName2=cookieValue2"
+            "cookieName1=cookieValue1",
+            "cookieName2=cookieValue2"
         ), httpServletResponse.getHeaders("Set-Cookie"));
     }
 
@@ -68,6 +63,6 @@ public class MockServerResponseToHttpServletResponseEncoderBasicMappingTest {
         when(httpServletResponse.getOutputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        new MockServerResponseToHttpServletResponseEncoder().mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
+        new MockServerResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
     }
 }

@@ -5,7 +5,10 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import org.mockserver.codec.BodyDecoderEncoder;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.slf4j.event.Level;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 
@@ -14,13 +17,32 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
  */
 public class FullHttpResponseToMockServerResponse {
 
+    private final MockServerLogger mockServerLogger;
+    private final BodyDecoderEncoder bodyDecoderEncoder;
+
+    public FullHttpResponseToMockServerResponse(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
+    }
+
     public HttpResponse mapMockServerResponseToFullHttpResponse(FullHttpResponse fullHttpResponse) {
         HttpResponse httpResponse = new HttpResponse();
-        if (fullHttpResponse != null) {
-            setStatusCode(httpResponse, fullHttpResponse);
-            setHeaders(httpResponse, fullHttpResponse);
-            setCookies(httpResponse);
-            setBody(httpResponse, fullHttpResponse);
+        try {
+            if (fullHttpResponse != null) {
+                setStatusCode(httpResponse, fullHttpResponse);
+                setHeaders(httpResponse, fullHttpResponse);
+                setCookies(httpResponse);
+                setBody(httpResponse, fullHttpResponse);
+            }
+        } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception decoding request {}")
+                    .setArguments(fullHttpResponse)
+                    .setThrowable(throwable)
+            );
         }
         return httpResponse;
     }
@@ -34,7 +56,7 @@ public class FullHttpResponseToMockServerResponse {
     private void setHeaders(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {
         Headers headers = new Headers();
         for (String headerName : fullHttpResponse.headers().names()) {
-            headers.withEntry(new Header(headerName, fullHttpResponse.headers().getAll(headerName)));
+            headers.withEntry(headerName, fullHttpResponse.headers().getAll(headerName));
         }
         if (!headers.isEmpty()) {
             httpResponse.withHeaders(headers);
@@ -68,6 +90,6 @@ public class FullHttpResponseToMockServerResponse {
     }
 
     private void setBody(HttpResponse httpResponse, FullHttpResponse fullHttpResponse) {
-        httpResponse.withBody(BodyDecoderEncoder.byteBufToBody(fullHttpResponse.content(), fullHttpResponse.headers().get(CONTENT_TYPE)));
+        httpResponse.withBody(bodyDecoderEncoder.byteBufToBody(fullHttpResponse.content(), fullHttpResponse.headers().get(CONTENT_TYPE)));
     }
 }

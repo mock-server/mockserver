@@ -19,7 +19,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableGet {
     public void shouldGetSingeValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
@@ -31,7 +31,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableGet {
     public void shouldGetFirstMultiValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
@@ -43,7 +43,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableGet {
     public void shouldGetAllMultiValues() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
@@ -55,7 +55,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableGet {
     public void shouldGetAllSingeValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
@@ -67,7 +67,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableGet {
     public void shouldGetAllMultiValuesFromMultipleKeys() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
@@ -80,7 +80,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableGet {
     public void shouldGetAllSingeValueFromMultipleKeys() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+#set -o xtrace
 
 function showUsage {
     echo >&2 "   run_mockserver.sh -serverPort <port> [-proxyRemotePort <port>] [-proxyRemoteHost <hostname>] [-logLevel <level>] [-jvmOptions <system parameters>]"
@@ -28,9 +29,10 @@ function showUsage {
     echo >&2 "                                                proxyRemotePort has been specified,"
     echo >&2 "                                                proxyRemoteHost will default to \"localhost\"."
     echo >&2 "                                                "
-    echo >&2 "        -logLevel <level>                       Optionally specify log level as TRACE, DEBUG,"
-    echo >&2 "                                                INFO, WARN, ERROR or OFF. If not specified"
-    echo >&2 "                                                default is INFO"
+    echo >&2 "        -logLevel <level>                       Optionally specify log level using SLF4J levels:"
+    echo >&2 "                                                TRACE, DEBUG, INFO, WARN, ERROR, OFF or Java"
+    echo >&2 "                                                Logger levels: FINEST, FINE, INFO, WARNING,"
+    echo >&2 "                                                SEVERE or OFF. If not specified default is INFO"
     echo >&2 "                                                "
     echo >&2 "        -jvmOptions <system parameters>         Specified generic JVM options or system properties."
     echo >&2 "                                                                                   "
@@ -46,6 +48,29 @@ function runCommand {
     eval $1
 }
 
+function prep_term {
+    unset term_child_pid
+    unset term_kill_needed
+    trap 'handle_term' TERM INT
+}
+
+function handle_term {
+    if [ "${term_child_pid}" ]; then
+        kill -TERM "${term_child_pid}" 2>/dev/null
+    else
+        term_kill_needed="yes"
+    fi
+}
+
+function wait_term {
+    term_child_pid=$!
+    if [ "${term_kill_needed}" ]; then
+        kill -TERM "${term_child_pid}" 2>/dev/null
+    fi
+    wait ${term_child_pid}
+    trap - TERM INT
+    wait ${term_child_pid}
+}
 
 while [ $# -gt 0 ]
 do
@@ -130,4 +155,6 @@ then
     fi
 fi
 
-runCommand "java $JVM_OPTIONS -Dfile.encoding=UTF-8 -jar /opt/mockserver/mockserver-netty-jar-with-dependencies.jar$COMMAND_LINE_OPTS"
+prep_term
+runCommand "java -XX:+UseContainerSupport -XX:MaxRAMPercentage=90.0 ${JVM_OPTIONS} -Dfile.encoding=UTF-8 -jar /opt/mockserver/mockserver-netty-jar-with-dependencies.jar ${COMMAND_LINE_OPTS} &"
+wait_term

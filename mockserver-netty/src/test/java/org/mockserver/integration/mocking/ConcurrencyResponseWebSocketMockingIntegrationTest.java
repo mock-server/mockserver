@@ -5,6 +5,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.*;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -16,6 +17,7 @@ import java.util.concurrent.*;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -43,7 +45,7 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
                         .withBody(request.getBodyAsString());
                 }
             });
-        httpClient = new NettyHttpClient(clientEventLoopGroup, null);
+        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
     }
 
     @AfterClass
@@ -71,11 +73,11 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
 
         List<ScheduledFuture> scheduledFutures = new ArrayList<>();
         for (int i = 0; i < parallelThreads; i++) {
-            scheduledFutures.add(executor.schedule(new Task(), 1L, TimeUnit.SECONDS));
+            scheduledFutures.add(executor.schedule(new Task(), 500L, MILLISECONDS));
         }
 
         for (int i = 0; i < parallelThreads; i++) {
-            scheduledFutures.get(i).get(15L, TimeUnit.SECONDS);
+            scheduledFutures.get(i).get(25L, SECONDS);
         }
     }
 

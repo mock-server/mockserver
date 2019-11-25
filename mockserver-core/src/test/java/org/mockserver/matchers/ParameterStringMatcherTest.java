@@ -19,14 +19,14 @@ public class ParameterStringMatcherTest {
         assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
 
         assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameter.*", "parameter.*")
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
@@ -38,7 +38,7 @@ public class ParameterStringMatcherTest {
         assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
@@ -47,7 +47,7 @@ public class ParameterStringMatcherTest {
         assertFalse(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
-        ))).matches(null, "" +
+        ), true)).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
@@ -56,7 +56,16 @@ public class ParameterStringMatcherTest {
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
-        )).matches(null, "" +
+        ), true).matches(null, "" +
+            "parameterOneName=parameterOneValueOne" +
+            "&parameterOneName=parameterOneValueTwo" +
+            "&parameterTwoName=parameterTwoValue"));
+
+        // and - multiple not parameters
+        assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
+            new Parameter(not("parameterOneName"), not("parameterOneValueOne"), not("parameterOneValueTwo")),
+            new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
@@ -65,7 +74,7 @@ public class ParameterStringMatcherTest {
         assertTrue(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
-        ))).matches(null, "" +
+        ), true)).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
@@ -77,7 +86,7 @@ public class ParameterStringMatcherTest {
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter(not("parameterTwoName"), not("parameterTwoValue"))
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
@@ -86,7 +95,7 @@ public class ParameterStringMatcherTest {
         assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter(not("parameterThree"), not("parameterThreeValueOne"))
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
@@ -94,15 +103,23 @@ public class ParameterStringMatcherTest {
         // not only parameter
         assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter(not("parameterThree"), not("parameterThreeValueOne"))
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
 
+        // not only parameter
+        assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
+            new Parameter(not("parameterOne"), not("parameterOneValueOne")),
+            new Parameter(not("parameterTwo"), not("parameterTwoValueOne"))
+        ), true).matches(null, "" +
+            "notParameterOne=notParameterOneValueOne" +
+            "&notParameterTwo=notParameterTwoValueOne"));
+
         // not all parameters (but matching)
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter(not("parameter.*"), not(".*"))
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
@@ -110,7 +127,7 @@ public class ParameterStringMatcherTest {
         // not all parameters (but not matching name)
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter(not("parameter.*"), not("parameter.*"))
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "notParameterOneName=parameterOneValueOne" +
             "&notParameterOneName=parameterOneValueTwo" +
             "&notParameterTwoName=parameterTwoValue"));
@@ -118,7 +135,7 @@ public class ParameterStringMatcherTest {
         // not all parameters (but not matching value)
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter(not("parameter.*"), not("parameter.*"))
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=notParameterOneValueOne" +
             "&parameterOneName=notParameterOneValueTwo" +
             "&parameterTwoName=notParameterTwoValue"));
@@ -128,26 +145,26 @@ public class ParameterStringMatcherTest {
     public void shouldMatchMatchingStringWithOnlyParameter() {
         assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter(not("parameterThree"), not("parameterThreeValueOne"))
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterThree", "parameterThreeValueOne")
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
 
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter(not("parameterOneName"), not("parameterOneValueOne"), not("parameterOneValueTwo"))
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
         assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo")
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
@@ -156,23 +173,23 @@ public class ParameterStringMatcherTest {
     @Test
     public void shouldMatchMatchingStringWithOnlyParameterForEmptyBody() {
         assertTrue(new ParameterStringMatcher(new MockServerLogger(),
-            new Parameters()
-        ).matches(null, "parameterThree=parameterThreeValueOne"));
+            new Parameters(),
+            true).matches(null, "parameterThree=parameterThreeValueOne"));
 
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterThree", "parameterThreeValueOne")
-        )).matches(null, ""));
+        ), true).matches(null, ""));
 
         assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter(not("parameterThree"), not("parameterThreeValueOne"))
-        )).matches(null, ""));
+        ), true).matches(null, ""));
     }
 
     @Test
     public void shouldNotMatchMatchingStringWithNotParameterAndNormalParameter() {
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
-            new Parameter(not("parameterTwoName"), not("parameterTwoValue")))).matches(null, "" +
+            new Parameter(not("parameterTwoName"), not("parameterTwoValue"))), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
@@ -181,7 +198,7 @@ public class ParameterStringMatcherTest {
     @Test
     public void shouldNotMatchMatchingStringWithOnlyNotParameter() {
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
-            new Parameter(not("parameterTwoName"), not("parameterTwoValue")))).matches(null, "" +
+            new Parameter(not("parameterTwoName"), not("parameterTwoValue"))), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
@@ -190,28 +207,28 @@ public class ParameterStringMatcherTest {
     @Test
     public void shouldNotMatchMatchingStringWithOnlyNotParameterForBodyWithSingleParameter() {
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
-            new Parameter(not("parameterTwoName"), not("parameterTwoValue")))).matches(null, "" +
+            new Parameter(not("parameterTwoName"), not("parameterTwoValue"))), true).matches(null, "" +
             "parameterTwoName=parameterTwoValue"));
     }
 
     @Test
     public void shouldMatchNullExpectation() {
-        assertTrue(new ParameterStringMatcher(new MockServerLogger(), null).matches(null, "some_value"));
+        assertTrue(new ParameterStringMatcher(new MockServerLogger(), null, true).matches(null, "some_value"));
     }
 
     @Test
     public void shouldNotMatchNullExpectationWhenNotApplied() {
-        assertFalse(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), null)).matches(null, "some_value"));
+        assertFalse(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), null, true)).matches(null, "some_value"));
     }
 
     @Test
     public void shouldMatchEmptyExpectation() {
-        assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters()).matches(null, "some_value"));
+        assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters(), true).matches(null, "some_value"));
     }
 
     @Test
     public void shouldNotMatchEmptyExpectationWhenNotApplied() {
-        assertFalse(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), new Parameters())).matches(null, "some_value"));
+        assertFalse(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), new Parameters(), true)).matches(null, "some_value"));
     }
 
     @Test
@@ -219,7 +236,7 @@ public class ParameterStringMatcherTest {
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&INCORRECTParameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
@@ -230,7 +247,7 @@ public class ParameterStringMatcherTest {
         assertTrue(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
-        ))).matches(null, "" +
+        ), true)).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&INCORRECTParameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=parameterTwoValue"));
@@ -241,7 +258,7 @@ public class ParameterStringMatcherTest {
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=INCORRECTParameterTwoValue"));
@@ -252,7 +269,7 @@ public class ParameterStringMatcherTest {
         assertTrue(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
-        ))).matches(null, "" +
+        ), true)).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&parameterTwoName=INCORRECTParameterTwoValue"));
@@ -263,7 +280,7 @@ public class ParameterStringMatcherTest {
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&INCORRECTParameterTwoName=INCORRECTParameterTwoValue"));
@@ -274,7 +291,7 @@ public class ParameterStringMatcherTest {
         assertTrue(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
             new Parameter("parameterTwoName", "parameterTwoValue")
-        ))).matches(null, "" +
+        ), true)).matches(null, "" +
             "parameterOneName=parameterOneValueOne" +
             "&parameterOneName=parameterOneValueTwo" +
             "&INCORRECTParameterTwoName=INCORRECTParameterTwoValue"));
@@ -285,7 +302,7 @@ public class ParameterStringMatcherTest {
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterValueOne"),
             new Parameter("parameterTwoName", "parameterTwoValue")
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterValueOne" +
             "&parameterTwoName="));
     }
@@ -295,7 +312,7 @@ public class ParameterStringMatcherTest {
         assertTrue(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterValueOne"),
             new Parameter("parameterTwoName", "parameterTwoValue")
-        ))).matches(null, "" +
+        ), true)).matches(null, "" +
             "parameterOneName=parameterValueOne" +
             "&parameterTwoName="));
     }
@@ -305,7 +322,7 @@ public class ParameterStringMatcherTest {
         assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterValueOne"),
             new Parameter("parameterTwoName", "")
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterValueOne" +
             "&parameterTwoName=parameterTwoValue"));
     }
@@ -315,7 +332,7 @@ public class ParameterStringMatcherTest {
         assertFalse(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterValueOne"),
             new Parameter("parameterTwoName", "parameterTwoValue")
-        )).matches(null, "" +
+        ), true).matches(null, "" +
             "parameterOneName=parameterValueOne"));
     }
 
@@ -324,27 +341,27 @@ public class ParameterStringMatcherTest {
         assertTrue(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), new Parameters(
             new Parameter("parameterOneName", "parameterValueOne"),
             new Parameter("parameterTwoName", "parameterTwoValue")
-        ))).matches(null, "" +
+        ), true)).matches(null, "" +
             "parameterOneName=parameterValueOne"));
     }
 
     @Test
     public void shouldMatchNullTest() {
-        assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters()).matches(null, null));
+        assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters(), true).matches(null, null));
     }
 
     @Test
     public void shouldNotMatchNullTestWhenNotApplied() {
-        assertFalse(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), new Parameters())).matches(null, null));
+        assertFalse(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), new Parameters(), true)).matches(null, null));
     }
 
     @Test
     public void shouldMatchEmptyTest() {
-        assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters()).matches(null, ""));
+        assertTrue(new ParameterStringMatcher(new MockServerLogger(), new Parameters(), true).matches(null, ""));
     }
 
     @Test
     public void shouldNotMatchEmptyTestWhenNotApplied() {
-        assertFalse(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), new Parameters())).matches(null, ""));
+        assertFalse(NotMatcher.not(new ParameterStringMatcher(new MockServerLogger(), new Parameters(), true)).matches(null, ""));
     }
 }

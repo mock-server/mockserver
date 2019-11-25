@@ -11,7 +11,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
 
-    private static final String[] excludedFields = {"endDate"};
+    private static final String[] EXCLUDED_FIELDS = {"key", "endDate"};
+    private static final TimeToLive TIME_TO_LIVE_UNLIMITED = new TimeToLive(null, null, true) {
+        public boolean stillAlive() {
+            return true;
+        }
+    };
     private final TimeUnit timeUnit;
     private final Long timeToLive;
     private final boolean unlimited;
@@ -27,7 +32,7 @@ public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
     }
 
     public static TimeToLive unlimited() {
-        return new TimeToLive(null, null, true);
+        return TIME_TO_LIVE_UNLIMITED;
     }
 
     public static TimeToLive exactly(TimeUnit timeUnit, Long timeToLive) {
@@ -47,11 +52,7 @@ public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
     }
 
     public boolean stillAlive() {
-        if (unlimited || isAfterNow(endDate)) {
-            return true;
-        } else {
-            return false;
-        }
+        return unlimited || isAfterNow(endDate);
     }
 
     private boolean isAfterNow(Date date) {
@@ -61,6 +62,6 @@ public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
     @Override
     @JsonIgnore
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return excludedFields;
+        return EXCLUDED_FIELDS;
     }
 }

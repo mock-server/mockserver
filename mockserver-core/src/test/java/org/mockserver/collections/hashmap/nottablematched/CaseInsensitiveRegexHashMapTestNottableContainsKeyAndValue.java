@@ -18,7 +18,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForSingleValueForNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -29,7 +29,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForSingleValueForNottedValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -40,7 +40,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldContainKeyAndValueForSingleValueForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -51,9 +51,9 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForSingleValueForNottedKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            true, new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
@@ -64,9 +64,9 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForSingleValueForNottedValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            true, new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
@@ -77,9 +77,9 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldContainKeyAndValueForSingleValueForNottedKeyAndValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            true, new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
@@ -90,7 +90,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForSingleValueWithKeyMismatch() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -101,7 +101,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForSingleValueWithValueMismatch() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -112,7 +112,7 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void singleValuedMapShouldNotContainKeyAndValueForSingleValueWithKeyAndValueMismatch() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -123,9 +123,9 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForSingleValueWithKeyMismatch() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            true, new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
@@ -136,9 +136,9 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForSingleValueWithValueMismatch() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            true, new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then
@@ -149,9 +149,9 @@ public class CaseInsensitiveRegexHashMapTestNottableContainsKeyAndValue {
     public void multiValuedMapShouldNotContainKeyAndValueForMultipleValuesWithKeyAndValueMismatch() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"},
-                new String[]{"keyThree", "keyThreeValue"}
+            true, new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"},
+            new String[]{"keyThree", "keyThreeValue"}
         );
 
         // then

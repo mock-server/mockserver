@@ -4,7 +4,6 @@ import org.junit.runner.RunWith;
 import org.mockserver.examples.proxy.configuration.RootConfiguration;
 import org.mockserver.examples.proxy.web.configuration.WebMvcConfiguration;
 import org.mockserver.examples.proxy.web.controller.BooksPageEndToEndIntegrationTest;
-import org.mockserver.examples.proxy.web.controller.PropertyMockingApplicationContextInitializer;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
@@ -17,17 +16,16 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
 @ContextHierarchy({
-        @ContextConfiguration(
-                classes = {
-                        RootConfiguration.class
-                },
-                initializers = PropertyMockingApplicationContextInitializer.class
-        ),
-        @ContextConfiguration(
-                classes = {
-                        WebMvcConfiguration.class
-                }
-        )
+    @ContextConfiguration(
+        classes = {
+            RootConfiguration.class
+        }
+    ),
+    @ContextConfiguration(
+        classes = {
+            WebMvcConfiguration.class
+        }
+    )
 })
 @ActiveProfiles(profiles = {"backend", "apacheClient"})
 public class BooksPageApacheClientEndToEndIntegrationTest extends BooksPageEndToEndIntegrationTest {

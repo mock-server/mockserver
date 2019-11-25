@@ -7,12 +7,24 @@ import org.mockserver.logging.MockServerLogger;
  */
 public class JsonSchemaHttpRequestValidator extends JsonSchemaValidator {
 
-    public JsonSchemaHttpRequestValidator(MockServerLogger mockServerLogger) {
-        super(mockServerLogger,
+    private JsonSchemaHttpRequestValidator(MockServerLogger mockServerLogger) {
+        super(
+            mockServerLogger,
             "org/mockserver/model/schema/",
             "httpRequest",
             "body",
             "keyToMultiValue",
-            "keyToValue");
+            "keyToValue",
+            "socketAddress"
+        );
+    }
+
+    private static JsonSchemaHttpRequestValidator jsonSchemaHttpRequestValidator;
+
+    public static JsonSchemaHttpRequestValidator jsonSchemaHttpRequestValidator(MockServerLogger mockServerLogger) {
+        if (jsonSchemaHttpRequestValidator == null) {
+            jsonSchemaHttpRequestValidator = new JsonSchemaHttpRequestValidator(mockServerLogger);
+        }
+        return jsonSchemaHttpRequestValidator;
     }
 }

@@ -7,12 +7,9 @@ import org.mockserver.examples.proxy.service.jerseyclient.JerseyClientConfigurat
 import org.mockserver.examples.proxy.service.jettyclient.JettyHttpClientConfiguration;
 import org.mockserver.examples.proxy.service.springclient.SpringRestTemplateConfiguration;
 import org.mockserver.examples.proxy.servicebackend.BackEndServiceConfiguration;
-import org.mockserver.socket.PortFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
-
-import javax.annotation.PostConstruct;
 
 /**
  * This configuration contains top level beans and any configuration required by filters (as WebMvcConfiguration only loaded within Dispatcher Servlet)
@@ -22,19 +19,14 @@ import javax.annotation.PostConstruct;
 @Configuration
 @PropertySource({"classpath:application.properties"})
 @Import({
-        BackEndServiceConfiguration.class,
-        ApacheHttpClientConfiguration.class,
-        JettyHttpClientConfiguration.class,
-        JerseyClientConfiguration.class,
-        GoogleHttpClientConfiguration.class,
-        JavaHttpClientConfiguration.class,
-        SpringRestTemplateConfiguration.class
+    BackEndServiceConfiguration.class,
+    ApacheHttpClientConfiguration.class,
+    JettyHttpClientConfiguration.class,
+    JerseyClientConfiguration.class,
+    GoogleHttpClientConfiguration.class,
+    JavaHttpClientConfiguration.class,
+    SpringRestTemplateConfiguration.class
 })
 public class RootConfiguration {
-
-    @PostConstruct
-    public void updateServerPort() {
-        System.setProperty("bookService.port", "" + PortFactory.findFreePort());
-    }
 
 }

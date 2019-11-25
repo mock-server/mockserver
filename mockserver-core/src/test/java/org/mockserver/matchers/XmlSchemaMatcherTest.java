@@ -66,7 +66,7 @@ public class XmlSchemaMatcherTest {
     @Before
     public void setupMocks() {
         logger = mock(Logger.class);
-        xmlSchemaMatcher = new XmlSchemaMatcher(new MockServerLogger(logger, null), XML_SCHEMA);
+        xmlSchemaMatcher = new XmlSchemaMatcher(new MockServerLogger(logger), XML_SCHEMA);
         initMocks(this);
 
         when(logger.isTraceEnabled()).thenReturn(true);
@@ -97,39 +97,38 @@ public class XmlSchemaMatcherTest {
             assertFalse(xmlSchemaMatcher.matches(null, xml));
 
             // then
-            verify(logger).trace("Failed to match [" + NEW_LINE +
-                NEW_LINE +
-                "\tsome_xml" + NEW_LINE +
-                NEW_LINE +
-                " ] with schema [" + NEW_LINE +
-                NEW_LINE +
-                "\t<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
-                "\t<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
-                "\t    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
-                "\t    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
-                "\t    <xs:element name=\"notes\">" + NEW_LINE +
-                "\t        <xs:complexType>" + NEW_LINE +
-                "\t            <xs:sequence>" + NEW_LINE +
-                "\t                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
-                "\t                    <xs:complexType>" + NEW_LINE +
-                "\t                        <xs:sequence>" + NEW_LINE +
-                "\t                            <xs:element name=\"to\" type=\"xs:string\"></xs:element>" + NEW_LINE +
-                "\t                            <xs:element name=\"from\" type=\"xs:string\"></xs:element>" + NEW_LINE +
-                "\t                            <xs:element name=\"heading\" type=\"xs:string\"></xs:element>" + NEW_LINE +
-                "\t                            <xs:element name=\"body\" type=\"xs:string\"></xs:element>" + NEW_LINE +
-                "\t                        </xs:sequence>" + NEW_LINE +
-                "\t                    </xs:complexType>" + NEW_LINE +
-                "\t                </xs:element>" + NEW_LINE +
-                "\t            </xs:sequence>" + NEW_LINE +
-                "\t        </xs:complexType>" + NEW_LINE +
-                "\t    </xs:element>" + NEW_LINE +
-                "\t</xs:schema>" + NEW_LINE +
-                NEW_LINE +
-                " ] because [" + NEW_LINE +
-                NEW_LINE +
-                "\tvalidator_error" + NEW_LINE +
-                NEW_LINE +
-                " ]");
+            verify(logger).debug("Failed to perform xml schema match of " + NEW_LINE +
+                    NEW_LINE +
+                    "\tsome_xml" + NEW_LINE +
+                    NEW_LINE +
+                    " with " + NEW_LINE +
+                    NEW_LINE +
+                    "\t<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                    "\t<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                    "\t    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                    "\t    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                    "\t    <xs:element name=\"notes\">" + NEW_LINE +
+                    "\t        <xs:complexType>" + NEW_LINE +
+                    "\t            <xs:sequence>" + NEW_LINE +
+                    "\t                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                    "\t                    <xs:complexType>" + NEW_LINE +
+                    "\t                        <xs:sequence>" + NEW_LINE +
+                    "\t                            <xs:element name=\"to\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                    "\t                            <xs:element name=\"from\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                    "\t                            <xs:element name=\"heading\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                    "\t                            <xs:element name=\"body\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                    "\t                        </xs:sequence>" + NEW_LINE +
+                    "\t                    </xs:complexType>" + NEW_LINE +
+                    "\t                </xs:element>" + NEW_LINE +
+                    "\t            </xs:sequence>" + NEW_LINE +
+                    "\t        </xs:complexType>" + NEW_LINE +
+                    "\t    </xs:element>" + NEW_LINE +
+                    "\t</xs:schema>" + NEW_LINE +
+                    NEW_LINE +
+                    " because " + NEW_LINE +
+                    NEW_LINE +
+                    "\tvalidator_error" + NEW_LINE,
+                (Throwable) null);
         } finally {
             logLevel(originalLevel.toString());
         }
@@ -148,39 +147,38 @@ public class XmlSchemaMatcherTest {
             assertFalse(xmlSchemaMatcher.matches(null, xml));
 
             // then
-            verify(logger).trace("Failed to match [" + NEW_LINE +
-                NEW_LINE +
-                "\tsome_xml" + NEW_LINE +
-                NEW_LINE +
-                " ] with schema [" + NEW_LINE +
-                NEW_LINE +
-                "\t<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
-                "\t<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
-                "\t    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
-                "\t    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
-                "\t    <xs:element name=\"notes\">" + NEW_LINE +
-                "\t        <xs:complexType>" + NEW_LINE +
-                "\t            <xs:sequence>" + NEW_LINE +
-                "\t                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
-                "\t                    <xs:complexType>" + NEW_LINE +
-                "\t                        <xs:sequence>" + NEW_LINE +
-                "\t                            <xs:element name=\"to\" type=\"xs:string\"></xs:element>" + NEW_LINE +
-                "\t                            <xs:element name=\"from\" type=\"xs:string\"></xs:element>" + NEW_LINE +
-                "\t                            <xs:element name=\"heading\" type=\"xs:string\"></xs:element>" + NEW_LINE +
-                "\t                            <xs:element name=\"body\" type=\"xs:string\"></xs:element>" + NEW_LINE +
-                "\t                        </xs:sequence>" + NEW_LINE +
-                "\t                    </xs:complexType>" + NEW_LINE +
-                "\t                </xs:element>" + NEW_LINE +
-                "\t            </xs:sequence>" + NEW_LINE +
-                "\t        </xs:complexType>" + NEW_LINE +
-                "\t    </xs:element>" + NEW_LINE +
-                "\t</xs:schema>" + NEW_LINE +
-                NEW_LINE +
-                " ] because [" + NEW_LINE +
-                NEW_LINE +
-                "\tTEST_EXCEPTION" + NEW_LINE +
-                NEW_LINE +
-                " ]");
+            verify(logger).debug("Failed to perform xml schema match of " + NEW_LINE +
+                    NEW_LINE +
+                    "\tsome_xml" + NEW_LINE +
+                    NEW_LINE +
+                    " with " + NEW_LINE +
+                    NEW_LINE +
+                    "\t<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                    "\t<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
+                    "\t    <!-- XML Schema Generated from XML Document on Wed Jun 28 2017 21:52:45 GMT+0100 (BST) -->" + NEW_LINE +
+                    "\t    <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->" + NEW_LINE +
+                    "\t    <xs:element name=\"notes\">" + NEW_LINE +
+                    "\t        <xs:complexType>" + NEW_LINE +
+                    "\t            <xs:sequence>" + NEW_LINE +
+                    "\t                <xs:element name=\"note\" maxOccurs=\"unbounded\">" + NEW_LINE +
+                    "\t                    <xs:complexType>" + NEW_LINE +
+                    "\t                        <xs:sequence>" + NEW_LINE +
+                    "\t                            <xs:element name=\"to\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                    "\t                            <xs:element name=\"from\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                    "\t                            <xs:element name=\"heading\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                    "\t                            <xs:element name=\"body\" type=\"xs:string\"></xs:element>" + NEW_LINE +
+                    "\t                        </xs:sequence>" + NEW_LINE +
+                    "\t                    </xs:complexType>" + NEW_LINE +
+                    "\t                </xs:element>" + NEW_LINE +
+                    "\t            </xs:sequence>" + NEW_LINE +
+                    "\t        </xs:complexType>" + NEW_LINE +
+                    "\t    </xs:element>" + NEW_LINE +
+                    "\t</xs:schema>" + NEW_LINE +
+                    NEW_LINE +
+                    " because " + NEW_LINE +
+                    NEW_LINE +
+                    "\tTEST_EXCEPTION" + NEW_LINE,
+                (Throwable) null);
         } finally {
             logLevel(originalLevel.toString());
         }

@@ -1,6 +1,5 @@
 package org.mockserver.collections.multimap.nottablematcher;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.model.NottableString;
@@ -22,7 +21,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableGet {
     public void shouldGetSingeValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         );
 
@@ -35,7 +34,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableGet {
     public void shouldGetFirstMultiValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
                 new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
@@ -49,7 +48,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableGet {
     public void shouldGetAllMultiValues() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         );
 
@@ -62,7 +61,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableGet {
     public void shouldGetAllSingeValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")}
         );
 
@@ -75,7 +74,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableGet {
     public void shouldGetAllMultiValuesFromMultipleKeys() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
                 new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );
@@ -89,7 +88,7 @@ public class CaseInsensitiveRegexMultiMapTestNottableGet {
     public void shouldGetAllSingeValueFromMultipleKeys() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
+            true, new NottableString[]{not("keyOne"), string("keyOne_valueOne")},
                 new NottableString[]{not("keyTwo"), string("keyTwo_valueOne"), string("keyTwo_valueTwo")},
                 new NottableString[]{not("keyThree"), string("keyThree_valueOne"), string("keyThree_valueTwo"), string("keyThree_valueThree")}
         );

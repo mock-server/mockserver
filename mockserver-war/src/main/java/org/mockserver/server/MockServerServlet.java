@@ -5,6 +5,8 @@ import com.google.common.net.MediaType;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.MockServerEventLog;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mock.HttpStateHandler;
@@ -15,6 +17,7 @@ import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.servlet.responsewriter.ServletResponseWriter;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
+import org.slf4j.event.Level;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -23,7 +26,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.rtsp.RtspResponseStatuses.NOT_IMPLEMENTED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
@@ -37,20 +42,29 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
     private MockServerLogger mockServerLogger;
     // generic handling
     private HttpStateHandler httpStateHandler;
-    private Scheduler scheduler = new Scheduler();
+    private Scheduler scheduler;
     // serializers
     private PortBindingSerializer portBindingSerializer;
     // mappers
-    private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder();
+    private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder(new MockServerLogger());
     // mockserver
     private ActionHandler actionHandler;
     private EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
 
+    @SuppressWarnings("WeakerAccess")
     public MockServerServlet() {
-        this.httpStateHandler = new HttpStateHandler(scheduler);
+        this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
+        this.httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder(this.mockServerLogger);
+        this.scheduler = new Scheduler(mockServerLogger);
+        this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
-        portBindingSerializer = new PortBindingSerializer(mockServerLogger);
+        this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
         this.actionHandler = new ActionHandler(workerGroup, httpStateHandler, null);
+    }
+
+    @Override
+    public void destroy() {
+        shutdown();
     }
 
     @Override
@@ -60,25 +74,27 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
+        shutdown();
+    }
+
+    private void shutdown() {
         this.scheduler.shutdown();
-        this.workerGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+        if (!this.workerGroup.isShuttingDown()) {
+            this.workerGroup.shutdownGracefully(100, 750, MILLISECONDS).syncUninterruptibly();
+        }
+        this.httpStateHandler.getMockServerLog().stop();
     }
 
     @Override
     public void service(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
-        ResponseWriter responseWriter = new ServletResponseWriter(httpServletResponse);
+        ResponseWriter responseWriter = new ServletResponseWriter(new MockServerLogger(), httpServletResponse);
         HttpRequest request = null;
         try {
 
             request = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
             final String hostHeader = request.getFirstHeader(HOST.toString());
-            scheduler.submit(new Runnable() {
-                @Override
-                public void run() {
-                    KeyAndCertificateFactory.addSubjectAlternativeName(hostHeader);
-                }
-            });
+            scheduler.submit(() -> KeyAndCertificateFactory.addSubjectAlternativeName(hostHeader));
 
             if (!httpStateHandler.handle(request, responseWriter, true)) {
 
@@ -113,11 +129,25 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
                 }
             }
         } catch (IllegalArgumentException iae) {
-            mockServerLogger.error(request, "exception processing: {} error: {}", request, iae.getMessage());
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setHttpRequest(request)
+                    .setMessageFormat("exception processing: {} error: {}")
+                    .setArguments(request, iae.getMessage())
+            );
             // send request without API CORS headers
             responseWriter.writeResponse(request, BAD_REQUEST, iae.getMessage(), MediaType.create("text", "plain").toString());
         } catch (Exception e) {
-            mockServerLogger.error(request, e, "exception processing " + request);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setHttpRequest(request)
+                    .setMessageFormat("exception processing " + request)
+                    .setThrowable(e)
+            );
             responseWriter.writeResponse(request, response().withStatusCode(BAD_REQUEST.code()).withBody(e.getMessage()), true);
         }
     }

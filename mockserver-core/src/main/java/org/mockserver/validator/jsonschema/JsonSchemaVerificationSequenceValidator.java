@@ -18,4 +18,13 @@ public class JsonSchemaVerificationSequenceValidator extends JsonSchemaValidator
             "keyToValue"
         );
     }
+
+    private static JsonSchemaVerificationSequenceValidator jsonSchemaVerificationSequenceValidator;
+
+    public static JsonSchemaVerificationSequenceValidator jsonSchemaVerificationSequenceValidator(MockServerLogger mockServerLogger) {
+        if (jsonSchemaVerificationSequenceValidator == null) {
+            jsonSchemaVerificationSequenceValidator = new JsonSchemaVerificationSequenceValidator(mockServerLogger);
+        }
+        return jsonSchemaVerificationSequenceValidator;
+    }
 }

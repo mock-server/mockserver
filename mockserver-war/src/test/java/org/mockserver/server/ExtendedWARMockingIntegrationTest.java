@@ -8,6 +8,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 
@@ -21,8 +22,8 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployableWARMockingIntegrationTest {
 
-    private final static int SERVER_HTTP_PORT = PortFactory.findFreePort();
-    private final static int SERVER_HTTPS_PORT = PortFactory.findFreePort();
+    private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
+    private static final int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static Tomcat tomcat;
 
     @BeforeClass
@@ -34,9 +35,11 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
 
         // add http port
         tomcat.setPort(SERVER_HTTP_PORT);
+        Connector defaultConnector = tomcat.getConnector();
+        defaultConnector.setRedirectPort(SERVER_HTTPS_PORT);
 
         // add https connector
-        KeyStoreFactory.keyStoreFactory().loadOrCreateKeyStore();
+        new KeyStoreFactory(new MockServerLogger()).loadOrCreateKeyStore();
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);
         httpsConnector.setSecure(true);
@@ -49,9 +52,6 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
 
         Service service = tomcat.getService();
         service.addConnector(httpsConnector);
-
-        Connector defaultConnector = tomcat.getConnector();
-        defaultConnector.setRedirectPort(SERVER_HTTPS_PORT);
 
         // add servlet
         Context ctx = tomcat.addContext("/" + servletContext, new File(".").getAbsolutePath());

@@ -9,8 +9,8 @@ import java.util.List;
  */
 public interface MultiValueToJavaSerializer<T extends ObjectWithReflectiveEqualsHashCodeToString> extends ToJavaSerializer<T> {
 
-    public String serializeAsJava(int numberOfSpacesToIndent, List<T> object);
+    String serializeAsJava(int numberOfSpacesToIndent, List<T> object);
 
-    public String serializeAsJava(int numberOfSpacesToIndent, T... object);
+    String serializeAsJava(int numberOfSpacesToIndent, T... object);
 
 }

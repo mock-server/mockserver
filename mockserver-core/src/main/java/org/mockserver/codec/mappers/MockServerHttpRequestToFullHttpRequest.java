@@ -1,53 +1,81 @@
 package org.mockserver.codec.mappers;
 
-import com.google.common.base.Strings;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.*;
-import org.mockserver.model.*;
+import org.mockserver.codec.BodyDecoderEncoder;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.NottableString;
+import org.mockserver.model.Parameter;
+import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
-import static io.netty.handler.codec.http.HttpHeaderValues.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
+import static io.netty.handler.codec.http.HttpHeaderValues.*;
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
-import static org.mockserver.codec.BodyDecoderEncoder.bodyToByteBuf;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * @author jamesdbloom
  */
 public class MockServerHttpRequestToFullHttpRequest {
 
+    private final MockServerLogger mockServerLogger;
+    private final BodyDecoderEncoder bodyDecoderEncoder;
+
+    public MockServerHttpRequestToFullHttpRequest(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+        this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
+    }
+
     public FullHttpRequest mapMockServerResponseToHttpServletResponse(HttpRequest httpRequest) {
         // method
         HttpMethod httpMethod = HttpMethod.valueOf(httpRequest.getMethod("GET"));
+        try {
+            // the request
+            FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, getURI(httpRequest), getBody(httpRequest));
 
-        // the request
-        FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, getURI(httpRequest), getBody(httpRequest));
+            // headers
+            setHeader(httpRequest, request);
 
-        // headers
-        setHeader(httpRequest, request);
+            // cookies
+            setCookies(httpRequest, request);
 
-        // cookies
-        setCookies(httpRequest, request);
-
-        return request;
+            return request;
+        } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception encoding request {}")
+                    .setArguments(httpRequest)
+                    .setThrowable(throwable)
+            );
+            return new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, getURI(httpRequest));
+        }
     }
 
     public String getURI(HttpRequest httpRequest) {
-        QueryStringEncoder queryStringEncoder = new QueryStringEncoder(httpRequest.getPath().getValue());
-        for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
-            for (NottableString value : parameter.getValues()) {
-                queryStringEncoder.addParam(parameter.getName().getValue(), value.getValue());
+        if (httpRequest.getPath() != null) {
+            QueryStringEncoder queryStringEncoder = new QueryStringEncoder(httpRequest.getPath().getValue());
+            for (Parameter parameter : httpRequest.getQueryStringParameterList()) {
+                for (NottableString value : parameter.getValues()) {
+                    queryStringEncoder.addParam(parameter.getName().getValue(), value.getValue());
+                }
             }
+            return queryStringEncoder.toString();
+        } else {
+            return "";
         }
-        return queryStringEncoder.toString();
     }
 
     private ByteBuf getBody(HttpRequest httpRequest) {
-        return bodyToByteBuf(httpRequest.getBody(), httpRequest.getFirstHeader(CONTENT_TYPE.toString()));
+        return bodyDecoderEncoder.bodyToByteBuf(httpRequest.getBody(), httpRequest.getFirstHeader(CONTENT_TYPE.toString()));
     }
 
     private void setCookies(HttpRequest httpRequest, FullHttpRequest request) {
@@ -81,7 +109,7 @@ public class MockServerHttpRequestToFullHttpRequest {
             }
         }
 
-        if (!Strings.isNullOrEmpty(httpRequest.getFirstHeader(HOST.toString()))) {
+        if (isNotBlank(httpRequest.getFirstHeader(HOST.toString()))) {
             request.headers().add(HOST, httpRequest.getFirstHeader(HOST.toString()));
         }
         request.headers().set(ACCEPT_ENCODING, GZIP + "," + DEFLATE);

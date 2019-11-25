@@ -4,6 +4,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.streams.IOStreamUtils;
 
@@ -20,6 +21,15 @@ import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SE
  * @author jamesdbloom
  */
 public class HttpServletRequestToMockServerRequestDecoder {
+
+    private final ContentTypeMapper contentTypeMapper;
+    private final IOStreamUtils ioStreamUtils;
+
+    public HttpServletRequestToMockServerRequestDecoder(MockServerLogger mockServerLogger) {
+        this.contentTypeMapper = new ContentTypeMapper(mockServerLogger);
+        ioStreamUtils = new IOStreamUtils(mockServerLogger);
+    }
+
     public HttpRequest mapHttpServletRequestToMockServerRequest(HttpServletRequest httpServletRequest) {
         HttpRequest request = new HttpRequest();
         setMethod(request, httpServletRequest);
@@ -53,12 +63,12 @@ public class HttpServletRequestToMockServerRequestDecoder {
     }
 
     private void setBody(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        byte[] bodyBytes = IOStreamUtils.readInputStreamToByteArray(httpServletRequest);
+        byte[] bodyBytes = ioStreamUtils.readInputStreamToByteArray(httpServletRequest);
         if (bodyBytes.length > 0) {
             if (ContentTypeMapper.isBinary(httpServletRequest.getHeader(CONTENT_TYPE.toString()))) {
                 httpRequest.withBody(new BinaryBody(bodyBytes));
             } else {
-                Charset requestCharset = ContentTypeMapper.getCharsetFromContentTypeHeader(httpServletRequest.getHeader(CONTENT_TYPE.toString()));
+                Charset requestCharset = contentTypeMapper.getCharsetFromContentTypeHeader(httpServletRequest.getHeader(CONTENT_TYPE.toString()));
                 httpRequest.withBody(new StringBody(new String(bodyBytes, requestCharset), DEFAULT_HTTP_CHARACTER_SET.equals(requestCharset) ? null : requestCharset));
             }
         }
@@ -74,7 +84,7 @@ public class HttpServletRequestToMockServerRequestDecoder {
             while (headerValues.hasMoreElements()) {
                 mappedHeaderValues.add(headerValues.nextElement());
             }
-            headers.withEntry(new Header(headerName, mappedHeaderValues.toArray(new String[mappedHeaderValues.size()])));
+            headers.withEntry(headerName, mappedHeaderValues);
         }
         httpRequest.withHeaders(headers);
     }

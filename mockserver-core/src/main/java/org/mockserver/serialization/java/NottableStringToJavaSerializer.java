@@ -8,7 +8,7 @@ import org.mockserver.model.NottableString;
  */
 public class NottableStringToJavaSerializer {
 
-    public static String serializeNottableString(NottableString nottableString) {
+    public static String serialize(NottableString nottableString) {
         if (nottableString.isNot()) {
             return "not(\"" + StringEscapeUtils.escapeJava(nottableString.getValue()) + "\")";
         } else {

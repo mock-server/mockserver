@@ -8,12 +8,15 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.serialization.model.VerificationSequenceDTO;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.serialization.model.VerificationSequenceDTO;
 import org.mockserver.verify.VerificationSequence;
 
 import java.io.IOException;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -56,12 +59,15 @@ public class VerificationSequenceSerializationErrorsTest {
 
     @Test
     public void shouldHandleExceptionWhileDeserializingObject() throws IOException {
-        // given
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("JsonParseException - Unrecognized token 'requestBytes': was expecting ('true', 'false' or 'null')");
-
-        // when
-        verificationSequenceSerializer.deserialize("requestBytes");
+        try {
+            // when
+            verificationSequenceSerializer.deserialize("requestBytes");
+            fail("expected exception");
+        } catch (IllegalArgumentException iae) {
+            // then
+            assertThat(iae.getMessage(), is("JsonParseException - Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
+                " at [Source: (String)\"requestBytes\"; line: 1, column: 13]"));
+        }
     }
 
 }

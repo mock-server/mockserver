@@ -7,7 +7,7 @@ import org.mockserver.logging.MockServerLogger;
  */
 public class JsonSchemaHttpResponseValidator extends JsonSchemaValidator {
 
-    public JsonSchemaHttpResponseValidator(MockServerLogger mockServerLogger) {
+    private JsonSchemaHttpResponseValidator(MockServerLogger mockServerLogger) {
         super(
             mockServerLogger,
             "org/mockserver/model/schema/",
@@ -18,6 +18,15 @@ public class JsonSchemaHttpResponseValidator extends JsonSchemaValidator {
             "keyToMultiValue",
             "keyToValue"
         );
+    }
+
+    private static JsonSchemaHttpResponseValidator jsonSchemaHttpResponseValidator;
+
+    public static JsonSchemaHttpResponseValidator jsonSchemaHttpResponseValidator(MockServerLogger mockServerLogger) {
+        if (jsonSchemaHttpResponseValidator == null) {
+            jsonSchemaHttpResponseValidator = new JsonSchemaHttpResponseValidator(mockServerLogger);
+        }
+        return jsonSchemaHttpResponseValidator;
     }
 
 }

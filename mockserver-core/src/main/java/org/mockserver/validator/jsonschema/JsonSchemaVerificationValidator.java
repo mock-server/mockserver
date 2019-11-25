@@ -20,4 +20,13 @@ public class JsonSchemaVerificationValidator extends JsonSchemaValidator {
         );
     }
 
+    private static JsonSchemaVerificationValidator jsonSchemaVerificationValidator;
+
+    public static JsonSchemaVerificationValidator jsonSchemaVerificationValidator(MockServerLogger mockServerLogger) {
+        if (jsonSchemaVerificationValidator == null) {
+            jsonSchemaVerificationValidator = new JsonSchemaVerificationValidator(mockServerLogger);
+        }
+        return jsonSchemaVerificationValidator;
+    }
+
 }

@@ -26,6 +26,9 @@
         },
         "keepAlive": {
             "type": "boolean"
+        },
+        "socketAddress": {
+            "$ref": "#/definitions/socketAddress"
         }
     },
     "definitions": {

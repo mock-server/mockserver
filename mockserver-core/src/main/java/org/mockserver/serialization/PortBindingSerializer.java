@@ -1,9 +1,10 @@
 package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.PortBinding;
+import org.slf4j.event.Level;
 
 /**
  * @author jamesdbloom
@@ -22,8 +23,14 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(portBinding);
         } catch (Exception e) {
-            mockServerLogger.error(String.format("Exception while serializing portBinding to JSON with value %s", portBinding), e);
-            throw new RuntimeException(String.format("Exception while serializing portBinding to JSON with value %s", portBinding), e);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception while serializing portBinding to JSON with value " + portBinding)
+                    .setThrowable(e)
+            );
+            throw new RuntimeException("Exception while serializing portBinding to JSON with value " + portBinding, e);
         }
     }
 
@@ -33,7 +40,14 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
             try {
                 portBinding = objectMapper.readValue(jsonPortBinding, PortBinding.class);
             } catch (Exception e) {
-                mockServerLogger.error((HttpRequest) null, e, "exception while parsing {}for PortBinding", jsonPortBinding);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("exception while parsing {} for PortBinding")
+                        .setArguments(jsonPortBinding)
+                        .setThrowable(e)
+                );
                 throw new RuntimeException("Exception while parsing PortBinding for [" + jsonPortBinding + "]", e);
             }
         }

@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBufHolder;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.ssl.SslHandshakeCompletionEvent;
@@ -19,7 +20,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 @Sharable
 public class LoggingHandler extends ChannelDuplexHandler {
 
-    private static final String NEWLINE = String.format("%n");
+    private static final String NEWLINE = "\n";
     private static final String[] BYTE2HEX = new String[256];
     private static final String[] HEXPADDING = new String[16];
     private static final String[] BYTEPADDING = new String[16];
@@ -71,22 +72,24 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
     protected final Logger logger;
 
-    public LoggingHandler(String loggerName) {
+    public LoggingHandler(final String loggerName) {
         logger = LoggerFactory.getLogger(loggerName);
     }
 
-    public LoggingHandler(Logger logger) {
-        this.logger = logger;
+    public LoggingHandler(final Class loggerClass) {
+        logger = LoggerFactory.getLogger(loggerClass.getName());
     }
 
     public void addLoggingHandler(ChannelHandlerContext ctx) {
-        if (ctx.pipeline().get(LoggingHandler.class) != null) {
-            ctx.pipeline().remove(LoggingHandler.class);
+        ChannelPipeline pipeline = ctx.pipeline();
+        if (pipeline.get(LoggingHandler.class) != null) {
+            pipeline.remove(LoggingHandler.class);
         }
-        if (ctx.pipeline().get(SslHandler.class) != null) {
-            ctx.pipeline().addAfter("SslHandler#0", "LoggingHandler#0", this);
+        ChannelHandlerContext context = pipeline.context(SslHandler.class);
+        if (context != null) {
+            pipeline.addAfter(context.name(), "LoggingHandler#0", this);
         } else {
-            ctx.pipeline().addFirst(this);
+            pipeline.addFirst(this);
         }
     }
 

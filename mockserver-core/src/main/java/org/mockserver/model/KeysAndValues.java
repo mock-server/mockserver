@@ -1,6 +1,7 @@
 package org.mockserver.model;
 
 import org.mockserver.collections.CaseInsensitiveRegexHashMap;
+import org.mockserver.logging.MockServerLogger;
 
 import java.util.*;
 
@@ -13,8 +14,8 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
 
     private Map<NottableString, NottableString> map = new LinkedHashMap<>();
 
-    public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(List<T> entries) {
-        CaseInsensitiveRegexHashMap caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap();
+    public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, List<T> entries, boolean controlPlaneMatcher) {
+        CaseInsensitiveRegexHashMap caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap(mockServerLogger, controlPlaneMatcher);
         if (entries != null) {
             for (KeyAndValue keyToMultiValue : entries) {
                 caseInsensitiveRegexHashMap.put(keyToMultiValue.getName(), keyToMultiValue.getValue());
@@ -58,15 +59,23 @@ public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValu
     }
 
     public List<T> getEntries() {
-        ArrayList<T> cookies = new ArrayList<>();
-        for (NottableString nottableString : map.keySet()) {
-            cookies.add(build(nottableString, map.get(nottableString)));
+        if (!map.isEmpty()) {
+            ArrayList<T> cookies = new ArrayList<>();
+            for (NottableString nottableString : map.keySet()) {
+                cookies.add(build(nottableString, map.get(nottableString)));
+            }
+            return cookies;
+        } else {
+            return Collections.emptyList();
         }
-        return cookies;
     }
 
-    public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap() {
-        return toCaseInsensitiveRegexMultiMap(this.getEntries());
+    public Map<NottableString, NottableString> getMap() {
+        return map;
+    }
+
+    public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
+        return toCaseInsensitiveRegexMultiMap(mockServerLogger, this.getEntries(), controlPlaneMatcher);
     }
 
     public boolean isEmpty() {

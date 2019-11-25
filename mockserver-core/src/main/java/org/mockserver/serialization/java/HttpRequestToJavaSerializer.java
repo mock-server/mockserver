@@ -2,11 +2,12 @@ package org.mockserver.serialization.java;
 
 import com.google.common.base.Strings;
 import org.apache.commons.text.StringEscapeUtils;
-import org.mockserver.serialization.Base64Converter;
 import org.mockserver.model.*;
+import org.mockserver.serialization.Base64Converter;
 
 import java.util.List;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.serialization.java.ExpectationToJavaSerializer.INDENT_SIZE;
 
@@ -33,11 +34,11 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
         if (request != null) {
             appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output);
             output.append("request()");
-            if (!Strings.isNullOrEmpty(request.getMethod().getValue())) {
+            if (isNotBlank(request.getMethod().getValue())) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withMethod(\"").append(request.getMethod().getValue()).append("\")");
             }
-            if (!Strings.isNullOrEmpty(request.getPath().getValue())) {
+            if (isNotBlank(request.getPath().getValue())) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withPath(\"").append(request.getPath().getValue()).append("\")");
             }
@@ -51,6 +52,13 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
             if (request.isKeepAlive() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withKeepAlive(").append(request.isKeepAlive().toString()).append(")");
+            }
+            if (request.getSocketAddress() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
+                output.append(".withSocketAddress(");
+                output.append(new SocketAddressToJavaSerializer().serialize(numberOfSpacesToIndent + 2, request.getSocketAddress()));
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
+                output.append(")");
             }
             if (request.getBody() != null) {
                 if (request.getBody() instanceof JsonBody) {

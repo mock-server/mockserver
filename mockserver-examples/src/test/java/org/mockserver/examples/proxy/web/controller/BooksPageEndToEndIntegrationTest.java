@@ -17,11 +17,6 @@ import org.springframework.web.context.WebApplicationContext;
 
 import javax.annotation.Resource;
 
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assume.assumeThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.verify.VerificationTimes.exactly;
@@ -44,16 +39,21 @@ public abstract class BooksPageEndToEndIntegrationTest {
 
     @BeforeClass
     public static void startProxy() {
+        System.setProperty("bookService.port", "" + PortFactory.findFreePort());
         proxy = ClientAndServer.startClientAndServer();
         System.setProperty("http.proxyHost", "127.0.0.1");
         System.setProperty("http.proxyPort", String.valueOf(proxy.getLocalPort()));
     }
 
     @AfterClass
-    public static void stopProxy() throws Exception {
+    public static void stopProxy() {
         stopQuietly(proxy);
         System.clearProperty("http.proxyHost");
         System.clearProperty("http.proxyPort");
+    }
+
+    public void testProxyTypeEnabled() {
+
     }
 
     @Before
@@ -63,11 +63,8 @@ public abstract class BooksPageEndToEndIntegrationTest {
 
     @Test
     public void shouldLoadListOfBooks() throws Exception {
-        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
-            startsWith("1.7."), equalTo("1.7"),
-            startsWith("7."), equalTo("7"),
-            startsWith("1.8."), equalTo("1.8"),
-            startsWith("8."), equalTo("8"))));
+        // given
+        testProxyTypeEnabled();
 
         // when
         MvcResult response = mockMvc.perform(get("/books").accept(MediaType.TEXT_HTML))
@@ -87,11 +84,8 @@ public abstract class BooksPageEndToEndIntegrationTest {
 
     @Test
     public void shouldLoadSingleBook() throws Exception {
-        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
-            startsWith("1.7."), equalTo("1.7"),
-            startsWith("7."), equalTo("7"),
-            startsWith("1.8."), equalTo("1.8"),
-            startsWith("8."), equalTo("8"))));
+        // given
+        testProxyTypeEnabled();
 
         // when
         MvcResult response = mockMvc.perform(get("/book/1").accept(MediaType.TEXT_HTML))

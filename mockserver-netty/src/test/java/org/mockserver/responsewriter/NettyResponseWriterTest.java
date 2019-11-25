@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
@@ -24,6 +25,8 @@ public class NettyResponseWriterTest {
     private ChannelHandlerContext mockChannelHandlerContext;
     @Mock
     private ChannelFuture mockChannelFuture;
+    @Mock
+    private MockServerLogger mockServerLogger;
 
     @Before
     public void setupTestFixture() {
@@ -86,7 +89,6 @@ public class NettyResponseWriterTest {
                             .withHeader("access-control-allow-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
                             .withHeader("access-control-expose-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
                             .withHeader("access-control-max-age", "300")
-                            .withHeader("x-cors", "MockServer CORS support enabled by default, to disable ConfigurationProperties.enableCORSForAPI(false) or -Dmockserver.enableCORSForAPI=false")
             );
             verify(mockChannelFuture).addListener(ChannelFutureListener.CLOSE);
         } finally {

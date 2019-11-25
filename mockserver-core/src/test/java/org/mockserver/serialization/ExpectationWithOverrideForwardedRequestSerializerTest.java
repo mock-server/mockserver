@@ -8,12 +8,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.serialization.model.*;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+import org.mockserver.serialization.model.*;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
@@ -31,6 +31,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.StringBody.exact;
@@ -49,12 +50,18 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
             .withHeaders(new Header("headerName", "headerValue"))
             .withCookies(new Cookie("cookieName", "cookieValue")),
         Times.once(),
-        TimeToLive.exactly(TimeUnit.HOURS, 2l))
+        TimeToLive.exactly(TimeUnit.HOURS, 2L))
         .thenForward(
-            new HttpOverrideForwardedRequest().withHttpRequest(
-                request("some_overridden_path")
-                    .withBody("some_overridden_body")
-            )
+            new HttpOverrideForwardedRequest()
+                .withHttpRequest(
+                    request("some_overridden_path")
+                        .withBody("some_overridden_body")
+                )
+                .withHttpResponse(
+                    response("some_overridden_path")
+                        .withHeader("headerName", "headerValue")
+                )
+                .withDelay(new Delay(TimeUnit.SECONDS, 10))
         );
     private final ExpectationDTO fullExpectationDTO = new ExpectationDTO()
         .setHttpRequest(
@@ -79,10 +86,15 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
                         request("some_overridden_path")
                             .withBody("some_overridden_body")
                     )
+                    .withHttpResponse(
+                        response("some_overridden_path")
+                            .withHeader("headerName", "headerValue")
+                    )
+                    .withDelay(new Delay(TimeUnit.SECONDS, 10))
             )
         )
         .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.once()))
-        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)));
+        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)));
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();

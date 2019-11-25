@@ -2,42 +2,80 @@ package org.mockserver.scheduler;
 
 import org.mockserver.client.SocketCommunicationException;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.HttpForwardActionResult;
 import org.mockserver.model.Delay;
+import org.slf4j.event.Level;
 
 import java.util.concurrent.*;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
 
 /**
  * @author jamesdbloom
  */
 public class Scheduler {
 
-    private ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(poolSize(), new ThreadPoolExecutor.CallerRunsPolicy());
+    private final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(
+        poolSize(),
+        new SchedulerThreadFactory("Scheduler"),
+        new ThreadPoolExecutor.CallerRunsPolicy()
+    );
+
+    public static class SchedulerThreadFactory implements ThreadFactory {
+
+        private final String name;
+        private static int threadInitNumber;
+
+        public SchedulerThreadFactory(String name) {
+            this.name = name;
+        }
+
+        @Override
+        @SuppressWarnings("NullableProblems")
+        public Thread newThread(Runnable runnable) {
+            Thread thread = new Thread(runnable);
+            thread.setName("MockServer-" + name + threadInitNumber++);
+            thread.setDaemon(true);
+            return thread;
+        }
+    }
+
+    private final MockServerLogger mockServerLogger;
+
+    public Scheduler(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+    }
 
     private int poolSize() {
-        return Math.max(2, Runtime.getRuntime().availableProcessors() * 2);
+        return Math.max(10, Runtime.getRuntime().availableProcessors() * 2);
     }
 
     public synchronized void shutdown() {
-        if (scheduler != null) {
+        if (!scheduler.isShutdown()) {
             scheduler.shutdown();
             try {
                 scheduler.awaitTermination(500, MILLISECONDS);
             } catch (InterruptedException ignore) {
                 // ignore interrupted exception
             }
-            scheduler = null;
         }
     }
 
-    private synchronized ScheduledExecutorService getScheduler() {
-        if (scheduler == null) {
-            scheduler = new ScheduledThreadPoolExecutor(poolSize(), new ThreadPoolExecutor.CallerRunsPolicy());
+    private void run(Runnable command) {
+        try {
+            command.run();
+        } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(WARN)
+                    .setLogLevel(Level.INFO)
+                    .setMessageFormat(throwable.getMessage())
+                    .setThrowable(throwable)
+            );
         }
-        return scheduler;
     }
 
     public void schedule(Runnable command, boolean synchronous, Delay... delays) {
@@ -46,12 +84,12 @@ public class Scheduler {
             if (delay != null) {
                 delay.applyDelay();
             }
-            command.run();
+            run(command);
         } else {
             if (delay != null) {
-                getScheduler().schedule(command, delay.getValue(), delay.getTimeUnit());
+                scheduler.schedule(() -> run(command), delay.getValue(), delay.getTimeUnit());
             } else {
-                command.run();
+                run(command);
             }
         }
     }
@@ -80,9 +118,9 @@ public class Scheduler {
 
     public void submit(Runnable command, boolean synchronous) {
         if (synchronous) {
-            command.run();
+            run(command);
         } else {
-            getScheduler().schedule(command, 0, NANOSECONDS);
+            scheduler.submit(() -> run(command));
         }
     }
 
@@ -92,13 +130,13 @@ public class Scheduler {
                 try {
                     future.getHttpResponse().get(ConfigurationProperties.maxSocketTimeout(), MILLISECONDS);
                 } catch (TimeoutException e) {
-                    future.getHttpResponse().setException(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
+                    future.getHttpResponse().completeExceptionally(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
                 } catch (InterruptedException | ExecutionException ex) {
-                    future.getHttpResponse().setException(ex);
+                    future.getHttpResponse().completeExceptionally(ex);
                 }
-                command.run();
+                run(command);
             } else {
-                future.getHttpResponse().addListener(command, getScheduler());
+                future.getHttpResponse().whenCompleteAsync((httpResponse, throwable) -> command.run(), scheduler);
             }
         }
     }

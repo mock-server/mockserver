@@ -5,7 +5,6 @@ import org.mockserver.collections.CaseInsensitiveRegexHashMap;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.mockserver.collections.CaseInsensitiveRegexHashMap.hashMap;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
@@ -19,8 +18,8 @@ public class CaseInsensitiveRegexHashMapTestNottableGet {
     public void shouldGetSingeValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"}
+            true, new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"}
         );
 
         // then
@@ -31,8 +30,8 @@ public class CaseInsensitiveRegexHashMapTestNottableGet {
     public void shouldGetFirstMultiValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"}
+            true, new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"}
         );
 
         // then

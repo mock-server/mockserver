@@ -60,6 +60,7 @@ public class CompileGeneratedJavaCodeTest {
                     )
                     .withSecure(false)
                     .withKeepAlive(true)
+                    .withSocketAddress("someHost", 1234, SocketAddress.Scheme.HTTP)
                     .withBody(new StringBody("somebody")),
                 Times.once(),
                 TimeToLive.unlimited()
@@ -264,7 +265,7 @@ public class CompileGeneratedJavaCodeTest {
         );
     }
 
-    public boolean compileJavaCode(final String javaCode) throws URISyntaxException {
+    private boolean compileJavaCode(final String javaCode) throws URISyntaxException {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
         JavaCompiler.CompilationTask task = compiler.getTask(null, compiler.getStandardFileManager(null, null, null), null, null, null,

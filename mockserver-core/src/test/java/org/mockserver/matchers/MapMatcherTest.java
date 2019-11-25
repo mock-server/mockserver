@@ -26,7 +26,7 @@ public class MapMatcherTest {
     public void matchesMatchingValues() {
         // given
         matcher.withEntry("foo", "bar");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo", "bar");
@@ -39,7 +39,7 @@ public class MapMatcherTest {
     public void doesNotMatchEmptyValueInExpectation() {
         // given
         matcher.withEntry("foo", "");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo", "bar", "bob");
@@ -52,7 +52,7 @@ public class MapMatcherTest {
     public void matchesMatchingRegexValue() {
         // given
         matcher.withEntry("foo", "b.*");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo", "bar", "bob");
@@ -65,7 +65,7 @@ public class MapMatcherTest {
     public void matchesMatchingRegexKey() {
         // given
         matcher.withEntry("f.*", "bar");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo", "bar");
@@ -78,7 +78,7 @@ public class MapMatcherTest {
     public void matchesMatchingRegexValueAndKey() {
         // given
         matcher.withEntry("f.*", "b.*");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo", "bar");
@@ -91,7 +91,7 @@ public class MapMatcherTest {
     public void matchesMatchingValuesWithExtraValues() {
         // given
         matcher.withEntry("foo1", "bar1");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo0", "bar0");
@@ -107,7 +107,7 @@ public class MapMatcherTest {
         // given
         matcher.withEntry("foo1", "bar1");
         matcher.withEntry("FOO2", "bar2");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo0", "bar0");
@@ -123,7 +123,7 @@ public class MapMatcherTest {
         // given
         matcher.withEntry("foo1", ".*1");
         matcher.withEntry("foo2", ".*2");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo0", "bar0");
@@ -139,7 +139,7 @@ public class MapMatcherTest {
         // given
         matcher.withEntry("f.*1", "bar1");
         matcher.withEntry("f.*2", "bar2");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo0", "bar0");
@@ -155,7 +155,7 @@ public class MapMatcherTest {
         // given
         matcher.withEntry("f.*1", ".*1");
         matcher.withEntry("f.*2", ".*2");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo0", "bar0");
@@ -171,7 +171,7 @@ public class MapMatcherTest {
         // given
         matcher.withEntry("FOO1", ".*1");
         matcher.withEntry("foo2", ".*2");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo1", "bar1");
@@ -184,7 +184,7 @@ public class MapMatcherTest {
     @Test
     public void matchesEmptyExpectation() {
         // given
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // then
         assertTrue(mapMatcher.matches(null, matched));
@@ -194,7 +194,7 @@ public class MapMatcherTest {
     public void doesNotMatchDifferentKeys() {
         // given
         matcher.withEntry("foo", "bar");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo2", "bar");
@@ -207,7 +207,7 @@ public class MapMatcherTest {
     public void doesNotMatchDifferentValues() {
         // given
         matcher.withEntry("foo", "bar");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo", "bar2");
@@ -220,7 +220,7 @@ public class MapMatcherTest {
     public void doesNotMatchDifferentEmptyValue() {
         // given
         matcher.withEntry("foo", "bar");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo", "");
@@ -233,7 +233,7 @@ public class MapMatcherTest {
     public void doesNotMatchIncorrectRegexValue() {
         // given
         matcher.withEntry("foo1", "a.*1");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo0", "bar0");
@@ -248,7 +248,7 @@ public class MapMatcherTest {
     public void doesNotMatchIncorrectRegexKey() {
         // given
         matcher.withEntry("g.*1", "bar1");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo0", "bar0");
@@ -263,7 +263,7 @@ public class MapMatcherTest {
     public void doesNotMatchIncorrectRegexKeyAndValue() {
         // given
         matcher.withEntry("g.*1", "a.*1");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo0", "bar0");
@@ -278,7 +278,7 @@ public class MapMatcherTest {
     public void shouldHandleIllegalRegexValuePattern() {
         // given
         matcher.withEntry("foo", "/{}");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo", "/{}/");
@@ -291,7 +291,7 @@ public class MapMatcherTest {
     public void shouldHandleIllegalRegexKeyPattern() {
         // given
         matcher.withEntry("/{}", "bar");
-        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher);
+        MultiValueMapMatcher mapMatcher = new MultiValueMapMatcher(new MockServerLogger(), matcher, true);
 
         // when
         matched.withEntry("foo", "/{}/");

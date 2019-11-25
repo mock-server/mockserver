@@ -1,5 +1,7 @@
 package org.mockserver.collections;
 
+import com.google.common.annotations.VisibleForTesting;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.RegexStringMatcher;
 import org.mockserver.model.NottableString;
 
@@ -15,8 +17,15 @@ import static org.mockserver.model.NottableString.string;
  */
 public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, NottableString> implements Map<NottableString, NottableString> {
 
-    public static CaseInsensitiveRegexHashMap hashMap(String[]... keyAndValues) {
-        CaseInsensitiveRegexHashMap hashMap = new CaseInsensitiveRegexHashMap();
+    private final RegexStringMatcher regexStringMatcher;
+
+    public CaseInsensitiveRegexHashMap(MockServerLogger mockServerLogger, boolean controlPlaneMatcher) {
+        regexStringMatcher = new RegexStringMatcher(mockServerLogger, controlPlaneMatcher);
+    }
+
+    @VisibleForTesting
+    public static CaseInsensitiveRegexHashMap hashMap(boolean controlPlaneMatcher, String[]... keyAndValues) {
+        CaseInsensitiveRegexHashMap hashMap = new CaseInsensitiveRegexHashMap(new MockServerLogger(), controlPlaneMatcher);
         for (String[] keyAndValue : keyAndValues) {
             if (keyAndValue.length >= 2) {
                 hashMap.put(keyAndValue[0], keyAndValue[1]);
@@ -25,8 +34,9 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
         return hashMap;
     }
 
-    public static CaseInsensitiveRegexHashMap hashMap(NottableString[]... keyAndValues) {
-        CaseInsensitiveRegexHashMap hashMap = new CaseInsensitiveRegexHashMap();
+    @VisibleForTesting
+    public static CaseInsensitiveRegexHashMap hashMap(boolean controlPlaneMatcher, NottableString[]... keyAndValues) {
+        CaseInsensitiveRegexHashMap hashMap = new CaseInsensitiveRegexHashMap(new MockServerLogger(), controlPlaneMatcher);
         for (NottableString[] keyAndValue : keyAndValues) {
             if (keyAndValue.length >= 2) {
                 hashMap.put(keyAndValue[0], keyAndValue[1]);
@@ -41,7 +51,12 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
         } else {
             for (Entry<NottableString, NottableString> entry : subSet.entrySet()) {
                 if ((entry.getKey().isNot() || entry.getValue().isNot()) && containsKeyValue(entry.getKey().getValue(), entry.getValue().getValue())) {
-                    return false;
+                    Entry<NottableString, NottableString> matchingEntry = retrieveEntry(entry.getKey(), entry.getValue());
+                    if (matchingEntry != null) {
+                        return entry.getKey().isNot() == matchingEntry.getKey().isNot() && entry.getValue().isNot() == matchingEntry.getValue().isNot();
+                    } else {
+                        return false;
+                    }
                 } else if (!containsKeyValue(entry.getKey(), entry.getValue())) {
                     return false;
                 }
@@ -50,7 +65,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
         return true;
     }
 
-    private boolean allKeysNotted() {
+    public boolean allKeysNotted() {
         for (NottableString key : keySet()) {
             if (!key.isNot()) {
                 return false;
@@ -67,8 +82,8 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
         boolean result = false;
 
         for (Entry<NottableString, NottableString> matcherEntry : entrySet()) {
-            if (RegexStringMatcher.matches(value, matcherEntry.getValue(), true)
-                && RegexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
+            if (regexStringMatcher.matches(value, matcherEntry.getValue(), true)
+                && regexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
                 result = true;
                 break;
             }
@@ -77,19 +92,25 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
         return result;
     }
 
+    private synchronized Entry<NottableString, NottableString> retrieveEntry(NottableString key, NottableString value) {
+        for (Entry<NottableString, NottableString> matcherEntry : entrySet()) {
+            if (regexStringMatcher.matches(value, matcherEntry.getValue(), true)
+                && regexStringMatcher.matches(key, matcherEntry.getKey(), true)) {
+                return matcherEntry;
+            }
+        }
+        return null;
+    }
+
     @Override
     public synchronized boolean containsKey(Object key) {
         boolean result = false;
 
         if (key instanceof NottableString) {
-            if (super.containsKey(key)) {
-                result = true;
-            } else {
-                for (NottableString keyToCompare : keySet()) {
-                    if (RegexStringMatcher.matches(((NottableString) key), keyToCompare, true)) {
-                        result = true;
-                        break;
-                    }
+            for (NottableString keyToCompare : keySet()) {
+                if (regexStringMatcher.matches(((NottableString) key), keyToCompare, true)) {
+                    result = true;
+                    break;
                 }
             }
         } else if (key instanceof String) {
@@ -105,7 +126,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
 
         if (value instanceof NottableString) {
             for (Entry<NottableString, NottableString> entry : entrySet()) {
-                if (RegexStringMatcher.matches((NottableString) value, entry.getValue(), true)) {
+                if (regexStringMatcher.matches((NottableString) value, entry.getValue(), true)) {
                     return true;
                 }
             }
@@ -120,7 +141,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
     public synchronized NottableString get(Object key) {
         if (key instanceof NottableString) {
             for (Entry<NottableString, NottableString> entry : entrySet()) {
-                if (RegexStringMatcher.matches((NottableString) key, entry.getKey(), true)) {
+                if (regexStringMatcher.matches((NottableString) key, entry.getKey(), true)) {
                     return super.get(entry.getKey());
                 }
             }
@@ -139,7 +160,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
             throw new IllegalArgumentException("key must not be null");
         }
         if (value == null) {
-            throw new IllegalArgumentException("key must not be null");
+            throw new IllegalArgumentException("value must not be null");
         }
         return super.put(key, value);
     }
@@ -148,7 +169,7 @@ public class CaseInsensitiveRegexHashMap extends LinkedHashMap<NottableString, N
     public synchronized NottableString remove(Object key) {
         if (key instanceof NottableString) {
             for (Entry<NottableString, NottableString> entry : entrySet()) {
-                if (RegexStringMatcher.matches((NottableString) key, entry.getKey(), true)) {
+                if (regexStringMatcher.matches((NottableString) key, entry.getKey(), true)) {
                     return super.remove(entry.getKey());
                 }
             }

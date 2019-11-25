@@ -7,7 +7,7 @@ subsection: true
 sitemap:
   priority: 0.7
   changefreq: 'monthly'
-  lastmod: 2018-11-16T16:00:00+01:00
+  lastmod: 2019-11-10T08:00:00+01:00
 ---
 
 <p>MockServer Proxy can be controlled in the following ways:</p>
@@ -24,6 +24,7 @@ sitemap:
         <p>Retrieving the following items:</p>
         <ul>
             <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_requests">recorded requests</a></strong></li>
+            <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_request_responses">recorded requests and responses</a></strong></li>
             <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_expectations">recorded expectations</a></strong></li>
             <li><strong><a href="/mock_server/debugging_issues.html#retrieving_recorded_logs">logs</a></strong></li>
         </ul>
@@ -56,13 +57,13 @@ sitemap:
 <p>The JavaScript client has the following version:</p>
 
 <ul>
-    <li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.5.1/mockServerClient.js"><strong>mockServerClient.js</strong></a></li>
+    <li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js"><strong>mockServerClient.js</strong></a></li>
     <li>a Node.js npm module <a href="https://www.npmjs.org/package/mockserver-client"><strong>mockserver-client</strong></a><br/><a href="https://www.npmjs.org/package/mockserver-client"><img src="https://nodei.co/npm/mockserver-client.png?downloads=true&downloadRank=true&stars=true" alt="mockserver-client-node"/></a></li>
 </ul>
 
 <p>To include the browser based client in an HTML page as follows:</p>
 
-<pre class="prettyprint lang-java code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.5.1/mockServerClient.js&quot;&gt;&lt;/script&gt;</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;</code></pre>
 
 <a name="client-code-examples" class="anchor" href="#client-code-examples">&nbsp;</a>
 
@@ -107,7 +108,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.5.1/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .retrieveRecordedRequests({
@@ -171,7 +172,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.5.1/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .retrieveRecordedRequests({
@@ -227,7 +228,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.5.1/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .retrieveLogMessages({
@@ -292,7 +293,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.5.1/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .verify(
@@ -374,7 +375,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.5.1/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .verifySequence(
@@ -400,17 +401,19 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">REST API</button>
         <div class="panel">
-            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verifySequence" -d '[
-    {
-      "path": "/some/path/one"
-    },
-    {
-      "path": "/some/path/two"
-    },
-    {
-      "path": "/some/path/three"
-    }
-]'</code></pre>
+            <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/verifySequence" -d '{
+   "httpRequests":[
+      {
+         "path":"/some/path/one"
+      },
+      {
+         "path":"/some/path/two"
+      },
+      {
+         "path":"/some/path/three"
+      }
+   ]
+}'</code></pre>
         </div>
     </div>
     <button id="button_client_clear" class="accordion">clear everything that matches request matcher</button>
@@ -441,7 +444,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.5.1/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .clear({
@@ -493,7 +496,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.5.1/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .clear({
@@ -538,7 +541,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.5.1/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .reset()

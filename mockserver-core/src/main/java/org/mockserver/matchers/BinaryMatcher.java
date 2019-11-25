@@ -1,10 +1,14 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 
 import java.util.Arrays;
+
+import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -14,7 +18,7 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
     private final MockServerLogger mockServerLogger;
     private final byte[] matcher;
 
-    public BinaryMatcher(MockServerLogger mockServerLogger, byte[] matcher) {
+    BinaryMatcher(MockServerLogger mockServerLogger, byte[] matcher) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
     }
@@ -27,7 +31,14 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
         }
 
         if (!result) {
-            mockServerLogger.trace(context, "Failed to perform binary match [{}] with [{}] because {}", (Object) matched);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.DEBUG)
+                    .setLogLevel(DEBUG)
+                    .setHttpRequest(context)
+                    .setMessageFormat("Failed to perform binary match of {} with {}")
+                    .setArguments(matched, this.matcher)
+            );
         }
 
         return not != result;

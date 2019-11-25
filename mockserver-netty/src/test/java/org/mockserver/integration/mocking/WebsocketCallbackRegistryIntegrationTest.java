@@ -7,15 +7,13 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.integration.server.AbstractMockingIntegrationTestBase;
 import org.mockserver.metrics.Metrics;
-import org.mockserver.mock.action.ExpectationForwardCallback;
-import org.mockserver.mock.action.ExpectationResponseCallback;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
+import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.stop.Stop.stopQuietly;
 
@@ -53,12 +51,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 request()
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        return response();
-                    }
-                }
+                httpRequest -> response()
             );
 
         // then
@@ -81,12 +74,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 request()
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        return response();
-                    }
-                }
+                httpRequest -> response()
             );
 
         try {
@@ -113,13 +101,10 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     .withPath(calculatePath("websocket_response_handler"))
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        // then
-                        return response()
-                            .withBody("websocket_response_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT));
-                    }
+                httpRequest -> {
+                    // then
+                    return response()
+                        .withBody("websocket_response_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT));
                 }
             );
 
@@ -153,14 +138,9 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     .withPath(calculatePath("websocket_forward_handler"))
             )
             .forward(
-                new ExpectationForwardCallback() {
-                    @Override
-                    public HttpRequest handle(HttpRequest httpRequest) {
-                        return request()
-                            .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
-                            .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT));
-                    }
-                }
+                httpRequest -> request()
+                    .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                    .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT))
             );
 
         // then
@@ -182,51 +162,62 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
         Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT), CoreMatchers.is(0));
     }
 
+    private int objectCallbackCounter = 0;
+
     @Test
-    public void shouldNotAllowUseOfWebsocketClientInsideCallback() {
+    @Ignore
+    public void shouldRespondByMultipleParallelObjectCallbacks() {
         // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("prevent_reentrant_websocketclient_registration"))
-            )
-            .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
+        for (int i = 0; i < 50; i++) {
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter))
+                )
+                .respond(
+                    httpRequest -> {
                         mockServerClient
                             .when(
                                 request()
-                                    .withPath(calculatePath("reentrant_websocketclient_registration"))
+                                    .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter))
                             )
-                            .respond(
-                                new ExpectationResponseCallback() {
-                                    @Override
-                                    public HttpResponse handle(HttpRequest httpRequest) {
-                                        // then
-                                        return response()
-                                            .withBody("reentrant_websocketclient_registration");
-                                    }
-                                }
+                            .respond(innerRequest ->
+                                response()
+                                    .withBody("inner_websocket_client_registration_" + objectCallbackCounter)
                             );
                         return response()
-                            .withBody("prevent_reentrant_websocketclient_registration");
+                            .withBody("outer_websocket_client_registration_" + objectCallbackCounter);
                     }
-                }
+                );
+            objectCallbackCounter++;
+        }
+
+        objectCallbackCounter = 0;
+
+        // then
+        for (int i = 0; i < 50; i++) {
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withBody("outer_websocket_client_registration_" + objectCallbackCounter),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter)),
+                    headersToIgnore)
             );
-
-        // when
-        assertEquals(
-            response()
-                .withStatusCode(NOT_FOUND_404.code())
-                .withReasonPhrase(NOT_FOUND_404.reasonPhrase())
-                .withBody("It is not possible to re-use the same MockServerClient instance to register a new object callback while responding to an object callback, please use a separate instance of the MockServerClient inside a callback"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("prevent_reentrant_websocketclient_registration")),
-                headersToIgnore)
-        );
-
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withBody("inner_websocket_client_registration_" + objectCallbackCounter),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter)),
+                    headersToIgnore)
+            );
+            objectCallbackCounter++;
+        }
     }
 
     @Test
@@ -238,27 +229,21 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     .withPath(calculatePath("prevent_reentrant_websocketclient_registration"))
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        new MockServerClient("localhost", getServerPort())
-                            .when(
-                                request()
-                                    .withPath(calculatePath("reentrant_websocketclient_registration"))
-                            )
-                            .respond(
-                                new ExpectationResponseCallback() {
-                                    @Override
-                                    public HttpResponse handle(HttpRequest httpRequest) {
-                                        // then
-                                        return response()
-                                            .withBody("reentrant_websocketclient_registration");
-                                    }
-                                }
-                            );
-                        return response()
-                            .withBody("prevent_reentrant_websocketclient_registration");
-                    }
+                httpRequest -> {
+                    new MockServerClient("localhost", getServerPort())
+                        .when(
+                            request()
+                                .withPath(calculatePath("reentrant_websocketclient_registration"))
+                        )
+                        .respond(
+                            httpRequest1 -> {
+                                // then
+                                return response()
+                                    .withBody("reentrant_websocketclient_registration");
+                            }
+                        );
+                    return response()
+                        .withBody("prevent_reentrant_websocketclient_registration");
                 }
             );
 

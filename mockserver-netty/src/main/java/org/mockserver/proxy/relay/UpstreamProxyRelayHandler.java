@@ -4,14 +4,16 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.ssl.SslHandler;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.socket.tls.NettySslContextFactory;
+import org.slf4j.event.Level;
 
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
 
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
-import static org.mockserver.socket.tls.NettySslContextFactory.nettySslContextFactory;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledDownstream;
 
 public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
@@ -36,7 +38,7 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, final FullHttpRequest request) {
         if (isSslEnabledDownstream(upstreamChannel) && downstreamChannel.pipeline().get(SslHandler.class) == null) {
-            downstreamChannel.pipeline().addFirst(nettySslContextFactory().createClientSslContext().newHandler(ctx.alloc()));
+            downstreamChannel.pipeline().addFirst(new NettySslContextFactory(mockServerLogger).createClientSslContext().newHandler(ctx.alloc()));
         }
         downstreamChannel.writeAndFlush(request).addListener(new ChannelFutureListener() {
             @Override
@@ -45,7 +47,13 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
                     ctx.channel().read();
                 } else {
                     if (isNotSocketClosedException(future.cause())) {
-                        mockServerLogger.error("Exception while returning response for request \"" + request.method() + " " + request.uri() + "\"", future.cause());
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(LogEntry.LogMessageType.EXCEPTION)
+                                .setLogLevel(Level.ERROR)
+                                .setMessageFormat("Exception while returning response for request \"" + request.method() + " " + request.uri() + "\"")
+                                .setThrowable(future.cause())
+                        );
                     }
                     future.channel().close();
                 }
@@ -65,7 +73,13 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (shouldNotIgnoreException(cause)) {
-            mockServerLogger.error("Exception caught by upstream relay handler -> closing pipeline " + ctx.channel(), cause);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception caught by upstream relay handler -> closing pipeline " + ctx.channel())
+                    .setThrowable(cause)
+            );
         }
         closeOnFlush(ctx.channel());
     }

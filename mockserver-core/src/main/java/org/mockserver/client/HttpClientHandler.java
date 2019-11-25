@@ -14,13 +14,13 @@ import static org.mockserver.client.NettyHttpClient.RESPONSE_FUTURE;
 @ChannelHandler.Sharable
 public class HttpClientHandler extends SimpleChannelInboundHandler<HttpResponse> {
 
-    public HttpClientHandler() {
+    HttpClientHandler() {
         super(false);
     }
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, HttpResponse response) {
-        ctx.channel().attr(RESPONSE_FUTURE).get().set(response);
+        ctx.channel().attr(RESPONSE_FUTURE).get().complete(response);
         ctx.close();
     }
 
@@ -29,7 +29,7 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpResponse>
         if (isNotSslException(cause)) {
             cause.printStackTrace();
         }
-        ctx.channel().attr(RESPONSE_FUTURE).get().setException(cause);
+        ctx.channel().attr(RESPONSE_FUTURE).get().completeExceptionally(cause);
         ctx.close();
     }
 

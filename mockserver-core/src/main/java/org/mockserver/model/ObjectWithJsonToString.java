@@ -1,11 +1,14 @@
 package org.mockserver.model;
 
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.ObjectMapperFactory;
 
 /**
  * @author jamesdbloom
  */
 public abstract class ObjectWithJsonToString extends ObjectWithReflectiveEqualsHashCodeToString {
+
+    private static final String ESCAPED_QUOTE = "\"";
 
     @Override
     public String toString() {
@@ -14,10 +17,8 @@ public abstract class ObjectWithJsonToString extends ObjectWithReflectiveEqualsH
                 .createObjectMapper()
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(this);
-            if (valueAsString.startsWith("\"") && valueAsString.endsWith("\"")) {
-                valueAsString = valueAsString
-                    .replaceAll("^\"", "")
-                    .replaceAll("\"$", "");
+            if (valueAsString.startsWith(ESCAPED_QUOTE) && valueAsString.endsWith(ESCAPED_QUOTE)) {
+                valueAsString = valueAsString.substring(1, valueAsString.length() - 1);
             }
             return valueAsString;
         } catch (Exception e) {

@@ -6,9 +6,14 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.*;
+import org.mockserver.model.Cookies;
+import org.mockserver.model.Headers;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.Parameters;
 import org.mockserver.url.URLParser;
+import org.slf4j.event.Level;
 
 import java.util.List;
 import java.util.Set;
@@ -24,10 +29,12 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
 
     private final MockServerLogger mockServerLogger;
     private final boolean isSecure;
+    private final BodyDecoderEncoder bodyDecoderEncoder;
 
     public MockServerRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure) {
         this.mockServerLogger = mockServerLogger;
         this.isSecure = isSecure;
+        this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
     }
 
     @Override
@@ -37,18 +44,31 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
 
     public HttpRequest decode(FullHttpRequest fullHttpRequest) {
         HttpRequest httpRequest = new HttpRequest();
-        if (fullHttpRequest != null) {
-            setMethod(httpRequest, fullHttpRequest);
+        try {
+            if (fullHttpRequest != null) {
+                setMethod(httpRequest, fullHttpRequest);
 
-            setPath(httpRequest, fullHttpRequest);
-            setQueryString(httpRequest, new QueryStringDecoder(fullHttpRequest.uri()));
+                setPath(httpRequest, fullHttpRequest);
+                if (fullHttpRequest.uri().contains("?")) {
+                    setQueryString(httpRequest, new QueryStringDecoder(fullHttpRequest.uri()));
+                }
 
-            setHeaders(httpRequest, fullHttpRequest);
-            setCookies(httpRequest, fullHttpRequest);
-            setBody(httpRequest, fullHttpRequest);
+                setHeaders(httpRequest, fullHttpRequest);
+                setCookies(httpRequest, fullHttpRequest);
+                setBody(httpRequest, fullHttpRequest);
 
-            httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
-            httpRequest.withSecure(isSecure);
+                httpRequest.withKeepAlive(isKeepAlive(fullHttpRequest));
+                httpRequest.withSecure(isSecure);
+            }
+        } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception decoding request {}")
+                    .setArguments(fullHttpRequest)
+                    .setThrowable(throwable)
+            );
         }
         return httpRequest;
     }
@@ -66,7 +86,14 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         try {
             parameters.withEntries(queryStringDecoder.parameters());
         } catch (IllegalArgumentException iae) {
-            mockServerLogger.error(httpRequest, "Exception while parsing query string", iae);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setHttpRequest(httpRequest)
+                    .setMessageFormat("Exception while parsing query string")
+                    .setArguments(iae)
+            );
         }
         httpRequest.withQueryStringParameters(parameters);
     }
@@ -75,7 +102,7 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         Headers headers = new Headers();
         HttpHeaders httpHeaders = fullHttpResponse.headers();
         for (String headerName : httpHeaders.names()) {
-            headers.withEntry(new Header(headerName, httpHeaders.getAll(headerName)));
+            headers.withEntry(headerName, httpHeaders.getAll(headerName));
         }
         httpRequest.withHeaders(headers);
     }
@@ -86,16 +113,16 @@ public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
             Set<io.netty.handler.codec.http.cookie.Cookie> decodedCookies =
                 ServerCookieDecoder.LAX.decode(cookieHeader);
             for (io.netty.handler.codec.http.cookie.Cookie decodedCookie : decodedCookies) {
-                cookies.withEntry(new Cookie(
+                cookies.withEntry(
                     decodedCookie.name(),
                     decodedCookie.value()
-                ));
+                );
             }
         }
         httpRequest.withCookies(cookies);
     }
 
     private void setBody(HttpRequest httpRequest, FullHttpRequest fullHttpRequest) {
-        httpRequest.withBody(BodyDecoderEncoder.byteBufToBody(fullHttpRequest.content(), fullHttpRequest.headers().get(CONTENT_TYPE)));
+        httpRequest.withBody(bodyDecoderEncoder.byteBufToBody(fullHttpRequest.content(), fullHttpRequest.headers().get(CONTENT_TYPE)));
     }
 }

@@ -18,7 +18,7 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnKeysForMapWithSingleEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -29,8 +29,8 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnKeysForMapWithMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"}
+            true, new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"}
         );
 
         // then
@@ -41,7 +41,7 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnValuesForMapWithSingleEntry() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // then
@@ -52,8 +52,8 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnValuesForMapWithMultipleEntries() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"}
+            true, new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"}
         );
 
         // then
@@ -64,14 +64,14 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     public void shouldReturnEntrySet() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"},
-                new String[]{"keyTwo", "keyTwoValue"}
+            true, new String[]{"keyOne", "keyOneValue"},
+            new String[]{"keyTwo", "keyTwoValue"}
         );
 
         // then
         assertThat(hashMap.entrySet(), containsInAnyOrder(
-                entry("keyOne", "keyOneValue"),
-                entry("keyTwo", "keyTwoValue")
+            entry("keyOne", "keyOneValue"),
+            entry("keyTwo", "keyTwoValue")
         ));
     }
 }

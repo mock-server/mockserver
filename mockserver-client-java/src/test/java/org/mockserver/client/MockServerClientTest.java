@@ -11,10 +11,7 @@ import org.mockserver.Version;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
-import org.mockserver.serialization.ExpectationSerializer;
-import org.mockserver.serialization.HttpRequestSerializer;
-import org.mockserver.serialization.VerificationSequenceSerializer;
-import org.mockserver.serialization.VerificationSerializer;
+import org.mockserver.serialization.*;
 import org.mockserver.serialization.model.*;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
@@ -57,6 +54,8 @@ public class MockServerClientTest {
     @Mock
     private HttpRequestSerializer mockHttpRequestSerializer;
     @Mock
+    private HttpRequestResponseSerializer httpRequestResponseSerializer;
+    @Mock
     private VerificationSerializer mockVerificationSerializer;
     @Mock
     private VerificationSequenceSerializer mockVerificationSequenceSerializer;
@@ -91,7 +90,6 @@ public class MockServerClientTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void shouldHandleInvalidExpectationException() {
         // then
         exception.expect(IllegalArgumentException.class);
@@ -110,7 +108,6 @@ public class MockServerClientTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void shouldHandleUnmatchingServerVersion() {
         try {
             System.setProperty("MOCKSERVER_VERSION", "some_version");
@@ -135,7 +132,6 @@ public class MockServerClientTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void shouldHandleMatchingServerVersion() {
         try {
             // given
@@ -839,6 +835,63 @@ public class MockServerClientTest {
             TimeUnit.MILLISECONDS
         );
         verify(mockHttpRequestSerializer).deserializeArray("body");
+    }
+
+    @Test
+    public void shouldRetrieveRequestResponses() {
+        // given - a request
+        HttpRequest someRequestMatcher = new HttpRequest()
+            .withPath("/some_path")
+            .withBody(new StringBody("some_request_body"));
+        when(mockHttpRequestSerializer.serialize(someRequestMatcher)).thenReturn(someRequestMatcher.toString());
+
+        // and - a client
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
+
+        // and - a response
+        HttpRequestAndHttpResponse[] httpRequests = {};
+        when(httpRequestResponseSerializer.deserializeArray("body")).thenReturn(httpRequests);
+
+        // when
+        assertSame(httpRequests, mockServerClient.retrieveRecordedRequestsAndResponses(someRequestMatcher));
+
+        // then
+        verify(mockHttpClient).sendRequest(
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/mockserver/retrieve")
+                .withQueryStringParameter("type", RetrieveType.REQUEST_RESPONSES.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS);
+        verify(httpRequestResponseSerializer).deserializeArray("body");
+    }
+
+    @Test
+    public void shouldRetrieveRequestResponsesWithNullRequest() {
+        // given
+        HttpRequestAndHttpResponse[] httpRequests = {};
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
+        when(httpRequestResponseSerializer.deserializeArray("body")).thenReturn(httpRequests);
+
+        // when
+        assertSame(httpRequests, mockServerClient.retrieveRecordedRequestsAndResponses(null));
+
+        // then
+        verify(mockHttpClient).sendRequest(
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1080)
+                .withMethod("PUT")
+                .withPath("/mockserver/retrieve")
+                .withQueryStringParameter("type", RetrieveType.REQUEST_RESPONSES.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withBody("", StandardCharsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS
+        );
+        verify(httpRequestResponseSerializer).deserializeArray("body");
     }
 
     @Test

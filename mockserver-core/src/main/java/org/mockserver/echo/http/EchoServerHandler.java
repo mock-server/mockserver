@@ -4,18 +4,20 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import org.mockserver.filters.MockServerEventLog;
-import org.mockserver.log.model.RequestLogEntry;
+import org.mockserver.codec.MockServerResponseEncoder;
+import org.mockserver.log.MockServerEventLog;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BodyWithContentType;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.codec.MockServerResponseEncoder;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static org.mockserver.log.model.LogEntry.LogMessageType.RECEIVED_REQUEST;
 import static org.mockserver.model.HttpResponse.response;
+import static org.slf4j.event.Level.INFO;
 
 /**
  * @author jamesdbloom
@@ -23,33 +25,38 @@ import static org.mockserver.model.HttpResponse.response;
 @ChannelHandler.Sharable
 public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
-    private final MockServerLogger mockServerLogger;
     private final EchoServer.Error error;
-    private final MockServerEventLog logFilter;
+    private final MockServerLogger mockServerLogger;
+    private final MockServerEventLog mockServerEventLog;
     private final EchoServer.NextResponse nextResponse;
     private final EchoServer.OnlyResponse onlyResponse;
 
-    EchoServerHandler(MockServerLogger mockServerLogger, EchoServer.Error error, MockServerEventLog logFilter, EchoServer.NextResponse nextResponse, EchoServer.OnlyResponse onlyResponse) {
-        this.mockServerLogger = mockServerLogger;
+    EchoServerHandler(EchoServer.Error error, MockServerLogger mockServerLogger, MockServerEventLog mockServerEventLog, EchoServer.NextResponse nextResponse, EchoServer.OnlyResponse onlyResponse) {
         this.error = error;
-        this.logFilter = logFilter;
+        this.mockServerLogger = mockServerLogger;
+        this.mockServerEventLog = mockServerEventLog;
         this.nextResponse = nextResponse;
         this.onlyResponse = onlyResponse;
     }
 
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
 
-        mockServerLogger.trace(request, "received request:{}", request);
-
-        logFilter.add(new RequestLogEntry(request));
+        mockServerEventLog.add(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(RECEIVED_REQUEST)
+                .setHttpRequest(request)
+                .setMessageFormat("EchoServer received request {}")
+                .setArguments(request)
+        );
 
         if (onlyResponse.httpResponse != null) {
             // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
-            DefaultFullHttpResponse httpResponse = new MockServerResponseEncoder().encode(onlyResponse.httpResponse);
+            DefaultFullHttpResponse httpResponse = new MockServerResponseEncoder(mockServerLogger).encode(onlyResponse.httpResponse);
             ctx.writeAndFlush(httpResponse);
         } else if (!nextResponse.httpResponse.isEmpty()) {
             // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
-            DefaultFullHttpResponse httpResponse = new MockServerResponseEncoder().encode(nextResponse.httpResponse.remove());
+            DefaultFullHttpResponse httpResponse = new MockServerResponseEncoder(mockServerLogger).encode(nextResponse.httpResponse.remove());
             ctx.writeAndFlush(httpResponse);
         } else {
             HttpResponse httpResponse =
@@ -72,6 +79,16 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             } else {
                 httpResponse.replaceHeader(CONTENT_LENGTH.toString(), String.valueOf(length));
             }
+
+            mockServerEventLog.add(
+                new LogEntry()
+                    .setLogLevel(INFO)
+                    .setType(LogEntry.LogMessageType.INFO)
+                    .setHttpRequest(request)
+                    .setHttpResponse(httpResponse)
+                    .setMessageFormat("EchoServer returning response {} for request {}")
+                    .setArguments(httpResponse, request)
+            );
 
             // write and flush
             ctx.writeAndFlush(httpResponse);

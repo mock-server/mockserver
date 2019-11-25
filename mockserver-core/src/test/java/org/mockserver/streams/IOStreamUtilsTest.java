@@ -2,6 +2,7 @@ package org.mockserver.streams;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 
 import javax.servlet.*;
 import java.io.IOException;
@@ -19,6 +20,8 @@ import static org.mockserver.character.Character.NEW_LINE;
  */
 public class IOStreamUtilsTest {
 
+    private final IOStreamUtils ioStreamUtils = new IOStreamUtils(new MockServerLogger());
+
     @Test
     public void shouldReadSocketInputStreamToString() throws IOException {
         // given
@@ -26,7 +29,7 @@ public class IOStreamUtilsTest {
         when(socket.getInputStream()).thenReturn(IOUtils.toInputStream("bytes", UTF_8));
 
         // when
-        String result = new IOStreamUtils().readInputStreamToString(socket);
+        String result = IOStreamUtils.readInputStreamToString(socket);
 
         // then
         assertEquals("bytes" + NEW_LINE, result);
@@ -105,7 +108,7 @@ public class IOStreamUtilsTest {
         );
 
         // when
-        String result = IOStreamUtils.readInputStreamToString(servletRequest);
+        String result = ioStreamUtils.readInputStreamToString(servletRequest);
 
         // then
         assertEquals("bytes", result);
@@ -118,7 +121,7 @@ public class IOStreamUtilsTest {
         when(servletRequest.getInputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        IOStreamUtils.readInputStreamToString(servletRequest);
+        ioStreamUtils.readInputStreamToString(servletRequest);
     }
 
     @Test
@@ -130,7 +133,7 @@ public class IOStreamUtilsTest {
         );
 
         // when
-        byte[] result = IOStreamUtils.readInputStreamToByteArray(servletRequest);
+        byte[] result = ioStreamUtils.readInputStreamToByteArray(servletRequest);
 
         // then
         assertEquals("bytes", new String(result));
@@ -143,7 +146,7 @@ public class IOStreamUtilsTest {
         when(servletRequest.getInputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        byte[] result = IOStreamUtils.readInputStreamToByteArray(servletRequest);
+        byte[] result = ioStreamUtils.readInputStreamToByteArray(servletRequest);
 
         // then
         assertEquals("bytes", new String(result));
@@ -157,7 +160,7 @@ public class IOStreamUtilsTest {
         when(mockServletResponse.getOutputStream()).thenReturn(mockServletOutputStream);
 
         // when
-        IOStreamUtils.writeToOutputStream("data".getBytes(UTF_8), mockServletResponse);
+        ioStreamUtils.writeToOutputStream("data".getBytes(UTF_8), mockServletResponse);
 
         // then
         verify(mockServletOutputStream).write("data".getBytes(UTF_8));
@@ -171,13 +174,14 @@ public class IOStreamUtilsTest {
         when(mockServletResponse.getOutputStream()).thenThrow(new IOException("TEST EXCEPTION"));
 
         // when
-        IOStreamUtils.writeToOutputStream("data".getBytes(UTF_8), mockServletResponse);
+        ioStreamUtils.writeToOutputStream("data".getBytes(UTF_8), mockServletResponse);
     }
 
     @Test
     public void shouldCreateBasicByteBuffer() {
         // when
-        ByteBuffer byteBuffer = IOStreamUtils.createBasicByteBuffer("byte_buffer");
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect("byte_buffer".length()).put("byte_buffer".getBytes(UTF_8));
+        byteBuffer.flip();
 
         // then
         byte[] content = new byte[byteBuffer.limit()];
@@ -185,7 +189,7 @@ public class IOStreamUtilsTest {
         assertEquals("byte_buffer", new String(content));
     }
 
-    class DelegatingServletInputStream extends ServletInputStream {
+    static class DelegatingServletInputStream extends ServletInputStream {
 
         private final InputStream inputStream;
 

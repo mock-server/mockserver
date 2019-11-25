@@ -17,9 +17,13 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  */
 public class ExpectationInitializerLoader {
 
-    private static ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private final ExpectationSerializer expectationSerializer;
 
-    private static Expectation[] retrieveExpectationsFromInitializerClass() {
+    public ExpectationInitializerLoader(MockServerLogger mockServerLogger) {
+        expectationSerializer = new ExpectationSerializer(mockServerLogger);
+    }
+
+    private Expectation[] retrieveExpectationsFromInitializerClass() {
         try {
             String initializationClass = ConfigurationProperties.initializationClass();
             if (isNotBlank(initializationClass)) {
@@ -38,7 +42,7 @@ public class ExpectationInitializerLoader {
         return new Expectation[0];
     }
 
-    private static Expectation[] retrieveExpectationsFromJson() {
+    private Expectation[] retrieveExpectationsFromJson() {
         String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
         if (isNotBlank(initializationJsonPath)) {
             return expectationSerializer.deserializeArray(FileReader.readFileFromClassPathOrPath(initializationJsonPath));
@@ -46,7 +50,7 @@ public class ExpectationInitializerLoader {
         return new Expectation[0];
     }
 
-    public static Expectation[] loadExpectations() {
+    public Expectation[] loadExpectations() {
         final Expectation[] expectationsFromInitializerClass = retrieveExpectationsFromInitializerClass();
         final Expectation[] expectationsFromJson = retrieveExpectationsFromJson();
         return ArrayUtils.addAll(expectationsFromInitializerClass, expectationsFromJson);

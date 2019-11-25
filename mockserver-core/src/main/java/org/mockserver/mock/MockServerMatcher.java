@@ -24,7 +24,7 @@ import static org.mockserver.metrics.Metrics.Name.*;
  */
 public class MockServerMatcher extends MockServerMatcherNotifier {
 
-    final List<HttpRequestMatcher> httpRequestMatchers = Collections.synchronizedList(new CircularLinkedList<HttpRequestMatcher>(maxExpectations()));
+    final List<HttpRequestMatcher> httpRequestMatchers = Collections.synchronizedList(new CircularLinkedList<>(maxExpectations()));
     private WebSocketClientRegistry webSocketClientRegistry;
     private MatcherBuilder matcherBuilder;
 
@@ -34,7 +34,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
         this.webSocketClientRegistry = webSocketClientRegistry;
     }
 
-    public synchronized void add(Expectation expectation) {
+    public void add(Expectation expectation) {
         httpRequestMatchers.add(matcherBuilder.transformsToMatcher(expectation));
         notifyListeners(this);
         if (expectation != null && expectation.getAction() != null) {
@@ -42,11 +42,11 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
         }
     }
 
-    private synchronized List<HttpRequestMatcher> cloneMatchers() {
-        return new ArrayList<>(httpRequestMatchers);
+    private HttpRequestMatcher[] cloneMatchers() {
+        return httpRequestMatchers.toArray(new HttpRequestMatcher[0]);
     }
 
-    public synchronized void reset() {
+    public void reset() {
         httpRequestMatchers.clear();
         Metrics.clearActionMetrics();
         notifyListeners(this);
@@ -109,8 +109,8 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
         }
     }
 
-    public List<Expectation> retrieveExpectations(HttpRequest httpRequest) {
-        List<Expectation> expectations = new ArrayList<Expectation>();
+    public List<Expectation> retrieveActiveExpectations(HttpRequest httpRequest) {
+        List<Expectation> expectations = new ArrayList<>();
         HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
         for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
             if (httpRequest == null ||

@@ -1,13 +1,12 @@
 package org.mockserver.collections.hashmap;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockserver.collections.CaseInsensitiveRegexHashMap;
-
-import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.mockserver.collections.CaseInsensitiveRegexHashMap.hashMap;
 import static org.mockserver.model.NottableString.string;
 
@@ -16,10 +15,13 @@ import static org.mockserver.model.NottableString.string;
  */
 public class CaseInsensitiveRegexHashMapTestPut {
 
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
+
     @Test
     public void shouldPutSingleValueForNewKey() {
         // given
-        CaseInsensitiveRegexHashMap hashMap = hashMap(new String[]{});
+        CaseInsensitiveRegexHashMap hashMap = hashMap(true, new String[]{});
 
         // when
         hashMap.put("keyOne", "keyOneValue");
@@ -33,7 +35,7 @@ public class CaseInsensitiveRegexHashMapTestPut {
     public void shouldPutSingleValueForExistingKey() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // when
@@ -49,7 +51,7 @@ public class CaseInsensitiveRegexHashMapTestPut {
     public void shouldPutSingleValueForExistingKeyAndValue() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(
-                new String[]{"keyOne", "keyOneValue"}
+            true, new String[]{"keyOne", "keyOneValue"}
         );
 
         // when

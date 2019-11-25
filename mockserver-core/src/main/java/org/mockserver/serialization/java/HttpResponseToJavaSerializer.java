@@ -7,6 +7,7 @@ import org.mockserver.model.*;
 
 import java.util.List;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.serialization.java.ExpectationToJavaSerializer.INDENT_SIZE;
 
@@ -30,7 +31,7 @@ public class HttpResponseToJavaSerializer implements ToJavaSerializer<HttpRespon
             }
             outputHeaders(numberOfSpacesToIndent + 1, output, httpResponse.getHeaderList());
             outputCookies(numberOfSpacesToIndent + 1, output, httpResponse.getCookieList());
-            if (!Strings.isNullOrEmpty(httpResponse.getBodyAsString())) {
+            if (isNotBlank(httpResponse.getBodyAsString())) {
                 if (httpResponse.getBody() instanceof BinaryBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     BinaryBody body = (BinaryBody) httpResponse.getBody();

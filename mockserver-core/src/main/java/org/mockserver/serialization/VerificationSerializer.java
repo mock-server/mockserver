@@ -1,15 +1,17 @@
 package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
-import org.mockserver.serialization.model.VerificationDTO;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
+import org.mockserver.serialization.model.VerificationDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaVerificationValidator;
 import org.mockserver.verify.Verification;
+import org.slf4j.event.Level;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.VERIFICATION_FAILED;
+import static org.mockserver.log.model.LogEntry.LogMessageType.VERIFICATION_FAILED;
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
@@ -30,13 +32,19 @@ public class VerificationSerializer implements Serializer<Verification> {
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(new VerificationDTO(verification));
         } catch (Exception e) {
-            mockServerLogger.error("Exception while serializing verification to JSON with value " + verification, e);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception while serializing verification to JSON with value " + verification)
+                    .setThrowable(e)
+            );
             throw new RuntimeException("Exception while serializing verification to JSON with value " + verification, e);
         }
     }
 
     public Verification deserialize(String jsonVerification) {
-        if (Strings.isNullOrEmpty(jsonVerification)) {
+        if (isBlank(jsonVerification)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a verification is required but value was \"" + String.valueOf(jsonVerification) + "\"");
         } else {
             String validationErrors = verificationValidator.isValid(jsonVerification);
@@ -48,12 +56,26 @@ public class VerificationSerializer implements Serializer<Verification> {
                         verification = verificationDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {}for Verification", jsonVerification);
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.EXCEPTION)
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("exception while parsing {} for Verification")
+                            .setArguments(jsonVerification)
+                            .setThrowable(e)
+                    );
                     throw new RuntimeException("Exception while parsing [" + jsonVerification + "] for Verification", e);
                 }
                 return verification;
             } else {
-                mockServerLogger.info(VERIFICATION_FAILED, "validation failed:{}verification:{}", validationErrors, jsonVerification);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(VERIFICATION_FAILED)
+                        .setLogLevel(Level.INFO)
+                        .setHttpRequest(request())
+                        .setMessageFormat("validation failed:{}verification:{}")
+                        .setArguments(validationErrors, jsonVerification)
+                );
                 throw new IllegalArgumentException(validationErrors);
             }
         }

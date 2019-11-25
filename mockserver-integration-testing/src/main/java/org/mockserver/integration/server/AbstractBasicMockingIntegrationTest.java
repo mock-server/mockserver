@@ -9,10 +9,10 @@ import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.verify.VerificationTimes;
 
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
@@ -30,6 +30,7 @@ import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverridde
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.model.Parameter.param;
@@ -180,6 +181,174 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     request()
                         .withHeader("Host", "localhost:" + secureEchoServer.getPort())
                         .withBody("some_overridden_body")
+                ).withDelay(MILLISECONDS, 10)
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+
+            )
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body_https")
+                )
+                .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body_https")
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldForwardOverriddenRequestWithOverriddenResponse() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                        .withBody("some_overridden_body"),
+                    response()
+                        .withHeader("extra_header", "some_value")
+                        .withHeader("content-length", "29")
+                        .withBody("some_overridden_response_body")
+                ).withDelay(MILLISECONDS, 10)
+            );
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "localhost:" + secureEchoServer.getPort())
+                        .withBody("some_overridden_body"),
+                    response()
+                        .withHeader("extra_header", "some_value")
+                        .withHeader("content-length", "29")
+                        .withBody("some_overridden_response_body")
+                ).withDelay(MILLISECONDS, 10)
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body"),
+                    header("extra_header", "some_value")
+                )
+                .withBody("some_overridden_response_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+
+            )
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body_https"),
+                    header("extra_header", "some_value")
+                )
+                .withBody("some_overridden_response_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body_https")
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldForwardOverriddenRequestWithSocketAddress() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "incorrect_host:1234")
+                        .withBody("some_overridden_body")
+                        .withSocketAddress(
+                            "localhost",
+                            insecureEchoServer.getPort(),
+                            SocketAddress.Scheme.HTTP
+                        )
+                ).withDelay(MILLISECONDS, 10)
+            );
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(true)
+            )
+            .forward(
+                forwardOverriddenRequest(
+                    request()
+                        .withHeader("Host", "incorrect_host:1234")
+                        .withBody("some_overridden_body")
+                        .withSocketAddress(
+                            "localhost",
+                            secureEchoServer.getPort(),
+                            SocketAddress.Scheme.HTTPS
+                        )
                 ).withDelay(MILLISECONDS, 10)
             );
 
@@ -439,8 +608,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // - in http
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withHeaders(
                     header("x-callback", "test_callback_header")
                 )
@@ -460,8 +629,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // - in https
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withHeaders(
                     header("x-callback", "test_callback_header")
                 )
@@ -507,7 +676,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         ) +
                     "]"
                 )
-        ).get(10, TimeUnit.SECONDS);
+        ).get(10, SECONDS);
 
         // then
         assertEquals(
@@ -660,77 +829,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
-    public void shouldReturnResponseForExpectationWithDelay() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("some_path1"))
-            )
-            .respond(
-                response()
-                    .withBody("some_body1")
-                    .withDelay(new Delay(MILLISECONDS, 10))
-            );
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("some_path2"))
-            )
-            .respond(
-                response()
-                    .withBody("some_body2")
-                    .withDelay(new Delay(MILLISECONDS, 20))
-            );
-
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body2"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("some_path2")),
-                headersToIgnore)
-        );
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body1"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("some_path1")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body2"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("some_path2")),
-                headersToIgnore)
-        );
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body1"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("some_path1")),
-                headersToIgnore)
-        );
-    }
-
-    @Test
     public void shouldReturnResponseFromVelocityTemplate() {
         // when
         mockServerClient
@@ -792,8 +890,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body_response")
             );
 
@@ -801,8 +899,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // - in http
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -819,8 +917,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         // - in https
         assertEquals(
             response()
-                .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                 .withBody("some_body_response"),
             makeRequest(
                 request()
@@ -855,8 +953,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -920,8 +1018,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 response()
-                    .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
-                    .withReasonPhrase(HttpStatusCode.ACCEPTED_202.reasonPhrase())
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
                     .withBody("some_body")
                     .withHeaders(header("headerName", "headerValue"))
                     .withCookies(cookie("cookieName", "cookieValue"))
@@ -1030,8 +1128,11 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 headersToIgnore)
         );
         try {
-            mockServerClient.verify(request()
-                .withPath(calculatePath("some_path")), VerificationTimes.atLeast(2));
+            mockServerClient
+                .verify(
+                    request()
+                        .withPath(calculatePath("some_path")), VerificationTimes.atLeast(2)
+                );
             fail();
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found at least 2 times, expected:<{" + NEW_LINE +
@@ -1184,18 +1285,18 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
-    public void shouldRetrieveRecordedExpectations() {
-        mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).forward(
-            forward()
-                .withHost("127.0.0.1")
-                .withPort(insecureEchoServer.getPort())
-        );
-        HttpRequest complexRequest = request()
-            .withPath(calculatePath("some_path_one"))
-            .withHeader("some", "header")
-            .withQueryStringParameter("some", "parameter")
-            .withCookie("some", "parameter")
-            .withBody("some_body_one");
+    public void shouldRetrieveRecordedExpectations() throws InterruptedException {
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path.*")),
+                exactly(4)
+            )
+            .forward(
+                forward()
+                    .withHost("127.0.0.1")
+                    .withPort(insecureEchoServer.getPort())
+            );
         assertEquals(
             response("some_body_one")
                 .withHeader("some", "header")
@@ -1203,7 +1304,12 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withHeader("set-cookie", "some=parameter")
                 .withCookie("some", "parameter"),
             makeRequest(
-                complexRequest,
+                request()
+                    .withPath(calculatePath("some_path_one"))
+                    .withHeader("some", "header")
+                    .withQueryStringParameter("some", "parameter")
+                    .withCookie("some", "parameter")
+                    .withBody("some_body_one"),
                 headersToIgnore
             )
         );
@@ -1216,6 +1322,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 headersToIgnore
             )
         );
+
+        MILLISECONDS.sleep(500);
 
         // then
         Expectation[] recordedExpectations = mockServerClient.retrieveRecordedExpectations(request().withPath(calculatePath("some_path_one")));
@@ -1283,7 +1391,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         String[] actualLogMessages = mockServerClient.retrieveLogMessagesArray(request().withPath(calculatePath(".*")));
 
         Object[] expectedLogMessages = new Object[]{
-            "resetting all expectations and request logs", //0
+            "resetting all expectations and request logs",
             "creating expectation:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
@@ -1299,13 +1407,22 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 "\t  \"httpResponse\" : {" + NEW_LINE +
                 "\t    \"body\" : \"some_body\"" + NEW_LINE +
                 "\t  }" + NEW_LINE +
-                "\t}" + NEW_LINE, //1
+                "\t}" + NEW_LINE,
+
+            new String[]{
+                "received request:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"method\" : \"GET\"," + NEW_LINE +
+                    "\t  \"path\" : \"/some_path_one\"," + NEW_LINE +
+                    "\t  \"headers\" : {"
+            },
             new String[]{
                 "request:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_one\",", // 2-0
+                    "\t  \"path\" : \"/some_path_one\",",
                 " matched expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -1321,15 +1438,12 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "\t  \"httpResponse\" : {" + NEW_LINE +
                     "\t    \"body\" : \"some_body\"" + NEW_LINE +
                     "\t  }" + NEW_LINE +
-                    "\t}" // 2-1
+                    "\t}"
             },
             new String[]{
                 "returning response:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
-                    "\t  \"headers\" : {" + NEW_LINE +
-                    "\t    \"connection\" : [ \"keep-alive\" ]" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
                     "\t  \"body\" : \"some_body\"" + NEW_LINE +
                     "\t}" + NEW_LINE +
                     NEW_LINE +
@@ -1337,19 +1451,27 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_one\",", // 3-0
+                    "\t  \"path\" : \"/some_path_one\",",
                 " for action:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"body\" : \"some_body\"" + NEW_LINE +
-                    "\t}" + NEW_LINE // 3-1
+                    "\t}" + NEW_LINE
+            },
+            new String[]{
+                "received request:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"method\" : \"GET\"," + NEW_LINE +
+                    "\t  \"path\" : \"/not_found\"," + NEW_LINE +
+                    "\t  \"headers\" : {"
             },
             new String[]{
                 "request:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/not_found\",", // 4-0
+                    "\t  \"path\" : \"/not_found\",",
                 " didn't match expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -1370,13 +1492,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     " because:" + NEW_LINE +
                     NEW_LINE +
                     "\tmethod matched," + NEW_LINE +
-                    "\tpath didn't match," + NEW_LINE +
-                    "\tquery matched," + NEW_LINE +
-                    "\tbody matched," + NEW_LINE +
-                    "\theaders matched," + NEW_LINE +
-                    "\tcookies matched," + NEW_LINE +
-                    "\tkeep-alive matched," + NEW_LINE +
-                    "\tssl matched" + NEW_LINE // 4-1
+                    "\tpath didn't match" + NEW_LINE
             },
             new String[]{
                 "no expectation for:" + NEW_LINE +
@@ -1384,21 +1500,29 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
                     "\t  \"path\" : \"/not_found\"," +
-                    NEW_LINE, // 5-0
+                    NEW_LINE,
                 " returning response:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"statusCode\" : 404," + NEW_LINE +
                     "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
-                    "\t}" + NEW_LINE // 5-1
+                    "\t}" + NEW_LINE
 
+            },
+            new String[]{
+                "received request:" + NEW_LINE +
+                    "" + NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"method\" : \"GET\"," + NEW_LINE +
+                    "\t  \"path\" : \"/some_path_three\"," + NEW_LINE +
+                    "\t  \"headers\" : {"
             },
             new String[]{
                 "request:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_three\",", // 6-0
+                    "\t  \"path\" : \"/some_path_three\",",
                 " matched expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -1414,15 +1538,12 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "\t  \"httpResponse\" : {" + NEW_LINE +
                     "\t    \"body\" : \"some_body\"" + NEW_LINE +
                     "\t  }" + NEW_LINE +
-                    "\t}" // 6-1
+                    "\t}"
             },
             new String[]{
                 "returning response:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
-                    "\t  \"headers\" : {" + NEW_LINE +
-                    "\t    \"connection\" : [ \"keep-alive\" ]" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
                     "\t  \"body\" : \"some_body\"" + NEW_LINE +
                     "\t}" + NEW_LINE +
                     NEW_LINE +
@@ -1430,28 +1551,22 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_three\",", // 7-0
+                    "\t  \"path\" : \"/some_path_three\",",
                 " for action:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"body\" : \"some_body\"" + NEW_LINE +
-                    "\t}" + NEW_LINE // 7-1
-            },
-            "retrieving logs that match:" + NEW_LINE +
-                NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"path\" : \"/.*\"" + NEW_LINE +
-                "\t}" + NEW_LINE +
-                NEW_LINE // 8-1
+                    "\t}" + NEW_LINE
+            }
         };
 
         for (int i = 0; i < expectedLogMessages.length; i++) {
             if (expectedLogMessages[i] instanceof String) {
-                assertThat("matching log message " + i + "\nActual:\n" + Arrays.toString(actualLogMessages), actualLogMessages[i], endsWith((String) expectedLogMessages[i]));
+                assertThat("matching log message " + i + "\nActual:" + NEW_LINE + Arrays.toString(actualLogMessages), actualLogMessages[i], endsWith((String) expectedLogMessages[i]));
             } else if (expectedLogMessages[i] instanceof String[]) {
                 String[] expectedLogMessage = (String[]) expectedLogMessages[i];
                 for (int j = 0; j < expectedLogMessage.length; j++) {
-                    assertThat("matching log message " + i + "-" + j + "\nActual:\n" + Arrays.toString(actualLogMessages), actualLogMessages[i], containsString(expectedLogMessage[j]));
+                    assertThat("matching log message " + i + "-" + j + "\nActual:" + NEW_LINE + Arrays.toString(actualLogMessages), actualLogMessages[i], containsString(expectedLogMessage[j]));
                 }
             }
         }
@@ -1639,7 +1754,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
                     "}")
-        ).get(10, TimeUnit.SECONDS);
+        ).get(10, SECONDS);
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
@@ -1661,7 +1776,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     "    \"method\" : true," + NEW_LINE +
                     "    \"keepAlive\" : \"false\"" + NEW_LINE +
                     "  }")
-        ).get(10, TimeUnit.SECONDS);
+        ).get(10, SECONDS);
 
         // then
         assertThat(httpResponse.getStatusCode(), is(400));
@@ -1669,5 +1784,213 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             " - instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"]) for field \"/keepAlive\"" + NEW_LINE +
             " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/method\"" + NEW_LINE +
             " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/path\""));
+    }
+
+    @Test
+    public void shouldForwardRequestInHTTPWithDelay() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                forward()
+                    .withHost("127.0.0.1")
+                    .withPort(insecureEchoServer.getPort())
+                    .withDelay(new Delay(SECONDS, 3))
+            );
+
+        // then
+        long timeBeforeRequest = System.currentTimeMillis();
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("echo"))
+                .withMethod("POST")
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            headersToIgnore);
+        long timeAfterRequest = System.currentTimeMillis();
+
+        // and
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            httpResponse
+        );
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(2)));
+    }
+
+    @Test
+    public void shouldForwardOverriddenRequestWithDelay() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withSecure(false)
+            )
+            .forward(
+                forwardOverriddenRequest()
+                    .withHttpRequest(
+                        request()
+                            .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                            .withBody("some_overridden_body")
+                    )
+                    .withDelay(SECONDS, 3)
+            );
+
+        // then
+        long timeBeforeRequest = System.currentTimeMillis();
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("echo"))
+                .withMethod("POST")
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            headersToIgnore
+        );
+        long timeAfterRequest = System.currentTimeMillis();
+
+        // and
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            httpResponse
+        );
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(2)));
+    }
+
+    @Test
+    public void shouldCallbackClassForForwardWithDelay() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                callback()
+                    .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationForwardCallback")
+                    .withDelay(new Delay(SECONDS, 3))
+            );
+
+        // then
+        long timeBeforeRequest = System.currentTimeMillis();
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("echo"))
+                .withMethod("POST")
+                .withHeaders(
+                    header("x-test", "test_headers_and_body"),
+                    header("x-echo-server-port", insecureEchoServer.getPort())
+                )
+                .withBody("an_example_body_http"),
+            headersToIgnore
+        );
+        long timeAfterRequest = System.currentTimeMillis();
+
+        // and
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overridden_body"),
+            httpResponse
+        );
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(2)));
+    }
+
+    @Test
+    public void shouldReturnResponseForExpectationWithDelay() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path1"))
+            )
+            .respond(
+                response()
+                    .withBody("some_body1")
+                    .withDelay(new Delay(SECONDS, 3))
+            );
+
+        // then
+        long timeBeforeRequest = System.currentTimeMillis();
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("some_path1")),
+            headersToIgnore
+        );
+        long timeAfterRequest = System.currentTimeMillis();
+
+        // and
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body1"),
+            httpResponse
+        );
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(2)));
+    }
+
+    @Test
+    public void shouldCallbackClassForResponseForExpectationWithDelay() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("callback"))
+            )
+            .respond(
+                callback()
+                    .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationResponseCallback")
+                    .withDelay(new Delay(SECONDS, 3))
+            );
+
+        // then
+        long timeBeforeRequest = System.currentTimeMillis();
+        HttpResponse httpResponse = makeRequest(
+            request()
+                .withPath(calculatePath("callback"))
+                .withMethod("POST")
+                .withHeaders(
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("an_example_body_http"),
+            headersToIgnore
+        );
+        long timeAfterRequest = System.currentTimeMillis();
+
+        // and
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withHeaders(
+                    header("x-callback", "test_callback_header")
+                )
+                .withBody("a_callback_response"),
+            httpResponse
+        );
+        assertThat(timeAfterRequest - timeBeforeRequest, greaterThanOrEqualTo(SECONDS.toMillis(2)));
     }
 }

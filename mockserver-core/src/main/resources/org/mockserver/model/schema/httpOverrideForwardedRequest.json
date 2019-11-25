@@ -8,6 +8,9 @@
         },
         "httpRequest": {
             "$ref": "#/definitions/httpRequest"
+        },
+        "httpResponse": {
+            "$ref": "#/definitions/httpResponse"
         }
     },
     "definitions": {

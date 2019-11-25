@@ -5,24 +5,31 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.integration.ClientAndServer;
 import org.mockserver.mockserver.MockServer;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.socket.PortFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
  */
 public class StopIntegrationTest {
 
-    private final static int MOCK_SERVER_PORT = PortFactory.findFreePort();
+    private static final int MOCK_SERVER_PORT = PortFactory.findFreePort();
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -41,11 +48,11 @@ public class StopIntegrationTest {
         mockServerClient.stop();
 
         // then
-        assertFalse(mockServerClient.isRunning());
+        mockServerClient.retrieveLogMessages(request());
     }
 
     @Test
-    public void canStartAndStopMultipleTimesViaClient() {
+    public void canStartAndStopMultipleTimesViaClient() throws ExecutionException, InterruptedException, TimeoutException {
         // start server
         new MockServer(MOCK_SERVER_PORT);
 
@@ -64,9 +71,22 @@ public class StopIntegrationTest {
         }
 
         assertTrue(mockServerClient.isRunning());
-        mockServerClient.stop();
+        mockServerClient.stopAsync().get(10, SECONDS);
         mockServerClient = new MockServerClient("localhost", MOCK_SERVER_PORT);
         assertFalse(mockServerClient.isRunning());
+    }
+
+    @Test
+    public void reportsIsRunningCorrectlyAfterClientStopped() {
+        // start server
+        MockServerClient mockServerClient = ClientAndServer.startClientAndServer();
+
+        // when
+        mockServerClient.stop();
+
+        // then
+        assertFalse(mockServerClient.isRunning());
+        assertFalse(mockServerClient.isRunning(10, 10000, TimeUnit.MILLISECONDS));
     }
 
     @Test
@@ -107,7 +127,7 @@ public class StopIntegrationTest {
     }
 
     @Test
-    public void freesPortBeforeStopMethodReturns() throws IOException {
+    public void freesPortBeforeStopMethodReturns() {
         // start server
         MockServer mockServer = new MockServer(MOCK_SERVER_PORT);
 
@@ -115,16 +135,10 @@ public class StopIntegrationTest {
         mockServer.stop();
 
         // then
-        ServerSocket serverSocket = null;
-        try {
-            serverSocket = new ServerSocket(MOCK_SERVER_PORT);
+        try (ServerSocket serverSocket = new ServerSocket(MOCK_SERVER_PORT)) {
             assertThat(serverSocket.isBound(), is(true));
         } catch (IOException ioe) {
             fail("port should be freed");
-        } finally {
-            if (serverSocket != null) {
-                serverSocket.close();
-            }
         }
     }
 }

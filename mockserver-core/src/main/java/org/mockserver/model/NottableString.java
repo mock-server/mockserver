@@ -1,3 +1,4 @@
+
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -5,38 +6,53 @@ import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * @author jamesdbloom
  */
-public class NottableString extends ObjectWithJsonToString {
+public class NottableString extends ObjectWithJsonToString implements Comparable<NottableString> {
 
+    private static final char NOT_CHAR = '!';
     private final String value;
+    private final boolean isBlank;
     private final Boolean not;
     private final int hashCode;
     private final String json;
+    private Pattern pattern;
+    private Pattern lowercasePattern;
 
     private NottableString(String value, Boolean not) {
         this.value = value;
+        this.isBlank = StringUtils.isBlank(value);
         if (not != null) {
             this.not = not;
         } else {
             this.not = Boolean.FALSE;
         }
         this.hashCode = Objects.hash(this.value, this.not);
-        this.json = (this.not ? "!" : "") + this.value;
+        if (this.not) {
+            this.json = NOT_CHAR + this.value;
+        } else {
+            this.json = this.value;
+        }
     }
 
     private NottableString(String value) {
-        if (value != null && value.startsWith("!")) {
-            this.value = value.replaceFirst("^!", "");
+        this.isBlank = StringUtils.isBlank(value);
+        if (!this.isBlank && value.charAt(0) == NOT_CHAR) {
+            this.value = value.substring(1);
             this.not = Boolean.TRUE;
         } else {
             this.value = value;
             this.not = Boolean.FALSE;
         }
         this.hashCode = Objects.hash(this.value, this.not);
-        this.json = (this.not ? "!" : "") + this.value;
+        if (this.not) {
+            this.json = NOT_CHAR + this.value;
+        } else {
+            this.json = this.value;
+        }
     }
 
     public static List<NottableString> deserializeNottableStrings(String... strings) {
@@ -108,7 +124,7 @@ public class NottableString extends ObjectWithJsonToString {
         return not;
     }
 
-    public NottableString capitalize() {
+    NottableString capitalize() {
         final String[] split = (value + "_").split("-");
         for (int i = 0; i < split.length; i++) {
             split[i] = StringUtils.capitalize(split[i]);
@@ -146,6 +162,24 @@ public class NottableString extends ObjectWithJsonToString {
         return false;
     }
 
+    public boolean isBlank() {
+        return isBlank;
+    }
+
+    public boolean matches(String input) {
+        if (pattern == null) {
+            pattern = Pattern.compile(getValue());
+        }
+        return pattern.matcher(input).matches();
+    }
+
+    public boolean matchesIgnoreCase(String input) {
+        if (lowercasePattern == null) {
+            lowercasePattern = Pattern.compile(getValue().toLowerCase());
+        }
+        return lowercasePattern.matcher(input.toLowerCase()).matches();
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other instanceof String) {
@@ -169,5 +203,10 @@ public class NottableString extends ObjectWithJsonToString {
     @Override
     public String toString() {
         return json;
+    }
+
+    @Override
+    public int compareTo(NottableString other) {
+        return other.getValue().compareTo(this.getValue());
     }
 }

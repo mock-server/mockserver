@@ -7,8 +7,10 @@ import org.mockserver.logging.MockServerLogger;
  */
 public class JsonSchemaExpectationValidator extends JsonSchemaValidator {
 
-    public JsonSchemaExpectationValidator(MockServerLogger mockServerLogger) {
-        super(mockServerLogger, "org/mockserver/model/schema/",
+    private JsonSchemaExpectationValidator(MockServerLogger mockServerLogger) {
+        super(
+            mockServerLogger,
+            "org/mockserver/model/schema/",
             "expectation",
             "httpRequest",
             "httpResponse",
@@ -25,6 +27,17 @@ public class JsonSchemaExpectationValidator extends JsonSchemaValidator {
             "delay",
             "connectionOptions",
             "keyToMultiValue",
-            "keyToValue");
+            "keyToValue",
+            "socketAddress"
+        );
+    }
+
+    private static JsonSchemaExpectationValidator jsonSchemaExpectationValidator;
+
+    public static JsonSchemaExpectationValidator jsonSchemaExpectationValidator(MockServerLogger mockServerLogger) {
+        if (jsonSchemaExpectationValidator == null) {
+            jsonSchemaExpectationValidator = new JsonSchemaExpectationValidator(mockServerLogger);
+        }
+        return jsonSchemaExpectationValidator;
     }
 }

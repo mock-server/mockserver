@@ -30,32 +30,38 @@ public class BookServiceJavaHttpClient implements BookService {
 
     @PostConstruct
     private void initialise() {
-        port = environment.getProperty("bookService.port", Integer.class);
+        port = Integer.parseInt(System.getProperty("bookService.port"));
         host = environment.getProperty("bookService.host", "localhost");
         objectMapper = createObjectMapper();
     }
 
     private HttpURLConnection sendRequestViaProxy(URL url) throws IOException {
-        Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort"))));
+        Proxy proxy = new Proxy(Proxy.Type.valueOf(System.getProperty("http.proxyType")), new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort"))));
         return (HttpURLConnection) url.openConnection(proxy);
     }
 
+    @Override
     public Book[] getAllBooks() {
         try {
+            logger.info("Sending request to http://" + host + ":" + port + "/get_books");
             HttpURLConnection connection = sendRequestViaProxy(new URL("http://" + host + ":" + port + "/get_books"));
             connection.setRequestMethod("GET");
             return objectMapper.readValue(connection.getInputStream(), Book[].class);
         } catch (Exception e) {
+            logger.info("Exception sending request to http://" + host + ":" + port + "/get_books", e);
             throw new RuntimeException("Exception making request to retrieve all books", e);
         }
     }
 
+    @Override
     public Book getBook(String id) {
         try {
+            logger.info("Sending request to http://" + host + ":" + port + "/get_book?id=" + id);
             HttpURLConnection connection = sendRequestViaProxy(new URL("http://" + host + ":" + port + "/get_book?id=" + id));
             connection.setRequestMethod("GET");
             return objectMapper.readValue(connection.getInputStream(), Book.class);
         } catch (Exception e) {
+            logger.info("Exception sending request to http://" + host + ":" + port + "/get_books", e);
             throw new RuntimeException("Exception making request to retrieve a book with id [" + id + "]", e);
         }
     }

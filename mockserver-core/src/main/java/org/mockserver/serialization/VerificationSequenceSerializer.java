@@ -1,15 +1,17 @@
 package org.mockserver.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
-import org.mockserver.serialization.model.VerificationSequenceDTO;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
+import org.mockserver.serialization.model.VerificationSequenceDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaVerificationSequenceValidator;
 import org.mockserver.verify.VerificationSequence;
+import org.slf4j.event.Level;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.log.model.MessageLogEntry.LogMessageType.VERIFICATION_FAILED;
+import static org.mockserver.log.model.LogEntry.LogMessageType.VERIFICATION_FAILED;
+import static org.mockserver.model.HttpRequest.request;
 
 /**
  * @author jamesdbloom
@@ -30,13 +32,19 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(new VerificationSequenceDTO(verificationSequence));
         } catch (Exception e) {
-            mockServerLogger.error("Exception while serializing verificationSequence to JSON with value " + verificationSequence, e);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception while serializing verificationSequence to JSON with value " + verificationSequence)
+                    .setThrowable(e)
+            );
             throw new RuntimeException("Exception while serializing verificationSequence to JSON with value " + verificationSequence, e);
         }
     }
 
     public VerificationSequence deserialize(String jsonVerificationSequence) {
-        if (Strings.isNullOrEmpty(jsonVerificationSequence)) {
+        if (isBlank(jsonVerificationSequence)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a verification sequence is required but value was \"" + String.valueOf(jsonVerificationSequence) + "\"");
         } else {
             String validationErrors = verificationSequenceValidator.isValid(jsonVerificationSequence);
@@ -48,12 +56,26 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                         verificationSequence = verificationDTO.buildObject();
                     }
                 } catch (Exception e) {
-                    mockServerLogger.error((HttpRequest) null, e, "exception while parsing {}for VerificationSequence", jsonVerificationSequence);
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.EXCEPTION)
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("exception while parsing {} for VerificationSequence")
+                            .setArguments(jsonVerificationSequence)
+                            .setThrowable(e)
+                    );
                     throw new RuntimeException("Exception while parsing [" + jsonVerificationSequence + "] for VerificationSequence", e);
                 }
                 return verificationSequence;
             } else {
-                mockServerLogger.info(VERIFICATION_FAILED, "validation failed:{}verification sequence:{}", validationErrors, jsonVerificationSequence);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(VERIFICATION_FAILED)
+                        .setLogLevel(Level.INFO)
+                        .setHttpRequest(request())
+                        .setMessageFormat("validation failed:{}verification sequence:{}")
+                        .setArguments(validationErrors, jsonVerificationSequence)
+                );
                 throw new IllegalArgumentException(validationErrors);
             }
         }

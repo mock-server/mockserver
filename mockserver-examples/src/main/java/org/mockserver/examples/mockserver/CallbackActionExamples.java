@@ -52,36 +52,59 @@ public class CallbackActionExamples {
                     .withPath("/some/path")
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        if (httpRequest.getMethod().getValue().equals("POST")) {
-                            return response()
-                                .withStatusCode(ACCEPTED_202.code())
-                                .withHeaders(
-                                    header("x-object-callback", "test_object_callback_header")
-                                )
-                                .withBody("an_object_callback_response");
-                        } else {
-                            return notFoundResponse();
-                        }
+                httpRequest -> {
+                    if (httpRequest.getMethod().getValue().equals("POST")) {
+                        return response()
+                            .withStatusCode(ACCEPTED_202.code())
+                            .withHeaders(
+                                header("x-object-callback", "test_object_callback_header")
+                            )
+                            .withBody("an_object_callback_response");
+                    } else {
+                        return notFoundResponse();
                     }
                 }
             );
 
     }
 
+    public void createExpectationWithinObjectCallback() {
+        MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+        mockServerClient
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .respond(
+                httpRequest -> {
+                    if (httpRequest.getMethod().getValue().equals("POST")) {
+                        mockServerClient
+                            .when(
+                                request()
+                                    .withPath("/some/otherPath")
+                            )
+                            .respond(
+                                response()
+                                    .withBody(httpRequest.getBodyAsString())
+                            );
+                        return response()
+                            .withStatusCode(ACCEPTED_202.code())
+                            .withBody("request processed");
+                    } else {
+                        return notFoundResponse();
+                    }
+                }
+            );
+    }
+
     public void forwardObjectCallback() {
-new MockServerClient("localhost", 1080)
-    .when(
-        request()
-            .withPath("/some/path")
-    )
-    .forward(
-        new ExpectationForwardCallback() {
-            @Override
-            public HttpRequest handle(HttpRequest httpRequest) {
-                return request()
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .forward(
+                httpRequest -> request()
                     .withPath(httpRequest.getPath())
                     .withMethod("POST")
                     .withHeaders(
@@ -89,10 +112,8 @@ new MockServerClient("localhost", 1080)
                         header("Content-Length", "a_callback_request".getBytes(UTF_8).length),
                         header("Connection", "keep-alive")
                     )
-                    .withBody("a_callback_request");
-            }
-        }
-    );
+                    .withBody("a_callback_request")
+            );
 
     }
 

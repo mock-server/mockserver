@@ -1,5 +1,6 @@
 package org.mockserver.examples.proxy.servicebackend;
 
+import org.mockserver.socket.PortFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -23,7 +24,8 @@ public class BackEndServiceConfiguration {
 
     @Bean
     public BookServer bookServer() {
-        return new BookServer(environment.getProperty("bookService.port", Integer.class), false);
+        System.setProperty("bookService.port", "" + PortFactory.findFreePort());
+        return new BookServer(Integer.parseInt(System.getProperty("bookService.port")), false);
     }
 
 }

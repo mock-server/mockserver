@@ -8,12 +8,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockserver.serialization.model.*;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+import org.mockserver.serialization.model.*;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
 import java.io.IOException;
@@ -40,53 +40,55 @@ import static org.mockserver.model.StringBody.exact;
 public class ExpectationWithForwardSerializerTest {
 
     private final Expectation fullExpectation = new Expectation(
-            new HttpRequest()
-                    .withMethod("GET")
-                    .withPath("somePath")
-                    .withQueryStringParameters(
-                        param("queryParameterName", "queryParameterValue")
-                    )
-                    .withBody("somebody")
-                    .withHeaders(
-                        header("headerName", "headerValue")
-                    )
-                    .withCookies(
-                        cookie("cookieName", "cookieValue")
-                    ),
-            Times.once(),
-            TimeToLive.exactly(TimeUnit.HOURS, 2l))
-            .thenForward(
-                    forward()
-                            .withHost("some_host")
-                            .withPort(9090)
-                            .withScheme(HttpForward.Scheme.HTTPS)
-            );
+        new HttpRequest()
+            .withMethod("GET")
+            .withPath("somePath")
+            .withQueryStringParameters(
+                param("queryParameterName", "queryParameterValue")
+            )
+            .withBody("somebody")
+            .withHeaders(
+                header("headerName", "headerValue")
+            )
+            .withCookies(
+                cookie("cookieName", "cookieValue")
+            ),
+        Times.once(),
+        TimeToLive.exactly(TimeUnit.HOURS, 2l))
+        .thenForward(
+            forward()
+                .withHost("some_host")
+                .withPort(9090)
+                .withScheme(HttpForward.Scheme.HTTPS)
+                .withDelay(new Delay(TimeUnit.SECONDS, 10))
+        );
     private final ExpectationDTO fullExpectationDTO = new ExpectationDTO()
-            .setHttpRequest(
-                    new HttpRequestDTO()
-                            .setMethod(string("GET"))
-                            .setPath(string("somePath"))
-                            .setQueryStringParameters(new Parameters().withEntries(
-                                param("queryParameterName", "queryParameterValue")
-                            ))
-                            .setBody(BodyDTO.createDTO(exact("somebody")))
-                            .setHeaders(new Headers().withEntries(
-                                header("headerName", "headerValue")
-                            ))
-                            .setCookies(new Cookies().withEntries(
-                                cookie("cookieName", "cookieValue")
-                            ))
+        .setHttpRequest(
+            new HttpRequestDTO()
+                .setMethod(string("GET"))
+                .setPath(string("somePath"))
+                .setQueryStringParameters(new Parameters().withEntries(
+                    param("queryParameterName", "queryParameterValue")
+                ))
+                .setBody(BodyDTO.createDTO(exact("somebody")))
+                .setHeaders(new Headers().withEntries(
+                    header("headerName", "headerValue")
+                ))
+                .setCookies(new Cookies().withEntries(
+                    cookie("cookieName", "cookieValue")
+                ))
+        )
+        .setHttpForward(
+            new HttpForwardDTO(
+                new HttpForward()
+                    .withHost("some_host")
+                    .withPort(9090)
+                    .withScheme(HttpForward.Scheme.HTTPS)
+                    .withDelay(new Delay(TimeUnit.SECONDS, 10))
             )
-            .setHttpForward(
-                    new HttpForwardDTO(
-                            new HttpForward()
-                                    .withHost("some_host")
-                                    .withPort(9090)
-                                    .withScheme(HttpForward.Scheme.HTTPS)
-                    )
-            )
-            .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.once()))
-            .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)));
+        )
+        .setTimes(new org.mockserver.serialization.model.TimesDTO(Times.once()))
+        .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2l)));
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -186,10 +188,10 @@ public class ExpectationWithForwardSerializerTest {
         // then
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("" +
-                "[" + NEW_LINE +
-                "  an error," + NEW_LINE +
-                "  an error" + NEW_LINE +
-                "]");
+            "[" + NEW_LINE +
+            "  an error," + NEW_LINE +
+            "  an error" + NEW_LINE +
+            "]");
 
         // when
         expectationSerializer.deserializeArray("requestBytes");

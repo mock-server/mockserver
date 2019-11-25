@@ -1,6 +1,6 @@
 package org.mockserver.ui;
 
-import org.mockserver.filters.MockServerEventLog;
+import org.mockserver.log.MockServerEventLog;
 
 /**
  * @author jamesdbloom

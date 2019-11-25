@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.mocking.initializer.ExpectationInitializerIntegrationExample;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mockserver.MockServer;
 
 import java.util.concurrent.TimeUnit;
@@ -24,13 +25,13 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class ExpectationInitializerIntegrationTest {
 
-    static NettyHttpClient httpClient;
+    private static NettyHttpClient httpClient;
     private static EventLoopGroup clientEventLoopGroup;
 
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
         clientEventLoopGroup = new NioEventLoopGroup();
-        httpClient = new NettyHttpClient(clientEventLoopGroup, null);
+        httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
     }
 
     @AfterClass

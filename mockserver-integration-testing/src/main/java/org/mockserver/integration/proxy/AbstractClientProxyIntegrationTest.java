@@ -1,6 +1,5 @@
 package org.mockserver.integration.proxy;
 
-import com.google.common.base.Strings;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.http.Header;
@@ -24,6 +23,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.client.NettyHttpClient;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.socket.tls.KeyStoreFactory;
@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
@@ -75,7 +76,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     private HttpClient createHttpClient() {
         return HttpClients
             .custom()
-            .setSSLSocketFactory(new SSLConnectionSocketFactory(KeyStoreFactory.keyStoreFactory().sslContext(), NoopHostnameVerifier.INSTANCE))
+            .setSSLSocketFactory(new SSLConnectionSocketFactory(new KeyStoreFactory(new MockServerLogger()).sslContext(), NoopHostnameVerifier.INSTANCE))
             .setRoutePlanner(new DefaultProxyRoutePlanner(
                 new HttpHost(
                     System.getProperty("http.proxyHost", "localhost"),
@@ -96,7 +97,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     private String addContextToPath(String path) {
         String cleanedPath = path;
-        if (!Strings.isNullOrEmpty(servletContext)) {
+        if (isNotBlank(servletContext)) {
             cleanedPath =
                 (!servletContext.startsWith("/") ? "/" : "") +
                     servletContext +
@@ -260,7 +261,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             output.flush();
 
             // then
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 404 Not Found");
+            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 404");
         }
 
         // and
@@ -842,7 +843,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToClear() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())
@@ -865,7 +866,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToVerify() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())
@@ -887,7 +888,7 @@ public abstract class AbstractClientProxyIntegrationTest {
     @Test
     public void shouldReturnErrorForInvalidRequestToVerifySequence() throws Exception {
         // when
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(clientEventLoopGroup, null).sendRequest(
+        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
                 .withHeader(HOST.toString(), "localhost:" + getProxyPort())

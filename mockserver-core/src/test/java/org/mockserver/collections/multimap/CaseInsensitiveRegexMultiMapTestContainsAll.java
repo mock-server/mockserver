@@ -16,12 +16,12 @@ public class CaseInsensitiveRegexMultiMapTestContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndSingleValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         )), is(true));
     }
 
@@ -29,14 +29,14 @@ public class CaseInsensitiveRegexMultiMapTestContainsAll {
     public void shouldContainAllSubSetSingleKeyAndSingleValue() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         )), is(true));
     }
 
@@ -44,12 +44,12 @@ public class CaseInsensitiveRegexMultiMapTestContainsAll {
     public void shouldContainAllExactMatchSingleKeyAndMultipleValues() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         )), is(true));
     }
 
@@ -57,14 +57,14 @@ public class CaseInsensitiveRegexMultiMapTestContainsAll {
     public void shouldContainAllSubSetSingleKeyAndMultipleValues() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         )), is(true));
     }
 
@@ -72,13 +72,13 @@ public class CaseInsensitiveRegexMultiMapTestContainsAll {
     public void shouldContainAllExactMatchMultipleKeyAndMultipleValues() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         )), is(true));
     }
@@ -87,14 +87,14 @@ public class CaseInsensitiveRegexMultiMapTestContainsAll {
     public void shouldContainAllSubSetMultipleKeyAndMultipleValues() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         )), is(true));
     }
@@ -103,12 +103,12 @@ public class CaseInsensitiveRegexMultiMapTestContainsAll {
     public void shouldNotContainAllNotMatchSingleKeySingleEntry() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"notKeyOne", "keyOne_valueOne"}
+            true, new String[]{"notKeyOne", "keyOne_valueOne"}
         )), is(false));
     }
 
@@ -116,12 +116,12 @@ public class CaseInsensitiveRegexMultiMapTestContainsAll {
     public void shouldNotContainAllNotMatchSingleValueSingleEntry() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"}
+            true, new String[]{"keyOne", "keyOne_valueOne"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"keyOne", "notKeyOne_valueOne"}
+            true, new String[]{"keyOne", "notKeyOne_valueOne"}
         )), is(false));
     }
 
@@ -129,14 +129,14 @@ public class CaseInsensitiveRegexMultiMapTestContainsAll {
     public void shouldNotContainAllNotMatchSingleKeyMultipleEntries() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"notKeyOne", "keyOne_valueOne"}
+            true, new String[]{"notKeyOne", "keyOne_valueOne"}
         )), is(false));
     }
 
@@ -144,17 +144,17 @@ public class CaseInsensitiveRegexMultiMapTestContainsAll {
     public void shouldNotContainAllNotMatchSingleValueMultipleEntries() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"keyOne", "notKeyOne_valueOne"}
+            true, new String[]{"keyOne", "notKeyOne_valueOne"}
         )), is(false));
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"keyTwo", "keyTwo_valueOne", "notKeyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "keyTwo_valueOne", "notKeyTwo_valueTwo"}
         )), is(false));
     }
 
@@ -162,14 +162,14 @@ public class CaseInsensitiveRegexMultiMapTestContainsAll {
     public void shouldNotContainAllNotMatchMultipleKeysMultipleEntries() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"notKeyOne", "keyOne_valueOne"},
+            true, new String[]{"notKeyOne", "keyOne_valueOne"},
                 new String[]{"notKeyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"}
         )), is(false));
     }
@@ -178,18 +178,18 @@ public class CaseInsensitiveRegexMultiMapTestContainsAll {
     public void shouldNotContainAllNotMatchMultipleValuesMultipleEntries() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
-                new String[]{"keyOne", "keyOne_valueOne"},
+            true, new String[]{"keyOne", "keyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "keyTwo_valueTwo"},
                 new String[]{"keyThree", "keyThree_valueOne", "keyThree_valueTwo", "keyThree_valueThree"}
         );
 
         // then
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"keyOne", "notKeyOne_valueOne"},
+            true, new String[]{"keyOne", "notKeyOne_valueOne"},
                 new String[]{"keyTwo", "keyTwo_valueOne", "notKeyTwo_valueTwo"}
         )), is(false));
         assertThat(multiMap.containsAll(multiMap(
-                new String[]{"keyTwo", "notKeyTwo_valueOne", "notKeyTwo_valueTwo"}
+            true, new String[]{"keyTwo", "notKeyTwo_valueOne", "notKeyTwo_valueTwo"}
         )), is(false));
     }
 }

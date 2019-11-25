@@ -8,12 +8,13 @@ import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.github.fge.jsonschema.main.JsonValidator;
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import org.mockserver.file.FileReader;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.validator.Validator;
+import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 
 /**
@@ -29,9 +31,9 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToString implements Validator<String> {
 
     private static final Map<String, String> schemaCache = new ConcurrentHashMap<>();
+    private final MockServerLogger mockServerLogger;
     private final String schema;
     private final JsonValidator validator = JsonSchemaFactory.byDefault().getValidator();
-    private final MockServerLogger mockServerLogger;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     public JsonSchemaValidator(MockServerLogger mockServerLogger, String schema) {
@@ -76,7 +78,13 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(jsonSchema);
         } catch (Exception e) {
-            mockServerLogger.error("Exception loading JSON Schema for Exceptions", e);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Exception loading JSON Schema for Exceptions")
+                    .setThrowable(e)
+            );
         }
         return combinedSchema;
     }
@@ -84,7 +92,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
     @Override
     public String isValid(String json) {
         String validationResult = "";
-        if (!Strings.isNullOrEmpty(json)) {
+        if (isNotBlank(json)) {
             try {
 
                 ProcessingReport processingReport = validator
@@ -98,7 +106,13 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     validationResult = formatProcessingReport(processingReport);
                 }
             } catch (Exception e) {
-                mockServerLogger.error("Exception validating JSON", e);
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("Exception validating JSON")
+                        .setThrowable(e)
+                );
                 return e.getClass().getSimpleName() + " - " + e.getMessage();
             }
         }
@@ -106,11 +120,15 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
     }
 
     private String formatProcessingReport(ProcessingReport validate) {
-        List<String> validationErrors = new ArrayList<String>();
+        List<String> validationErrors = new ArrayList<>();
         for (ProcessingMessage processingMessage : validate) {
             String fieldPointer = "";
             if (processingMessage.asJson().get("instance") != null && processingMessage.asJson().get("instance").get("pointer") != null) {
                 fieldPointer = String.valueOf(processingMessage.asJson().get("instance").get("pointer")).replaceAll("\"", "");
+            }
+            String schemaPointer = "";
+            if (processingMessage.asJson().get("schema") != null && processingMessage.asJson().get("schema").get("pointer") != null) {
+                schemaPointer = String.valueOf(processingMessage.asJson().get("schema").get("pointer"));
             }
             if (fieldPointer.endsWith("/headers")) {
                 validationErrors.add("for field \"" + fieldPointer + "\" only one of the following example formats is allowed: " + NEW_LINE + NEW_LINE +
@@ -163,8 +181,8 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     "            \"values\" : \"exampleCookieValueTwo\"" + NEW_LINE +
                     "        }" + NEW_LINE +
                     "    ]");
-            } else if (fieldPointer.endsWith("/body")) {
-                validationErrors.add("for field \"" + fieldPointer + "\" a plain string or one of the following example bodies must be specified " + NEW_LINE +
+            } else if (fieldPointer.endsWith("/body") && !schemaPointer.contains("bodyWithContentType")) {
+                validationErrors.add("for field \"" + fieldPointer + "\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
                     "   {" + NEW_LINE +
                     "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"BINARY\"," + NEW_LINE +
@@ -219,6 +237,31 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     "     \"type\": \"XPATH\"," + NEW_LINE +
                     "     \"xpath\": \"\"" + NEW_LINE +
                     "   }");
+            } else if (fieldPointer.endsWith("/body") && schemaPointer.contains("bodyWithContentType")) {
+                validationErrors.add("for field \"" + fieldPointer + "\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"type\": \"BINARY\"," + NEW_LINE +
+                    "     \"base64Bytes\": \"\"," + NEW_LINE +
+                    "     \"contentType\": \"\"" + NEW_LINE +
+                    "   }, " + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"type\": \"JSON\"," + NEW_LINE +
+                    "     \"json\": \"\"," + NEW_LINE +
+                    "     \"contentType\": \"\"" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"type\": \"PARAMETERS\"," + NEW_LINE +
+                    "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"type\": \"STRING\"," + NEW_LINE +
+                    "     \"string\": \"\"" + NEW_LINE +
+                    "   }," + NEW_LINE +
+                    "   {" + NEW_LINE +
+                    "     \"type\": \"XML\"," + NEW_LINE +
+                    "     \"xml\": \"\"," + NEW_LINE +
+                    "     \"contentType\": \"\"" + NEW_LINE +
+                    "   }");
             } else if (String.valueOf(processingMessage.asJson().get("keyword")).equals("\"oneOf\"")) {
                 StringBuilder oneOfErrorMessage = new StringBuilder("oneOf of the following must be specified ");
                 if (fieldPointer.isEmpty()) {
@@ -237,11 +280,11 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 } else {
                     for (JsonNode jsonNode : processingMessage.asJson().get("reports")) {
                         if (jsonNode.get(0) != null && jsonNode.get(0).get("required") != null && jsonNode.get(0).get("required").get(0) != null) {
-                            oneOfErrorMessage.append(String.valueOf(jsonNode.get(0).get("required").get(0))).append(" ");
+                            oneOfErrorMessage.append(jsonNode.get(0).get("required").get(0)).append(" ");
                         }
                     }
                 }
-                oneOfErrorMessage.append(" but ").append(String.valueOf(processingMessage.asJson().get("matched"))).append(" found");
+                oneOfErrorMessage.append(" but ").append(processingMessage.asJson().get("matched")).append(" found");
                 validationErrors.add(oneOfErrorMessage.toString() + (fieldPointer.isEmpty() ? "" : " for field \"" + fieldPointer + "\""));
             } else if (fieldPointer.endsWith("/times") && processingMessage.toString().contains("has properties which are not allowed by the schema") && String.valueOf(processingMessage.asJson().get("schema")).contains("verificationTimes")) {
                 validationErrors.add(processingMessage.getMessage() + " for field \"" + fieldPointer + "\", allowed fields are [\"atLeast\", \"atMost\"]");

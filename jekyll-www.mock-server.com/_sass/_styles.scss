@@ -268,10 +268,6 @@ a.anchor:focus {
     cursor: default;
 }
 
-a img,
-a:hover img,
-a:active img,
-a:focus img,
 a.no_link {
     text-decoration: none;
     border: 0 none;
@@ -312,6 +308,48 @@ ol pre {
 
 .sitemap .subsection_subpage {
     padding-left: 20px;
+}
+
+table.results {
+    font-family: 'Averia Sans Libre', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    border: 2px solid #EEEEEE;
+    background-color: #FFFFFF;
+    width: 100%;
+    text-align: center;
+    border-collapse: collapse;
+}
+table.results td, table.results th {
+    border: 1px solid #EEEEEE;
+    padding: 3px 2px;
+}
+table.results tbody td {
+    font-size: 19px;
+    font-weight: bold;
+    color: #444444;
+}
+table.results tr:nth-child(even) {
+    background: #EEEEEE;
+}
+table.results thead {
+    background: #CCCCCC;
+    background: -moz-linear-gradient(top, #d9d9d9 0%, #d1d1d1 66%, #CCCCCC 100%);
+    background: -webkit-linear-gradient(top, #d9d9d9 0%, #d1d1d1 66%, #CCCCCC 100%);
+    background: linear-gradient(to bottom, #d9d9d9 0%, #d1d1d1 66%, #CCCCCC 100%);
+    border-bottom: 1px solid #444444;
+}
+table.results thead th {
+    font-size: 21px;
+    font-weight: bold;
+    color: #444444;
+    text-align: center;
+    border-left: 2px solid #D0E4F5;
+}
+table.results thead th:first-child {
+    border-left: none;
+}
+
+table.results tfoot td {
+    font-size: 21px;
 }
 
 /* -- Responsive Styles (Media Queries) ------------------------------------- */
@@ -386,7 +424,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
     }
 
     .build_tag img {
-        width: 80px;
+        max-width: 80px;
         height: 18px;
     }
 
@@ -412,7 +450,7 @@ Hides the menu at `767px`, but modify this based on your app's needs.
 @media (max-width: 568px) {
 
     .build_tag img {
-        width: 80px;
+        max-width: 80px;
         height: 18px;
     }
 

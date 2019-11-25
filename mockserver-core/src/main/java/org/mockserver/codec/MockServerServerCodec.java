@@ -8,6 +8,6 @@ import org.mockserver.logging.MockServerLogger;
  */
 public class MockServerServerCodec extends CombinedChannelDuplexHandler<MockServerRequestDecoder, MockServerResponseEncoder> {
     public MockServerServerCodec(MockServerLogger mockServerLogger, boolean isSecure) {
-        init(new MockServerRequestDecoder(mockServerLogger, isSecure), new MockServerResponseEncoder());
+        init(new MockServerRequestDecoder(mockServerLogger, isSecure), new MockServerResponseEncoder(mockServerLogger));
     }
 }

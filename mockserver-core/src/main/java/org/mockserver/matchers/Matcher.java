@@ -8,4 +8,5 @@ import org.mockserver.model.HttpRequest;
 public interface Matcher<T> {
 
     boolean matches(HttpRequest context, T t);
+
 }

@@ -3,10 +3,11 @@ package org.mockserver.serialization.serializers.request;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.google.common.base.Strings;
 import org.mockserver.serialization.model.HttpRequestDTO;
 
 import java.io.IOException;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * @author jamesdbloom
@@ -23,10 +24,10 @@ public class HttpRequestDTOSerializer extends StdSerializer<HttpRequestDTO> {
         if (httpRequest.getNot() != null && httpRequest.getNot()) {
             jgen.writeBooleanField("not", httpRequest.getNot());
         }
-        if (httpRequest.getMethod() != null && !Strings.isNullOrEmpty(httpRequest.getMethod().getValue())) {
+        if (httpRequest.getMethod() != null && isNotBlank(httpRequest.getMethod().getValue())) {
             jgen.writeObjectField("method", httpRequest.getMethod());
         }
-        if (httpRequest.getPath() != null && !Strings.isNullOrEmpty(httpRequest.getPath().getValue())) {
+        if (httpRequest.getPath() != null && isNotBlank(httpRequest.getPath().getValue())) {
             jgen.writeObjectField("path", httpRequest.getPath());
         }
         if (httpRequest.getQueryStringParameters() != null && !httpRequest.getQueryStringParameters().isEmpty()) {
@@ -43,6 +44,9 @@ public class HttpRequestDTOSerializer extends StdSerializer<HttpRequestDTO> {
         }
         if (httpRequest.getSecure() != null) {
             jgen.writeBooleanField("secure", httpRequest.getSecure());
+        }
+        if (httpRequest.getSocketAddress() != null) {
+            jgen.writeObjectField("socketAddress", httpRequest.getSocketAddress());
         }
         if (httpRequest.getBody() != null) {
             jgen.writeObjectField("body", httpRequest.getBody());

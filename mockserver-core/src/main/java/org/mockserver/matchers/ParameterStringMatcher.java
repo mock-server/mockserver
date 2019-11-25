@@ -2,21 +2,24 @@ package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Parameters;
+
+import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
  */
 public class ParameterStringMatcher extends BodyMatcher<String> {
-    private static final String[] excludedFields = {"mockServerLogger"};
+    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final MultiValueMapMatcher matcher;
 
-    public ParameterStringMatcher(MockServerLogger mockServerLogger, Parameters parameters) {
+    ParameterStringMatcher(MockServerLogger mockServerLogger, Parameters parameters, boolean controlPlaneMatcher) {
         this.mockServerLogger = mockServerLogger;
-        this.matcher = new MultiValueMapMatcher(mockServerLogger, parameters);
+        this.matcher = new MultiValueMapMatcher(mockServerLogger, parameters, controlPlaneMatcher);
     }
 
     public boolean matches(final HttpRequest context, String matched) {
@@ -27,7 +30,14 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
         }
 
         if (!result) {
-            mockServerLogger.trace(context, "Failed to match [{}] with [{}]", matched, this.matcher);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.DEBUG)
+                    .setLogLevel(DEBUG)
+                    .setHttpRequest(context)
+                    .setMessageFormat("Failed to perform parameter match {} with {}")
+                    .setArguments(matched, this.matcher)
+            );
         }
 
         return not != result;
@@ -40,6 +50,6 @@ public class ParameterStringMatcher extends BodyMatcher<String> {
     @Override
     @JsonIgnore
     protected String[] fieldsExcludedFromEqualsAndHashCode() {
-        return excludedFields;
+        return EXCLUDED_FIELDS;
     }
 }

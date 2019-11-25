@@ -292,7 +292,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
         String[] actualLogMessages = mockServerClient.retrieveLogMessagesArray(request().withPath(calculatePath(".*")));
 
         Object[] expectedLogMessages = new Object[]{
-            "resetting all expectations and request logs", //0
+            "resetting all expectations and request logs",
             "creating expectation:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
@@ -308,13 +308,21 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                 "\t  \"httpResponse\" : {" + NEW_LINE +
                 "\t    \"body\" : \"some_body\"" + NEW_LINE +
                 "\t  }" + NEW_LINE +
-                "\t}" + NEW_LINE, //1
+                "\t}" + NEW_LINE,
+            new String[]{
+                "received request:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"method\" : \"GET\"," + NEW_LINE +
+                    "\t  \"path\" : \"/some_path_one\"," + NEW_LINE +
+                    "\t  \"headers\" : {"
+            },
             new String[]{
                 "request:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_one\",", // 2-0
+                    "\t  \"path\" : \"/some_path_one\",",
                 " matched expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -330,15 +338,12 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     "\t  \"httpResponse\" : {" + NEW_LINE +
                     "\t    \"body\" : \"some_body\"" + NEW_LINE +
                     "\t  }" + NEW_LINE +
-                    "\t}" // 2-1
+                    "\t}"
             },
             new String[]{
                 "returning response:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
-                    "\t  \"headers\" : {" + NEW_LINE +
-                    "\t    \"connection\" : [ \"keep-alive\" ]" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
                     "\t  \"body\" : \"some_body\"" + NEW_LINE +
                     "\t}" + NEW_LINE +
                     NEW_LINE +
@@ -346,19 +351,27 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_one\",", // 3-0
+                    "\t  \"path\" : \"/some_path_one\",",
                 " for action:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"body\" : \"some_body\"" + NEW_LINE +
-                    "\t}" + NEW_LINE // 3-1
+                    "\t}" + NEW_LINE
+            },
+            new String[]{
+                "received request:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"method\" : \"GET\"," + NEW_LINE +
+                    "\t  \"path\" : \"/not_found\"," + NEW_LINE +
+                    "\t  \"headers\" : {"
             },
             new String[]{
                 "request:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/not_found\",", // 4-0
+                    "\t  \"path\" : \"/not_found\",",
                 " didn't match expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -379,36 +392,35 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     " because:" + NEW_LINE +
                     NEW_LINE +
                     "\tmethod matched," + NEW_LINE +
-                    "\tpath didn't match," + NEW_LINE +
-                    "\tquery matched," + NEW_LINE +
-                    "\tbody matched," + NEW_LINE +
-                    "\theaders matched," + NEW_LINE +
-                    "\tcookies matched," + NEW_LINE +
-                    "\tkeep-alive matched," + NEW_LINE +
-                    "\tssl matched" + NEW_LINE // 4-1
+                    "\tpath didn't match" + NEW_LINE
             },
             new String[]{
-                "returning response:" + NEW_LINE +
+                "no expectation for:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"method\" : \"GET\"," + NEW_LINE +
+                    "\t  \"path\" : \"/not_found\"",
+                " returning response:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"statusCode\" : 404," + NEW_LINE +
-                    "\t  \"reasonPhrase\" : \"Not Found\"," + NEW_LINE +
-                    "\t  \"headers\" : {", // 5-0
-                " for forwarded request" + NEW_LINE +
+                    "\t  \"reasonPhrase\" : \"Not Found\"" + NEW_LINE +
+                    "\t}"
+            },
+            new String[]{
+                "received request:" + NEW_LINE +
                     NEW_LINE +
-                    " in json:" + NEW_LINE +
-                    "" + NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/not_found\"", // 5-1
-                " in curl:" // 5-2
+                    "\t  \"path\" : \"/some_path_three\"," + NEW_LINE +
+                    "\t  \"headers\" : {"
             },
             new String[]{
                 "request:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_three\",", // 6-0
+                    "\t  \"path\" : \"/some_path_three\",",
                 " matched expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
@@ -424,15 +436,12 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     "\t  \"httpResponse\" : {" + NEW_LINE +
                     "\t    \"body\" : \"some_body\"" + NEW_LINE +
                     "\t  }" + NEW_LINE +
-                    "\t}" // 6-1
+                    "\t}"
             },
             new String[]{
                 "returning response:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
-                    "\t  \"headers\" : {" + NEW_LINE +
-                    "\t    \"connection\" : [ \"keep-alive\" ]" + NEW_LINE +
-                    "\t  }," + NEW_LINE +
                     "\t  \"body\" : \"some_body\"" + NEW_LINE +
                     "\t}" + NEW_LINE +
                     NEW_LINE +
@@ -440,19 +449,13 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"method\" : \"GET\"," + NEW_LINE +
-                    "\t  \"path\" : \"/some_path_three\",", // 7-0
+                    "\t  \"path\" : \"/some_path_three\",",
                 " for action:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"body\" : \"some_body\"" + NEW_LINE +
-                    "\t}" + NEW_LINE // 7-1
-            },
-            "retrieving logs that match:" + NEW_LINE +
-                NEW_LINE +
-                "\t{" + NEW_LINE +
-                "\t  \"path\" : \"/.*\"" + NEW_LINE +
-                "\t}" + NEW_LINE +
-                NEW_LINE // 8-1
+                    "\t}" + NEW_LINE
+            }
         };
 
         for (int i = 0; i < expectedLogMessages.length; i++) {

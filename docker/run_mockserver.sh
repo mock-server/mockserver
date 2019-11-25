@@ -29,11 +29,12 @@ function showUsage {
     echo >&2 "                                                proxyRemotePort has been specified,"
     echo >&2 "                                                proxyRemoteHost will default to \"localhost\"."
     echo >&2 "                                                "
-    echo >&2 "        -logLevel <level>                       Optionally specify log level as TRACE, DEBUG,"
-    echo >&2 "                                                INFO, WARN, ERROR or OFF. If not specified"
-    echo >&2 "                                                default is INFO"
+    echo >&2 "        -logLevel <level>                       Optionally specify log level using SLF4J levels:"
+    echo >&2 "                                                TRACE, DEBUG, INFO, WARN, ERROR, OFF or Java"
+    echo >&2 "                                                Logger levels: FINEST, FINE, INFO, WARNING,"
+    echo >&2 "                                                SEVERE or OFF. If not specified default is INFO"
     echo >&2 "                                                "
-    echo >&2 "        -jvmOptions <system parameters>  Specified generic JVM options or system properties."
+    echo >&2 "        -jvmOptions <system parameters>         Specified generic JVM options or system properties."
     echo >&2 "                                                                                   "
     echo >&2 "   i.e. /opt/mockserver/run_mockserver.sh -serverPort 1080,1081 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -logLevel DEBUG -jvmOptions \"-Dmockserver.enableCORSForAllResponses=true -Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'\""
     echo >&2 "                                                                                   "
@@ -89,11 +90,11 @@ COMMAND_LINE_OPTS=""
 
 # serverPort
 if [ -z "$SERVER_PORT" ]
-    then
-if [ -n "$serverPort" ]
 then
-    SERVER_PORT="$serverPort"
-fi
+    if [ -n "$serverPort" ]
+    then
+        SERVER_PORT="$serverPort"
+    fi
 fi
 if [ -n "$SERVER_PORT" ]
 then
@@ -108,10 +109,10 @@ fi
 # proxyRemotePort
 if [ -z "$PROXY_REMOTE_PORT" ]
 then
-if [ -n "$proxyRemotePort" ]
-then
-    PROXY_REMOTE_PORT="$proxyRemotePort"
-fi
+    if [ -n "$proxyRemotePort" ]
+    then
+        PROXY_REMOTE_PORT="$proxyRemotePort"
+    fi
 fi
 if [ -n "$PROXY_REMOTE_PORT" ]
 then
@@ -121,10 +122,10 @@ fi
 # proxyRemoteHost
 if [ -z "$PROXY_REMOTE_HOST" ]
 then
-if [ -n "$proxyRemoteHost" ]
-then
-    PROXY_REMOTE_HOST="$proxyRemoteHost"
-fi
+    if [ -n "$proxyRemoteHost" ]
+    then
+        PROXY_REMOTE_HOST="$proxyRemoteHost"
+    fi
 fi
 if [ -n "$PROXY_REMOTE_HOST" ]
 then

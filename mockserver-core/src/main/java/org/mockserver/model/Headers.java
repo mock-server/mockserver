@@ -1,5 +1,6 @@
 package org.mockserver.model;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -16,11 +17,12 @@ public class Headers extends KeysToMultiValues<Header, Headers> {
     }
 
     @Override
-    public Header build(NottableString name, List<NottableString> values) {
+    public Header build(NottableString name, Collection<NottableString> values) {
         return new Header(name, values);
     }
 
     public Headers clone() {
         return new Headers().withEntries(getEntries());
     }
+
 }

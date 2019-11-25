@@ -15,7 +15,7 @@ public class CircularHashMapTest {
     @Test
     public void shouldNotContainMoreThenMaximumNumberOfEntries() {
         // given
-        CircularHashMap<String, String> circularHashMap = new CircularHashMap<String, String>(3);
+        CircularHashMap<String, String> circularHashMap = new CircularHashMap<>(3);
 
         // when
         circularHashMap.put("1", "1");
@@ -34,7 +34,7 @@ public class CircularHashMapTest {
     @Test
     public void shouldFindKeyByObject() {
         // given
-        CircularHashMap<String, String> circularHashMap = new CircularHashMap<String, String>(5);
+        CircularHashMap<String, String> circularHashMap = new CircularHashMap<>(5);
 
         // when
         circularHashMap.put("0", "a");

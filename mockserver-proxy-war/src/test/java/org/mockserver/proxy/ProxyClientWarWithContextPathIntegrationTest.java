@@ -1,6 +1,7 @@
 package org.mockserver.proxy;
 
 import org.apache.catalina.Context;
+import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -20,7 +21,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class ProxyClientWarWithContextPathIntegrationTest extends AbstractClientProxyIntegrationTest {
 
-    private final static int PROXY_PORT = PortFactory.findFreePort();
+    private static final int PROXY_PORT = PortFactory.findFreePort();
     private static EchoServer echoServer;
     private static Tomcat tomcat;
     private static MockServerClient mockServerClient;
@@ -41,6 +42,7 @@ public class ProxyClientWarWithContextPathIntegrationTest extends AbstractClient
 
         // add http port
         tomcat.setPort(PROXY_PORT);
+        tomcat.getConnector();
 
         // add servlet
         Context ctx = tomcat.addContext("/" + servletContext, new File(".").getAbsolutePath());

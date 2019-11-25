@@ -815,7 +815,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <pre><code class="code xml"> &lt;<span class="element">plugin</span>&gt;
      &lt;<span class="element">groupId</span>&gt;<span class="element_value">org.mock-server</span>&lt;/<span class="element">groupId</span>&gt;
      &lt;<span class="element">artifactId</span>&gt;<span class="element_value">mockserver-maven-plugin</span>&lt;/<span class="element">artifactId</span>&gt;
-     &lt;<span class="element">version</span>&gt;<span class="element_value">5.5.1</span>&lt;/<span class="element">version</span>&gt;
+     &lt;<span class="element">version</span>&gt;<span class="element_value">5.7.2</span>&lt;/<span class="element">version</span>&gt;
      &lt;<span class="element">configuration</span>&gt;
         &lt;<span class="element">serverPort</span>&gt;<span class="element_value">1080</span>&lt;/<span class="element">serverPort</span>&gt;
         &lt;<span class="element">logLevel</span>&gt;<span class="element_value">DEBUG</span>&lt;/<span class="element">logLevel</span>&gt;
@@ -847,9 +847,9 @@ mockServerClient("localhost", 1080).mockAnyResponse({
  &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
     <p>If MockServer is started using the <a href="/mock_server/running_mock_server.html#running_from_command_line">command line</a> then the callback classes must be added to the JVM using the classpath command line switch (<strong>cp</strong> or <strong>classpath</strong>). The <strong>classpath</strong> switch is ignored by the JVM if the
-        <strong>jar</strong> switch is used. So to run the MockServer from the command line directly (with mockserver-netty-5.5.1-jar-with-dependencies.jar) you must specify the <strong>org.mockserver.cli.Main</strong> main class specifically and not use the <strong>jar</strong> switch as follows.</p>
+        <strong>jar</strong> switch is used. So to run the MockServer from the command line directly (with mockserver-netty-5.7.2-jar-with-dependencies.jar) you must specify the <strong>org.mockserver.cli.Main</strong> main class specifically and not use the <strong>jar</strong> switch as follows.</p>
 
-    <pre><code class="code">java -Dfile.encoding=UTF-8 -cp mockserver-netty-5.5.1-jar-with-dependencies.jar:my-callback-dependency.jar org.mockserver.cli.Main -serverPort 1080</code></pre>
+    <pre><code class="code">java -Dfile.encoding=UTF-8 -cp mockserver-netty-5.7.2-jar-with-dependencies.jar:my-callback-dependency.jar org.mockserver.cli.Main -serverPort 1080</code></pre>
 </div>
 <button id="button_response_method_or_closure_callback" class="accordion">method / closure callback</button>
 <div class="panel">
@@ -911,6 +911,118 @@ var callback = function (request) {
                 "x-object-callback": ["test_object_callback_header"]
             },
             'body': "an_object_callback_response"
+        };
+    } else {
+        return {
+            'statusCode': 404
+        };
+    }
+};
+mockServerClient("localhost", 1080)
+    .mockWithCallback(
+        {
+            'path': '/some/path'
+        },
+        callback
+    )
+    .then(
+        function () {
+            console.log("expectation created");
+        },
+        function (error) {
+            console.log(error);
+        }
+    );</code></pre>
+    </div>
+</div>
+<button id="button_response_create_expecation_within_closure_callback" class="accordion">create expectation within closure callback</button>
+<div class="panel">
+    <button class="accordion inner">Java 7</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+mockServerClient
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .respond(
+        new ExpectationResponseCallback() {
+            @Override
+            public HttpResponse handle(HttpRequest httpRequest) throws Exception {
+                if (httpRequest.getMethod().getValue().equals("POST")) {
+                    mockServerClient
+                        .when(
+                            request()
+                                .withPath("/some/otherPath")
+                        )
+                        .respond(
+                            response()
+                                .withBody(httpRequest.getBodyAsString())
+                        );
+                    return response()
+                        .withStatusCode(ACCEPTED_202.code())
+                        .withBody("request processed");
+                } else {
+                    return notFoundResponse();
+                }
+            }
+        }
+    );</code></pre>
+    </div>
+    <button class="accordion inner">Java 8+</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
+mockServerClient
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .respond(
+        httpRequest -> {
+            if (httpRequest.getMethod().getValue().equals("POST")) {
+                mockServerClient
+                    .when(
+                        request()
+                            .withPath("/some/otherPath")
+                    )
+                    .respond(
+                        response()
+                            .withBody(httpRequest.getBodyAsString())
+                    );
+                return response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withBody("request processed");
+            } else {
+                return notFoundResponse();
+            }
+        }
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+var callback = function (request) {
+    if (request.method === 'POST') {
+        mockServerClient("localhost", 1080)
+            .mockAnyResponse({
+                "httpRequest": {
+                    "path": "/some/otherPath"
+                },
+                "httpResponse": {
+                    "body": request.body.string
+                }
+            })
+            .then(
+                function () {
+                    console.log("chained expectation created");
+                },
+                function (error) {
+                    console.log(error);
+                }
+            );
+        return {
+            'statusCode': 202,
+            'body': "request processed"
         };
     } else {
         return {

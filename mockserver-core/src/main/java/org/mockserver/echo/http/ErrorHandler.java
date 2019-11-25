@@ -17,10 +17,10 @@ public class ErrorHandler extends ChannelDuplexHandler {
     }
 
     @Override
-    public void read(ChannelHandlerContext ctx) throws Exception {
+    public void read(ChannelHandlerContext ctx) {
         if (error == EchoServer.Error.CLOSE_CONNECTION) {
-            ctx.channel().disconnect();
-            ctx.channel().close();
+            ctx.disconnect();
+            ctx.close();
         } else {
             ctx.read();
         }

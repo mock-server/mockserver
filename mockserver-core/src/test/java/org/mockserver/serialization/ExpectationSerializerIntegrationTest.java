@@ -213,6 +213,11 @@ public class ExpectationSerializerIntegrationTest {
             "      \"name\" : \"someCookieName\"," + NEW_LINE +
             "      \"value\" : \"someCookieValue\"" + NEW_LINE +
             "    } ]," + NEW_LINE +
+            "    \"socketAddress\" : {" + NEW_LINE +
+            "      \"host\" : \"someHost\"," + NEW_LINE +
+            "      \"port\" : 1234," + NEW_LINE +
+            "      \"scheme\" : \"HTTPS\"" + NEW_LINE +
+            "    }," +
             "    \"headers\" : [ {" + NEW_LINE +
             "      \"name\" : \"someHeaderName\"," + NEW_LINE +
             "      \"values\" : [ \"someHeaderValue\" ]" + NEW_LINE +
@@ -266,6 +271,12 @@ public class ExpectationSerializerIntegrationTest {
                     ))
                     .setCookies(new Cookies().withEntries(
                         cookie("someCookieName", "someCookieValue")
+                    ))
+                    .setSocketAddress(new SocketAddressDTO(
+                        new SocketAddress()
+                            .withHost("someHost")
+                            .withPort(1234)
+                            .withScheme(SocketAddress.Scheme.HTTPS)
                     ))
             )
             .setHttpResponse(

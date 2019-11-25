@@ -13,12 +13,12 @@ import org.mockserver.codec.MockServerClientCodec;
 import org.mockserver.proxy.ProxyConfiguration;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.socket.tls.NettySslContextFactory;
 
 import java.net.InetSocketAddress;
 
 import static org.mockserver.client.NettyHttpClient.REMOTE_SOCKET;
 import static org.mockserver.client.NettyHttpClient.SECURE;
-import static org.mockserver.socket.tls.NettySslContextFactory.nettySslContextFactory;
 import static org.slf4j.event.Level.TRACE;
 
 @ChannelHandler.Sharable
@@ -29,7 +29,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
     private final HttpClientHandler httpClientHandler;
     private final ProxyConfiguration proxyConfiguration;
 
-    public HttpClientInitializer(ProxyConfiguration proxyConfiguration, MockServerLogger mockServerLogger) {
+    HttpClientInitializer(ProxyConfiguration proxyConfiguration, MockServerLogger mockServerLogger) {
         this.proxyConfiguration = proxyConfiguration;
         this.mockServerLogger = mockServerLogger;
         this.httpClientHandler = new HttpClientHandler();
@@ -50,11 +50,11 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
         if (channel.attr(SECURE) != null && channel.attr(SECURE).get() != null && channel.attr(SECURE).get()) {
             InetSocketAddress remoteAddress = channel.attr(REMOTE_SOCKET).get();
-            pipeline.addLast(nettySslContextFactory().createClientSslContext().newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
+            pipeline.addLast(new NettySslContextFactory(mockServerLogger).createClientSslContext().newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
         }
 
         // add logging
-        if (mockServerLogger.isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE)) {
             pipeline.addLast(new LoggingHandler("NettyHttpClient -->"));
         }
 
@@ -64,7 +64,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
         pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-        pipeline.addLast(new MockServerClientCodec());
+        pipeline.addLast(new MockServerClientCodec(mockServerLogger));
 
         pipeline.addLast(httpClientHandler);
     }

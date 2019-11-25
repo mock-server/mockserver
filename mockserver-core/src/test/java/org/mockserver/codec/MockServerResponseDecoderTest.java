@@ -6,6 +6,7 @@ import io.netty.handler.codec.http.*;
 import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.Body;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
@@ -36,8 +37,8 @@ public class MockServerResponseDecoderTest {
 
     @Before
     public void setupFixture() {
-        mockServerResponseDecoder = new MockServerResponseDecoder();
-        output = new ArrayList<Object>();
+        mockServerResponseDecoder = new MockServerResponseDecoder(new MockServerLogger());
+        output = new ArrayList<>();
     }
 
     @Test
@@ -134,7 +135,7 @@ public class MockServerResponseDecoderTest {
 
         // then
         Body body = ((HttpResponse) output.get(0)).getBody();
-        assertThat(body, Is.<Body>is(exact("我说中国话", MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16))));
+        assertThat(body, Is.is(exact("我说中国话", MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16))));
     }
 
     @Test

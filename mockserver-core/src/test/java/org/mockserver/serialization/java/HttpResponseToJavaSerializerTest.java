@@ -8,6 +8,7 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -22,7 +23,7 @@ public class HttpResponseToJavaSerializerTest {
     private final Base64Converter base64Converter = new Base64Converter();
 
     @Test
-    public void shouldSerializeFullObjectWithResponseAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithResponseAsJava() {
         assertEquals(NEW_LINE +
                 "        response()" + NEW_LINE +
                 "                .withStatusCode(304)" + NEW_LINE +
@@ -35,7 +36,8 @@ public class HttpResponseToJavaSerializerTest {
                 "                        new Cookie(\"responseCookieNameOne\", \"responseCookieValueOne\")," + NEW_LINE +
                 "                        new Cookie(\"responseCookieNameTwo\", \"responseCookieValueTwo\")" + NEW_LINE +
                 "                )" + NEW_LINE +
-                "                .withBody(\"responseBody\")",
+                "                .withBody(\"responseBody\")" + NEW_LINE +
+                "                .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))",
             new HttpResponseToJavaSerializer().serialize(1,
                 new HttpResponse()
                     .withStatusCode(304)
@@ -49,12 +51,13 @@ public class HttpResponseToJavaSerializerTest {
                         new Cookie("responseCookieNameTwo", "responseCookieValueTwo")
                     )
                     .withBody("responseBody")
+                    .withDelay(TimeUnit.MILLISECONDS, 100)
             )
         );
     }
 
     @Test
-    public void shouldSerializeFullObjectWithBinaryBodyResponseAsJava() throws IOException {
+    public void shouldSerializeObjectWithBinaryBodyResponseAsJava() {
         // when
         assertEquals(NEW_LINE +
                 "        response()" + NEW_LINE +
@@ -67,7 +70,7 @@ public class HttpResponseToJavaSerializerTest {
     }
 
     @Test
-    public void shouldEscapeJSONBodies() throws IOException {
+    public void shouldEscapeJSONBodies() {
         assertEquals("" + NEW_LINE +
                 "        response()" + NEW_LINE +
                 "                .withStatusCode(304)" + NEW_LINE +
@@ -104,7 +107,7 @@ public class HttpResponseToJavaSerializerTest {
     }
 
     @Test
-    public void shouldSerializeMinimalObjectAsJava() throws IOException {
+    public void shouldSerializeMinimalObjectAsJava() {
         assertEquals(NEW_LINE +
                 "        response()" + NEW_LINE +
                 "                .withStatusCode(304)" + NEW_LINE +

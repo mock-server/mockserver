@@ -25,6 +25,7 @@ mods
 *.sql
 *.sqlite
 test.csv
+TODO.md
 
 # Runtime artifacts #
 #####################

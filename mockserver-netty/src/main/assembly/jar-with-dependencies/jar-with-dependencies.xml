@@ -21,10 +21,4 @@
             <scope>runtime</scope>
         </dependencySet>
     </dependencySets>
-    <files>
-        <file>
-            <source>${basedir}/src/main/assembly/jar-with-dependencies/logback.xml</source>
-            <outputDirectory>${file.separator}</outputDirectory>
-        </file>
-    </files>
 </assembly>

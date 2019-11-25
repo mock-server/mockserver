@@ -15,10 +15,9 @@ import org.mockserver.examples.proxy.service.BookService;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.nio.charset.StandardCharsets;
 
 import static org.mockserver.examples.proxy.json.ObjectMapperFactory.createObjectMapper;
 
@@ -37,7 +36,7 @@ public class BookServiceApacheHttpClient implements BookService {
 
     @PostConstruct
     private void initialise() {
-        port = environment.getProperty("bookService.port", Integer.class);
+        port = Integer.parseInt(System.getProperty("bookService.port"));
         host = environment.getProperty("bookService.host", "localhost");
         objectMapper = createObjectMapper();
         httpClient = createHttpClient();
@@ -53,11 +52,11 @@ public class BookServiceApacheHttpClient implements BookService {
         String responseBody = "";
         try {
             HttpResponse response = httpClient.execute(new HttpGet(new URIBuilder()
-                    .setScheme("http")
-                    .setHost(host)
-                    .setPort(port)
-                    .setPath("/get_books")
-                    .build()));
+                .setScheme("http")
+                .setHost(host)
+                .setPort(port)
+                .setPath("/get_books")
+                .build()));
             responseBody = new String(EntityUtils.toByteArray(response.getEntity()), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new RuntimeException("Exception making request to retrieve all books", e);
@@ -72,12 +71,12 @@ public class BookServiceApacheHttpClient implements BookService {
     public Book getBook(String id) {
         try {
             HttpResponse response = httpClient.execute(new HttpGet(new URIBuilder()
-                    .setScheme("http")
-                    .setHost(host)
-                    .setPort(port)
-                    .setPath("/get_book")
-                    .setParameter("id", id)
-                    .build()));
+                .setScheme("http")
+                .setHost(host)
+                .setPort(port)
+                .setPath("/get_book")
+                .setParameter("id", id)
+                .build()));
             return objectMapper.readValue(EntityUtils.toByteArray(response.getEntity()), Book.class);
         } catch (Exception e) {
             throw new RuntimeException("Exception making request to retrieve a book with id [" + id + "]", e);

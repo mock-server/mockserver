@@ -3,10 +3,11 @@ package org.mockserver.serialization.serializers.request;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.google.common.base.Strings;
 import org.mockserver.model.HttpRequest;
 
 import java.io.IOException;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * @author jamesdbloom
@@ -23,10 +24,10 @@ public class HttpRequestSerializer extends StdSerializer<HttpRequest> {
         if (httpRequest.getNot() != null && httpRequest.getNot()) {
             jgen.writeBooleanField("not", httpRequest.getNot());
         }
-        if (httpRequest.getMethod() != null && !Strings.isNullOrEmpty(httpRequest.getMethod().getValue())) {
+        if (httpRequest.getMethod() != null && !httpRequest.getMethod().isBlank()) {
             jgen.writeObjectField("method", httpRequest.getMethod());
         }
-        if (httpRequest.getPath() != null && !Strings.isNullOrEmpty(httpRequest.getPath().getValue())) {
+        if (httpRequest.getPath() != null && !httpRequest.getPath().isBlank()) {
             jgen.writeObjectField("path", httpRequest.getPath());
         }
         if (httpRequest.getQueryStringParameterList() != null && !httpRequest.getQueryStringParameterList().isEmpty()) {
@@ -44,7 +45,10 @@ public class HttpRequestSerializer extends StdSerializer<HttpRequest> {
         if (httpRequest.isSecure() != null) {
             jgen.writeBooleanField("secure", httpRequest.isSecure());
         }
-        if (httpRequest.getBody() != null && !Strings.isNullOrEmpty(String.valueOf(httpRequest.getBody().getValue()))) {
+        if (httpRequest.getSocketAddress() != null) {
+            jgen.writeObjectField("socketAddress", httpRequest.getSocketAddress());
+        }
+        if (httpRequest.getBody() != null && isNotBlank(String.valueOf(httpRequest.getBody().getValue()))) {
             jgen.writeObjectField("body", httpRequest.getBody());
         }
         jgen.writeEndObject();

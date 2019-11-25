@@ -22,7 +22,7 @@ public class HttpForwardActionHandler extends HttpForwardAction {
         } else {
             httpRequest.withSecure(false);
         }
-        return sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()));
+        return sendRequest(httpRequest, new InetSocketAddress(httpForward.getHost(), httpForward.getPort()), null);
     }
 
 }

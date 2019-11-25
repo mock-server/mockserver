@@ -20,6 +20,7 @@ import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpForward.forward;
+import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpTemplate.template;
@@ -205,6 +206,7 @@ public class ExpectationToJavaSerializerTest {
                 "        .respond(" + NEW_LINE +
                 "                template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
                 "                        .withTemplate(\"if (request.method === 'POST' && request.path === '/somePath') {\\n    return {\\n        'statusCode': 200,\\n        'body': JSON.stringify({name: 'value'})\\n    };\\n} else {\\n    return {\\n        'statusCode': 406,\\n        'body': request.body\\n    };\\n}\")" + NEW_LINE +
+                "                        .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))" + NEW_LINE +
                 "        );",
             new ExpectationToJavaSerializer().serialize(1,
                 new Expectation(
@@ -239,6 +241,7 @@ public class ExpectationToJavaSerializerTest {
                             "        'body': request.body\n" +
                             "    };\n" +
                             "}")
+                            .withDelay(TimeUnit.MILLISECONDS, 100)
                     )
             )
         );
@@ -342,6 +345,7 @@ public class ExpectationToJavaSerializerTest {
                 "        .respond(" + NEW_LINE +
                 "                callback()" + NEW_LINE +
                 "                        .withCallbackClass(\"some_class\")" + NEW_LINE +
+                "                        .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))" + NEW_LINE +
                 "        );",
             new ExpectationToJavaSerializer().serialize(1,
                 new Expectation(
@@ -367,6 +371,7 @@ public class ExpectationToJavaSerializerTest {
                     .thenRespond(
                         callback()
                             .withCallbackClass("some_class")
+                            .withDelay(TimeUnit.MILLISECONDS, 100)
                     )
             )
         );
@@ -421,6 +426,7 @@ public class ExpectationToJavaSerializerTest {
                     .thenRespond(
                         new HttpObjectCallback()
                             .withClientId("some_client_id")
+                            .withDelay(TimeUnit.MILLISECONDS, 100)
                     )
             )
         );
@@ -455,6 +461,7 @@ public class ExpectationToJavaSerializerTest {
                 "                        .withHost(\"some_host\")" + NEW_LINE +
                 "                        .withPort(9090)" + NEW_LINE +
                 "                        .withScheme(HttpForward.Scheme.HTTPS)" + NEW_LINE +
+                "                        .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))" + NEW_LINE +
                 "        );",
             new ExpectationToJavaSerializer().serialize(1,
                 new Expectation(
@@ -482,6 +489,100 @@ public class ExpectationToJavaSerializerTest {
                             .withHost("some_host")
                             .withPort(9090)
                             .withScheme(HttpForward.Scheme.HTTPS)
+                            .withDelay(TimeUnit.MILLISECONDS, 100)
+                    )
+            )
+        );
+    }
+
+    @Test
+    public void shouldSerializeFullObjectWithForwardOverriddenRequestAsJava() {
+        assertEquals(NEW_LINE +
+                "        new MockServerClient(\"localhost\", 1080)" + NEW_LINE +
+                "        .when(" + NEW_LINE +
+                "                request()" + NEW_LINE +
+                "                        .withMethod(\"GET\")" + NEW_LINE +
+                "                        .withPath(\"somePath\")" + NEW_LINE +
+                "                        .withHeaders(" + NEW_LINE +
+                "                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withCookies(" + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withQueryStringParameters(" + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withBody(new StringBody(\"somebody\"))," + NEW_LINE +
+                "                Times.once()," + NEW_LINE +
+                "                TimeToLive.unlimited()" + NEW_LINE +
+                "        )" + NEW_LINE +
+                "        .forward(" + NEW_LINE +
+                "                forwardOverriddenRequest()" + NEW_LINE +
+                "                        .withRequest(" + NEW_LINE +
+                "                                request()" + NEW_LINE +
+                "                                        .withMethod(\"GET\")" + NEW_LINE +
+                "                                        .withPath(\"somePath\")" + NEW_LINE +
+                "                                        .withHeaders(" + NEW_LINE +
+                "                                                new Header(\"requestHeaderNameOne\", \"requestHeaderValueOneOne\", \"requestHeaderValueOneTwo\")," + NEW_LINE +
+                "                                                new Header(\"requestHeaderNameTwo\", \"requestHeaderValueTwo\")" + NEW_LINE +
+                "                                        )" + NEW_LINE +
+                "                                        .withCookies(" + NEW_LINE +
+                "                                                new Cookie(\"requestCookieNameOne\", \"requestCookieValueOne\")," + NEW_LINE +
+                "                                                new Cookie(\"requestCookieNameTwo\", \"requestCookieValueTwo\")" + NEW_LINE +
+                "                                        )" + NEW_LINE +
+                "                                        .withQueryStringParameters(" + NEW_LINE +
+                "                                                new Parameter(\"requestQueryStringParameterNameOne\", \"requestQueryStringParameterValueOneOne\", \"requestQueryStringParameterValueOneTwo\")," + NEW_LINE +
+                "                                                new Parameter(\"requestQueryStringParameterNameTwo\", \"requestQueryStringParameterValueTwo\")" + NEW_LINE +
+                "                                        )" + NEW_LINE +
+                "                                        .withBody(new StringBody(\"somebody\"))" + NEW_LINE +
+                "                        )" + NEW_LINE +
+                "                        .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))" + NEW_LINE +
+                "        );",
+            new ExpectationToJavaSerializer().serialize(1,
+                new Expectation(
+                    request()
+                        .withMethod("GET")
+                        .withPath("somePath")
+                        .withQueryStringParameters(
+                            new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                            new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                        )
+                        .withHeaders(
+                            new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                            new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                        )
+                        .withCookies(
+                            new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                            new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                        )
+                        .withBody(new StringBody("somebody")),
+                    once(),
+                    unlimited()
+                )
+                    .thenForward(
+                        forwardOverriddenRequest()
+                            .withHttpRequest(
+                                request()
+                                    .withMethod("GET")
+                                    .withPath("somePath")
+                                    .withQueryStringParameters(
+                                        new Parameter("requestQueryStringParameterNameOne", "requestQueryStringParameterValueOneOne", "requestQueryStringParameterValueOneTwo"),
+                                        new Parameter("requestQueryStringParameterNameTwo", "requestQueryStringParameterValueTwo")
+                                    )
+                                    .withHeaders(
+                                        new Header("requestHeaderNameOne", "requestHeaderValueOneOne", "requestHeaderValueOneTwo"),
+                                        new Header("requestHeaderNameTwo", "requestHeaderValueTwo")
+                                    )
+                                    .withCookies(
+                                        new Cookie("requestCookieNameOne", "requestCookieValueOne"),
+                                        new Cookie("requestCookieNameTwo", "requestCookieValueTwo")
+                                    )
+                                    .withBody(new StringBody("somebody"))
+                            )
+                            .withDelay(TimeUnit.MILLISECONDS, 100)
                     )
             )
         );
@@ -514,6 +615,7 @@ public class ExpectationToJavaSerializerTest {
                 "        .forward(" + NEW_LINE +
                 "                template(HttpTemplate.TemplateType.JAVASCRIPT)" + NEW_LINE +
                 "                        .withTemplate(\"return { 'path': \\\"somePath\\\", 'body': JSON.stringify({name: 'value'}) };\")" + NEW_LINE +
+                "                        .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))" + NEW_LINE +
                 "        );",
             new ExpectationToJavaSerializer().serialize(1,
                 new Expectation(
@@ -539,6 +641,7 @@ public class ExpectationToJavaSerializerTest {
                     .thenForward(
                         template(HttpTemplate.TemplateType.JAVASCRIPT)
                             .withTemplate("return { 'path': \"somePath\", 'body': JSON.stringify({name: 'value'}) };")
+                            .withDelay(TimeUnit.MILLISECONDS, 100)
                     )
             )
         );
@@ -571,6 +674,7 @@ public class ExpectationToJavaSerializerTest {
                 "        .forward(" + NEW_LINE +
                 "                callback()" + NEW_LINE +
                 "                        .withCallbackClass(\"some_class\")" + NEW_LINE +
+                "                        .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))" + NEW_LINE +
                 "        );",
             new ExpectationToJavaSerializer().serialize(1,
                 new Expectation(
@@ -596,6 +700,7 @@ public class ExpectationToJavaSerializerTest {
                     .thenForward(
                         callback()
                             .withCallbackClass("some_class")
+                            .withDelay(TimeUnit.MILLISECONDS, 100)
                     )
             )
         );
@@ -650,6 +755,7 @@ public class ExpectationToJavaSerializerTest {
                     .thenForward(
                         new HttpObjectCallback()
                             .withClientId("some_client_id")
+                            .withDelay(TimeUnit.MILLISECONDS, 100)
                     )
             )
         );

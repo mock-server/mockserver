@@ -1,22 +1,26 @@
 package org.mockserver.client;
 
-import com.google.common.util.concurrent.SettableFuture;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
-import org.mockserver.proxy.ProxyConfiguration;
+import io.netty.util.concurrent.CompleteFuture;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.proxy.ProxyConfiguration;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -25,25 +29,26 @@ public class NettyHttpClient {
 
     static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");
     static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
-    static final AttributeKey<SettableFuture<HttpResponse>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
-    private static final MockServerLogger mockServerLogger = new MockServerLogger(NettyHttpClient.class);
+    static final AttributeKey<CompletableFuture<HttpResponse>> RESPONSE_FUTURE = AttributeKey.valueOf("RESPONSE_FUTURE");
+    private final MockServerLogger mockServerLogger;
     private final EventLoopGroup eventLoopGroup;
     private final ProxyConfiguration proxyConfiguration;
 
-    public NettyHttpClient(EventLoopGroup eventLoopGroup, ProxyConfiguration proxyConfiguration) {
+    public NettyHttpClient(MockServerLogger mockServerLogger, EventLoopGroup eventLoopGroup, ProxyConfiguration proxyConfiguration) {
+        this.mockServerLogger = mockServerLogger;
         this.eventLoopGroup = eventLoopGroup;
         this.proxyConfiguration = proxyConfiguration;
     }
 
-    public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {
+    public CompletableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest) throws SocketConnectionException {
         return sendRequest(httpRequest, httpRequest.socketAddressFromHostHeader());
     }
 
-    public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) throws SocketConnectionException {
+    public CompletableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress) throws SocketConnectionException {
         return sendRequest(httpRequest, remoteAddress, ConfigurationProperties.socketConnectionTimeout());
     }
 
-    public SettableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress, Integer connectionTimeoutMillis) throws SocketConnectionException {
+    public CompletableFuture<HttpResponse> sendRequest(final HttpRequest httpRequest, @Nullable InetSocketAddress remoteAddress, Integer connectionTimeoutMillis) throws SocketConnectionException {
         if (!eventLoopGroup.isShuttingDown()) {
             if (proxyConfiguration != null && proxyConfiguration.getType() == ProxyConfiguration.Type.HTTP) {
                 remoteAddress = proxyConfiguration.getProxyAddress();
@@ -51,7 +56,7 @@ public class NettyHttpClient {
                 remoteAddress = httpRequest.socketAddressFromHostHeader();
             }
 
-            final SettableFuture<HttpResponse> httpResponseSettableFuture = SettableFuture.create();
+            final CompletableFuture<HttpResponse> httpResponseFuture = new CompletableFuture<>();
             new Bootstrap()
                 .group(eventLoopGroup)
                 .channel(NioSocketChannel.class)
@@ -61,22 +66,19 @@ public class NettyHttpClient {
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeoutMillis)
                 .attr(SECURE, httpRequest.isSecure() != null && httpRequest.isSecure())
                 .attr(REMOTE_SOCKET, remoteAddress)
-                .attr(RESPONSE_FUTURE, httpResponseSettableFuture)
+                .attr(RESPONSE_FUTURE, httpResponseFuture)
                 .handler(new HttpClientInitializer(proxyConfiguration, mockServerLogger))
                 .connect(remoteAddress)
-                .addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) {
-                        if (future.isSuccess()) {
-                            // send the HTTP request
-                            future.channel().writeAndFlush(httpRequest);
-                        } else {
-                            httpResponseSettableFuture.setException(future.cause());
-                        }
+                .addListener((ChannelFutureListener) future -> {
+                    if (future.isSuccess()) {
+                        // send the HTTP request
+                        future.channel().writeAndFlush(httpRequest);
+                    } else {
+                        httpResponseFuture.completeExceptionally(future.cause());
                     }
                 });
 
-            return httpResponseSettableFuture;
+            return httpResponseFuture;
         } else {
             throw new IllegalStateException("Request sent after client has been stopped - the event loop has been shutdown so it is not possible to send a request");
         }
@@ -86,7 +88,7 @@ public class NettyHttpClient {
         try {
             return sendRequest(httpRequest).get(timeout, unit);
         } catch (TimeoutException e) {
-            throw new SocketCommunicationException("Response was not received from MockServer after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
+            throw new SocketCommunicationException("Response was not received from MockServer after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause());
         } catch (InterruptedException | ExecutionException ex) {
             Throwable cause = ex.getCause();
             if (cause instanceof SocketConnectionException) {
