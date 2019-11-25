@@ -2,6 +2,7 @@ package org.mockserver.cli;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
@@ -38,6 +39,12 @@ public class MainTest {
     @AfterClass
     public static void stopEventLoopGroup() {
         clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
+        Main.usageShown = false;
+    }
+
+    @After
+    public void clearUsageShown() {
+        Main.usageShown = false;
     }
 
     @Test

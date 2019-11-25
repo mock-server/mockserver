@@ -16,7 +16,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.cli.Main.Arguments.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
-import static org.slf4j.event.Level.*;
+import static org.slf4j.event.Level.DEBUG;
 
 /**
  * @author jamesdbloom
@@ -58,6 +58,7 @@ public class Main {
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(Main.class);
     private static final IntegerStringListParser INTEGER_STRING_LIST_PARSER = new IntegerStringListParser();
     static PrintStream systemOut = System.out;
+    static boolean usageShown = false;
 
     /**
      * Run the MockServer directly providing the arguments as specified below.
@@ -94,17 +95,17 @@ public class Main {
                 } else {
                     new MockServer(localPorts);
                 }
+
+                if (ConfigurationProperties.logLevel() != null) {
+                    MOCK_SERVER_LOGGER.logEvent(
+                        new LogEntry()
+                            .setType(SERVER_CONFIGURATION)
+                            .setLogLevel(ConfigurationProperties.logLevel())
+                            .setMessageFormat("Logger level is " + ConfigurationProperties.logLevel() + ", change using:\n - \'ConfigurationProperties.logLevel(String level)\' in Java code,\n - \'-logLevel\' command line argument,\n - \'mockserver.logLevel\' JVM system property or,\n - \'mockserver.logLevel\' property value in \'mockserver.properties\'")
+                    );
+                }
             } else {
                 showUsage();
-            }
-
-            if (ConfigurationProperties.logLevel() != null) {
-                MOCK_SERVER_LOGGER.logEvent(
-                    new LogEntry()
-                        .setType(SERVER_CONFIGURATION)
-                        .setLogLevel(ConfigurationProperties.logLevel())
-                        .setMessageFormat("Logger level is " + ConfigurationProperties.logLevel() + ", change using:\n - \'ConfigurationProperties.logLevel(String level)\' in Java code,\n - \'-logLevel\' command line argument,\n - \'mockserver.logLevel\' JVM system property or,\n - \'mockserver.logLevel\' property value in \'mockserver.properties\'")
-                );
             }
 
         } catch (IllegalArgumentException iae) {
@@ -185,7 +186,10 @@ public class Main {
     }
 
     private static void showUsage() {
-        systemOut.print(USAGE);
+        if (!usageShown) {
+            usageShown = true;
+            systemOut.print(USAGE);
+        }
     }
 
     public enum Arguments {
