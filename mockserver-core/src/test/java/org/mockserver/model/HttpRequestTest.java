@@ -195,4 +195,35 @@ public class HttpRequestTest {
         ));
     }
 
+    @Test
+    public void shouldUpdateEmptyRequest() {
+        // given
+        HttpRequest requestOne = request();
+        HttpRequest requestTwo = request()
+            .withPath("some_path_two")
+            .withBody("some_body_two")
+            .withMethod("METHO_TWO")
+            .withHeader("some_header_two", "some_header_value_two")
+            .withSecure(false)
+            .withCookie("some_cookie_two", "some_cookie_value_two")
+            .withQueryStringParameter("some_parameter_two", "some_parameter_value_two")
+            .withKeepAlive(false);
+
+        // when
+        requestOne.update(requestTwo);
+
+        // then
+        assertThat(requestOne, is(
+            request()
+                .withPath("some_path_two")
+                .withBody("some_body_two")
+                .withMethod("METHO_TWO")
+                .withHeader("some_header_two", "some_header_value_two")
+                .withSecure(false)
+                .withCookie("some_cookie_two", "some_cookie_value_two")
+                .withQueryStringParameter("some_parameter_two", "some_parameter_value_two")
+                .withKeepAlive(false)
+        ));
+    }
+
 }

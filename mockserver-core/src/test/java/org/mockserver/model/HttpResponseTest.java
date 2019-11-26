@@ -220,7 +220,6 @@ public class HttpResponseTest {
         assertThat(responseOne, is(responseTwo));
     }
 
-
     @Test
     public void shouldUpdate() {
         // given
@@ -261,6 +260,43 @@ public class HttpResponseTest {
                 .withHeader("some_header", "some_header_value")
                 .withHeader("some_header_two", "some_header_value_two")
                 .withCookie("some_cookie", "some_cookie_value")
+                .withCookie("some_cookie_two", "some_cookie_value_two")
+                .withConnectionOptions(
+                    connectionOptions()
+                        .withContentLengthHeaderOverride(100)
+                        .withCloseSocket(false)
+                        .withKeepAliveOverride(false)
+                )
+        ));
+    }
+
+    @Test
+    public void shouldUpdateEmptyResponse() {
+        // given
+        HttpResponse responseOne = response();
+        HttpResponse responseTwo = response()
+            .withStatusCode(321)
+            .withReasonPhrase("someReasonPhrase_two")
+            .withBody("some_body_two")
+            .withHeader("some_header_two", "some_header_value_two")
+            .withCookie("some_cookie_two", "some_cookie_value_two")
+            .withConnectionOptions(
+                connectionOptions()
+                    .withContentLengthHeaderOverride(100)
+                    .withCloseSocket(false)
+                    .withKeepAliveOverride(false)
+            );
+
+        // when
+        responseOne.update(responseTwo);
+
+        // then
+        assertThat(responseOne, is(
+            response()
+                .withStatusCode(321)
+                .withReasonPhrase("someReasonPhrase_two")
+                .withBody("some_body_two")
+                .withHeader("some_header_two", "some_header_value_two")
                 .withCookie("some_cookie_two", "some_cookie_value_two")
                 .withConnectionOptions(
                     connectionOptions()

@@ -683,13 +683,13 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
             withPath(replaceRequest.getPath());
         }
         for (Header header : replaceRequest.getHeaderList()) {
-            getHeaders().replaceEntry(header);
+            getOrCreateHeaders().replaceEntry(header);
         }
         for (Cookie cookie : replaceRequest.getCookieList()) {
             withCookie(cookie);
         }
         for (Parameter parameter : replaceRequest.getQueryStringParameterList()) {
-            getQueryStringParameters().replaceEntry(parameter);
+            getOrCreateQueryStringParameters().replaceEntry(parameter);
         }
         if (replaceRequest.getBody() != null) {
             withBody(replaceRequest.getBody());

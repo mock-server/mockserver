@@ -506,7 +506,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
             withReasonPhrase(replaceResponse.getReasonPhrase());
         }
         for (Header header : replaceResponse.getHeaderList()) {
-            getHeaders().replaceEntry(header);
+            getOrCreateHeaders().replaceEntry(header);
         }
         for (Cookie cookie : replaceResponse.getCookieList()) {
             withCookie(cookie);
