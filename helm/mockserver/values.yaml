@@ -3,7 +3,9 @@ replicaCount: 1
 app:
   logLevel: "INFO"
   serverPort: "1080"
-  mapConfigDirectory: false
+  mountConfigMap: false
+  mountedConfigMapName: "mockserver-config"
+  propertiesFileName: "mockserver.properties"
   initializationJsonFileName: "initializerJson.json"
 
 image:

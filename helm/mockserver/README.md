@@ -45,7 +45,7 @@ To view the logs:
 kubectl logs $(kubectl get po -l release=mockserver -n mockserver | awk '{if(NR==2)print $1}') -n mockserver
 ```
 
-### Modify Start Command
+### Basic MockServer Configuration 
 
 Modify the argument used to start the docker container by setting values explicitly as follows:
 
@@ -59,6 +59,7 @@ The following values are supported:
 - `app.proxyRemoteHost` (no default)
 - `app.proxyRemotePort` (no default)
 - `app.jvmOptions` (no default)
+- `image.snapshot` (default: false) - set `true` to use latest snapshot version
 
 For example configure a proxyRemoteHost and proxyRemotePort, as follows:
 
@@ -71,6 +72,19 @@ Double check the correct arguments have been passed to the pod, as follows:
 ```bash
 kubectl -n mockserver logs -l app=mockserver,release=mockserver
 ``` 
+
+### Detailed MockServer Configuration
+
+This helm chart supports providing detailed configuration such as:
+- a **properties file** - to configure all MockServer properties, or 
+- an **json expectation initialization file** - to initialize expectations at start-up.
+  
+This is done by deploying a configmap to kubernetes with files embedded in the yaml as shown in [mockserver-config](https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config) helm chart.
+Once a configmap has been deployed the following values are supported in this chart to configure how the configmap is used: 
+- `app.mountConfigMap` (default: false) - enables the mounting of the configmap into the MockServer container file system
+- `mountedConfigMapName` (default: mockserver-config) - name of the configmap (in the same namespace) to mount
+- `propertiesFileName` (default: mockserver.properties) - name of the property file in the configmap
+- `initializationJsonFileName` (default: initializerJson.json) - name of the JSON initialization file in the configmap
 
 ### MockServer URL
 

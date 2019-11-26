@@ -69,15 +69,15 @@ spec:
             - name: JVM_OPTIONS
               value: {{ .Values.app.jvmOptions | quote }}
 {{- end }}
-{{- if .Values.app.mapConfigDirectory }}
+{{- if .Values.app.mountConfigMap }}
             - name: MOCKSERVER_PROPERTY_FILE
-              value: /config/mockserver.properties
+              value: /config/{{ .Values.app.propertiesFileName }}
 {{- if .Values.app.initializationJsonFileName }}
             - name: MOCKSERVER_INITIALIZATION_JSON_PATH
               value: /config/{{ .Values.app.initializationJsonFileName }}
 {{- end }}
 {{- end }}
-{{- if .Values.app.mapConfigDirectory }}
+{{- if .Values.app.mountConfigMap }}
           volumeMounts:
             - name: config-volume
               mountPath: /config
@@ -86,11 +86,12 @@ spec:
           resources:
 {{ toYaml .Values.resources | indent 12 }}
 {{- end }}
-{{- if .Values.app.mapConfigDirectory }}
+{{- if .Values.app.mountConfigMap }}
       volumes:
         - name: config-volume
           configMap:
-            name: {{ template "chart.fullname" . }}-config
+            name: {{ .Values.app.mountedConfigMapName }}
+            optional: true
 {{- end }}
 {{- with .Values.nodeSelector }}
       nodeSelector:
