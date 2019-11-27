@@ -1,7 +1,7 @@
 #
 # MockServer Build Dockerfile
 #
-# https://github.com/mockserver/mockserver
+# https://github.com/mock-server/mockserver
 # http://www.mock-server.com
 #
 
@@ -33,7 +33,7 @@ RUN apt-get install -y maven
 COPY settings.xml /etc/maven/settings.xml
 
 # pre-fetch maven dependencies
-RUN git clone https://github.com/mockserver/mockserver.git
+RUN git clone https://github.com/mock-server/mockserver.git
 RUN cd mockserver && \
     ./mvnw -s /etc/maven/settings.xml dependency:go-offline && \
     ./mvnw -s /etc/maven/settings.xml package -DskipTests && \

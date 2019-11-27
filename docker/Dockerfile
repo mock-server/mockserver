@@ -1,7 +1,7 @@
 #
 # MockServer Dockerfile
 #
-# https://github.com/mockserver/mockserver
+# https://github.com/mock-server/mockserver
 # http://www.mock-server.com
 #
 

@@ -15,7 +15,7 @@ keywords:
   - https-proxy
 home: "http://mock-server.com"
 sources:
-  - "https://github.com/mockserver/mockserver"
+  - "https://github.com/mock-server/mockserver"
   - "https://hub.docker.com/r/mockserver/mockserver"
 maintainers:
   - name: James D Bloom
