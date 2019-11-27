@@ -3,6 +3,7 @@ package org.mockserver.proxy;
 import com.google.common.collect.ImmutableSet;
 import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockserver.log.TimeService;
@@ -60,6 +61,11 @@ public class ProxyServletTest {
 
     private MockHttpServletResponse response;
 
+    @BeforeClass
+    public static void fixTime() {
+        TimeService.fixedTime = true;
+    }
+
     @Before
     public void setupFixture() {
         mockActionHandler = mock(ActionHandler.class);
@@ -85,7 +91,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldRetrieveRequests() throws InterruptedException {
+    public void shouldRetrieveRequests() {
         // given
         httpStateHandler.log(
             new LogEntry()
@@ -172,7 +178,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldStop() throws InterruptedException {
+    public void shouldStop() {
         // given
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
             "PUT",
@@ -188,7 +194,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldRetrieveRecordedExpectations() throws InterruptedException {
+    public void shouldRetrieveRecordedExpectations() {
         // given
         httpStateHandler.log(
             new LogEntry()
@@ -212,7 +218,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldRetrieveLogMessages() throws InterruptedException {
+    public void shouldRetrieveLogMessages() {
         // given
         httpStateHandler.log(
             new LogEntry()
