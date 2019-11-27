@@ -9,6 +9,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.scheduler.Scheduler;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public class ConcurrencyBasicResponseMockingIntegrationTest {
     private ClientAndServer clientAndServer;
     private NettyHttpClient httpClient;
 
-    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
+    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(ConcurrencyResponseWebSocketMockingIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
     @Before
     public void setUp() {

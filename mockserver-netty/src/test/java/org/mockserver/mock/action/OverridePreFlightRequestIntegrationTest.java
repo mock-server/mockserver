@@ -10,6 +10,7 @@ import org.mockserver.client.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.scheduler.Scheduler;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.Future;
@@ -32,7 +33,7 @@ public class OverridePreFlightRequestIntegrationTest {
 
     private static ClientAndServer clientAndServer;
 
-    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup();
+    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(OverridePreFlightRequestIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
     private static NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
 

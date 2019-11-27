@@ -45,7 +45,7 @@ MockServerClient implements Stoppable {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClient.class);
     private static final Map<Integer, MockServerEventBus> EVENT_BUS_MAP = new ConcurrentHashMap<>();
-    private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+    private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
     private final String host;
     private final String contextPath;
     private final Class<MockServerClient> clientClass;
@@ -647,6 +647,7 @@ MockServerClient implements Stoppable {
      *
      * @param expectations one or more expectations
      */
+    @SuppressWarnings("WeakerAccess")
     public void sendExpectation(Expectation... expectations) {
         for (Expectation expectation : expectations) {
             HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", StandardCharsets.UTF_8));

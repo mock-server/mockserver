@@ -11,6 +11,7 @@ import io.netty.handler.codec.http.*;
 import org.mockserver.examples.proxy.json.ObjectMapperFactory;
 import org.mockserver.examples.proxy.model.Book;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.tls.NettySslContextFactory;
 
 import javax.annotation.PostConstruct;
@@ -47,7 +48,7 @@ public class BookServer {
         if (serverBootstrap == null) {
             try {
                 serverBootstrap = new ServerBootstrap()
-                    .group(new NioEventLoopGroup(1))
+                    .group(new NioEventLoopGroup(1, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop")))
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override

@@ -49,7 +49,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
     private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder(new MockServerLogger());
     // mockserver
     private ActionHandler actionHandler;
-    private EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
+    private EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
 
     @SuppressWarnings("WeakerAccess")
     public MockServerServlet() {

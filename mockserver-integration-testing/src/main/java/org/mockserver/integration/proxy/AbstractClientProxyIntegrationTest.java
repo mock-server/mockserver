@@ -26,6 +26,7 @@ import org.mockserver.client.NettyHttpClient;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.streams.IOStreamUtils;
 
@@ -65,7 +66,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
-        clientEventLoopGroup = new NioEventLoopGroup();
+        clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(AbstractClientProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
     }
 
     @AfterClass

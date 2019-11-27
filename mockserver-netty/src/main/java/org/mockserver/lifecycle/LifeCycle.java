@@ -35,8 +35,8 @@ import static org.slf4j.event.Level.TRACE;
 public abstract class LifeCycle implements Stoppable {
 
     protected final MockServerLogger mockServerLogger;
-    protected EventLoopGroup bossGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
-    protected EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
+    protected EventLoopGroup bossGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
+    protected EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
     protected HttpStateHandler httpStateHandler;
     protected ServerBootstrap serverServerBootstrap;
     private List<Future<Channel>> serverChannelFutures = new ArrayList<>();

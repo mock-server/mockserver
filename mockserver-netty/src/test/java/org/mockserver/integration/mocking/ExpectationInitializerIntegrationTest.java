@@ -10,6 +10,7 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.mocking.initializer.ExpectationInitializerIntegrationExample;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mockserver.MockServer;
+import org.mockserver.scheduler.Scheduler;
 
 import java.util.concurrent.TimeUnit;
 
@@ -30,7 +31,7 @@ public class ExpectationInitializerIntegrationTest {
 
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
-        clientEventLoopGroup = new NioEventLoopGroup();
+        clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(ExpectationInitializerIntegrationTest.class.getSimpleName() + "-eventLoop"));
         httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
     }
 

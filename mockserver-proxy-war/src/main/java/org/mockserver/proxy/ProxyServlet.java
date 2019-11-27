@@ -49,7 +49,7 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
     private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder;
     // mockserver
     private ActionHandler actionHandler;
-    private EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount());
+    private EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
 
     @SuppressWarnings("WeakerAccess")
     public ProxyServlet() {
