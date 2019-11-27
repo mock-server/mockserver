@@ -1313,6 +1313,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 headersToIgnore
             )
         );
+        MILLISECONDS.sleep(500);
         assertEquals(
             response("some_body_three"),
             makeRequest(
@@ -1322,8 +1323,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 headersToIgnore
             )
         );
-
-        MILLISECONDS.sleep(500);
 
         // then
         Expectation[] recordedExpectations = mockServerClient.retrieveRecordedExpectations(request().withPath(calculatePath("some_path_one")));
