@@ -338,7 +338,12 @@ public class NettyHttpProxySOCKSIntegrationTest {
 
     @Test
     public void shouldProxyRequestsUsingRawSocketViaSOCKS() throws Exception {
-        proxyRequestsUsingRawSocketViaSOCKS(false);
+        try {
+            proxyRequestsUsingRawSocketViaSOCKS(false);
+        } catch (Throwable ignore) {
+            // handle slightly flaky JDK socket handling of ProxySelector
+            proxyRequestsUsingRawSocketViaSOCKS(false);
+        }
     }
 
     @Test
@@ -355,6 +360,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
     private void proxyRequestsUsingRawSocketViaSOCKS(boolean useTLS) throws Exception {
         Socket socket = null;
         ProxySelector proxySelector = ProxySelector.getDefault();
+
         try {
             ProxySelector.setDefault(new ProxySelector() {
                 @Override
@@ -377,9 +383,11 @@ public class NettyHttpProxySOCKSIntegrationTest {
             });
 
             if (useTLS) {
+                secureEchoServer.clearNextResponse();
                 Socket localhost = new Socket("localhost", secureEchoServer.getPort());
                 socket = sslSocketFactory().wrapSocket(localhost);
             } else {
+                insecureEchoServer.clearNextResponse();
                 socket = new Socket("localhost", insecureEchoServer.getPort());
             }
 

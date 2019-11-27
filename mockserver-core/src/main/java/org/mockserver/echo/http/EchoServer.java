@@ -28,13 +28,11 @@ public class EchoServer implements Stoppable {
 
     static final AttributeKey<MockServerEventLog> LOG_FILTER = AttributeKey.valueOf("SERVER_LOG_FILTER");
     static final AttributeKey<NextResponse> NEXT_RESPONSE = AttributeKey.valueOf("NEXT_RESPONSE");
-    static final AttributeKey<OnlyResponse> ONLY_RESPONSE = AttributeKey.valueOf("ONLY_RESPONSE");
     private static final MockServerLogger mockServerLogger = new MockServerLogger(EchoServer.class);
 
     private final Scheduler scheduler = new Scheduler(mockServerLogger);
     private final MockServerEventLog logFilter = new MockServerEventLog(mockServerLogger, scheduler, true);
     private final NextResponse nextResponse = new NextResponse();
-    private final OnlyResponse onlyResponse = new OnlyResponse();
     private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
     private final CompletableFuture<Integer> boundPort = new CompletableFuture<>();
     private final List<String> registeredClients;
@@ -61,7 +59,6 @@ public class EchoServer implements Stoppable {
                 .childHandler(new EchoServerInitializer(mockServerLogger, secure, error, registeredClients, websocketChannels, textWebSocketFrames))
                 .childAttr(LOG_FILTER, logFilter)
                 .childAttr(NEXT_RESPONSE, nextResponse)
-                .childAttr(ONLY_RESPONSE, onlyResponse)
                 .bind(0)
                 .addListener((ChannelFutureListener) future -> {
                     if (future.isSuccess()) {
@@ -112,16 +109,14 @@ public class EchoServer implements Stoppable {
         return logFilter;
     }
 
-    public EchoServer withNextResponse(HttpResponse... httpResponses) {
+    public void withNextResponse(HttpResponse... httpResponses) {
         // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
         nextResponse.httpResponse.addAll(Arrays.asList(httpResponses));
-        return this;
     }
 
-    public EchoServer withOnlyResponse(HttpResponse httpResponse) {
+    public void clearNextResponse() {
         // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
-        onlyResponse.httpResponse = httpResponse;
-        return this;
+        nextResponse.httpResponse.clear();
     }
 
     public List<String> getRegisteredClients() {
@@ -143,11 +138,7 @@ public class EchoServer implements Stoppable {
         RANDOM_BYTES_RESPONSE
     }
 
-    public class NextResponse {
+    public static class NextResponse {
         public final Queue<HttpResponse> httpResponse = new LinkedList<HttpResponse>();
-    }
-
-    public class OnlyResponse {
-        public HttpResponse httpResponse;
     }
 }

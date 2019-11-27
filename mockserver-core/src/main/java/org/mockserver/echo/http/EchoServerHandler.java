@@ -29,14 +29,11 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private final MockServerLogger mockServerLogger;
     private final MockServerEventLog mockServerEventLog;
     private final EchoServer.NextResponse nextResponse;
-    private final EchoServer.OnlyResponse onlyResponse;
-
-    EchoServerHandler(EchoServer.Error error, MockServerLogger mockServerLogger, MockServerEventLog mockServerEventLog, EchoServer.NextResponse nextResponse, EchoServer.OnlyResponse onlyResponse) {
+    EchoServerHandler(EchoServer.Error error, MockServerLogger mockServerLogger, MockServerEventLog mockServerEventLog, EchoServer.NextResponse nextResponse) {
         this.error = error;
         this.mockServerLogger = mockServerLogger;
         this.mockServerEventLog = mockServerEventLog;
         this.nextResponse = nextResponse;
-        this.onlyResponse = onlyResponse;
     }
 
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest request) {
@@ -50,11 +47,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 .setArguments(request)
         );
 
-        if (onlyResponse.httpResponse != null) {
-            // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
-            DefaultFullHttpResponse httpResponse = new MockServerResponseEncoder(mockServerLogger).encode(onlyResponse.httpResponse);
-            ctx.writeAndFlush(httpResponse);
-        } else if (!nextResponse.httpResponse.isEmpty()) {
+        if (!nextResponse.httpResponse.isEmpty()) {
             // WARNING: this logic is only for unit tests that run in series and is NOT thread safe!!!
             DefaultFullHttpResponse httpResponse = new MockServerResponseEncoder(mockServerLogger).encode(nextResponse.httpResponse.remove());
             ctx.writeAndFlush(httpResponse);

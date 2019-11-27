@@ -76,8 +76,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
             error,
             mockServerLogger,
             channel.attr(LOG_FILTER).get(),
-            channel.attr(NEXT_RESPONSE).get(),
-            channel.attr(ONLY_RESPONSE).get()
+            channel.attr(NEXT_RESPONSE).get()
         ));
     }
 }
