@@ -10,45 +10,118 @@ sitemap:
   lastmod: 2019-11-10T08:00:00+01:00
 ---
 
-<p>MockServer is available as Helm chart so it can be easily installed in Kubernetes.</p>
+<h2>Helm Install</h2>
 
-<p>To install the chart with:</p>
+<p>To run MockServer in Kubernetes the easiest way is to use the existing <a href="http://www.mock-server.com/mockserver-5.7.2.tgz">MockServer helm chart</a>.</p>
 
-<ul>
-  <li><strong>release name:</strong> mockserver</li>
-  <li><strong>namespace:</strong> mockserver</li>
-  <li><strong>configuration:</strong> values (see values.yaml for values definitions)</li>
-</ul>
-
-<p>Remotely using www.mock-server.com as a chart repo:</p>
+<p>This is available by using <strong>www.mock-server.com</strong> as a chart repo, with the following command:</p>
 
 <pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.7.2.tgz</code></pre>
 
-<p>Or if you have helm chart source folder (i.e. you have the repository cloned):</p>
+<p><strong>OR</strong></p>
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --values helm/mockserver/values.yaml --namespace mockserver mockserver helm/mockserver</code></pre>
+<p>If you have helm chart source folder (i.e. you have the repository cloned):</p>
 
-<p>To wait until the deployment is complete run:</p>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver mockserver helm/mockserver</code></pre>
 
-<pre class="prettyprint code"><code class="code">kubectl rollout status deployments mockserver -n mockserver</code></pre>
-
-<p>To check the status of the deployment without waiting, run the following command and confirm the mockserver has the Running status:</p>
-
-<pre class="prettyprint code"><code class="code">kubectl get po -l release=mockserver -n mockserver</code></pre>
+<p>The two commands above will install MockServer into a <strong>namespace</strong> called <span class="keyword">mockserver</span> with default configuration (as per the embedded <a href="https://github.com/mock-server/mockserver/blob/master/helm/mockserver/values.yaml">values.yaml</a>).</p>
+<p>MockServer will then be available on domain name <span class="keyword">mockserver.mockserver.svc.cluster.local</span>, as long as the namespace you are calling from isn't prevented (by network policy) to call the <span class="keyword">mockserver</span> namespace.</p>
 
 <p>To view the logs:</p>
 
-<pre class="prettyprint code"><code class="code">kubectl logs $(kubectl get po -l release=mockserver -n mockserver | awk '{if(NR==2)print $1}') -n mockserver</code></pre>
+<pre class="prettyprint code"><code class="code">kubectl -n mockserver logs --tail=100 -l app=mockserver,release=mockserver</code></pre>
 
-<p>MockServer will know be deployed a DNS inside kubernetes cluster, of <span class="keyword">mockserver.&lt;namespace&gt;.svc.cluster.local</span>, i.e. <span class="keyword">mockserver.mockserver.svc.cluster.local</span></p>
+<p>To wait until the deployment is complete run:</p>
 
-<p>To retrieve MockServer address outside kubernetes cluster:</p>
+<pre class="prettyprint code"><code class="code">kubectl -n mockserver rollout status deployments mockserver</code></pre>
 
-<pre class="prettyprint code"><code class="code">export NODE_PORT=$(kubectl get --namespace mockserver -o jsonpath="{.spec.ports[0].nodePort}" services mockserver)
-export NODE_IP=$(kubectl get nodes --namespace mockserver -o jsonpath="{.items[0].status.addresses[0].address}")
+<p>To check the status of the deployment without waiting, run the following command and confirm the mockserver has the Running status:</p>
+
+<pre class="prettyprint code"><code class="code">kubectl -n mockserver get po -l release=mockserver</code></pre>
+
+<h2>Basic MockServer Configuration</h2>
+
+<p>Modify the arguments used to start the docker container by setting values explicitly using <span class="keyword">--set</span>, as follows:</p>
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.logLevel=INFO mockserver http://www.mock-server.com/mockserver-5.7.2.tgz</code></pre>
+
+<p>The following values are supported:</p>
+<ul>
+  <li><span class="keyword">app.serverPort</span> (default: 1080)</li>
+  <li><span class="keyword">app.logLevel</span> (default: INFO)</li>
+  <li><span class="keyword">app.proxyRemoteHost</span> (no default)</li>
+  <li><span class="keyword">app.proxyRemotePort</span> (no default)</li>
+  <li><span class="keyword">app.jvmOptions</span> (no default)</li>
+  <li><span class="keyword">image.snapshot</span> (default: false) - set <span class="keyword">true</span> to use latest snapshot version</li>
+</ul>
+
+<p>For example configure a proxyRemoteHost and proxyRemotePort, as follows:</p>
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.proxyRemoteHost=www.mock-server.com --set app.proxyRemotePort=443 mockserver http://www.mock-server.com/mockserver-5.7.2.tgz</code></pre>
+
+<p>Double check the correct arguments have been passed to the pod, as follows:</p>
+
+<pre class="prettyprint code"><code class="code">kubectl -n mockserver logs -l app=mockserver,release=mockserver</code></pre>
+
+<h2>Detailed MockServer Configuration</h2>
+
+<p>The MockServer helm chart also supports providing detailed configuration such as:</p>
+<ul>
+  <li>a <strong>properties file</strong> to configure all MockServer properties, or</li>
+  <li>a <strong>json expectation initialization file</strong> to initialize expectations at start-up.</li>
+</ul>
+
+<p>This is done by deploying a <strong>configmap</strong> to kubernetes with files embedded in the yaml as shown in <a href="https://github.com/mock-server/mockserver/tree/master/helm/mockserver-config">mockserver-config</a> helm chart.</p>
+<p>The MockServer helm chart to configure to control how to mount the files from the <strong>configmap</strong>, as follows:</p>
+<ul>
+  <li><span class="keyword">app.mountConfigMap</span> (default: false) - enables the mounting of the configmap into the MockServer container file system</li>
+  <li><span class="keyword">app.mountedConfigMapName</span> (default: mockserver-config) - name of the configmap (in the same namespace) to mount</li>
+  <li><span class="keyword">app.propertiesFileName</span> (default: mockserver.properties) - name of the property file in the configmap</li>
+  <li><span class="keyword">app.initializationJsonFileName</span> (default: initializerJson.json) - name of the JSON initialization file in the configmap</li>
+</ul>
+
+For example:
+
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountConfigMap=true --set app.mountedConfigMapName=mockserver-config --set app.propertiesFileNamem=mockserver.properties --set app.initializationJsonFileName=initializerJson.json mockserver helm/mockserver</code></pre>
+
+<h2>MockServer URL</h2>
+
+<h3>Local Kubernetes Cluster (i.e. <a href="https://github.com/kubernetes/minikube">minikube</a>, <a href="https://microk8s.io">microk8s</a>)</h3>
+
+<p>If the <span class="keyword">service</span> type hasn't been modified the following will provide the MockServer URL from outside the cluster.</p>
+
+<pre class="prettyprint code"><code class="code">export NODE_PORT=$(kubectl get -n mockserver -o jsonpath="{.spec.ports[0].nodePort}" services mockserver)
+export NODE_IP=$(kubectl get nodes -n mockserver -o jsonpath="{.items[0].status.addresses[0].address}")
 export MOCKSERVER_HOST=$NODE_IP:$NODE_PORT
 echo http://$MOCKSERVER_HOST</code></pre>
 
-<p>To remove the MockServer deployment from Kubernetes:</p>
+<p>To test the installation the following <span class="keyword">curl</span> command should return the ports MockServer is bound to:</p>
+
+<pre class="prettyprint code"><code class="code">curl -v -X PUT http://$MOCKSERVER_HOST/status</code></pre>
+
+<h3>Docker for Desktop</h3>
+
+<p><a href="https://www.docker.com/products/docker-desktop">Docker for Desktop</a> creates automatic port bindings for LoadBalancer or NodePort services.</p>
+<p>In addition on MacOS Docker for Desktop runs inside <a href="https://github.com/moby/hyperkit">Hyperkit</a> so the node IP address is not reachable, therefore the only way to call NodePort or LoadBalancer services is via the port bindings added by Docker for Desktop.</p>
+
+<p>If the <span class="keyword">service</span> type hasn't been modified the following will provide the MockServer URL from outside the cluster.</p>
+
+<pre class="prettyprint code"><code class="code">export NODE_PORT=$(kubectl get -n mockserver -o jsonpath="{.spec.ports[0].nodePort}" services mockserver)
+export MOCKSERVER_HOST=127.0.0.1:$NODE_PORT
+echo http://$MOCKSERVER_HOST</code></pre>
+
+<h3>Outside Remote Kubernetes Cluster (i.e. Azure AKS, AWS EKS, etc)</h3>
+
+<pre class="prettyprint code"><code class="code">kubectl -n mockserver port-forward svc/mockserver 1080:1080 &
+export MOCKSERVER_HOST=127.0.0.1:1080
+echo http://$MOCKSERVER_HOST</code></pre>
+
+<h3>Inside Kubernetes Cluster</h3>
+
+<p>If a <a href="https://kubernetes.io/docs/concepts/services-networking/service/#dns">DNS server</a> has been installed in the Kubernetes cluster the following DNS name should be available <span class="keyword">mockserver.&lt;namespace&gt;.svc.cluster.local</span>, i.e. <span class="keyword">mockserver.mockserver.svc.cluster.local</span></p>
+
+<h2>Helm Delete</h2>
+
+<p>To completely remove the chart:</p>
 
 <pre class="prettyprint code"><code class="code">helm delete mockserver --purge</code></pre>
