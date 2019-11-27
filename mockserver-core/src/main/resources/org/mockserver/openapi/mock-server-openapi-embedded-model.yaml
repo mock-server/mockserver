@@ -14,7 +14,7 @@ info:
 
     Both MockServer and the MockServer Proxy record all received requests so that it is possible to verify exactly what requests have been sent by the system under test.
   license:
-    url: 'https://github.com/jamesdbloom/mockserver/blob/master/LICENSE.md'
+    url: 'https://github.com/mockserver/mockserver/blob/master/LICENSE.md'
     name: Apache 2.0
 tags:
   - name: expectation

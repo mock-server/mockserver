@@ -35,9 +35,9 @@ Release Steps
    1. ./scripts/local_deploy_snapshot.sh
 1. update docker image
    1. update Dockerfile
-   1. docker build -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
+   1. docker build -t mockserver/mockserver:mockserver-x.x.x ./docker
    1. docker login
-   1. docker push jamesdbloom/mockserver:mockserver-x.x.x
+   1. docker push mockserver/mockserver:mockserver-x.x.x
 1. update helm chart
    1. find and replace previous MockServer release version to new release
    1. cd helm

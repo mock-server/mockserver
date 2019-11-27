@@ -12,13 +12,13 @@ to trigger build using REST API:
 build step (as docker command):
 
     # run as interactive container (for debugging)
-    docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME:/build -i -t jamesdbloom/mockserver:build /bin/bash
+    docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME:/build -i -t mockserver/mockserver:build /bin/bash
 
     # check files in build folder (for debugging)
-    docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:build ls -lrt
+    docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr mockserver/mockserver:build ls -lrt
 
     # actually run the build
-    docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr jamesdbloom/mockserver:build /build/mockserver/scripts/local_quick_build.sh
+    docker run -v /var/lib/buildkite-agent/builds/$BUILDKITE_AGENT_NAME/mockserver:/build -w /build/mockserver -a stdout -a stderr mockserver/mockserver:build /build/mockserver/scripts/local_quick_build.sh
 
 determine killed reason:
 
