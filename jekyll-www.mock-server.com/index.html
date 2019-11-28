@@ -9,7 +9,7 @@ layout: default
 	<h2 itemprop="headline">Easy mocking of any system you integrate with via HTTP or HTTPS</h2>
 </div>
 
-<a href="https://github.com/jamesdbloom/mockserver" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" width="149" height="149" src="images/forkme_right_red.png" alt="Fork us on GitHub"></a>
+<a href="https://github.com/mock-server/mockserver" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" width="149" height="149" src="images/forkme_right_red.png" alt="Fork us on GitHub"></a>
 
 
 <a id="what-is-mockserver" class="anchor" href="#what-is-mockserver">&nbsp;</a>
@@ -107,7 +107,7 @@ layout: default
 	<li><strong>SSL & Certificates</strong>
 		<ul>
 			<li>all SSL traffic is handled transparently by auto-generating an appropriate SSL certificate</li>
-			<li>generated certificates use a single <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer root CA certificate</a> enabling the root certificate to be
+			<li>generated certificates use a single <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer root CA certificate</a> enabling the root certificate to be
 				<a href="/proxy/configuring_sut.html">easily imported</a></li>
 		</ul>
 	</li>
@@ -190,7 +190,7 @@ layout: default
 	</li>
 	<li>debug HTTP interactions
 		<ul>
-			<li>log all outbound requests so it is possible to visualise all interactions (for example from a browser) to external services. This is particularly important as network analysis tools in browsers such as Chrome do not accurately show all network interactions, such as, favicon.ico requests.  In addition many proxies do not handle encrypted HTTPS traffic, however, MockServer Proxy auto-generates certificates using a single <a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer root CA certificate</a> enabling the root certificate to be <a href="/proxy/configuring_sut.html">easily imported</a></li>
+			<li>log all outbound requests so it is possible to visualise all interactions (for example from a browser) to external services. This is particularly important as network analysis tools in browsers such as Chrome do not accurately show all network interactions, such as, favicon.ico requests.  In addition many proxies do not handle encrypted HTTPS traffic, however, MockServer Proxy auto-generates certificates using a single <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer root CA certificate</a> enabling the root certificate to be <a href="/proxy/configuring_sut.html">easily imported</a></li>
 		</ul>
 	</li>
 	<li>record & replay

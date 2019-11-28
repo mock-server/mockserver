@@ -20,7 +20,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <p>To pull the MockServer Docker image use the pull command, as follows:</p>
 
-<pre><code class="code">docker pull jamesdbloom/mockserver</code></pre>
+<pre><code class="code">docker pull mockserver/mockserver</code></pre>
 
 <p>This is not strictly necessary as the image will be automatically pulled if it does not exist when the run command is used. However, using the pull command will ensure the latest version of the image is downloaded.</p>
 
@@ -30,7 +30,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <p>Then to run MockServer as a Docker container run the following command:</p>
 
-<pre><code class="code">docker run -d --rm -p jamesdbloom/mockserver</code></pre>
+<pre><code class="code">docker run -d --rm -p mockserver/mockserver</code></pre>
 
 <p>The <strong>-P</strong> switch in this command tells Docker to map all ports exported by the MockServer container to dynamically allocated ports on the host machine.</p><p>To view information about the MockServer container, including which dynamic ports have been used run the following command:</p>
 
@@ -48,11 +48,11 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <p>To specify which ports (on the host machine) should be mapped to the MockServer docker container use the <strong>-p</strong> <span class="command_line_argument_placeholder">&lt;host port&gt;</span><strong>:</strong><span class="command_line_argument_placeholder">&lt;container port&gt;</span> option, as follows:</p>
 
-<pre><code class="code">docker run -d --rm -p <span class="command_line_argument_placeholder">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver</code></pre>
+<pre><code class="code">docker run -d --rm -p <span class="command_line_argument_placeholder">&lt;serverPort&gt;</span>:<span class="numeric_literal">1080</span> mockserver/mockserver</code></pre>
 
 <p>For example:</p>
 
-<pre><code class="code">docker run -d --rm -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver</code></pre>
+<pre><code class="code">docker run -d --rm -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> mockserver/mockserver</code></pre>
 
 <h3>Modifying Default Command</h3>
 
@@ -62,11 +62,11 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <p>It is possible to pass alternative arguments to the entrypoint for the container, by appending arguments to the end of the run command, as follows:</p>
 
-<pre><code class="code">docker run -d --rm -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver <em>-serverPort <span class="numeric_literal">1080</span> -logLevel INFO</em></code></pre>
+<pre><code class="code">docker run -d --rm -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> mockserver/mockserver <em>-serverPort <span class="numeric_literal">1080</span> -logLevel INFO</em></code></pre>
 
 <p>For following command can be used to view the available command line switches:</p>
 
-<pre><code class="code"><strong>docker run jamesdbloom/mockserver ""</strong>
+<pre><code class="code"><strong>docker run mockserver/mockserver ""</strong>
 
    Error: At least 'serverPort' must be provided
 
@@ -107,13 +107,13 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <p>Then the appropriate options can be specified, for example, to setup a port forwarding proxy (from <strong>0.0.0.0:1080</strong> to <strong>www.mock-server.com:80</strong>) using the following command:</p>
 
-<pre><code class="code">docker run -d --rm -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> jamesdbloom/mockserver -serverPort <span class="numeric_literal">1080</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
+<pre><code class="code">docker run -d --rm -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> mockserver/mockserver -serverPort <span class="numeric_literal">1080</span> -proxyRemotePort <span class="numeric_literal">80</span> -proxyRemoteHost www.mock-server.com</code></pre>
 
 <h3>Interactive Shell</h3>
 
 <p>It is possible to launch the container with an interactive bash shell by modifying the entrypoint as follows:</p>
 
-<pre><code class="code">docker run -it -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> --entrypoint <em>"/bin/bash"</em> jamesdbloom/mockserver</code></pre>
+<pre><code class="code">docker run -it -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> --entrypoint <em>"/bin/bash"</em> mockserver/mockserver</code></pre>
 
 <p><strong>Note:</strong> in this example above the <strong>-d</strong> flag (for daemon) has been replaced with <strong>-i</strong> (to stdin open) and <strong>-t</strong> (for pseudo-tty) to ensure docker creates the container in the foreground with an attached stdin, see the <a href="https://docs.docker.com/reference/run/">docker documentation</a> for more details.</p>
 

@@ -49,7 +49,7 @@ function determineTrustStoreOrKeyStoreLocation {
 
 function downloadCertificate {
     # download certificate
-    runCommand "wget https://raw.githubusercontent.com/jamesdbloom/mockserver/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem"
+    runCommand "wget https://raw.githubusercontent.com/mock-server/mockserver/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem"
 }
 
 function deleteDownloadedCertificate {
