@@ -171,4 +171,13 @@ public class ContentTypeMapperTest {
         assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
     }
 
+    @Test
+    public void shouldDetermineCharsetWithAdditonalParameters() {
+        // when
+        Charset charset = new ContentTypeMapper(mockServerLogger).getCharsetFromContentTypeHeader("application/soap+xml;charset=UTF-8;action=\"somerandomstuff\"");
+
+        // then
+        assertThat(charset, is(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET));
+    }
+
 }
