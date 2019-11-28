@@ -29,7 +29,7 @@ sitemap:
     <li>Clear failure messages when verifying requests (that support "show difference" in IntelliJ)</li>
 </ul>
 
-<a name="retrieving_recorded_requests" class="anchor" href="#retrieving_recorded_requests">&nbsp;</a>
+<a id="retrieving_recorded_requests" class="anchor" href="#retrieving_recorded_requests">&nbsp;</a>
 
 <h2>Retrieving Recorded Requests</h2>
 
@@ -158,7 +158,7 @@ mockServerClient("localhost", 1080).retrieveRecordedRequests({
     </div>
 </div>
 
-<a name="retrieving_recorded_request_responses" class="anchor" href="#retrieving_recorded_requests">&nbsp;</a>
+<a id="retrieving_recorded_request_responses" class="anchor" href="#retrieving_recorded_requests">&nbsp;</a>
 
 <h3>Retrieve Recorded Requests &amp; Responses</h3>
 
@@ -234,7 +234,7 @@ mockServerClient("localhost", 1080).retrieveRecordedRequestsAndResponses({
     </div>
 </div>
 
-<a name="retrieving_active_expectations" class="anchor" href="#retrieving_active_expectations">&nbsp;</a>
+<a id="retrieving_active_expectations" class="anchor" href="#retrieving_active_expectations">&nbsp;</a>
 
 <h2>Retrieving Active Expectations</h2>
 
@@ -361,7 +361,7 @@ mockServerClient("localhost", 1080).retrieveActiveExpectations({
     </div>
 </div>
 
-<a name="retrieving_recorded_expectations" class="anchor" href="#retrieving_recorded_expectations">&nbsp;</a>
+<a id="retrieving_recorded_expectations" class="anchor" href="#retrieving_recorded_expectations">&nbsp;</a>
 
 <h2>Retrieving Recorded Expectations</h2>
 
@@ -490,7 +490,7 @@ mockServerClient("localhost", 1080).retrieveRecordedExpectations({
     </div>
 </div>
 
-<a name="retrieving_recorded_logs" class="anchor" href="#retrieving_recorded_logs">&nbsp;</a>
+<a id="retrieving_recorded_logs" class="anchor" href="#retrieving_recorded_logs">&nbsp;</a>
 
 <h2>Retrieving Recorded Logs</h2>
 
@@ -606,7 +606,7 @@ mockServerClient("localhost", 1080)
     </div>
 </div>
 
-<a name="logging-levels" class="anchor" href="#logging-levels">&nbsp;</a>
+<a id="logging-levels" class="anchor" href="#logging-levels">&nbsp;</a>
 
 <h2>Logging</h2>
 
@@ -622,13 +622,13 @@ mockServerClient("localhost", 1080)
 
 <p>The <strong>TRACE</strong> level logging results in a lot of verbose logging but can be very helpful to debug why a complex matcher (such as the JSON Schema matcher) is not matching.</p>
 
-<a name="logging_with_api" class="anchor" href="#logging_with_api">&nbsp;</a>
+<a id="logging_with_api" class="anchor" href="#logging_with_api">&nbsp;</a>
 
 <h3>Logging with JUnit @Rule or API</h3>
 
 <p>MockServer uses SL4J for logging so if MockSever is being launched using the <a href="/mock_server/running_mock_server.html#junit_rule"><strong>JUnit @Rule</strong></a> or <a href="/mock_server/running_mock_server.html#client_api"><strong>programmatically via an API</strong></a> configure the logging output by configuring <a href="http://www.slf4j.org/faq.html">SLF4J</a></p>
 
-<a name="logging_with_command_line" class="anchor" href="#logging_with_command_line">&nbsp;</a>
+<a id="logging_with_command_line" class="anchor" href="#logging_with_command_line">&nbsp;</a>
 
 <h3>Logging with Command Line</h3>
 
@@ -640,7 +640,7 @@ mockServerClient("localhost", 1080)
 
 <pre><code class="code">java -Dmockserver.logLevel=INFO -jar ~/Downloads/mockserver-netty-5.7.2-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span></code></pre>
 
-<a name="configure_java_logger" class="anchor" href="#configure_java_logger">&nbsp;</a>
+<a id="configure_java_logger" class="anchor" href="#configure_java_logger">&nbsp;</a>
 
 <h3>Configuring Java Logger</h3>
 
@@ -651,7 +651,7 @@ mockServerClient("localhost", 1080)
 <p>The default logging configuration can be overridden as follows:</p>
 <pre><code class="code">java -Djava.util.logging.config.file=/path/to/example_logging_configuration.properties -jar ~/Downloads/mockserver-netty-5.7.2-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel DEBUG</code></pre>
 
-<a name="logging_with_maven_plugin" class="anchor" href="#logging_with_maven_plugin">&nbsp;</a>
+<a id="logging_with_maven_plugin" class="anchor" href="#logging_with_maven_plugin">&nbsp;</a>
 
 <h3>Logging with Maven Plugin</h3>
 
@@ -683,7 +683,7 @@ mockServerClient("localhost", 1080)
      &lt;/<span class="element">executions</span>&gt;
  &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
-<a name="logging-with-node" class="anchor" href="#logging-with-node">&nbsp;</a>
+<a id="logging-with-node" class="anchor" href="#logging-with-node">&nbsp;</a>
 
 <h3>Logging with npm module</h3>
 
@@ -731,7 +731,7 @@ mockserver
 
 grunt.loadNpmTasks('mockserver-node');</code></pre>
 
-<a name="disabling-logging" class="anchor" href="#disabling-logging">&nbsp;</a>
+<a id="disabling-logging" class="anchor" href="#disabling-logging">&nbsp;</a>
 
 <h3>Disabling Logging</h3>
 

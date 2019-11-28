@@ -8,13 +8,13 @@ The typical sequence for running the MockServer docker image is as follows:
 
 In addition it is possible to <a href="#docker_container_customization">customise how the container is run</a>.
 
-<a name="install_docker" class="anchor" href="#install_docker">&nbsp;</a>
+<a id="install_docker" class="anchor" href="#install_docker">&nbsp;</a>
 
 <h3>Install Docker</h3>
 
 <p>To install Docker see the <a href="https://docs.docker.com/installation/">installation instructions</a>.</p>
 
-<a name="pull_docker_image" class="anchor" href="#pull_docker_image">&nbsp;</a>
+<a id="pull_docker_image" class="anchor" href="#pull_docker_image">&nbsp;</a>
 
 <h3>Pull MockServer Image</h3>
 
@@ -24,7 +24,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <p>This is not strictly necessary as the image will be automatically pulled if it does not exist when the run command is used. However, using the pull command will ensure the latest version of the image is downloaded.</p>
 
-<a name="run_docker_container" class="anchor" href="#run_docker_container">&nbsp;</a>
+<a id="run_docker_container" class="anchor" href="#run_docker_container">&nbsp;</a>
 
 <h3>Run MockServer Container</h3>
 
@@ -36,7 +36,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <pre><code class="code">docker ps</code></pre>
 
-<a name="docker_container_customization" class="anchor" href="#docker_container_customization">&nbsp;</a>
+<a id="docker_container_customization" class="anchor" href="#docker_container_customization">&nbsp;</a>
 
 <h3>Configure Port Mapping</h3>
 
@@ -111,8 +111,55 @@ In addition it is possible to <a href="#docker_container_customization">customis
 
 <h3>Interactive Shell</h3>
 
-<p>It is possible to launch the container with an interactive bash shell by modiying the entrypoint as follows:</p>
+<p>It is possible to launch the container with an interactive bash shell by modifying the entrypoint as follows:</p>
 
 <pre><code class="code">docker run -it -p <span class="numeric_literal">1080</span>:<span class="numeric_literal">1080</span> --entrypoint <em>"/bin/bash"</em> jamesdbloom/mockserver</code></pre>
 
 <p><strong>Note:</strong> in this example above the <strong>-d</strong> flag (for daemon) has been replaced with <strong>-i</strong> (to stdin open) and <strong>-t</strong> (for pseudo-tty) to ensure docker creates the container in the foreground with an attached stdin, see the <a href="https://docs.docker.com/reference/run/">docker documentation</a> for more details.</p>
+
+<a id="docker_compose" class="anchor" href="#docker_compose">&nbsp;</a>
+
+<h2>Docker Compose</h2>
+
+<p>MockServer can be run using <a href="https://docs.docker.com/compose/">docker compose</a> by adding the container as a service.</p>
+
+<p>The MockServer container uses an <span class="keyword">entrypoint</span>, so it is possible to configure the MockServer by specifying the command line flags using by specifying the <span class="keyword">command</span>, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">version: "2.4"
+services:
+  mockServer:
+    image: mockserver/mockserver:mockserver-5.7.2
+    command: -logLevel DEBUG -serverPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -jvmOptions "-Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'"
+    ports:
+      - 1080:1090</code></pre>
+
+<p>It is also possible to configure the MockServer by setting <span class="keyword">environment</span> variables, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">version: "2.4"
+services:
+  mockServer:
+    image: mockserver/mockserver:mockserver-5.7.2
+    ports:
+      - 1080:1090
+    environment:
+      LOG_LEVEL: "DEBUG"
+      SERVER_PORT: 1090
+      PROXY_REMOTE_PORT: 80
+      PROXY_REMOTE_HOST: www.mock-server.com
+      JVM_OPTIONS: -Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'</code></pre>
+
+<p>It is also possible to configure the MockServer by mounting a volume containing a properties file or JSON expectation initializer, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">version: "2.4"
+services:
+  mockServer:
+    image: mockserver/mockserver:mockserver-5.7.2
+    ports:
+      - 1080:1080
+    environment:
+      MOCKSERVER_PROPERTY_FILE: /config/mockserver.properties
+      MOCKSERVER_INITIALIZATION_JSON_PATH: /config/initializerJson.json
+    volumes:
+      - type: bind
+        source: .
+        target: /config</code></pre>

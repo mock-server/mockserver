@@ -1,4 +1,4 @@
-<a name="maven_plugin" class="anchor" href="#maven_plugin">&nbsp;</a>
+<a id="maven_plugin" class="anchor" href="#maven_plugin">&nbsp;</a>
 
 <h2>Maven Plugin</h2>
 
@@ -152,7 +152,7 @@
 	</li>
 </ul>
 
-<a name="client_api" class="anchor" href="#client_api">&nbsp;</a>
+<a id="client_api" class="anchor" href="#client_api">&nbsp;</a>
 
 <h2>Client API&nbsp;&nbsp;-&nbsp;&nbsp;starting and stopping</h2>
 
@@ -194,7 +194,7 @@
 <p>The <a href="https://github.com/jamesdbloom/mockserver/tree/master/mockserver-examples">mockserver-example</a> project contains an example test called
 	<a href="https://github.com/jamesdbloom/mockserver/blob/master/mockserver-examples/src/test/java/org/mockserver/examples/proxy/web/controller/BooksPageIntegrationTest.java">BookPageIntegrationTest</a> that demonstrates a fully working example.</p>
 
-<a name="junit_rule" class="anchor" href="#junit_rule">&nbsp;</a>
+<a id="junit_rule" class="anchor" href="#junit_rule">&nbsp;</a>
 
 <h2>Running MockServer via a JUnit @Rule</h2>
 
@@ -257,7 +257,7 @@
  */</span>
 <span class="keyword">public</span> MockServerRule(Object target, <span class="keyword">boolean</span> per TestSuite, Integer... ports);</code></pre>
 
-<a name="running_from_command_line" class="anchor" href="#running_from_command_line">&nbsp;</a>
+<a id="running_from_command_line" class="anchor" href="#running_from_command_line">&nbsp;</a>
 
 <h2>Running From Command Line</h2>
 
@@ -270,7 +270,7 @@
 	<li><a href="#docker_container">using docker</a> i.e. <strong>docker run -d --rm -p jamesdbloom/mockserver</strong></li>
 </ul>
 
-<a name="running_from_command_line_using_homebrew" class="anchor" href="#running_from_command_line_using_homebrew">&nbsp;</a>
+<a id="running_from_command_line_using_homebrew" class="anchor" href="#running_from_command_line_using_homebrew">&nbsp;</a>
 
 <h3>Running From Command Line - Using Homebrew</h3>
 
@@ -328,7 +328,7 @@ i.e. mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080,10
 
 <pre><code class="code">mockserver -logLevel INFO -serverPort <span class="numeric_literal">1080</span></code></pre>
 
-<a name="running_from_command_line_using_java" class="anchor" href="#running_from_command_line_using_java">&nbsp;</a>
+<a id="running_from_command_line_using_java" class="anchor" href="#running_from_command_line_using_java">&nbsp;</a>
 
 <h3>Running From Command Line - Using Java</h3>
 
@@ -383,7 +383,7 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <p>The argument <span class="inline_code">logLevel</span> can be used to set the <a href="/mock_server/debugging_issues.html#logging-levels">log level</a>, as shown above. It is also possible to further customise where loggers send log events by overriding the default <a href="/mock_server/debugging_issues.html#configure_java_logger">logging configuration</a>.</p>
 
-<a name="running_from_command_line_using_maven_plugin" class="anchor" href="#running_from_command_line_using_maven_plugin">&nbsp;</a>
+<a id="running_from_command_line_using_maven_plugin" class="anchor" href="#running_from_command_line_using_maven_plugin">&nbsp;</a>
 
 <h3>Running From Command Line - Using Maven Plugin</h3>
 
@@ -408,7 +408,7 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <p>For more information on the <strong>mockserver-maven-plugin</strong> see the section on <a href="#maven_plugin">MockServer Maven Plugin</a></p>
 
-<a name="deployable_war" class="anchor" href="#deployable_war">&nbsp;</a>
+<a id="deployable_war" class="anchor" href="#deployable_war">&nbsp;</a>
 
 <h2>Web Archive (WAR)</h2>
 
@@ -427,19 +427,19 @@ i.e. java -jar ./mockserver-jetty-jar-with-dependencies.jar -serverPort <span cl
 
 <pre><code class="code"><span class="keyword">public</span> MockServerClient(String host, <span class="keyword">int</span> port, String contextPath)</code></pre>
 
-<a name="mockserver_node" class="anchor" href="#mockserver_node">&nbsp;</a>
+<a id="mockserver_node" class="anchor" href="#mockserver_node">&nbsp;</a>
 
 <h2>NPM Module & MockServer Grunt Plugin</h2>
 
 {% include_subpage ../mock_server/_includes/running_npm_module.html %}
 
-<a name="docker_container" class="anchor" href="#docker_container">&nbsp;</a>
+<a id="docker_container" class="anchor" href="#docker_container">&nbsp;</a>
 
 <h2>Docker Container</h2>
 
 {% include_subpage ../mock_server/_includes/running_docker_container.html %}
 
-<a name="build-and-run-from-source" class="anchor" href="#build-and-run-from-source">&nbsp;</a>
+<a id="build-and-run-from-source" class="anchor" href="#build-and-run-from-source">&nbsp;</a>
 
 <h2>Build & Run From Source</h2>
 

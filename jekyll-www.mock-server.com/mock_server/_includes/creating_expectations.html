@@ -54,7 +54,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 
 <p>MockServer will play expectations in the exact order they are added. For example, if an expectation <span class="annotation">A</span> is added with <span class="inline_code">Times.exactly(3)</span> then expectation <span class="annotation">B</span> is added with <span class="inline_code">Times.exactly(2)</span> with the same request matcher they will be applied in the following order <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">A</span>, <span class="annotation">B</span>, <span class="annotation">B</span>.</p>
 
-<a name="request_matchers" class="anchor" href="#request_matchers">&nbsp;</a>
+<a id="request_matchers" class="anchor" href="#request_matchers">&nbsp;</a>
 
 <h3>Request Matchers</h3>
 
@@ -88,7 +88,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     {% include_subpage _includes/request_matcher_code_examples.html %}
 </div>
 
-<a name="actions" class="anchor" href="#actions">&nbsp;</a>
+<a id="actions" class="anchor" href="#actions">&nbsp;</a>
 
 <h3>Actions</h3>
 
@@ -114,7 +114,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <li><strong><a href="#error_action">error</a></strong> - returns an invalid response as a sequence of bytes or closes the connection</li>
 </ul>
 
-<a name="response_action" class="anchor" href="#response_action">&nbsp;</a>
+<a id="response_action" class="anchor" href="#response_action">&nbsp;</a>
 
 <p>A <strong>response action</strong> can be:</p>
 
@@ -152,7 +152,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     {% include_subpage _includes/response_action_code_examples.html %}
 </div>
 
-<a name="forward_action" class="anchor" href="#forward_action">&nbsp;</a>
+<a id="forward_action" class="anchor" href="#forward_action">&nbsp;</a>
 
 <p>A <strong>forward action</strong> can be:</p>
 
@@ -189,7 +189,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     {% include_subpage _includes/forward_action_code_examples.html %}
 </div>
 
-<a name="error_action" class="anchor" href="#error_action">&nbsp;</a>
+<a id="error_action" class="anchor" href="#error_action">&nbsp;</a>
 
 <p>An <strong>error action</strong> can return an invalid response as a <a href="#button_random_bytes_error">sequence of bytes</a> or <a href="#button_drop_connection_error">drop the connection</a></p>
 

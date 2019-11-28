@@ -1,7 +1,0 @@
- mockServer:
-   image: mockserver/mockserver:mockserver-5.7.2
-   command: -serverPort 1090
-   ports:
-   - 1080:1090
-   environment:
-      LOG_LEVEL: "OFF"
