@@ -87,7 +87,7 @@ public class MediaType extends ObjectWithJsonToString {
         final TreeMap<String, String> map = new TreeMap<>(String::compareToIgnoreCase);
         if (initialValues != null) {
             for (Map.Entry<String, String> entry : initialValues.entrySet()) {
-                map.put(entry.getKey().toLowerCase(), entry.getValue());
+                map.put(entry.getKey().toLowerCase().trim(), entry.getValue().trim());
             }
         }
         return map;
@@ -192,7 +192,7 @@ public class MediaType extends ObjectWithJsonToString {
             if (stringBuilder.length() > 0) {
                 stringBuilder.append(PARAMETER_START).append(' ');
             }
-            stringBuilder.append(Joiner.on(";").withKeyValueSeparator("=").join(parameters));
+            stringBuilder.append(Joiner.on("; ").withKeyValueSeparator("=").join(parameters));
         }
         return stringBuilder.toString();
     }

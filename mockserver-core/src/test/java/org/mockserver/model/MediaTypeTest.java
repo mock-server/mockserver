@@ -157,7 +157,7 @@ public class MediaTypeTest {
     public void shouldSerialiseToStringWithAdditionParameters() {
         assertThat(new MediaType("application", "soap+xml", ImmutableMap.of(
             "action", "somerandomstuff"
-        )).withCharset(StandardCharsets.UTF_8).toString(), is("application/soap+xml; action=somerandomstuff;charset=utf-8"));
+        )).withCharset(StandardCharsets.UTF_8).toString(), is("application/soap+xml; action=somerandomstuff; charset=utf-8"));
     }
 
     @Test
