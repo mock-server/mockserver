@@ -182,7 +182,22 @@ public class ContentTypeMapperTest {
 
         for (String rfcContentTypeExample : rfcContentTypeExamples) {
             // then
-            assertThat(rfcContentTypeExample, HttpUtil.getCharset(rfcContentTypeExample.replaceAll("\"", "")), is(StandardCharsets.UTF_8));
+            assertThat(rfcContentTypeExample, new ContentTypeMapper(mockServerLogger).getCharsetFromContentTypeHeader(rfcContentTypeExample), is(StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test
+    public void shouldParseContentTypeWithAdditionalParameters() {
+        // when
+        String[] rfcContentTypeExamples = new String[]{
+            "application/soap+xml;charset=UTF-8;action=\"somerandomstuff\"",
+            "application/soap+xml;charset=UTF-8;action=somerandomstuff",
+            "application/soap+xml; charset=UTF-8; action=\"somerandomstuff\"",
+            "charset=UTF-8;action=\"somerandomstuff\""
+        };
+
+        for (String rfcContentTypeExample : rfcContentTypeExamples) {
+            // then
             assertThat(rfcContentTypeExample, new ContentTypeMapper(mockServerLogger).getCharsetFromContentTypeHeader(rfcContentTypeExample), is(StandardCharsets.UTF_8));
         }
     }
