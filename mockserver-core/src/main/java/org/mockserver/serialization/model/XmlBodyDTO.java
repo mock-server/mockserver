@@ -1,6 +1,5 @@
 package org.mockserver.serialization.model;
 
-import com.google.common.net.MediaType;
 import org.mockserver.model.Body;
 import org.mockserver.model.XmlBody;
 

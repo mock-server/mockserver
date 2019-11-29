@@ -1,6 +1,5 @@
 package org.mockserver.model;
 
-import com.google.common.net.MediaType;
 import org.junit.Test;
 
 import java.nio.charset.Charset;

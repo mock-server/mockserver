@@ -1,6 +1,5 @@
 package org.mockserver.codec;
 
-import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpRequest;

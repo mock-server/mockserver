@@ -2,7 +2,6 @@ package org.mockserver.mock;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.net.MediaType;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -16,6 +15,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.MediaType;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.HttpRequestSerializer;
@@ -236,7 +236,7 @@ public class HttpStateHandlerTest {
                     "" + NEW_LINE +
                     "\t{ }" + NEW_LINE +
                     NEW_LINE,
-                PLAIN_TEXT_UTF_8).withStatusCode(200))
+                MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
     }
 
@@ -345,7 +345,7 @@ public class HttpStateHandlerTest {
                     "\t  \"path\" : \"request_one\"" + NEW_LINE +
                     "\t}" + NEW_LINE +
                     NEW_LINE,
-                PLAIN_TEXT_UTF_8).withStatusCode(200))
+                MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
     }
 
@@ -431,7 +431,7 @@ public class HttpStateHandlerTest {
                     NEW_LINE +
                     "\t{ }" + NEW_LINE +
                     NEW_LINE,
-                PLAIN_TEXT_UTF_8).withStatusCode(200))
+                MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
         assertThat(
             httpStateHandler
@@ -439,7 +439,7 @@ public class HttpStateHandlerTest {
                     request()
                         .withQueryStringParameter("type", "active_expectations")
                 ),
-            is(response().withBody("[]", JSON_UTF_8).withStatusCode(200))
+            is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200))
         );
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
     }
@@ -526,7 +526,7 @@ public class HttpStateHandlerTest {
                     "" + NEW_LINE +
                     "\t{ }" + NEW_LINE +
                     NEW_LINE,
-                PLAIN_TEXT_UTF_8).withStatusCode(200))
+                MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
         assertThat(
             httpStateHandler
@@ -551,7 +551,7 @@ public class HttpStateHandlerTest {
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
                     "} ]",
-                JSON_UTF_8).withStatusCode(200))
+                MediaType.JSON_UTF_8).withStatusCode(200))
         );
         assertThat(
             httpStateHandler.firstMatchingExpectation(request("request_one")),
@@ -607,7 +607,7 @@ public class HttpStateHandlerTest {
                     "" + NEW_LINE +
                     "\t{ }" + NEW_LINE +
                     NEW_LINE,
-                PLAIN_TEXT_UTF_8).withStatusCode(200))
+                MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
         assertThat(
             httpStateHandler
@@ -632,7 +632,7 @@ public class HttpStateHandlerTest {
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
                     "} ]",
-                JSON_UTF_8).withStatusCode(200))
+                MediaType.JSON_UTF_8).withStatusCode(200))
         );
         assertThat(
             httpStateHandler.firstMatchingExpectation(request("request_one")),
@@ -732,7 +732,7 @@ public class HttpStateHandlerTest {
             is(response().withBody(httpRequestSerializer.serialize(Arrays.asList(
                 request("request_one"),
                 request("request_one")
-            )), JSON_UTF_8).withStatusCode(200))
+            )), MediaType.JSON_UTF_8).withStatusCode(200))
         );
     }
 
@@ -790,7 +790,7 @@ public class HttpStateHandlerTest {
                     .setHttpRequest(request("request_one"))
                     .setMessageFormat("received request:{}")
                     .setArguments(request("request_one"))
-            )), JSON_UTF_8).withStatusCode(200))
+            )), MediaType.JSON_UTF_8).withStatusCode(200))
         );
     }
 
@@ -880,7 +880,7 @@ public class HttpStateHandlerTest {
                 "      \"body\" : \"response_two\"" + NEW_LINE +
                 "    }" + NEW_LINE +
                 "  }" + NEW_LINE +
-                "]", JSON_UTF_8).withStatusCode(200))
+                "]", MediaType.JSON_UTF_8).withStatusCode(200))
         );
     }
 
@@ -992,7 +992,7 @@ public class HttpStateHandlerTest {
                 "      \"   }\"" + NEW_LINE +
                 "    ]" + NEW_LINE +
                 "  }" + NEW_LINE +
-                "]", JSON_UTF_8).withStatusCode(200))
+                "]", MediaType.JSON_UTF_8).withStatusCode(200))
         );
     }
 
@@ -1042,7 +1042,7 @@ public class HttpStateHandlerTest {
             is(response().withBody(httpExpectationSerializer.serialize(Arrays.asList(
                 new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one")),
                 new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_two"))
-            )), JSON_UTF_8).withStatusCode(200))
+            )), MediaType.JSON_UTF_8).withStatusCode(200))
         );
     }
 
@@ -1139,7 +1139,7 @@ public class HttpStateHandlerTest {
             is(response().withBody(httpExpectationSerializer.serialize(Arrays.asList(
                 expectationOne,
                 expectationThree
-            )), JSON_UTF_8).withStatusCode(200))
+            )), MediaType.JSON_UTF_8).withStatusCode(200))
         );
     }
 
@@ -1205,7 +1205,7 @@ public class HttpStateHandlerTest {
                     "" + NEW_LINE +
                     "\t{ }" + NEW_LINE +
                     NEW_LINE,
-                PLAIN_TEXT_UTF_8).withStatusCode(200))
+                MediaType.PLAIN_TEXT_UTF_8).withStatusCode(200))
         );
         assertThat(
             httpStateHandler
@@ -1213,7 +1213,7 @@ public class HttpStateHandlerTest {
                     request()
                         .withQueryStringParameter("type", "active_expectations")
                 ),
-            is(response().withBody("[]", JSON_UTF_8).withStatusCode(200))
+            is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200))
         );
         assertThat(httpStateHandler.firstMatchingExpectation(request("request_one")), nullValue());
     }

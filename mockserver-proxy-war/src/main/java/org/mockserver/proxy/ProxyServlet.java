@@ -1,7 +1,6 @@
 package org.mockserver.proxy;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.net.MediaType;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -12,6 +11,7 @@ import org.mockserver.mappers.HttpServletRequestToMockServerRequestDecoder;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.MediaType;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.PortBindingSerializer;

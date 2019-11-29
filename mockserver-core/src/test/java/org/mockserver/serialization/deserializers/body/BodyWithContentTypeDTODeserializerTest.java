@@ -1,6 +1,5 @@
 package org.mockserver.serialization.deserializers.body;
 
-import com.google.common.net.MediaType;
 import io.netty.util.CharsetUtil;
 import org.junit.Test;
 import org.mockserver.matchers.MatchType;

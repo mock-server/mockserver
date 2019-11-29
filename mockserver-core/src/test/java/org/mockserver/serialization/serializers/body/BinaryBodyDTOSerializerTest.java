@@ -1,7 +1,7 @@
 package org.mockserver.serialization.serializers.body;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.net.MediaType;
+import org.mockserver.model.MediaType;
 import org.junit.Test;
 import org.mockserver.serialization.Base64Converter;
 import org.mockserver.serialization.ObjectMapperFactory;

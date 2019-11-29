@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.google.common.net.MediaType;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatchType;
@@ -21,6 +20,7 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.model.NottableString.string;
 import static org.slf4j.event.Level.TRACE;
 
@@ -116,7 +116,10 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     }
                     if (key.equalsIgnoreCase("contentType")) {
                         try {
-                            contentType = MediaType.parse(String.valueOf(entry.getValue()));
+                            String mediaTypeHeader = String.valueOf(entry.getValue());
+                            if (isNotBlank(mediaTypeHeader)) {
+                                contentType = MediaType.parse(mediaTypeHeader);
+                            }
                         } catch (IllegalArgumentException uce) {
                             MOCK_SERVER_LOGGER.logEvent(
                                 new LogEntry()

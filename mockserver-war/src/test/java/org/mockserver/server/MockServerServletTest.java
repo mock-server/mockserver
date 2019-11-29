@@ -12,6 +12,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.model.MediaType;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ExpectationSerializer;
@@ -22,13 +23,10 @@ import org.slf4j.event.Level;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import java.util.Arrays;
 import java.util.Collections;
 
-import static com.google.common.net.MediaType.JSON_UTF_8;
 import static org.apache.commons.codec.Charsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -144,7 +142,7 @@ public class MockServerServletTest {
             .withMethod("PUT")
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
-            )), is(response().withBody("[]", JSON_UTF_8).withStatusCode(200)));
+            )), is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200)));
     }
 
     @Test

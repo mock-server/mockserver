@@ -1,6 +1,5 @@
 package org.mockserver.codec;
 
-import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.util.CharsetUtil;
 import org.junit.Before;
@@ -9,6 +8,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.MediaType;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -54,7 +54,7 @@ public class MockServerResponseEncoderContentTypeTest {
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.content().array(), is("avro işarəsi: \u20AC".getBytes(CharsetUtil.UTF_8)));
+        assertThat(fullHttpResponse.content().array(), is("avro işarəsi: \u20AC".getBytes(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET)));
     }
 
     @Test

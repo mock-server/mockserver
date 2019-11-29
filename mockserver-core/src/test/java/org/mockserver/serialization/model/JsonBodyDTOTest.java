@@ -1,11 +1,11 @@
 package org.mockserver.serialization.model;
 
-import com.google.common.net.MediaType;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.JsonBody;
 import org.mockserver.model.JsonBody;
+import org.mockserver.model.MediaType;
 
 import java.nio.charset.StandardCharsets;
 

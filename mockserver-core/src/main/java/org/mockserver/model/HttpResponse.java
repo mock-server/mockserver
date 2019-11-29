@@ -2,7 +2,6 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Multimap;
-import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 
 import java.nio.charset.Charset;

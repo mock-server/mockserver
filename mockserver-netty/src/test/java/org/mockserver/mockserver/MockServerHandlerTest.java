@@ -21,6 +21,7 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.MediaType;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.responsewriter.NettyResponseWriter;
 import org.mockserver.scheduler.Scheduler;
@@ -141,7 +142,7 @@ public class MockServerHandlerTest {
             .withMethod("PUT")
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
-            )), is(response().withBody("[]", JSON_UTF_8).withStatusCode(200)));
+            )), is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200)));
     }
 
     @Test

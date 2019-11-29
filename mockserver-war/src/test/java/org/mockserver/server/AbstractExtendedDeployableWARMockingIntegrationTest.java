@@ -1,6 +1,5 @@
 package org.mockserver.server;
 
-import com.google.common.net.MediaType;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -12,6 +11,7 @@ import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.model.MediaType;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;

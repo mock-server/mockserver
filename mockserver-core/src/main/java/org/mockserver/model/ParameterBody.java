@@ -1,7 +1,5 @@
 package org.mockserver.model;
 
-import com.google.common.net.MediaType;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

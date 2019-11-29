@@ -1,6 +1,5 @@
 package org.mockserver.codec;
 
-import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.FullHttpRequest;
 import org.junit.Before;
 import org.junit.Test;
@@ -8,6 +7,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.ContentTypeMapper;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.MediaType;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

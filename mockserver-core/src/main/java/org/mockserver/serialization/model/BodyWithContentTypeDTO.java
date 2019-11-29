@@ -1,7 +1,6 @@
 package org.mockserver.serialization.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.net.MediaType;
 import org.mockserver.model.*;
 
 /**

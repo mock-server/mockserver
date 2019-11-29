@@ -1,6 +1,6 @@
 package org.mockserver.codec;
 
-import com.google.common.net.MediaType;
+import org.mockserver.model.MediaType;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;

@@ -1,11 +1,11 @@
 package org.mockserver.examples.proxy.web.configuration;
 
-import com.google.common.net.MediaType;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.MultiTemplateLoader;
 import freemarker.cache.TemplateLoader;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
+import org.mockserver.model.MediaType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;

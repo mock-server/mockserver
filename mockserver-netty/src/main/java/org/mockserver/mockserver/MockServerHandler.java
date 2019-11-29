@@ -1,6 +1,5 @@
 package org.mockserver.mockserver;
 
-import com.google.common.net.MediaType;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -13,6 +12,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.MediaType;
 import org.mockserver.model.PortBinding;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.responsewriter.NettyResponseWriter;

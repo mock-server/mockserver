@@ -1,6 +1,5 @@
 package org.mockserver.integration.mocking;
 
-import com.google.common.net.MediaType;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;

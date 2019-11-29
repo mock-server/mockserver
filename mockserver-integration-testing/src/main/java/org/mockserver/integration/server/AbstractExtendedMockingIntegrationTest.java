@@ -1,6 +1,5 @@
 package org.mockserver.integration.server;
 
-import com.google.common.net.MediaType;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.netty.util.CharsetUtil;
 import org.apache.commons.io.IOUtils;

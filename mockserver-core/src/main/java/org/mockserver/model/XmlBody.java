@@ -1,7 +1,5 @@
 package org.mockserver.model;
 
-import com.google.common.net.MediaType;
-
 import java.nio.charset.Charset;
 
 import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET;

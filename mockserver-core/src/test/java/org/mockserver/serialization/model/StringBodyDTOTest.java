@@ -1,10 +1,10 @@
 package org.mockserver.serialization.model;
 
-import com.google.common.net.MediaType;
 import io.netty.util.CharsetUtil;
 import org.apache.commons.lang3.CharSetUtils;
 import org.junit.Test;
 import org.mockserver.model.Body;
+import org.mockserver.model.MediaType;
 import org.mockserver.model.StringBody;
 
 import java.nio.charset.StandardCharsets;

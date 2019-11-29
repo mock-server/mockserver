@@ -1,12 +1,12 @@
 package org.mockserver.integration.mocking;
 
 import com.google.common.base.Joiner;
-import com.google.common.net.MediaType;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.integration.server.AbstractBasicMockingIntegrationTest;
+import org.mockserver.model.MediaType;
 import org.mockserver.socket.PortFactory;
 
 import java.util.List;

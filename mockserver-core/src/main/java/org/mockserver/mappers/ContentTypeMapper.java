@@ -2,6 +2,7 @@ package org.mockserver.mappers;
 
 import com.google.common.collect.ImmutableSet;
 import io.netty.handler.codec.http.HttpConstants;
+import io.netty.handler.codec.http.HttpUtil;
 import io.netty.util.CharsetUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
@@ -107,29 +108,24 @@ public class ContentTypeMapper {
     public Charset getCharsetFromContentTypeHeader(String contentType) {
         Charset charset = DEFAULT_HTTP_CHARACTER_SET;
         if (contentType != null) {
-            String charsetName = StringUtils.substringAfterLast(contentType, CHARSET.toString() + (char) HttpConstants.EQUALS).replaceAll("\"", "");
-            if (isNotBlank(charsetName)) {
-                try {
-                    charset = Charset.forName(charsetName);
-                } catch (UnsupportedCharsetException uce) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(LogEntry.LogMessageType.WARN)
-                            .setLogLevel(WARN)
-                            .setMessageFormat("Unsupported character set {} in Content-Type header: {}.")
-                            .setArguments(StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType)
-                    );
-                } catch (IllegalCharsetNameException icne) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(LogEntry.LogMessageType.WARN)
-                            .setLogLevel(WARN)
-                            .setMessageFormat("Illegal character set {} in Content-Type header: {}.")
-                            .setArguments(StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType)
-                    );
-                }
-            } else if (UTF_8_CONTENT_TYPES.contains(contentType)) {
-                charset = CharsetUtil.UTF_8;
+            try {
+                charset = HttpUtil.getCharset(contentType.replaceAll("\"", ""));
+            } catch (UnsupportedCharsetException uce) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.WARN)
+                        .setLogLevel(WARN)
+                        .setMessageFormat("Unsupported character set {} in Content-Type header: {}.")
+                        .setArguments(StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType)
+                );
+            } catch (IllegalCharsetNameException icne) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.WARN)
+                        .setLogLevel(WARN)
+                        .setMessageFormat("Illegal character set {} in Content-Type header: {}.")
+                        .setArguments(StringUtils.substringAfterLast(contentType, CHARSET.toString() + HttpConstants.EQUALS), contentType)
+                );
             }
         }
         return charset;

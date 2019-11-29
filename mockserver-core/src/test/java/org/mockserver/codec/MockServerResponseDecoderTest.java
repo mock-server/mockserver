@@ -1,15 +1,13 @@
 package org.mockserver.codec;
 
-import com.google.common.net.MediaType;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
 import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.Body;
+import org.mockserver.model.*;
 import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
 import org.mockserver.model.HttpResponse;
 
 import java.nio.charset.StandardCharsets;

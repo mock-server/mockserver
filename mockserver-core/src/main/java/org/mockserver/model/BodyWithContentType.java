@@ -1,7 +1,6 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.net.MediaType;
 
 import java.nio.charset.Charset;
 
@@ -19,8 +18,11 @@ public abstract class BodyWithContentType<T> extends Body {
 
     @JsonIgnore
     Charset determineCharacterSet(MediaType contentType, Charset defaultCharset) {
-        if (contentType != null && contentType.charset().isPresent()) {
-            return contentType.charset().get();
+        if (contentType != null) {
+            Charset charset = contentType.getCharset();
+            if (charset != null) {
+                return charset;
+            }
         }
         return defaultCharset;
     }

@@ -1,12 +1,8 @@
 package org.mockserver.mappers;
 
-import com.google.common.net.MediaType;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.Cookie;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.HttpStatusCode;
+import org.mockserver.model.*;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import javax.servlet.http.HttpServletResponse;
