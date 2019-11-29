@@ -12,6 +12,7 @@ import org.mockserver.serialization.*;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
+import org.mockserver.server.persistence.ExpectationFileSystemPersistence;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.event.Level;
@@ -47,6 +48,7 @@ public class HttpStateHandler {
     private final MockServerEventLog mockServerLog;
     private final Scheduler scheduler;
     private final ExpectationInitializerLoader expectationInitializerLoader;
+    private final ExpectationFileSystemPersistence expectationFileSystemPersistence;
     // mockserver
     private MockServerMatcher mockServerMatcher;
     private final MockServerLogger mockServerLogger;
@@ -75,22 +77,8 @@ public class HttpStateHandler {
         this.verificationSerializer = new VerificationSerializer(mockServerLogger);
         this.verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
         this.logEntrySerializer = new LogEntrySerializer(mockServerLogger);
-        this.expectationInitializerLoader = new ExpectationInitializerLoader(mockServerLogger);
-        addExpectationsFromInitializer();
-    }
-
-    private void addExpectationsFromInitializer() {
-        for (Expectation expectation : expectationInitializerLoader.loadExpectations()) {
-            mockServerMatcher.add(expectation);
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(CREATED_EXPECTATION)
-                    .setLogLevel(Level.INFO)
-                    .setHttpRequest(expectation.getHttpRequest())
-                    .setMessageFormat("creating expectation:{}")
-                    .setArguments(expectation.clone())
-            );
-        }
+        this.expectationInitializerLoader = new ExpectationInitializerLoader(mockServerLogger, mockServerMatcher);
+        this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
     }
 
     public MockServerLogger getMockServerLogger() {

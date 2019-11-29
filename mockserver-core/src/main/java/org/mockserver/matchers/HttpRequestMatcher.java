@@ -341,7 +341,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
     }
 
-    public Expectation decrementRemainingMatches() {
+    public boolean decrementRemainingMatches() {
         return expectation.decrementRemainingMatches();
     }
 

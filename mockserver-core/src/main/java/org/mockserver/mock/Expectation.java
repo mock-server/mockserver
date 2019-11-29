@@ -245,11 +245,11 @@ public class Expectation extends ObjectWithJsonToString {
         return timeToLive == null || timeToLive.stillAlive();
     }
 
-    public Expectation decrementRemainingMatches() {
+    public boolean decrementRemainingMatches() {
         if (times != null) {
-            times.decrement();
+            return times.decrement();
         }
-        return this;
+        return false;
     }
 
     public boolean contains(HttpRequest httpRequest) {

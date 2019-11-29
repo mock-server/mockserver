@@ -27,7 +27,8 @@ public class TimesTest {
 
         // then
         assertThat(times.greaterThenZero(), is(true));
-        times.decrement().decrement();
+        times.decrement();
+        times.decrement();
         assertThat(times.greaterThenZero(), is(false));
     }
 }

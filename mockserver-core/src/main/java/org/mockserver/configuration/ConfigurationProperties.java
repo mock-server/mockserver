@@ -85,6 +85,8 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD = "mockserver.proxyAuthenticationPassword";
     private static final String MOCKSERVER_INITIALIZATION_CLASS = "mockserver.initializationClass";
     private static final String MOCKSERVER_INITIALIZATION_JSON_PATH = "mockserver.initializationJsonPath";
+    private static final String MOCKSERVER_PERSISTED_EXPECTATIONS_PATH = "mockserver.persistedExpectationsPath";
+    private static final String MOCKSERVER_PERSIST_EXPECTATIONS = "mockserver.persistExpectations";
 
     private static final Properties PROPERTIES = readPropertyFile();
     private static final Set<String> ALL_SUBJECT_ALTERNATIVE_DOMAINS = Sets.newConcurrentHashSet();
@@ -570,6 +572,22 @@ public class ConfigurationProperties {
 
     public static void initializationJsonPath(String initializationJsonPath) {
         System.setProperty(MOCKSERVER_INITIALIZATION_JSON_PATH, initializationJsonPath);
+    }
+
+    public static String persistedExpectationsPath() {
+        return readPropertyHierarchically(MOCKSERVER_PERSISTED_EXPECTATIONS_PATH, "MOCKSERVER_PERSISTED_EXPECTATIONS_PATH", "persistedExpectations.json");
+    }
+
+    public static void persistedExpectationsPath(String persistedExpectationsPath) {
+        System.setProperty(MOCKSERVER_PERSISTED_EXPECTATIONS_PATH, persistedExpectationsPath);
+    }
+
+    public static boolean persistExpectations() {
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_PERSIST_EXPECTATIONS, "MOCKSERVER_PERSIST_EXPECTATIONS", "" + false));
+    }
+
+    public static void persistExpectations(boolean enabled) {
+        System.setProperty(MOCKSERVER_PERSIST_EXPECTATIONS, "" + enabled);
     }
 
     private static void validateHostAndPort(String hostAndPort, String propertyName, String mockserverSocksProxy) {

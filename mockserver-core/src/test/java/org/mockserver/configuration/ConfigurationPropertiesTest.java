@@ -2,8 +2,12 @@ package org.mockserver.configuration;
 
 import io.netty.util.NettyRuntime;
 import io.netty.util.internal.SystemPropertyUtil;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockserver.server.initialize.ExpectationInitializerExample;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.slf4j.event.Level;
 
@@ -759,5 +763,61 @@ public class ConfigurationPropertiesTest {
         // then
         assertEquals("p@ssw0rd", proxyAuthenticationPassword());
         assertEquals("p@ssw0rd", System.getProperty("mockserver.proxyAuthenticationPassword"));
+    }
+
+    @Test
+    public void shouldSetAndReadInitializationClass() {
+        // given
+        System.clearProperty("mockserver.initializationClass");
+
+        // when
+        assertEquals("", initializationClass());
+        initializationClass(ExpectationInitializerExample.class.getName());
+
+        // then
+        assertEquals(ExpectationInitializerExample.class.getName(), initializationClass());
+        assertEquals(ExpectationInitializerExample.class.getName(), System.getProperty("mockserver.initializationClass"));
+    }
+
+    @Test
+    public void shouldSetAndReadInitializationJsonPath() {
+        // given
+        System.clearProperty("mockserver.initializationJsonPath");
+
+        // when
+        assertEquals("", initializationJsonPath());
+        initializationJsonPath("org/mockserver/server/initialize/initializerJson.json");
+
+        // then
+        assertEquals("org/mockserver/server/initialize/initializerJson.json", initializationJsonPath());
+        assertEquals("org/mockserver/server/initialize/initializerJson.json", System.getProperty("mockserver.initializationJsonPath"));
+    }
+
+    @Test
+    public void shouldSetAndReadPersistedExpectationsPath() {
+        // given
+        System.clearProperty("mockserver.persistedExpectationsPath");
+
+        // when
+        assertEquals("persistedExpectations.json", persistedExpectationsPath());
+        persistedExpectationsPath("otherPersistedExpectations.json");
+
+        // then
+        assertEquals("otherPersistedExpectations.json", persistedExpectationsPath());
+        assertEquals("otherPersistedExpectations.json", System.getProperty("mockserver.persistedExpectationsPath"));
+    }
+
+    @Test
+    public void shouldSetAndReadPersistExpectations() {
+        // given
+        System.clearProperty("mockserver.persistExpectations");
+
+        // when
+        assertFalse(persistExpectations());
+        persistExpectations(true);
+
+        // then
+        assertTrue(persistExpectations());
+        assertEquals("" + true, System.getProperty("mockserver.persistExpectations"));
     }
 }

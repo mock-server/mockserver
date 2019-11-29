@@ -20,8 +20,8 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
             return true;
         }
 
-        public final Times decrement() {
-            return this;
+        public final boolean decrement() {
+            return false;
         }
     };
 
@@ -57,11 +57,12 @@ public class Times extends ObjectWithReflectiveEqualsHashCodeToString {
         return unlimited || remainingTimes > 0;
     }
 
-    public Times decrement() {
+    public boolean decrement() {
         if (!unlimited) {
             remainingTimes--;
+            return true;
         }
-        return this;
+        return false;
     }
 
     @SuppressWarnings("MethodDoesntCallSuperMethod")
