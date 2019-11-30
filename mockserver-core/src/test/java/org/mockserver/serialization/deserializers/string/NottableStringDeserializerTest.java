@@ -136,15 +136,4 @@ public class NottableStringDeserializerTest {
             )));
     }
 
-
-    /*
-          "name" : {
-	        "not" : false,
-	        "value" : "!name"
-	      },
-	      "value" : {
-	        "not" : true,
-	        "value" : "!value"
-	      }
-     */
 }

@@ -3,7 +3,6 @@ package org.mockserver.matchers;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -20,14 +19,14 @@ public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
     private final TimeUnit timeUnit;
     private final Long timeToLive;
     private final boolean unlimited;
-    private Date endDate;
+    private long endDate;
 
     private TimeToLive(TimeUnit timeUnit, Long timeToLive, boolean unlimited) {
         this.timeUnit = timeUnit;
         this.timeToLive = timeToLive;
         this.unlimited = unlimited;
         if (!unlimited) {
-            endDate = new Date(System.currentTimeMillis() + timeUnit.toMillis(timeToLive));
+            endDate = System.currentTimeMillis() + timeUnit.toMillis(timeToLive);
         }
     }
 
@@ -55,8 +54,8 @@ public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
         return unlimited || isAfterNow(endDate);
     }
 
-    private boolean isAfterNow(Date date) {
-        return date.getTime() > System.currentTimeMillis();
+    private boolean isAfterNow(long date) {
+        return date > System.currentTimeMillis();
     }
 
     @Override

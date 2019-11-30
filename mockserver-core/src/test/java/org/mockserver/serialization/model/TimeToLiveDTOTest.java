@@ -16,11 +16,11 @@ public class TimeToLiveDTOTest {
     @Test
     public void shouldReturnValuesSetInConstructor() {
         // when
-        TimeToLiveDTO timeToLive = new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.MINUTES, 5l));
+        TimeToLiveDTO timeToLive = new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.MINUTES, 5L));
 
         // then
         assertThat(timeToLive.getTimeUnit(), is(TimeUnit.MINUTES));
-        assertThat(timeToLive.getTimeToLive(), is(5l));
+        assertThat(timeToLive.getTimeToLive(), is(5L));
         assertThat(timeToLive.isUnlimited(), is(false));
     }
 
@@ -33,11 +33,11 @@ public class TimeToLiveDTOTest {
         assertThat(timeToLive.isUnlimited(), is(true));
 
         // when
-        timeToLive = new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.MINUTES, 5l)).buildObject();
+        timeToLive = new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.MINUTES, 5L)).buildObject();
 
         // then
         assertThat(timeToLive.getTimeUnit(), is(TimeUnit.MINUTES));
-        assertThat(timeToLive.getTimeToLive(), is(5l));
+        assertThat(timeToLive.getTimeToLive(), is(5L));
         assertThat(timeToLive.isUnlimited(), is(false));
     }
 }

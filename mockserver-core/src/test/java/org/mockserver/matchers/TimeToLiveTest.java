@@ -16,20 +16,20 @@ public class TimeToLiveTest {
     public void shouldCreateCorrectObjects() {
         // when
         assertThat(TimeToLive.unlimited().isUnlimited(), is(true));
-        assertThat(TimeToLive.exactly(TimeUnit.MINUTES, 5l).isUnlimited(), is(false));
-        assertThat(TimeToLive.exactly(TimeUnit.MINUTES, 5l).getTimeUnit(), is(TimeUnit.MINUTES));
-        assertThat(TimeToLive.exactly(TimeUnit.MINUTES, 5l).getTimeToLive(), is(5l));
+        assertThat(TimeToLive.exactly(TimeUnit.MINUTES, 5L).isUnlimited(), is(false));
+        assertThat(TimeToLive.exactly(TimeUnit.MINUTES, 5L).getTimeUnit(), is(TimeUnit.MINUTES));
+        assertThat(TimeToLive.exactly(TimeUnit.MINUTES, 5L).getTimeToLive(), is(5L));
     }
 
     @Test
     public void shouldCalculateStillLive() throws InterruptedException {
         // when
-        TimeToLive timeToLive = TimeToLive.exactly(TimeUnit.MILLISECONDS, 0l);
+        TimeToLive timeToLive = TimeToLive.exactly(TimeUnit.MILLISECONDS, 0L);
 
         TimeUnit.MILLISECONDS.sleep(5);
 
         // then
         assertThat(timeToLive.stillAlive(), is(false));
-        assertThat(TimeToLive.exactly(TimeUnit.MINUTES, 10l).stillAlive(), is(true));
+        assertThat(TimeToLive.exactly(TimeUnit.MINUTES, 10L).stillAlive(), is(true));
     }
 }
