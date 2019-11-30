@@ -56,14 +56,19 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     public Expectation firstMatchingExpectation(HttpRequest httpRequest) {
         Expectation matchingExpectation = null;
         for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
+            boolean remainingMatchesDecremented = false;
             if (httpRequestMatcher.matches(httpRequest, httpRequest)) {
                 matchingExpectation = httpRequestMatcher.getExpectation();
                 if (matchingExpectation.decrementRemainingMatches()) {
-                    notifyListeners(this);
+                    remainingMatchesDecremented = true;
                 }
             }
             if (!httpRequestMatcher.isActive()) {
                 removeHttpRequestMatcher(httpRequestMatcher);
+            } else if (remainingMatchesDecremented) {
+                // only update remaining matches if expectation not
+                // being removed completely to avoid double events
+                notifyListeners(this);
             }
             if (matchingExpectation != null) {
                 break;
