@@ -224,6 +224,13 @@ MockServerClient implements Stoppable {
                 return isRunning(attempts - 1, timeout, timeUnit);
             }
         } catch (SocketConnectionException | IllegalStateException sce) {
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(DEBUG)
+                    .setMessageFormat("Exception while checking if MockServer is running - " + sce.getMessage())
+                    .setThrowable(sce)
+            );
             return false;
         }
     }
@@ -255,7 +262,7 @@ MockServerClient implements Stoppable {
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(DEBUG)
                     .setMessageFormat("Exception while stopping - " + throwable.getMessage())
-                    .setArguments(throwable)
+                    .setThrowable(throwable)
             );
         }
     }
