@@ -12,7 +12,7 @@ import org.mockserver.serialization.*;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
-import org.mockserver.server.persistence.ExpectationFileSystemPersistence;
+import org.mockserver.persistence.ExpectationFileSystemPersistence;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.event.Level;

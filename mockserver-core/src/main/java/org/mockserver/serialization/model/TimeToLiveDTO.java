@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
@@ -10,13 +11,16 @@ import java.util.concurrent.TimeUnit;
  */
 public class TimeToLiveDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<TimeToLive> {
 
+    private static final String[] EXCLUDED_FIELDS = {"key", "endDate"};
     private TimeUnit timeUnit;
     private Long timeToLive;
+    private Long endDate;
     private boolean unlimited;
 
     public TimeToLiveDTO(TimeToLive timeToLive) {
         this.timeUnit = timeToLive.getTimeUnit();
         this.timeToLive = timeToLive.getTimeToLive();
+        this.endDate = timeToLive.getEndDate();
         this.unlimited = timeToLive.isUnlimited();
     }
 
@@ -28,7 +32,11 @@ public class TimeToLiveDTO extends ObjectWithReflectiveEqualsHashCodeToString im
         if (unlimited) {
             return TimeToLive.unlimited();
         } else {
-            return TimeToLive.exactly(timeUnit, timeToLive);
+            TimeToLive exactly = TimeToLive.exactly(timeUnit, timeToLive);
+            if (this.endDate != null) {
+                exactly.setEndDate(this.endDate);
+            }
+            return exactly;
         }
     }
 
@@ -40,7 +48,17 @@ public class TimeToLiveDTO extends ObjectWithReflectiveEqualsHashCodeToString im
         return timeToLive;
     }
 
+    public Long getEndDate() {
+        return endDate;
+    }
+
     public boolean isUnlimited() {
         return unlimited;
+    }
+
+    @Override
+    @JsonIgnore
+    protected String[] fieldsExcludedFromEqualsAndHashCode() {
+        return EXCLUDED_FIELDS;
     }
 }

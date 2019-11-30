@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.mockserver.log.model.LogEntry;
-import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
 import org.mockserver.serialization.deserializers.body.BodyDTODeserializer;
@@ -16,6 +15,7 @@ import org.mockserver.serialization.deserializers.body.BodyWithContentTypeDTODes
 import org.mockserver.serialization.deserializers.collections.CookiesDeserializer;
 import org.mockserver.serialization.deserializers.collections.HeadersDeserializer;
 import org.mockserver.serialization.deserializers.collections.ParametersDeserializer;
+import org.mockserver.serialization.deserializers.condition.TimeToLiveDTODeserializer;
 import org.mockserver.serialization.deserializers.condition.VerificationTimesDTODeserializer;
 import org.mockserver.serialization.deserializers.string.NottableStringDeserializer;
 import org.mockserver.serialization.model.*;
@@ -26,10 +26,8 @@ import org.mockserver.serialization.serializers.collections.ParametersSerializer
 import org.mockserver.serialization.serializers.condition.VerificationTimesDTOSerializer;
 import org.mockserver.serialization.serializers.condition.VerificationTimesSerializer;
 import org.mockserver.serialization.serializers.request.HttpRequestDTOSerializer;
-import org.mockserver.serialization.serializers.response.HttpResponseDTOSerializer;
+import org.mockserver.serialization.serializers.response.*;
 import org.mockserver.serialization.serializers.response.HttpResponseSerializer;
-import org.mockserver.serialization.serializers.response.TimesDTOSerializer;
-import org.mockserver.serialization.serializers.response.TimesSerializer;
 import org.mockserver.serialization.serializers.string.NottableStringSerializer;
 import org.mockserver.verify.VerificationTimes;
 
@@ -97,6 +95,8 @@ public class ObjectMapperFactory {
             // times
             addSerializer(Times.class, new TimesSerializer());
             addSerializer(TimesDTO.class, new TimesDTOSerializer());
+            addSerializer(TimeToLiveDTO.class, new TimeToLiveDTOSerializer());
+            addDeserializer(TimeToLiveDTO.class, new TimeToLiveDTODeserializer());
             // request
             addSerializer(HttpRequest.class, new org.mockserver.serialization.serializers.request.HttpRequestSerializer());
             addSerializer(HttpRequestDTO.class, new HttpRequestDTOSerializer());

@@ -29,7 +29,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     private WebSocketClientRegistry webSocketClientRegistry;
     private MatcherBuilder matcherBuilder;
 
-    MockServerMatcher(MockServerLogger logFormatter, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry) {
+    public MockServerMatcher(MockServerLogger logFormatter, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry) {
         super(scheduler);
         this.matcherBuilder = new MatcherBuilder(logFormatter);
         this.webSocketClientRegistry = webSocketClientRegistry;

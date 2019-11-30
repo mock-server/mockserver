@@ -5,6 +5,7 @@
     "properties": {
         "timeUnit": {
             "enum": [
+                "DAYS",
                 "HOURS",
                 "MINUTES",
                 "SECONDS",
@@ -14,6 +15,9 @@
             ]
         },
         "timeToLive": {
+            "type": "integer"
+        },
+        "endDate": {
             "type": "integer"
         },
         "unlimited": {

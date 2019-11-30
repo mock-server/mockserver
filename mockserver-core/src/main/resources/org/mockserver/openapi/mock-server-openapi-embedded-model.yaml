@@ -409,6 +409,7 @@ components:
       properties:
         timeUnit:
           enum:
+            - DAYS
             - HOURS
             - MINUTES
             - SECONDS

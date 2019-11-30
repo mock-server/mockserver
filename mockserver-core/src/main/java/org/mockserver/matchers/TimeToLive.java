@@ -46,6 +46,16 @@ public class TimeToLive extends ObjectWithReflectiveEqualsHashCodeToString {
         return timeToLive;
     }
 
+    @JsonIgnore
+    public long getEndDate() {
+        return endDate;
+    }
+
+    public TimeToLive setEndDate(long endDate) {
+        this.endDate = endDate;
+        return this;
+    }
+
     public boolean isUnlimited() {
         return unlimited;
     }
