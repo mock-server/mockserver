@@ -53,7 +53,8 @@ Release Steps
 1. update repo
    1. delete jekyll-www.mock-server.com/_site
    1. ./mvnw clean
-   1. find and replace
+   1. find and replace maven / npm version references
+   1. find and replace swagger version references (i.e. maven version with bugfix version as x)
    1. update README
    1. commit to github
 1. add javaDoc
@@ -67,6 +68,7 @@ Release Steps
    1. login to https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi
    1. create new version
    1. publish version
+   1. update references to 5.x.x (i.e. 5.8.x) to correct version
 1. update www.mock-server.com
    1. find and replace MockServer version
    1. upload to S3
