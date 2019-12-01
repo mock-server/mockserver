@@ -81,7 +81,10 @@ Release Steps
       1. copy to https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/?region=us-east-1
       1. invalidate CloudFront cache
 1. update homebrew
-   1. wget https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar
-   1. shasum -a 256 mockserver-netty-x.x.x-brew-tar.tar
-   1. see https://github.com/Homebrew/brew/issues/5561
+   1. brew doctor
+   1. delete https://github.com/jamesdbloom/homebrew-core
+   1. git -C "$(brew --repo homebrew/core)" checkout master
+   1. git -C "$(brew --repo homebrew/core)" branch -D mockserver-5.8.0
+   1. git -C "$(brew --repo homebrew/core)" reset --hard HEAD
    1. brew bump-formula-pr --strict mockserver --url=https://oss.sonatype.org/content/repositories/releases/org/mock-server/mockserver-netty/x.x.x/mockserver-netty-x.x.x-brew-tar.tar --sha256=...
+   1. **Note:** use personal access token as password (due to lack of 2FA)
