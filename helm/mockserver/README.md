@@ -7,12 +7,12 @@
 
 ### Helm Install
 
-To run MockServer in Kubernetes the easiest way is to use the existing [MockServer helm chart](http://www.mock-server.com/mockserver-5.7.2.tgz).
+To run MockServer in Kubernetes the easiest way is to use the existing [MockServer helm chart](http://www.mock-server.com/mockserver-5.8.0.tgz).
 
 This is available by using `www.mock-server.com` as a chart repo, with the following command:
 
 ```bash
-helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.7.2.tgz
+helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.8.0.tgz
 ```
 
 **OR** 
@@ -51,7 +51,7 @@ kubectl -n mockserver get po -l release=mockserver
 Modify the arguments used to start the docker container by setting values explicitly using `--set`, as follows:
 
 ```bash
-helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.logLevel=INFO mockserver http://www.mock-server.com/mockserver-5.7.2.tgz
+helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.logLevel=INFO mockserver http://www.mock-server.com/mockserver-5.8.0.tgz
 ```
 
 The following values are supported:
@@ -65,7 +65,7 @@ The following values are supported:
 For example configure a proxyRemoteHost and proxyRemotePort, as follows:
 
 ```bash
-helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.proxyRemoteHost=www.mock-server.com --set app.proxyRemotePort=443 mockserver http://www.mock-server.com/mockserver-5.7.2.tgz
+helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.proxyRemoteHost=www.mock-server.com --set app.proxyRemotePort=443 mockserver http://www.mock-server.com/mockserver-5.8.0.tgz
 ```
 
 Double check the correct arguments have been passed to the pod, as follows:

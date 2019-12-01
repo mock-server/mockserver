@@ -5,8 +5,7 @@ Release Steps
 1. publish SNAPSHOT to sonatype 
    1. ./scripts/local_deploy_snapshot.sh
 1. update mockserver-node
-   1. delete package-lock.json
-   1. rm -rf node_modules
+   1. rm -rf package-lock.json node_modules
    1. find and replace MockServer version
    1. npm i
    1. grunt
@@ -16,8 +15,7 @@ Release Steps
    1. npm login
    1. npm publish --access=public
 1. update mockserver-client-node
-   1. delete package-lock.json
-   1. rm -rf node_modules
+   1. rm -rf package-lock.json node_modules
    1. find and replace MockServer version
    1. npm i
    1. grunt
@@ -29,6 +27,8 @@ Release Steps
 1. update mockserver-maven-plugin
    1. update parent pom SNAPSHOT version to RELEASE version
    1. update jar-with-dependencies SNAPSHOT version to RELEASE version
+   1. ./scripts/local_deploy_snapshot.sh
+   1. git push origin master
    1. ./scripts/local_release.sh
    1. update parent pom RELEASE version to new SNAPSHOT version
    1. update jar-with-dependencies RELEASE version to new SNAPSHOT version
@@ -36,8 +36,10 @@ Release Steps
 1. update docker image
    1. update Dockerfile
    1. docker build -t mockserver/mockserver:mockserver-x.x.x ./docker
+   1. docker build -t jamesdbloom/mockserver:mockserver-x.x.x ./docker
    1. docker login
    1. docker push mockserver/mockserver:mockserver-x.x.x
+   1. docker push jamesdbloom/mockserver:mockserver-x.x.x
 1. update helm chart
    1. find and replace previous MockServer release version to new release
    1. cd helm
@@ -46,7 +48,7 @@ Release Steps
 1. create copy of document / website for existing version (for minor or major releases)
    1. create S3 bucket cloning permissions from existing
    1. copy public policy
-   1. clone existing website: aws s3 sync s3://aws-website-mockserver-nb9hq s3://aws-website-mockserver--c89db --source-region us-east-1 --region eu-west-2 (**Note:** prepend with credentials from secrets manager)
+   1. clone existing website: aws s3 sync s3://aws-website-mockserver-nb9hq s3://aws-website-mockserver--8001a --source-region us-east-1 --region eu-west-2 (**Note:** prepend with credentials from secrets manager)
    1. delete `versions` and helm charts
    1. create cloud front distribution copying existing settings
    1. create Route53 A record as alias to cloud front distribution

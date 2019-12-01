@@ -12,11 +12,11 @@ sitemap:
 
 <h2>Helm Install</h2>
 
-<p>To run MockServer in Kubernetes the easiest way is to use the existing <a href="http://www.mock-server.com/mockserver-5.7.2.tgz">MockServer helm chart</a>.</p>
+<p>To run MockServer in Kubernetes the easiest way is to use the existing <a href="http://www.mock-server.com/mockserver-5.8.0.tgz">MockServer helm chart</a>.</p>
 
 <p>This is available by using <strong>www.mock-server.com</strong> as a chart repo, with the following command:</p>
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.7.2.tgz</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver mockserver http://www.mock-server.com/mockserver-5.8.0.tgz</code></pre>
 
 <p><strong>OR</strong></p>
 
@@ -43,7 +43,7 @@ sitemap:
 
 <p>Modify the arguments used to start the docker container by setting values explicitly using <span class="keyword">--set</span>, as follows:</p>
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.logLevel=INFO mockserver http://www.mock-server.com/mockserver-5.7.2.tgz</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.logLevel=INFO mockserver http://www.mock-server.com/mockserver-5.8.0.tgz</code></pre>
 
 <p>The following values are supported:</p>
 <ul>
@@ -57,7 +57,7 @@ sitemap:
 
 <p>For example configure a proxyRemoteHost and proxyRemotePort, as follows:</p>
 
-<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.proxyRemoteHost=www.mock-server.com --set app.proxyRemotePort=443 mockserver http://www.mock-server.com/mockserver-5.7.2.tgz</code></pre>
+<pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.serverPort=1080 --set app.proxyRemoteHost=www.mock-server.com --set app.proxyRemotePort=443 mockserver http://www.mock-server.com/mockserver-5.8.0.tgz</code></pre>
 
 <p>Double check the correct arguments have been passed to the pod, as follows:</p>
 
