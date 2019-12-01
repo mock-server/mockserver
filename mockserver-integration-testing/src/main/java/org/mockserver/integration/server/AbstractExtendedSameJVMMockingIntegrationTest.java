@@ -282,4 +282,5 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
 
         }
     }
+
 }

@@ -79,7 +79,7 @@ public class WebSocketClient<T extends HttpObject> {
                             .addLast(
                                 new HttpClientCodec(),
                                 new HttpObjectAggregator(Integer.MAX_VALUE),
-                                new WebSocketClientHandler(mockServerLogger, serverAddress, contextPath, WebSocketClient.this)
+                                new WebSocketClientHandler(mockServerLogger, serverAddress, contextPath, WebSocketClient.this, isSecure)
                             );
                     }
                 })

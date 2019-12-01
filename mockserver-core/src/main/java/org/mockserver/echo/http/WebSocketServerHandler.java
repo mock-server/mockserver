@@ -29,13 +29,15 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
     private final List<String> registeredClients;
     private final List<Channel> websocketChannels;
     private final List<TextWebSocketFrame> textWebSocketFrames;
+    private final boolean isSecure;
     private WebSocketServerHandshaker handshaker;
 
-    WebSocketServerHandler(MockServerLogger mockServerLogger, List<String> registeredClients, List<Channel> websocketChannels, List<TextWebSocketFrame> textWebSocketFrames) {
+    WebSocketServerHandler(MockServerLogger mockServerLogger, List<String> registeredClients, List<Channel> websocketChannels, List<TextWebSocketFrame> textWebSocketFrames, boolean isSecure) {
         this.mockServerLogger = mockServerLogger;
         this.registeredClients = registeredClients;
         this.websocketChannels = websocketChannels;
         this.textWebSocketFrames = textWebSocketFrames;
+        this.isSecure = isSecure;
     }
 
     @Override
@@ -67,7 +69,7 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
 
     private void upgradeChannel(final ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
         handshaker = new WebSocketServerHandshakerFactory(
-            "ws://" + httpRequest.headers().get(HOST) + UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI,
+            (isSecure ? "wss" : "ws") + "://" + httpRequest.headers().get(HOST) + UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI,
             null,
             true,
             Integer.MAX_VALUE

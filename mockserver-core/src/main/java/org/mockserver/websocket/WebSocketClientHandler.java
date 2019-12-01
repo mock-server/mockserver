@@ -34,11 +34,11 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     private final MockServerLogger mockServerLogger;
     private final ContentTypeMapper contentTypeMapper;
 
-    WebSocketClientHandler(MockServerLogger mockServerLogger, InetSocketAddress serverAddress, String contextPath, WebSocketClient webSocketClient) throws URISyntaxException {
+    WebSocketClientHandler(MockServerLogger mockServerLogger, InetSocketAddress serverAddress, String contextPath, WebSocketClient webSocketClient, boolean isSecure) throws URISyntaxException {
         this.mockServerLogger = mockServerLogger;
         this.contentTypeMapper = new ContentTypeMapper(mockServerLogger);
         this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(
-            new URI("ws://" + serverAddress.getHostName() + ":" + serverAddress.getPort() + cleanContextPath(contextPath) + "/_mockserver_callback_websocket"),
+            new URI((isSecure ? "wss" : "ws") + "://" + serverAddress.getHostName() + ":" + serverAddress.getPort() + cleanContextPath(contextPath) + "/_mockserver_callback_websocket"),
             WebSocketVersion.V13,
             null,
             false,
