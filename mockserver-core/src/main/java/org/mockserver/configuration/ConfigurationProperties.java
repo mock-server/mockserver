@@ -484,15 +484,6 @@ public class ConfigurationProperties {
         configureLogger();
     }
 
-    public static void metricsEnabled(boolean enabled) {
-        System.setProperty(MOCKSERVER_METRICS_ENABLED, "" + enabled);
-        metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
-    }
-
-    public static boolean metricsEnabled() {
-        return metricsEnabled;
-    }
-
     public static boolean disableSystemOut() {
         return disableSystemOut;
     }
@@ -500,6 +491,15 @@ public class ConfigurationProperties {
     public static void disableSystemOut(boolean disable) {
         System.setProperty(MOCKSERVER_DISABLE_SYSTEM_OUT, "" + disable);
         disableSystemOut = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_DISABLE_SYSTEM_OUT, "MOCKSERVER_DISABLE_SYSTEM_OUT", "" + false));
+    }
+
+    public static boolean metricsEnabled() {
+        return metricsEnabled;
+    }
+
+    public static void metricsEnabled(boolean enable) {
+        System.setProperty(MOCKSERVER_METRICS_ENABLED, "" + enable);
+        metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
     }
 
     public static InetSocketAddress httpProxy() {
@@ -574,20 +574,20 @@ public class ConfigurationProperties {
         System.setProperty(MOCKSERVER_INITIALIZATION_JSON_PATH, initializationJsonPath);
     }
 
+    public static boolean persistExpectations() {
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_PERSIST_EXPECTATIONS, "MOCKSERVER_PERSIST_EXPECTATIONS", "" + false));
+    }
+
+    public static void persistExpectations(boolean enable) {
+        System.setProperty(MOCKSERVER_PERSIST_EXPECTATIONS, "" + enable);
+    }
+
     public static String persistedExpectationsPath() {
         return readPropertyHierarchically(MOCKSERVER_PERSISTED_EXPECTATIONS_PATH, "MOCKSERVER_PERSISTED_EXPECTATIONS_PATH", "persistedExpectations.json");
     }
 
     public static void persistedExpectationsPath(String persistedExpectationsPath) {
         System.setProperty(MOCKSERVER_PERSISTED_EXPECTATIONS_PATH, persistedExpectationsPath);
-    }
-
-    public static boolean persistExpectations() {
-        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_PERSIST_EXPECTATIONS, "MOCKSERVER_PERSIST_EXPECTATIONS", "" + false));
-    }
-
-    public static void persistExpectations(boolean enabled) {
-        System.setProperty(MOCKSERVER_PERSIST_EXPECTATIONS, "" + enabled);
     }
 
     private static void validateHostAndPort(String hostAndPort, String propertyName, String mockserverSocksProxy) {
