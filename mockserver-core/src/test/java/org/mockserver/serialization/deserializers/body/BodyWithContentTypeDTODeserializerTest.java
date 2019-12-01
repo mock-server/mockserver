@@ -612,6 +612,30 @@ public class BodyWithContentTypeDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseJsonWithJsonBodyAsObjectField() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpResponse\": {" + NEW_LINE +
+            "        \"body\": {" + NEW_LINE +
+            "            \"type\": \"JSON\"," + NEW_LINE +
+            "            \"json\": {\"context\": [{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"}]}," + NEW_LINE +
+            "            \"matchType\" : \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new JsonBodyDTO(new JsonBody("{\"context\":[{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"}]}")))
+            ), expectationDTO);
+    }
+
+    @Test
     public void shouldParseJsonWithJsonBodyWithMatchTypeAndContentType() throws IOException {
         // given
         String json = ("{" + NEW_LINE +

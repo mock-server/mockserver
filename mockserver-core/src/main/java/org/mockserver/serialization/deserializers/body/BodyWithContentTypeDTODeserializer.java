@@ -17,6 +17,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -77,7 +78,14 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                         if (fieldNameToType.containsKey(fieldName)) {
                             type = fieldNameToType.get(fieldName);
                         }
-                        valueJsonValue = String.valueOf(entry.getValue());
+                        if (Map.class.isAssignableFrom(entry.getValue().getClass())) {
+                            if (objectMapper == null) {
+                                objectMapper = ObjectMapperFactory.createObjectMapper();
+                            }
+                            valueJsonValue = objectMapper.writeValueAsString(entry.getValue());
+                        } else {
+                            valueJsonValue = String.valueOf(entry.getValue());
+                        }
                     }
                     if (key.equalsIgnoreCase("not")) {
                         not = Boolean.parseBoolean(String.valueOf(entry.getValue()));

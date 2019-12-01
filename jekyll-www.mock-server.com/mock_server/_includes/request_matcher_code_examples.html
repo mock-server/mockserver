@@ -1446,7 +1446,8 @@ mockServerClient(&quot;localhost&quot;, 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_body_with_json_exactly" class="accordion">match request by body with json exactly</button>
 <div class="panel">
-    <p>Json body matcher supports two mode <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request matcher</p>
+    <p>JSON body matcher supports two mode <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request matcher.</p>
+    <p>When matching JSON arrays the number of elements in the array must always match, however if <strong>ONLY_MATCHING_FIELDS</strong> mode is specified only the fields in the each array element in the matcher will be matched against each corresponding object in the array.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -1519,7 +1520,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 </div>
 <button id="button_match_request_by_body_with_json_ignoring_extra_fields" class="accordion">match request by body with json ignoring extra fields</button>
 <div class="panel">
-    <p>Json body matcher supports two mode <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request matcher</p>
+    <p>JSON body matcher supports two mode <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request matcher.</p>
+    <p>When matching JSON arrays the number of elements in the array must always match, however if <strong>ONLY_MATCHING_FIELDS</strong> mode is specified only the fields in the each array element in the matcher will be matched against each corresponding object in the array.</p>
     <button class="accordion inner">Java</button>
     <div class="panel">
         <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
@@ -1554,7 +1556,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
                 "name": "A green door",
                 "price": 12.50,
                 "tags": ["home", "green"]
-            })
+            }),
+            "matchType" : "ONLY_MATCHING_FIELDS"
         }
     },
     "httpResponse": {
@@ -1577,13 +1580,91 @@ mockServerClient("localhost", 1080).mockAnyResponse({
   "httpRequest" : {
     "body" : {
       "type" : "JSON",
-      "json" : "{ \"id\": 1, \"name\": \"A green door\", \"price\": 12.50, \"tags\": [\"home\", \"green\"] }"
+      "json" : "{ \"id\": 1, \"name\": \"A green door\", \"price\": 12.50, \"tags\": [\"home\", \"green\"] }",
+      "matchType" : "ONLY_MATCHING_FIELDS"
     }
   },
   "httpResponse" : {
     "statusCode" : 202,
     "body" : "some_response_body"
   }
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.7.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+<button id="button_match_request_by_body_with_json_ignoring_extra_fields_in_array" class="accordion">match request by body with json ignoring extra fields in array objects</button>
+<div class="panel">
+    <p>JSON body matcher supports two mode <strong>STRICT</strong> which matches all fields, order of arrays and no additional fields allowed, and <strong>ONLY_MATCHING_FIELDS</strong> which only matches fields provided in the request matcher.</p>
+    <p>When matching JSON arrays the number of elements in the array must always match, however if <strong>ONLY_MATCHING_FIELDS</strong> mode is specified only the fields in the each array element in the matcher will be matched against each corresponding object in the array.</p>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withBody(
+                json(
+                    "{\"context\": [{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"}]}",
+                    MatchType.ONLY_MATCHING_FIELDS
+                )
+            )
+    )
+    .respond(
+        response()
+            .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
+            .withBody("some_response_body")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "method": "POST",
+        "path": "/json",
+        "body": {
+            "type": "JSON",
+            "json": "{\"context\": [{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"}]}"
+            "matchType" : "ONLY_MATCHING_FIELDS"
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "some response"
+    },
+    "times": {
+        "remainingTimes": 1,
+        "unlimited": true
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.7.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/json",
+        "body": {
+            "type": "JSON",
+            "json": "{\"context\": [{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"}]}"
+            "matchType" : "ONLY_MATCHING_FIELDS"
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "some response"
+    },
+    "times": {
+        "remainingTimes": 1,
+        "unlimited": true
+    }
 }'</code></pre>
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.7.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
