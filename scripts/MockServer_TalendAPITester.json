@@ -1,0 +1,2721 @@
+{
+    "version": 6,
+    "entities": [
+        {
+            "entity": {
+                "type": "Project",
+                "id": "a2ad79b7-006e-42d5-a583-3646cb6aa636",
+                "name": "Mock Server"
+            },
+            "children": [
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/clear"
+                        },
+                        "id": "519b9a9c-6c06-40c4-88bc-d616a78c03ec",
+                        "name": "clear - all"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": "{\n  \"httpRequest\" : {\n    \"method\" : \"GET\",\n    \"path\" : \"/json\",\n    \"queryStringParameters\" : [ {\n      \"name\" : \"param\",\n      \"values\" : [ \"one\" ]\n    } ]\n  }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "path": "localhost:1080/clear"
+                        },
+                        "id": "2ab72b2f-647e-4bfc-9bf3-9a5a25f2de01",
+                        "name": "clear - as expectation"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": "{\n    \"path\": \"/json\", \n    \"body\": {\n        \"type\": \"JSON\", \n        \"value\": \"{'one_name':'one_value', 'two_name':'two_value'}\"\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "path": "localhost:1080/clear"
+                        },
+                        "id": "c653538e-f0b5-4870-b922-752fe5c4e715",
+                        "name": "clear - json"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": "{\n    \"method\": \"GET\"\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/clear"
+                        },
+                        "id": "df838327-f0e3-4377-ac26-350935fa92d7",
+                        "name": "clear - simple"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": "{\n    \"path\": \"/simple\"\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "name": "type",
+                                        "value": "expectation"
+                                    }
+                                ]
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "path": "localhost:1080/clear"
+                        },
+                        "id": "a11f5624-963c-4059-acc3-03ed587ab524",
+                        "name": "clear - simple - expectations"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": "{\n    \"path\": \"/simple\"\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "name": "type",
+                                        "value": "log"
+                                    }
+                                ]
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "path": "localhost:1080/clear"
+                        },
+                        "id": "6fb9f1db-576e-4bb5-b107-90d72177d502",
+                        "name": "clear - simple - logs"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": "{\n    \"method\": \"POST\", \n    \"path\": \"/SomeService\", \n    \"body\": {\n        \"type\": \"XPATH\", \n        \"value\": \"(* and /[local-name()='Envelope']/[local-name()='Header']/[local-name()='Context']/Id[text()='ValueX'])\"\n    }, \n    \"headers\": [\n        {\n            \"name\": \"Content-Type\", \n            \"values\": [\n                \".action=\\\"?.search\\\"?.\"\n            ]\n        }\n    ]\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "path": "localhost:1080/clear"
+                        },
+                        "id": "ba8fb5f1-e415-4d7f-9895-7611bc9ab567",
+                        "name": "clear - xpath complex"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"OPTIONS\"\n    }, \n    \"httpResponse\": {\n        \"headers\": [\n            {\n                \"name\": \"Access-Control-Allow-Origin\", \n                \"values\": [\n                    \"*\"\n                ]\n            }, \n            {\n                \"name\": \"Access-Control-Allow-Methods\", \n                \"values\": [\n                    \"DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH\"\n                ]\n            }, \n            {\n                \"name\": \"Access-Control-Allow-Headers\", \n                \"values\": [\n                    \"Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization\"\n                ]\n            }, \n            {\n                \"name\": \"Access-Control-Expose-Headers\", \n                \"values\": [\n                    \"Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization\"\n                ]\n            }, \n            {\n                \"name\": \"Access-Control-Max-Age\", \n                \"values\": [\n                    \"300\"\n                ]\n            }, \n            {\n                \"name\": \"connection\", \n                \"values\": [\n                    \"close\"\n                ]\n            }\n        ]\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "acf6094f-8ac6-4307-a7d2-289d7bbd68ac",
+                        "name": "expectation - OPTIONS",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/json\"\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": {\n            \"type\": \"BINARY\", \n            \"base64Bytes\": \"iVBORw0KGgoAAAANSUhEUgAAAC4AAAA0CAYAAAD19ArKAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNS1jMDIxIDc5LjE1NTc3MiwgMjAxNC8wMS8xMy0xOTo0NDowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTQgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NkExNjYxNzFBRjlDMTFFNDg5OEI5RTRGRUE2RDI1Q0QiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NkExNjYxNzJBRjlDMTFFNDg5OEI5RTRGRUE2RDI1Q0QiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo2QTE2NjE2RkFGOUMxMUU0ODk4QjlFNEZFQTZEMjVDRCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo2QTE2NjE3MEFGOUMxMUU0ODk4QjlFNEZFQTZEMjVDRCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PjcxawAAABPhSURBVHja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\"\n        }, \n        \"headers\": [\n            {\n                \"name\": \"Accept-Ranges\", \n                \"values\": [\n                    \"bytes\"\n                ]\n            }, \n            {\n                \"name\": \"vary\", \n                \"values\": [\n                    \"accept-encoding\"\n                ]\n            }, \n            {\n                \"name\": \"ETag\", \n                \"values\": [\n                    \"W/\\\"1773-2239948642\\\"\"\n                ]\n            }, \n            {\n                \"name\": \"Connection\", \n                \"values\": [\n                    \"keep-alive\"\n                ]\n            }, \n            {\n                \"name\": \"Last-Modified\", \n                \"values\": [\n                    \"Fri, 20 Feb 2015 09:48:17 GMT\"\n                ]\n            }, \n            {\n                \"name\": \"cache-control\", \n                \"values\": [\n                    \"max-age=60\"\n                ]\n            }, \n            {\n                \"name\": \"Content-Length\", \n                \"values\": [\n                    \"6003\"\n                ]\n            }, \n            {\n                \"name\": \"Date\", \n                \"values\": [\n                    \"Sat, 11 Apr 2015 11:51:34 GMT\"\n                ]\n            }, \n            {\n                \"name\": \"X-Powered-By\", \n                \"values\": [\n                    \"Express\"\n                ]\n            }, \n            {\n                \"name\": \"Content-Type\", \n                \"values\": [\n                    \"image/png\"\n                ]\n            }\n        ]\n    }, \n    \"times\": {\n        \"remainingTimes\": 1, \n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "026cbed4-d30b-4525-8dcd-2235a175b636",
+                        "name": "expectation - binary response",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/connectContentAndOpen\"\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"some response\", \n        \"connectionOptions\": {\n            \"contentLengthHeaderOverride\": 5, \n            \"keepAliveOverride\": true, \n            \"closeSocket\": false\n        }\n    }, \n    \"times\": {\n        \"remainingTimes\": 1, \n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "173346fc-ea5a-4122-800f-8b80cec919d8",
+                        "name": "expectation - connection options (override headers - don't close)",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/connectContent\"\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"some response\", \n        \"connectionOptions\": {\n            \"contentLengthHeaderOverride\": 50, \n            \"keepAliveOverride\": true, \n            \"closeSocket\": true\n        }\n    }, \n    \"times\": {\n        \"remainingTimes\": 1, \n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "968ed361-b745-4813-b1c2-987a7f49a36c",
+                        "name": "expectation - connection options (override headers)",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/connectOpen\"\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"some response\", \n        \"connectionOptions\": {\n            \"suppressContentLengthHeader\": true, \n            \"suppressConnectionHeader\": true, \n            \"closeSocket\": false\n        }\n    }, \n    \"times\": {\n        \"remainingTimes\": 1, \n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "3ecb1f53-619a-4f81-95cf-95fa86a71628",
+                        "name": "expectation - connection options (suppress headers - don't close)",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/connect\"\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"some response\", \n        \"connectionOptions\": {\n            \"suppressContentLengthHeader\": true, \n            \"suppressConnectionHeader\": true, \n            \"closeSocket\": true\n        }\n    }, \n    \"times\": {\n        \"remainingTimes\": 1, \n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "abbd5e60-02b9-4ed2-b8e7-aa451749ce08",
+                        "name": "expectation - connection options (suppress headers)",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/cookie\", \n        \"cookies\": [\n            {\n                \"name\": \"name\", \n                \"value\": \"value\"\n            }\n        ]\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "18bec344-89c0-4e12-9b65-1561a00744da",
+                        "name": "expectation - cookie",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"OPTIONS\"\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"headers\": [\n            {\n                \"name\": \"Access-Control-Allow-Origin\", \n                \"values\": \"*\"\n            }, \n            {\n                \"name\": \"Access-Control-Allow-Methods\", \n                \"values\": \"PUT\"\n            }\n        ]\n    }, \n    \"times\": {\n        \"remainingTimes\": 1, \n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "8fad5dce-7149-4c99-972c-b79587c2c257",
+                        "name": "expectation - cors pre-flight",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/dWM%2FdWM+ZA==\"\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"some encoded path response\"\n    }, \n    \"times\": {\n        \"remainingTimes\": 1, \n        \"unlimited\": false\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "b0153ffc-b7ee-4c07-aed0-a3c180dfd4e9",
+                        "name": "expectation - encoded path",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/error\"\n    }, \n    \"httpError\": {\n        \"delay\": {\n            \"timeUnit\": \"SECONDS\", \n            \"value\": 5\n        }, \n        \"dropConnection\": true\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "03e2ccd9-bc6c-472b-9655-c5b1a32d1fc9",
+                        "name": "expectation - error simple",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/errorWithResponseBytes\"\n    }, \n    \"httpError\": {\n        \"delay\": {\n            \"timeUnit\": \"SECONDS\", \n            \"value\": 5\n        }, \n        \"dropConnection\": true, \n        \"responseBytes\": \"c29tZV9ieXRlcw==\"\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "8a813be9-9c04-4a0e-8149-759ccb25d4cc",
+                        "name": "expectation - error with response bytes",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n    \theaders: {\n\t    \t\"host\": [\"www.mock-server.com\"]\n        },\n        \"method\": \"GET\"\n    }, \n    \"httpForward\": {\n        \"host\": \"www.mock-server.com\", \n        \"port\": 443, \n        \"scheme\": \"HTTPS\"\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "84386f26-c70f-45a3-b13a-38a0d8ef4b77",
+                        "name": "expectation - forward",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"path\": \"/index.html\",\n        \"method\": \"GET\"\n    }, \n    \"httpOverrideForwardedRequest\": {\n\t    \"httpRequest\": {\n\t        \"headers\": {\n\t        \t\"host\": [ \"www.mock-server.com\" ]\n\t        }\n\t    }\n\t},\n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "description": "",
+                        "id": "faa629c8-9b1f-418a-9e21-e01c2b6d742b",
+                        "name": "expectation - forward override",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"path\": \"/forward\"\n    }, \n    \"httpOverrideForwardedRequest\": {\n\t    \"httpRequest\": {\n\t        \"headers\": {\n\t        \t\"host\": [ \"www.mock-server.com\" ]\n\t        }\n\t    }\n\t},\n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "description": "",
+                        "id": "7b74895c-f750-49f6-8abb-637e287cb605",
+                        "name": "expectation - forward override CONNECT",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"path\": \"/forward\"\n    }, \n    \"httpOverrideForwardedRequest\": {\n\t    \"httpRequest\": {\n            \"path\": \"/simple\"\n\t    }\n\t}\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "2523a2d6-9187-4c8b-b569-50f9e4742f0a",
+                        "name": "expectation - forward to simple",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"headers\": {\n            \"host\": [\n                \"www.mock-server.com\"\n            ]\n        }, \n        \"method\": \"GET\"\n    }, \n    \"httpForward\": {\n        \"delay\": {\n            \"timeUnit\": \"SECONDS\", \n            \"value\": 60\n        }, \n        \"host\": \"www.mock-server.com\", \n        \"port\": 443, \n        \"scheme\": \"HTTPS\"\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}\n"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "f203aff0-2322-42b8-b6de-e305fe09f9a2",
+                        "name": "expectation - forward with delay",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"POST\", \n        \"path\": \"/json\", \n        \"body\": {\n            \"type\": \"JSON\", \n            \"json\": \"{\\\"access_token\\\":\\\"6899B611-EFC6-47BB-8101-C06D4BDB14FA\\\"}\"\n        }\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"some response\"\n    }, \n    \"times\": {\n        \"remainingTimes\": 1, \n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "0a0ed7a5-48fa-427a-a669-af8e74494ece",
+                        "name": "expectation - json  request",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/cookieNot\", \n        \"cookies\": [\n            {\n                \"name\": \"!name\", \n                \"value\": \"value\"\n            }\n        ]\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "80cb55d1-bce4-4511-be99-e5df9a74f1dd",
+                        "name": "expectation - not cookie",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/cookieNotValue\", \n        \"cookies\": [\n            {\n                \"name\": \"name\", \n                \"value\": \"!value\"\n            }\n        ]\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/expectation"
+                        },
+                        "id": "cb5da53e-667b-4566-8154-b7bacf2c6f41",
+                        "name": "expectation - not cookie value",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/headerNotValue\", \n        \"headers\": [\n            {\n                \"name\": \"key\", \n                \"values\": [\n                    \"!value\"\n                ]\n            }\n        ]\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/expectation"
+                        },
+                        "id": "15b4cb2a-69ec-460e-96c0-9982422476ea",
+                        "name": "expectation - not header value",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\" : {\n\t    \"method\" : \"GET\",\n\t    \"path\" : \"/posts/api\",\n\t    \"headers\" : [ {\n\t      \"name\" : \"Host\",\n\t      \"values\" : [ \"habrahabr.ru:1080\" ]\n\t    } ]\n\t},\n    \"httpForward\": {\n        \"host\": \"www.mock-server.com\",\n        \"port\": 80,\n        \"scheme\": \"HTTP\"\n    },\n    \"times\": {\n        \"remainingTimes\": 3,\n        \"unlimited\": false\n    }\n}"
+                        },
+                        "uri": {
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/expectation"
+                        },
+                        "id": "eadbfc72-bc08-4001-a946-775fc22cc345",
+                        "name": "expectation - not localhost",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/parameterNotName\", \n        \"queryStringParameters\": {\n            \"!name\" : [\"valueOne\", \"valueTwo\"]\n         }\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200,\n        \"body\": \"not param name\"\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/expectation"
+                        },
+                        "id": "0ea45650-16cc-4822-a027-742e28abb4a0",
+                        "name": "expectation - not parameter name",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/parameterNotValue\", \n        \"queryStringParameters\": [\n            {\n                \"name\": \"name\",\n                \"values\": [\"!valueOne\", \"valueTwo\"]\n            }\n        ]\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/expectation"
+                        },
+                        "id": "d4cdc74d-5b8b-4604-9bb1-be56d25ace31",
+                        "name": "expectation - not parameter value",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"POST\", \n        \"path\": \"/notBody\", \n        \"body\": {\n            \"not\": true, \n            \"type\": \"REGEX\", \n            \"regex\": \"10\\\\.\\\\d{1,3}\\\\.\\\\d{1,3}\\\\.\\\\d{1,3}\"\n        }\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}\n"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "69e40526-f585-4c4c-9920-025e4ef5f8b3",
+                        "name": "expectation - not regex body",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\",\n        \"path\": \"/test\"\n    },\n    \"httpResponse\": {\n        \"statusCode\": 200,\n        \"headers\": [\n            {\n                \"name\": \"Content-Type\",\n                \"values\": [\"text/xml\"]\n            }\n        ],\n        \"body\": \"<test>Hello world</test>\"\n    }\n}"
+                        },
+                        "uri": {
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/expectation"
+                        },
+                        "id": "6d813271-f51d-4d82-887e-6d6f04b396d1",
+                        "name": "expectation - override content-type",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/json\",\n        \"queryStringParameters\": [\n            {\n                \"name\": \"foo\",\n                \"values\": [\"bar\"]\n            }\n        ]\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"some response\"\n    }\n}"
+                        },
+                        "uri": {
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/expectation"
+                        },
+                        "id": "3e120385-5854-4fb9-96c1-6bb3c0e0e51a",
+                        "name": "expectation - query parameter",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"POST\", \n        \"path\": \"/notBody\", \n        \"body\": {\n            \"not\": true, \n            \"type\": \"REGEX\", \n            \"regex\": \"10\\\\.\\\\d{1,3}\\\\.\\\\d{1,3}\\\\.\\\\d{1,3}\"\n        }\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}\n"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "c1af290d-fb39-447d-8fd3-6c45685d067c",
+                        "name": "expectation - regex body",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/secure\",\n\t    \"secure\": true\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"some response\"\n    }, \n    \"times\": {\n        \"remainingTimes\": 1, \n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "958c2c23-9288-4453-806b-42611b474cf6",
+                        "name": "expectation - secure",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/simple\"\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"some response\"\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "description": "",
+                        "id": "62f443a5-a680-4006-a28f-104a72f44c1c",
+                        "name": "expectation - simple",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"POST\", \n        \"path\": \"/simple\"\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"some response\"\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "description": "",
+                        "id": "2e353d87-c670-41ea-85d7-7b6417a69de7",
+                        "name": "expectation - simple POST",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/delay\"\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"some response\",\n        \"delay\": {\n            \"timeUnit\": \"SECONDS\", \n            \"value\": 1\n        }\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "description": "",
+                        "id": "2e4339a0-a9ac-4dbf-b469-267b95acadae",
+                        "name": "expectation - simple with delay",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"POST\", \n        \"path\": \"/substringBody\", \n        \"body\": {\n            \"type\": \"STRING\", \n            \"substring\": true, \n            \"string\": \"transferBetweenAccounts\"\n        }\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}\n"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "2db7fb68-23df-45d1-bccb-5fa8293a099a",
+                        "name": "expectation - substring body",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"path\": \"/templatePath\"\n    }, \n    \"httpResponseTemplate\": {\n        \"templateType\": \"JAVASCRIPT\", \n        \"template\": \"if (request.method === 'POST' && request.path === '/templatePath') { return { 'statusCode': 200, 'body': JSON.stringify({name: 'value'}) }; } else { return { 'statusCode': 406, 'body': request.body }; }\", \n        \"delay\": {\n            \"timeUnit\": \"MICROSECONDS\", \n            \"value\": 1\n        }\n    }, \n    \"times\": {\n        \"remainingTimes\": 3, \n        \"unlimited\": false\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "description": "",
+                        "id": "3e263991-b5e0-42ef-aeb3-1bce960f69e4",
+                        "name": "expectation - template javascript",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/simple\"\n    }, \n    \"httpResponseTemplate\": {\n        \"templateType\": \"VELOCITY\", \n        \"template\": \"#if ( $request.method == 'POST' && $request.path == '/somePath' ) { 'statusCode': 200, 'body': \\\"{'name': 'value'}\\\" } #else { 'statusCode': 406, 'body': \\\"$!request.body\\\" } #end\", \n        \"delay\": {\n            \"timeUnit\": \"MICROSECONDS\", \n            \"value\": 1\n        }\n    }, \n    \"times\": {\n        \"remainingTimes\": 1, \n        \"unlimited\": false\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "description": "",
+                        "id": "546e5768-f01c-4cd3-b2f0-38e5c09e1ab8",
+                        "name": "expectation - template velocity ",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/simple\"\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"some response\"\n    }, \n    \"timeToLive\": {\n        \"timeUnit\": \"HOURS\",\n        \"timeToLive\": 2\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "description": "",
+                        "id": "550c0cf3-3250-4f99-873d-05d2a159eda1",
+                        "name": "expectation - time to live",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"GET\", \n        \"path\": \"/v3/api/auth/validateToken\",\n        \"queryStringParameters\": {\n            \"client_id\": [\"e1158b25-dbec-49c5-8365-2be1ef5c273d\"],\n            \"access_token\" : [\"6899B611-EFC6-47BB-8101-C06D4BDB14FA\"]\n        },\n        \"headers\": {\n            \"Host\": [\"identity-ppe.api.tesco.com\"]\n        }\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"body\": \"{\\r\\n  \\\"UserId\\\": \\\"trn:tesco:uid:uuid:ACF88EA8-C72F-4421-979B-A53758A16FB4\\\",\\r\\n  \\\"Status\\\": \\\"VALID\\\",\\r\\n  \\\"Claims\\\": [\\r\\n    {\\r\\n      \\\"claimType\\\": \\\"http://schemas.tesco.com/ws/2011/12/identity/claims/clientid\\\",\\r\\n      \\\"value\\\": \\\"trn:tesco:cid:84361859-228D-4E00-B0E7-31615E8D241D\\\"\\r\\n    },\\r\\n    {\\r\\n      \\\"claimType\\\": \\\"http://schemas.tesco.com/ws/2011/12/identity/claims/scope\\\",\\r\\n      \\\"value\\\": \\\"oob\\\"\\r\\n    },\\r\\n    {\\r\\n      \\\"claimType\\\": \\\"http://schemas.tesco.com/ws/2011/12/identity/claims/userkey\\\",\\r\\n      \\\"value\\\": \\\"trn:tesco:uid:uuid:84361859-228D-4E00-B0E7-31615E8D241D\\\"\\r\\n    },\\r\\n    {\\r\\n      \\\"claimType\\\": \\\"http://schemas.tesco.com/ws/2011/12/identity/claims/confidencelevel\\\",\\r\\n      \\\"value\\\": \\\"12\\\"\\r\\n    },\\r\\n    {\\r\\n      \\\"claimType\\\": \\\"http://schemas.microsoft.com/ws/2008/06/identity/claims/expiration\\\",\\r\\n      \\\"value\\\": \\\"Fri, 29 Jul 2016 16:27:25 GMT\\\"\\r\\n    }\\r\\n  ]\\r\\n}\"\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "secure": true,
+                                "name": "https",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "description": "",
+                        "id": "ec23b112-276e-48ff-bd78-e107efc397e1",
+                        "name": "expectation - validateToken",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"httpRequest\": {\n        \"method\": \"POST\", \n        \"path\": \"/SomeService\", \n        \"body\": {\n            \"type\": \"XPATH\", \n            \"xpath\": \"(* and /[local-name()='Envelope']/[local-name()='Header']/[local-name()='Context']/Id[text()='ValueX'])\"\n        }, \n        \"headers\": [\n            {\n                \"name\": \"Content-Type\", \n                \"values\": [\n                    \".action=\\\"?.search\\\"?.\"\n                ]\n            }\n        ]\n    }, \n    \"httpResponse\": {\n        \"statusCode\": 200, \n        \"headers\": [\n            {\n                \"name\": \"Content-Type\", \n                \"values\": [\n                    \"application/soap+xml; charset=utf-8\"\n                ]\n            }\n        ], \n        \"body\": \"\"\n    }, \n    \"times\": {\n        \"unlimited\": true\n    }, \n    \"timeToLive\": {\n        \"timeUnit\": \"SECONDS\", \n        \"timeToLive\": 120, \n        \"unlimited\": false\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/expectation"
+                        },
+                        "id": "2eb0a3b1-9a7a-4c14-823a-c23a3b66cbeb",
+                        "name": "expectation - xpath complex",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"ports\": [\n        0,\n        0\n    ]\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/bind"
+                        },
+                        "description": "",
+                        "id": "57c8a482-3d17-4748-8861-3e58dd0269c0",
+                        "name": "port binding",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.5",
+                            "name": "POST"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/some/path"
+                        },
+                        "id": "cea4b996-0ded-4d79-81d7-dadb89faa1ac",
+                        "name": "request - /some/path",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.1",
+                            "name": "GET"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/cookie"
+                        },
+                        "id": "24207a9e-4ba8-49a7-a0c2-e3b21e7281e6",
+                        "name": "request - cookie ",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "Cookie",
+                                "value": "name=value"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.1",
+                            "name": "GET"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/cookieNot"
+                        },
+                        "id": "bded1b52-3e01-401e-97b8-303c72ce76f3",
+                        "name": "request - cookieNot",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "Cookie",
+                                "value": "notName=value"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.1",
+                            "name": "GET"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/cookieNotValue"
+                        },
+                        "id": "a80fa5de-4d9f-4ee6-99d4-f8c04a77535b",
+                        "name": "request - cookieNotValue",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "Cookie",
+                                "value": "name=notValue"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.1",
+                            "name": "GET"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/dWM%2FdWM+ZA=="
+                        },
+                        "id": "c89febc7-3f76-4977-8d87-27176fb7ec35",
+                        "name": "request - encoded path",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.1",
+                            "name": "GET"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/headerNotValue"
+                        },
+                        "id": "e970a315-d73b-4ed8-91fa-6e2f2c4bcdfe",
+                        "name": "request - headerNotValue",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "key",
+                                "value": "value"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.5",
+                            "name": "POST"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{'one_name':'one_value', 'two_name':'two_value'}"
+                        },
+                        "uri": {
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/json"
+                        },
+                        "id": "863e3902-fb0f-4df0-bead-d882ab4097b1",
+                        "name": "request - json ",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.3",
+                            "name": "POST"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/substringBody"
+                        },
+                        "id": "1c940213-74b2-4e48-b9bc-0a173638656e",
+                        "name": "request - no body",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.3",
+                            "name": "POST"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "10.2.3.4333"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/notBody"
+                        },
+                        "id": "20160901-df0b-4e52-9545-9735f1a62ddb",
+                        "name": "request - not regex body",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.1",
+                            "name": "GET"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "name": "notName",
+                                        "value": "valueOne"
+                                    },
+                                    {
+                                        "enabled": true,
+                                        "name": "notName",
+                                        "value": "valueTwo"
+                                    }
+                                ]
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/parameterNotName"
+                        },
+                        "id": "321d437e-9962-4d2f-b3c1-2c01346df54d",
+                        "name": "request - parameterNotName",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.1",
+                            "name": "GET"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "name": "name",
+                                        "value": "notValueOne"
+                                    },
+                                    {
+                                        "enabled": true,
+                                        "name": "name",
+                                        "value": "valueTwo"
+                                    }
+                                ]
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/parameterNotValue"
+                        },
+                        "id": "bacae519-55d3-4188-ab9e-5610371f5daa",
+                        "name": "request - parameterNotValue",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.1",
+                            "name": "GET"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "name": "foo",
+                                        "value": "bar"
+                                    }
+                                ]
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/json"
+                        },
+                        "id": "f39be7a6-2036-4065-9464-421c564e70a5",
+                        "name": "request - query parameter",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.1",
+                            "name": "GET"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/some/path"
+                        },
+                        "id": "945edada-b88a-40a6-8354-b8c95a6a4056",
+                        "name": "request - requests in json",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "bar",
+                                "value": "asdfg"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.1",
+                            "name": "GET"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "secure": true,
+                                "name": "https",
+                                "version": "V11"
+                            },
+                            "path": "localhost:1080/secure"
+                        },
+                        "id": "4c7a64d3-b383-4bf3-a96f-6f723319f477",
+                        "name": "request - secure",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.1",
+                            "name": "GET"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/simple"
+                        },
+                        "id": "c8b04715-1b4a-4096-9955-b919b392ddb5",
+                        "name": "request - simple",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.3",
+                            "name": "POST"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": "{\n    \"operationName\": \"transferBetweenAccounts\", \n    \"variables\": {\n        \"fromAccountId\": \"f0174360-e3bc-4296-8237-fab71d972392\", \n        \"toAccountId\": \"83accd4c-1143-4ab2-b1f4-66da3da6c4ef\", \n        \"amount\": \"5\"\n    }, \n\t\"query\":\"mutation transferBetweenAccounts($fromAccountId: ID!, $toAccountId: ID!, $amount: String!, $currency: String!) {\\n  makeTransfer(fromAccountId: $fromAccountId, toAccountId: $toAccountId, amount: $amount)\\n}\\n\"\n}\n\n"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/substringBody"
+                        },
+                        "id": "135e501e-d397-4928-affa-5180dcfcacac",
+                        "name": "request - substring body",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://tools.ietf.org/html/rfc7231#section-4.3.3",
+                            "name": "POST"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/templatePath"
+                        },
+                        "id": "ecdd8a23-6a9e-4a68-b497-67457e006778",
+                        "name": "request - template",
+                        "headers": [
+                            {
+                                "enabled": true,
+                                "name": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "path": "localhost:1080/reset"
+                        },
+                        "id": "41020fdb-901b-401f-93fe-5c75913d2ef0",
+                        "name": "reset"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": "{}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "name": "type",
+                                        "value": "active_expectations"
+                                    }
+                                ]
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/retrieve"
+                        },
+                        "id": "c55662cf-8944-49a8-b27c-e673bc7cc91f",
+                        "name": "retrieve - active expectations"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "name": "type",
+                                        "value": "logs"
+                                    }
+                                ]
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/retrieve"
+                        },
+                        "id": "892f9cce-26ed-4e0c-bba0-354a9e6dd008",
+                        "name": "retrieve - log"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "name": "type",
+                                        "value": "recorded_expectations"
+                                    }
+                                ]
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/retrieve"
+                        },
+                        "id": "706d8cb7-cbc0-4a93-813c-d338ed9ac3f7",
+                        "name": "retrieve - recorded expectations"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "name": "type",
+                                        "value": "recorded_expectations"
+                                    },
+                                    {
+                                        "enabled": true,
+                                        "name": "format",
+                                        "value": "java"
+                                    }
+                                ]
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/retrieve"
+                        },
+                        "id": "36e5adaa-e8e2-47cf-bffb-338409625b58",
+                        "name": "retrieve - recorded expectations in java"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "name": "format",
+                                        "value": "java"
+                                    }
+                                ]
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/retrieve"
+                        },
+                        "id": "405704db-c83b-471b-a1ce-1f83f796acc1",
+                        "name": "retrieve - requests in java"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/retrieve"
+                        },
+                        "id": "2b8a1443-9f60-4df1-a13e-03df8852cdc0",
+                        "name": "retrieve - requests in json"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "name": "format",
+                                        "value": "log_entries"
+                                    }
+                                ]
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/retrieve"
+                        },
+                        "id": "aa027ce7-b6f7-4d5b-b5c8-f7ec3e918268",
+                        "name": "retrieve - requests in log_entries"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true
+                            },
+                            "bodyType": "Text",
+                            "textBodyEditorHeight": 422,
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/status"
+                        },
+                        "id": "a123d210-4d9c-40a0-bf42-8f925eb51257",
+                        "name": "status",
+                        "headers": []
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": ""
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "path": "localhost:1080/stop"
+                        },
+                        "id": "e3df0d8b-c5a1-4d2e-a023-2184ae39437b",
+                        "name": "stop"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": "{\n    \"httpRequest\": {\n        \"path\": \"/json\",\n        \"body\": {\n            \"type\": \"JSON\", \n            \"json\": \"{'one_name':'one_value', 'two_name':'two_value'}\"\n        }\n    }, \n    \"times\": {\n        \"count\": 1\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/mockserver/verify"
+                        },
+                        "id": "cb48f67c-ba57-4ada-ab3a-c1ab7f712b24",
+                        "name": "verify - json"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": "{\n    \"httpRequest\": {\n        \"path\": \"/simple\"\n    }, \n    \"times\": {\n        \"count\": 1\n    }\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "path": "localhost:1080/verify"
+                        },
+                        "id": "05f5bcfa-c4d4-4c67-8914-0e2e90f02052",
+                        "name": "verify - simple"
+                    }
+                },
+                {
+                    "entity": {
+                        "type": "Request",
+                        "method": {
+                            "requestBody": true,
+                            "link": "http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6",
+                            "name": "PUT"
+                        },
+                        "body": {
+                            "formBody": {
+                                "overrideContentType": true,
+                                "items": [
+                                    {
+                                        "enabled": true,
+                                        "type": "Text",
+                                        "name": "numberOfAIPlayers",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "bodyType": "Text",
+                            "textBody": "{\n    \"httpRequests\": [\n        {\n            \"method\": \"someMethod\", \n            \"path\": \"somePath\", \n            \"queryStringParameters\": [\n                {\n                    \"name\": \"queryStringParameterNameOne\", \n                    \"values\": [\n                        \"queryStringParameterValueOne_One\", \n                        \"queryStringParameterValueOne_Two\"\n                    ]\n                }, \n                {\n                    \"name\": \"queryStringParameterNameTwo\", \n                    \"values\": [\n                        \"queryStringParameterValueTwo_One\"\n                    ]\n                }\n            ], \n            \"body\": {\n                \"type\": \"STRING\", \n                \"string\": \"someBody\"\n            }, \n            \"cookies\": [\n                {\n                    \"name\": \"someCookieName\", \n                    \"value\": \"someCookieValue\"\n                }\n            ], \n            \"headers\": [\n                {\n                    \"name\": \"someHeaderName\", \n                    \"values\": [\n                        \"someHeaderValue\"\n                    ]\n                }\n            ]\n        }, \n        {\n            \"method\": \"someMethod\", \n            \"path\": \"somePath\", \n            \"queryStringParameters\": [\n                {\n                    \"name\": \"queryStringParameterNameOne\", \n                    \"values\": [\n                        \"queryStringParameterValueOne_One\", \n                        \"queryStringParameterValueOne_Two\"\n                    ]\n                }, \n                {\n                    \"name\": \"queryStringParameterNameTwo\", \n                    \"values\": [\n                        \"queryStringParameterValueTwo_One\"\n                    ]\n                }\n            ], \n            \"body\": {\n                \"type\": \"STRING\", \n                \"string\": \"someBody\"\n            }, \n            \"cookies\": [\n                {\n                    \"name\": \"someCookieName\", \n                    \"value\": \"someCookieValue\"\n                }\n            ], \n            \"headers\": [\n                {\n                    \"name\": \"someHeaderName\", \n                    \"values\": [\n                        \"someHeaderValue\"\n                    ]\n                }\n            ]\n        }\n    ]\n}"
+                        },
+                        "uri": {
+                            "query": {
+                                "delimiter": "&",
+                                "items": []
+                            },
+                            "scheme": {
+                                "name": "http",
+                                "version": "V11"
+                            },
+                            "host": "localhost:1080",
+                            "path": "/verifySequence"
+                        },
+                        "id": "a64292fe-f72e-460d-9249-86a02208aa81",
+                        "name": "verifySequence"
+                    }
+                }
+            ]
+        }
+    ]
+}
