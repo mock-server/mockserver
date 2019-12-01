@@ -1,5 +1,5 @@
 ---
-title: Debugging Issues
+title: Logging & Debugging
 layout: page
 pageOrder: 8
 section: 'Mock Server'
@@ -647,7 +647,8 @@ mockServerClient("localhost", 1080)
 <ul>
     <li><strong>WARN</strong> - exceptions, errors</li>
     <li><strong>INFO</strong> - all interactions with the MockServer including setting up expectations, matching expectations, clearing expectations and verifying requests</li>
-    <li><strong>TRACE</strong> - all matcher results, including when specific matchers fail (such as HeaderMatcher)</li>
+    <li><strong>DEBUG</strong> - all matcher results, including when specific matchers fail (such as HeaderMatcher)</li>
+    <li><strong>TRACE</strong> - low level details or exceptions that aren't usually considered an error</li>
 </ul>
 
 <p>The <strong>TRACE</strong> level logging results in a lot of verbose logging but can be very helpful to debug why a complex matcher (such as the JSON Schema matcher) is not matching.</p>
@@ -674,12 +675,32 @@ mockServerClient("localhost", 1080)
 
 <h3>Configuring Java Logger</h3>
 
+<h4>Running from command line (i.e. docker, npm or jar-with-dependencies)</h4>
+
 <p>When running MockServer from the command line it relies on the Java Logger <span class="inline_code">java.util.logging.Logger</span> in addition to controlling the log level of MockServer using <span class="inline_code">-logLevel</span> the underlying logging framework can be configured (overriding the default configuration) by specifying the System Property <span class="inline_code">java.util.logging.config.file</span> or <span class="inline_code">java.util.logging.config.class</span> as detailed in the <a href="https://docs.oracle.com/javase/7/docs/api/java/util/logging/LogManager.html">LogManager JavaDoc</a>.</p>
 
-<p>An example <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-netty/src/main/resources/example_logging_configuration.properties">Java Logger configuration file</a> (which would be configured using <span class="inline_code">java.util.logging.config.file</span>) is available in github.</p>
+<p>The MockServer github repository contains an example <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-netty/src/main/resources/example_logging_configuration.properties">Java Logger configuration file</a> (which would be configured using <span class="inline_code">java.util.logging.config.file</span>).</p>
 
 <p>The default logging configuration can be overridden as follows:</p>
 <pre><code class="code">java -Djava.util.logging.config.file=/path/to/example_logging_configuration.properties -jar ~/Downloads/mockserver-netty-5.7.2-jar-with-dependencies.jar -serverPort <span class="numeric_literal">1080</span> -logLevel DEBUG</code></pre>
+
+<h4>Running from Java (i.e. maven or gradle project)</h4>
+
+<p>MockServer relies on the Java Logger SLF4J binding using an optional dependency.  Therefore, when MockServer is added as a dependency to a Maven or Gradle project it does not pull in the Java Logger binding transitively.</p>
+
+<p>If no existing SLF4J logger binding exists no logs will be output and the following error will be displayed by SLF4J:</p>
+
+<pre><code class="code">SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.</code></pre>
+
+<p>If this happens the simplest way to output logs for MockServer is to add the Java Logger SLF4J binding as a dependency.  For example, in Maven this would be as follows:</p>
+
+<pre><code class="code">&lt;<span class="element">dependency</span>&gt;
+    &lt;<span class="element">groupId</span>&gt;org.slf4j&lt;/<span class="element">groupId</span>&gt;
+    &lt;<span class="element">artifactId</span>&gt;slf4j-jdk14&lt;/<span class="element">artifactId</span>&gt;
+    &lt;<span class="element">version</span>&gt;1.7.29&lt;/<span class="element">version</span>&gt;
+&lt;/<span class="element">dependency</span>&gt;</code></pre>
 
 <a id="logging_with_maven_plugin" class="anchor" href="#logging_with_maven_plugin">&nbsp;</a>
 

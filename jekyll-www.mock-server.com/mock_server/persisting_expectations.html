@@ -1,0 +1,34 @@
+---
+title: Persisting Expectations
+layout: page
+pageOrder: 14
+section: 'Mock Server'
+subsection: true
+sitemap:
+  priority: 0.8
+  changefreq: 'monthly'
+  lastmod: 2019-11-10T08:00:00+01:00
+---
+
+<p>In MockServer expectations are only held in memory by default.  However, it is possible to persist expectations to the local file system to ensure that they survive a restart of MockServer.</p>
+
+<ol>
+  <li><a href="/mock_server/configuration_properties.html#button_configuration_persist_expectations_as_json">persistExpectations</a> configuration property needs to be set to <strong>true</strong></li>
+  <li>the file path used to persist expectations can be configured using the <a href="/mock_server/configuration_properties.html#button_configuration_persisted_expectations_file_path">persistedExpectationsPath</a> configuration property</li>
+  <li>expectations should be initialised automatically using the <a href="/mock_server/configuration_properties.html#button_configuration_initialization_json_path">initializationJsonPath</a> configuration property</li>
+</ol>
+
+<p>To ensure that the persisted expectations are loaded the next time MockServer starts the <a href="/mock_server/configuration_properties.html#button_configuration_initialization_json_path">initializationJsonPath</a> and <a href="/mock_server/configuration_properties.html#button_configuration_persisted_expectations_file_path">persistedExpectationsPath</a> should match and the <a href="/mock_server/configuration_properties.html#button_configuration_persist_expectations_as_json">persistExpectations</a> should be set to <strong>true</strong> as follows:</p>
+
+<pre class="prettyprint lang-javascript code"><code class="code">MOCKSERVER_PERSIST_EXPECTATIONS=true \
+MOCKSERVER_PERSISTED_EXPECTATIONS_PATH=mockserverInitialization.json \
+MOCKSERVER_INITIALIZATION_JSON_PATH=mockserverInitialization.json \
+java -jar ~/Downloads/mockserver-netty-5.7.2-jar-with-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
+
+<p>or</p>
+
+<pre class="prettyprint lang-javascript code"><code class="code">java \
+-Dmockserver.persistExpectations=true \
+-Dmockserver.persistedExpectationsPath=mockserverInitialization.json \
+-Dmockserver.initializationJsonPath=mockserverInitialization.json \
+-jar ~/Downloads/mockserver-netty-5.7.2-jar-with-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
