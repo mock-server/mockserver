@@ -5,7 +5,7 @@
     <parent>
         <artifactId>mockserver</artifactId>
         <groupId>org.mock-server</groupId>
-        <version>5.7.3-SNAPSHOT</version>
+        <version>5.8.0</version>
     </parent>
 
     <name>MockServer JUnit Jupiter Integration</name>
