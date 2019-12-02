@@ -8,6 +8,7 @@ import org.mockserver.model.KeysToMultiValues;
 import org.mockserver.model.NottableString;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.mockserver.model.NottableString.serialiseNottableString;
 
@@ -23,10 +24,11 @@ public abstract class KeysToMultiValuesSerializer<T extends KeysToMultiValues<? 
     @Override
     public void serialize(T collection, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
-        for (KeyToMultiValue keyToMultiValue : collection.getEntries()) {
-            jgen.writeFieldName(serialiseNottableString(keyToMultiValue.getName()));
-            jgen.writeStartArray(keyToMultiValue.getValues().size());
-            for (NottableString nottableString : keyToMultiValue.getValues()) {
+        for (NottableString key : collection.keySet()) {
+            jgen.writeFieldName(serialiseNottableString(key));
+            List<NottableString> values = collection.getValues(key);
+            jgen.writeStartArray(values.size());
+            for (NottableString nottableString : values) {
                 jgen.writeString(serialiseNottableString(nottableString));
             }
             jgen.writeEndArray();

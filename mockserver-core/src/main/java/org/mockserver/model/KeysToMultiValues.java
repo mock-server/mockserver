@@ -148,6 +148,14 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         }
     }
 
+    public Set<NottableString> keySet() {
+        return listMultimap.keySet();
+    }
+
+    public List<NottableString> getValues(NottableString key) {
+        return listMultimap.get(key);
+    }
+
     public Multimap<NottableString, NottableString> getMultimap() {
         return listMultimap;
     }
