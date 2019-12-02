@@ -219,15 +219,17 @@ public class ConfigurationProperties {
     }
 
     public static int ringBufferSize() {
-        if (maxLogEntries() <= 1024) {
-            return 1024;
-        } else if (maxLogEntries() <= 2048) {
-            return 2048;
-        } else if (maxLogEntries() <= 4096) {
-            return 4096;
-        } else {
-            return 8192;
+        return nextPowerOfTwo(maxExpectations() * maxExpectations());
+    }
+
+    private static int nextPowerOfTwo(int value) {
+        for (int i = 0; i < 16; i++) {
+            double powOfTwo = Math.pow(2, i);
+            if (powOfTwo > value) {
+                return (int) powOfTwo;
+            }
         }
+        return (int) Math.pow(2, 16);
     }
 
     public static int maxWebSocketExpectations() {

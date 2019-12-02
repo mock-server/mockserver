@@ -77,9 +77,11 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
 
     public void add(LogEntry logEntry) {
         if (asynchronousEventProcessing) {
-            // only try to publish so if it fails log is lost
             if (!disruptor.getRingBuffer().tryPublishEvent(logEntry)) {
-                logger.error("Failed to add event too log ring buffer, for event: " + logEntry);
+                // if ring buffer full only write WARN and ERROR to logger
+                if (logEntry.getLogLevel().toInt() >= Level.WARN.toInt()) {
+                    logger.warn("Too many log events failed to add log event to ring buffer: " + logEntry);
+                }
             }
         } else {
             processLogEntry(logEntry);
