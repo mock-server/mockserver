@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -64,7 +64,7 @@ public class ExpectationFileSystemPersistenceTest {
             for (Expectation expectation : expectations) {
                 mockServerMatcher.add(expectation);
             }
-            SECONDS.sleep(1);
+            MILLISECONDS.sleep(1500);
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
