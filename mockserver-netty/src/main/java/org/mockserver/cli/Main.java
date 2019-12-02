@@ -109,8 +109,6 @@ public class Main {
                 showUsage();
             }
 
-        } catch (IllegalArgumentException iae) {
-            showUsage();
         } catch (Throwable throwable) {
             MOCK_SERVER_LOGGER.logEvent(
                 new LogEntry()
@@ -119,6 +117,7 @@ public class Main {
                     .setMessageFormat("Exception while starting: {}")
                     .setThrowable(throwable)
             );
+            showUsage();
         }
     }
 
