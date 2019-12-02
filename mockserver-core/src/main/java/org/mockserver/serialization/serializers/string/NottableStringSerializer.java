@@ -22,4 +22,5 @@ public class NottableStringSerializer extends StdSerializer<NottableString> {
     public void serialize(NottableString nottableString, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeString(serialiseNottableString(nottableString));
     }
+
 }
