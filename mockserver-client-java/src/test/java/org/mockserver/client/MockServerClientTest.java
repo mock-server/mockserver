@@ -75,15 +75,6 @@ public class MockServerClientTest {
     }
 
     @Test
-    public void shouldHandleNullHttpRequestEnhancerException() {
-        // then
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage(containsString("Request with default properties can not be null"));
-
-        mockServerClient.setupDefaultRequestProperties(null);
-    }
-
-    @Test
     public void shouldHandleNullHostnameExceptions() {
         // then
         exception.expect(IllegalArgumentException.class);
@@ -94,17 +85,28 @@ public class MockServerClientTest {
     }
 
     @Test
+    public void shouldHandleNullHttpRequestEnhancerException() {
+        // then
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("Request with default properties can not be null"));
+
+        mockServerClient.setRequestOverride(null);
+    }
+
+    @Test
     public void shouldEnhanceRequestWithAuthorizationHeader() {
         // given
         String authorizationKey = "Authorization";
         String authorizationHeaderValue = "Basic dGVzdFVzZXI6dGVzdA==";
-        HttpRequest defaultRequestProperty = new HttpRequest();
-        defaultRequestProperty.withHeader(authorizationKey, authorizationHeaderValue);
-        // when
-        mockServerClient.setupDefaultRequestProperties(defaultRequestProperty);
-        mockServerClient.reset();
+        HttpRequest defaultRequestProperties = new HttpRequest();
+        defaultRequestProperties.withHeader(authorizationKey, authorizationHeaderValue);
 
-        //then
+        // when
+        mockServerClient
+            .setRequestOverride(defaultRequestProperties)
+            .reset();
+
+        // then
         verify(mockHttpClient).sendRequest(httpRequestArgumentCaptor.capture(), anyInt(), any(TimeUnit.class));
         List<String> authorizationHeader = httpRequestArgumentCaptor.getValue().getHeader(authorizationKey);
         assertTrue(authorizationHeader.contains(authorizationHeaderValue));
