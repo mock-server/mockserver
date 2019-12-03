@@ -27,7 +27,6 @@ import static org.mockserver.model.HttpTemplate.template;
 /**
  * @author jamesdbloom
  */
-@Ignore("ignored due to issue with classpath during maven build")
 public class CompileGeneratedJavaCodeTest {
 
     private static final String commonImports = "" +

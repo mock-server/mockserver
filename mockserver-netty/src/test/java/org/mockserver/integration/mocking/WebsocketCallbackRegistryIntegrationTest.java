@@ -165,7 +165,6 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
     private int objectCallbackCounter = 0;
 
     @Test
-    @Ignore
     public void shouldRespondByMultipleParallelObjectCallbacks() {
         // when
         for (int i = 0; i < 50; i++) {
