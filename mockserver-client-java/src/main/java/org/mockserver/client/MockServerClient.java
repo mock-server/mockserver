@@ -118,10 +118,6 @@ public class MockServerClient implements Stoppable {
         return this;
     }
 
-    EventLoopGroup getEventLoopGroup() {
-        return eventLoopGroup;
-    }
-
     private MockServerEventBus getMockServerEventBus() {
         if (EVENT_BUS_MAP.get(this.port()) == null) {
             EVENT_BUS_MAP.put(this.port(), new MockServerEventBus());

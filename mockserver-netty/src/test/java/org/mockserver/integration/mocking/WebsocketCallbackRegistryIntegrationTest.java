@@ -165,7 +165,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
     @Test
     public void shouldAllowUseOfSameWebsocketClientInsideCallback() {
         // when
-        int total = 5;
+        int total = 150;
         for (int i = 0; i < total; i++) {
             mockServerClient
                 .when(
