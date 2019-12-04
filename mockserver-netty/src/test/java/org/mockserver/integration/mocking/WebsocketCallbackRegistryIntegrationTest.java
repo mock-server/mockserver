@@ -8,12 +8,10 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.integration.server.AbstractMockingIntegrationTestBase;
 import org.mockserver.metrics.Metrics;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
-import static org.mockserver.model.Header.header;
+import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.stop.Stop.stopQuietly;
 
@@ -165,7 +163,75 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
     private int objectCallbackCounter = 0;
 
     @Test
-    public void shouldRespondByMultipleParallelObjectCallbacks() {
+    public void shouldAllowUseOfSameWebsocketClientInsideCallback() {
+        // when
+        int total = 5;
+        for (int i = 0; i < total; i++) {
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter)),
+                    once()
+                )
+                .respond(
+                    httpRequest -> {
+                        mockServerClient
+                            .when(
+                                request()
+                                    .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter)),
+                                once()
+                            )
+                            .respond(innerRequest -> {
+                                    mockServerClient
+                                        .when(
+                                            request()
+                                                .withPath(calculatePath("inner_inner_websocket_client_registration_" + objectCallbackCounter)),
+                                            once()
+                                        )
+                                        .respond(innerInnerRequest -> response()
+                                            .withBody("inner_inner_websocket_client_registration_" + objectCallbackCounter)
+                                        );
+                                    return response()
+                                        .withBody("inner_websocket_client_registration_" + objectCallbackCounter);
+                                }
+                            );
+                        return response()
+                            .withBody("outer_websocket_client_registration_" + objectCallbackCounter);
+                    }
+                );
+            objectCallbackCounter++;
+        }
+
+        objectCallbackCounter = 0;
+
+        // then
+        for (int i = 0; i < total; i++) {
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withBody("outer_websocket_client_registration_" + objectCallbackCounter),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter)),
+                    headersToIgnore)
+            );
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withBody("inner_websocket_client_registration_" + objectCallbackCounter),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter)),
+                    headersToIgnore)
+            );
+            objectCallbackCounter++;
+        }
+    }
+
+    @Test
+    public void shouldAllowUseOfSeparateWebsocketClientInsideCallback() {
         // when
         for (int i = 0; i < 50; i++) {
             mockServerClient
@@ -175,7 +241,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 )
                 .respond(
                     httpRequest -> {
-                        mockServerClient
+                        new MockServerClient("localhost", getServerPort())
                             .when(
                                 request()
                                     .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter))
@@ -217,46 +283,5 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
             );
             objectCallbackCounter++;
         }
-    }
-
-    @Test
-    public void shouldAllowUseOfSeparateWebsocketClientInsideCallback() {
-        // when
-        mockServerClient
-            .when(
-                request()
-                    .withPath(calculatePath("prevent_reentrant_websocketclient_registration"))
-            )
-            .respond(
-                httpRequest -> {
-                    new MockServerClient("localhost", getServerPort())
-                        .when(
-                            request()
-                                .withPath(calculatePath("reentrant_websocketclient_registration"))
-                        )
-                        .respond(
-                            httpRequest1 -> {
-                                // then
-                                return response()
-                                    .withBody("reentrant_websocketclient_registration");
-                            }
-                        );
-                    return response()
-                        .withBody("prevent_reentrant_websocketclient_registration");
-                }
-            );
-
-        // when
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("prevent_reentrant_websocketclient_registration"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("prevent_reentrant_websocketclient_registration")),
-                headersToIgnore)
-        );
-
     }
 }
