@@ -19,7 +19,7 @@ public class NettySslContextFactory {
 
     public NettySslContextFactory(MockServerLogger mockServerLogger) {
         keyAndCertificateFactory = new KeyAndCertificateFactory(mockServerLogger);
-        System.setProperty("https.protocols", "SSLv3,TLSv1,TLSv1.1,TLSv1.2,TLSv1.3");
+        System.setProperty("https.protocols", "SSLv3,TLSv1,TLSv1.1,TLSv1.2");
     }
 
     public synchronized SslContext createClientSslContext() {
