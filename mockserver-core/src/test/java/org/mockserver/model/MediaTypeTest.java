@@ -27,6 +27,13 @@ public class MediaTypeTest {
     }
 
     @Test
+    public void shouldParseContentTypeWithSpecialCharacters() {
+        assertThat(MediaType.parse("application/my.type+xml"), is(new MediaType("application", "my.type+xml")));
+        assertThat(MediaType.parse("application/my.type+xml;charset=utf-8"), is(new MediaType("application", "my.type+xml").withCharset("utf-8")));
+        assertThat(MediaType.parse("application/my.type+xml; Charset=\"utf-8\""), is(new MediaType("application", "my.type+xml").withCharset("utf-8")));
+    }
+
+    @Test
     public void shouldParseWithoutCharset() {
         // when
         String[] rfcContentTypeExamples = new String[]{
