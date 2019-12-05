@@ -34,14 +34,14 @@ import static org.mockserver.model.StringBody.exact;
  */
 public class MockServerRequestEncoderBasicMappingTest {
 
-    private MockServerRequestEncoder mockServerRequestEncoder;
+    private MockServerToNettyRequestEncoder mockServerRequestEncoder;
     private List<Object> output;
     private HttpRequest httpRequest;
     private final MockServerLogger mockServerLogger = new MockServerLogger();
 
     @Before
     public void setupFixture() {
-        mockServerRequestEncoder = new MockServerRequestEncoder(mockServerLogger);
+        mockServerRequestEncoder = new MockServerToNettyRequestEncoder(mockServerLogger);
         output = new ArrayList<Object>();
         httpRequest = request();
     }
@@ -159,7 +159,7 @@ public class MockServerRequestEncoderBasicMappingTest {
         httpRequest.withCookies(new Cookie("cookieName1", "cookieValue1"), new Cookie("cookieName2", "cookieValue2"));
 
         // when
-        new MockServerRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerToNettyRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
 
         // then
         HttpHeaders headers = ((FullHttpRequest) output.get(0)).headers();
@@ -172,7 +172,7 @@ public class MockServerRequestEncoderBasicMappingTest {
         httpRequest.withCookies((Cookie[]) null);
 
         // when
-        new MockServerRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerToNettyRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
 
         // then
         HttpHeaders headers = ((FullHttpRequest) output.get(0)).headers();
@@ -185,7 +185,7 @@ public class MockServerRequestEncoderBasicMappingTest {
         httpRequest.withBody("somebody");
 
         // when
-        new MockServerRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerToNettyRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
@@ -199,7 +199,7 @@ public class MockServerRequestEncoderBasicMappingTest {
         httpRequest.withBody(exact("somebody", MediaType.HTML_UTF_8));
 
         // when
-        new MockServerRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerToNettyRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
@@ -213,7 +213,7 @@ public class MockServerRequestEncoderBasicMappingTest {
         httpRequest.withBody(binary("somebody".getBytes(UTF_8)));
 
         // when
-        new MockServerRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerToNettyRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
@@ -227,7 +227,7 @@ public class MockServerRequestEncoderBasicMappingTest {
         httpRequest.withBody(binary("somebody".getBytes(UTF_8), MediaType.QUICKTIME));
 
         // when
-        new MockServerRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerToNettyRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);
@@ -241,7 +241,7 @@ public class MockServerRequestEncoderBasicMappingTest {
         httpRequest.withBody((String) null);
 
         // when
-        new MockServerRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
+        new MockServerToNettyRequestEncoder(mockServerLogger).encode(null, httpRequest, output);
 
         // then
         FullHttpRequest fullHttpRequest = (FullHttpRequest) output.get(0);

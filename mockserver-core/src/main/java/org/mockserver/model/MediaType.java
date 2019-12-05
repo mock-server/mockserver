@@ -59,28 +59,32 @@ public class MediaType extends ObjectWithJsonToString {
 
     @SuppressWarnings("UnstableApiUsage")
     public static MediaType parse(String mediaTypeHeader) {
-        int typeSeparator = mediaTypeHeader.indexOf(TYPE_SEPARATOR);
-        int typeEndIndex = 0;
-        String type = null;
-        String subType = null;
-        if (typeSeparator != -1) {
-            typeEndIndex = mediaTypeHeader.indexOf(PARAMETER_START);
-            if (typeEndIndex == -1) {
-                typeEndIndex = mediaTypeHeader.length();
+        if (isNotBlank(mediaTypeHeader)) {
+            int typeSeparator = mediaTypeHeader.indexOf(TYPE_SEPARATOR);
+            int typeEndIndex = 0;
+            String type = null;
+            String subType = null;
+            if (typeSeparator != -1) {
+                typeEndIndex = mediaTypeHeader.indexOf(PARAMETER_START);
+                if (typeEndIndex == -1) {
+                    typeEndIndex = mediaTypeHeader.length();
+                }
+                String typeString = mediaTypeHeader.substring(0, typeEndIndex).trim();
+                type = StringUtils.substringBefore(typeString, "/").trim().toLowerCase();
+                subType = StringUtils.substringAfter(typeString, "/").trim().toLowerCase();
+                if (typeEndIndex < mediaTypeHeader.length()) {
+                    typeEndIndex++;
+                }
             }
-            String typeString = mediaTypeHeader.substring(0, typeEndIndex).trim();
-            type = StringUtils.substringBefore(typeString, "/").trim().toLowerCase();
-            subType = StringUtils.substringAfter(typeString, "/").trim().toLowerCase();
-            if (typeEndIndex < mediaTypeHeader.length()) {
-                typeEndIndex++;
+            String parameters = mediaTypeHeader.substring(typeEndIndex).trim().toLowerCase().replaceAll("\"", "");
+            Map<String, String> parameterMap = null;
+            if (isNotBlank(parameters)) {
+                parameterMap = Splitter.on(';').withKeyValueSeparator('=').split(parameters);
             }
+            return new MediaType(type, subType, parameterMap);
+        } else {
+            return new MediaType(null, null);
         }
-        String parameters = mediaTypeHeader.substring(typeEndIndex).trim().toLowerCase().replaceAll("\"", "");
-        Map<String, String> parameterMap = null;
-        if (isNotBlank(parameters)) {
-            parameterMap = Splitter.on(';').withKeyValueSeparator('=').split(parameters);
-        }
-        return new MediaType(type, subType, parameterMap);
     }
 
     private static TreeMap<String, String> createParametersMap(Map<String, String> initialValues) {
@@ -180,6 +184,10 @@ public class MediaType extends ObjectWithJsonToString {
                 (type.equalsIgnoreCase(other.type) && (subtype.equals(MEDIA_TYPE_WILDCARD) || other.subtype.equals(MEDIA_TYPE_WILDCARD))) ||
                 // same types & sub-types
                 (type.equalsIgnoreCase(other.type) && this.subtype.equalsIgnoreCase(other.subtype)));
+    }
+
+    public boolean isJson() {
+        return type != null && type.equalsIgnoreCase("json") || subtype != null && subtype.equalsIgnoreCase("json");
     }
 
     @Override

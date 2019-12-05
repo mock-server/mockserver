@@ -30,6 +30,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
 import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.Parameter.param;
 
 /**
@@ -334,9 +335,9 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody("{" + NEW_LINE +
+                .withBody(json("{" + NEW_LINE +
                     "  \"ports\" : [ " + getServerPort() + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8),
+                    "}", MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/status"))
@@ -349,9 +350,9 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody("{" + NEW_LINE +
+                .withBody(json("{" + NEW_LINE +
                     "  \"ports\" : [ " + getServerSecurePort() + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8),
+                    "}", MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withSecure(true)

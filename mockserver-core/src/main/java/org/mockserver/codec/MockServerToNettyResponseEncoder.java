@@ -29,13 +29,13 @@ import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 /**
  * @author jamesdbloom
  */
-public class MockServerResponseEncoder extends MessageToMessageEncoder<HttpResponse> {
+public class MockServerToNettyResponseEncoder extends MessageToMessageEncoder<HttpResponse> {
 
     private final MockServerLogger mockServerLogger;
     private final BodyDecoderEncoder bodyDecoderEncoder;
     private final ContentTypeMapper contentTypeMapper;
 
-    public MockServerResponseEncoder(MockServerLogger mockServerLogger) {
+    public MockServerToNettyResponseEncoder(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
         this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
         this.contentTypeMapper = new ContentTypeMapper(mockServerLogger);

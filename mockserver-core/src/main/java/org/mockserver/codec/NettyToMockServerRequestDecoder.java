@@ -25,13 +25,13 @@ import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
 /**
  * @author jamesdbloom
  */
-public class MockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRequest> {
+public class NettyToMockServerRequestDecoder extends MessageToMessageDecoder<FullHttpRequest> {
 
     private final MockServerLogger mockServerLogger;
     private final boolean isSecure;
     private final BodyDecoderEncoder bodyDecoderEncoder;
 
-    public MockServerRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure) {
+    public NettyToMockServerRequestDecoder(MockServerLogger mockServerLogger, boolean isSecure) {
         this.mockServerLogger = mockServerLogger;
         this.isSecure = isSecure;
         this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);

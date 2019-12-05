@@ -32,13 +32,13 @@ import static org.mockserver.model.StringBody.exact;
  */
 public class MockServerRequestDecoderTest {
 
-    private MockServerRequestDecoder mockServerRequestDecoder;
+    private NettyToMockServerRequestDecoder mockServerRequestDecoder;
     private List<Object> output;
     private FullHttpRequest fullHttpRequest;
 
     @Before
     public void setupFixture() {
-        mockServerRequestDecoder = new MockServerRequestDecoder(new MockServerLogger(), false);
+        mockServerRequestDecoder = new NettyToMockServerRequestDecoder(new MockServerLogger(), false);
         output = new ArrayList<>();
     }
 

@@ -19,6 +19,7 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -55,9 +56,9 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody("{" + NEW_LINE +
+                .withBody(json("{" + NEW_LINE +
                     "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8),
+                    "}", MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/status"))
@@ -70,9 +71,9 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody("{" + NEW_LINE +
+                .withBody(json("{" + NEW_LINE +
                     "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8),
+                    "}", MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -95,9 +96,9 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody("{" + NEW_LINE +
+                .withBody(json("{" + NEW_LINE +
                     "  \"ports\" : [ " + firstNewPort + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8),
+                    "}", MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/bind"))
@@ -112,9 +113,9 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody("{" + NEW_LINE +
+                .withBody(json("{" + NEW_LINE +
                     "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8),
+                    "}", MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withPath(calculatePath("mockserver/status"))
@@ -127,9 +128,9 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody("{" + NEW_LINE +
+                .withBody(json("{" + NEW_LINE +
                     "  \"ports\" : [ " + secondNewPort + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8),
+                    "}", MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -145,9 +146,9 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), "application/json; charset=utf-8")
-                .withBody("{" + NEW_LINE +
+                .withBody(json("{" + NEW_LINE +
                     "  \"ports\" : [ " + Joiner.on(", ").join(severHttpPort) + ", " + firstNewPort + ", " + secondNewPort + " ]" + NEW_LINE +
-                    "}", MediaType.JSON_UTF_8),
+                    "}", MediaType.JSON_UTF_8)),
             makeRequest(
                 request()
                     .withSecure(true)

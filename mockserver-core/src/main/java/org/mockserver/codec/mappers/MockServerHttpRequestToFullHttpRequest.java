@@ -33,7 +33,7 @@ public class MockServerHttpRequestToFullHttpRequest {
         this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
     }
 
-    public FullHttpRequest mapMockServerResponseToHttpServletResponse(HttpRequest httpRequest) {
+    public FullHttpRequest mapMockServerResquestToNettyRequest(HttpRequest httpRequest) {
         // method
         HttpMethod httpMethod = HttpMethod.valueOf(httpRequest.getMethod("GET"));
         try {

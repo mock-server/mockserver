@@ -17,9 +17,9 @@ public abstract class BodyWithContentType<T> extends Body {
     }
 
     @JsonIgnore
-    Charset determineCharacterSet(MediaType contentType, Charset defaultCharset) {
-        if (contentType != null) {
-            Charset charset = contentType.getCharset();
+    Charset determineCharacterSet(MediaType mediaType, Charset defaultCharset) {
+        if (mediaType != null) {
+            Charset charset = mediaType.getCharset();
             if (charset != null) {
                 return charset;
             }

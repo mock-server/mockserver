@@ -9,6 +9,7 @@ import org.mockserver.model.*;
 import java.nio.charset.Charset;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.model.JsonBody.DEFAULT_MATCH_TYPE;
 
 public class BodyDecoderEncoder {
 
@@ -42,20 +43,29 @@ public class BodyDecoderEncoder {
                 if (ContentTypeMapper.isBinary(contentTypeHeader)) {
                     return new BinaryBody(bodyBytes);
                 } else {
-                    MediaType parse = null;
-                    try {
-                        if (isNotBlank(contentTypeHeader)) {
-                            parse = MediaType.parse(contentTypeHeader);
+                    MediaType mediaType = MediaType.parse(contentTypeHeader);
+                    if (mediaType.isJson()) {
+                        return new JsonBody(
+                            new String(bodyBytes, contentTypeMapper.getCharsetFromContentTypeHeader(contentTypeHeader)),
+                            mediaType.getCharset(),
+                            DEFAULT_MATCH_TYPE
+                        );
+                    } else {
+                        MediaType parse = null;
+                        try {
+                            if (isNotBlank(contentTypeHeader)) {
+                                parse = mediaType;
+                            }
+                        } catch (Throwable throwable) {
+                            // ignore content-type parse failure
                         }
-                    } catch (Throwable throwable) {
-                        // ignore content-type parse failure
+                        return new StringBody(
+                            new String(bodyBytes, contentTypeMapper.getCharsetFromContentTypeHeader(contentTypeHeader)),
+                            bodyBytes,
+                            false,
+                            parse
+                        );
                     }
-                    return new StringBody(
-                        new String(bodyBytes, contentTypeMapper.getCharsetFromContentTypeHeader(contentTypeHeader)),
-                        bodyBytes,
-                        false,
-                        parse
-                    );
                 }
             }
         }

@@ -24,13 +24,13 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public class MockServerResponseEncoderCookieHeaderTest {
 
-    private MockServerResponseEncoder mockServerResponseEncoder;
+    private MockServerToNettyResponseEncoder mockServerResponseEncoder;
     private List<Object> output;
     private HttpResponse httpResponse;
 
     @Before
     public void setupFixture() {
-        mockServerResponseEncoder = new MockServerResponseEncoder(new MockServerLogger());
+        mockServerResponseEncoder = new MockServerToNettyResponseEncoder(new MockServerLogger());
         output = new ArrayList<Object>();
         httpResponse = response();
     }

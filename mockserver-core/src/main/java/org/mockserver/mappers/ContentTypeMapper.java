@@ -62,7 +62,7 @@ public class ContentTypeMapper {
         .build();
 
     public static boolean isBinary(String contentTypeHeader) {
-        boolean binary = false;
+        boolean isBinary = false;
         if (isNotBlank(contentTypeHeader)) {
             String contentType = contentTypeHeader.toLowerCase();
             boolean utf8Body = contentType.contains("utf-8")
@@ -79,7 +79,7 @@ public class ContentTypeMapper {
                 || contentType.contains("urlencoded")
                 || contentType.contains("xml");
             if (!utf8Body) {
-                binary = contentType.contains("ogg")
+                isBinary = contentType.contains("ogg")
                     || contentType.contains("audio")
                     || contentType.contains("video")
                     || contentType.contains("image")
@@ -96,7 +96,16 @@ public class ContentTypeMapper {
                     || contentType.contains("application");
             }
         }
-        return binary;
+        return isBinary;
+    }
+
+    public static boolean isJson(String contentTypeHeader) {
+        boolean isJson = false;
+        if (isNotBlank(contentTypeHeader)) {
+            String contentType = contentTypeHeader.toLowerCase();
+            return contentType.contains("json");
+        }
+        return isJson;
     }
 
     private final MockServerLogger mockServerLogger;

@@ -6,7 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
-import org.mockserver.codec.MockServerRequestDecoder;
+import org.mockserver.codec.NettyToMockServerRequestDecoder;
 
 import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
 import static io.netty.buffer.Unpooled.wrappedBuffer;
@@ -53,7 +53,7 @@ public class MatcherBuilderTest {
         String bodyTestString = "UTF_8 characters: Bj\u00F6rk";
 
         // given
-        MockServerRequestDecoder mockServerRequestDecoder = new MockServerRequestDecoder(mockServerLogger, false);
+        NettyToMockServerRequestDecoder mockServerRequestDecoder = new NettyToMockServerRequestDecoder(mockServerLogger, false);
         FullHttpRequest fullHttpRequest = new DefaultFullHttpRequest(
             HTTP_1_1,
             GET,
@@ -82,7 +82,7 @@ public class MatcherBuilderTest {
         String bodyTestString = "UTF_8 characters: Bj\u00F6rk";
 
         // given
-        MockServerRequestDecoder mockServerRequestDecoder = new MockServerRequestDecoder(mockServerLogger, false);
+        NettyToMockServerRequestDecoder mockServerRequestDecoder = new NettyToMockServerRequestDecoder(mockServerLogger, false);
         FullHttpRequest fullHttpRequest = new DefaultFullHttpRequest(
             HTTP_1_1,
             GET,

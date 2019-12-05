@@ -11,11 +11,11 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
-public class MockServerResponseDecoder extends MessageToMessageDecoder<FullHttpResponse> {
+public class NettyToMockServerResponseDecoder extends MessageToMessageDecoder<FullHttpResponse> {
 
     private final MockServerLogger mockServerLogger;
 
-    MockServerResponseDecoder(MockServerLogger mockServerLogger) {
+    NettyToMockServerResponseDecoder(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
     }
 
