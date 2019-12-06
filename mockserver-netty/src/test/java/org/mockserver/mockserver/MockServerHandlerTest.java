@@ -206,9 +206,10 @@ public class MockServerHandlerTest {
         // given
         httpStateHandler.log(
             new LogEntry()
+                .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_one"))
                 .setHttpResponse(response("response_one"))
-                .setType(FORWARDED_REQUEST)
+                .setExpectation(request("request_one"), response("response_one"))
         );
 
         // when

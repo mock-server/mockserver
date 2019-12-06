@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import org.mockserver.log.model.LogEntry;
-import org.mockserver.matchers.Times;
-import org.mockserver.model.*;
 import org.mockserver.serialization.deserializers.body.BodyDTODeserializer;
 import org.mockserver.serialization.deserializers.body.BodyWithContentTypeDTODeserializer;
 import org.mockserver.serialization.deserializers.collections.CookiesDeserializer;
@@ -15,7 +12,6 @@ import org.mockserver.serialization.deserializers.collections.ParametersDeserial
 import org.mockserver.serialization.deserializers.condition.TimeToLiveDTODeserializer;
 import org.mockserver.serialization.deserializers.condition.VerificationTimesDTODeserializer;
 import org.mockserver.serialization.deserializers.string.NottableStringDeserializer;
-import org.mockserver.serialization.model.*;
 import org.mockserver.serialization.serializers.body.*;
 import org.mockserver.serialization.serializers.collections.CookiesSerializer;
 import org.mockserver.serialization.serializers.collections.HeadersSerializer;
@@ -26,7 +22,6 @@ import org.mockserver.serialization.serializers.request.HttpRequestDTOSerializer
 import org.mockserver.serialization.serializers.response.HttpResponseSerializer;
 import org.mockserver.serialization.serializers.response.*;
 import org.mockserver.serialization.serializers.string.NottableStringSerializer;
-import org.mockserver.verify.VerificationTimes;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,11 +34,14 @@ import java.util.Map;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class ObjectMapperFactory {
 
-    private static final ObjectMapper OBJECT_MAPPER = buildObjectMapper();
+    private static ObjectMapper objectMapper = buildObjectMapper();
 
     public static ObjectMapper createObjectMapper(JsonSerializer... additionJsonSerializers) {
         if (additionJsonSerializers == null || additionJsonSerializers.length == 0) {
-            return OBJECT_MAPPER;
+            if (objectMapper == null) {
+                objectMapper = buildObjectMapper();
+            }
+            return objectMapper;
         } else {
             return buildObjectMapper(additionJsonSerializers);
         }
@@ -143,6 +141,8 @@ public class ObjectMapperFactory {
             new XmlSchemaBodyDTOSerializer(),
             new XPathBodySerializer(),
             new XPathBodyDTOSerializer(),
+            new LogEventBodySerializer(),
+            new LogEventBodyDTOSerializer(),
             // condition
             new VerificationTimesDTOSerializer(),
             new VerificationTimesSerializer(),

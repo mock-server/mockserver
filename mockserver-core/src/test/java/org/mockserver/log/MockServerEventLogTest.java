@@ -198,6 +198,7 @@ public class MockServerEventLogTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_five"))
                 .setHttpResponse(response("response_five"))
+                .setExpectation(request("request_five"), response("response_five"))
         );
 
         // then
@@ -228,7 +229,7 @@ public class MockServerEventLogTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_five"))
                 .setHttpResponse(response("response_five"))
-                .setExpectation(new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five")))
+                .setExpectation(request("request_five"), response("response_five"))
         ));
         assertThat(retrieveRecordedExpectations(null), contains(
             new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five"))
@@ -279,7 +280,7 @@ public class MockServerEventLogTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_five"))
                 .setHttpResponse(response("response_five"))
-                .setExpectation(new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five")))
+                .setExpectation(request("request_five"), response("response_five"))
         ));
     }
 
@@ -343,6 +344,7 @@ public class MockServerEventLogTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_five"))
                 .setHttpResponse(response("response_five"))
+                .setExpectation(request("request_five"), response("response_five"))
         );
 
         // then
@@ -497,6 +499,7 @@ public class MockServerEventLogTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_five"))
                 .setHttpResponse(response("response_five"))
+                .setExpectation(request("request_five"), response("response_five"))
         );
 
         // when
@@ -520,7 +523,7 @@ public class MockServerEventLogTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_five"))
                 .setHttpResponse(response("response_five"))
-                .setExpectation(new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five")))
+                .setExpectation(request("request_five"), response("response_five"))
         ));
         assertThat(retrieveRecordedExpectations(null), contains(
             new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five"))
@@ -558,7 +561,7 @@ public class MockServerEventLogTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_five"))
                 .setHttpResponse(response("response_five"))
-                .setExpectation(new Expectation(request("request_five"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_five")))
+                .setExpectation(request("request_five"), response("response_five"))
         ));
     }
 

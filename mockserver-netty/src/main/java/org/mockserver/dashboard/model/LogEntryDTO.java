@@ -40,8 +40,8 @@ public class LogEntryDTO extends ObjectWithJsonToString {
         setTimestamp(logEntry.getTimestamp());
         setEpochTime(logEntry.getEpochTime());
         setType(logEntry.getType());
-        setHttpRequests(logEntry.getHttpRequests());
-        setHttpResponse(logEntry.getHttpResponse());
+        setHttpRequests(logEntry.getHttpUpdatedRequests());
+        setHttpResponse(logEntry.getHttpUpdatedResponse());
         setHttpError(logEntry.getHttpError());
         setExpectation(logEntry.getExpectation());
         setMessageFormat(logEntry.getMessageFormat());

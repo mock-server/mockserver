@@ -79,8 +79,8 @@ public class MockServerClientIntegrationTest {
 
     @Before
     public void clearRequestLog() {
-        echoServerOne.requestLogFilter().reset();
-        echoServerTwo.requestLogFilter().reset();
+        echoServerOne.mockServerEventLog().reset();
+        echoServerTwo.mockServerEventLog().reset();
     }
 
     @After
@@ -90,7 +90,7 @@ public class MockServerClientIntegrationTest {
 
     private List<HttpRequest> retrieveRequests(HttpRequest httpRequest) {
         CompletableFuture<List<HttpRequest>> result = new CompletableFuture<>();
-        echoServerOne.requestLogFilter().retrieveRequests(httpRequest, result::complete);
+        echoServerOne.mockServerEventLog().retrieveRequests(httpRequest, result::complete);
         try {
             return result.get(10, SECONDS);
         } catch (Exception e) {
@@ -101,7 +101,7 @@ public class MockServerClientIntegrationTest {
 
     public String verify(Verification verification) {
         CompletableFuture<String> result = new CompletableFuture<>();
-        echoServerOne.requestLogFilter().verify(verification, result::complete);
+        echoServerOne.mockServerEventLog().verify(verification, result::complete);
         try {
             return result.get(10, SECONDS);
         } catch (Exception e) {
@@ -112,7 +112,7 @@ public class MockServerClientIntegrationTest {
 
     public String verify(VerificationSequence verificationSequence) {
         CompletableFuture<String> result = new CompletableFuture<>();
-        echoServerOne.requestLogFilter().verify(verificationSequence, result::complete);
+        echoServerOne.mockServerEventLog().verify(verificationSequence, result::complete);
         try {
             return result.get(10, SECONDS);
         } catch (Exception e) {

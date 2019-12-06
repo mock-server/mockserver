@@ -288,9 +288,9 @@ public class HttpStateHandler {
                                 mockServerLog
                                     .retrieveRequestResponses(
                                         httpRequest,
-                                        requests -> {
+                                        httpRequestAndHttpResponses -> {
                                             response.withBody(
-                                                httpRequestResponseSerializer.serialize(requests),
+                                                httpRequestResponseSerializer.serialize(httpRequestAndHttpResponses),
                                                 MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);

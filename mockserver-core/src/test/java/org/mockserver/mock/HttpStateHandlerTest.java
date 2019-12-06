@@ -90,14 +90,15 @@ public class HttpStateHandlerTest {
                 .setMessageFormat("no expectation for:{}returning response:{}")
                 .setArguments(request("request_one"), notFoundResponse())
         );
+        LogEntry logEntry = new LogEntry()
+            .setLogLevel(INFO)
+            .setType(EXPECTATION_RESPONSE)
+            .setHttpRequest(request("request_two"))
+            .setHttpResponse(response("response_two"))
+            .setMessageFormat("returning error:{}for request:{}for action:{}")
+            .setArguments(request("request_two"), response("response_two"), response("response_two"));
         httpStateHandler.log(
-            new LogEntry()
-                .setLogLevel(INFO)
-                .setType(EXPECTATION_RESPONSE)
-                .setHttpRequest(request("request_two"))
-                .setHttpResponse(response("response_two"))
-                .setMessageFormat("returning error:{}for request:{}for action:{}")
-                .setArguments(request("request_two"), response("response_two"), response("response_two"))
+            logEntry
         );
         httpStateHandler.log(
             new LogEntry()
@@ -1020,6 +1021,7 @@ public class HttpStateHandlerTest {
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request("request_one"))
                 .setHttpResponse(response("response_one"))
+                .setExpectation(request("request_one"), response("response_one"))
         );
         httpStateHandler.log(
             new LogEntry()
@@ -1027,6 +1029,7 @@ public class HttpStateHandlerTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_two"))
                 .setHttpResponse(response("response_two"))
+                .setExpectation(request("request_two"), response("response_two"))
         );
 
         // when
@@ -1055,6 +1058,7 @@ public class HttpStateHandlerTest {
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request("request_one"))
                 .setHttpResponse(response("response_one"))
+                .setExpectation(request("request_one"), response("response_one"))
         );
         httpStateHandler.log(
             new LogEntry()
@@ -1062,6 +1066,7 @@ public class HttpStateHandlerTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_two"))
                 .setHttpResponse(response("response_two"))
+                .setExpectation(request("request_two"), response("response_two"))
         );
 
         // when
@@ -1090,6 +1095,7 @@ public class HttpStateHandlerTest {
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request("request_one"))
                 .setHttpResponse(response("response_one"))
+                .setExpectation(request("request_one"), response("response_one"))
         );
         httpStateHandler.log(
             new LogEntry()
@@ -1097,6 +1103,7 @@ public class HttpStateHandlerTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_two"))
                 .setHttpResponse(response("response_two"))
+                .setExpectation(request("request_two"), response("response_two"))
         );
 
         // when

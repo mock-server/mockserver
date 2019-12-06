@@ -54,5 +54,6 @@ public abstract class Body<T> extends Not {
         XML,
         XML_SCHEMA,
         XPATH,
+        LOG_EVENT,
     }
 }

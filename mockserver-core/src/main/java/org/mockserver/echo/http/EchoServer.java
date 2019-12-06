@@ -31,7 +31,7 @@ public class EchoServer implements Stoppable {
     private static final MockServerLogger mockServerLogger = new MockServerLogger(EchoServer.class);
 
     private final Scheduler scheduler = new Scheduler(mockServerLogger);
-    private final MockServerEventLog logFilter = new MockServerEventLog(mockServerLogger, scheduler, true);
+    private final MockServerEventLog mockServerEventLog = new MockServerEventLog(mockServerLogger, scheduler, true);
     private final NextResponse nextResponse = new NextResponse();
     private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
     private final CompletableFuture<Integer> boundPort = new CompletableFuture<>();
@@ -57,7 +57,7 @@ public class EchoServer implements Stoppable {
                 .option(ChannelOption.SO_BACKLOG, 100)
                 .handler(new LoggingHandler(EchoServer.class))
                 .childHandler(new EchoServerInitializer(mockServerLogger, secure, error, registeredClients, websocketChannels, textWebSocketFrames))
-                .childAttr(LOG_FILTER, logFilter)
+                .childAttr(LOG_FILTER, mockServerEventLog)
                 .childAttr(NEXT_RESPONSE, nextResponse)
                 .bind(0)
                 .addListener((ChannelFutureListener) future -> {
@@ -105,8 +105,8 @@ public class EchoServer implements Stoppable {
         }
     }
 
-    public MockServerEventLog requestLogFilter() {
-        return logFilter;
+    public MockServerEventLog mockServerEventLog() {
+        return mockServerEventLog;
     }
 
     public void withNextResponse(HttpResponse... httpResponses) {

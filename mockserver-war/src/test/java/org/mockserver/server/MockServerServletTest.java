@@ -200,15 +200,17 @@ public class MockServerServletTest {
         // given
         httpStateHandler.log(
             new LogEntry()
+                .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_one"))
                 .setHttpResponse(response("response_one"))
-                .setType(FORWARDED_REQUEST)
+                .setExpectation(request("request_one"), response("response_one"))
         );
         httpStateHandler.log(
             new LogEntry()
+                .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_two"))
                 .setHttpResponse(response("response_two"))
-                .setType(FORWARDED_REQUEST)
+                .setExpectation(request("request_two"), response("response_two"))
         );
 
         // when

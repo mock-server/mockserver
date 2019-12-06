@@ -31,13 +31,13 @@ public class LogEntrySerializer extends StdSerializer<LogEntry> {
         }
         if (logEntry.getHttpRequests() != null) {
             if (logEntry.getHttpRequests().length > 1) {
-                jgen.writeObjectField("httpRequests", logEntry.getHttpRequests());
+                jgen.writeObjectField("httpRequests", logEntry.getHttpUpdatedRequests());
             } else if (logEntry.getHttpRequests().length == 1) {
-                jgen.writeObjectField("httpRequest", logEntry.getHttpRequest());
+                jgen.writeObjectField("httpRequest", logEntry.getHttpUpdatedRequests()[0]);
             }
         }
         if (logEntry.getHttpResponse() != null) {
-            jgen.writeObjectField("httpResponse", logEntry.getHttpResponse());
+            jgen.writeObjectField("httpResponse", logEntry.getHttpUpdatedResponse());
         }
         if (logEntry.getHttpError() != null) {
             jgen.writeObjectField("httpError", logEntry.getHttpError());

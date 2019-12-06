@@ -11,6 +11,8 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.*;
@@ -224,6 +226,7 @@ public class ActionHandler {
                                     .setLogLevel(Level.INFO)
                                     .setHttpRequest(request)
                                     .setHttpResponse(response)
+                                    .setExpectation(request, response)
                                     .setMessageFormat("returning response:{}for forwarded request" + NEW_LINE + NEW_LINE + " in json:{}" + NEW_LINE + NEW_LINE + " in curl:{}")
                                     .setArguments(response, request, httpRequestToCurlSerializer.toCurl(request, remoteAddress))
                             );
@@ -308,6 +311,7 @@ public class ActionHandler {
                         .setLogLevel(Level.INFO)
                         .setHttpRequest(request)
                         .setHttpResponse(response)
+                        .setExpectation(request, response)
                         .setMessageFormat("returning response:{}for forwarded request\n\n in json:{}\n\n in curl:{}for action:{}")
                         .setArguments(response, responseFuture.getHttpRequest(), httpRequestToCurlSerializer.toCurl(responseFuture.getHttpRequest(), responseFuture.getRemoteAddress()), action)
                 );
