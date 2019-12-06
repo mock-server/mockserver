@@ -1128,6 +1128,144 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    public void shouldReturnResponseByMatchingBodyWithXmlWithSpecialCharacters() {
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withBody(
+                        xml(
+                            "" +
+                                "<bookstore>" + NEW_LINE +
+                                "  <book nationality=\"ITALIAN\" category=\"COOKING\"><title>Everyday Italian</title><author>我说中国话</author></book>" + NEW_LINE +
+                                "</bookstore>",
+                            StandardCharsets.UTF_8
+                        )
+                    ),
+                exactly(2)
+            )
+            .respond(
+                response()
+                    .withBody("some_body")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withHeader("Content-Type", "application/xml; charset=utf-8")
+                    .withBody(new StringBody("" +
+                        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                        "<bookstore>" + NEW_LINE +
+                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + NEW_LINE +
+                        "    <title>Everyday Italian</title>" + NEW_LINE +
+                        "    <author>我说中国话</author>" + NEW_LINE +
+                        "  </book>" + NEW_LINE +
+                        "</bookstore>")),
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withHeader("Content-Type", "application/xml; charset=utf-8")
+                    .withBody(new StringBody("" +
+                        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
+                        "<bookstore>" + NEW_LINE +
+                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + NEW_LINE +
+                        "    <title>Everyday Italian</title>" + NEW_LINE +
+                        "    <author>我说中国话</author>" + NEW_LINE +
+                        "  </book>" + NEW_LINE +
+                        "</bookstore>")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingBodyWithXmlWithSpecialCharactersClientCharsetDifferent() {
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withBody(
+                        xml(
+                            "" +
+                                "<bookstore>" + NEW_LINE +
+                                "  <book nationality=\"ITALIAN\" category=\"COOKING\"><title>Everyday Italian</title><author>ÄÑçîüÏ</author></book>" + NEW_LINE +
+                                "</bookstore>",
+                            StandardCharsets.UTF_8
+                        )
+                    ),
+                exactly(2)
+            )
+            .respond(
+                response()
+                    .withBody("some_body")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withHeader("Content-Type", "application/xml; charset=" + StandardCharsets.ISO_8859_1.name())
+                    .withBody(binary(("" +
+                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                        "<bookstore>" + NEW_LINE +
+                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + NEW_LINE +
+                        "    <title>Everyday Italian</title>" + NEW_LINE +
+                        "    <author>ÄÑçîüÏ</author>" + NEW_LINE +
+                        "  </book>" + NEW_LINE +
+                        "</bookstore>").getBytes(StandardCharsets.ISO_8859_1))),
+                headersToIgnore)
+        );
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST")
+                    .withHeader("Content-Type", "application/xml; charset=" + StandardCharsets.ISO_8859_1.name())
+                    .withBody(binary(("" +
+                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
+                        "<bookstore>" + NEW_LINE +
+                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + NEW_LINE +
+                        "    <title>Everyday Italian</title>" + NEW_LINE +
+                        "    <author>ÄÑçîüÏ</author>" + NEW_LINE +
+                        "  </book>" + NEW_LINE +
+                        "</bookstore>").getBytes(StandardCharsets.ISO_8859_1))),
+                headersToIgnore)
+        );
+    }
+
+    @Test
     public void shouldReturnResponseByMatchingBodyWithJson() {
         // when
         mockServerClient
