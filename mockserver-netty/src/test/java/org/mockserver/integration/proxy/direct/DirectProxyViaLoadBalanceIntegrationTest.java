@@ -1,4 +1,4 @@
-package org.mockserver.mock.action;
+package org.mockserver.integration.proxy.direct;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -11,6 +11,7 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.verify.VerificationTimes;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.Future;
@@ -26,24 +27,23 @@ import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.stop.Stop.stopQuietly;
-import static org.mockserver.verify.VerificationTimes.once;
 
 /**
  * @author jamesdbloom
  */
-public class HttpProxyViaLoadBalanceIntegrationTest {
+public class DirectProxyViaLoadBalanceIntegrationTest {
 
     private static ClientAndServer targetClientAndServer;
     private static ClientAndServer loadBalancerClientAndServer;
 
-    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(HttpProxyViaLoadBalanceIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(DirectProxyViaLoadBalanceIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
     private static NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
 
     @BeforeClass
     public static void startServer() {
         targetClientAndServer = startClientAndServer();
-        loadBalancerClientAndServer = startClientAndServer();
+        loadBalancerClientAndServer = startClientAndServer("127.0.0.1", targetClientAndServer.getLocalPort());
     }
 
     @AfterClass
@@ -70,45 +70,46 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
             httpClient.sendRequest(
                 request()
                     .withPath("/some_path")
-                    .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getLocalPort()),
+                    .withHeader(HOST.toString(), "localhost:" + loadBalancerClientAndServer.getLocalPort()),
                 new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
             );
 
         // then - returns 404
         assertThat(responseFuture.get(10, TimeUnit.MINUTES).getStatusCode(), is(404));
 
-        // and - verify request received by proxy (not possible for target due to loop prevention)
-        loadBalancerClientAndServer.verify(request().withPath("/some_path"), once());
-        targetClientAndServer.verify(request().withPath("/some_path"), once());
+        // and - both proxy and target verify request received
+        loadBalancerClientAndServer.verify(request().withPath("/some_path"));
+        targetClientAndServer.verify(request().withPath("/some_path"));
 
         // and - logs hide proxied request
         String[] loadBalancerLogMessages = loadBalancerClientAndServer.retrieveLogMessagesArray(null);
         String[] targetLogMessages = targetClientAndServer.retrieveLogMessagesArray(null);
-        assertThat(loadBalancerLogMessages[2], containsString("returning response:" + NEW_LINE +
-            NEW_LINE +
+        assertThat(loadBalancerLogMessages[2], containsString("no expectation for:" + NEW_LINE +
+            "" + NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"method\" : \"GET\"," + NEW_LINE +
+            "\t  \"path\" : \"/some_path\"")
+        );
+        assertThat(loadBalancerLogMessages[2], containsString(" returning response:" + NEW_LINE +
+            "" + NEW_LINE +
             "\t{" + NEW_LINE +
             "\t  \"statusCode\" : 404," + NEW_LINE +
-            "\t  \"reasonPhrase\" : \"Not Found\",\n")
+            "\t  \"reasonPhrase\" : \"Not Found\"")
         );
-        assertThat(loadBalancerLogMessages[2], containsString(" for forwarded request" + NEW_LINE +
-            NEW_LINE +
+        // target server forward request to load balancer as Host header matches load balancer's Host
+        assertThat(targetLogMessages[2], containsString("returning response:" + NEW_LINE +
+            "" + NEW_LINE +
+            "\t{" + NEW_LINE +
+            "\t  \"statusCode\" : 404," + NEW_LINE +
+            "\t  \"reasonPhrase\" : \"Not Found\"")
+        );
+        assertThat(targetLogMessages[2], containsString("for forwarded request" + NEW_LINE +
+            "" + NEW_LINE +
             " in json:" + NEW_LINE +
             "" + NEW_LINE +
             "\t{" + NEW_LINE +
             "\t  \"method\" : \"GET\"," + NEW_LINE +
-            "\t  \"path\" : \"/some_path\",\n")
-        );
-        assertThat(targetLogMessages[2], containsString("no expectation for:" + NEW_LINE +
-            NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"method\" : \"GET\"," + NEW_LINE +
-            "\t  \"path\" : \"/some_path\",")
-        );
-        assertThat(targetLogMessages[2], containsString(" returning response:" + NEW_LINE +
-            NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"statusCode\" : 404," + NEW_LINE +
-            "\t  \"reasonPhrase\" : \"Not Found\"")
+            "\t  \"path\" : \"/some_path\"")
         );
     }
 
@@ -130,7 +131,7 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
             httpClient.sendRequest(
                 request()
                     .withPath("/target")
-                    .withHeader(HOST.toString(), "localhost:" + targetClientAndServer.getLocalPort()),
+                    .withHeader(HOST.toString(), "localhost:" + loadBalancerClientAndServer.getLocalPort()),
                 new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
             );
 
@@ -164,6 +165,27 @@ public class HttpProxyViaLoadBalanceIntegrationTest {
             "\t{" + NEW_LINE +
             "\t  \"method\" : \"GET\"," + NEW_LINE +
             "\t  \"path\" : \"/target\"," + NEW_LINE));
+    }
+
+    @Test
+    public void shouldVerifyReceivedRequests() throws Exception {
+        // given
+        Future<HttpResponse> responseFuture =
+            httpClient.sendRequest(
+                request()
+                    .withPath("/some_path")
+                    .withHeader(HOST.toString(), "localhost:" + loadBalancerClientAndServer.getLocalPort()),
+                new InetSocketAddress(loadBalancerClientAndServer.getLocalPort())
+            );
+
+        // then
+        assertThat(responseFuture.get(10, TimeUnit.SECONDS).getStatusCode(), is(404));
+
+        // then
+        targetClientAndServer.verify(request()
+            .withPath("/some_path"));
+        targetClientAndServer.verify(request()
+            .withPath("/some_path"), VerificationTimes.exactly(1));
     }
 
 }

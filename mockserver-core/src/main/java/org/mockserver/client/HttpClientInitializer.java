@@ -10,9 +10,9 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.proxy.HttpProxyHandler;
 import io.netty.handler.proxy.Socks5ProxyHandler;
 import org.mockserver.codec.MockServerClientCodec;
-import org.mockserver.proxy.ProxyConfiguration;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.proxy.ProxyConfiguration;
 import org.mockserver.socket.tls.NettySslContextFactory;
 
 import java.net.InetSocketAddress;
@@ -41,9 +41,17 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
         if (proxyConfiguration != null) {
             if (proxyConfiguration.getType() == ProxyConfiguration.Type.HTTPS) {
-                pipeline.addLast(new HttpProxyHandler(proxyConfiguration.getProxyAddress()));
+                if (proxyConfiguration.getUsername() != null && proxyConfiguration.getPassword() != null) {
+                    pipeline.addLast(new HttpProxyHandler(proxyConfiguration.getProxyAddress(), proxyConfiguration.getUsername(), proxyConfiguration.getPassword()));
+                } else {
+                    pipeline.addLast(new HttpProxyHandler(proxyConfiguration.getProxyAddress()));
+                }
             } else if (proxyConfiguration.getType() == ProxyConfiguration.Type.SOCKS5) {
-                pipeline.addLast(new Socks5ProxyHandler(proxyConfiguration.getProxyAddress()));
+                if (proxyConfiguration.getUsername() != null && proxyConfiguration.getPassword() != null) {
+                    pipeline.addLast(new Socks5ProxyHandler(proxyConfiguration.getProxyAddress(), proxyConfiguration.getUsername(), proxyConfiguration.getPassword()));
+                } else {
+                    pipeline.addLast(new Socks5ProxyHandler(proxyConfiguration.getProxyAddress()));
+                }
             }
         }
         pipeline.addLast(httpClientConnectionHandler);

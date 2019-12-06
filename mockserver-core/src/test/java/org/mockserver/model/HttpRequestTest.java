@@ -11,8 +11,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsSame.sameInstance;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.NottableString.string;
@@ -86,6 +85,25 @@ public class HttpRequestTest {
         assertEquals("value1", new HttpRequest().withHeaders(new Header("name", "value1")).getFirstHeader("name"));
         assertEquals("value1", new HttpRequest().withHeaders(new Header("name", "value1", "value2")).getFirstHeader("name"));
         assertEquals("value1", new HttpRequest().withHeaders(new Header("name", "value1", "value2"), new Header("name", "value3")).getFirstHeader("name"));
+    }
+
+    @Test
+    public void shouldContainHeaderByName() {
+        assertTrue(new HttpRequest().withHeaders(new Header("name", "value1")).containsHeader("name"));
+        assertFalse(new HttpRequest().withHeaders(new Header("name", "value1")).containsHeader("names"));
+        assertFalse(new HttpRequest().withHeaders(new Header("name", "value1")).containsHeader("value1"));
+        assertFalse(new HttpRequest().withHeaders(new Header("name", "value1")).containsHeader(null));
+        assertFalse(new HttpRequest().withHeaders(new Header("name", "value1")).containsHeader(""));
+    }
+
+    @Test
+    public void shouldContainHeaderByNameAndValue() {
+        assertTrue(new HttpRequest().withHeaders(new Header("name", "value1")).containsHeader("name", "value1"));
+        assertFalse(new HttpRequest().withHeaders(new Header("name", "value1")).containsHeader("names", "value1"));
+        assertFalse(new HttpRequest().withHeaders(new Header("name", "value1")).containsHeader("name", "value12"));
+        assertFalse(new HttpRequest().withHeaders(new Header("name", "value1")).containsHeader("value1", "name"));
+        assertFalse(new HttpRequest().withHeaders(new Header("name", "value1")).containsHeader(null, null));
+        assertFalse(new HttpRequest().withHeaders(new Header("name", "value1")).containsHeader("", ""));
     }
 
     @Test

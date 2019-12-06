@@ -8,7 +8,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
-import io.netty.util.concurrent.CompleteFuture;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -24,6 +23,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import static java.lang.Boolean.TRUE;
 
 public class NettyHttpClient {
 
@@ -54,6 +55,10 @@ public class NettyHttpClient {
                 remoteAddress = proxyConfiguration.getProxyAddress();
             } else if (remoteAddress == null) {
                 remoteAddress = httpRequest.socketAddressFromHostHeader();
+            }
+
+            if (proxyConfiguration != null && proxyConfiguration.getType() == ProxyConfiguration.Type.HTTPS && !TRUE.equals(httpRequest.isSecure())) {
+                httpRequest.withSecure(true);
             }
 
             final CompletableFuture<HttpResponse> httpResponseFuture = new CompletableFuture<>();

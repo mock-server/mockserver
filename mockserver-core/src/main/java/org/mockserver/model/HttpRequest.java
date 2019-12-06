@@ -548,6 +548,21 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
         }
     }
 
+    /**
+     * Returns true if a header with the specified name and value has been added
+     *
+     * @param name the header name
+     * @param value the header value
+     * @return true if a header has been added with that name otherwise false
+     */
+    public boolean containsHeader(String name, String value) {
+        if (this.headers != null) {
+            return this.headers.containsEntry(name, value);
+        } else {
+            return false;
+        }
+    }
+
     public HttpRequest removeHeader(String name) {
         if (this.headers != null) {
             headers.remove(name);

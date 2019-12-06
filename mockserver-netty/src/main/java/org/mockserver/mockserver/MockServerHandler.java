@@ -1,9 +1,13 @@
 package org.mockserver.mockserver;
 
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.base64.Base64;
 import io.netty.util.AttributeKey;
+import io.netty.util.CharsetUtil;
+import org.apache.commons.text.StringEscapeUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.dashboard.DashboardHandler;
 import org.mockserver.lifecycle.LifeCycle;
@@ -17,7 +21,6 @@ import org.mockserver.model.PortBinding;
 import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
-import org.mockserver.serialization.Base64Converter;
 import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.slf4j.event.Level;
@@ -29,8 +32,7 @@ import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Locale.US;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
@@ -114,25 +116,17 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 } else if (request.matches("PUT", PATH_PREFIX + "/stop", "/stop")) {
 
                     ctx.writeAndFlush(response().withStatusCode(OK.code()));
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            server.stop();
-                        }
-                    }).start();
+                    new Thread(() -> server.stop()).start();
 
                 } else if (request.getMethod().getValue().equals("CONNECT")) {
 
                     String username = ConfigurationProperties.proxyAuthenticationUsername();
                     String password = ConfigurationProperties.proxyAuthenticationPassword();
-                    if ((!username.isEmpty() && !password.isEmpty())
-                        && (!request.containsHeader(PROXY_AUTHORIZATION.toString())
-                        || !request.getFirstHeader(PROXY_AUTHORIZATION.toString()).toLowerCase(US).startsWith("basic ")
-                        || !request.getFirstHeader(PROXY_AUTHORIZATION.toString()).substring(6).equals(
-                        new Base64Converter().bytesToBase64String((username + ":" + password).getBytes(UTF_8))))) {
+                    if (isNotBlank(username) && isNotBlank(password) &&
+                        !request.containsHeader(PROXY_AUTHORIZATION.toString(), "Basic " + Base64.encode(Unpooled.copiedBuffer(username + ':' + password, CharsetUtil.UTF_8), false).toString(CharsetUtil.US_ASCII))) {
                         ctx.writeAndFlush(response()
                             .withStatusCode(PROXY_AUTHENTICATION_REQUIRED.code())
-                            .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + ConfigurationProperties.proxyAuthenticationRealm().replace("\"", "\\\"") + "\""));
+                            .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + StringEscapeUtils.escapeJava(ConfigurationProperties.proxyAuthenticationRealm()) + "\", charset=\"UTF-8\""));
                     } else {
                         ctx.channel().attr(PROXYING).set(Boolean.TRUE);
                         // assume SSL for CONNECT request

@@ -60,7 +60,7 @@ public class HttpClientConnectionHandler extends ChannelDuplexHandler {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         CompletableFuture<HttpResponse> responseFuture = ctx.channel().attr(RESPONSE_FUTURE).get();
         if (!responseFuture.isDone()) {
-            responseFuture.completeExceptionally(new RuntimeException("Exception caught before valid response has been received", cause));
+            responseFuture.completeExceptionally(cause);
         }
         super.exceptionCaught(ctx, cause);
     }

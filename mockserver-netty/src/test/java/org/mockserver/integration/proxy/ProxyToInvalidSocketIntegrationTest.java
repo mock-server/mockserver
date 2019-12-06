@@ -1,4 +1,4 @@
-package org.mockserver.mock.action;
+package org.mockserver.integration.proxy;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;

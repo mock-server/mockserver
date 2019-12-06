@@ -43,6 +43,7 @@ public class NettyHttpProxySecureIntegrationTest extends AbstractClientSecurePro
     @Before
     public void resetProxy() {
         mockServerClient.reset();
+        echoServer.mockServerEventLog().reset();
     }
 
     @Override

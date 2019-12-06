@@ -32,6 +32,7 @@ import static org.slf4j.event.Level.DEBUG;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("DeprecatedIsStillUsed")
 public class ConfigurationProperties {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ConfigurationProperties.class);
@@ -76,10 +77,18 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_LOG_LEVEL = "mockserver.logLevel";
     private static final String MOCKSERVER_METRICS_ENABLED = "mockserver.metricsEnabled";
     private static final String MOCKSERVER_DISABLE_SYSTEM_OUT = "mockserver.disableSystemOut";
-    private static final String MOCKSERVER_HTTP_PROXY = "mockserver.httpProxy";
-    private static final String MOCKSERVER_HTTPS_PROXY = "mockserver.httpsProxy";
-    private static final String MOCKSERVER_SOCKS_PROXY = "mockserver.socksProxy";
     private static final String MOCKSERVER_LOCAL_BOUND_IP = "mockserver.localBoundIP";
+    @Deprecated
+    private static final String MOCKSERVER_HTTP_PROXY = "mockserver.httpProxy";
+    @Deprecated
+    private static final String MOCKSERVER_HTTPS_PROXY = "mockserver.httpsProxy";
+    @Deprecated
+    private static final String MOCKSERVER_SOCKS_PROXY = "mockserver.socksProxy";
+    private static final String MOCKSERVER_FORWARD_HTTP_PROXY = "mockserver.forwardHttpProxy";
+    private static final String MOCKSERVER_FORWARD_HTTPS_PROXY = "mockserver.forwardHttpsProxy";
+    private static final String MOCKSERVER_FORWARD_SOCKS_PROXY = "mockserver.forwardSocksProxy";
+    private static final String MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_USERNAME = "mockserver.forwardProxyAuthenticationUsername";
+    private static final String MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_PASSWORD = "mockserver.forwardProxyAuthenticationPassword";
     private static final String MOCKSERVER_HTTP_PROXY_SERVER_REALM = "mockserver.proxyAuthenticationRealm";
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_USERNAME = "mockserver.proxyAuthenticationUsername";
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD = "mockserver.proxyAuthenticationPassword";
@@ -504,36 +513,108 @@ public class ConfigurationProperties {
         metricsEnabled = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_METRICS_ENABLED, "MOCKSERVER_METRICS_ENABLED", "" + false));
     }
 
-    public static InetSocketAddress httpProxy() {
-        return readInetSocketAddressProperty(MOCKSERVER_HTTP_PROXY, "MOCKSERVER_HTTP_PROXY");
-    }
-
-    public static void httpProxy(String hostAndPort) {
-        validateHostAndPort(hostAndPort, "httpProxy", MOCKSERVER_HTTP_PROXY);
-    }
-
-    public static InetSocketAddress httpsProxy() {
-        return readInetSocketAddressProperty(MOCKSERVER_HTTPS_PROXY, "MOCKSERVER_HTTPS_PROXY");
-    }
-
-    public static void httpsProxy(String hostAndPort) {
-        validateHostAndPort(hostAndPort, "httpsProxy", MOCKSERVER_HTTPS_PROXY);
-    }
-
-    public static InetSocketAddress socksProxy() {
-        return readInetSocketAddressProperty(MOCKSERVER_SOCKS_PROXY, "MOCKSERVER_SOCKS_PROXY");
-    }
-
-    public static void socksProxy(String hostAndPort) {
-        validateHostAndPort(hostAndPort, "socksProxy", MOCKSERVER_SOCKS_PROXY);
-    }
-
     public static String localBoundIP() {
         return readPropertyHierarchically(MOCKSERVER_LOCAL_BOUND_IP, "MOCKSERVER_LOCAL_BOUND_IP", "");
     }
 
     public static void localBoundIP(String localBoundIP) {
         System.setProperty(MOCKSERVER_LOCAL_BOUND_IP, InetAddresses.forString(localBoundIP).getHostAddress());
+    }
+
+    /**
+     * @deprecated use forwardHttpProxy instead
+     */
+    @Deprecated
+    public static InetSocketAddress httpProxy() {
+        return readInetSocketAddressProperty(MOCKSERVER_HTTP_PROXY, "MOCKSERVER_HTTP_PROXY");
+    }
+
+    /**
+     * @deprecated use forwardHttpProxy instead
+     */
+    @Deprecated
+    public static void httpProxy(String hostAndPort) {
+        validateHostAndPort(hostAndPort, "httpProxy", MOCKSERVER_HTTP_PROXY);
+    }
+
+    /**
+     * @deprecated use forwardHttpsProxy instead
+     */
+    @Deprecated
+    public static InetSocketAddress httpsProxy() {
+        return readInetSocketAddressProperty(MOCKSERVER_HTTPS_PROXY, "MOCKSERVER_HTTPS_PROXY");
+    }
+
+    /**
+     * @deprecated use forwardHttpsProxy instead
+     */
+    @Deprecated
+    public static void httpsProxy(String hostAndPort) {
+        validateHostAndPort(hostAndPort, "httpsProxy", MOCKSERVER_HTTPS_PROXY);
+    }
+
+    /**
+     * @deprecated use forwardSocksProxy instead
+     */
+    @Deprecated
+    public static InetSocketAddress socksProxy() {
+        return readInetSocketAddressProperty(MOCKSERVER_SOCKS_PROXY, "MOCKSERVER_SOCKS_PROXY");
+    }
+
+    /**
+     * @deprecated use forwardSocksProxy instead
+     */
+    @Deprecated
+    public static void socksProxy(String hostAndPort) {
+        validateHostAndPort(hostAndPort, "socksProxy", MOCKSERVER_SOCKS_PROXY);
+    }
+
+    public static InetSocketAddress forwardHttpProxy() {
+        return readInetSocketAddressProperty(MOCKSERVER_FORWARD_HTTP_PROXY, "MOCKSERVER_FORWARD_HTTP_PROXY");
+    }
+
+    public static void forwardHttpProxy(String hostAndPort) {
+        validateHostAndPort(hostAndPort, "forwardHttpProxy", MOCKSERVER_FORWARD_HTTP_PROXY);
+    }
+
+    public static InetSocketAddress forwardHttpsProxy() {
+        return readInetSocketAddressProperty(MOCKSERVER_FORWARD_HTTPS_PROXY, "MOCKSERVER_FORWARD_HTTPS_PROXY");
+    }
+
+    public static void forwardHttpsProxy(String hostAndPort) {
+        validateHostAndPort(hostAndPort, "forwardHttpsProxy", MOCKSERVER_FORWARD_HTTPS_PROXY);
+    }
+
+    public static InetSocketAddress forwardSocksProxy() {
+        return readInetSocketAddressProperty(MOCKSERVER_FORWARD_SOCKS_PROXY, "MOCKSERVER_FORWARD_SOCKS_PROXY");
+    }
+
+    public static void forwardSocksProxy(String hostAndPort) {
+        validateHostAndPort(hostAndPort, "forwardSocksProxy", MOCKSERVER_FORWARD_SOCKS_PROXY);
+    }
+
+    public static String forwardProxyAuthenticationUsername() {
+        return readPropertyHierarchically(MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_USERNAME, "MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_USERNAME", null);
+    }
+
+    public static void forwardProxyAuthenticationUsername(String forwardProxyAuthenticationUsername) {
+        if (forwardProxyAuthenticationUsername != null) {
+            System.setProperty(MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_USERNAME, forwardProxyAuthenticationUsername);
+        } else {
+            System.clearProperty(MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_USERNAME);
+        }
+    }
+
+    public static String forwardProxyAuthenticationPassword() {
+        return readPropertyHierarchically(MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_PASSWORD, "MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_PASSWORD", null);
+    }
+
+    public static void forwardProxyAuthenticationPassword(String forwardProxyAuthenticationPassword) {
+        if (forwardProxyAuthenticationPassword != null) {
+            System.setProperty(MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_PASSWORD, forwardProxyAuthenticationPassword);
+        } else {
+            System.clearProperty(MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_PASSWORD);
+        }
     }
 
     public static String proxyAuthenticationRealm() {
