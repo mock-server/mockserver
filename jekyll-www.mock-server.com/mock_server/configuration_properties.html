@@ -463,54 +463,6 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.metricsEnabled="true"</code></pre>
 </div>
 
-<button id="button_configuration_http_proxy" class="accordion title"><strong>HTTP Proxy For Forwarded Request</strong></button>
-<div class="panel title">
-    <p>Specifies that all output / forwarded requests are sent via an HTTP proxy</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.httpProxy(String hostAndPort)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.httpProxy=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_HTTP_PROXY=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.httpProxy=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.httpProxy="127.0.0.1:1090"</code></pre>
-</div>
-
-<button id="button_configuration_https_proxy" class="accordion title"><strong>HTTPS Proxy For Forwarded Request</strong></button>
-<div class="panel title">
-    <p>Specifies that all output / forwarded requests are sent via an HTTPS proxy</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.httpsProxy(String hostAndPort)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.httpsProxy=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_HTTPS_PROXY=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.httpsProxy=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.httpsProxy="127.0.0.1:1090"</code></pre>
-</div>
-
-<button id="button_configuration_socks_proxy" class="accordion title"><strong>SOCKS Proxy For Forwarded Request</strong></button>
-<div class="panel title">
-    <p>Specifies that all output / forwarded requests are sent via a SOCKS proxy</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.socksProxy(String hostAndPort)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.socksProxy=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_SOCKS_PROXY=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.socksProxy=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.socksProxy="127.0.0.1:1090"</code></pre>
-</div>
-
 <button id="button_configuration_local_bound_ip" class="accordion title"><strong>Local Bound IP For Accepting Socket Connection</strong></button>
 <div class="panel title">
     <p>The local IP address to bind to for accepting new socket connections</p>
@@ -527,7 +479,87 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.localBoundIP="0.0.0.0"</code></pre>
 </div>
 
-<button id="button_configuration_proxy_authentication_realm" class="accordion title"><strong>Proxy Authentication Realm</strong></button>
+<button id="button_configuration_http_proxy" class="accordion title"><strong>HTTP Proxy For Forwarded Requests</strong></button>
+<div class="panel title">
+    <p>Use HTTP proxy (i.e. via Host header) for all outbound / forwarded requests</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.forwardHttpProxy(String hostAndPort)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardHttpProxy=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_FORWARD_HTTP_PROXY=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.forwardHttpProxy=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardHttpProxy="127.0.0.1:1090"</code></pre>
+</div>
+
+<button id="button_configuration_https_proxy" class="accordion title"><strong>HTTPS Proxy For Forwarded Requests</strong></button>
+<div class="panel title">
+    <p>Use HTTPS proxy (i.e. HTTP CONNECT) for all outbound / forwarded requests, supports TLS tunnelling of HTTPS requests</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.forwardHttpsProxy(String hostAndPort)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardHttpsProxy=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_FORWARD_HTTPS_PROXY=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.forwardHttpsProxy=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardHttpsProxy="127.0.0.1:1090"</code></pre>
+</div>
+
+<button id="button_configuration_socks_proxy" class="accordion title"><strong>SOCKS Proxy For Forwarded Requests</strong></button>
+<div class="panel title">
+    <p>Use SOCKS proxy for all outbound / forwarded requests, support TLS tunnelling of TCP connections</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.forwardSocksProxy(String hostAndPort)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardSocksProxy=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_FORWARD_SOCKS_PROXY=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.forwardSocksProxy=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardSocksProxy="127.0.0.1:1090"</code></pre>
+</div>
+
+<button id="button_configuration_forward_proxy_authentication_username" class="accordion title"><strong>Proxy Authentication Username For Forwarded Requests</strong></button>
+<div class="panel title">
+    <p>Username for proxy authentication when using HTTPS proxy (i.e. HTTP CONNECT) for all outbound / forwarded requests</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.forwardProxyAuthenticationUsername(String forwardProxyAuthenticationUsername)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardProxyAuthenticationUsername=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_USERNAME=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.forwardProxyAuthenticationUsername=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardProxyAuthenticationUsername=john.doe</code></pre>
+</div>
+
+<button id="button_configuration_forward_proxy_authentication_password" class="accordion title"><strong>Proxy Authentication Password For Forwarded Requests</strong></button>
+<div class="panel title">
+    <p>Password for proxy authentication when using HTTPS proxy (i.e. HTTP CONNECT) for all outbound / forwarded requests</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null/span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.forwardProxyAuthenticationPassword(String forwardProxyAuthenticationPassword)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardProxyAuthenticationPassword=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_PASSWORD=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.forwardProxyAuthenticationPassword=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardProxyAuthenticationPassword="p@ssw0rd"</code></pre>
+</div>
+
+<button id="button_configuration_proxy_authentication_realm" class="accordion title"><strong>Realm For Proxy Authentication to MockServer</strong></button>
 <div class="panel title">
     <p>The authentication realm for proxy authentication to MockServer</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">MockServer HTTP Proxy</span></p>
@@ -536,14 +568,14 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyAuthenticationRealm=...</code></pre>
     <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_HTTP_PROXY_SERVER_REALM=...</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_PROXY_SERVER_REALM=...</code></pre>
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.proxyAuthenticationRealm=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyAuthenticationRealm="MockServer HTTP Proxy"</code></pre>
 </div>
 
-<button id="button_configuration_proxy_authentication_username" class="accordion title"><strong>Proxy Authentication Username</strong></button>
+<button id="button_configuration_proxy_authentication_username" class="accordion title"><strong>Required Username For Proxy Authentication to MockServer</strong></button>
 <div class="panel title">
     <p>The required username for proxy authentication to MockServer</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">john.doe</span></p>
@@ -559,7 +591,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxyAuthenticationUsername=john.doe</code></pre>
 </div>
 
-<button id="button_configuration_proxy_authentication_password" class="accordion title"><strong>Proxy Authentication Password</strong></button>
+<button id="button_configuration_proxy_authentication_password" class="accordion title"><strong>Required Password For Proxy Authentication to MockServer</strong></button>
 <div class="panel title">
     <p>The required password for proxy authentication to MockServer</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">p@ssw0rd</span></p>

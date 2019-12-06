@@ -89,7 +89,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_FORWARD_SOCKS_PROXY = "mockserver.forwardSocksProxy";
     private static final String MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_USERNAME = "mockserver.forwardProxyAuthenticationUsername";
     private static final String MOCKSERVER_FORWARD_PROXY_AUTHENTICATION_PASSWORD = "mockserver.forwardProxyAuthenticationPassword";
-    private static final String MOCKSERVER_HTTP_PROXY_SERVER_REALM = "mockserver.proxyAuthenticationRealm";
+    private static final String MOCKSERVER_PROXY_SERVER_REALM = "mockserver.proxyAuthenticationRealm";
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_USERNAME = "mockserver.proxyAuthenticationUsername";
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD = "mockserver.proxyAuthenticationPassword";
     private static final String MOCKSERVER_INITIALIZATION_CLASS = "mockserver.initializationClass";
@@ -618,11 +618,11 @@ public class ConfigurationProperties {
     }
 
     public static String proxyAuthenticationRealm() {
-        return readPropertyHierarchically(MOCKSERVER_HTTP_PROXY_SERVER_REALM, "MOCKSERVER_HTTP_PROXY_SERVER_REALM", "MockServer HTTP Proxy");
+        return readPropertyHierarchically(MOCKSERVER_PROXY_SERVER_REALM, "MOCKSERVER_PROXY_SERVER_REALM", "MockServer HTTP Proxy");
     }
 
     public static void proxyAuthenticationRealm(String proxyAuthenticationRealm) {
-        System.setProperty(MOCKSERVER_HTTP_PROXY_SERVER_REALM, proxyAuthenticationRealm);
+        System.setProperty(MOCKSERVER_PROXY_SERVER_REALM, proxyAuthenticationRealm);
     }
 
     public static String proxyAuthenticationUsername() {
