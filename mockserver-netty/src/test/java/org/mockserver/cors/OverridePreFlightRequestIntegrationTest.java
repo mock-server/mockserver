@@ -83,7 +83,35 @@ public class OverridePreFlightRequestIntegrationTest {
     }
 
     @Test
-    public void shouldReturnOveriddenPreFlightResponse() throws Exception {
+    public void shouldReturnDefaultPreFlightResponseForPathRequestWithExtraHeaders() throws Exception {
+        // when
+        Future<HttpResponse> responseFuture =
+            httpClient.sendRequest(
+                request()
+                    .withMethod("OPTIONS")
+                    .withPath("/settings/account")
+                    .withHeader(HOST.toString(), "localhost:" + clientAndServer.getLocalPort())
+                    .withHeader("Origin", "http://localhost:8000")
+                    .withHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/69.0.3497.100 Safari/537.36")
+                    .withHeader("Access-Control-Request-Method", "PATCH")
+                    .withHeader( "Access-Control-Request-Headers", "extra-header, other-extra-header"),
+                new InetSocketAddress(clientAndServer.getLocalPort())
+            );
+
+        // then
+        HttpResponse httpResponse = responseFuture.get(10, TimeUnit.SECONDS);
+        System.out.println("httpResponse = " + httpResponse);
+        assertThat(httpResponse.getStatusCode(), is(200));
+        assertThat(httpResponse.getHeader("access-control-allow-origin"), containsInAnyOrder("*"));
+        assertThat(httpResponse.getHeader("access-control-allow-methods"), containsInAnyOrder("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE"));
+        assertThat(httpResponse.getHeader("access-control-allow-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization, extra-header, other-extra-header"));
+        assertThat(httpResponse.getHeader("access-control-expose-headers"), containsInAnyOrder("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization"));
+        assertThat(httpResponse.getHeader("access-control-max-age"), containsInAnyOrder("300"));
+        assertThat(httpResponse.getFirstHeader("version"), not(isEmptyString()));
+    }
+
+    @Test
+    public void shouldReturnOverriddenPreFlightResponse() throws Exception {
         // given
         clientAndServer
             .when(
