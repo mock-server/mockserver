@@ -1,6 +1,7 @@
 package org.mockserver.lifecycle;
 
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -28,6 +29,7 @@ import static org.mockserver.model.HttpRequest.request;
 /**
  * @author jamesdbloom
  */
+@Ignore
 public class StopIntegrationTest {
 
     private static final int MOCK_SERVER_PORT = PortFactory.findFreePort();
