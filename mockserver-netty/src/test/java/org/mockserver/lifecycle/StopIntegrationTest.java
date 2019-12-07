@@ -20,6 +20,7 @@ import java.util.concurrent.TimeoutException;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 import static org.mockserver.model.HttpRequest.request;
@@ -38,7 +39,10 @@ public class StopIntegrationTest {
     public void returnsExceptionWhenAlreadyStopped() {
         // given
         exception.expect(IllegalStateException.class);
-        exception.expectMessage(Matchers.containsString("Request sent after client has been stopped - the event loop has been shutdown so it is not possible to send a request"));
+        exception.expectMessage(anyOf(
+            Matchers.containsString("Request sent after client has been stopped - the event loop has been shutdown so it is not possible to send a request"),
+            Matchers.containsString("Unable to connect to socket localhost/127.0.0.1:" + MOCK_SERVER_PORT)
+        ));
 
         // when - server started
         new MockServer(MOCK_SERVER_PORT);
