@@ -81,7 +81,6 @@ public class HttpProxyChainedIntegrationTest {
                     new InetSocketAddress(proxyClientAndServer.getLocalPort())
                 )
                 .get(10, SECONDS);
-            System.out.println("httpResponse = " + httpResponse);
 
             // and - both proxy and target verify request received
             proxyClientAndServer.verify(request().withPath("/target"));
@@ -121,7 +120,6 @@ public class HttpProxyChainedIntegrationTest {
                     new InetSocketAddress(proxyClientAndServer.getLocalPort())
                 )
                 .get(10, SECONDS);
-            System.out.println("httpResponse = " + httpResponse);
 
             // and - both proxy and target verify request received
             proxyClientAndServer.verify(request().withPath("/target"));

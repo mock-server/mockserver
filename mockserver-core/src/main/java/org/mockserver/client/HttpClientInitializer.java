@@ -25,7 +25,7 @@ import static org.slf4j.event.Level.TRACE;
 public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
 
     private final MockServerLogger mockServerLogger;
-    private final HttpClientConnectionHandler httpClientConnectionHandler = new HttpClientConnectionHandler();
+    private final HttpClientConnectionHandler httpClientConnectionHandler;
     private final HttpClientHandler httpClientHandler;
     private final ProxyConfiguration proxyConfiguration;
 
@@ -33,6 +33,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         this.proxyConfiguration = proxyConfiguration;
         this.mockServerLogger = mockServerLogger;
         this.httpClientHandler = new HttpClientHandler();
+        this.httpClientConnectionHandler = new HttpClientConnectionHandler(mockServerLogger);
     }
 
     @Override

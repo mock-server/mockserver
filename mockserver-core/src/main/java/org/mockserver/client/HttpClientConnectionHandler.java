@@ -4,19 +4,33 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 
 import java.util.concurrent.CompletableFuture;
 
 import static org.mockserver.client.NettyHttpClient.RESPONSE_FUTURE;
+import static org.slf4j.event.Level.TRACE;
 
 @ChannelHandler.Sharable
 public class HttpClientConnectionHandler extends ChannelDuplexHandler {
 
+    private final MockServerLogger mockServerLogger;
+
+    public HttpClientConnectionHandler(MockServerLogger mockServerLogger) {
+        this.mockServerLogger = mockServerLogger;
+    }
+
     private void updatePromise(ChannelHandlerContext ctx, String action) {
         CompletableFuture<HttpResponse> responseFuture = ctx.channel().attr(RESPONSE_FUTURE).get();
         if (responseFuture != null && !responseFuture.isDone()) {
-            responseFuture.completeExceptionally(new SocketConnectionException("Channel " + action + " before valid response has been received"));
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("Channel " + action + " before response has been received, this can be due to responses without a Content-Length")
+            );
         }
     }
 

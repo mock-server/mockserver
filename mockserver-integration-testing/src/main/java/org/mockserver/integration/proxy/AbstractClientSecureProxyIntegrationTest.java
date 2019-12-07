@@ -396,7 +396,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                         .withSecure(true)
                         .withHeader(HOST.toString(), "localhost:" + getServerSecurePort())
                 )
-                .get(10, MINUTES);
+                .get(10, SECONDS);
 
             assertThat(httpResponse.getStatusCode(), is(200));
 
@@ -420,7 +420,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                     .withPath("/target")
                     .withHeader(HOST.toString(), "localhost:" + getServerSecurePort())
             )
-            .get(10, MINUTES);
+            .get(10, SECONDS);
 
         assertThat(httpResponse.getStatusCode(), is(200));
     }
