@@ -1,14 +1,11 @@
 package org.mockserver.lifecycle;
 
-import org.hamcrest.Matchers;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.mockserver.MockServer;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.socket.PortFactory;
 
 import java.io.IOException;
@@ -21,7 +18,6 @@ import java.util.concurrent.TimeoutException;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 import static org.mockserver.model.HttpRequest.request;
@@ -40,16 +36,14 @@ public class StopIntegrationTest {
     public void returnsExceptionWhenAlreadyStopped() {
         // given
         exception.expect(IllegalStateException.class);
-        exception.expectMessage(anyOf(
-            Matchers.containsString("Request sent after client has been stopped - the event loop has been shutdown so it is not possible to send a request"),
-            Matchers.containsString("Unable to connect to socket localhost/127.0.0.1:" + MOCK_SERVER_PORT)
-        ));
+        exception.expectMessage(containsString("Request sent after client has been stopped - the event loop has been shutdown so it is not possible to send a request"));
 
         // when - server started
         new MockServer(MOCK_SERVER_PORT);
 
         // and - start client
         MockServerClient mockServerClient = new MockServerClient("localhost", MOCK_SERVER_PORT);
+        mockServerClient.isRunning();
         mockServerClient.stop();
 
         // then
