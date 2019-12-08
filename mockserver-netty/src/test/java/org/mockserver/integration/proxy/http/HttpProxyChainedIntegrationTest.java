@@ -22,6 +22,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.stop.Stop.stopQuietly;
+import static org.mockserver.verify.VerificationTimes.exactly;
 
 /**
  * @author jamesdbloom
@@ -77,6 +78,7 @@ public class HttpProxyChainedIntegrationTest {
                 .sendRequest(
                     request()
                         .withPath("/target")
+                        .withSecure(true)
                         .withHeader(HOST.toString(), "www.mock-server.com"),
                     new InetSocketAddress(proxyClientAndServer.getLocalPort())
                 )
@@ -116,6 +118,7 @@ public class HttpProxyChainedIntegrationTest {
                 .sendRequest(
                     request()
                         .withPath("/target")
+                        .withSecure(true)
                         .withHeader(HOST.toString(), "www.mock-server.com"),
                     new InetSocketAddress(proxyClientAndServer.getLocalPort())
                 )
@@ -124,6 +127,41 @@ public class HttpProxyChainedIntegrationTest {
             // and - both proxy and target verify request received
             proxyClientAndServer.verify(request().withPath("/target"));
             targetClientAndServer.verify(request().withPath("/target"));
+
+        } finally {
+            if (proxyClientAndServer != null) {
+                stopQuietly(proxyClientAndServer);
+            }
+
+            if (forwardHttpsProxy != null) {
+                System.setProperty("mockserver.forwardHttpsProxy", forwardHttpsProxy);
+            } else {
+                System.clearProperty("mockserver.forwardHttpsProxy");
+            }
+        }
+    }
+
+    @Test
+    public void shouldNotForwardHTTPConnectIfNotSecure() throws Exception {
+        String forwardHttpsProxy = System.getProperty("mockserver.forwardHttpsProxy");
+        ClientAndServer proxyClientAndServer = null;
+        try {
+
+            ConfigurationProperties.forwardHttpsProxy("localhost:" + targetClientAndServer.getLocalPort());
+            proxyClientAndServer = startClientAndServer();
+
+            HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null)
+                .sendRequest(
+                    request()
+                        .withPath("/target")
+                        .withHeader(HOST.toString(), "www.mock-server.com"),
+                    new InetSocketAddress(proxyClientAndServer.getLocalPort())
+                )
+                .get(10, SECONDS);
+
+            // and - both proxy and target verify request received
+            proxyClientAndServer.verify(request().withPath("/target"));
+            targetClientAndServer.verify(request().withPath("/target"), exactly(0));
 
         } finally {
             if (proxyClientAndServer != null) {

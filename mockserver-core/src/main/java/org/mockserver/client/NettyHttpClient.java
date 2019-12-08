@@ -57,10 +57,6 @@ public class NettyHttpClient {
                 remoteAddress = httpRequest.socketAddressFromHostHeader();
             }
 
-            if (proxyConfiguration != null && proxyConfiguration.getType() == ProxyConfiguration.Type.HTTPS && !TRUE.equals(httpRequest.isSecure())) {
-                httpRequest.withSecure(true);
-            }
-
             final CompletableFuture<HttpResponse> httpResponseFuture = new CompletableFuture<>();
             new Bootstrap()
                 .group(eventLoopGroup)

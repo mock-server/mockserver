@@ -356,6 +356,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                     .sendRequest(
                         request()
                             .withPath("/target")
+                            .withSecure(true)
                             .withHeader(HOST.toString(), "localhost:" + getServerSecurePort())
                     )
                     .get(10, SECONDS);
@@ -404,24 +405,5 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
             ConfigurationProperties.proxyAuthenticationUsername(existingUsername);
             ConfigurationProperties.proxyAuthenticationPassword(existingPassword);
         }
-    }
-
-    @Test
-    public void shouldConnectInHTTPSAndForceRequestToHTTPS() throws Exception {
-        org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(
-            new MockServerLogger(),
-            clientEventLoopGroup,
-            proxyConfiguration(
-                ProxyConfiguration.Type.HTTPS,
-                "localhost:" + getProxyPort()
-            ))
-            .sendRequest(
-                request()
-                    .withPath("/target")
-                    .withHeader(HOST.toString(), "localhost:" + getServerSecurePort())
-            )
-            .get(10, SECONDS);
-
-        assertThat(httpResponse.getStatusCode(), is(200));
     }
 }
