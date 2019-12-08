@@ -138,6 +138,7 @@ public class ExampleTestClass {
   <li>configuration for SAN hostnames or SAN IP addresses is specified</li>
   <li>an expectation is added containing a Host header with a hostname not seen before</li>
   <li>a request is received containing a Host header with a hostname not seen before</li>
+  <li>a TLS handshake using Server Name Indication (SNI) with a hostname not seen before</li>
 </ul>
 
 <p><strong>Note:</strong> if a request is received with a Host header for a hostname not seen before the first request will fail validation because the TLS connection has already been established before the Host header can be read, any subsequent requests with that hostname will pass hostname validation.</p>
