@@ -1,0 +1,330 @@
+---
+title: HTTPS & TLS
+layout: page
+pageOrder: 13
+section: 'Mock Server'
+subsection: true
+sitemap:
+  priority: 0.7
+  changefreq: 'monthly'
+  lastmod: 2019-11-10T08:00:00+01:00
+---
+
+<p>MockServer uses port unification to simplify configuration so all protocols (i.e. HTTP, HTTPS / SSL, SOCKS, etc) are supported on the same port.  This means when a request is sent over TLS (i.e. an HTTPS request) MockServer dynamically detects that the request is encrypted.</p>
+
+<p>The majority of HTTP clients perform the following steps when making an HTTPS request: </p>
+
+<ol>
+  <li>establish TCP connection to remote server</li>
+    <li>perform TLS handshake with remote server and <a href="#verify_trust_chain"><strong>verify trust chain</strong></a> by receiving remote server X.509 Certificate and verifying it is signed by a know Certificate Authority</li>
+  <li>perform <a href="#hostname_validation"><strong>hostname validation</strong></a> by comparing hostname (or IP address) of remote server with Subject Alternative Name (SAN) or Common Name (CN) on X.509</li>
+</ol>
+
+<p>MockServer provides multiple ways its TLS can be <a href="#configuration">configured</a>.</p>
+
+<a id="verify_trust_chain" class="anchor" href="#verify_trust_chain">&nbsp;</a>
+
+<h4>Verify Trust Chain</h4>
+
+<p>The MockServer CA X.509 must be considered a valid trust root to ensure MockServer's dynamically generate X.509 certificates are trusted by an HTTP Client.  This means the CA X.509 needs to be added into the JVM, HTTP Client or operating system as appropriate.</p>
+
+<p>The MockServer CA X.509 can be found (in PEM format) in the <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer github repo</a> or can be loaded from the classpath location <span class="constant">/org/mockserver/socket/CertificateAuthorityCertificate.pem</span></p>
+
+<h5>Java via Classpath</h5>
+
+<p>The following code shows how to load a file from the classpath or a relative filesystem location:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">public void doSomething() {
+    String mockServerCA = loadFileFromLocation("/org/mockserver/socket/CertificateAuthorityCertificate.pem");
+}
+
+public String loadFileFromLocation(String location) {
+    location = location.trim().replaceAll("\\\\", "/");
+
+    Path path;
+    if (location.toLowerCase().startsWith("file:")) {
+        path = Paths.get(URI.create(location));
+    } else {
+        path = Paths.get(location);
+    }
+
+    if (Files.exists(path)) {
+        // org.apache.commons.io.FileUtils
+        return FileUtils.readFileToString(path.toFile(), "UTF-8");
+    } else {
+        return loadFileFromClasspath(location);
+    }
+}
+
+private String loadFileFromClasspath(String location) {
+    InputStream inputStream = this.getClass().getResourceAsStream(location);
+
+    if (inputStream == null) {
+        inputStream = this.getClass().getClassLoader().getResourceAsStream(location);
+    }
+
+    if (inputStream == null) {
+        inputStream = ClassLoader.getSystemResourceAsStream(location);
+    }
+
+    if (inputStream != null) {
+        try {
+            // org.apache.commons.io.IOUtils
+            return IOUtils.toString(inputStream, Charsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not read " + location + " from the classpath", e);
+        }
+    }
+
+    throw new RuntimeException("Could not find " + location + " on the classpath");
+}</code></pre>
+
+<h5>Java DefaultSSLSocketFactory</h5>
+
+<p>Another mechanism to ensure the MockServer X.509 is trusted is to configure the DefaultSSLSocketFactory in the JVM using the following line:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">HttpsURLConnection.setDefaultSSLSocketFactory(new KeyStoreFactory(new MockServerLogger()).sslContext().getSocketFactory());</code></pre>
+
+<p>This can be used in a test case, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.mockserver.integration.ClientAndServer;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.socket.PortFactory;
+import org.mockserver.socket.tls.KeyStoreFactory;
+
+import javax.net.ssl.HttpsURLConnection;
+
+public class ExampleTestClass {
+
+    private static ClientAndServer mockServer;
+
+    @BeforeClass
+    public static void startMockServer() {
+        // ensure all connection using HTTPS will use the SSL context defined by
+        // MockServer to allow dynamically generated certificates to be accepted
+        HttpsURLConnection.setDefaultSSLSocketFactory(new KeyStoreFactory(new MockServerLogger()).sslContext().getSocketFactory());
+        mockServer = ClientAndServer.startClientAndServer(PortFactory.findFreePort());
+    }
+
+    @AfterClass
+    public static void stopMockServer() {
+        mockServer.stop();
+    }
+
+    @Test
+    public void shouldDoSomething() {
+        // test system
+    }
+}</code></pre>
+
+<h5>Java Keytool</h5>
+
+<p>The Java <strong>keytool</strong> command can also be used to add the MockServer CA X.509 certificate to the list of trust CA Certificates for a JVM, as follows:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">keytool -import -v -keystore /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/security/cacerts -alias mockserver-ca -file CertificateAuthorityCertificate.pem -storepass changeit -trustcacerts -noprompt</code></pre>
+
+<p>An example bash script showing how this can be done can be found in the <a href="https://github.com/mock-server/mockserver/blob/master/scripts/install_ca_certificate.sh">MockServer github repo</a></p>
+
+<a id="hostname_validation" class="anchor" href="#hostname_validation">&nbsp;</a>
+
+<h4>Hostname Validation</h4>
+
+<p>MockServer is able to mock the behaviour of multiple hostnames (i.e. servers) and present a valid X.509 Certificates for them.  MockServer achieves this by dynamically generating its X.509 Certificate using an in-memory list of hostnames.  When the list of hostnames changes a new certificate is generated.  The list of hostnames is updated, when:</p>
+
+<ul>
+  <li>configuration for SAN hostnames or SAN IP addresses is specified</li>
+  <li>an expectation is added containing a Host header with a hostname not seen before</li>
+  <li>a request is received containing a Host header with a hostname not seen before</li>
+</ul>
+
+<p><strong>Note:</strong> if a request is received with a Host header for a hostname not seen before the first request will fail validation because the TLS connection has already been established before the Host header can be read, any subsequent requests with that hostname will pass hostname validation.</p>
+
+<a id="configuration" class="anchor" href="#configuration">&nbsp;</a>
+
+<h4>Configuration:</h4>
+
+<p>HTTPS (i.e. TLS / SSL) support can be configured as follows:</p>
+
+<button id="button_configuration_java_key_store_file_path" class="accordion title"><strong>Java KeyStore File Path</strong></button>
+<div class="panel title">
+  <p>The relative or absolute file path to the java key store</p>
+  <p>Type: <span class="keyword">string</span> Default: <span class="this_value">`mockserver_keystore` file name with extension depending on `mockserver.javaKeyStoreType` property</span></p>
+  <p>Java Code:</p>
+  <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.javaKeyStoreFilePath(String keyStoreFilePath)</code></pre>
+  <p>System Property:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javaKeyStoreFilePath=...</code></pre>
+  <p>Environment Variable:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_JAVA_KEY_STORE_FILE_PATH=...</code></pre>
+  <p>Property File:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">mockserver.javaKeyStoreFilePath=...</code></pre>
+  <p>Example:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javaKeyStoreFilePath="mockserver_keystore.jks"</code></pre>
+</div>
+
+<button id="button_configuration_java_key_store_password" class="accordion title"><strong>Java KeyStore File Password</strong></button>
+<div class="panel title">
+  <p>The java key store password</p>
+  <p>Type: <span class="keyword">string</span> Default: <span class="this_value">changeit</span></p>
+  <p>Java Code:</p>
+  <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.javaKeyStorePassword(String keyStorePassword)</code></pre>
+  <p>System Property:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javaKeyStorePassword=...</code></pre>
+  <p>Environment Variable:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_JAVA_KEY_STORE_PASSWORD=...</code></pre>
+  <p>Property File:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">mockserver.javaKeyStorePassword=...</code></pre>
+  <p>Example:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javaKeyStorePassword="changeit"</code></pre>
+</div>
+
+<button id="button_configuration_java_key_store_type" class="accordion title"><strong>Java KeyStore Type</strong></button>
+<div class="panel title">
+  <p>The type of the java key store</p>
+  <p>Type: <span class="keyword">string</span> Default: <span class="this_value">KeyStore.getDefaultType() - in Java 1.7 this uses the system property `keystore.type` or defaults to `jks`</span></p>
+  <p>Java Code:</p>
+  <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.javaKeyStoreType(String keyStoreType)</code></pre>
+  <p>System Property:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javaKeyStoreType=...</code></pre>
+  <p>Environment Variable:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_JAVA_KEY_STORE_TYPE=...</code></pre>
+  <p>Property File:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">mockserver.javaKeyStoreType=...</code></pre>
+  <p>Example:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.javaKeyStoreType="jks"</code></pre>
+</div>
+
+<button id="button_configuration_delete_generated_key_store_on_exit" class="accordion title"><strong>Delete Generated KeyStore On Exit</strong></button>
+<div class="panel title">
+  <p>Determines if an auto-generated java key store file is deleted on exit</p>
+  <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
+  <p>Java Code:</p>
+  <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.deleteGeneratedKeyStoreOnExit(boolean deleteGeneratedKeyStoreOnExit)</code></pre>
+  <p>System Property:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.deleteGeneratedKeyStoreOnExit=...</code></pre>
+  <p>Environment Variable:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_DELETE_GENERATED_KEY_STORE_ON_EXIT=...</code></pre>
+  <p>Property File:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">mockserver.deleteGeneratedKeyStoreOnExit=...</code></pre>
+  <p>Example:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.deleteGeneratedKeyStoreOnExit="false"</code></pre>
+</div>
+
+<button id="button_configuration_ssl_certificate_domain_name" class="accordion title"><strong>TLS Certificate Domain Name</strong></button>
+<div class="panel title">
+  <p>The domain name for auto-generate TLS certificates</p>
+  <p>Type: <span class="keyword">string</span> Default: <span class="this_value">localhost</span></p>
+  <p>Java Code:</p>
+  <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.sslCertificateDomainName(String domainName)</code></pre>
+  <p>System Property:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslCertificateDomainName=...</code></pre>
+  <p>Environment Variable:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME=...</code></pre>
+  <p>Property File:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">mockserver.sslCertificateDomainName=...</code></pre>
+  <p>Example:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslCertificateDomainName="localhost"</code></pre>
+</div>
+
+<button id="button_configuration_ssl_subject_alternative_name_domains" class="accordion title"><strong>TLS Subject Alternative Name Domains</strong></button>
+<div class="panel title">
+  <p>The Subject Alternative Name (SAN) domain names for auto-generate TLS certificates as a comma separated list</p>
+  <p>Type: <span class="keyword">string</span> Default: <span class="this_value">localhost</span></p>
+  <p>Java Code:</p>
+  <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.addSslSubjectAlternativeNameDomains(String... additionalSubjectAlternativeNameDomains)</code></pre>
+  or
+  <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.clearSslSubjectAlternativeNameDomains()</code></pre>
+  <p>System Property:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslSubjectAlternativeNameDomains=...</code></pre>
+  <p>Environment Variable:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_DOMAINS=...</code></pre>
+  <p>Property File:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">mockserver.sslSubjectAlternativeNameDomains=...</code></pre>
+  <p>Example:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslSubjectAlternativeNameDomains="localhost,www.foo.bar"</code></pre>
+</div>
+
+<button id="button_configuration_ssl_subject_alternative_name_ips" class="accordion title"><strong>TLS Subject Alternative Name IPs</strong></button>
+<div class="panel title">
+  <p>The Subject Alternative Name (SAN) IP addresses for auto-generate TLS certificates as a comma separated list</p>
+  <p>Type: <span class="keyword">string</span> Default: <span class="this_value">127.0.0.1,0.0.0.0</span></p>
+  <p>Java Code:</p>
+  <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.addSslSubjectAlternativeNameIps(String... additionalSubjectAlternativeNameIps)</code></pre>
+  or
+  <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.clearSslSubjectAlternativeNameIps()</code></pre>
+  <p>System Property:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslSubjectAlternativeNameIps=...</code></pre>
+  <p>Environment Variable:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_SSL_SUBJECT_ALTERNATIVE_NAME_IPS=...</code></pre>
+  <p>Property File:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">mockserver.sslSubjectAlternativeNameIps=...</code></pre>
+  <p>Example:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslSubjectAlternativeNameIps="127.0.0.1,0.0.0.0"</code></pre>
+</div>
+
+<button id="button_configuration_prevent_dynamic_tls_update" class="accordion title"><strong>Prevent Dynamic TLS Certificate Update</strong></button>
+<div class="panel title">
+  <p>MockServer dynamically updates the Subject Alternative Name (SAN) values for its TLS certificate to add domain names and IP addresses from request Host headers and Host headers in expectations,
+    this configuration setting disables this automatic update and only uses SAN value provided in <strong>TLS Subject Alternative Name Domains</strong> and <strong>TLS Subject Alternative Name IPs</strong> configuration properties.</p>
+  <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+  <p>Java Code:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.preventCertificateDynamicUpdate(boolean prevent)</code></pre>
+  <p>System Property:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.preventCertificateDynamicUpdate=...</code></pre>
+  <p>Environment Variable:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE=...</code></pre>
+  <p>Property File:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">mockserver.preventCertificateDynamicUpdate=...</code></pre>
+  <p>Example:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.preventCertificateDynamicUpdate="true"</code></pre>
+</div>
+
+<button id="button_configuration_tls_certificate_authority_private_key" class="accordion title"><strong>TLS Certificate Authority Private Key</strong></button>
+<div class="panel title">
+  <p>Location of custom file for Certificate Authority for TLS, the private key must be a PEM file and must match the <strong>TLS Certificate Authority X509 Certificate</strong>.</p>
+  <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">null</span></p>
+  <p>Java Code:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.certificateAuthorityPrivateKey(String certificateAuthorityPrivateKey)</code></pre>
+  <p>System Property:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.certificateAuthorityPrivateKey=...</code></pre>
+  <p>Environment Variable:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CERTIFICATE_AUTHORITY_PRIVATE_KEY=...</code></pre>
+  <p>Property File:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">mockserver.certificateAuthorityPrivateKey=...</code></pre>
+  <p>Example:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.certificateAuthorityPrivateKey="true"</code></pre>
+</div>
+
+<button id="button_configuration_tls_certificate_authority_certificate" class="accordion title"><strong>TLS Certificate Authority X509 Certificate</strong></button>
+<div class="panel title">
+  <p>Location of custom file for Certificate Authority for TLS, the certificate must be a X509 PEM file and must match the <strong>TLS Certificate Authority Private Key</strong>.</p>
+  <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">null</span></p>
+  <p>Java Code:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.certificateAuthorityCertificate(String certificateAuthorityCertificate)</code></pre>
+  <p>System Property:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.certificateAuthorityCertificate=...</code></pre>
+  <p>Environment Variable:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CERTIFICATE_AUTHORITY_X509_CERTIFICATE=...</code></pre>
+  <p>Property File:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">mockserver.certificateAuthorityCertificate=...</code></pre>
+  <p>Example:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.certificateAuthorityCertificate="true"</code></pre>
+</div>
+
+<button id="button_configuration_directory_to_save_dynamic_ssl_certificates" class="accordion title"><strong>Directory To Save Dynamic TLS Certificates</strong></button>
+<div class="panel title">
+  <p>Location used to save dynamically generated certificates, by default this is saved as a temporary file by the JVM, for example: <strong>/var/folders/lz/_kbrwxrx4ss3brnc0y9ms2vc0000gn/T/MockServerCertificate75d431bb-cbf1-4cfe-b8a2-000ece2150e3.pem1048371440427200504.tmp</strong>.</p>
+  <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">File.createTempFile(...)</span></p>
+  <p>Java Code:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.directoryToSaveDynamicSSLCertificate(String directoryToSaveDynamicSSLCertificate)</code></pre>
+  <p>System Property:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.directoryToSaveDynamicSSLCertificate=...</code></pre>
+  <p>Environment Variable:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE=...</code></pre>
+  <p>Property File:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">mockserver.directoryToSaveDynamicSSLCertificate=...</code></pre>
+  <p>Example:</p>
+  <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.directoryToSaveDynamicSSLCertificate="/some/existing/path"</code></pre>
+</div>
