@@ -12,6 +12,8 @@ import org.mockserver.scheduler.Scheduler;
 
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -63,16 +65,25 @@ public class MockServerMatcherManageExpectationsTest {
     @Test
     public void shouldRemoveMultipleExpiredExpectations() throws InterruptedException {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).thenRespond(httpResponse.withBody("someBody")));
-        Expectation expectationToExpireAfter3Seconds = new Expectation(httpRequest.withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.SECONDS, 3L));
-        mockServerMatcher.add(expectationToExpireAfter3Seconds.thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher
+            .add(
+                new Expectation(httpRequest.withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L))
+                    .thenRespond(httpResponse.withBody("someBody"))
+            );
+        Expectation expectationToExpireAfter3Seconds =
+            new Expectation(httpRequest.withPath("somePath"), Times.unlimited(), TimeToLive.exactly(MILLISECONDS, 1500L))
+                .thenRespond(httpResponse.withBody("someBodyOtherBody"));
+        mockServerMatcher
+            .add(
+                expectationToExpireAfter3Seconds.thenRespond(httpResponse.withBody("someBody"))
+            );
 
         // then
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somePath")), is(expectationToExpireAfter3Seconds));
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
 
         // when
-        TimeUnit.SECONDS.sleep(3);
+        SECONDS.sleep(2);
 
         // then - after 3 seconds
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
