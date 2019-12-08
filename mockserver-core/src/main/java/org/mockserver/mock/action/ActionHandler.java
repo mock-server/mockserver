@@ -180,6 +180,12 @@ public class ActionHandler {
         } else if (isPreflightRequest(request) && (enableCORSForAPI() || enableCORSForAllResponses())) {
 
             responseWriter.writeResponse(request, OK);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(INFO)
+                    .setLogLevel(Level.INFO)
+                    .setMessageFormat("Returning CORS response for OPTIONS request")
+            );
 
         } else if (proxyingRequest || potentiallyHttpProxy) {
 
