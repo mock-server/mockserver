@@ -196,29 +196,6 @@ public class ConfigurationProperties {
         return System.getProperty(MOCKSERVER_PROPERTY_FILE, isBlank(System.getenv("MOCKSERVER_PROPERTY_FILE")) ? "mockserver.properties" : System.getenv("MOCKSERVER_PROPERTY_FILE"));
     }
 
-    public static boolean enableCORSForAPI() {
-        return enableCORSForAPI;
-    }
-
-    public static boolean enableCORSForAPIHasBeenSetExplicitly() {
-        return enableCORSForAPIHasBeenSetExplicitly;
-    }
-
-    public static void enableCORSForAPI(boolean enable) {
-        System.setProperty(MOCKSERVER_ENABLE_CORS_FOR_API, "" + enable);
-        enableCORSForAPI = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ENABLE_CORS_FOR_API, "MOCKSERVER_ENABLE_CORS_FOR_API", DEFAULT_ENABLE_CORS_FOR_API));
-        enableCORSForAPIHasBeenSetExplicitly = true;
-    }
-
-    public static boolean enableCORSForAllResponses() {
-        return enableCORSForAllResponses;
-    }
-
-    public static void enableCORSForAllResponses(boolean enable) {
-        System.setProperty(MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES, "" + enable);
-        enableCORSForAllResponses = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES, "MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES", DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES));
-    }
-
     public static int maxExpectations() {
         return readIntegerProperty(MOCKSERVER_MAX_EXPECTATIONS, "MOCKSERVER_MAX_EXPECTATIONS", DEFAULT_MAX_EXPECTATIONS);
     }
@@ -679,6 +656,29 @@ public class ConfigurationProperties {
 
     public static void persistedExpectationsPath(String persistedExpectationsPath) {
         System.setProperty(MOCKSERVER_PERSISTED_EXPECTATIONS_PATH, persistedExpectationsPath);
+    }
+
+    public static boolean enableCORSForAPI() {
+        return enableCORSForAPI;
+    }
+
+    public static boolean enableCORSForAPIHasBeenSetExplicitly() {
+        return enableCORSForAPIHasBeenSetExplicitly;
+    }
+
+    public static void enableCORSForAPI(boolean enable) {
+        System.setProperty(MOCKSERVER_ENABLE_CORS_FOR_API, "" + enable);
+        enableCORSForAPI = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ENABLE_CORS_FOR_API, "MOCKSERVER_ENABLE_CORS_FOR_API", DEFAULT_ENABLE_CORS_FOR_API));
+        enableCORSForAPIHasBeenSetExplicitly = true;
+    }
+
+    public static boolean enableCORSForAllResponses() {
+        return enableCORSForAllResponses;
+    }
+
+    public static void enableCORSForAllResponses(boolean enable) {
+        System.setProperty(MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES, "" + enable);
+        enableCORSForAllResponses = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES, "MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES", DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES));
     }
 
     public static String corsAllowHeaders() {

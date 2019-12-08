@@ -50,47 +50,6 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadEnableCORSSettingForAPI() {
-        // given
-        System.clearProperty("mockserver.enableCORSForAPI");
-        reset();
-
-        // when
-        assertFalse(ConfigurationProperties.enableCORSForAPI());
-        ConfigurationProperties.enableCORSForAPI(true);
-
-        // then
-        assertTrue(ConfigurationProperties.enableCORSForAPI());
-        assertEquals("true", System.getProperty("mockserver.enableCORSForAPI"));
-    }
-
-    @Test
-    public void shouldDetectEnableCORSSettingForAPIHasBeenExplicitlySet() {
-        // given
-        System.clearProperty("mockserver.enableCORSForAPI");
-        reset();
-
-        // when
-        assertFalse(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
-        ConfigurationProperties.enableCORSForAPI(true);
-        assertTrue(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
-    }
-
-    @Test
-    public void shouldSetAndReadEnableCORSSettingForAllResponses() {
-        // given
-        System.clearProperty("mockserver.enableCORSForAllResponses");
-
-        // when
-        assertFalse(ConfigurationProperties.enableCORSForAllResponses());
-        ConfigurationProperties.enableCORSForAllResponses(false);
-
-        // then
-        assertFalse(ConfigurationProperties.enableCORSForAllResponses());
-        assertEquals("false", System.getProperty("mockserver.enableCORSForAllResponses"));
-    }
-
-    @Test
     public void shouldSetAndReadNIOEventLoopThreadCount() {
         // given
         System.clearProperty("mockserver.nioEventLoopThreadCount");
@@ -919,6 +878,47 @@ public class ConfigurationPropertiesTest {
         // then
         assertTrue(persistExpectations());
         assertEquals("" + true, System.getProperty("mockserver.persistExpectations"));
+    }
+
+    @Test
+    public void shouldSetAndReadEnableCORSSettingForAPI() {
+        // given
+        System.clearProperty("mockserver.enableCORSForAPI");
+        reset();
+
+        // when
+        assertFalse(ConfigurationProperties.enableCORSForAPI());
+        ConfigurationProperties.enableCORSForAPI(true);
+
+        // then
+        assertTrue(ConfigurationProperties.enableCORSForAPI());
+        assertEquals("true", System.getProperty("mockserver.enableCORSForAPI"));
+    }
+
+    @Test
+    public void shouldDetectEnableCORSSettingForAPIHasBeenExplicitlySet() {
+        // given
+        System.clearProperty("mockserver.enableCORSForAPI");
+        reset();
+
+        // when
+        assertFalse(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
+        ConfigurationProperties.enableCORSForAPI(true);
+        assertTrue(ConfigurationProperties.enableCORSForAPIHasBeenSetExplicitly());
+    }
+
+    @Test
+    public void shouldSetAndReadEnableCORSSettingForAllResponses() {
+        // given
+        System.clearProperty("mockserver.enableCORSForAllResponses");
+
+        // when
+        assertFalse(ConfigurationProperties.enableCORSForAllResponses());
+        ConfigurationProperties.enableCORSForAllResponses(false);
+
+        // then
+        assertFalse(ConfigurationProperties.enableCORSForAllResponses());
+        assertEquals("false", System.getProperty("mockserver.enableCORSForAllResponses"));
     }
 
     @Test
