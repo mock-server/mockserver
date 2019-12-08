@@ -920,4 +920,60 @@ public class ConfigurationPropertiesTest {
         assertTrue(persistExpectations());
         assertEquals("" + true, System.getProperty("mockserver.persistExpectations"));
     }
+
+    @Test
+    public void shouldSetAndReadCORSAllowHeaders() {
+        // given
+        System.clearProperty("mockserver.corsAllowHeaders");
+
+        // when
+        assertEquals("Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization", corsAllowHeaders());
+        corsAllowHeaders("RandomHeader, AnotherHeader");
+
+        // then
+        assertEquals("RandomHeader, AnotherHeader", corsAllowHeaders());
+        assertEquals("RandomHeader, AnotherHeader", System.getProperty("mockserver.corsAllowHeaders"));
+    }
+
+    @Test
+    public void shouldSetAndReadCORSAllowMethods() {
+        // given
+        System.clearProperty("mockserver.corsAllowMethods");
+
+        // when
+        assertEquals("CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE", corsAllowMethods());
+        corsAllowMethods("CONNECT, PATCH");
+
+        // then
+        assertEquals("CONNECT, PATCH", corsAllowMethods());
+        assertEquals("CONNECT, PATCH", System.getProperty("mockserver.corsAllowMethods"));
+    }
+
+    @Test
+    public void shouldSetAndReadCORSAllowCredentials() {
+        // given
+        System.clearProperty("mockserver.corsAllowCredentials");
+
+        // when
+        assertTrue(corsAllowCredentials());
+        corsAllowCredentials(false);
+
+        // then
+        assertFalse(corsAllowCredentials());
+        assertEquals("" + false, System.getProperty("mockserver.corsAllowCredentials"));
+    }
+
+    @Test
+    public void shouldSetAndReadCORSMaxAgeInSeconds() {
+        // given
+        System.clearProperty("mockserver.corsMaxAgeInSeconds");
+
+        // when
+        assertEquals(300, corsMaxAgeInSeconds());
+        corsMaxAgeInSeconds(100);
+
+        // then
+        assertEquals("100", System.getProperty("mockserver.corsMaxAgeInSeconds"));
+        assertEquals(100, corsMaxAgeInSeconds());
+    }
 }

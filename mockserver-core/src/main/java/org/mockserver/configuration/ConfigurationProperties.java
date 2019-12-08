@@ -50,6 +50,10 @@ public class ConfigurationProperties {
     private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = Math.max(1, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors() * 5));
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "org/mockserver/socket/CertificateAuthorityPrivateKey.pem";
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "org/mockserver/socket/CertificateAuthorityCertificate.pem";
+    private static final String DEFAULT_CORS_ALLOW_HEADERS = "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization";
+    private static final String DEFAULT_CORS_ALLOW_METHODS = "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE";
+    private static final String DEFAULT_CORS_ALLOW_CREDENTIALS = "true";
+    private static final int DEFAULT_CORS_MAX_AGE_IN_SECONDS = 300;
 
     private static final String MOCKSERVER_PROPERTY_FILE = "mockserver.propertyFile";
     private static final String MOCKSERVER_ENABLE_CORS_FOR_API = "mockserver.enableCORSForAPI";
@@ -96,6 +100,10 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_INITIALIZATION_JSON_PATH = "mockserver.initializationJsonPath";
     private static final String MOCKSERVER_PERSISTED_EXPECTATIONS_PATH = "mockserver.persistedExpectationsPath";
     private static final String MOCKSERVER_PERSIST_EXPECTATIONS = "mockserver.persistExpectations";
+    private static final String MOCKSERVER_CORS_ALLOW_HEADERS = "mockserver.corsAllowHeaders";
+    private static final String MOCKSERVER_CORS_ALLOW_METHODS = "mockserver.corsAllowMethods";
+    private static final String MOCKSERVER_CORS_ALLOW_CREDENTIALS = "mockserver.corsAllowCredentials";
+    private static final String MOCKSERVER_CORS_MAX_AGE_IN_SECONDS = "mockserver.corsMaxAgeInSeconds";
 
     private static final Properties PROPERTIES = readPropertyFile();
     private static final Set<String> ALL_SUBJECT_ALTERNATIVE_DOMAINS = Sets.newConcurrentHashSet();
@@ -671,6 +679,38 @@ public class ConfigurationProperties {
 
     public static void persistedExpectationsPath(String persistedExpectationsPath) {
         System.setProperty(MOCKSERVER_PERSISTED_EXPECTATIONS_PATH, persistedExpectationsPath);
+    }
+
+    public static String corsAllowHeaders() {
+        return readPropertyHierarchically(MOCKSERVER_CORS_ALLOW_HEADERS, "MOCKSERVER_CORS_ALLOW_HEADERS", DEFAULT_CORS_ALLOW_HEADERS);
+    }
+
+    public static void corsAllowHeaders(String corsAllowHeaders) {
+        System.setProperty(MOCKSERVER_CORS_ALLOW_HEADERS, corsAllowHeaders);
+    }
+
+    public static String corsAllowMethods() {
+        return readPropertyHierarchically(MOCKSERVER_CORS_ALLOW_METHODS, "MOCKSERVER_CORS_ALLOW_METHODS", DEFAULT_CORS_ALLOW_METHODS);
+    }
+
+    public static void corsAllowMethods(String corsAllowMethods) {
+        System.setProperty(MOCKSERVER_CORS_ALLOW_METHODS, corsAllowMethods);
+    }
+
+    public static boolean corsAllowCredentials() {
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_CORS_ALLOW_CREDENTIALS, "MOCKSERVER_CORS_ALLOW_CREDENTIALS", DEFAULT_CORS_ALLOW_CREDENTIALS));
+    }
+
+    public static void corsAllowCredentials(boolean allow) {
+        System.setProperty(MOCKSERVER_CORS_ALLOW_CREDENTIALS, "" + allow);
+    }
+
+    public static int corsMaxAgeInSeconds() {
+        return readIntegerProperty(MOCKSERVER_CORS_MAX_AGE_IN_SECONDS, "MOCKSERVER_CORS_MAX_AGE_IN_SECONDS", DEFAULT_CORS_MAX_AGE_IN_SECONDS);
+    }
+
+    public static void corsMaxAgeInSeconds(int ageInSeconds) {
+        System.setProperty(MOCKSERVER_CORS_MAX_AGE_IN_SECONDS, "" + ageInSeconds);
     }
 
     private static void validateHostAndPort(String hostAndPort, String propertyName, String mockserverSocksProxy) {
