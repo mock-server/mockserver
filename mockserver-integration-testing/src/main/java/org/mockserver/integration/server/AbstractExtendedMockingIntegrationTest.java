@@ -5002,7 +5002,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
-    public void shouldRetrieveRecordedRequestsAsLogEntries() throws IOException {
+    public void shouldRetrieveRecordedRequestsAsLogEntries() {
         // given
         mockServerClient.when(request().withPath(calculatePath("some_path.*")), exactly(4)).respond(response().withBody("some_body"));
         assertEquals(
@@ -5837,33 +5837,27 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
 
         ExecutorService executorService = Executors.newFixedThreadPool(2);
 
-        Future<Long> slowFuture = executorService.submit(new Callable<Long>() {
-            @Override
-            public Long call() throws Exception {
-                long start = System.currentTimeMillis();
-                makeRequest(request("/slow"), Collections.<String>emptySet());
-                return System.currentTimeMillis() - start;
-            }
+        Future<Long> slowFuture = executorService.submit(() -> {
+            long start = System.currentTimeMillis();
+            makeRequest(request("/slow"), Collections.emptySet());
+            return System.currentTimeMillis() - start;
         });
 
         // Let fast request come to the server slightly after slow request
         Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 
-        Future<Long> fastFuture = executorService.submit(new Callable<Long>() {
-            @Override
-            public Long call() throws Exception {
-                long start = System.currentTimeMillis();
-                makeRequest(request("/fast"), Collections.<String>emptySet());
-                return System.currentTimeMillis() - start;
+        Future<Long> fastFuture = executorService.submit(() -> {
+            long start = System.currentTimeMillis();
+            makeRequest(request("/fast"), Collections.emptySet());
+            return System.currentTimeMillis() - start;
 
-            }
         });
 
         Long slowRequestElapsedMillis = slowFuture.get();
         Long fastRequestElapsedMillis = fastFuture.get();
 
-        assertThat("Slow request takes less than expected", slowRequestElapsedMillis, is(greaterThan(5 * 1000L)));
-        assertThat("Fast request takes longer than expected", fastRequestElapsedMillis, is(lessThan(5 * 1000L)));
+        assertThat("Slow request takes less than expected", slowRequestElapsedMillis, is(greaterThan(4 * 1000L)));
+        assertThat("Fast request takes longer than expected", fastRequestElapsedMillis, is(lessThan(1000L)));
     }
 
 }
