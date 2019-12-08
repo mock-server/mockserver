@@ -29,7 +29,6 @@ import static org.mockserver.model.HttpRequest.request;
 /**
  * @author jamesdbloom
  */
-@Ignore
 public class StopIntegrationTest {
 
     private static final int MOCK_SERVER_PORT = PortFactory.findFreePort();
