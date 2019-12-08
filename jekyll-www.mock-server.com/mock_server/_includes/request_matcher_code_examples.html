@@ -1477,12 +1477,12 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
         "body": {
             "type": "JSON",
-            "json": JSON.stringify({
+            "json": {
                 "id": 1,
                 "name": "A green door",
                 "price": 12.50,
                 "tags": ["home", "green"]
-            }),
+            },
             "matchType": "STRICT"
         }
     },
@@ -1503,17 +1503,22 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
-  "httpRequest" : {
-    "body" : {
-      "type" : "JSON",
-      "json" : "{ \"id\": 1, \"name\": \"A green door\", \"price\": 12.50, \"tags\": [\"home\", \"green\"] }",
-      "matchType" : "STRICT"
+    "httpRequest": {
+        "body": {
+            "type": "JSON",
+            "json": {
+                "id": 1,
+                "name": "A green door",
+                "price": 12.50,
+                "tags": ["home", "green"]
+            },
+            "matchType": "STRICT"
+        }
+    },
+    "httpResponse": {
+        "statusCode": 202,
+        "body": "some_response_body"
     }
-  },
-  "httpResponse" : {
-    "statusCode" : 202,
-    "body" : "some_response_body"
-  }
 }'</code></pre>
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.7.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
@@ -1550,14 +1555,10 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
         "body": {
-            "type": "JSON",
-            "json": JSON.stringify({
-                "id": 1,
-                "name": "A green door",
-                "price": 12.50,
-                "tags": ["home", "green"]
-            }),
-            "matchType" : "ONLY_MATCHING_FIELDS"
+            "id": 1,
+            "name": "A green door",
+            "price": 12.50,
+            "tags": ["home", "green"]
         }
     },
     "httpResponse": {
@@ -1577,17 +1578,18 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
-  "httpRequest" : {
-    "body" : {
-      "type" : "JSON",
-      "json" : "{ \"id\": 1, \"name\": \"A green door\", \"price\": 12.50, \"tags\": [\"home\", \"green\"] }",
-      "matchType" : "ONLY_MATCHING_FIELDS"
+    "httpRequest": {
+        "body": {
+            "id": 1,
+            "name": "A green door",
+            "price": 12.50,
+            "tags": ["home", "green"]
+        }
+    },
+    "httpResponse": {
+        "statusCode": 202,
+        "body": "some_response_body"
     }
-  },
-  "httpResponse" : {
-    "statusCode" : 202,
-    "body" : "some_response_body"
-  }
 }'</code></pre>
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.7.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
@@ -1623,8 +1625,20 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "path": "/json",
         "body": {
             "type": "JSON",
-            "json": "{\"context\": [{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"}]}"
-            "matchType" : "ONLY_MATCHING_FIELDS"
+            "json": {
+                "context": [
+                    {
+                        "source": "DECISION_REQUEST"
+                    },
+                    {
+                        "source": "DECISION_REQUEST"
+                    },
+                    {
+                        "source": "DECISION_REQUEST"
+                    }
+                ]
+            },
+            "matchType": "ONLY_MATCHING_FIELDS"
         }
     },
     "httpResponse": {
@@ -1653,8 +1667,20 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         "path": "/json",
         "body": {
             "type": "JSON",
-            "json": "{\"context\": [{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"}]}"
-            "matchType" : "ONLY_MATCHING_FIELDS"
+            "json": {
+                "context": [
+                    {
+                        "source": "DECISION_REQUEST"
+                    },
+                    {
+                        "source": "DECISION_REQUEST"
+                    },
+                    {
+                        "source": "DECISION_REQUEST"
+                    }
+                ]
+            },
+            "matchType": "ONLY_MATCHING_FIELDS"
         }
     },
     "httpResponse": {
@@ -1681,7 +1707,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
                 jsonSchema("{" + System.lineSeparator() +
                     "    \"$schema\": \"http://json-schema.org/draft-04/schema#\"," + System.lineSeparator() +
                     "    \"title\": \"Product\"," + System.lineSeparator() +
-                    "    \"description\": \"A product from Acme's catalog\"," + System.lineSeparator() +
+                    "    \"description\": \"A product from Acme catalog\"," + System.lineSeparator() +
                     "    \"type\": \"object\"," + System.lineSeparator() +
                     "    \"properties\": {" + System.lineSeparator() +
                     "        \"id\": {" + System.lineSeparator() +
@@ -1721,10 +1747,10 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
         "body": {
             "type": "JSON_SCHEMA",
-            "jsonSchema": JSON.stringify({
+            "jsonSchema": {
                 "$schema": "http://json-schema.org/draft-04/schema#",
                 "title": "Product",
-                "description": "A product from Acme's catalog",
+                "description": "A product from Acme catalog",
                 "type": "object",
                 "properties": {
                     "id": {
@@ -1749,8 +1775,12 @@ mockServerClient("localhost", 1080).mockAnyResponse({
                         "uniqueItems": true
                     }
                 },
-                "required": ["id", "name", "price"]
-            })
+                "required": [
+                    "id",
+                    "name",
+                    "price"
+                ]
+            }
         }
     },
     "httpResponse": {
@@ -1769,15 +1799,48 @@ mockServerClient("localhost", 1080).mockAnyResponse({
     <button class="accordion inner">REST API</button>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
-  "httpRequest" : {
-    "body" : {
-      "type" : "JSON_SCHEMA",
-      "jsonSchema" : "{\"$schema\": \"http://json-schema.org/draft-04/schema#\", \"title\": \"Product\", \"description\": \"A product from Acme's catalog\", \"type\": \"object\", \"properties\": { \"id\": { \"description\": \"The unique identifier for a product\", \"type\": \"integer\" }, \"name\": { \"description\": \"Name of the product\", \"type\": \"string\"}, \"price\": { \"type\": \"number\", \"minimum\": 0, \"exclusiveMinimum\": true }, \"tags\": { \"type\": \"array\", \"items\": { \"type\": \"string\" }, \"minItems\": 1, \"uniqueItems\": true } }, \"required\": [\"id\", \"name\", \"price\"] }"
+    "httpRequest": {
+        "body": {
+            "type": "JSON_SCHEMA",
+            "jsonSchema": {
+                "$schema": "http://json-schema.org/draft-04/schema#",
+                "title": "Product",
+                "description": "A product from Acme catalog",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "description": "The unique identifier for a product",
+                        "type": "integer"
+                    },
+                    "name": {
+                        "description": "Name of the product",
+                        "type": "string"
+                    },
+                    "price": {
+                        "type": "number",
+                        "minimum": 0,
+                        "exclusiveMinimum": true
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "price"
+                ]
+            }
+        }
+    },
+    "httpResponse": {
+        "body": "some_response_body"
     }
-  },
-  "httpResponse" : {
-    "body" : "some_response_body"
-  }
 }'</code></pre>
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.7.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
