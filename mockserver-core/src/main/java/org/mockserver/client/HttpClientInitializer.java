@@ -33,15 +33,16 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         this.proxyConfiguration = proxyConfiguration;
         this.mockServerLogger = mockServerLogger;
         this.httpClientHandler = new HttpClientHandler();
-        this.httpClientConnectionHandler = new HttpClientConnectionHandler(mockServerLogger);
+        this.httpClientConnectionHandler = new HttpClientConnectionHandler();
     }
 
     @Override
     public void initChannel(SocketChannel channel) {
         ChannelPipeline pipeline = channel.pipeline();
+        boolean secure = channel.attr(SECURE) != null && channel.attr(SECURE).get() != null && channel.attr(SECURE).get();
 
         if (proxyConfiguration != null) {
-            if (proxyConfiguration.getType() == ProxyConfiguration.Type.HTTPS) {
+            if (proxyConfiguration.getType() == ProxyConfiguration.Type.HTTPS && secure) {
                 if (proxyConfiguration.getUsername() != null && proxyConfiguration.getPassword() != null) {
                     pipeline.addLast(new HttpProxyHandler(proxyConfiguration.getProxyAddress(), proxyConfiguration.getUsername(), proxyConfiguration.getPassword()));
                 } else {
@@ -57,7 +58,7 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         }
         pipeline.addLast(httpClientConnectionHandler);
 
-        if (channel.attr(SECURE) != null && channel.attr(SECURE).get() != null && channel.attr(SECURE).get()) {
+        if (secure) {
             InetSocketAddress remoteAddress = channel.attr(REMOTE_SOCKET).get();
             pipeline.addLast(new NettySslContextFactory(mockServerLogger).createClientSslContext().newHandler(channel.alloc(), remoteAddress.getHostName(), remoteAddress.getPort()));
         }
