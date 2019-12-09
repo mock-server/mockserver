@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class Action<T extends Action> extends ObjectWithJsonToString {
 
     private Delay delay;

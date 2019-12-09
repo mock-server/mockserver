@@ -69,6 +69,7 @@ public class ActionHandler {
         this.httpClient = new NettyHttpClient(mockServerLogger, eventLoopGroup, proxyConfiguration);
     }
 
+    @SuppressWarnings("rawtypes")
     public void processAction(final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, Set<String> localAddresses, boolean proxyingRequest, final boolean synchronous) {
         if (request.getHeaders() == null || !request.getHeaders().containsEntry(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
             mockServerLogger.logEvent(

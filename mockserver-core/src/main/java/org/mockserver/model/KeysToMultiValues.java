@@ -14,6 +14,7 @@ import static org.mockserver.model.NottableString.*;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends KeysToMultiValues> extends ObjectWithJsonToString {
 
     private final ListMultimap<NottableString, NottableString> listMultimap = LinkedListMultimap.create();
@@ -120,6 +121,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         return k;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     K replaceEntry(final T entry) {
         if (entry != null) {
             remove(entry.getName());
@@ -128,6 +130,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         return k;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     K replaceEntry(final String name, final String... values) {
         if (ArrayUtils.isNotEmpty(values)) {
             remove(name);

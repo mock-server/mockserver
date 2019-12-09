@@ -27,6 +27,7 @@ public class HttpResponseClassCallbackActionHandler {
         return invokeCallbackMethod(httpClassCallback, request);
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private ExpectationResponseCallback instantiateCallback(HttpClassCallback httpClassCallback) {
         try {
             Class expectationResponseCallbackClass = Class.forName(httpClassCallback.getCallbackClass());

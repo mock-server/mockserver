@@ -14,6 +14,7 @@ import java.util.Map;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class WebSocketMessageSerializer {
 
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();

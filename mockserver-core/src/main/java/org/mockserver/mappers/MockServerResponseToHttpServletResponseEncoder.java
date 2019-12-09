@@ -33,6 +33,7 @@ public class MockServerResponseToHttpServletResponseEncoder {
         setBody(httpResponse, httpServletResponse);
     }
 
+    @SuppressWarnings("deprecation")
     private void setStatusCode(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
         int statusCode = httpResponse.getStatusCode() != null ? httpResponse.getStatusCode() : 200;
         if (httpResponse.getReasonPhrase() != null) {

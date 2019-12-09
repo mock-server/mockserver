@@ -47,6 +47,7 @@ public class ObjectMapperFactory {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private static ObjectMapper buildObjectMapper(JsonSerializer... additionJsonSerializers) {
         ObjectMapper objectMapper = new ObjectMapper();
 

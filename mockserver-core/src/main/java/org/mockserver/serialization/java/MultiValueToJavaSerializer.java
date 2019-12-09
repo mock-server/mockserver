@@ -11,6 +11,7 @@ public interface MultiValueToJavaSerializer<T extends ObjectWithReflectiveEquals
 
     String serializeAsJava(int numberOfSpacesToIndent, List<T> object);
 
+    @SuppressWarnings("unchecked")
     String serializeAsJava(int numberOfSpacesToIndent, T... object);
 
 }
