@@ -15,7 +15,15 @@ public class HttpOverrideForwardedRequestActionHandler extends HttpForwardAction
     }
 
     public HttpForwardActionResult handle(final HttpOverrideForwardedRequest httpOverrideForwardedRequest, final HttpRequest request) {
-        return sendRequest(request.clone().update(httpOverrideForwardedRequest.getHttpRequest()), null, httpOverrideForwardedRequest.getHttpResponse());
+        return sendRequest(request.clone().update(httpOverrideForwardedRequest.getHttpRequest()), null, httpResponse -> {
+            if (httpResponse == null) {
+                return httpOverrideForwardedRequest.getHttpResponse();
+            } else if (httpOverrideForwardedRequest.getHttpResponse() == null) {
+                return httpResponse;
+            } else {
+                return httpResponse.update(httpOverrideForwardedRequest.getHttpResponse());
+            }
+        });
     }
 
 }

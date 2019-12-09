@@ -11,6 +11,7 @@ import org.slf4j.event.Level;
 import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 
@@ -28,9 +29,9 @@ public abstract class HttpForwardAction {
         this.httpClient = httpClient;
     }
 
-    protected HttpForwardActionResult sendRequest(HttpRequest request, @Nullable InetSocketAddress remoteAddress, HttpResponse overriddenHttpResponse) {
+    protected HttpForwardActionResult sendRequest(HttpRequest request, @Nullable InetSocketAddress remoteAddress, Function<HttpResponse, HttpResponse> overrideHttpResponse) {
         try {
-            return new HttpForwardActionResult(request, httpClient.sendRequest(hopByHopHeaderFilter.onRequest(request), remoteAddress), overriddenHttpResponse, remoteAddress);
+            return new HttpForwardActionResult(request, httpClient.sendRequest(hopByHopHeaderFilter.onRequest(request), remoteAddress), overrideHttpResponse, remoteAddress);
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()

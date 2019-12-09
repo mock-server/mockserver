@@ -23,7 +23,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
         return invokeCallbackMethod(httpClassCallback, request);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private ExpectationForwardCallback instantiateCallback(HttpClassCallback httpClassCallback) {
         try {
             Class expectationResponseCallbackClass = Class.forName(httpClassCallback.getCallbackClass());
@@ -88,7 +88,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
                 return notFoundFuture(httpRequest);
             }
         } else {
-            return notFoundFuture(httpRequest);
+            return notFoundFuture(null);
         }
     }
 }
