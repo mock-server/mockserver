@@ -220,7 +220,7 @@ public class MockServerClient implements Stoppable {
             HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")));
             if (httpResponse.getStatusCode() == HttpStatusCode.OK_200.code()) {
                 return true;
-            } else if (attempts == 0) {
+            } else if (attempts <= 0) {
                 return false;
             } else {
                 try {
@@ -231,14 +231,23 @@ public class MockServerClient implements Stoppable {
                 return isRunning(attempts - 1, timeout, timeUnit);
             }
         } catch (SocketConnectionException | IllegalStateException sce) {
-            MOCK_SERVER_LOGGER.logEvent(
-                new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
-                    .setLogLevel(DEBUG)
-                    .setMessageFormat("Exception while checking if MockServer is running - " + sce.getMessage())
-                    .setThrowable(sce)
-            );
-            return false;
+            if (attempts <= 0) {
+                MOCK_SERVER_LOGGER.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(DEBUG)
+                        .setMessageFormat("Exception while checking if MockServer is running - " + sce.getMessage())
+                        .setThrowable(sce)
+                );
+                return false;
+            } else {
+                try {
+                    timeUnit.sleep(timeout);
+                } catch (InterruptedException e) {
+                    // ignore interrupted exception
+                }
+                return isRunning(attempts - 1, timeout, timeUnit);
+            }
         }
     }
 
