@@ -258,7 +258,7 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
     }
 
     @Test
-    public void shouldCallbackForForwardCallbackToSpecifiedClassInTestClasspath() {
+    public void shouldCallbackForwardCallbackToOverrideRequestInTestClasspath() {
         // given
         TestClasspathTestExpectationForwardCallback.httpRequests.clear();
         TestClasspathTestExpectationForwardCallback.httpRequestToReturn = request()
@@ -324,6 +324,82 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
         );
         assertEquals(TestClasspathTestExpectationForwardCallback.httpRequests.get(1).getBody().getValue(), "an_example_body_https");
         assertEquals(TestClasspathTestExpectationForwardCallback.httpRequests.get(1).getPath().getValue(), calculatePath("callback"));
+    }
+
+    @Test
+    public void shouldCallbackForwardCallbackToOverrideRequestAndResponseInTestClasspath() {
+        // given
+        TestClasspathTestExpectationForwardCallbackWithResponseOverride.httpRequests.clear();
+        TestClasspathTestExpectationForwardCallbackWithResponseOverride.httpRequestToReturn = request()
+            .withHeaders(
+                header("x-callback", "test_callback_header_request"),
+                header("Host", "localhost:" + insecureEchoServer.getPort())
+            )
+            .withBody("a_callback_forward_request");
+        TestClasspathTestExpectationForwardCallbackWithResponseOverride.httpResponseToReturn = response()
+            .withHeaders(
+                header("x-callback", "test_callback_header_response")
+            )
+            .withBody("a_callback_forward_response");
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("callback"))
+            )
+            .forward(
+                callback()
+                    .withCallbackClass("org.mockserver.server.TestClasspathTestExpectationForwardCallbackWithResponseOverride")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-callback", "test_callback_header_response")
+                )
+                .withBody("a_callback_forward_response"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("callback"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("X-Test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore)
+        );
+        assertEquals(TestClasspathTestExpectationForwardCallbackWithResponseOverride.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
+        assertEquals(TestClasspathTestExpectationForwardCallbackWithResponseOverride.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
+        assertEquals(TestClasspathTestExpectationForwardCallbackWithResponseOverride.httpResponses.get(0).getBody().getValue(), "a_callback_forward_request");
+
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-callback", "test_callback_header_response")
+                )
+                .withBody("a_callback_forward_response"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("callback"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("X-Test", "test_headers_and_body")
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore)
+        );
+        assertEquals(TestClasspathTestExpectationForwardCallbackWithResponseOverride.httpRequests.get(0).getPath().getValue(), calculatePath("callback"));
+        assertEquals(TestClasspathTestExpectationForwardCallbackWithResponseOverride.httpRequests.get(0).getBody().getValue(), "an_example_body_http");
+        assertEquals(TestClasspathTestExpectationForwardCallbackWithResponseOverride.httpResponses.get(0).getBody().getValue(), "a_callback_forward_request");
     }
 
     @Test

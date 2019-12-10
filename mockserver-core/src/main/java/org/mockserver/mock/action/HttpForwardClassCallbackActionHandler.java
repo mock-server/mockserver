@@ -72,7 +72,22 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
             ExpectationForwardCallback expectationForwardCallback = instantiateCallback(httpClassCallback);
             if (expectationForwardCallback != null) {
                 try {
-                    return sendRequest(expectationForwardCallback.handle(httpRequest), null, null);
+                    HttpRequest request = expectationForwardCallback.handle(httpRequest);
+                    return sendRequest(request, null, response -> {
+                        try {
+                            return expectationForwardCallback.handle(request, response);
+                        } catch (Throwable throwable) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                                    .setLogLevel(Level.ERROR)
+                                    .setHttpRequest(httpRequest)
+                                    .setMessageFormat(httpClassCallback.getCallbackClass() + " throw exception while executing handle callback method - " + throwable.getMessage())
+                                    .setThrowable(throwable)
+                            );
+                            return response;
+                        }
+                    });
                 } catch (Throwable throwable) {
                     mockServerLogger.logEvent(
                         new LogEntry()

@@ -397,7 +397,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
-    public void shouldCallbackForForwardToSpecifiedClassWithPrecannedResponse() {
+    public void shouldCallbackForwardCallbackToOverrideRequestInTestClasspath() {
         // when
         mockServerClient
             .when(
@@ -441,6 +441,69 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     header("x-test", "test_headers_and_body")
                 )
                 .withBody("some_overridden_body"),
+            makeRequest(
+                request()
+                    .withSecure(true)
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body"),
+                        header("x-echo-server-port", secureEchoServer.getPort())
+                    )
+                    .withBody("an_example_body_https"),
+                headersToIgnore
+            )
+        );
+    }
+
+
+    @Test
+    public void shouldCallbackForwardCallbackToOverrideRequestAndResponseInTestClasspath() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                callback()
+                    .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationForwardCallbackWithResponse")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-response-test", "x-response-test"),
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overidden_response_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("echo"))
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-test", "test_headers_and_body"),
+                        header("x-echo-server-port", insecureEchoServer.getPort())
+                    )
+                    .withBody("an_example_body_http"),
+                headersToIgnore
+            )
+        );
+
+        // - in https
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeaders(
+                    header("x-response-test", "x-response-test"),
+                    header("x-test", "test_headers_and_body")
+                )
+                .withBody("some_overidden_response_body"),
             makeRequest(
                 request()
                     .withSecure(true)

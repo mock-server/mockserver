@@ -195,9 +195,6 @@ public class ActionHandler {
                         if (response == null) {
                             response = notFoundResponse();
                         }
-                        if (responseFuture.getOverrideHttpResponse() != null) {
-                            response = responseFuture.getOverrideHttpResponse().apply(response);
-                        }
                         if (response.containsHeader(httpStateHandler.getUniqueLoopPreventionHeaderName(), httpStateHandler.getUniqueLoopPreventionHeaderValue())) {
                             response.removeHeader(httpStateHandler.getUniqueLoopPreventionHeaderName());
                             mockServerLogger.logEvent(
@@ -291,9 +288,6 @@ public class ActionHandler {
         scheduler.submit(responseFuture, () -> {
             try {
                 HttpResponse response = responseFuture.getHttpResponse().get();
-                if (responseFuture.getOverrideHttpResponse() != null) {
-                    response = responseFuture.getOverrideHttpResponse().apply(response);
-                }
                 responseWriter.writeResponse(request, response, false);
                 mockServerLogger.logEvent(
                     new LogEntry()
