@@ -16,7 +16,9 @@ public interface ExpectationForwardCallback extends ExpectationCallback<HttpRequ
      * @param httpRequest the request that satisfied the expectation condition
      * @return the request that will be proxied
      */
-    HttpRequest handle(HttpRequest httpRequest) throws Exception;
+    default HttpRequest handle(HttpRequest httpRequest) throws Exception {
+        return httpRequest;
+    }
 
     /**
      * Called for every response received from a proxied request, the return
