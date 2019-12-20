@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -496,6 +497,11 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
      */
     public HttpRequest withHeader(NottableString name, NottableString... values) {
         getOrCreateHeaders().withEntry(header(name, values));
+        return this;
+    }
+
+    public HttpRequest withContentType(MediaType mediaType) {
+        getOrCreateHeaders().withEntry(header(CONTENT_TYPE.toString(), mediaType.toString()));
         return this;
     }
 

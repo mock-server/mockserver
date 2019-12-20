@@ -207,7 +207,6 @@ public class ActionHandlerTest {
         // then
         verify(mockHttpResponseTemplateActionHandler).handle(template, request);
         verify(mockResponseWriter).writeResponse(request, notFoundResponse(), false);
-        InetSocketAddress remoteAddress = httpForwardActionResult.getRemoteAddress();
         verify(mockServerLogger).logEvent(
             new LogEntry()
                 .setType(RECEIVED_REQUEST)
@@ -378,7 +377,6 @@ public class ActionHandlerTest {
         // then
         verify(mockHttpForwardTemplateActionHandler).handle(template, request);
         verify(mockResponseWriter).writeResponse(request, notFoundResponse(), false);
-        InetSocketAddress remoteAddress = httpForwardActionResult.getRemoteAddress();
         verify(mockServerLogger).logEvent(
             new LogEntry()
                 .setType(RECEIVED_REQUEST)
@@ -533,6 +531,7 @@ public class ActionHandlerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldProxyRequestsWithRemoteSocketAttribute() {
         // given
         HttpRequest request = request("request_one");

@@ -15,7 +15,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
-import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 import static org.mockserver.model.NottableString.string;
 
 /**

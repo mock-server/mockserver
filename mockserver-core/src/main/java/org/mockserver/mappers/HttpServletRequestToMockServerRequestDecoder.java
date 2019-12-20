@@ -4,30 +4,26 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
-import org.mockserver.streams.IOStreamUtils;
 
 import javax.servlet.http.HttpServletRequest;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET;
 
 /**
  * @author jamesdbloom
  */
 public class HttpServletRequestToMockServerRequestDecoder {
 
-    private final ContentTypeMapper contentTypeMapper;
-    private final IOStreamUtils ioStreamUtils;
+    private final BodyDecoderEncoder bodyDecoderEncoder;
 
     public HttpServletRequestToMockServerRequestDecoder(MockServerLogger mockServerLogger) {
-        this.contentTypeMapper = new ContentTypeMapper(mockServerLogger);
-        ioStreamUtils = new IOStreamUtils(mockServerLogger);
+        bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
     }
 
     public HttpRequest mapHttpServletRequestToMockServerRequest(HttpServletRequest httpServletRequest) {
@@ -63,15 +59,7 @@ public class HttpServletRequestToMockServerRequestDecoder {
     }
 
     private void setBody(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
-        byte[] bodyBytes = ioStreamUtils.readInputStreamToByteArray(httpServletRequest);
-        if (bodyBytes.length > 0) {
-            if (ContentTypeMapper.isBinary(httpServletRequest.getHeader(CONTENT_TYPE.toString()))) {
-                httpRequest.withBody(new BinaryBody(bodyBytes));
-            } else {
-                Charset requestCharset = contentTypeMapper.getCharsetFromContentTypeHeader(httpServletRequest.getHeader(CONTENT_TYPE.toString()));
-                httpRequest.withBody(new StringBody(new String(bodyBytes, requestCharset), DEFAULT_HTTP_CHARACTER_SET.equals(requestCharset) ? null : requestCharset));
-            }
-        }
+        httpRequest.withBody(bodyDecoderEncoder.servletRequestToBody(httpServletRequest));
     }
 
     private void setHeaders(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
@@ -79,7 +67,7 @@ public class HttpServletRequestToMockServerRequestDecoder {
         Enumeration<String> headerNames = httpServletRequest.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();
-            List<String> mappedHeaderValues = new ArrayList<String>();
+            List<String> mappedHeaderValues = new ArrayList<>();
             Enumeration<String> headerValues = httpServletRequest.getHeaders(headerName);
             while (headerValues.hasMoreElements()) {
                 mappedHeaderValues.add(headerValues.nextElement());

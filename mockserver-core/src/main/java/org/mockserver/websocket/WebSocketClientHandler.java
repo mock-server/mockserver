@@ -10,13 +10,12 @@ import io.netty.handler.codec.http.websocketx.*;
 import org.mockserver.codec.mappers.FullHttpResponseToMockServerResponse;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mappers.ContentTypeMapper;
+import org.mockserver.model.MediaType;
 import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
 import java.util.concurrent.CompletableFuture;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
@@ -27,16 +26,15 @@ import static org.mockserver.websocket.WebSocketClient.REGISTRATION_FUTURE;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
 
+@SuppressWarnings("rawtypes")
 public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> {
 
     private final WebSocketClient webSocketClient;
     private final WebSocketClientHandshaker handshaker;
     private final MockServerLogger mockServerLogger;
-    private final ContentTypeMapper contentTypeMapper;
 
     WebSocketClientHandler(MockServerLogger mockServerLogger, InetSocketAddress serverAddress, String contextPath, WebSocketClient webSocketClient, boolean isSecure) throws URISyntaxException {
         this.mockServerLogger = mockServerLogger;
-        this.contentTypeMapper = new ContentTypeMapper(mockServerLogger);
         this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(
             new URI((isSecure ? "wss" : "ws") + "://" + serverAddress.getHostName() + ":" + serverAddress.getPort() + cleanContextPath(contextPath) + "/_mockserver_callback_websocket"),
             WebSocketVersion.V13,
@@ -121,8 +119,8 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         if (fullHttpResponse.content().readableBytes() > 0) {
             byte[] bodyBytes = new byte[fullHttpResponse.content().readableBytes()];
             fullHttpResponse.content().readBytes(bodyBytes);
-            Charset requestCharset = contentTypeMapper.getCharsetFromContentTypeHeader(fullHttpResponse.headers().get(CONTENT_TYPE));
-            return new String(bodyBytes, requestCharset);
+            MediaType mediaType = MediaType.parse(fullHttpResponse.headers().get(CONTENT_TYPE));
+            return new String(bodyBytes, mediaType.getCharsetOrDefault());
         }
         return "";
     }

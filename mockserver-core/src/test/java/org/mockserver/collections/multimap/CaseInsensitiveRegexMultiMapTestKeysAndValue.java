@@ -39,6 +39,7 @@ public class CaseInsensitiveRegexMultiMapTestKeysAndValue {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldReturnEntrySet() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(
@@ -55,6 +56,7 @@ public class CaseInsensitiveRegexMultiMapTestKeysAndValue {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldReturnEntryList() {
         // given
         CaseInsensitiveRegexMultiMap multiMap = multiMap(

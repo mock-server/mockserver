@@ -64,7 +64,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
             }
 
             // set hop-by-hop headers
-            final int length = httpResponse.getBodyAsString() != null ? httpResponse.getBodyAsString().length() : 0;
+            final int length = httpResponse.getBody() != null ? httpResponse.getBody().getRawBytes().length : 0;
             if (error == EchoServer.Error.LARGER_CONTENT_LENGTH) {
                 httpResponse.replaceHeader(CONTENT_LENGTH.toString(), String.valueOf(length * 2));
             } else if (error == EchoServer.Error.SMALLER_CONTENT_LENGTH) {

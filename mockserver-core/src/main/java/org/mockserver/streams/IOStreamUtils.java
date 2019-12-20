@@ -66,21 +66,6 @@ public class IOStreamUtils {
         }
     }
 
-    public byte[] readInputStreamToByteArray(ServletRequest request) {
-        try {
-            return IOUtils.toByteArray(request.getInputStream());
-        } catch (IOException ioe) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
-                    .setLogLevel(Level.ERROR)
-                    .setMessageFormat("IOException while reading HttpServletRequest input stream")
-                    .setThrowable(ioe)
-            );
-            throw new RuntimeException("IOException while reading HttpServletRequest input stream", ioe);
-        }
-    }
-
     public void writeToOutputStream(byte[] data, ServletResponse response) {
         try {
             OutputStream output = response.getOutputStream();

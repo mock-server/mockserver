@@ -1366,7 +1366,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), MediaType.create("application", "json").toString())
-                .withBody(json("{\"id\":1,\"name\":\"A green door\",\"price\":12.5,\"tags\":[\"home\",\"green\"]}", (MediaType) null)),
+                .withBody(json("{\"id\":1,\"name\":\"A green door\",\"price\":12.5,\"tags\":[\"home\",\"green\"]}", MediaType.create("application", "json"))),
             makeRequest(
                 request()
                     .withPath(calculatePath("some_path"))
@@ -1753,7 +1753,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
                     header(CONTENT_TYPE.toString(), MediaType.PDF.toString())
                 )
-                .withBody(binary(pdfBytes)),
+                .withBody(binary(pdfBytes, MediaType.PDF)),
             makeRequest(
                 request()
                     .withPath(calculatePath("ws/rest/user/1/document/2.pdf"))
@@ -1770,7 +1770,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
                     header(CONTENT_TYPE.toString(), MediaType.PDF.toString())
                 )
-                .withBody(binary(pdfBytes)),
+                .withBody(binary(pdfBytes, MediaType.PDF)),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -1810,7 +1810,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
                     header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
                 )
-                .withBody(binary(pngBytes)),
+                .withBody(binary(pngBytes, MediaType.PNG)),
             makeRequest(
                 request()
                     .withPath(calculatePath("ws/rest/user/1/icon/1.png"))
@@ -1827,7 +1827,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
                     header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
                 )
-                .withBody(binary(pngBytes)),
+                .withBody(binary(pngBytes, MediaType.PNG)),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -1869,7 +1869,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
                     header(CONTENT_TYPE.toString(), MediaType.PDF.toString())
                 )
-                .withBody(binary(pdfBytes)),
+                .withBody(binary(pdfBytes, MediaType.PDF)),
             makeRequest(
                 request()
                     .withPath(calculatePath("ws/rest/user/1/document/2.pdf"))
@@ -1887,7 +1887,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
                     header(CONTENT_TYPE.toString(), MediaType.PDF.toString())
                 )
-                .withBody(binary(pdfBytes)),
+                .withBody(binary(pdfBytes, MediaType.PDF)),
             makeRequest(
                 request()
                     .withSecure(true)
@@ -1928,7 +1928,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
                     header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
                 )
-                .withBody(binary(pngBytes)),
+                .withBody(binary(pngBytes, MediaType.PNG)),
             makeRequest(
                 request()
                     .withPath(calculatePath("ws/rest/user/1/icon/1.png"))
@@ -1945,7 +1945,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
                     header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
                 )
-                .withBody(binary(pngBytes)),
+                .withBody(binary(pngBytes, MediaType.PNG)),
             makeRequest(
                 request()
                     .withSecure(true)

@@ -2,6 +2,7 @@ package org.mockserver.client;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOutboundInvoker;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import org.hamcrest.core.IsNot;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
@@ -24,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -42,6 +44,9 @@ import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverridde
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpTemplate.template;
+import static org.mockserver.model.JsonBody.json;
+import static org.mockserver.model.MediaType.APPLICATION_JSON;
+import static org.mockserver.model.MediaType.APPLICATION_JSON_UTF_8;
 import static org.mockserver.stop.Stop.stopQuietly;
 import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationSequence.verificationSequence;
@@ -149,11 +154,11 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
-                .withBody(new StringBody("" +
+                .withBody(json("" +
                     "{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"/some_path\"," + NEW_LINE +
@@ -171,7 +176,7 @@ public class MockServerClientIntegrationTest {
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "}"))
+                    "}", APPLICATION_JSON_UTF_8))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -205,11 +210,11 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
-                .withBody(new StringBody("" +
+                .withBody(json("" +
                     "{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"/some_path\"," + NEW_LINE +
@@ -225,7 +230,7 @@ public class MockServerClientIntegrationTest {
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "}"))
+                    "}", APPLICATION_JSON_UTF_8))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -259,11 +264,11 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
-                .withBody(new StringBody("" +
+                .withBody(json("" +
                     "{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"/some_path\"," + NEW_LINE +
@@ -278,7 +283,7 @@ public class MockServerClientIntegrationTest {
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "}"))
+                    "}", APPLICATION_JSON_UTF_8))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -310,11 +315,11 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
-                .withBody(new StringBody("" +
+                .withBody(json("" +
                     "{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"/some_path\"," + NEW_LINE +
@@ -329,7 +334,7 @@ public class MockServerClientIntegrationTest {
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "}"))
+                    "}", APPLICATION_JSON_UTF_8))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -452,11 +457,11 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
-                .withBody(new StringBody("" +
+                .withBody(json("" +
                     "{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"/some_path\"," + NEW_LINE +
@@ -473,7 +478,7 @@ public class MockServerClientIntegrationTest {
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "}"))
+                    "}", APPLICATION_JSON_UTF_8))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -507,11 +512,11 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
-                .withBody(new StringBody("" +
+                .withBody(json("" +
                     "{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"/some_path\"," + NEW_LINE +
@@ -527,7 +532,7 @@ public class MockServerClientIntegrationTest {
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "}"))
+                    "}", APPLICATION_JSON_UTF_8))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -561,11 +566,11 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
-                .withBody(new StringBody("" +
+                .withBody(json("" +
                     "{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"/some_path\"," + NEW_LINE +
@@ -580,7 +585,7 @@ public class MockServerClientIntegrationTest {
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "}"))
+                    "}", APPLICATION_JSON_UTF_8))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -614,11 +619,11 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
-                .withBody(new StringBody("" +
+                .withBody(json("" +
                     "{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"/some_path\"," + NEW_LINE +
@@ -633,7 +638,7 @@ public class MockServerClientIntegrationTest {
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "}"))
+                    "}", APPLICATION_JSON_UTF_8))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -670,11 +675,11 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
-                .withBody(new StringBody("" +
+                .withBody(json("" +
                     "{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"/some_path\"," + NEW_LINE +
@@ -694,7 +699,7 @@ public class MockServerClientIntegrationTest {
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "}"))
+                    "}", APPLICATION_JSON_UTF_8))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -729,11 +734,11 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
-                .withBody(new StringBody("" +
+                .withBody(json("" +
                     "{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"/some_path\"," + NEW_LINE +
@@ -749,7 +754,7 @@ public class MockServerClientIntegrationTest {
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "}"))
+                    "}", APPLICATION_JSON_UTF_8))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -785,11 +790,11 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
-                .withBody(new StringBody("" +
+                .withBody(json("" +
                     "{" + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"/some_path\"," + NEW_LINE +
@@ -807,7 +812,7 @@ public class MockServerClientIntegrationTest {
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +
                     "  }" + NEW_LINE +
-                    "}"))
+                    "}", APPLICATION_JSON_UTF_8))
         ));
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -964,7 +969,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1003,7 +1008,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1037,7 +1042,7 @@ public class MockServerClientIntegrationTest {
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1053,6 +1058,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(new HttpRequestSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
                     request("/some_request_one"),
                     request("/some_request_two")
@@ -1082,7 +1088,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1102,6 +1108,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(new HttpRequestSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
                     request("/some_request_one"),
                     request("/some_request_two")
@@ -1128,7 +1135,7 @@ public class MockServerClientIntegrationTest {
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1148,6 +1155,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(serializedRequests))
         );
 
@@ -1172,7 +1180,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1196,6 +1204,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(serializedRequest))
         );
 
@@ -1220,7 +1229,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1240,6 +1249,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
                     new HttpRequestAndHttpResponse()
                         .withHttpRequest(request("/some_request_one"))
@@ -1277,7 +1287,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1297,6 +1307,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
                     new HttpRequestAndHttpResponse()
                         .withHttpRequest(request("/some_request_one"))
@@ -1331,7 +1342,7 @@ public class MockServerClientIntegrationTest {
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1355,6 +1366,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(serializedRequests))
         );
 
@@ -1379,7 +1391,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1399,6 +1411,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
@@ -1428,7 +1441,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1448,6 +1461,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
@@ -1474,7 +1488,7 @@ public class MockServerClientIntegrationTest {
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1494,6 +1508,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(serializeExpectations))
         );
 
@@ -1518,7 +1533,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1542,6 +1557,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(serializedExpectations))
         );
 
@@ -1566,7 +1582,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1586,6 +1602,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
@@ -1615,7 +1632,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1635,6 +1652,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(new ExpectationSerializer(MOCK_SERVER_LOGGER).serialize(
                     new Expectation(request("/some_request_one"), unlimited(), TimeToLive.unlimited()).thenRespond(response()),
                     new Expectation(request("/some_request_two"), unlimited(), TimeToLive.unlimited()).thenRespond(response())
@@ -1661,7 +1679,7 @@ public class MockServerClientIntegrationTest {
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("content-length", "0"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1681,6 +1699,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(serializeExpectations))
         );
 
@@ -1705,7 +1724,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1729,6 +1748,7 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(
             response()
                 .withStatusCode(201)
+                .withContentType(APPLICATION_JSON)
                 .withBody(new StringBody(serializedExpectations))
         );
 
@@ -1753,7 +1773,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1770,10 +1790,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldVerifySingleRequestNoVerificationTimes() {
         // given
-        echoServerOne.withNextResponse(
-            response()
-                .withStatusCode(201)
-        );
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
         mockServerClientOne.verify(
@@ -1792,7 +1809,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1812,10 +1829,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldVerifyMultipleRequestsNoVerificationTimes() {
         // given
-        echoServerOne.withNextResponse(
-            response()
-                .withStatusCode(201)
-        );
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
         mockServerClientOne.verify(
@@ -1837,7 +1851,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)
@@ -1860,10 +1874,7 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldVerifySingleRequestOnce() {
         // given
-        echoServerOne.withNextResponse(
-            response()
-                .withStatusCode(201)
-        );
+        echoServerOne.withNextResponse(response().withStatusCode(201));
 
         // when
         mockServerClientOne.verify(
@@ -1883,7 +1894,7 @@ public class MockServerClientIntegrationTest {
                     new Header("host", "localhost:" + echoServerOne.getPort()),
                     new Header("accept-encoding", "gzip,deflate"),
                     new Header("connection", "keep-alive"),
-                    new Header("content-type", "text/plain; charset=utf-8")
+                    new Header("content-type", "application/json; charset=utf-8")
                 )
                 .withSecure(false)
                 .withKeepAlive(true)

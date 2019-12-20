@@ -11,11 +11,7 @@ import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mappers.ContentTypeMapper;
-import org.mockserver.model.Body;
-import org.mockserver.model.ConnectionOptions;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.NottableString;
+import org.mockserver.model.*;
 import org.slf4j.event.Level;
 
 import java.nio.charset.Charset;
@@ -33,12 +29,10 @@ public class MockServerToNettyResponseEncoder extends MessageToMessageEncoder<Ht
 
     private final MockServerLogger mockServerLogger;
     private final BodyDecoderEncoder bodyDecoderEncoder;
-    private final ContentTypeMapper contentTypeMapper;
 
     public MockServerToNettyResponseEncoder(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
         this.bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
-        this.contentTypeMapper = new ContentTypeMapper(mockServerLogger);
     }
 
     @Override
@@ -105,11 +99,13 @@ public class MockServerToNettyResponseEncoder extends MessageToMessageEncoder<Ht
             if (overrideContentLength) {
                 response.headers().set(CONTENT_LENGTH, connectionOptions.getContentLengthHeaderOverride());
             } else if (addContentLength) {
+                // TODO(jamesdbloom) rework serialising of body
                 Body body = httpResponse.getBody();
                 byte[] bodyBytes = new byte[0];
                 if (body != null) {
                     Object bodyContents = body.getValue();
-                    Charset bodyCharset = body.getCharset(contentTypeMapper.getCharsetFromContentTypeHeader(httpResponse.getFirstHeader(CONTENT_TYPE.toString())));
+                    MediaType mediaType = MediaType.parse(httpResponse.getFirstHeader(CONTENT_TYPE.toString()));
+                    Charset bodyCharset = body.getCharset(mediaType.getCharsetOrDefault());
                     if (bodyContents instanceof byte[]) {
                         bodyBytes = (byte[]) bodyContents;
                     } else if (bodyContents instanceof String) {

@@ -32,6 +32,7 @@ public class HttpServletRequestToMockServerRequestDecoderTest {
         httpServletRequest.addHeader("headerName1", "headerValue1_1");
         httpServletRequest.addHeader("headerName1", "headerValue1_2");
         httpServletRequest.addHeader("headerName2", "headerValue2");
+        httpServletRequest.addHeader("Content-Type", "multipart/form-data");
         httpServletRequest.setCookies(new javax.servlet.http.Cookie("cookieName1", "cookieValue1"), new javax.servlet.http.Cookie("cookieName2", "cookieValue2"));
         httpServletRequest.setContent("bodyParameterNameOne=bodyParameterValueOne_One&bodyParameterNameOne=bodyParameterValueOne_Two&bodyParameterNameTwo=bodyParameterValueTwo_One".getBytes(UTF_8));
 
@@ -52,6 +53,7 @@ public class HttpServletRequestToMockServerRequestDecoderTest {
         assertEquals(Lists.newArrayList(
             new Header("headerName1", "headerValue1_1", "headerValue1_2"),
             new Header("headerName2", "headerValue2"),
+            new Header("Content-Type", "multipart/form-data"),
             new Header("Cookie", "cookieName1=cookieValue1; cookieName2=cookieValue2")
         ), httpRequest.getHeaderList());
         assertEquals(Lists.newArrayList(

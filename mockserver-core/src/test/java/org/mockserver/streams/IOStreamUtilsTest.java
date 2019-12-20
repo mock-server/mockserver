@@ -125,34 +125,6 @@ public class IOStreamUtilsTest {
     }
 
     @Test
-    public void shouldReadInputStreamToByteArray() throws IOException {
-        // given
-        ServletRequest servletRequest = mock(ServletRequest.class);
-        when(servletRequest.getInputStream()).thenReturn(
-            new DelegatingServletInputStream(IOUtils.toInputStream("bytes", UTF_8))
-        );
-
-        // when
-        byte[] result = ioStreamUtils.readInputStreamToByteArray(servletRequest);
-
-        // then
-        assertEquals("bytes", new String(result));
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void shouldHandleExceptionWhenReadInputStreamToByteArray() throws IOException {
-        // given
-        ServletRequest servletRequest = mock(ServletRequest.class);
-        when(servletRequest.getInputStream()).thenThrow(new IOException("TEST EXCEPTION"));
-
-        // when
-        byte[] result = ioStreamUtils.readInputStreamToByteArray(servletRequest);
-
-        // then
-        assertEquals("bytes", new String(result));
-    }
-
-    @Test
     public void shouldWriteToOutputStream() throws IOException {
         // given
         ServletResponse mockServletResponse = mock(ServletResponse.class);

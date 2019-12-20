@@ -61,6 +61,7 @@ public class CaseInsensitiveRegexHashMapTestKeysAndValue {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldReturnEntrySet() {
         // given
         CaseInsensitiveRegexHashMap hashMap = hashMap(

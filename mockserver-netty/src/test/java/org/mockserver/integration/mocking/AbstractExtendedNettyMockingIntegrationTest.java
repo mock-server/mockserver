@@ -808,7 +808,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody(binary("some_lo".getBytes(UTF_8))),
+                .withBody(binary("some_lo".getBytes(UTF_8), MediaType.ANY_AUDIO_TYPE)),
             makeRequest(
                 request()
                     .withPath(calculatePath("")),
@@ -822,7 +822,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withHeader(CONTENT_TYPE.toString(), MediaType.ANY_AUDIO_TYPE.toString())
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody(binary("some_lo".getBytes(UTF_8))),
+                .withBody(binary("some_lo".getBytes(UTF_8), MediaType.ANY_AUDIO_TYPE)),
             makeRequest(
                 request()
                     .withSecure(true)

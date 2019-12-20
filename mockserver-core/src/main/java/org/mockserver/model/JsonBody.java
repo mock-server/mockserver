@@ -6,7 +6,7 @@ import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.nio.charset.Charset;
 
-import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 
 /**
  * @author jamesdbloom

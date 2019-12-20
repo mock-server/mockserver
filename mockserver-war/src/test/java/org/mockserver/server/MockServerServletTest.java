@@ -12,6 +12,7 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.MediaType;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.scheduler.Scheduler;
@@ -25,6 +26,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.Collections;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.apache.commons.codec.Charsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -36,8 +38,10 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
+import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.MediaType.APPLICATION_JSON_UTF_8;
 import static org.mockserver.model.PortBinding.portBinding;
 
 /**
@@ -71,6 +75,7 @@ public class MockServerServletTest {
 
     private MockHttpServletRequest buildHttpServletRequest(String method, String requestURI, String body) {
         MockHttpServletRequest expectationRetrieveRequestsRequest = new MockHttpServletRequest(method, requestURI);
+        expectationRetrieveRequestsRequest.addHeader(CONTENT_TYPE.toString(), MediaType.APPLICATION_JSON_UTF_8.toString());
         expectationRetrieveRequestsRequest.setContent(body.getBytes());
         return expectationRetrieveRequestsRequest;
     }
@@ -323,6 +328,7 @@ public class MockServerServletTest {
             eq(
                 request("request_one")
                     .withMethod("GET")
+                    .withHeader("Content-Type", APPLICATION_JSON_UTF_8.toString())
                     .withKeepAlive(true)
                     .withSecure(false)
             ),
@@ -356,6 +362,7 @@ public class MockServerServletTest {
             eq(
                 request("request_one")
                     .withMethod("GET")
+                    .withHeader("Content-Type", APPLICATION_JSON_UTF_8.toString())
                     .withKeepAlive(true)
                     .withSecure(false)
             ),
@@ -390,6 +397,7 @@ public class MockServerServletTest {
             eq(
                 request("request_one")
                     .withMethod("GET")
+                    .withHeader("Content-Type", APPLICATION_JSON_UTF_8.toString())
                     .withKeepAlive(true)
                     .withSecure(true)
             ),
@@ -424,6 +432,7 @@ public class MockServerServletTest {
             eq(
                 request("request_one")
                     .withMethod("GET")
+                    .withHeader("Content-Type", APPLICATION_JSON_UTF_8.toString())
                     .withKeepAlive(true)
                     .withSecure(true)
             ),

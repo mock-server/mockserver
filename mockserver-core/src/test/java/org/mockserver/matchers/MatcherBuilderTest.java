@@ -18,7 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 
 /**
  * @author jamesdbloom

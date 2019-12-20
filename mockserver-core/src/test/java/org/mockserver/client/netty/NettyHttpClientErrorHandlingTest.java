@@ -10,6 +10,7 @@ import org.mockserver.client.NettyHttpClient;
 import org.mockserver.echo.http.EchoServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.MediaType;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.PortFactory;
 
@@ -88,7 +89,14 @@ public class NettyHttpClientErrorHandlingTest {
         try {
             // when
             InetSocketAddress socket = new InetSocketAddress("127.0.0.1", echoServer.getPort());
-            HttpResponse httpResponse = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null).sendRequest(request().withBody(exact("this is an example body")).withSecure(true), socket)
+            HttpResponse httpResponse = new NettyHttpClient(mockServerLogger, clientEventLoopGroup, null)
+                .sendRequest(
+                    request()
+                        .withHeader(CONTENT_TYPE.toString(), MediaType.TEXT_PLAIN.toString())
+                        .withBody(exact("this is an example body"))
+                        .withSecure(true),
+                    socket
+                )
                 .get(10, TimeUnit.SECONDS);
 
             // then
@@ -96,10 +104,11 @@ public class NettyHttpClientErrorHandlingTest {
                 response()
                     .withStatusCode(200)
                     .withReasonPhrase("OK")
-                    .withHeader(header(CONTENT_LENGTH.toString(), "this is an example body".length() / 2))
-                    .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
+                    .withHeader(CONTENT_TYPE.toString(), "text/plain")
                     .withHeader(header(ACCEPT_ENCODING.toString(), GZIP.toString() + "," + DEFLATE.toString()))
-                    .withBody(exact("this is an "))
+                    .withHeader(header(CONNECTION.toString(), KEEP_ALIVE.toString()))
+                    .withHeader(header(CONTENT_LENGTH.toString(), "this is an example body".length() / 2))
+                    .withBody(exact("this is an ", MediaType.TEXT_PLAIN))
             ));
         } finally {
             stopQuietly(echoServer);

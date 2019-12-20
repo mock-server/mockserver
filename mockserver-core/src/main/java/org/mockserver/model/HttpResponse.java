@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
@@ -248,6 +249,11 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
      */
     public HttpResponse withHeader(NottableString name, NottableString... values) {
         getOrCreateHeaders().withEntry(header(name, values));
+        return this;
+    }
+
+    public HttpResponse withContentType(MediaType mediaType) {
+        getOrCreateHeaders().withEntry(header(CONTENT_TYPE.toString(), mediaType.toString()));
         return this;
     }
 

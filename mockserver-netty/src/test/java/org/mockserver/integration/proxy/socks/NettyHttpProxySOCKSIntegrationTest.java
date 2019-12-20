@@ -51,6 +51,7 @@ import static org.mockserver.verify.VerificationTimes.exactly;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("unchecked")
 public class NettyHttpProxySOCKSIntegrationTest {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(NettyHttpProxySOCKSIntegrationTest.class);
@@ -58,7 +59,6 @@ public class NettyHttpProxySOCKSIntegrationTest {
     private static Integer mockServerPort;
     private static EchoServer insecureEchoServer;
     private static EchoServer secureEchoServer;
-    private static MockServer httpProxy;
     private static MockServerClient mockServerClient;
 
     @BeforeClass
@@ -125,7 +125,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             });
 
             // and - an HTTP client
-            HttpClient httpClient = HttpClientBuilder.create().setSslcontext(new KeyStoreFactory(new MockServerLogger()).sslContext()).build();
+            HttpClient httpClient = HttpClientBuilder.create().setSSLContext(new KeyStoreFactory(new MockServerLogger()).sslContext()).build();
 
             // when
             HttpResponse response = httpClient.execute(new HttpHost("127.0.0.1", insecureEchoServer.getPort(), "http"), new HttpGet("/"));
@@ -171,7 +171,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
             });
 
             // and - an HTTP client
-            HttpClient httpClient = HttpClientBuilder.create().setSslcontext(new KeyStoreFactory(new MockServerLogger()).sslContext()).build();
+            HttpClient httpClient = HttpClientBuilder.create().setSSLContext(new KeyStoreFactory(new MockServerLogger()).sslContext()).build();
 
             // when
             HttpResponse response = httpClient.execute(new HttpHost("127.0.0.1", secureEchoServer.getPort(), "https"), new HttpGet("/"));
@@ -196,7 +196,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
         Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
             .register("http", new ConnectionSocketFactory() {
 
-                public Socket createSocket(final HttpContext context) throws IOException {
+                public Socket createSocket(final HttpContext context) {
                     return new Socket(new java.net.Proxy(
                         java.net.Proxy.Type.SOCKS,
                         new InetSocketAddress(
@@ -274,7 +274,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
         Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
             .register("https", new ConnectionSocketFactory() {
 
-                public Socket createSocket(final HttpContext context) throws IOException {
+                public Socket createSocket(final HttpContext context) {
                     return new Socket(new java.net.Proxy(java.net.Proxy.Type.SOCKS, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
                 }
 

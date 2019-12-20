@@ -40,6 +40,8 @@ public interface HttpObject<T extends HttpObject, B extends Body> {
 
     T withHeader(NottableString name, NottableString... values);
 
+    T withContentType(MediaType mediaType);
+
     T replaceHeader(Header header);
 
     List<Header> getHeaderList();

@@ -32,6 +32,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.mock.HttpStateHandler.LOG_SEPARATOR;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.MediaType.APPLICATION_JSON_UTF_8;
 import static org.mockserver.model.PortBinding.portBinding;
 import static org.mockserver.verify.Verification.verification;
 import static org.mockserver.verify.VerificationTimes.exactly;
@@ -333,7 +334,11 @@ public class MockServerClient implements Stoppable {
      */
     public MockServerClient reset() {
         getMockServerEventBus().publish(EventType.RESET);
-        sendRequest(request().withMethod("PUT").withPath(calculatePath("reset")));
+        sendRequest(
+            request()
+                .withMethod("PUT")
+                .withPath(calculatePath("reset"))
+        );
         return clientClass.cast(this);
     }
 
@@ -343,7 +348,13 @@ public class MockServerClient implements Stoppable {
      * @param httpRequest the http request that is matched against when deciding whether to clear each expectation if null all expectations are cleared
      */
     public MockServerClient clear(HttpRequest httpRequest) {
-        sendRequest(request().withMethod("PUT").withPath(calculatePath("clear")).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8));
+        sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("clear"))
+                .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
+        );
         return clientClass.cast(this);
     }
 
@@ -354,7 +365,13 @@ public class MockServerClient implements Stoppable {
      * @param type        the type to clear, EXPECTATION, LOG or BOTH
      */
     public MockServerClient clear(HttpRequest httpRequest, ClearType type) {
-        sendRequest(request().withMethod("PUT").withPath(calculatePath("clear")).withQueryStringParameter("type", type.name().toLowerCase()).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8));
+        sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("clear"))
+                .withQueryStringParameter("type", type.name().toLowerCase()).withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
+        );
         return clientClass.cast(this);
     }
 
@@ -381,7 +398,13 @@ public class MockServerClient implements Stoppable {
         }
 
         VerificationSequence verificationSequence = new VerificationSequence().withRequests(httpRequests);
-        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verifySequence")).withBody(verificationSequenceSerializer.serialize(verificationSequence), StandardCharsets.UTF_8)).getBodyAsString();
+        String result = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("verifySequence"))
+                .withBody(verificationSequenceSerializer.serialize(verificationSequence), StandardCharsets.UTF_8)
+        ).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -419,7 +442,13 @@ public class MockServerClient implements Stoppable {
         }
 
         Verification verification = verification().withRequest(httpRequest).withTimes(times);
-        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)).getBodyAsString();
+        String result = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("verify"))
+                .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
+        ).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -434,7 +463,13 @@ public class MockServerClient implements Stoppable {
      */
     public MockServerClient verifyZeroInteractions() throws AssertionError {
         Verification verification = verification().withRequest(request()).withTimes(exactly(0));
-        String result = sendRequest(request().withMethod("PUT").withPath(calculatePath("verify")).withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)).getBodyAsString();
+        String result = sendRequest(
+            request()
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath(calculatePath("verify"))
+                .withBody(verificationSerializer.serialize(verification), StandardCharsets.UTF_8)
+        ).getBodyAsString();
 
         if (result != null && !result.isEmpty()) {
             throw new AssertionError(result);
@@ -468,6 +503,7 @@ public class MockServerClient implements Stoppable {
         HttpResponse httpResponse = sendRequest(
             request()
                 .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.REQUESTS.name())
                 .withQueryStringParameter("format", format.name())
@@ -502,6 +538,7 @@ public class MockServerClient implements Stoppable {
         HttpResponse httpResponse = sendRequest(
             request()
                 .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.REQUEST_RESPONSES.name())
                 .withQueryStringParameter("format", format.name())
@@ -536,6 +573,7 @@ public class MockServerClient implements Stoppable {
         HttpResponse httpResponse = sendRequest(
             request()
                 .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
                 .withQueryStringParameter("format", format.name())
@@ -554,6 +592,7 @@ public class MockServerClient implements Stoppable {
         HttpResponse httpResponse = sendRequest(
             request()
                 .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.LOGS.name())
                 .withBody(httpRequest != null ? httpRequestSerializer.serialize(httpRequest) : "", StandardCharsets.UTF_8)
@@ -673,7 +712,14 @@ public class MockServerClient implements Stoppable {
     @SuppressWarnings("WeakerAccess")
     public void sendExpectation(Expectation... expectations) {
         for (Expectation expectation : expectations) {
-            HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", StandardCharsets.UTF_8));
+            HttpResponse httpResponse =
+                sendRequest(
+                    request()
+                        .withMethod("PUT")
+                        .withContentType(APPLICATION_JSON_UTF_8)
+                        .withPath(calculatePath("expectation"))
+                        .withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", StandardCharsets.UTF_8)
+                );
             if (httpResponse != null && httpResponse.getStatusCode() != 201) {
                 throw new ClientException(formatLogMessage("error:{}while submitted expectation:{}", httpResponse.getBody(), expectation));
             }
@@ -706,6 +752,7 @@ public class MockServerClient implements Stoppable {
         HttpResponse httpResponse = sendRequest(
             request()
                 .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
                 .withPath(calculatePath("retrieve"))
                 .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
                 .withQueryStringParameter("format", format.name())

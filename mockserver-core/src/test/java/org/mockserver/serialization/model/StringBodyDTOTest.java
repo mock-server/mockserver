@@ -13,7 +13,7 @@ import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
-import static org.mockserver.mappers.ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.StringBody.subString;
 

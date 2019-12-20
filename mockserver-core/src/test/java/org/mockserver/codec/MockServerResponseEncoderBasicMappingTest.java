@@ -5,21 +5,21 @@ import io.netty.handler.codec.http.HttpHeaders;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mappers.ContentTypeMapper;
-import org.mockserver.model.*;
+import org.mockserver.model.Cookie;
+import org.mockserver.model.Header;
+import org.mockserver.model.HttpResponse;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
-import static org.mockito.Mockito.verify;
 import static org.mockserver.model.BinaryBody.binary;
-import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 
 /**
  * @author jamesdbloom
@@ -42,8 +42,8 @@ public class MockServerResponseEncoderBasicMappingTest {
     public void shouldEncodeHeaders() {
         // given
         httpResponse = response().withHeaders(
-                new Header("headerName1", "headerValue1"),
-                new Header("headerName2", "headerValue2_1", "headerValue2_2")
+            new Header("headerName1", "headerValue1"),
+            new Header("headerName2", "headerValue2_1", "headerValue2_2")
         );
 
         // when
@@ -80,8 +80,8 @@ public class MockServerResponseEncoderBasicMappingTest {
         // then
         HttpHeaders headers = ((FullHttpResponse) output.get(0)).headers();
         assertThat(headers.getAll("Set-Cookie"), containsInAnyOrder(
-                "cookieName1=cookieValue1",
-                "cookieName2=cookieValue2"
+            "cookieName1=cookieValue1",
+            "cookieName2=cookieValue2"
         ));
     }
 
@@ -174,7 +174,7 @@ public class MockServerResponseEncoderBasicMappingTest {
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.content().toString(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET), is("somebody"));
+        assertThat(fullHttpResponse.content().toString(DEFAULT_HTTP_CHARACTER_SET), is("somebody"));
     }
 
     @Test
@@ -200,7 +200,7 @@ public class MockServerResponseEncoderBasicMappingTest {
 
         // then
         FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.content().toString(ContentTypeMapper.DEFAULT_HTTP_CHARACTER_SET), is(""));
+        assertThat(fullHttpResponse.content().toString(DEFAULT_HTTP_CHARACTER_SET), is(""));
     }
 
 }

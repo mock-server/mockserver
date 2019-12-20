@@ -4,8 +4,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockserver.client.ClientException;
-import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
 
 import static org.hamcrest.Matchers.containsString;
@@ -13,6 +11,7 @@ import static org.hamcrest.core.Is.is;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.MediaType.TEXT_PLAIN;
 
 /**
  * @author jamesdbloom
@@ -35,60 +34,61 @@ public class MockServerClientServerValidationErrorsTest {
     public void shouldHandleServerValidationFailure() {
         // given
         String responseBody = "2 errors:" + NEW_LINE +
-                " - object instance has properties which are not allowed by the schema: [\"paths\"] for field \"/httpRequest\"" + NEW_LINE +
-                " - for field \"/httpRequest/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
-                "   {" + NEW_LINE +
-                "     \"not\": false," + NEW_LINE +
-                "     \"type\": \"BINARY\"," + NEW_LINE +
-                "     \"base64Bytes\": \"\"," + NEW_LINE +
-                "     \"contentType\": \"\"" + NEW_LINE +
-                "   }, " + NEW_LINE +
-                "   {" + NEW_LINE +
-                "     \"not\": false," + NEW_LINE +
-                "     \"type\": \"JSON\"," + NEW_LINE +
-                "     \"json\": \"\"," + NEW_LINE +
-                "     \"contentType\": \"\"," + NEW_LINE +
-                "     \"matchType\": \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
-                "   }," + NEW_LINE +
-                "   {" + NEW_LINE +
-                "     \"not\": false," + NEW_LINE +
-                "     \"type\": \"JSON_SCHEMA\"," + NEW_LINE +
-                "     \"jsonSchema\": \"\"" + NEW_LINE +
-                "   }," + NEW_LINE +
-                "   {" + NEW_LINE +
-                "     \"not\": false," + NEW_LINE +
-                "     \"type\": \"PARAMETERS\"," + NEW_LINE +
-                "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
-                "   }," + NEW_LINE +
-                "   {" + NEW_LINE +
-                "     \"not\": false," + NEW_LINE +
-                "     \"type\": \"REGEX\"," + NEW_LINE +
-                "     \"regex\": \"\"" + NEW_LINE +
-                "   }," + NEW_LINE +
-                "   {" + NEW_LINE +
-                "     \"not\": false," + NEW_LINE +
-                "     \"type\": \"STRING\"," + NEW_LINE +
-                "     \"string\": \"\"" + NEW_LINE +
-                "   }," + NEW_LINE +
-                "   {" + NEW_LINE +
-                "     \"not\": false," + NEW_LINE +
-                "     \"type\": \"XML\"," + NEW_LINE +
-                "     \"xml\": \"\"," + NEW_LINE +
-                "     \"contentType\": \"\"" + NEW_LINE +
-                "   }," + NEW_LINE +
-                "   {" + NEW_LINE +
-                "     \"not\": false," + NEW_LINE +
-                "     \"type\": \"XML_SCHEMA\"," + NEW_LINE +
-                "     \"xmlSchema\": \"\"" + NEW_LINE +
-                "   }," + NEW_LINE +
-                "   {" + NEW_LINE +
-                "     \"not\": false," + NEW_LINE +
-                "     \"type\": \"XPATH\"," + NEW_LINE +
-                "     \"xpath\": \"\"" + NEW_LINE +
-                "   }";
+            " - object instance has properties which are not allowed by the schema: [\"paths\"] for field \"/httpRequest\"" + NEW_LINE +
+            " - for field \"/httpRequest/body\" a plain string, JSON object or one of the following example bodies must be specified " + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"not\": false," + NEW_LINE +
+            "     \"type\": \"BINARY\"," + NEW_LINE +
+            "     \"base64Bytes\": \"\"," + NEW_LINE +
+            "     \"contentType\": \"\"" + NEW_LINE +
+            "   }, " + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"not\": false," + NEW_LINE +
+            "     \"type\": \"JSON\"," + NEW_LINE +
+            "     \"json\": \"\"," + NEW_LINE +
+            "     \"contentType\": \"\"," + NEW_LINE +
+            "     \"matchType\": \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
+            "   }," + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"not\": false," + NEW_LINE +
+            "     \"type\": \"JSON_SCHEMA\"," + NEW_LINE +
+            "     \"jsonSchema\": \"\"" + NEW_LINE +
+            "   }," + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"not\": false," + NEW_LINE +
+            "     \"type\": \"PARAMETERS\"," + NEW_LINE +
+            "     \"parameters\": {\"name\": \"value\"}" + NEW_LINE +
+            "   }," + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"not\": false," + NEW_LINE +
+            "     \"type\": \"REGEX\"," + NEW_LINE +
+            "     \"regex\": \"\"" + NEW_LINE +
+            "   }," + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"not\": false," + NEW_LINE +
+            "     \"type\": \"STRING\"," + NEW_LINE +
+            "     \"string\": \"\"" + NEW_LINE +
+            "   }," + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"not\": false," + NEW_LINE +
+            "     \"type\": \"XML\"," + NEW_LINE +
+            "     \"xml\": \"\"," + NEW_LINE +
+            "     \"contentType\": \"\"" + NEW_LINE +
+            "   }," + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"not\": false," + NEW_LINE +
+            "     \"type\": \"XML_SCHEMA\"," + NEW_LINE +
+            "     \"xmlSchema\": \"\"" + NEW_LINE +
+            "   }," + NEW_LINE +
+            "   {" + NEW_LINE +
+            "     \"not\": false," + NEW_LINE +
+            "     \"type\": \"XPATH\"," + NEW_LINE +
+            "     \"xpath\": \"\"" + NEW_LINE +
+            "   }";
         echoServer.withNextResponse(response()
-                .withStatusCode(400)
-                .withBody(responseBody)
+            .withStatusCode(400)
+            .withContentType(TEXT_PLAIN)
+            .withBody(responseBody)
         );
 
         // then
@@ -105,8 +105,9 @@ public class MockServerClientServerValidationErrorsTest {
         // given
         String responseBody = "some_random_response";
         echoServer.withNextResponse(response()
-                .withStatusCode(401)
-                .withBody(responseBody)
+            .withStatusCode(401)
+            .withContentType(TEXT_PLAIN)
+            .withBody(responseBody)
         );
 
         // then
