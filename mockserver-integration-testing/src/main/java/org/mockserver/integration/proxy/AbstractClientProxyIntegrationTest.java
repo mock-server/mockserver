@@ -2,6 +2,7 @@ package org.mockserver.integration.proxy;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -35,6 +36,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -241,6 +243,42 @@ public abstract class AbstractClientProxyIntegrationTest {
                 .withCookie("personalization_59996b985e24ce008d3df3bd07e27c1b", "")
                 .withCookie("anonymous_59996b985e24ce008d3df3bd07e27c1b", "acgzEaAKOVR=mAY9yJhP7IrC9Am")
                 .withBody("an_example_body"),
+            exactly(1)
+        );
+    }
+
+    @Test
+    public void shouldForwardRequestsWithCharset() throws Exception {
+        // given
+        HttpClient httpClient = createHttpClient();
+        String body = "" +
+            "{" + NEW_LINE +
+            "\"field\" : \"" + Base64.getEncoder().encodeToString(RandomUtils.nextBytes(50)) + "\"" + NEW_LINE +
+            "}";
+
+        // when
+        HttpPost request = new HttpPost(
+            new URIBuilder()
+                .setScheme("http")
+                .setHost("localhost")
+                .setPort(getServerPort())
+                .setPath(addContextToPath("test_headers_and_body"))
+                .build()
+        );
+        request.setEntity(new StringEntity(body));
+        request.setHeader("Content-Type", "application/encrypted;charset=utf-8");
+        HttpResponse response = httpClient.execute(request);
+
+        // then
+        assertEquals(HttpStatusCode.OK_200.code(), response.getStatusLine().getStatusCode());
+        assertEquals(body, new String(EntityUtils.toByteArray(response.getEntity()), UTF_8));
+
+        // and
+        getMockServerClient().verify(
+            request()
+                .withMethod("POST")
+                .withPath("/test_headers_and_body")
+                .withBody(body),
             exactly(1)
         );
     }
