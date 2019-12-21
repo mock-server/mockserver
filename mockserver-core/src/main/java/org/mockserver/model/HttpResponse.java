@@ -18,6 +18,7 @@ import static org.mockserver.model.HttpStatusCode.OK_200;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("rawtypes")
 public class HttpResponse extends Action<HttpResponse> implements HttpObject<HttpResponse, BodyWithContentType> {
     private Integer statusCode;
     private String reasonPhrase;
@@ -492,6 +493,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
         return Type.RESPONSE;
     }
 
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public HttpResponse clone() {
         return response()
             .withStatusCode(statusCode)

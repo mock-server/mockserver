@@ -6,10 +6,11 @@ import org.apache.commons.io.IOUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.mockserver.streams.IOStreamUtils;
 import org.slf4j.event.Level;
 
-import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
@@ -21,26 +22,42 @@ import static org.mockserver.model.JsonBody.DEFAULT_MATCH_TYPE;
 public class BodyDecoderEncoder {
 
     private final MockServerLogger mockServerLogger;
+    private final IOStreamUtils ioStreamUtils;
 
     public BodyDecoderEncoder(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
+        this.ioStreamUtils = new IOStreamUtils(mockServerLogger);
     }
 
     public ByteBuf bodyToByteBuf(Body body, String contentTypeHeader) {
-        ByteBuf content = Unpooled.buffer(0, 0);
+        byte[] bytes = bodyToBytes(body, contentTypeHeader);
+        if (bytes != null) {
+            return Unpooled.copiedBuffer(bytes);
+        } else {
+            return Unpooled.buffer(0, 0);
+        }
+    }
+
+    public void bodyToServletResponse(HttpServletResponse httpServletResponse, Body body, String contentTypeHeader) {
+        byte[] bytes = bodyToBytes(body, contentTypeHeader);
+        if (bytes != null) {
+            ioStreamUtils.writeToOutputStream(bytes, httpServletResponse);
+        }
+    }
+
+    private byte[] bodyToBytes(Body body, String contentTypeHeader) {
         if (body != null) {
-            Object bodyContents = body.getValue();
-            MediaType mediaType = MediaType.parse(contentTypeHeader);
-            Charset bodyCharset = body.getCharset(mediaType.getCharsetOrDefault());
-            if (bodyContents instanceof byte[]) {
-                content = Unpooled.copiedBuffer((byte[]) bodyContents);
-            } else if (bodyContents instanceof String) {
-                content = Unpooled.copiedBuffer(((String) bodyContents).getBytes(bodyCharset));
-            } else if (body.toString() != null) {
-                content = Unpooled.copiedBuffer(body.toString().getBytes(bodyCharset));
+            if (body instanceof BinaryBody) {
+                return body.getRawBytes();
+            } else if (body.getValue() instanceof String) {
+                Charset responseCharset = MediaType.parse(contentTypeHeader).getCharsetOrDefault();
+                Charset bodyCharset = body.getCharset(responseCharset);
+                return ((String) body.getValue()).getBytes(bodyCharset);
+            } else {
+                return body.getRawBytes();
             }
         }
-        return content;
+        return null;
     }
 
     public BodyWithContentType byteBufToBody(ByteBuf content, String contentTypeHeader) {

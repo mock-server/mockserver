@@ -19,6 +19,7 @@ import static org.mockserver.model.NottableString.string;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("rawtypes")
 public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
     private NottableString method = string("");
     private NottableString path = string("");
@@ -268,6 +269,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
         }
     }
 
+    @SuppressWarnings("unused")
     public boolean hasQueryStringParameter(String name, String value) {
         if (this.queryStringParameters != null) {
             return this.queryStringParameters.containsEntry(name, value);
@@ -276,6 +278,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
         }
     }
 
+    @SuppressWarnings("unused")
     public boolean hasQueryStringParameter(NottableString name, NottableString value) {
         if (this.queryStringParameters != null) {
             return this.queryStringParameters.containsEntry(name, value);
@@ -683,6 +686,7 @@ public class HttpRequest extends Not implements HttpObject<HttpRequest, Body> {
         }
     }
 
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public HttpRequest clone() {
         return not(request(), not)
             .withMethod(method)

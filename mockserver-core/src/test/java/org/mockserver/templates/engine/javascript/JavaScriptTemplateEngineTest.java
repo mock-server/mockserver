@@ -345,7 +345,7 @@ public class JavaScriptTemplateEngineTest {
     }
 
     @Test
-    public void shouldrRestrictGlobalContextMultipleHttpRequestsInParallel1() throws InterruptedException, ExecutionException {
+    public void shouldRestrictGlobalContextMultipleHttpRequestsInParallel() throws InterruptedException, ExecutionException {
         // given
         final String template = ""
             + "var resbody = \"ok\"; " + NEW_LINE

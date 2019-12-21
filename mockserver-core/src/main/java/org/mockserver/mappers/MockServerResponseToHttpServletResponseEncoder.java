@@ -2,6 +2,7 @@ package org.mockserver.mappers;
 
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
+import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.serialization.Base64Converter;
@@ -19,9 +20,11 @@ public class MockServerResponseToHttpServletResponseEncoder {
 
     private final Base64Converter base64Converter = new Base64Converter();
     private final IOStreamUtils ioStreamUtils;
+    private final BodyDecoderEncoder bodyDecoderEncoder;
 
     public MockServerResponseToHttpServletResponseEncoder(MockServerLogger mockServerLogger) {
         ioStreamUtils = new IOStreamUtils(mockServerLogger);
+        bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
     }
 
     public void mapMockServerResponseToHttpServletResponse(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
@@ -70,15 +73,7 @@ public class MockServerResponseToHttpServletResponseEncoder {
     }
 
     private void setBody(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {
-        if (httpResponse.getBodyAsString() != null) {
-            if (httpResponse.getBody() instanceof BinaryBody) {
-                ioStreamUtils.writeToOutputStream(base64Converter.base64StringToBytes(httpResponse.getBodyAsString()), httpServletResponse);
-            } else {
-                MediaType mediaType = MediaType.parse(httpResponse.getFirstHeader(CONTENT_TYPE.toString()));
-                Charset bodyCharset = httpResponse.getBody().getCharset(mediaType.getCharsetOrDefault());
-                ioStreamUtils.writeToOutputStream(httpResponse.getBodyAsString().getBytes(bodyCharset), httpServletResponse);
-            }
-        }
+        bodyDecoderEncoder.bodyToServletResponse(httpServletResponse, httpResponse.getBody(), httpResponse.getFirstHeader(CONTENT_TYPE.toString()));
     }
 
     private void addContentTypeHeader(HttpResponse httpResponse, HttpServletResponse httpServletResponse) {

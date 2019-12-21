@@ -42,12 +42,13 @@ public class MockServerToNettyResponseEncoder extends MessageToMessageEncoder<Ht
 
     public DefaultFullHttpResponse encode(HttpResponse httpResponse) {
         try {
+            ByteBuf body = getBody(httpResponse);
             DefaultFullHttpResponse defaultFullHttpResponse = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1,
                 getStatus(httpResponse),
-                getBody(httpResponse)
+                body
             );
-            setHeaders(httpResponse, defaultFullHttpResponse);
+            setHeaders(httpResponse, defaultFullHttpResponse, body);
             setCookies(httpResponse, defaultFullHttpResponse);
             return defaultFullHttpResponse;
         } catch (Throwable throwable) {
@@ -76,7 +77,7 @@ public class MockServerToNettyResponseEncoder extends MessageToMessageEncoder<Ht
         return bodyDecoderEncoder.bodyToByteBuf(httpResponse.getBody(), httpResponse.getFirstHeader(CONTENT_TYPE.toString()));
     }
 
-    private void setHeaders(HttpResponse httpResponse, DefaultFullHttpResponse response) {
+    private void setHeaders(HttpResponse httpResponse, DefaultFullHttpResponse response, ByteBuf body) {
         if (httpResponse.getHeaderMultimap() != null) {
             for (Map.Entry<NottableString, NottableString> header : httpResponse.getHeaderMultimap().entries()) {
                 response.headers().add(header.getKey().getValue(), header.getValue().getValue());
@@ -99,22 +100,7 @@ public class MockServerToNettyResponseEncoder extends MessageToMessageEncoder<Ht
             if (overrideContentLength) {
                 response.headers().set(CONTENT_LENGTH, connectionOptions.getContentLengthHeaderOverride());
             } else if (addContentLength) {
-                // TODO(jamesdbloom) rework serialising of body
-                Body body = httpResponse.getBody();
-                byte[] bodyBytes = new byte[0];
-                if (body != null) {
-                    Object bodyContents = body.getValue();
-                    MediaType mediaType = MediaType.parse(httpResponse.getFirstHeader(CONTENT_TYPE.toString()));
-                    Charset bodyCharset = body.getCharset(mediaType.getCharsetOrDefault());
-                    if (bodyContents instanceof byte[]) {
-                        bodyBytes = (byte[]) bodyContents;
-                    } else if (bodyContents instanceof String) {
-                        bodyBytes = ((String) bodyContents).getBytes(bodyCharset);
-                    } else if (body.toString() != null) {
-                        bodyBytes = body.toString().getBytes(bodyCharset);
-                    }
-                }
-                response.headers().set(CONTENT_LENGTH, bodyBytes.length);
+                response.headers().set(CONTENT_LENGTH, body.readableBytes());
             }
         }
     }

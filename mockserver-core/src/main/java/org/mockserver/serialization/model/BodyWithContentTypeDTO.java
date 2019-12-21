@@ -6,6 +6,7 @@ import org.mockserver.model.*;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("rawtypes")
 public abstract class BodyWithContentTypeDTO extends BodyDTO {
 
     protected String contentType;
