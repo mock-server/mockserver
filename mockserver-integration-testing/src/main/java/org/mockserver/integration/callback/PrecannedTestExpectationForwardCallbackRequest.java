@@ -10,7 +10,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public class PrecannedTestExpectationForwardCallback implements ExpectationForwardCallback {
+public class PrecannedTestExpectationForwardCallbackRequest implements ExpectationForwardCallback {
 
     @Override
     public HttpRequest handle(HttpRequest httpRequest) {

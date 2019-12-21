@@ -6,8 +6,6 @@ import org.junit.*;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mock.action.ExpectationResponseCallback;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
 
@@ -38,14 +36,11 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
                 request()
                     .withPath("/my/echo")
             )
-            .respond(new ExpectationResponseCallback() {
-                @Override
-                public HttpResponse handle(HttpRequest request) {
-                    return response()
-                        .withHeader(CONTENT_LENGTH.toString(), String.valueOf(request.getBodyAsString().length()))
-                        .withBody(request.getBodyAsString());
-                }
-            });
+            .respond(request ->
+                response()
+                    .withHeader(CONTENT_LENGTH.toString(), String.valueOf(request.getBodyAsString().length()))
+                    .withBody(request.getBodyAsString())
+            );
         httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
     }
 
@@ -69,6 +64,7 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
         scheduleTasksAndWaitForResponses(100);
     }
 
+    @SuppressWarnings("rawtypes")
     private void scheduleTasksAndWaitForResponses(int parallelThreads) throws InterruptedException, ExecutionException, TimeoutException {
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(parallelThreads);
 

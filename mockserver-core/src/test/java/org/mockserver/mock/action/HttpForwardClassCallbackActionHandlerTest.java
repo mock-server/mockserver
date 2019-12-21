@@ -42,18 +42,19 @@ public class HttpForwardClassCallbackActionHandlerTest {
     public void shouldHandleInvalidClass() throws Exception {
         // given
         CompletableFuture<HttpResponse> httpResponse = new CompletableFuture<>();
-        httpResponse.complete(notFoundResponse());
+        httpResponse.complete(response("some_response_body"));
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), isNull(InetSocketAddress.class))).thenReturn(httpResponse);
 
         HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.FooBar");
 
         // when
-        CompletableFuture<HttpResponse> actualHttpRequest = httpForwardClassCallbackActionHandler
+        CompletableFuture<HttpResponse> actualHttpResponse = httpForwardClassCallbackActionHandler
             .handle(httpClassCallback, request().withBody("some_body"))
             .getHttpResponse();
 
         // then
-        assertThat(actualHttpRequest.get(), is(notFoundResponse()));
-        verifyZeroInteractions(mockHttpClient);
+        assertThat(actualHttpResponse.get(), is(httpResponse.get()));
+        verify(mockHttpClient).sendRequest(request().withBody("some_body"), null);
     }
 
     @Test
@@ -63,15 +64,15 @@ public class HttpForwardClassCallbackActionHandlerTest {
         httpResponse.complete(response("some_response_body"));
         when(mockHttpClient.sendRequest(any(HttpRequest.class), isNull(InetSocketAddress.class))).thenReturn(httpResponse);
 
-        HttpClassCallback httpClassCallback = callback("org.mockserver.mock.action.HttpForwardClassCallbackActionHandlerTest$TestCallback");
+        HttpClassCallback httpClassCallback = callback(HttpForwardClassCallbackActionHandlerTest.TestCallback.class);
 
         // when
-        CompletableFuture<HttpResponse> actualHttpRequest = httpForwardClassCallbackActionHandler
+        CompletableFuture<HttpResponse> actualHttpResponse = httpForwardClassCallbackActionHandler
             .handle(httpClassCallback, request().withBody("some_body"))
             .getHttpResponse();
 
         // then
-        assertThat(actualHttpRequest.get(), is(httpResponse.get()));
+        assertThat(actualHttpResponse.get(), is(httpResponse.get()));
         verify(mockHttpClient).sendRequest(request("some_path"), null);
     }
 

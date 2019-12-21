@@ -1,6 +1,8 @@
 package org.mockserver.integration.server;
 
 import org.junit.Test;
+import org.mockserver.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
+import org.mockserver.integration.callback.PrecannedTestExpectationForwardCallbackRequestAndResponse;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
@@ -406,7 +408,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .forward(
                 callback()
-                    .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationForwardCallback")
+                    .withCallbackClass(PrecannedTestExpectationForwardCallbackRequest.class)
             );
 
         // then
@@ -456,7 +458,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         );
     }
 
-
     @Test
     public void shouldCallbackForwardCallbackToOverrideRequestAndResponseInTestClasspath() {
         // when
@@ -467,7 +468,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .forward(
                 callback()
-                    .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationForwardCallbackWithResponse")
+                    .withCallbackClass(PrecannedTestExpectationForwardCallbackRequestAndResponse.class)
             );
 
         // then
@@ -1947,7 +1948,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .forward(
                 callback()
-                    .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationForwardCallback")
+                    .withCallbackClass(PrecannedTestExpectationForwardCallbackRequest.class)
                     .withDelay(new Delay(SECONDS, 3))
             );
 

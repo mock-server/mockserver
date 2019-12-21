@@ -11,7 +11,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public class PrecannedTestExpectationForwardCallbackWithResponse implements ExpectationForwardCallback {
+public class PrecannedTestExpectationForwardCallbackRequestAndResponse implements ExpectationForwardCallback {
 
     @Override
     public HttpRequest handle(HttpRequest httpRequest) {
@@ -23,7 +23,7 @@ public class PrecannedTestExpectationForwardCallbackWithResponse implements Expe
     }
 
     @Override
-    public HttpResponse handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
+    public HttpResponse handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         HttpResponse response = response()
             .withHeader("x-response-test", "x-response-test")
             .withBody("some_overidden_response_body");

@@ -4,6 +4,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
 import org.mockserver.integration.server.AbstractMockingIntegrationTestBase;
 import org.mockserver.mockserver.MockServer;
 import org.mockserver.model.HttpForward;
@@ -143,7 +144,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
             )
             .forward(
                 callback()
-                    .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationForwardCallback")
+                    .withCallbackClass(PrecannedTestExpectationForwardCallbackRequest.class)
             );
 
         // then

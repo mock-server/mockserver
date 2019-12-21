@@ -28,7 +28,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
         try {
             Class expectationResponseCallbackClass = Class.forName(httpClassCallback.getCallbackClass());
             if (ExpectationForwardCallback.class.isAssignableFrom(expectationResponseCallbackClass)) {
-                Constructor<? extends ExpectationForwardCallback> constructor = expectationResponseCallbackClass.getConstructor();
+                Constructor<ExpectationForwardCallback> constructor = expectationResponseCallbackClass.getConstructor();
                 return constructor.newInstance();
             } else {
                 mockServerLogger.logEvent(
@@ -100,7 +100,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
                     return notFoundFuture(httpRequest);
                 }
             } else {
-                return notFoundFuture(httpRequest);
+                return sendRequest(httpRequest, null, null);
             }
         } else {
             return notFoundFuture(null);
