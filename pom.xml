@@ -642,6 +642,12 @@
                     </systemProperties>
                     <argLine>-Duser.language=en -Duser.country=GB</argLine>
                     <disableXmlReport>true</disableXmlReport>
+                    <properties>
+                        <property>
+                            <name>listener</name>
+                            <value>org.mockserver.test.PrintOutCurrentTestRunListener</value>
+                        </property>
+                    </properties>
                 </configuration>
             </plugin>
             <plugin>
@@ -656,10 +662,16 @@
                     </includes>
                     <systemProperties>
                         <mockserver.disableSystemOut>true</mockserver.disableSystemOut>
-                        <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>
+<!--                        <mockserver.nioEventLoopThreadCount>1</mockserver.nioEventLoopThreadCount>-->
                     </systemProperties>
                     <argLine>-Duser.language=en -Duser.country=GB</argLine>
                     <disableXmlReport>true</disableXmlReport>
+                    <properties>
+                        <property>
+                            <name>listener</name>
+                            <value>org.mockserver.test.PrintOutCurrentTestRunListener</value>
+                        </property>
+                    </properties>
                 </configuration>
                 <executions>
                     <execution>
