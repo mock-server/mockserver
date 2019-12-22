@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class HttpObjectCallback extends Action<HttpObjectCallback> {
 
     private String clientId;
+    private Boolean responseCallback;
     private Type actionType;
 
     public String getClientId() {
@@ -27,6 +28,20 @@ public class HttpObjectCallback extends Action<HttpObjectCallback> {
         return this;
     }
 
+    public Boolean getResponseCallback() {
+        return responseCallback;
+    }
+
+    public void setResponseCallback(Boolean responseCallback) {
+        this.responseCallback = responseCallback;
+    }
+
+    public HttpObjectCallback withResponseCallback(Boolean responseCallback) {
+        this.responseCallback = responseCallback;
+        return this;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
     public HttpObjectCallback withActionType(Type actionType) {
         this.actionType = actionType;
         return this;

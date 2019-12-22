@@ -2,7 +2,6 @@ package org.mockserver.client;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOutboundInvoker;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import org.hamcrest.core.IsNot;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
@@ -12,8 +11,8 @@ import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ExpectationSerializer;
-import org.mockserver.serialization.HttpRequestResponseSerializer;
 import org.mockserver.serialization.HttpRequestSerializer;
+import org.mockserver.serialization.LogEventRequestAndResponseSerializer;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.verify.Verification;
@@ -25,7 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -1250,18 +1248,18 @@ public class MockServerClientIntegrationTest {
             response()
                 .withStatusCode(201)
                 .withContentType(APPLICATION_JSON)
-                .withBody(new StringBody(new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
-                    new HttpRequestAndHttpResponse()
+                .withBody(new StringBody(new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
+                    new LogEventRequestAndResponse()
                         .withHttpRequest(request("/some_request_one"))
                         .withHttpResponse(response("some_body_one")),
-                    new HttpRequestAndHttpResponse()
+                    new LogEventRequestAndResponse()
                         .withHttpRequest(request("/some_request_two"))
                         .withHttpResponse(response("some_body_two"))
                 ))))
         );
 
         // when
-        HttpRequestAndHttpResponse[] actualResponse = mockServerClientOne.retrieveRecordedRequestsAndResponses(
+        LogEventRequestAndResponse[] actualResponse = mockServerClientOne.retrieveRecordedRequestsAndResponses(
             request()
                 .withPath("/some_path")
                 .withBody(new StringBody("some_request_body"))
@@ -1269,10 +1267,10 @@ public class MockServerClientIntegrationTest {
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
-            new HttpRequestAndHttpResponse()
+            new LogEventRequestAndResponse()
                 .withHttpRequest(request("/some_request_one"))
                 .withHttpResponse(response("some_body_one")),
-            new HttpRequestAndHttpResponse()
+            new LogEventRequestAndResponse()
                 .withHttpRequest(request("/some_request_two"))
                 .withHttpResponse(response("some_body_two"))
         ));
@@ -1308,25 +1306,25 @@ public class MockServerClientIntegrationTest {
             response()
                 .withStatusCode(201)
                 .withContentType(APPLICATION_JSON)
-                .withBody(new StringBody(new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
-                    new HttpRequestAndHttpResponse()
+                .withBody(new StringBody(new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
+                    new LogEventRequestAndResponse()
                         .withHttpRequest(request("/some_request_one"))
                         .withHttpResponse(response("some_body_one")),
-                    new HttpRequestAndHttpResponse()
+                    new LogEventRequestAndResponse()
                         .withHttpRequest(request("/some_request_two"))
                         .withHttpResponse(response("some_body_two"))
                 ))))
         );
 
         // when
-        HttpRequestAndHttpResponse[] actualResponse = mockServerClientOne.retrieveRecordedRequestsAndResponses(null);
+        LogEventRequestAndResponse[] actualResponse = mockServerClientOne.retrieveRecordedRequestsAndResponses(null);
 
         // then
         assertThat(Arrays.asList(actualResponse), hasItems(
-            new HttpRequestAndHttpResponse()
+            new LogEventRequestAndResponse()
                 .withHttpRequest(request("/some_request_one"))
                 .withHttpResponse(response("some_body_one")),
-            new HttpRequestAndHttpResponse()
+            new LogEventRequestAndResponse()
                 .withHttpRequest(request("/some_request_two"))
                 .withHttpResponse(response("some_body_two"))
         ));
@@ -1355,11 +1353,11 @@ public class MockServerClientIntegrationTest {
     @Test
     public void shouldRetrieveRequestAndResponsesAsJson() {
         // given
-        String serializedRequests = new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
-            new HttpRequestAndHttpResponse()
+        String serializedRequests = new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER).serialize(Arrays.asList(
+            new LogEventRequestAndResponse()
                 .withHttpRequest(request("/some_request_one"))
                 .withHttpResponse(response("some_body_one")),
-            new HttpRequestAndHttpResponse()
+            new LogEventRequestAndResponse()
                 .withHttpRequest(request("/some_request_two"))
                 .withHttpResponse(response("some_body_two"))
         ));

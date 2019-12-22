@@ -6,13 +6,13 @@ import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.mockserver.persistence.ExpectationFileSystemPersistence;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.*;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
-import org.mockserver.persistence.ExpectationFileSystemPersistence;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.event.Level;
@@ -55,7 +55,7 @@ public class HttpStateHandler {
     private WebSocketClientRegistry webSocketClientRegistry;
     // serializers
     private HttpRequestSerializer httpRequestSerializer;
-    private HttpRequestResponseSerializer httpRequestResponseSerializer;
+    private LogEventRequestAndResponseSerializer httpRequestResponseSerializer;
     private ExpectationSerializer expectationSerializer;
     private HttpRequestToJavaSerializer httpRequestToJavaSerializer;
     private ExpectationToJavaSerializer expectationToJavaSerializer;
@@ -70,7 +70,7 @@ public class HttpStateHandler {
         this.mockServerLog = new MockServerEventLog(mockServerLogger, scheduler, true);
         this.mockServerMatcher = new MockServerMatcher(mockServerLogger, scheduler, webSocketClientRegistry);
         this.httpRequestSerializer = new HttpRequestSerializer(mockServerLogger);
-        this.httpRequestResponseSerializer = new HttpRequestResponseSerializer(mockServerLogger);
+        this.httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(mockServerLogger);
         this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
         this.httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
         this.expectationToJavaSerializer = new ExpectationToJavaSerializer();

@@ -3,10 +3,11 @@ package org.mockserver.serialization;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import org.mockserver.serialization.model.WebSocketMessageDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpRequestAndHttpResponse;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.serialization.model.WebSocketMessageDTO;
 
 import java.io.IOException;
 import java.util.Map;
@@ -23,13 +24,15 @@ public class WebSocketMessageSerializer {
     public WebSocketMessageSerializer(MockServerLogger mockServerLogger) {
         serializers = ImmutableMap.of(
             HttpRequest.class, new HttpRequestSerializer(mockServerLogger),
-            HttpResponse.class, new HttpResponseSerializer(mockServerLogger)
+            HttpResponse.class, new HttpResponseSerializer(mockServerLogger),
+            HttpRequestAndHttpResponse.class, new HttpRequestAndHttpResponseSerializer(mockServerLogger)
         );
     }
 
     public String serialize(Object message) throws JsonProcessingException {
         if (serializers.containsKey(message.getClass())) {
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(new WebSocketMessageDTO().setType(message.getClass().getName()).setValue(serializers.get(message.getClass()).serialize((message))));
+            WebSocketMessageDTO value = new WebSocketMessageDTO().setType(message.getClass().getName()).setValue(serializers.get(message.getClass()).serialize((message)));
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(value);
         } else {
             return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(new WebSocketMessageDTO().setType(message.getClass().getName()).setValue(objectMapper.writeValueAsString(message)));
         }

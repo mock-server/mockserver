@@ -22,7 +22,9 @@ public class HttpClassCallback extends Action<HttpClassCallback> {
      * Static builder to create a callback, which take a callback class as a string.
      * <p>
      * The callback class must:
-     * - implement org.mockserver.mock.action.ExpectationResponseCallback or org.mockserver.mock.action.ExpectationForwardCallback
+     * - implement org.mockserver.mock.action.ExpectationResponseCallback or
+     * - implement org.mockserver.mock.action.ExpectationForwardCallback or
+     * - implement org.mockserver.mock.action.ExpectationForwardAndResponseCallback
      * - have a zero argument constructor
      * - be available in the classpath of the MockServer
      *
@@ -36,7 +38,9 @@ public class HttpClassCallback extends Action<HttpClassCallback> {
      * Static builder to create a callback, which take a callback class.
      * <p>
      * The callback class must:
-     * - implement org.mockserver.mock.action.ExpectationResponseCallback or org.mockserver.mock.action.ExpectationForwardCallback
+     * - implement org.mockserver.mock.action.ExpectationResponseCallback or
+     * - implement org.mockserver.mock.action.ExpectationForwardCallback or
+     * - implement org.mockserver.mock.action.ExpectationForwardAndResponseCallback
      * - have a zero argument constructor
      * - be available in the classpath of the MockServer
      *
@@ -54,7 +58,9 @@ public class HttpClassCallback extends Action<HttpClassCallback> {
      * The class to callback as a fully qualified class name
      * <p>
      * The callback class must:
-     * - implement org.mockserver.mock.action.ExpectationResponseCallback or org.mockserver.mock.action.ExpectationForwardCallback
+     * - implement org.mockserver.mock.action.ExpectationResponseCallback or
+     * - implement org.mockserver.mock.action.ExpectationForwardCallback or
+     * - implement org.mockserver.mock.action.ExpectationForwardAndResponseCallback
      * - have a zero argument constructor
      * - be available in the classpath of the MockServer
      *
@@ -69,7 +75,9 @@ public class HttpClassCallback extends Action<HttpClassCallback> {
      * The class to callback
      * <p>
      * The callback class must:
-     * - implement org.mockserver.mock.action.ExpectationResponseCallback or org.mockserver.mock.action.ExpectationForwardCallback
+     * - implement org.mockserver.mock.action.ExpectationResponseCallback or
+     * - implement org.mockserver.mock.action.ExpectationForwardCallback or
+     * - implement org.mockserver.mock.action.ExpectationForwardAndResponseCallback
      * - have a zero argument constructor
      * - be available in the classpath of the MockServer
      *

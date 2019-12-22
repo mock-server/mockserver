@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class ObjectMapperFactory {
     private static ObjectMapper objectMapper;
 
+    @SuppressWarnings("deprecation")
     public static ObjectMapper createObjectMapper() {
         if (objectMapper == null) {
             objectMapper = new ObjectMapper();

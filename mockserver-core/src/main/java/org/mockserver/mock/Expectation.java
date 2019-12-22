@@ -8,6 +8,7 @@ import org.mockserver.model.*;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("rawtypes")
 public class Expectation extends ObjectWithJsonToString {
 
     private final HttpRequest httpRequest;
@@ -176,7 +177,8 @@ public class Expectation extends ObjectWithJsonToString {
 
     public Expectation thenForward(HttpObjectCallback httpObjectCallback) {
         if (httpObjectCallback != null) {
-            httpObjectCallback.withActionType(Action.Type.FORWARD_OBJECT_CALLBACK);
+            httpObjectCallback
+                .withActionType(Action.Type.FORWARD_OBJECT_CALLBACK);
             validationErrors("a forward object callback", httpObjectCallback.getType());
             this.httpForwardObjectCallback = httpObjectCallback;
         }
@@ -252,10 +254,12 @@ public class Expectation extends ObjectWithJsonToString {
         return false;
     }
 
+    @SuppressWarnings("PointlessNullCheck")
     public boolean contains(HttpRequest httpRequest) {
         return httpRequest != null && this.httpRequest.equals(httpRequest);
     }
 
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Expectation clone() {
         return new Expectation(httpRequest, times.clone(), timeToLive)
             .thenRespond(httpResponse)

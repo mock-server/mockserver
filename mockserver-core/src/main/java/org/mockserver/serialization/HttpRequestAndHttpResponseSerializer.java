@@ -5,10 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.serialization.model.HttpRequestDTO;
-import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
-import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
+import org.mockserver.model.HttpRequestAndHttpResponse;
+import org.mockserver.serialization.model.HttpRequestAndHttpResponseDTO;
+import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestAndHttpResponseValidator;
 import org.slf4j.event.Level;
 
 import java.util.ArrayList;
@@ -17,81 +16,53 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator.jsonSchemaHttpRequestValidator;
+import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestAndHttpResponseValidator.jsonSchemaHttpRequestAndHttpResponseValidator;
 
 /**
  * @author jamesdbloom
  */
-public class HttpRequestSerializer implements Serializer<HttpRequest> {
+public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequestAndHttpResponse> {
     private final MockServerLogger mockServerLogger;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
-    private JsonSchemaHttpRequestValidator httpRequestValidator;
+    private JsonSchemaHttpRequestAndHttpResponseValidator jsonSchemaHttpRequestAndHttpResponseValidator;
 
-    public HttpRequestSerializer(MockServerLogger mockServerLogger) {
+    public HttpRequestAndHttpResponseSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        httpRequestValidator = jsonSchemaHttpRequestValidator(mockServerLogger);
+        jsonSchemaHttpRequestAndHttpResponseValidator = jsonSchemaHttpRequestAndHttpResponseValidator(mockServerLogger);
     }
 
-    public String serialize(HttpRequest httpRequest) {
-        return serialize(false, httpRequest);
-    }
-
-    public String serialize(boolean prettyPrint, HttpRequest httpRequest) {
+    public String serialize(HttpRequestAndHttpResponse httpRequestAndHttpResponse) {
         try {
-            if (prettyPrint) {
-                return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(new HttpRequestTemplateObject(httpRequest));
-            } else {
-                return objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(new HttpRequestDTO(httpRequest));
-            }
+            return objectMapper
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(new HttpRequestAndHttpResponseDTO(httpRequestAndHttpResponse));
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing HttpRequest to JSON with value " + httpRequest)
+                    .setMessageFormat("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + httpRequestAndHttpResponse)
                     .setThrowable(e)
             );
-            throw new RuntimeException("Exception while serializing HttpRequest to JSON with value " + httpRequest, e);
+            throw new RuntimeException("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + httpRequestAndHttpResponse, e);
         }
     }
 
-    public String serialize(List<HttpRequest> httpRequests) {
-        return serialize(false, httpRequests);
+    public String serialize(List<HttpRequestAndHttpResponse> httpRequests) {
+        return serialize(httpRequests.toArray(new HttpRequestAndHttpResponse[0]));
     }
 
-    public String serialize(boolean prettyPrint, List<HttpRequest> httpRequests) {
-        return serialize(prettyPrint, httpRequests.toArray(new HttpRequest[0]));
-    }
-
-    public String serialize(HttpRequest... httpRequests) {
-        return serialize(false, httpRequests);
-    }
-
-    public String serialize(boolean prettyPrint, HttpRequest... httpRequests) {
+    public String serialize(HttpRequestAndHttpResponse... httpRequests) {
         try {
             if (httpRequests != null && httpRequests.length > 0) {
-                if (prettyPrint) {
-                    HttpRequestTemplateObject[] httpRequestTemplateObjects = new HttpRequestTemplateObject[httpRequests.length];
-                    for (int i = 0; i < httpRequests.length; i++) {
-                        httpRequestTemplateObjects[i] = new HttpRequestTemplateObject(httpRequests[i]);
-                    }
-                    return objectMapper
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(httpRequestTemplateObjects);
-                } else {
-                    HttpRequestDTO[] httpRequestDTOs = new HttpRequestDTO[httpRequests.length];
-                    for (int i = 0; i < httpRequests.length; i++) {
-                        httpRequestDTOs[i] = new HttpRequestDTO(httpRequests[i]);
-                    }
-                    return objectMapper
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(httpRequestDTOs);
+                HttpRequestAndHttpResponseDTO[] httpRequestDTOs = new HttpRequestAndHttpResponseDTO[httpRequests.length];
+                for (int i = 0; i < httpRequests.length; i++) {
+                    httpRequestDTOs[i] = new HttpRequestAndHttpResponseDTO(httpRequests[i]);
                 }
+                return objectMapper
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(httpRequestDTOs);
             } else {
                 return "[]";
             }
@@ -100,55 +71,55 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequests))
+                    .setMessageFormat("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequests))
                     .setThrowable(e)
             );
-            throw new RuntimeException("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequests), e);
+            throw new RuntimeException("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequests), e);
         }
     }
 
-    public HttpRequest deserialize(String jsonHttpRequest) {
+    public HttpRequestAndHttpResponse deserialize(String jsonHttpRequest) {
         if (isBlank(jsonHttpRequest)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request is required but value was \"" + jsonHttpRequest + "\"");
         } else {
-            if (jsonHttpRequest.contains("\"httpRequest\"")) {
+            if (jsonHttpRequest.contains("\"httpRequestAndHttpResponse\"")) {
                 try {
                     JsonNode jsonNode = objectMapper.readTree(jsonHttpRequest);
-                    if (jsonNode.has("httpRequest")) {
-                        jsonHttpRequest = jsonNode.get("httpRequest").toString();
+                    if (jsonNode.has("httpRequestAndHttpResponse")) {
+                        jsonHttpRequest = jsonNode.get("httpRequestAndHttpResponse").toString();
                     }
                 } catch (Exception e) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing {} for HttpRequest")
+                            .setMessageFormat("exception while parsing {} for HttpRequestAndHttpResponse")
                             .setArguments(jsonHttpRequest)
                             .setThrowable(e)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", e);
                 }
             }
-            String validationErrors = httpRequestValidator.isValid(jsonHttpRequest);
+            String validationErrors = jsonSchemaHttpRequestAndHttpResponseValidator.isValid(jsonHttpRequest);
             if (validationErrors.isEmpty()) {
-                HttpRequest httpRequest = null;
+                HttpRequestAndHttpResponse httpRequestAndHttpResponse = null;
                 try {
-                    HttpRequestDTO httpRequestDTO = objectMapper.readValue(jsonHttpRequest, HttpRequestDTO.class);
+                    HttpRequestAndHttpResponseDTO httpRequestDTO = objectMapper.readValue(jsonHttpRequest, HttpRequestAndHttpResponseDTO.class);
                     if (httpRequestDTO != null) {
-                        httpRequest = httpRequestDTO.buildObject();
+                        httpRequestAndHttpResponse = httpRequestDTO.buildObject();
                     }
                 } catch (Exception e) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing {} for HttpRequest")
+                            .setMessageFormat("exception while parsing {} for HttpRequestAndHttpResponse")
                             .setArguments(jsonHttpRequest)
                             .setThrowable(e)
                     );
-                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequest", e);
+                    throw new RuntimeException("Exception while parsing [" + jsonHttpRequest + "] for HttpRequestAndHttpResponse", e);
                 }
-                return httpRequest;
+                return httpRequestAndHttpResponse;
             } else {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -164,12 +135,12 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
     }
 
     @Override
-    public Class<HttpRequest> supportsType() {
-        return HttpRequest.class;
+    public Class<HttpRequestAndHttpResponse> supportsType() {
+        return HttpRequestAndHttpResponse.class;
     }
 
-    public HttpRequest[] deserializeArray(String jsonHttpRequests) {
-        List<HttpRequest> httpRequests = new ArrayList<>();
+    public HttpRequestAndHttpResponse[] deserializeArray(String jsonHttpRequests) {
+        List<HttpRequestAndHttpResponse> httpRequests = new ArrayList<>();
         if (isBlank(jsonHttpRequests)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request or request array is required but value was \"" + jsonHttpRequests + "\"");
         } else {
@@ -191,7 +162,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                 }
             }
         }
-        return httpRequests.toArray(new HttpRequest[0]);
+        return httpRequests.toArray(new HttpRequestAndHttpResponse[0]);
     }
 
 }

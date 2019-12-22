@@ -9,7 +9,6 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.mockserver.MockServer;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.stop.Stop.stopQuietly;
 
@@ -42,7 +41,6 @@ public class ExtendedNettyMockingIntegrationTest extends AbstractExtendedNettyMo
     @Test
     public void shouldThrowExceptionIfFailToBindToSocket() {
         // given
-        System.out.println(NEW_LINE + NEW_LINE + "+++ IGNORE THE FOLLOWING java.net.BindException EXCEPTION +++" + NEW_LINE + NEW_LINE);
         expectedException.expect(RuntimeException.class);
         expectedException.expectMessage(containsString("Exception while binding MockServer to port "));
 

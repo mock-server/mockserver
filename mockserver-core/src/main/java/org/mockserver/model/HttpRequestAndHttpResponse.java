@@ -5,18 +5,8 @@ package org.mockserver.model;
  */
 public class HttpRequestAndHttpResponse extends ObjectWithJsonToString {
 
-    private String timestamp;
     private HttpRequest httpRequest;
     private HttpResponse httpResponse;
-
-    public String getTimestamp() {
-        return timestamp;
-    }
-
-    public HttpRequestAndHttpResponse withTimestamp(String timestamp) {
-        this.timestamp = timestamp;
-        return this;
-    }
 
     public HttpRequest getHttpRequest() {
         return httpRequest;

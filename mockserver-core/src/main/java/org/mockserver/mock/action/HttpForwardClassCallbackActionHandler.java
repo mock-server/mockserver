@@ -24,11 +24,11 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private ExpectationForwardCallback instantiateCallback(HttpClassCallback httpClassCallback) {
+    private <T extends ExpectationCallback> T instantiateCallback(HttpClassCallback httpClassCallback, Class<T> callbackClass) {
         try {
             Class expectationResponseCallbackClass = Class.forName(httpClassCallback.getCallbackClass());
-            if (ExpectationForwardCallback.class.isAssignableFrom(expectationResponseCallbackClass)) {
-                Constructor<ExpectationForwardCallback> constructor = expectationResponseCallbackClass.getConstructor();
+            if (callbackClass.isAssignableFrom(expectationResponseCallbackClass)) {
+                Constructor<? extends T> constructor = expectationResponseCallbackClass.getConstructor();
                 return constructor.newInstance();
             } else {
                 mockServerLogger.logEvent(
@@ -36,7 +36,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
                         .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setHttpRequest(null)
-                        .setMessageFormat(httpClassCallback.getCallbackClass() + " does not implement " + ExpectationForwardCallback.class.getCanonicalName() + " which required for forwarded requests generated from a class callback")
+                        .setMessageFormat(httpClassCallback.getCallbackClass() + " does not implement " + callbackClass.getCanonicalName() + " which required for forwarded requests generated from a class callback")
                 );
             }
         } catch (ClassNotFoundException e) {
@@ -69,13 +69,14 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
 
     private HttpForwardActionResult invokeCallbackMethod(HttpClassCallback httpClassCallback, HttpRequest httpRequest) {
         if (httpRequest != null) {
-            ExpectationForwardCallback expectationForwardCallback = instantiateCallback(httpClassCallback);
-            if (expectationForwardCallback != null) {
+            ExpectationForwardCallback expectationForwardCallback = instantiateCallback(httpClassCallback, ExpectationForwardCallback.class);
+            ExpectationForwardAndResponseCallback expectationForwardResponseCallback = instantiateCallback(httpClassCallback, ExpectationForwardAndResponseCallback.class);
+            if (expectationForwardCallback != null || expectationForwardResponseCallback != null) {
                 try {
-                    HttpRequest request = expectationForwardCallback.handle(httpRequest);
+                    HttpRequest request = expectationForwardCallback != null ? expectationForwardCallback.handle(httpRequest) : httpRequest;
                     return sendRequest(request, null, response -> {
                         try {
-                            return expectationForwardCallback.handle(request, response);
+                            return expectationForwardResponseCallback != null ? expectationForwardResponseCallback.handle(request, response) : response;
                         } catch (Throwable throwable) {
                             mockServerLogger.logEvent(
                                 new LogEntry()

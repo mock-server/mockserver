@@ -2,8 +2,8 @@ package org.mockserver.serialization.model;
 
 import org.junit.Test;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpRequestAndHttpResponse;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.LogEventRequestAndResponse;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -21,12 +21,12 @@ public class HttpRequestAndHttpResponseDTOTest {
         HttpRequest httpRequest = request("some_request");
         HttpResponse httpResponse = response("some_response");
 
-        HttpRequestAndHttpResponse httpOverrideForwardedRequest = new HttpRequestAndHttpResponse()
+        LogEventRequestAndResponse httpOverrideForwardedRequest = new LogEventRequestAndResponse()
             .withHttpRequest(httpRequest)
             .withHttpResponse(httpResponse);
 
         // when
-        HttpRequestAndHttpResponseDTO httpOverrideForwardedRequestDTO = new HttpRequestAndHttpResponseDTO(httpOverrideForwardedRequest);
+        LogEventRequestAndResponseDTO httpOverrideForwardedRequestDTO = new LogEventRequestAndResponseDTO(httpOverrideForwardedRequest);
 
         // then
         assertThat(httpOverrideForwardedRequestDTO.getHttpRequest(), is(new HttpRequestDTO(httpRequest)));
@@ -39,12 +39,12 @@ public class HttpRequestAndHttpResponseDTOTest {
         HttpRequest httpRequest = request("some_request");
         HttpResponse httpResponse = response("some_response");
 
-        HttpRequestAndHttpResponse httpOverrideForwardedRequest = new HttpRequestAndHttpResponse()
+        LogEventRequestAndResponse httpOverrideForwardedRequest = new LogEventRequestAndResponse()
             .withHttpRequest(httpRequest)
             .withHttpResponse(httpResponse);
 
         // when
-        HttpRequestAndHttpResponse builtHttpRequestAndHttpResponse = new HttpRequestAndHttpResponseDTO(httpOverrideForwardedRequest).buildObject();
+        LogEventRequestAndResponse builtHttpRequestAndHttpResponse = new LogEventRequestAndResponseDTO(httpOverrideForwardedRequest).buildObject();
 
         // then
         assertThat(builtHttpRequestAndHttpResponse.getHttpRequest(), is(httpRequest));
@@ -57,10 +57,10 @@ public class HttpRequestAndHttpResponseDTOTest {
         HttpRequestDTO httpRequest = new HttpRequestDTO(request("some_request"));
         HttpResponseDTO httpResponse = new HttpResponseDTO(response("some_response"));
 
-        HttpRequestAndHttpResponse httpOverrideForwardedRequest = new HttpRequestAndHttpResponse();
+        LogEventRequestAndResponse httpOverrideForwardedRequest = new LogEventRequestAndResponse();
 
         // when
-        HttpRequestAndHttpResponseDTO httpOverrideForwardedRequestDTO = new HttpRequestAndHttpResponseDTO(httpOverrideForwardedRequest);
+        LogEventRequestAndResponseDTO httpOverrideForwardedRequestDTO = new LogEventRequestAndResponseDTO(httpOverrideForwardedRequest);
         httpOverrideForwardedRequestDTO.setHttpRequest(httpRequest);
         httpOverrideForwardedRequestDTO.setHttpResponse(httpResponse);
 
@@ -72,7 +72,7 @@ public class HttpRequestAndHttpResponseDTOTest {
     @Test
     public void shouldHandleNullObjectInput() {
         // when
-        HttpRequestAndHttpResponseDTO httpObjectCallbackDTO = new HttpRequestAndHttpResponseDTO(null);
+        LogEventRequestAndResponseDTO httpObjectCallbackDTO = new LogEventRequestAndResponseDTO(null);
 
         // then
         assertThat(httpObjectCallbackDTO.getHttpRequest(), is(nullValue()));
@@ -82,7 +82,7 @@ public class HttpRequestAndHttpResponseDTOTest {
     @Test
     public void shouldHandleNullFieldInput() {
         // when
-        HttpRequestAndHttpResponseDTO httpObjectCallbackDTO = new HttpRequestAndHttpResponseDTO(new HttpRequestAndHttpResponse());
+        LogEventRequestAndResponseDTO httpObjectCallbackDTO = new LogEventRequestAndResponseDTO(new LogEventRequestAndResponse());
 
         // then
         assertThat(httpObjectCallbackDTO.getHttpRequest(), is(nullValue()));

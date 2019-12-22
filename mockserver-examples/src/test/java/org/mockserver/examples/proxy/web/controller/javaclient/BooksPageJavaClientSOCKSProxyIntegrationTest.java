@@ -17,6 +17,7 @@ import static org.junit.Assume.assumeThat;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("unchecked")
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
 @ContextHierarchy({

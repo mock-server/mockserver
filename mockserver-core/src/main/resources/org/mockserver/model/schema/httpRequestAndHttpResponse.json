@@ -1,0 +1,15 @@
+{
+  "title": "request and response",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "httpRequest": {
+      "$ref": "#/definitions/httpRequest"
+    },
+    "httpResponse": {
+      "$ref": "#/definitions/httpResponse"
+    }
+  },
+  "definitions": {
+  }
+}

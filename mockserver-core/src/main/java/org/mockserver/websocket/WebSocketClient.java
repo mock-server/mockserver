@@ -17,8 +17,11 @@ import io.netty.util.AttributeKey;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.ExpectationCallback;
+import org.mockserver.mock.action.ExpectationForwardAndResponseCallback;
 import org.mockserver.model.HttpObject;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpRequestAndHttpResponse;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.WebSocketMessageSerializer;
 import org.mockserver.serialization.model.WebSocketClientIdDTO;
 import org.mockserver.serialization.model.WebSocketErrorDTO;
@@ -35,6 +38,7 @@ import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELA
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("rawtypes")
 public class WebSocketClient<T extends HttpObject> {
 
     static final AttributeKey<CompletableFuture<String>> REGISTRATION_FUTURE = AttributeKey.valueOf("REGISTRATION_FUTURE");
@@ -42,6 +46,7 @@ public class WebSocketClient<T extends HttpObject> {
     private Channel channel;
     private WebSocketMessageSerializer webSocketMessageSerializer;
     private ExpectationCallback<T> expectationCallback;
+    private ExpectationForwardAndResponseCallback expectationForwardResponseCallback;
     private boolean isStopped = false;
     private EventLoopGroup eventLoopGroup;
 
@@ -117,7 +122,33 @@ public class WebSocketClient<T extends HttpObject> {
                                 .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
                                 .setHttpRequest(httpRequest)
-                                .setMessageFormat("Exception thrown while handling callback - " + throwable.getMessage())
+                                .setMessageFormat("Exception thrown while handling callback for request - " + throwable.getMessage())
+                                .setThrowable(throwable)
+                        );
+                        channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(
+                            new WebSocketErrorDTO()
+                                .setMessage(throwable.getMessage())
+                                .setWebSocketCorrelationId(webSocketCorrelationId)
+                        )));
+                    }
+                }
+            } else if (deserializedMessage instanceof HttpRequestAndHttpResponse) {
+                HttpRequestAndHttpResponse httpRequestAndHttpResponse = (HttpRequestAndHttpResponse) deserializedMessage;
+                HttpRequest httpRequest = httpRequestAndHttpResponse.getHttpRequest();
+                HttpResponse httpResponse = httpRequestAndHttpResponse.getHttpResponse();
+                String webSocketCorrelationId = httpRequest.getFirstHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME);
+                if (expectationForwardResponseCallback != null) {
+                    try {
+                        HttpResponse result = expectationForwardResponseCallback.handle(httpRequest, httpResponse);
+                        result.withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId);
+                        channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(result)));
+                    } catch (Throwable throwable) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(LogEntry.LogMessageType.EXCEPTION)
+                                .setLogLevel(Level.ERROR)
+                                .setHttpRequest(httpRequest)
+                                .setMessageFormat("Exception thrown while handling callback for request and response - " + throwable.getMessage())
                                 .setThrowable(throwable)
                         );
                         channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(
@@ -150,9 +181,10 @@ public class WebSocketClient<T extends HttpObject> {
         }
     }
 
-    public Future<String> registerExpectationCallback(final ExpectationCallback<T> expectationCallback, final InetSocketAddress serverAddress, final String contextPath, final boolean isSecure) {
+    public Future<String> registerExpectationCallback(final ExpectationCallback<T> expectationCallback, ExpectationForwardAndResponseCallback expectationForwardResponseCallback, final InetSocketAddress serverAddress, final String contextPath, final boolean isSecure) {
         if (this.expectationCallback == null) {
             this.expectationCallback = expectationCallback;
+            this.expectationForwardResponseCallback = expectationForwardResponseCallback;
             return register(serverAddress, contextPath, isSecure);
         } else {
             throw new IllegalArgumentException("It is not possible to set response callback once a forward callback has been set");

@@ -11,6 +11,7 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
@@ -34,7 +35,53 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
         webSocketClientRegistry.registerForwardCallbackHandler(webSocketCorrelationId, new WebSocketRequestCallback() {
             @Override
             public void handle(final HttpRequest request) {
-                final HttpForwardActionResult responseFuture = sendRequest(request.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), null, null);
+                final HttpForwardActionResult responseFuture = sendRequest(
+                    request.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME),
+                    null,
+                    httpObjectCallback.getResponseCallback() != null && httpObjectCallback.getResponseCallback() ? response -> {
+                        // register callback for overridden response
+                        CompletableFuture<HttpResponse> httpResponseCompletableFuture = new CompletableFuture<>();
+                        webSocketClientRegistry.registerResponseCallbackHandler(webSocketCorrelationId, overriddenResponse -> {
+                            httpResponseCompletableFuture.complete(overriddenResponse.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME));
+                            webSocketClientRegistry.unregisterResponseCallbackHandler(webSocketCorrelationId);
+                        });
+                        // send websocket message to override response
+                        if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId), response)) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.WARN)
+                                    .setLogLevel(WARN)
+                                    .setHttpRequest(request)
+                                    .setMessageFormat("Returning {} because client " + clientId + " has closed web socket connection")
+                                    .setArguments(notFoundResponse())
+                            );
+                            actionHandler.writeForwardActionResponse(notFoundFuture(request), responseWriter, request, httpObjectCallback, synchronous);
+                        } else {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.TRACE)
+                                    .setLogLevel(TRACE)
+                                    .setHttpRequest(request)
+                                    .setMessageFormat("Sending request {} to client " + clientId)
+                                    .setArguments(request)
+                            );
+                        }
+                        // return overridden response
+                        try {
+                            return httpResponseCompletableFuture.get();
+                        } catch (Exception e) {
+                            mockServerLogger.logEvent(
+                                new LogEntry()
+                                    .setType(LogEntry.LogMessageType.WARN)
+                                    .setLogLevel(WARN)
+                                    .setHttpRequest(request)
+                                    .setMessageFormat("Exception receiving overridden response from client " + clientId + " for request {} and original response {}")
+                                    .setArguments(request, response)
+                            );
+                            return response;
+                        }
+                    } : null
+                );
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
@@ -53,7 +100,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 actionHandler.writeResponseActionResponse(httpResponse, responseWriter, request, httpObjectCallback, synchronous);
             }
         });
-        if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId))) {
+        if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId), null)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.WARN)

@@ -6,6 +6,7 @@ import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.action.ExpectationCallback;
+import org.mockserver.mock.action.ExpectationForwardAndResponseCallback;
 import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.*;
@@ -14,7 +15,6 @@ import org.mockserver.websocket.WebSocketClient;
 import org.mockserver.websocket.WebSocketException;
 
 import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
 
 /**
  * @author jamesdbloom
@@ -77,7 +77,7 @@ public class ForwardChainExpectation {
      * @param expectationResponseCallback object to call locally or remotely to generate response
      */
     public void respond(final ExpectationResponseCallback expectationResponseCallback) {
-        expectation.thenRespond(new HttpObjectCallback().withClientId(registerWebSocketClient(expectationResponseCallback)));
+        expectation.thenRespond(new HttpObjectCallback().withClientId(registerWebSocketClient(expectationResponseCallback, null)));
         mockServerClient.sendExpectation(expectation);
     }
 
@@ -91,7 +91,7 @@ public class ForwardChainExpectation {
         expectation
             .thenRespond(
                 new HttpObjectCallback()
-                    .withClientId(registerWebSocketClient(expectationResponseCallback))
+                    .withClientId(registerWebSocketClient(expectationResponseCallback, null))
                     .withDelay(delay)
             );
         mockServerClient.sendExpectation(expectation);
@@ -123,7 +123,7 @@ public class ForwardChainExpectation {
      * to generate request to forward when expectation is matched
      * <p>
      * The callback class must:
-     * - implement org.mockserver.mock.action.ExpectationForwardCallback
+     * - implement org.mockserver.mock.action.ExpectationForwardCallback or org.mockserver.mock.action.ExpectationForwardAndResponseCallback
      * - have a zero argument constructor
      * - be available in the classpath of the MockServer
      *
@@ -141,7 +141,27 @@ public class ForwardChainExpectation {
      * @param expectationForwardCallback object to call locally or remotely to generate request
      */
     public void forward(final ExpectationForwardCallback expectationForwardCallback) {
-        expectation.thenForward(new HttpObjectCallback().withClientId(registerWebSocketClient(expectationForwardCallback)));
+        expectation
+            .thenForward(
+                new HttpObjectCallback()
+                    .withClientId(registerWebSocketClient(expectationForwardCallback, null))
+            );
+        mockServerClient.sendExpectation(expectation);
+    }
+
+    /**
+     * Call method on object locally or remotely (over web socket)
+     * to generate request to forward when expectation is matched
+     *
+     * @param expectationForwardCallback object to call locally or remotely to generate request
+     */
+    public void forward(final ExpectationForwardCallback expectationForwardCallback, final ExpectationForwardAndResponseCallback expectationForwardResponseCallback) {
+        expectation
+            .thenForward(
+                new HttpObjectCallback()
+                    .withResponseCallback(true)
+                    .withClientId(registerWebSocketClient(expectationForwardCallback, expectationForwardResponseCallback))
+            );
         mockServerClient.sendExpectation(expectation);
     }
 
@@ -153,9 +173,27 @@ public class ForwardChainExpectation {
      */
     public void forward(final ExpectationForwardCallback expectationForwardCallback, final Delay delay) {
         expectation
-            .thenForward(new HttpObjectCallback()
-                .withClientId(registerWebSocketClient(expectationForwardCallback))
-                .withDelay(delay)
+            .thenForward(
+                new HttpObjectCallback()
+                    .withClientId(registerWebSocketClient(expectationForwardCallback, null))
+                    .withDelay(delay)
+            );
+        mockServerClient.sendExpectation(expectation);
+    }
+
+    /**
+     * Call method on object locally or remotely (over web socket)
+     * to generate request to forward when expectation is matched
+     *
+     * @param expectationForwardCallback object to call locally or remotely to generate request
+     */
+    public void forward(final ExpectationForwardCallback expectationForwardCallback, final ExpectationForwardAndResponseCallback expectationForwardResponseCallback, final Delay delay) {
+        expectation
+            .thenForward(
+                new HttpObjectCallback()
+                    .withResponseCallback(true)
+                    .withClientId(registerWebSocketClient(expectationForwardCallback, expectationForwardResponseCallback))
+                    .withDelay(delay)
             );
         mockServerClient.sendExpectation(expectation);
     }
@@ -182,7 +220,8 @@ public class ForwardChainExpectation {
         mockServerClient.sendExpectation(expectation);
     }
 
-    private <T extends HttpObject> String registerWebSocketClient(ExpectationCallback<T> expectationCallback) {
+    @SuppressWarnings("rawtypes")
+    private <T extends HttpObject> String registerWebSocketClient(ExpectationCallback<T> expectationCallback, ExpectationForwardAndResponseCallback expectationForwardResponseCallback) {
         try {
             final WebSocketClient<T> webSocketClient = new WebSocketClient<>(
                 new NioEventLoopGroup(2, new Scheduler.SchedulerThreadFactory(WebSocketClient.class.getSimpleName() + "-eventLoop")),
@@ -190,6 +229,7 @@ public class ForwardChainExpectation {
             );
             final Future<String> register = webSocketClient.registerExpectationCallback(
                 expectationCallback,
+                expectationForwardResponseCallback,
                 mockServerClient.remoteAddress(),
                 mockServerClient.contextPath(),
                 mockServerClient.isSecure()

@@ -187,7 +187,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>or a <strong>callback</strong> used to dynamically generate the request to forward based on the request received by MockServer:</p>
         <ul>
             <li>
-                <p>as a <strong>server side callback</strong> implemented as a <a href="#button_forward_class_callback">java class</a> that has a default constructor, implements <span class="annotation">org.mockserver.mock.action.ExpectationForwardCallback</span> and is available on the classpath</p>
+                <p>as a <strong>server side callback</strong> implemented as a <a href="#button_forward_class_callback">java class</a> that has a default constructor, implements <span class="annotation">org.mockserver.mock.action.ExpectationForwardCallback</span> or <span class="annotation">org.mockserver.mock.action.ExpectationForwardAndResponseCallback</span> and is available on the classpath</p>
             </li>
             <li>
                 <p>as a <strong>client side callback</strong> implemented as a <a href="#button_forward_method_or_closure_callback">closure</a> using the java or javascript clients</p>

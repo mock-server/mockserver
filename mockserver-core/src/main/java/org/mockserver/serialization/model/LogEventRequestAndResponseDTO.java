@@ -1,22 +1,23 @@
 package org.mockserver.serialization.model;
 
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpRequestAndHttpResponse;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.LogEventRequestAndResponse;
 import org.mockserver.model.ObjectWithJsonToString;
 
 /**
  * @author jamesdbloom
  */
-public class HttpRequestAndHttpResponseDTO extends ObjectWithJsonToString implements DTO<HttpRequestAndHttpResponse> {
+public class LogEventRequestAndResponseDTO extends ObjectWithJsonToString implements DTO<LogEventRequestAndResponse> {
 
+    private String timestamp;
     private HttpRequestDTO httpRequest;
     private HttpResponseDTO httpResponse;
 
-    public HttpRequestAndHttpResponseDTO() {
+    public LogEventRequestAndResponseDTO() {
     }
 
-    public HttpRequestAndHttpResponseDTO(HttpRequestAndHttpResponse httpRequestAndHttpResponse) {
+    public LogEventRequestAndResponseDTO(LogEventRequestAndResponse httpRequestAndHttpResponse) {
         if (httpRequestAndHttpResponse != null) {
             HttpRequest httpRequest = httpRequestAndHttpResponse.getHttpRequest();
             if (httpRequest != null) {
@@ -26,11 +27,12 @@ public class HttpRequestAndHttpResponseDTO extends ObjectWithJsonToString implem
             if (httpResponse != null) {
                 this.httpResponse = new HttpResponseDTO(httpResponse);
             }
+            timestamp = httpRequestAndHttpResponse.getTimestamp();
         }
     }
 
     @Override
-    public HttpRequestAndHttpResponse buildObject() {
+    public LogEventRequestAndResponse buildObject() {
         HttpRequest httpRequest = null;
         HttpResponse httpResponse = null;
         if (this.httpRequest != null) {
@@ -39,26 +41,33 @@ public class HttpRequestAndHttpResponseDTO extends ObjectWithJsonToString implem
         if (this.httpResponse != null) {
             httpResponse = this.httpResponse.buildObject();
         }
-        return new HttpRequestAndHttpResponse()
+        return new LogEventRequestAndResponse()
             .withHttpRequest(httpRequest)
-            .withHttpResponse(httpResponse);
+            .withHttpResponse(httpResponse)
+            .withTimestamp(timestamp);
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
     }
 
     public HttpRequestDTO getHttpRequest() {
         return httpRequest;
     }
 
-    public HttpRequestAndHttpResponseDTO setHttpRequest(HttpRequestDTO httpRequest) {
+    public void setHttpRequest(HttpRequestDTO httpRequest) {
         this.httpRequest = httpRequest;
-        return this;
     }
 
     public HttpResponseDTO getHttpResponse() {
         return httpResponse;
     }
 
-    public HttpRequestAndHttpResponseDTO setHttpResponse(HttpResponseDTO httpResponse) {
+    public void setHttpResponse(HttpResponseDTO httpResponse) {
         this.httpResponse = httpResponse;
-        return this;
     }
 }

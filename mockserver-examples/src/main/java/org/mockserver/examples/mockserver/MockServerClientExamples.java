@@ -4,7 +4,7 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.ClearType;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpRequestAndHttpResponse;
+import org.mockserver.model.LogEventRequestAndResponse;
 import org.mockserver.verify.VerificationTimes;
 
 import java.util.List;
@@ -105,7 +105,7 @@ public class MockServerClientExamples {
     }
 
     public void retrieveRecordedRequestResponses() {
-        HttpRequestAndHttpResponse[] httpRequestAndHttpResponse = new MockServerClient("localhost", 1080)
+        LogEventRequestAndResponse[] httpRequestAndHttpResponse = new MockServerClient("localhost", 1080)
             .retrieveRecordedRequestsAndResponses(
                 request()
                     .withPath("/some/path")

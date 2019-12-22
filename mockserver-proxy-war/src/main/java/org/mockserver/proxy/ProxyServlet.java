@@ -100,7 +100,7 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
 
                 if (request.getPath().getValue().equals("/_mockserver_callback_websocket")) {
 
-                    responseWriter.writeResponse(request, NOT_IMPLEMENTED, "ExpectationResponseCallback and ExpectationForwardCallback is not supported by MockServer deployed as a WAR", "text/plain");
+                    responseWriter.writeResponse(request, NOT_IMPLEMENTED, "ExpectationResponseCallback, ExpectationForwardCallback or ExpectationForwardAndResponseCallback is not supported by MockServer deployed as a WAR", "text/plain");
 
                 } else if (request.matches("PUT", PATH_PREFIX + "/status", "/status")) {
 

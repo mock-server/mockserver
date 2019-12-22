@@ -56,7 +56,7 @@ public class MockServerClientTest {
     @Mock
     private HttpRequestSerializer mockHttpRequestSerializer;
     @Mock
-    private HttpRequestResponseSerializer httpRequestResponseSerializer;
+    private LogEventRequestAndResponseSerializer httpRequestResponseSerializer;
     @Mock
     private VerificationSerializer mockVerificationSerializer;
     @Mock
@@ -887,7 +887,7 @@ public class MockServerClientTest {
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
 
         // and - a response
-        HttpRequestAndHttpResponse[] httpRequests = {};
+        LogEventRequestAndResponse[] httpRequests = {};
         when(httpRequestResponseSerializer.deserializeArray("body")).thenReturn(httpRequests);
 
         // when
@@ -911,7 +911,7 @@ public class MockServerClientTest {
     @Test
     public void shouldRetrieveRequestResponsesWithNullRequest() {
         // given
-        HttpRequestAndHttpResponse[] httpRequests = {};
+        LogEventRequestAndResponse[] httpRequests = {};
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
         when(httpRequestResponseSerializer.deserializeArray("body")).thenReturn(httpRequests);
 

@@ -160,6 +160,47 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
         Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT), CoreMatchers.is(0));
     }
 
+    @Test // same JVM due to dynamic calls to static Metrics class
+    public void shouldRemoveWebsocketForwardAndResponseHandlerFromRegistry() {
+        // given
+        Metrics.clear();
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("websocket_forward_handler"))
+            )
+            .forward(
+                httpRequest ->
+                    request()
+                        .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                        .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT)),
+                (httpRequest, httpResponse) ->
+                    httpResponse
+                        .withHeader("x-response-test", "websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT))
+            );
+
+        // then
+        Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(1));
+
+        // when
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("x-response-test", "websocket_forward_handler_count_0_1")
+                .withBody("websocket_forward_handler_count_1_0"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("websocket_forward_handler")),
+                headersToIgnore)
+        );
+
+        // then
+        Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT), CoreMatchers.is(0));
+        Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT), CoreMatchers.is(0));
+    }
+
     private int objectCallbackCounter = 0;
 
     @Test

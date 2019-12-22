@@ -4,9 +4,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.ClientException;
-import org.mockserver.echo.http.EchoServer;
 import org.mockserver.integration.server.AbstractExtendedSameJVMMockingIntegrationTest;
-import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.mock.action.ExpectationResponseCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -14,8 +12,6 @@ import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.MediaType;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.Matchers.containsString;
@@ -139,7 +135,7 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
     public void shouldReturnErrorResponseForRespondByObjectCallback() {
         // given
         exception.expect(ClientException.class);
-        exception.expectMessage(containsString("ExpectationResponseCallback and ExpectationForwardCallback is not supported by MockServer deployed as a WAR"));
+        exception.expectMessage(containsString("ExpectationResponseCallback, ExpectationForwardCallback or ExpectationForwardAndResponseCallback is not supported by MockServer deployed as a WAR"));
 
         // when
         mockServerClient
@@ -167,7 +163,7 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
     public void shouldReturnErrorResponseForForwardByObjectCallback() {
         // given
         exception.expect(ClientException.class);
-        exception.expectMessage(containsString("ExpectationResponseCallback and ExpectationForwardCallback is not supported by MockServer deployed as a WAR"));
+        exception.expectMessage(containsString("ExpectationResponseCallback, ExpectationForwardCallback or ExpectationForwardAndResponseCallback is not supported by MockServer deployed as a WAR"));
 
         // when
         mockServerClient
@@ -176,14 +172,32 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                     .withPath(calculatePath("echo"))
             )
             .forward(
-                new ExpectationForwardCallback() {
-                    @Override
-                    public HttpRequest handle(HttpRequest httpRequest) {
-                        return request()
-                            .withBody("some_overridden_body")
-                            .withSecure(httpRequest.isSecure());
-                    }
-                }
+                httpRequest -> request()
+                    .withBody("some_overridden_body")
+                    .withSecure(httpRequest.isSecure())
+            );
+    }
+
+    @Test
+    public void shouldReturnErrorResponseForForwardAndResponseByObjectCallback() {
+        // given
+        exception.expect(ClientException.class);
+        exception.expectMessage(containsString("ExpectationResponseCallback, ExpectationForwardCallback or ExpectationForwardAndResponseCallback is not supported by MockServer deployed as a WAR"));
+
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("echo"))
+            )
+            .forward(
+                httpRequest ->
+                    request()
+                        .withBody("some_overridden_body")
+                        .withSecure(httpRequest.isSecure()),
+                (httpRequest, httpResponse) ->
+                    httpResponse
+                        .withHeader("x-response-test", "x-response-test")
             );
     }
 

@@ -7,6 +7,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.metrics.Metrics;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpRequestAndHttpResponse;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.serialization.WebSocketMessageSerializer;
 import org.mockserver.serialization.model.WebSocketClientIdDTO;
@@ -114,10 +115,18 @@ public class WebSocketClientRegistry {
         Metrics.set(WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT, forwardCallbackRegistry.size());
     }
 
-    public boolean sendClientMessage(String clientId, HttpRequest httpRequest) {
+    public boolean sendClientMessage(String clientId, HttpRequest httpRequest, HttpResponse httpResponse) {
         try {
             if (clientRegistry.containsKey(clientId)) {
-                clientRegistry.get(clientId).channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(httpRequest)));
+                if (httpResponse == null) {
+                    clientRegistry.get(clientId).channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(httpRequest)));
+                } else {
+                    clientRegistry.get(clientId).channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(
+                        new HttpRequestAndHttpResponse()
+                            .withHttpRequest(httpRequest)
+                            .withHttpResponse(httpResponse)
+                    )));
+                }
                 return true;
             } else {
                 mockServerLogger.logEvent(

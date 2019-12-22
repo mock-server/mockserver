@@ -11,7 +11,6 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -43,7 +42,7 @@ public class HttpForwardObjectCallbackActionHandlerTest {
 
         // then
         verify(mockWebSocketClientRegistry).registerForwardCallbackHandler(any(String.class), any(WebSocketRequestCallback.class));
-        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class));
+        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull(HttpResponse.class));
     }
 
     @Test
@@ -57,22 +56,17 @@ public class HttpForwardObjectCallbackActionHandlerTest {
         ResponseWriter mockResponseWriter = mock(ResponseWriter.class);
         when(mockHttpStateHandler.getWebSocketClientRegistry()).thenReturn(mockWebSocketClientRegistry);
         when(mockHttpStateHandler.getMockServerLogger()).thenReturn(new MockServerLogger());
-        when(mockWebSocketClientRegistry.sendClientMessage(eq("some_clientId"), any(HttpRequest.class))).thenReturn(false);
+        when(mockWebSocketClientRegistry.sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull(HttpResponse.class))).thenReturn(false);
 
         // when
         new HttpForwardObjectCallbackActionHandler(mockHttpStateHandler, null).handle(mockActionHandler, httpObjectCallback, request, mockResponseWriter, true);
 
         // then
         verify(mockWebSocketClientRegistry).registerForwardCallbackHandler(any(String.class), any(WebSocketRequestCallback.class));
-        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class));
+        verify(mockWebSocketClientRegistry).sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull(HttpResponse.class));
         ArgumentCaptor<HttpForwardActionResult> httpForwardActionResultArgumentCaptor = ArgumentCaptor.forClass(HttpForwardActionResult.class);
         verify(mockActionHandler).writeForwardActionResponse(httpForwardActionResultArgumentCaptor.capture(), same(mockResponseWriter), same(request), same(httpObjectCallback), eq(true));
         assertThat(httpForwardActionResultArgumentCaptor.getValue().getHttpResponse().get(), is(notFoundResponse()));
     }
 
-    private HttpForwardActionResult notFoundFuture(HttpRequest httpRequest) {
-        CompletableFuture<HttpResponse> notFoundFuture = new CompletableFuture<>();
-        notFoundFuture.complete(notFoundResponse());
-        return new HttpForwardActionResult(httpRequest, notFoundFuture, null);
-    }
 }

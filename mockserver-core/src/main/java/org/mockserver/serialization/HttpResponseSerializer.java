@@ -148,7 +148,7 @@ public class HttpResponseSerializer implements Serializer<HttpResponse> {
             if (jsonResponseList.isEmpty()) {
                 throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a response or array of response is required");
             } else {
-                List<String> validationErrorsList = new ArrayList<String>();
+                List<String> validationErrorsList = new ArrayList<>();
                 for (String jsonExpecation : jsonResponseList) {
                     try {
                         httpResponses.add(deserialize(jsonExpecation));

@@ -10,11 +10,13 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 public class HttpObjectCallbackDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<HttpObjectCallback> {
 
     private String clientId;
+    private Boolean responseCallback;
     private DelayDTO delay;
 
     public HttpObjectCallbackDTO(HttpObjectCallback httpObjectCallback) {
         if (httpObjectCallback != null) {
             clientId = httpObjectCallback.getClientId();
+            responseCallback = httpObjectCallback.getResponseCallback();
             if (httpObjectCallback.getDelay() != null) {
                 delay = new DelayDTO(httpObjectCallback.getDelay());
             }
@@ -31,6 +33,7 @@ public class HttpObjectCallbackDTO extends ObjectWithReflectiveEqualsHashCodeToS
         }
         return new HttpObjectCallback()
             .withClientId(clientId)
+            .withResponseCallback(responseCallback)
             .withDelay(delay);
     }
 
@@ -40,6 +43,15 @@ public class HttpObjectCallbackDTO extends ObjectWithReflectiveEqualsHashCodeToS
 
     public HttpObjectCallbackDTO setClientId(String clientId) {
         this.clientId = clientId;
+        return this;
+    }
+
+    public Boolean getResponseCallback() {
+        return responseCallback;
+    }
+
+    public HttpObjectCallbackDTO setResponseCallback(Boolean responseCallback) {
+        this.responseCallback = responseCallback;
         return this;
     }
 

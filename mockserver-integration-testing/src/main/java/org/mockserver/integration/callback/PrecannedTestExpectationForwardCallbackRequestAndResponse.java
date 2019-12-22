@@ -1,6 +1,6 @@
 package org.mockserver.integration.callback;
 
-import org.mockserver.mock.action.ExpectationForwardCallback;
+import org.mockserver.mock.action.ExpectationForwardAndResponseCallback;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -11,7 +11,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public class PrecannedTestExpectationForwardCallbackRequestAndResponse implements ExpectationForwardCallback {
+public class PrecannedTestExpectationForwardCallbackRequestAndResponse implements ExpectationForwardAndResponseCallback {
 
     @Override
     public HttpRequest handle(HttpRequest httpRequest) {

@@ -10,7 +10,7 @@ import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpRequestAndHttpResponse;
+import org.mockserver.model.LogEventRequestAndResponse;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.ui.MockServerEventLogNotifier;
@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.logging.MockServerLogger.writeToSystemOut;
@@ -53,8 +52,8 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         -> input.getType() == FORWARDED_REQUEST;
     private static final Function<LogEntry, HttpRequest[]> logEntryToRequest = LogEntry::getHttpRequests;
     private static final Function<LogEntry, Expectation> logEntryToExpectation = LogEntry::getExpectation;
-    private static final Function<LogEntry, HttpRequestAndHttpResponse> logEntryToHttpRequestAndHttpResponse =
-        logEntry -> new HttpRequestAndHttpResponse()
+    private static final Function<LogEntry, LogEventRequestAndResponse> logEntryToHttpRequestAndHttpResponse =
+        logEntry -> new LogEventRequestAndResponse()
             .withHttpRequest(logEntry.getHttpRequest())
             .withHttpResponse(logEntry.getHttpResponse())
             .withTimestamp(logEntry.getTimestamp());
@@ -129,7 +128,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
 
     public void stop() {
         try {
-            disruptor.shutdown(500, MILLISECONDS);
+            disruptor.shutdown(2, SECONDS);
         } catch (Throwable throwable) {
             writeToSystemOut(logger, new LogEntry()
                 .setLogLevel(Level.WARN)
@@ -229,7 +228,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         );
     }
 
-    public void retrieveRequestResponses(HttpRequest httpRequest, Consumer<List<HttpRequestAndHttpResponse>> listConsumer) {
+    public void retrieveRequestResponses(HttpRequest httpRequest, Consumer<List<LogEventRequestAndResponse>> listConsumer) {
         retrieveLogEntries(
             httpRequest,
             requestResponseLogPredicate,

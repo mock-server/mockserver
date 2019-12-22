@@ -1,6 +1,6 @@
 package org.mockserver.server;
 
-import org.mockserver.mock.action.ExpectationForwardCallback;
+import org.mockserver.mock.action.ExpectationForwardAndResponseCallback;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
@@ -13,7 +13,7 @@ import static org.mockserver.model.HttpResponse.response;
 /**
  * @author jamesdbloom
  */
-public class TestClasspathTestExpectationForwardCallbackWithResponseOverride implements ExpectationForwardCallback {
+public class TestClasspathTestExpectationForwardCallbackWithResponseOverride implements ExpectationForwardAndResponseCallback {
 
     public static List<HttpRequest> httpRequests = new ArrayList<HttpRequest>();
     public static List<HttpResponse> httpResponses = new ArrayList<>();

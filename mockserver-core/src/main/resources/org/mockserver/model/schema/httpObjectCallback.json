@@ -1,13 +1,16 @@
 {
-    "title": "object / method callback",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "delay": {
-            "$ref": "#/definitions/delay"
-        },
-        "clientId": {
-            "type": "string"
-        }
+  "title": "object / method callback",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "delay": {
+      "$ref": "#/definitions/delay"
+    },
+    "clientId": {
+      "type": "string"
+    },
+    "responseCallback": {
+      "type": "boolean"
     }
+  }
 }

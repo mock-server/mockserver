@@ -1,14 +1,14 @@
 package org.mockserver.serialization;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Joiner;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequestAndHttpResponse;
-import org.mockserver.serialization.model.HttpRequestAndHttpResponseDTO;
+import org.mockserver.model.LogEventRequestAndResponse;
+import org.mockserver.serialization.model.LogEventRequestAndResponseDTO;
 import org.slf4j.event.Level;
 
 import java.util.ArrayList;
@@ -21,13 +21,13 @@ import static org.mockserver.character.Character.NEW_LINE;
 /**
  * @author jamesdbloom
  */
-public class HttpRequestResponseSerializer {
+public class LogEventRequestAndResponseSerializer {
     private final MockServerLogger mockServerLogger;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private JsonArraySerializer jsonArraySerializer = new JsonArraySerializer();
     private final ObjectWriter objectWriter;
 
-    public HttpRequestResponseSerializer(MockServerLogger mockServerLogger) {
+    public LogEventRequestAndResponseSerializer(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
 
         DefaultPrettyPrinter prettyPrinter = new DefaultPrettyPrinter()
@@ -37,9 +37,9 @@ public class HttpRequestResponseSerializer {
         objectWriter = ObjectMapperFactory.createObjectMapper().writer(prettyPrinter);
     }
 
-    public String serialize(HttpRequestAndHttpResponse httpRequestAndHttpResponse) {
+    public String serialize(LogEventRequestAndResponse httpRequestAndHttpResponse) {
         try {
-            return objectWriter.writeValueAsString(new HttpRequestAndHttpResponseDTO(httpRequestAndHttpResponse));
+            return objectWriter.writeValueAsString(new LogEventRequestAndResponseDTO(httpRequestAndHttpResponse));
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -52,16 +52,16 @@ public class HttpRequestResponseSerializer {
         }
     }
 
-    public String serialize(List<HttpRequestAndHttpResponse> httpRequestAndHttpResponses) {
-        return serialize(httpRequestAndHttpResponses.toArray(new HttpRequestAndHttpResponse[0]));
+    public String serialize(List<LogEventRequestAndResponse> httpRequestAndHttpResponses) {
+        return serialize(httpRequestAndHttpResponses.toArray(new LogEventRequestAndResponse[0]));
     }
 
-    public String serialize(HttpRequestAndHttpResponse... httpRequestAndHttpResponses) {
+    public String serialize(LogEventRequestAndResponse... httpRequestAndHttpResponses) {
         try {
             if (httpRequestAndHttpResponses != null && httpRequestAndHttpResponses.length > 0) {
-                HttpRequestAndHttpResponseDTO[] httpRequestAndHttpResponseDTOS = new HttpRequestAndHttpResponseDTO[httpRequestAndHttpResponses.length];
+                LogEventRequestAndResponseDTO[] httpRequestAndHttpResponseDTOS = new LogEventRequestAndResponseDTO[httpRequestAndHttpResponses.length];
                 for (int i = 0; i < httpRequestAndHttpResponses.length; i++) {
-                    httpRequestAndHttpResponseDTOS[i] = new HttpRequestAndHttpResponseDTO(httpRequestAndHttpResponses[i]);
+                    httpRequestAndHttpResponseDTOS[i] = new LogEventRequestAndResponseDTO(httpRequestAndHttpResponses[i]);
                 }
                 return objectWriter.writeValueAsString(httpRequestAndHttpResponseDTOS);
             } else {
@@ -79,13 +79,13 @@ public class HttpRequestResponseSerializer {
         }
     }
 
-    public HttpRequestAndHttpResponse deserialize(String jsonHttpRequestAndHttpResponse) {
+    public LogEventRequestAndResponse deserialize(String jsonHttpRequestAndHttpResponse) {
         if (isBlank(jsonHttpRequestAndHttpResponse)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request is required but value was \"" + jsonHttpRequestAndHttpResponse + "\"");
         } else {
-            HttpRequestAndHttpResponse httpRequestAndHttpResponse = null;
+            LogEventRequestAndResponse httpRequestAndHttpResponse = null;
             try {
-                HttpRequestAndHttpResponseDTO httpRequestAndHttpResponseDTO = objectMapper.readValue(jsonHttpRequestAndHttpResponse, HttpRequestAndHttpResponseDTO.class);
+                LogEventRequestAndResponseDTO httpRequestAndHttpResponseDTO = objectMapper.readValue(jsonHttpRequestAndHttpResponse, LogEventRequestAndResponseDTO.class);
                 if (httpRequestAndHttpResponseDTO != null) {
                     httpRequestAndHttpResponse = httpRequestAndHttpResponseDTO.buildObject();
                 }
@@ -104,8 +104,8 @@ public class HttpRequestResponseSerializer {
         }
     }
 
-    public HttpRequestAndHttpResponse[] deserializeArray(String jsonHttpRequestAndHttpResponse) {
-        List<HttpRequestAndHttpResponse> httpRequestAndHttpResponses = new ArrayList<>();
+    public LogEventRequestAndResponse[] deserializeArray(String jsonHttpRequestAndHttpResponse) {
+        List<LogEventRequestAndResponse> httpRequestAndHttpResponses = new ArrayList<>();
         if (isBlank(jsonHttpRequestAndHttpResponse)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request or request array is required but value was \"" + jsonHttpRequestAndHttpResponse + "\"");
         } else {
@@ -127,7 +127,7 @@ public class HttpRequestResponseSerializer {
                 }
             }
         }
-        return httpRequestAndHttpResponses.toArray(new HttpRequestAndHttpResponse[0]);
+        return httpRequestAndHttpResponses.toArray(new LogEventRequestAndResponse[0]);
     }
 
 }

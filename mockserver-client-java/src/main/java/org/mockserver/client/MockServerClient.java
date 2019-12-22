@@ -55,7 +55,7 @@ public class MockServerClient implements Stoppable {
     private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null);
     private HttpRequest requestOverride;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(MOCK_SERVER_LOGGER);
-    private HttpRequestResponseSerializer httpRequestResponseSerializer = new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER);
+    private LogEventRequestAndResponseSerializer httpRequestResponseSerializer = new LogEventRequestAndResponseSerializer(MOCK_SERVER_LOGGER);
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(MOCK_SERVER_LOGGER);
     private ExpectationSerializer expectationSerializer = new ExpectationSerializer(MOCK_SERVER_LOGGER);
     private VerificationSerializer verificationSerializer = new VerificationSerializer(MOCK_SERVER_LOGGER);
@@ -518,12 +518,12 @@ public class MockServerClient implements Stoppable {
      * @param httpRequest the http request that is matched against when deciding whether to return each request (and its corresponding response), use null for the parameter to retrieve for all requests
      * @return an array of all requests and responses that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
-    public HttpRequestAndHttpResponse[] retrieveRecordedRequestsAndResponses(HttpRequest httpRequest) {
+    public LogEventRequestAndResponse[] retrieveRecordedRequestsAndResponses(HttpRequest httpRequest) {
         String recordedRequests = retrieveRecordedRequestsAndResponses(httpRequest, Format.JSON);
         if (StringUtils.isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
             return httpRequestResponseSerializer.deserializeArray(recordedRequests);
         } else {
-            return new HttpRequestAndHttpResponse[0];
+            return new LogEventRequestAndResponse[0];
         }
     }
 
