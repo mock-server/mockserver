@@ -24,13 +24,25 @@ sitemap:
 
 <a id="verify_trust_chain" class="anchor" href="#verify_trust_chain">&nbsp;</a>
 
-<h4>Verify Trust Chain</h4>
+<h2>Ensure MockServer Certificates Are Trusted</h2>
 
 <p>The MockServer CA X.509 must be considered a valid trust root to ensure MockServer's dynamically generate X.509 certificates are trusted by an HTTP Client.  This means the CA X.509 needs to be added into the JVM, HTTP Client or operating system as appropriate.</p>
 
 <p>The MockServer CA X.509 can be found (in PEM format) in the <a href="https://github.com/mock-server/mockserver/blob/master/mockserver-core/src/main/resources/org/mockserver/socket/CertificateAuthorityCertificate.pem">MockServer github repo</a> or can be loaded from the classpath location <span class="constant">/org/mockserver/socket/CertificateAuthorityCertificate.pem</span></p>
 
-<h5>Java via Classpath</h5>
+<h3>Operating System</h3>
+
+<p>It is technically possible to add the MockServer CA X.509 as a trusted root CA to your operating system, this will make most clients applications running on your OS (such as browsers) trust dynamically generated certificates from MockServer.</p>
+<p>This is generally not a good idea or if it is done it should be done for a very short period to record expectations or perform a quick test.  During this period do not navigate to any sensitive sites like banks or email servers.</p>
+<p>This is not completely safe to do this because the private key for the MockServer Root CA is in the MockServer repository and therefore anyone could potentially use this to generate certificates that appear to have comes from MockServer.</p>
+
+<h5>Web Browsers</h5>
+
+<p>Browsers (such as Chrome, Firefox or IE) may not always trust dynamically generated certificates from MockServer because of <a href="https://tools.ietf.org/html/rfc6962">Certificate Transparency</a> and <a href="https://tools.ietf.org/html/rfc7469">Public Key Pinning</a> both of which make it hard to dynamically generate certificates that are trusted.</p>
+<p>Some sites will work but others (such as google sites) won't work due to certificate pinning.</p>
+<p>Browser that rely on <a href="https://tools.ietf.org/html/rfc6962">Certificate Transparency</a> will likely not trust dynamically generated certificates from MockServer</p>
+
+<h3>Java via Classpath</h3>
 
 <p>The following code shows how to load a file from the classpath or a relative filesystem location:</p>
 
@@ -79,7 +91,7 @@ private String loadFileFromClasspath(String location) {
     throw new RuntimeException("Could not find " + location + " on the classpath");
 }</code></pre>
 
-<h5>Java DefaultSSLSocketFactory</h5>
+<h3>Java DefaultSSLSocketFactory</h3>
 
 <p>Another mechanism to ensure the MockServer X.509 is trusted is to configure the DefaultSSLSocketFactory in the JVM using the following line:</p>
 
@@ -120,7 +132,7 @@ public class ExampleTestClass {
     }
 }</code></pre>
 
-<h5>Java Keytool</h5>
+<h3>Java Keytool</h3>
 
 <p>The Java <strong>keytool</strong> command can also be used to add the MockServer CA X.509 certificate to the list of trust CA Certificates for a JVM, as follows:</p>
 
@@ -130,7 +142,7 @@ public class ExampleTestClass {
 
 <a id="hostname_validation" class="anchor" href="#hostname_validation">&nbsp;</a>
 
-<h4>Hostname Validation</h4>
+<h2>Hostname Validation</h2>
 
 <p>MockServer is able to mock the behaviour of multiple hostnames (i.e. servers) and present a valid X.509 Certificates for them.  MockServer achieves this by dynamically generating its X.509 Certificate using an in-memory list of hostnames.  When the list of hostnames changes a new certificate is generated.  The list of hostnames is updated, when:</p>
 
@@ -145,7 +157,7 @@ public class ExampleTestClass {
 
 <a id="configuration" class="anchor" href="#configuration">&nbsp;</a>
 
-<h4>Configuration:</h4>
+<h2>Configuration:</h2>
 
 <p>HTTPS (i.e. TLS / SSL) support can be configured as follows:</p>
 
