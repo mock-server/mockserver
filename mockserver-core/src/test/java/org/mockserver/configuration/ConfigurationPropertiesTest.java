@@ -53,7 +53,7 @@ public class ConfigurationPropertiesTest {
     public void shouldSetAndReadNIOEventLoopThreadCount() {
         // given
         System.clearProperty("mockserver.nioEventLoopThreadCount");
-        int eventLoopCount = Math.max(10, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
+        int eventLoopCount = Math.max(20, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
 
         // when
         assertEquals(eventLoopCount, ConfigurationProperties.nioEventLoopThreadCount());
@@ -68,7 +68,7 @@ public class ConfigurationPropertiesTest {
     public void shouldHandleInvalidNIOEventLoopThreadCount() {
         // given
         System.setProperty("mockserver.nioEventLoopThreadCount", "invalid");
-        int eventLoopCount = Math.max(10, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
+        int eventLoopCount = Math.max(20, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
 
         // then
         assertEquals(eventLoopCount, ConfigurationProperties.nioEventLoopThreadCount());
