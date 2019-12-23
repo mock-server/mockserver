@@ -47,7 +47,7 @@ public class ConfigurationProperties {
     private static final String DEFAULT_ENABLE_CORS_FOR_API = "false";
     private static final String DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES = "false";
     private static final String DEFAULT_PREVENT_CERTIFICATE_DYNAMIC_UPDATE = "false";
-    private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = Math.max(10, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
+    private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = Math.max(15, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "org/mockserver/socket/CertificateAuthorityPrivateKey.pem";
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "org/mockserver/socket/CertificateAuthorityCertificate.pem";
     private static final String DEFAULT_CORS_ALLOW_HEADERS = "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization";
