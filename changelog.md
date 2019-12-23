@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added TLS documentation
 
 ### Changed
+- reduced default number of fail handles used by nio event loop
 - improved performance and scalability of logging ring buffer
 - improved performance of json serialisation
 - deprecated isRunning and replaced with hasStopped and hasStarted to make behaviour more explicit and faster
@@ -28,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved JSON format for expectation to support objects instead of escaped strings
 
 ### Fixed
+- fixed reading logLevel from system property or environment variable
 - ensure all errors are printed to console
 - removed TLSv1.3 to avoid any issues with JVM version that do not support TLSv1.3
 - handle proxying requests without Content-Length header
