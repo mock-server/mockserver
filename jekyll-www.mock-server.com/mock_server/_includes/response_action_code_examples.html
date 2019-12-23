@@ -773,7 +773,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             )
             .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationResponseCallback")
+                    .withCallbackClass(TestExpectationResponseCallback.class)
             );
     }
 
@@ -829,6 +829,12 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 }'</code></pre>
     </div>
     <p>To use a class callback MockServer must be able to <strong>load the class from the classpath</strong>.</p>
+    <p>The callback class must:</p>
+    <ul>
+        <li>implement <ul><li><strong><span class="this_value">org.mockserver.mock.action.ExpectationResponseCallback</span></strong> to dynamically override the <strong>response</strong></li></ul></li>
+        <li>have a zero argument constructor</li>
+        <li>be available in the classpath of the MockServer</li>
+    </ul>
 
     <p>If MockServer is started using the <a href="/mock_server/running_mock_server.html#junit_rule">JUnit @Rule</a> <strong>org.mockserver.junit.MockServerRule</strong> or using <strong>org.mockserver.integration.ClientAndServer</strong> or directly using the <strong>org.mockserver.mockserver.MockServerBuilder</strong> then any class present in the main or test classpaths will be visible to MockServer.</p>
 

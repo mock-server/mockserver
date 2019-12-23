@@ -635,7 +635,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
-<button id="button_forward_class_callback" class="accordion">class callback</button>
+<button id="button_forward_class_callback" class="accordion">class callback to override request & response</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
     <div class="panel">
@@ -649,7 +649,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             )
             .forward(
                 callback()
-                    .withCallbackClass("org.mockserver.examples.mockserver.CallbackActionExamples$TestExpectationForwardCallback")
+                    .withCallbackClass(TestExpectationForwardCallback.class)
             );
     }
 
@@ -702,6 +702,12 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 }'</code></pre>
     </div>
     <p>To use a class callback MockServer must be able to <strong>load the class from the classpath</strong>.</p>
+    <p>The callback class must:</p>
+    <ul>
+        <li>implement <ul><li><strong><span class="this_value">org.mockserver.mock.action.ExpectationForwardCallback</span></strong> to dynamically override the <strong>request</strong> or</li><li><strong><span class="this_value">org.mockserver.mock.action.ExpectationForwardAndResponseCallback</span></strong> to dynamically override the <strong>request</strong> and the <strong>response</strong></li></ul></li>
+        <li>have a zero argument constructor</li>
+        <li>be available in the classpath of the MockServer</li>
+    </ul>
 
     <p>If MockServer is started using the <a href="/mock_server/running_mock_server.html#junit_rule">JUnit @Rule</a> <strong>org.mockserver.junit.MockServerRule</strong> or using <strong>org.mockserver.integration.ClientAndServer</strong> or directly using the <strong>org.mockserver.mockserver.MockServerBuilder</strong> then any class present in the main or test classpaths will be visible to MockServer.</p>
 
@@ -748,7 +754,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 
     <pre><code class="code">java -Dfile.encoding=UTF-8 -cp mockserver-netty-5.8.0-jar-with-dependencies.jar:my-callback-dependency.jar org.mockserver.cli.Main -serverPort 1080</code></pre>
 </div>
-<button id="button_forward_method_or_closure_callback" class="accordion">method / closure callback</button>
+<button id="button_forward_method_or_closure_callback" class="accordion">method / closure callback to override request</button>
 <div class="panel">
     <button class="accordion inner">Java 7</button>
     <div class="panel">
@@ -791,6 +797,67 @@ mockServerClient("localhost", 1080).mockAnyResponse({
                         header("Connection", "keep-alive")
                     )
                     .withBody("a_callback_request")
+    );</code></pre>
+    </div>
+</div>
+<button id="button_forward_method_or_closure_callback_with_response" class="accordion">method / closure callback to override request & response</button>
+<div class="panel">
+    <button class="accordion inner">Java 7</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        new ExpectationForwardCallback() {
+            @Override
+            public HttpRequest handle(HttpRequest httpRequest) throws Exception {
+                return request()
+                    .withPath(httpRequest.getPath())
+                    .withMethod("POST")
+                    .withHeaders(
+                        header("x-callback", "test_callback_header"),
+                        header("Content-Length", "a_callback_request".getBytes(UTF_8).length),
+                        header("Connection", "keep-alive")
+                    )
+                    .withBody("a_callback_request");
+            }
+        },
+        new ExpectationForwardAndResponseCallback() {
+            @Override
+            public HttpResponse handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
+                return httpResponse
+                    .withHeader("x-response-test", "x-response-test")
+                    .removeHeader(CONTENT_LENGTH.toString())
+                    .withBody("some_overridden_response_body");
+            }
+        }
+    );</code></pre>
+    </div>
+    <button class="accordion inner">Java 8+</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .forward(
+        httpRequest ->
+            request()
+                .withPath(httpRequest.getPath())
+                .withMethod("POST")
+                .withHeaders(
+                    header("x-callback", "test_callback_header"),
+                    header("Content-Length", "a_callback_request".getBytes(UTF_8).length),
+                    header("Connection", "keep-alive")
+                )
+                .withBody("a_callback_request"),
+        (httpRequest, httpResponse) ->
+            httpResponse
+                .withHeader("x-response-test", "x-response-test")
+                .removeHeader(CONTENT_LENGTH.toString())
+                .withBody("some_overridden_response_body")
     );</code></pre>
     </div>
 </div>
