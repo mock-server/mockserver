@@ -10,9 +10,9 @@ import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
-import java.nio.charset.Charset;
 import java.util.logging.LogManager;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.ConfigurationProperties.javaLoggerLogLevel;
 import static org.mockserver.configuration.ConfigurationProperties.logLevel;
@@ -23,7 +23,6 @@ import static org.slf4j.event.Level.ERROR;
 /**
  * @author jamesdbloom
  */
-@SuppressWarnings("CharsetObjectCanBeUsed")
 public class MockServerLogger {
 
     static {
@@ -40,7 +39,7 @@ public class MockServerLogger {
                     "java.util.logging.SimpleFormatter.format=%1$tF %1$tT  %3$s  %4$s  %5$s %6$s%n\n" +
                     ".level=" + javaLoggerLogLevel() + "\n" +
                     "io.netty.handler.ssl.SslHandler.level=WARNING";
-                LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingConfiguration.getBytes(Charset.forName("UTF-8"))));
+                LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(loggingConfiguration.getBytes(UTF_8)));
             }
         } catch (Throwable throwable) {
             new MockServerLogger().logEvent(
