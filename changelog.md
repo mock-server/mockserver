@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- changelog
 - added configuration for all CORS headers
 - added support for forward proxy authentication (via configuration)
 - added support for overriding forward responses by class or closure
