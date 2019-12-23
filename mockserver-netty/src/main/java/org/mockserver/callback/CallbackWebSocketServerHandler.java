@@ -19,6 +19,7 @@ import java.util.UUID;
 import static com.google.common.net.HttpHeaders.HOST;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.unification.PortUnificationHandler.isSslEnabledUpstream;
+import static org.mockserver.websocket.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
 
 /**
  * @author jamesdbloom
@@ -74,12 +75,12 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
         if (handshaker == null) {
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
         } else {
-            final String clientId = UUID.randomUUID().toString();
+            final String clientId = httpRequest.headers().contains(CLIENT_REGISTRATION_ID_HEADER) ? httpRequest.headers().get(CLIENT_REGISTRATION_ID_HEADER) : UUID.randomUUID().toString();
             handshaker
                 .handshake(
                     ctx.channel(),
                     httpRequest,
-                    new DefaultHttpHeaders().add("X-CLIENT-REGISTRATION-ID", clientId),
+                    new DefaultHttpHeaders().add(CLIENT_REGISTRATION_ID_HEADER, clientId),
                     ctx.channel().newPromise()
                 )
                 .addListener((ChannelFutureListener) future -> {
@@ -93,7 +94,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                             .setMessageFormat("Registering client " + clientId)
                     );
                     webSocketClientRegistry.registerClient(clientId, ctx);
-                    future.channel().closeFuture().addListener((ChannelFutureListener) future1 -> {
+                    future.channel().closeFuture().addListener((ChannelFutureListener) closeFuture -> {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(LogEntry.LogMessageType.TRACE)

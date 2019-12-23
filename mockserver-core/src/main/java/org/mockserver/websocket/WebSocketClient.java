@@ -30,6 +30,7 @@ import org.slf4j.event.Level;
 import javax.net.ssl.SSLException;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
@@ -49,6 +50,8 @@ public class WebSocketClient<T extends HttpObject> {
     private ExpectationForwardAndResponseCallback expectationForwardResponseCallback;
     private boolean isStopped = false;
     private EventLoopGroup eventLoopGroup;
+    private final String clientId = UUID.randomUUID().toString();
+    public static final String CLIENT_REGISTRATION_ID_HEADER = "X-CLIENT-REGISTRATION-ID";
 
     public WebSocketClient(final EventLoopGroup eventLoopGroup, final MockServerLogger mockServerLogger) {
         this.eventLoopGroup = eventLoopGroup;
@@ -56,7 +59,7 @@ public class WebSocketClient<T extends HttpObject> {
         this.webSocketMessageSerializer = new WebSocketMessageSerializer(mockServerLogger);
     }
 
-    private Future<String> register(final InetSocketAddress serverAddress, final String contextPath, final boolean isSecure) {
+    private Future<String> register(final InetSocketAddress serverAddress, final String contextPath, final boolean isSecure, int reconnectAttempts) {
         CompletableFuture<String> registrationFuture = new CompletableFuture<>();
         try {
             new Bootstrap()
@@ -85,7 +88,7 @@ public class WebSocketClient<T extends HttpObject> {
                             .addLast(
                                 new HttpClientCodec(),
                                 new HttpObjectAggregator(Integer.MAX_VALUE),
-                                new WebSocketClientHandler(mockServerLogger, serverAddress, contextPath, WebSocketClient.this, isSecure)
+                                new WebSocketClientHandler(mockServerLogger, clientId, serverAddress, contextPath, WebSocketClient.this, isSecure)
                             );
                     }
                 })
@@ -93,9 +96,9 @@ public class WebSocketClient<T extends HttpObject> {
                 .addListener((ChannelFutureListener) connectChannelFuture -> {
                     channel = connectChannelFuture.channel();
                     channel.closeFuture().addListener((ChannelFutureListener) closeChannelFuture -> {
-                        if (!isStopped) {
+                        if (!isStopped && reconnectAttempts > 0) {
                             // attempt to re-connect
-                            register(serverAddress, contextPath, isSecure);
+                            register(serverAddress, contextPath, isSecure, reconnectAttempts - 1);
                         }
                     });
                 });
@@ -185,7 +188,7 @@ public class WebSocketClient<T extends HttpObject> {
         if (this.expectationCallback == null) {
             this.expectationCallback = expectationCallback;
             this.expectationForwardResponseCallback = expectationForwardResponseCallback;
-            return register(serverAddress, contextPath, isSecure);
+            return register(serverAddress, contextPath, isSecure, 3);
         } else {
             throw new IllegalArgumentException("It is not possible to set response callback once a forward callback has been set");
         }

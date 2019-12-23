@@ -27,7 +27,7 @@ public class HttpResponseObjectCallbackActionHandler {
         this.webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();
     }
 
-    public void handle(final ActionHandler actionHandler, final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous) {
+    public void handle(final ActionHandler actionHandler, final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous, Runnable expectationPostProcessor) {
         final String clientId = httpObjectCallback.getClientId();
         final String webSocketCorrelationId = UUID.randomUUID().toString();
         webSocketClientRegistry.registerResponseCallbackHandler(webSocketCorrelationId, response -> {
@@ -40,6 +40,9 @@ public class HttpResponseObjectCallbackActionHandler {
                     .setArguments(request)
             );
             webSocketClientRegistry.unregisterResponseCallbackHandler(webSocketCorrelationId);
+            if (expectationPostProcessor != null) {
+                expectationPostProcessor.run();
+            }
             actionHandler.writeResponseActionResponse(response.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME), responseWriter, request, httpObjectCallback, synchronous);
         });
         if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId), null)) {

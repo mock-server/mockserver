@@ -62,12 +62,10 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
                 if (matchingExpectation.decrementRemainingMatches()) {
                     remainingMatchesDecremented = true;
                 }
-            }
-            if (!httpRequestMatcher.isActive()) {
+            } else if (!httpRequestMatcher.isActive()) {
                 removeHttpRequestMatcher(httpRequestMatcher);
-            } else if (remainingMatchesDecremented) {
-                // only update remaining matches if expectation not
-                // being removed completely to avoid double events
+            }
+            if (remainingMatchesDecremented) {
                 notifyListeners(this);
             }
             if (matchingExpectation != null) {
@@ -97,20 +95,27 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
         }
     }
 
+    Expectation postProcess(Expectation expectation) {
+        if (expectation != null) {
+            if (!expectation.isActive()) {
+                for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers) {
+                    if (httpRequestMatcher.getExpectation() == expectation) {
+                        removeHttpRequestMatcher(httpRequestMatcher);
+                        break;
+                    }
+                }
+            }
+        }
+        return expectation;
+    }
+
+    @SuppressWarnings("rawtypes")
     private void removeHttpRequestMatcher(HttpRequestMatcher httpRequestMatcher) {
-        if (httpRequestMatchers.contains(httpRequestMatcher)) {
-            httpRequestMatchers.remove(httpRequestMatcher);
+        if (httpRequestMatchers.remove(httpRequestMatcher)) {
             if (httpRequestMatcher.getExpectation() != null) {
                 final Action action = httpRequestMatcher.getExpectation().getAction();
-                if (action != null) {
-                    switch (action.getType()) {
-                        case FORWARD_OBJECT_CALLBACK:
-                            webSocketClientRegistry.unregisterForwardCallbackHandler(((HttpObjectCallback) action).getClientId());
-                            break;
-                        case RESPONSE_OBJECT_CALLBACK:
-                            webSocketClientRegistry.unregisterResponseCallbackHandler(((HttpObjectCallback) action).getClientId());
-                            break;
-                    }
+                if (action instanceof HttpObjectCallback) {
+                    webSocketClientRegistry.unregisterClient(((HttpObjectCallback) action).getClientId());
                     Metrics.decrement(action.getType());
                 }
             }

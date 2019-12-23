@@ -14,8 +14,14 @@ import org.mockserver.serialization.model.WebSocketClientIdDTO;
 import org.mockserver.serialization.model.WebSocketErrorDTO;
 import org.mockserver.websocket.WebSocketException;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import static org.mockserver.configuration.ConfigurationProperties.maxWebSocketExpectations;
 import static org.mockserver.metrics.Metrics.Name.*;
+import static org.mockserver.metrics.Metrics.clearWebSocketMetrics;
 import static org.mockserver.model.HttpResponse.response;
 import static org.slf4j.event.Level.WARN;
 
@@ -27,9 +33,10 @@ public class WebSocketClientRegistry {
     public static final String WEB_SOCKET_CORRELATION_ID_HEADER_NAME = "WebSocketCorrelationId";
     private final MockServerLogger mockServerLogger;
     private final WebSocketMessageSerializer webSocketMessageSerializer;
-    private final CircularHashMap<String, ChannelHandlerContext> clientRegistry = new CircularHashMap<>(maxWebSocketExpectations());
-    private final CircularHashMap<String, WebSocketResponseCallback> responseCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
-    private final CircularHashMap<String, WebSocketRequestCallback> forwardCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
+    private final Map<String, ChannelHandlerContext> clientRegistry = Collections.synchronizedMap(new CircularHashMap<>(maxWebSocketExpectations()));
+    private final Map<String, WebSocketResponseCallback> responseCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
+    private final Map<String, WebSocketRequestCallback> forwardCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
+    private static final ReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock();
 
     public WebSocketClientRegistry(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
@@ -81,18 +88,31 @@ public class WebSocketClientRegistry {
     }
 
     void registerClient(String clientId, ChannelHandlerContext ctx) {
+        READ_WRITE_LOCK.readLock().lock();
         try {
-            ctx.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(new WebSocketClientIdDTO().setClientId(clientId))));
-        } catch (Exception e) {
-            throw new WebSocketException("Exception while sending web socket registration client id message to client " + clientId, e);
+            try {
+                ctx.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(new WebSocketClientIdDTO().setClientId(clientId))));
+            } catch (Exception e) {
+                throw new WebSocketException("Exception while sending web socket registration client id message to client " + clientId, e);
+            }
+            clientRegistry.put(clientId, ctx);
+            Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
         }
-        clientRegistry.put(clientId, ctx);
-        Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
     }
 
-    void unregisterClient(String clientId) {
-        clientRegistry.remove(clientId);
-        Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
+    public void unregisterClient(String clientId) {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            ChannelHandlerContext removeChannel = clientRegistry.remove(clientId);
+            if (removeChannel != null && removeChannel.channel().isOpen()) {
+                removeChannel.channel().close();
+            }
+            Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
     }
 
     public void registerResponseCallbackHandler(String webSocketCorrelationId, WebSocketResponseCallback expectationResponseCallback) {
@@ -144,4 +164,16 @@ public class WebSocketClientRegistry {
         }
     }
 
+    public void reset() {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            forwardCallbackRegistry.clear();
+            responseCallbackRegistry.clear();
+            clientRegistry.forEach((key, value) -> value.channel().close());
+            clientRegistry.clear();
+            clearWebSocketMetrics();
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
 }

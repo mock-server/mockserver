@@ -38,7 +38,7 @@ public class HttpForwardObjectCallbackActionHandlerTest {
         when(mockHttpStateHandler.getMockServerLogger()).thenReturn(new MockServerLogger());
 
         // when
-        new HttpForwardObjectCallbackActionHandler(mockHttpStateHandler, null).handle(mock(ActionHandler.class), httpObjectCallback, request, mockResponseWriter, true);
+        new HttpForwardObjectCallbackActionHandler(mockHttpStateHandler, null).handle(mock(ActionHandler.class), httpObjectCallback, request, mockResponseWriter, true, null);
 
         // then
         verify(mockWebSocketClientRegistry).registerForwardCallbackHandler(any(String.class), any(WebSocketRequestCallback.class));
@@ -59,7 +59,7 @@ public class HttpForwardObjectCallbackActionHandlerTest {
         when(mockWebSocketClientRegistry.sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull(HttpResponse.class))).thenReturn(false);
 
         // when
-        new HttpForwardObjectCallbackActionHandler(mockHttpStateHandler, null).handle(mockActionHandler, httpObjectCallback, request, mockResponseWriter, true);
+        new HttpForwardObjectCallbackActionHandler(mockHttpStateHandler, null).handle(mockActionHandler, httpObjectCallback, request, mockResponseWriter, true, null);
 
         // then
         verify(mockWebSocketClientRegistry).registerForwardCallbackHandler(any(String.class), any(WebSocketRequestCallback.class));

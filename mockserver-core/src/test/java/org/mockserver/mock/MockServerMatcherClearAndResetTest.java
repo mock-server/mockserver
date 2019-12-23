@@ -60,8 +60,8 @@ public class MockServerMatcherClearAndResetTest {
         mockServerMatcher.add(expectation);
 
         // and
-        assertEquals(expectation, mockServerMatcher.firstMatchingExpectation(request().withPath("somepath")));
-        assertEquals(expectation, mockServerMatcher.firstMatchingExpectation(request().withPath("somepath")));
+        assertEquals(expectation, mockServerMatcher.postProcess(mockServerMatcher.firstMatchingExpectation(request().withPath("somepath"))));
+        assertEquals(expectation, mockServerMatcher.postProcess(mockServerMatcher.firstMatchingExpectation(request().withPath("somepath"))));
 
         // then
         assertThat(mockServerMatcher.httpRequestMatchers, is(empty()));

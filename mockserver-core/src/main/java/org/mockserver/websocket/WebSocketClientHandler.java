@@ -16,12 +16,14 @@ import org.slf4j.event.Level;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.UPGRADE;
 import static io.netty.handler.codec.http.HttpHeaderValues.WEBSOCKET;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.websocket.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
 import static org.mockserver.websocket.WebSocketClient.REGISTRATION_FUTURE;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
@@ -32,15 +34,17 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     private final WebSocketClient webSocketClient;
     private final WebSocketClientHandshaker handshaker;
     private final MockServerLogger mockServerLogger;
+    private final String clientId;
 
-    WebSocketClientHandler(MockServerLogger mockServerLogger, InetSocketAddress serverAddress, String contextPath, WebSocketClient webSocketClient, boolean isSecure) throws URISyntaxException {
+    WebSocketClientHandler(MockServerLogger mockServerLogger, String clientId, InetSocketAddress serverAddress, String contextPath, WebSocketClient webSocketClient, boolean isSecure) throws URISyntaxException {
         this.mockServerLogger = mockServerLogger;
+        this.clientId = clientId;
         this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(
             new URI((isSecure ? "wss" : "ws") + "://" + serverAddress.getHostName() + ":" + serverAddress.getPort() + cleanContextPath(contextPath) + "/_mockserver_callback_websocket"),
             WebSocketVersion.V13,
             null,
             false,
-            new DefaultHttpHeaders(),
+            new DefaultHttpHeaders().add(CLIENT_REGISTRATION_ID_HEADER, clientId),
             Integer.MAX_VALUE
         );
         this.webSocketClient = webSocketClient;
@@ -77,13 +81,13 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             final CompletableFuture<String> registrationFuture = ch.attr(REGISTRATION_FUTURE).get();
             if (httpResponse.headers().contains(UPGRADE, WEBSOCKET, true) && !handshaker.isHandshakeComplete()) {
                 handshaker.finishHandshake(ch, httpResponse);
-                final String clientRegistrationId = httpResponse.headers().get("X-CLIENT-REGISTRATION-ID");
-                registrationFuture.complete(clientRegistrationId);
+//                final String clientRegistrationId = httpResponse.headers().get(CLIENT_REGISTRATION_ID_HEADER);
+                registrationFuture.complete(clientId);
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("web socket client " + clientRegistrationId + " connected!")
+                        .setMessageFormat("web socket client " + clientId + " connected!")
                 );
             } else if (httpResponse.status().equals(HttpResponseStatus.NOT_IMPLEMENTED)) {
                 String message = readRequestBody(httpResponse);

@@ -13,6 +13,8 @@ import org.mockserver.responsewriter.ResponseWriter;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import static org.apache.commons.lang3.BooleanUtils.isFalse;
+import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.slf4j.event.Level.TRACE;
@@ -29,7 +31,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
         this.webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();
     }
 
-    public void handle(final ActionHandler actionHandler, final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous) {
+    public void handle(final ActionHandler actionHandler, final HttpObjectCallback httpObjectCallback, final HttpRequest request, final ResponseWriter responseWriter, final boolean synchronous, Runnable expectationPostProcessor) {
         final String clientId = httpObjectCallback.getClientId();
         final String webSocketCorrelationId = UUID.randomUUID().toString();
         webSocketClientRegistry.registerForwardCallbackHandler(webSocketCorrelationId, new WebSocketRequestCallback() {
@@ -38,12 +40,15 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 final HttpForwardActionResult responseFuture = sendRequest(
                     request.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME),
                     null,
-                    httpObjectCallback.getResponseCallback() != null && httpObjectCallback.getResponseCallback() ? response -> {
+                    isTrue(httpObjectCallback.getResponseCallback()) ? response -> {
                         // register callback for overridden response
                         CompletableFuture<HttpResponse> httpResponseCompletableFuture = new CompletableFuture<>();
                         webSocketClientRegistry.registerResponseCallbackHandler(webSocketCorrelationId, overriddenResponse -> {
-                            httpResponseCompletableFuture.complete(overriddenResponse.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME));
                             webSocketClientRegistry.unregisterResponseCallbackHandler(webSocketCorrelationId);
+                            if (expectationPostProcessor != null) {
+                                expectationPostProcessor.run();
+                            }
+                            httpResponseCompletableFuture.complete(overriddenResponse.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME));
                         });
                         // send websocket message to override response
                         if (!webSocketClientRegistry.sendClientMessage(clientId, request.clone().withHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME, webSocketCorrelationId), response)) {
@@ -91,6 +96,9 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         .setArguments(request)
                 );
                 webSocketClientRegistry.unregisterForwardCallbackHandler(webSocketCorrelationId);
+                if (expectationPostProcessor != null && isFalse(httpObjectCallback.getResponseCallback())) {
+                    expectationPostProcessor.run();
+                }
                 actionHandler.writeForwardActionResponse(responseFuture, responseWriter, request, httpObjectCallback, synchronous);
             }
 

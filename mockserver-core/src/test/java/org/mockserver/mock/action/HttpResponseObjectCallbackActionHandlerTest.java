@@ -33,7 +33,7 @@ public class HttpResponseObjectCallbackActionHandlerTest {
         when(mockHttpStateHandler.getMockServerLogger()).thenReturn(new MockServerLogger());
 
         // when
-        new HttpResponseObjectCallbackActionHandler(mockHttpStateHandler).handle(mock(ActionHandler.class), httpObjectCallback, request, mockResponseWriter, true);
+        new HttpResponseObjectCallbackActionHandler(mockHttpStateHandler).handle(mock(ActionHandler.class), httpObjectCallback, request, mockResponseWriter, true, null);
 
         // then
         verify(mockWebSocketClientRegistry).registerResponseCallbackHandler(any(String.class), any(WebSocketResponseCallback.class));
@@ -54,7 +54,7 @@ public class HttpResponseObjectCallbackActionHandlerTest {
         when(mockWebSocketClientRegistry.sendClientMessage(eq("some_clientId"), any(HttpRequest.class), isNull(HttpResponse.class))).thenReturn(false);
 
         // when
-        new HttpResponseObjectCallbackActionHandler(mockHttpStateHandler).handle(mockActionHandler, httpObjectCallback, request, mockResponseWriter, true);
+        new HttpResponseObjectCallbackActionHandler(mockHttpStateHandler).handle(mockActionHandler, httpObjectCallback, request, mockResponseWriter, true, null);
 
         // then
         verify(mockWebSocketClientRegistry).registerResponseCallbackHandler(any(String.class), any(WebSocketResponseCallback.class));

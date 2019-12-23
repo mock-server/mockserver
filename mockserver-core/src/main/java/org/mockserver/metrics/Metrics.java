@@ -93,6 +93,12 @@ public class Metrics {
         metrics.remove(Name.ACTION_ERROR_COUNT);
     }
 
+    public static void clearWebSocketMetrics() {
+        metrics.remove(Name.WEBSOCKET_CALLBACK_CLIENT_COUNT);
+        metrics.remove(Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT);
+        metrics.remove(Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT);
+    }
+
     public enum Name {
         EXPECTATION_NOT_MATCHED_COUNT,
         RESPONSE_EXPECTATION_MATCHED_COUNT,

@@ -47,7 +47,9 @@ public class HttpStateHandler {
     private final String uniqueLoopPreventionHeaderValue = "MockServer_" + UUID.randomUUID().toString();
     private final MockServerEventLog mockServerLog;
     private final Scheduler scheduler;
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private final ExpectationInitializerLoader expectationInitializerLoader;
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private final ExpectationFileSystemPersistence expectationFileSystemPersistence;
     // mockserver
     private MockServerMatcher mockServerMatcher;
@@ -136,6 +138,7 @@ public class HttpStateHandler {
     public void reset() {
         mockServerMatcher.reset();
         mockServerLog.reset();
+        webSocketClientRegistry.reset();
         mockServerLogger.logEvent(
             new LogEntry()
                 .setType(CLEARED)
@@ -171,6 +174,10 @@ public class HttpStateHandler {
         } else {
             return mockServerMatcher.firstMatchingExpectation(request);
         }
+    }
+
+    public void postProcess(Expectation expectation) {
+        mockServerMatcher.postProcess(expectation);
     }
 
     public void log(LogEntry logEntry) {

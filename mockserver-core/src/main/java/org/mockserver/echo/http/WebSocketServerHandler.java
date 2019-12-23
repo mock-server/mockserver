@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.google.common.net.HttpHeaders.HOST;
+import static org.mockserver.websocket.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
 
 /**
  * @author jamesdbloom
@@ -77,12 +78,12 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
         if (handshaker == null) {
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
         } else {
-            final String clientId = UUID.randomUUID().toString();
+            final String clientId = httpRequest.headers().contains(CLIENT_REGISTRATION_ID_HEADER) ? httpRequest.headers().get(CLIENT_REGISTRATION_ID_HEADER) : UUID.randomUUID().toString();
             handshaker
                 .handshake(
                     ctx.channel(),
                     httpRequest,
-                    new DefaultHttpHeaders().add("X-CLIENT-REGISTRATION-ID", clientId),
+                    new DefaultHttpHeaders().add(CLIENT_REGISTRATION_ID_HEADER, clientId),
                     ctx.channel().newPromise()
                 )
                 .addListener((ChannelFutureListener) future -> {

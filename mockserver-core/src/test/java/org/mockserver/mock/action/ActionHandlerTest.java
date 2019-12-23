@@ -156,7 +156,8 @@ public class ActionHandlerTest {
                 .setMessageFormat("returning response:{}for request:{}for action:{}")
                 .setArguments(this.response, request, response)
         );
-        verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(1)), eq(milliseconds(0)));
+        verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(1)));
+        verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(0)));
     }
 
     @Test
@@ -189,7 +190,8 @@ public class ActionHandlerTest {
                 .setMessageFormat("returning response:{}for request:{}for action:{}")
                 .setArguments(response, request, template)
         );
-        verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(1)), eq(milliseconds(0)));
+        verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(1)));
+        verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(0)));
     }
 
     @Test
@@ -264,7 +266,8 @@ public class ActionHandlerTest {
                 .setMessageFormat("returning response:{}for request:{}for action:{}")
                 .setArguments(response, request, callback)
         );
-        verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(1)), eq(milliseconds(0)));
+        verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(1)));
+        verify(scheduler).schedule(any(Runnable.class), eq(true), eq(milliseconds(0)));
     }
 
     @Test
@@ -279,7 +282,7 @@ public class ActionHandlerTest {
         actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
 
         // then
-        verify(mockHttpResponseObjectCallbackActionHandler).handle(any(ActionHandler.class), same(callback), same(request), same(mockResponseWriter), eq(true));
+        verify(mockHttpResponseObjectCallbackActionHandler).handle(any(ActionHandler.class), same(callback), same(request), same(mockResponseWriter), eq(true), any(Runnable.class));
         verify(mockServerLogger).logEvent(
             new LogEntry()
                 .setType(RECEIVED_REQUEST)
@@ -451,7 +454,7 @@ public class ActionHandlerTest {
         actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
 
         // then
-        verify(mockHttpForwardObjectCallbackActionHandler).handle(any(ActionHandler.class), same(callback), same(request), same(mockResponseWriter), eq(true));
+        verify(mockHttpForwardObjectCallbackActionHandler).handle(any(ActionHandler.class), same(callback), same(request), same(mockResponseWriter), eq(true), any(Runnable.class));
         verify(mockServerLogger).logEvent(
             new LogEntry()
                 .setType(RECEIVED_REQUEST)

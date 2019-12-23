@@ -81,6 +81,7 @@ public class ActionHandler {
             );
         }
         final Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
+        Runnable expectationPostProcessor = () -> httpStateHandler.postProcess(expectation);
         final boolean potentiallyHttpProxy = !StringUtils.isEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString()));
 
         if (expectation != null && expectation.getAction() != null) {
@@ -88,34 +89,40 @@ public class ActionHandler {
             final Action action = expectation.getAction();
             switch (action.getType()) {
                 case RESPONSE: {
-                    scheduler.submit(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
+                    scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpResponse response = getHttpResponseActionHandler().handle((HttpResponse) action);
                         writeResponseActionResponse(response, responseWriter, request, action, synchronous);
-                    }), synchronous);
+                        expectationPostProcessor.run();
+                    }), synchronous, action.getDelay());
                     break;
                 }
                 case RESPONSE_TEMPLATE: {
-                    scheduler.submit(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
+                    scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpResponse response = getHttpResponseTemplateActionHandler().handle((HttpTemplate) action, request);
                         writeResponseActionResponse(response, responseWriter, request, action, synchronous);
-                    }), synchronous);
+                        expectationPostProcessor.run();
+                    }), synchronous, action.getDelay());
                     break;
                 }
                 case RESPONSE_CLASS_CALLBACK: {
-                    scheduler.submit(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
+                    scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpResponse response = getHttpResponseClassCallbackActionHandler().handle((HttpClassCallback) action, request);
                         writeResponseActionResponse(response, responseWriter, request, action, synchronous);
-                    }), synchronous);
+                        expectationPostProcessor.run();
+                    }), synchronous, action.getDelay());
                     break;
                 }
                 case RESPONSE_OBJECT_CALLBACK: {
-                    scheduler.submit(() -> getHttpResponseObjectCallbackActionHandler().handle(ActionHandler.this, (HttpObjectCallback) action, request, responseWriter, synchronous), synchronous);
+                    scheduler.schedule(() ->
+                            getHttpResponseObjectCallbackActionHandler().handle(ActionHandler.this, (HttpObjectCallback) action, request, responseWriter, synchronous, expectationPostProcessor),
+                        synchronous, action.getDelay());
                     break;
                 }
                 case FORWARD: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpForwardActionHandler().handle((HttpForward) action, request);
                         writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
+                        expectationPostProcessor.run();
                     }), synchronous, action.getDelay());
                     break;
                 }
@@ -123,6 +130,7 @@ public class ActionHandler {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpForwardTemplateActionHandler().handle((HttpTemplate) action, request);
                         writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
+                        expectationPostProcessor.run();
                     }), synchronous, action.getDelay());
                     break;
                 }
@@ -130,17 +138,21 @@ public class ActionHandler {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpForwardClassCallbackActionHandler().handle((HttpClassCallback) action, request);
                         writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
+                        expectationPostProcessor.run();
                     }), synchronous, action.getDelay());
                     break;
                 }
                 case FORWARD_OBJECT_CALLBACK: {
-                    scheduler.schedule(() -> getHttpForwardObjectCallbackActionHandler().handle(ActionHandler.this, (HttpObjectCallback) action, request, responseWriter, synchronous), synchronous, action.getDelay());
+                    scheduler.schedule(() ->
+                            getHttpForwardObjectCallbackActionHandler().handle(ActionHandler.this, (HttpObjectCallback) action, request, responseWriter, synchronous, expectationPostProcessor),
+                        synchronous, action.getDelay());
                     break;
                 }
                 case FORWARD_REPLACE: {
                     scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () -> {
                         final HttpForwardActionResult responseFuture = getHttpOverrideForwardedRequestCallbackActionHandler().handle((HttpOverrideForwardedRequest) action, request);
                         writeForwardActionResponse(responseFuture, responseWriter, request, action, synchronous);
+                        expectationPostProcessor.run();
                     }), synchronous, action.getDelay());
                     break;
                 }
@@ -156,6 +168,7 @@ public class ActionHandler {
                                 .setMessageFormat("returning error:{}for request:{}for action:{}")
                                 .setArguments(action, request, action)
                         );
+                        expectationPostProcessor.run();
                     }), synchronous, action.getDelay());
                     break;
                 }
@@ -281,7 +294,7 @@ public class ActionHandler {
                     .setArguments(response, request, action)
             );
             responseWriter.writeResponse(request, response, false);
-        }, synchronous, action.getDelay(), response.getDelay());
+        }, synchronous, response.getDelay());
     }
 
     void writeForwardActionResponse(final HttpForwardActionResult responseFuture, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous) {
