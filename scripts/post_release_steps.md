@@ -53,6 +53,7 @@ Release Steps
    1. create cloud front distribution copying existing settings
    1. create Route53 A record as alias to cloud front distribution
 1. update repo
+   1. update changelog
    1. delete jekyll-www.mock-server.com/_site
    1. ./mvnw clean
    1. find and replace maven / npm version references
