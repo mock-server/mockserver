@@ -20,7 +20,7 @@ import static org.mockserver.model.JsonBody.json;
 
 public class LogEntryDTOSerializerTest {
 
-    ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper(
+    final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper(
         new LogEntryDTOSerializer(),
         new ThrowableSerializer()
     );

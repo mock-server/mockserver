@@ -19,7 +19,7 @@ public class XmlBodyTest {
 
     @Test
     public void shouldAlwaysCreateNewObject() {
-        assertEquals(new XmlBody("some_body").xml("some_body"), xml("some_body"));
+        assertEquals(xml("some_body"), xml("some_body"));
         assertNotSame(xml("some_body"), xml("some_body"));
     }
 

@@ -16,7 +16,7 @@ import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException
 public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpResponse> {
 
     private final MockServerLogger mockServerLogger;
-    private volatile Channel upstreamChannel;
+    private final Channel upstreamChannel;
 
     public DownstreamProxyRelayHandler(MockServerLogger mockServerLogger, Channel upstreamChannel) {
         super(false);

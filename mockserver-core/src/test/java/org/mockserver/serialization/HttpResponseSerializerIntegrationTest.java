@@ -33,7 +33,7 @@ public class HttpResponseSerializerIntegrationTest {
 
     private static final ObjectWriter OBJECT_WRITER = ObjectMapperFactory.createObjectMapper().writerWithDefaultPrettyPrinter();
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    public final ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void shouldIgnoreExtraFields() {
@@ -268,6 +268,7 @@ public class HttpResponseSerializerIntegrationTest {
     }
 
     @Test
+    @SuppressWarnings("RedundantArrayCreation")
     public void shouldSerializeArray() {
         // when
         String jsonHttpResponse = new HttpResponseSerializer(new MockServerLogger()).serialize(

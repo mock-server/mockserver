@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockserver.character.Character.NEW_LINE;

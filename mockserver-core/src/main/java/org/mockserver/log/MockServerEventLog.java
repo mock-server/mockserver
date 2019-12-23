@@ -310,7 +310,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             retrieveRequests(verification.getHttpRequest(), httpRequests -> {
                 if (!verification.getTimes().matches(httpRequests.size())) {
                     retrieveRequests(null, allRequests -> {
-                        String failureMessage = "";
+                        String failureMessage;
                         String serializedRequestToBeVerified = httpRequestSerializer.serialize(true, verification.getHttpRequest());
                         String serializedAllRequestInLog = allRequests.size() == 1 ? httpRequestSerializer.serialize(true, allRequests.get(0)) : httpRequestSerializer.serialize(true, allRequests);
                         failureMessage = "Request not found " + verification.getTimes() + ", expected:<" + serializedRequestToBeVerified + "> but was:<" + serializedAllRequestInLog + ">";

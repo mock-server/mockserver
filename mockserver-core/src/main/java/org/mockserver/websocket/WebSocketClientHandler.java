@@ -16,7 +16,6 @@ import org.slf4j.event.Level;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;

@@ -29,7 +29,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class HttpRequestAndHttpResponseSerializationErrorsTest {
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    public final ExpectedException thrown = ExpectedException.none();
     @Mock
     private ObjectMapper objectMapper;
     @Mock

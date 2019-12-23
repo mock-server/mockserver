@@ -13,7 +13,6 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.socket.tls.NettySslContextFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockserver.echo.http.EchoServer.*;

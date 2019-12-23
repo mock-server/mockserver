@@ -8,7 +8,6 @@ import org.mockserver.model.HttpRequest;
 import java.util.Arrays;
 
 import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom

@@ -22,7 +22,7 @@ public class StringFormatter {
     public static String formatLogMessage(final String message, final Object... arguments) {
         final StringBuilder logMessage = new StringBuilder();
         final StringBuilder[] formattedArguments = indentAndToString(arguments);
-        final String[] messageParts = message.split("\\{\\}");
+        final String[] messageParts = message.split("\\{}");
         for (int messagePartIndex = 0; messagePartIndex < messageParts.length; messagePartIndex++) {
             logMessage.append(messageParts[messagePartIndex]);
             if (formattedArguments.length > 0 &&

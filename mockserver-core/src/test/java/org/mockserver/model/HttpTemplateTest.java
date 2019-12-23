@@ -11,7 +11,6 @@ import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpTemplate.TemplateType.JAVASCRIPT;
 import static org.mockserver.model.HttpTemplate.TemplateType.VELOCITY;
 import static org.mockserver.model.HttpTemplate.template;
-import static org.mockserver.model.HttpTemplate.template;
 
 /**
  * @author jamesdbloom
@@ -19,9 +18,10 @@ import static org.mockserver.model.HttpTemplate.template;
 public class HttpTemplateTest {
 
     @Test
+    @SuppressWarnings("AccessStaticViaInstance")
     public void shouldAlwaysCreateNewObject() {
-        assertEquals(new HttpTemplate(JAVASCRIPT).template(JAVASCRIPT), template(JAVASCRIPT));
-        assertEquals(new HttpTemplate(VELOCITY).template(VELOCITY), template(VELOCITY));
+        assertEquals(template(JAVASCRIPT), template(JAVASCRIPT));
+        assertEquals(template(VELOCITY), template(VELOCITY));
         assertNotSame(template(JAVASCRIPT), template(JAVASCRIPT));
         assertNotSame(template(VELOCITY), template(VELOCITY));
     }

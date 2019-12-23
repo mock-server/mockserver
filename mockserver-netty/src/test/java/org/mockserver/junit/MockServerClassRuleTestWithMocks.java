@@ -1,6 +1,5 @@
 package org.mockserver.junit;
 
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
@@ -13,7 +12,6 @@ import org.mockserver.socket.PortFactory;
 
 import java.util.Arrays;
 
-import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertThat;

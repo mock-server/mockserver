@@ -9,8 +9,8 @@ import org.mockserver.model.JsonBody;
  */
 public class JsonBodyDTO extends BodyWithContentTypeDTO {
 
-    private String json;
-    private MatchType matchType;
+    private final String json;
+    private final MatchType matchType;
 
     public JsonBodyDTO(JsonBody jsonBody) {
         this(jsonBody, false);

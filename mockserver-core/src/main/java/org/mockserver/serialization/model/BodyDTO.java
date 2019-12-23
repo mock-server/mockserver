@@ -7,7 +7,7 @@ import org.mockserver.model.*;
  */
 public abstract class BodyDTO extends NotDTO implements DTO<Body> {
 
-    private Body.Type type;
+    private final Body.Type type;
 
     public BodyDTO(Body.Type type, Boolean not) {
         super(not);

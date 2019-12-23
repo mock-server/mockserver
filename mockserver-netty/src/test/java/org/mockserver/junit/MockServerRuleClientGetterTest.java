@@ -14,7 +14,7 @@ import static org.junit.Assert.assertThat;
 public class MockServerRuleClientGetterTest {
 
     @Rule
-    public MockServerRule mockServerRule = new MockServerRule(this);
+    public final MockServerRule mockServerRule = new MockServerRule(this);
 
     @Test
     public void shouldSetTestMockServeField() {

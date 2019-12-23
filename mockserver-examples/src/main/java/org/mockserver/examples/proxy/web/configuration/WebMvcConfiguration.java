@@ -33,7 +33,7 @@ public class WebMvcConfiguration extends WebMvcConfigurerAdapter {
     }
 
     @Bean
-    public FreeMarkerConfigurer freemarkerConfig() throws IOException, TemplateException {
+    public FreeMarkerConfigurer freemarkerConfig() {
         FreeMarkerConfigurer freeMarkerConfigurer = new FreeMarkerConfigurer();
         freeMarkerConfigurer.setConfiguration(new freemarker.template.Configuration(freemarker.template.Configuration.VERSION_2_3_22) {{
             setTemplateLoader(new MultiTemplateLoader(

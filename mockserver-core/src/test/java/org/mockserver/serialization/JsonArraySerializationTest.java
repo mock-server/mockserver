@@ -13,10 +13,6 @@ import java.io.IOException;
 
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -27,7 +23,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class JsonArraySerializationTest {
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    public final ExpectedException thrown = ExpectedException.none();
     @Mock
     private ObjectMapper objectMapper;
     @Mock
@@ -56,7 +52,7 @@ public class JsonArraySerializationTest {
     }
 
     @Test
-    public void shouldReturnArrayItems() throws IOException {
+    public void shouldReturnArrayItems() {
         // when
         assertThat(new JsonArraySerializer().returnJSONObjects("[{'foo':'bar'},{'foo':'bar'}]"), hasItems("{" + NEW_LINE + "  \"foo\" : \"bar\"" + NEW_LINE + "}", "{" + NEW_LINE + "  \"foo\" : \"bar\"" + NEW_LINE + "}"));
         assertThat(new JsonArraySerializer().returnJSONObjects("[{},{}]"), hasItems("{ }", "{ }"));

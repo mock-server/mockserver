@@ -38,7 +38,7 @@ public class ForwardViaSocksProxyMockingIntegrationTest extends AbstractMockingI
     @BeforeClass
     public static void startServer() {
         proxy = new MockServer();
-        mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.SOCKS5, "127.0.0.1:" + String.valueOf(proxy.getLocalPort())));
+        mockServer = new MockServer(proxyConfiguration(ProxyConfiguration.Type.SOCKS5, "127.0.0.1:" + proxy.getLocalPort()));
 
         mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort(), servletContext);
     }

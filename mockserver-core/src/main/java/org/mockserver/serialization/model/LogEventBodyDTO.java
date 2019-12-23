@@ -8,7 +8,7 @@ import org.mockserver.model.LogEventBody;
  */
 public class LogEventBodyDTO extends BodyWithContentTypeDTO {
 
-    private Object value;
+    private final Object value;
 
     public LogEventBodyDTO(LogEventBody logEventBody) {
         super(Body.Type.STRING, false, null);

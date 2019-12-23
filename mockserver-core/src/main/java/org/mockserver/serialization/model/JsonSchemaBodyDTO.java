@@ -8,7 +8,7 @@ import org.mockserver.model.JsonSchemaBody;
  */
 public class JsonSchemaBodyDTO extends BodyDTO {
 
-    private String jsonSchema;
+    private final String jsonSchema;
 
     public JsonSchemaBodyDTO(JsonSchemaBody jsonSchemaBody) {
         this(jsonSchemaBody, false);

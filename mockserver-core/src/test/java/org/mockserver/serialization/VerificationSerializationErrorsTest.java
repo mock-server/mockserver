@@ -29,7 +29,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class VerificationSerializationErrorsTest {
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    public final ExpectedException thrown = ExpectedException.none();
     @Mock
     private ObjectMapper objectMapper;
     @Mock
@@ -64,7 +64,7 @@ public class VerificationSerializationErrorsTest {
     }
 
     @Test
-    public void shouldHandleExceptionWhileDeserializingObject() throws IOException {
+    public void shouldHandleExceptionWhileDeserializingObject() {
         try {
             // when
             verificationSerializer.deserialize("requestBytes");

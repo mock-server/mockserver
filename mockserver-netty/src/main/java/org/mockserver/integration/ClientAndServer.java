@@ -38,7 +38,12 @@ public class ClientAndServer extends MockServerClient {
         return new ClientAndServer(remoteHost, remotePort, port);
     }
 
+    @SuppressWarnings("deprecation")
     public boolean isRunning() {
+        return mockServer.isRunning();
+    }
+
+    public boolean hasStarted() {
         return mockServer.isRunning();
     }
 

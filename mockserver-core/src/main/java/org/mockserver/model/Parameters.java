@@ -21,6 +21,7 @@ public class Parameters extends KeysToMultiValues<Parameter, Parameters> {
         return new Parameter(name, values);
     }
 
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Parameters clone() {
         return new Parameters().withEntries(getEntries());
     }

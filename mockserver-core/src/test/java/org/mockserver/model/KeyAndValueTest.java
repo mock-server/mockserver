@@ -1,13 +1,9 @@
 package org.mockserver.model;
 
 import org.junit.Test;
-import org.mockserver.collections.CaseInsensitiveRegexHashMap;
-
-import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.NottableString.string;
 
 public class KeyAndValueTest {

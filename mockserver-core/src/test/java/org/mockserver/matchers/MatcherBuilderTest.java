@@ -8,7 +8,6 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.codec.NettyToMockServerRequestDecoder;
 
-import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
 import static io.netty.buffer.Unpooled.wrappedBuffer;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpMethod.GET;
@@ -19,13 +18,14 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
+import static org.mockserver.model.MediaType.PLAIN_TEXT_UTF_8;
 
 /**
  * @author jamesdbloom
  */
 public class MatcherBuilderTest {
 
-    private HttpRequest httpRequest = new HttpRequest()
+    private final HttpRequest httpRequest = new HttpRequest()
             .withMethod("GET")
             .withPath("some_path")
             .withQueryStringParameter(new Parameter("queryStringParameterName", "queryStringParameterValue"))

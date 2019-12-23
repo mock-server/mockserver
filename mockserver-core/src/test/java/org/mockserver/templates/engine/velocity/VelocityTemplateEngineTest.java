@@ -34,7 +34,7 @@ import static org.slf4j.event.Level.INFO;
 public class VelocityTemplateEngineTest {
 
     @Rule
-    public ExpectedException exception = ExpectedException.none();
+    public final ExpectedException exception = ExpectedException.none();
 
     @Mock
     private MockServerLogger logFormatter;

@@ -211,7 +211,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 localAddressesCache.put(cacheKey, localAddresses);
             }
         }
-        return (localAddresses == null) ? Collections.<String>emptySet() : localAddresses;
+        return (localAddresses == null) ? Collections.emptySet() : localAddresses;
     }
 
     private String calculatePortExtension(InetSocketAddress inetSocketAddress, boolean sslEnabledUpstream) {

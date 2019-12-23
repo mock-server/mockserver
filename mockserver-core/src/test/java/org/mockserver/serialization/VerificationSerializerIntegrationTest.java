@@ -20,7 +20,7 @@ import static org.mockserver.model.HttpRequest.request;
 public class VerificationSerializerIntegrationTest {
 
     @Test
-    public void shouldDeserializeCompleteObject() throws IOException {
+    public void shouldDeserializeCompleteObject() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
@@ -44,7 +44,7 @@ public class VerificationSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializePartialObject() throws IOException {
+    public void shouldDeserializePartialObject() {
         // given
         String requestBytes = "{" + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
@@ -61,7 +61,7 @@ public class VerificationSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeCompleteObject() throws IOException {
+    public void shouldSerializeCompleteObject() {
         // when
         String jsonExpectation = new VerificationSerializer(new MockServerLogger()).serialize(
             new VerificationDTO()
@@ -84,7 +84,7 @@ public class VerificationSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializePartialObject() throws IOException {
+    public void shouldSerializePartialObject() {
         // when
         String jsonExpectation = new VerificationSerializer(new MockServerLogger()).serialize(
             new VerificationDTO()

@@ -282,13 +282,13 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         if (!testResult) {
             if (!controlPlaneMatcher) {
                 if (request.isNot()) {
-                    becauseBuilder.append(",").append(NEW_LINE).append("request \'not\' operator is enabled");
+                    becauseBuilder.append(",").append(NEW_LINE).append("request 'not' operator is enabled");
                 }
                 if (this.httpRequest.isNot()) {
-                    becauseBuilder.append(",").append(NEW_LINE).append("expectation's request \'not\' operator is enabled");
+                    becauseBuilder.append(",").append(NEW_LINE).append("expectation's request 'not' operator is enabled");
                 }
                 if (not) {
-                    becauseBuilder.append(",").append(NEW_LINE).append("expectation's request matcher \'not\' operator is enabled");
+                    becauseBuilder.append(",").append(NEW_LINE).append("expectation's request matcher 'not' operator is enabled");
                 }
             }
             matchFailed = true;

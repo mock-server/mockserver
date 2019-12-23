@@ -10,7 +10,6 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
@@ -58,7 +57,7 @@ public class NettyResponseWriterTest {
         HttpRequest request = request("some_request");
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), (HttpResponse) null, false);
+        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), null, false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(

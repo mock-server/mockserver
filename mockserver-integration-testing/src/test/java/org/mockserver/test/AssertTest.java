@@ -12,6 +12,7 @@ import static org.mockserver.test.Assert.*;
 public class AssertTest {
 
     @Test
+    @SuppressWarnings("AccessStaticViaInstance")
     public void shouldNotFailWhenStringDoesContainSubstring() {
         assertContains("string", "s");
         assertContains("string", "g");

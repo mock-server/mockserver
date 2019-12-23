@@ -19,13 +19,13 @@ import static org.mockserver.model.MediaType.TEXT_PLAIN;
 public class MockServerClientServerValidationErrorsTest {
 
     @Rule
-    public ExpectedException exception = ExpectedException.none();
+    public final ExpectedException exception = ExpectedException.none();
 
     private EchoServer echoServer;
     private MockServerClient mockServerClient;
 
     @Before
-    public void setupTestFixture() throws Exception {
+    public void setupTestFixture() {
         echoServer = new EchoServer(false);
         mockServerClient = new MockServerClient("localhost", echoServer.getPort());
     }

@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-
 /**
  * @author jamesdbloom
  */

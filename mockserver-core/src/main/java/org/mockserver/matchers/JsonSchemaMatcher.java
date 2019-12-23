@@ -7,7 +7,6 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.jsonschema.JsonSchemaValidator;
 
 import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * See http://json-schema.org/

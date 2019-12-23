@@ -27,7 +27,7 @@ public class HttpResponseTemplateActionHandler {
     public HttpResponse handle(HttpTemplate httpTemplate, HttpRequest httpRequest) {
         HttpResponse httpResponse = notFoundResponse();
 
-        TemplateEngine templateEngine = null;
+        TemplateEngine templateEngine;
         switch (httpTemplate.getTemplateType()) {
             case VELOCITY:
                 templateEngine = velocityTemplateEngine;

@@ -5,8 +5,6 @@ import org.junit.Test;
 import org.mockserver.model.Delay;
 import org.mockserver.model.HttpTemplate;
 
-import java.io.IOException;
-
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;

@@ -19,8 +19,8 @@ import static org.mockserver.unification.PortUnificationHandler.isSslEnabledDown
 public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private final MockServerLogger mockServerLogger;
-    private volatile Channel upstreamChannel;
-    private volatile Channel downstreamChannel;
+    private final Channel upstreamChannel;
+    private final Channel downstreamChannel;
 
     public UpstreamProxyRelayHandler(MockServerLogger mockServerLogger, Channel upstreamChannel, Channel downstreamChannel) {
         super(false);

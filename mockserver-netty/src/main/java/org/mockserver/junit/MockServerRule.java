@@ -89,7 +89,7 @@ public class MockServerRule implements TestRule {
     public Integer[] getPorts() {
         if (clientAndServer != null) {
             List<Integer> ports = clientAndServer.getLocalPorts();
-            return ports.toArray(new Integer[ports.size()]);
+            return ports.toArray(new Integer[0]);
         }
         return ports;
     }
@@ -145,7 +145,7 @@ public class MockServerRule implements TestRule {
     }
 
     @VisibleForTesting
-    class ClientAndServerFactory {
+    static class ClientAndServerFactory {
         private final Integer[] port;
 
         public ClientAndServerFactory(Integer... port) {

@@ -22,7 +22,7 @@ public class HttpForwardTemplateActionHandler extends HttpForwardAction {
     }
 
     public HttpForwardActionResult handle(HttpTemplate httpTemplate, HttpRequest originalRequest) {
-        TemplateEngine templateEngine = null;
+        TemplateEngine templateEngine;
         switch (httpTemplate.getTemplateType()) {
             case VELOCITY:
                 templateEngine = getVelocityTemplateEngine();

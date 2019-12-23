@@ -15,8 +15,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -29,7 +27,7 @@ public class PortBindingSerializerTest {
     private final PortBinding fullPortBinding = new PortBinding().setPorts(Arrays.asList(1, 2, 3, 4, 5));
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    public final ExpectedException thrown = ExpectedException.none();
     @Mock
     private ObjectMapper objectMapper;
     @Mock

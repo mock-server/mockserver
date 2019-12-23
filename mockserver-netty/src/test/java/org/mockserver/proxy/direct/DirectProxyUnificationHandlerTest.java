@@ -18,9 +18,6 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mockserver.MockServerUnificationInitializer;
 import org.mockserver.proxy.socks.Socks5ProxyHandler;
 import org.mockserver.scheduler.Scheduler;
-import org.mockserver.unification.PortUnificationHandler;
-
-import java.io.IOException;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -50,7 +47,7 @@ public class DirectProxyUnificationHandlerTest {
         }));
 
         // then - should add SSL handlers first
-        if (new MockServerLogger(PortUnificationHandler.class).isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE)) {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "SniHandler#0",
                 "LoggingHandler#0",
@@ -67,7 +64,7 @@ public class DirectProxyUnificationHandlerTest {
     }
 
     @Test
-    public void shouldSwitchToSOCKS() throws IOException, InterruptedException {
+    public void shouldSwitchToSOCKS() {
         // given - embedded channel
         short localPort = 1234;
         EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpStateHandler(new MockServerLogger(), mock(Scheduler.class)), null));
@@ -94,7 +91,7 @@ public class DirectProxyUnificationHandlerTest {
         })));
 
         // and then - should add SOCKS handlers first
-        if (new MockServerLogger().isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE)) {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "LoggingHandler#0",
                 "Socks5CommandRequestDecoder#0",
@@ -129,7 +126,7 @@ public class DirectProxyUnificationHandlerTest {
         embeddedChannel.writeInbound(Unpooled.wrappedBuffer("GET /somePath HTTP/1.1\r\nHost: some.random.host\r\n\r\n".getBytes(UTF_8)));
 
         // then - should add HTTP handlers last
-        if (new MockServerLogger(PortUnificationHandler.class).isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE)) {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "LoggingHandler#0",
                 "HttpServerCodec#0",

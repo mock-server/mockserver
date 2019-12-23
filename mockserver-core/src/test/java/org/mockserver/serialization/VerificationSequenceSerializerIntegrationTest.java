@@ -8,6 +8,7 @@ import org.mockserver.verify.VerificationSequence;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -19,7 +20,7 @@ import static org.mockserver.model.HttpRequest.request;
 public class VerificationSequenceSerializerIntegrationTest {
 
     @Test
-    public void shouldDeserializeCompleteObject() throws IOException {
+    public void shouldDeserializeCompleteObject() {
         // given
         String requestBytes = "{" + NEW_LINE +
                 "  \"httpRequests\" : [ {" + NEW_LINE +
@@ -52,7 +53,7 @@ public class VerificationSequenceSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializeEmptyObject() throws IOException {
+    public void shouldDeserializeEmptyObject() {
         // given
         String requestBytes = "{" + NEW_LINE +
                 "  \"httpRequests\" : [ ]" + NEW_LINE +
@@ -63,12 +64,12 @@ public class VerificationSequenceSerializerIntegrationTest {
 
         // then
         assertEquals(new VerificationSequenceDTO()
-                .setHttpRequests(Arrays.<HttpRequestDTO>asList())
+                .setHttpRequests(Collections.<HttpRequestDTO>emptyList())
                 .buildObject(), verificationSequence);
     }
 
     @Test
-    public void shouldDeserializePartialObject() throws IOException {
+    public void shouldDeserializePartialObject() {
         // given
         String requestBytes = "{" + NEW_LINE +
                 "  \"httpRequests\" : [ {" + NEW_LINE +
@@ -81,14 +82,14 @@ public class VerificationSequenceSerializerIntegrationTest {
 
         // then
         assertEquals(new VerificationSequenceDTO()
-                .setHttpRequests(Arrays.asList(
-                        new HttpRequestDTO(request("some_path_one"))
+                .setHttpRequests(Collections.singletonList(
+                    new HttpRequestDTO(request("some_path_one"))
                 ))
                 .buildObject(), verificationSequence);
     }
 
     @Test
-    public void shouldSerializeCompleteObject() throws IOException {
+    public void shouldSerializeCompleteObject() {
         // when
         String jsonExpectation = new VerificationSequenceSerializer(new MockServerLogger()).serialize(
                 new VerificationSequenceDTO()
@@ -120,12 +121,12 @@ public class VerificationSequenceSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializePartialObject() throws IOException {
+    public void shouldSerializePartialObject() {
         // when
         String jsonExpectation = new VerificationSequenceSerializer(new MockServerLogger()).serialize(
                 new VerificationSequenceDTO()
-                        .setHttpRequests(Arrays.asList(
-                                new HttpRequestDTO(request("some_path_one").withBody("some_body_one"))
+                        .setHttpRequests(Collections.singletonList(
+                            new HttpRequestDTO(request("some_path_one").withBody("some_body_one"))
                         ))
                         .buildObject()
         );
@@ -140,11 +141,11 @@ public class VerificationSequenceSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeEmptyObject() throws IOException {
+    public void shouldSerializeEmptyObject() {
         // when
         String jsonExpectation = new VerificationSequenceSerializer(new MockServerLogger()).serialize(
                 new VerificationSequenceDTO()
-                        .setHttpRequests(Arrays.<HttpRequestDTO>asList())
+                        .setHttpRequests(Collections.<HttpRequestDTO>emptyList())
                         .buildObject()
         );
 

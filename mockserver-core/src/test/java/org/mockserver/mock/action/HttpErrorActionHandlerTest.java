@@ -9,7 +9,6 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import org.junit.Test;
 import org.mockserver.model.HttpError;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockserver.model.HttpError.error;
 

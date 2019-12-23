@@ -5,7 +5,7 @@ package org.mockserver.model;
  */
 public class RegexBody extends Body {
 
-    private String regex;
+    private final String regex;
 
     public RegexBody(String regex) {
         super(Type.REGEX);

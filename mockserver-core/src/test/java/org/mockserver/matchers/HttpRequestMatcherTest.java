@@ -34,8 +34,8 @@ import static org.mockserver.model.XmlSchemaBody.xmlSchema;
  */
 public class HttpRequestMatcherTest {
 
-    private HttpStateHandler httpStateHandler = mock(HttpStateHandler.class);
-    private MockServerLogger mockServerLogger = new MockServerLogger(httpStateHandler);
+    private final HttpStateHandler httpStateHandler = mock(HttpStateHandler.class);
+    private final MockServerLogger mockServerLogger = new MockServerLogger(httpStateHandler);
 
     @Test
     public void shouldAllowUseOfNotWithMatchingRequests() {

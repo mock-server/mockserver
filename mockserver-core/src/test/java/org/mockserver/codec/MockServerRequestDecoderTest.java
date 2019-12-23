@@ -250,10 +250,6 @@ public class MockServerRequestDecoderTest {
     }
 
     @Test
-    public void name() {
-    }
-
-    @Test
     public void shouldDecodeBodyWithUTF8ContentType() {
         // given
         fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/uri", Unpooled.wrappedBuffer("avro işarəsi: \u20AC".getBytes(StandardCharsets.UTF_8)));

@@ -19,7 +19,6 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,7 +45,7 @@ class MockServerExtensionWithMocksTest {
     }
 
     @Test
-    void identifiesSupportedParameter() throws Exception {
+    void identifiesSupportedParameter() {
         doReturn(mockParameter).when(mockParameterContext).getParameter();
         doReturn(MockServerClient.class).when(mockParameter).getType();
         boolean result = subject.supportsParameter(mockParameterContext, null);
@@ -54,7 +53,7 @@ class MockServerExtensionWithMocksTest {
     }
 
     @Test
-    void doesNotsupportsRandomParameterType() throws Exception {
+    void doesNotsupportsRandomParameterType() {
         doReturn(mockParameter).when(mockParameterContext).getParameter();
         doReturn(Object.class).when(mockParameter).getType();
         boolean result = subject.supportsParameter(mockParameterContext, null);
@@ -62,7 +61,7 @@ class MockServerExtensionWithMocksTest {
     }
 
     @Test
-    void beforeAdd_startsServerWithRandomPort() throws Exception {
+    void beforeAdd_startsServerWithRandomPort() {
         Optional<AnnotatedElement> element = Optional.of(mockAnnotatedElement);
         MockServerSettings mockServerSettings = mock(MockServerSettings.class);
         doReturn(Optional.empty()).when(mockExtensionContext).getParent();
@@ -71,14 +70,14 @@ class MockServerExtensionWithMocksTest {
     }
 
     @Test
-    void beforeAdd_startsServerWithSpecifiedPorts() throws Exception {
+    void beforeAdd_startsServerWithSpecifiedPorts() {
         List<Integer> ports = mockServerCreation();
         subject.beforeAll(mockExtensionContext);
         verify(mockClientAndServerFactory).startClientAndServer(ports);
     }
 
     @Test
-    void beforeAdd_startsPerTestSuiteServer() throws Exception {
+    void beforeAdd_startsPerTestSuiteServer() {
         List<Integer> ports = mockServerCreation();
         ClientAndServer mockServerClient = mock(ClientAndServer.class);
         doReturn(mockServerClient).when(mockClientAndServerFactory).startClientAndServer(anyList());
@@ -87,7 +86,7 @@ class MockServerExtensionWithMocksTest {
     }
 
     @Test
-    void resolveParameter_returnsClientInstance() throws Exception {
+    void resolveParameter_returnsClientInstance() {
         Optional<AnnotatedElement> element = Optional.of(mockAnnotatedElement);
         MockServerSettings mockServerSettings = mock(MockServerSettings.class);
         ClientAndServer mockServerClient = mock(ClientAndServer.class);
@@ -99,7 +98,7 @@ class MockServerExtensionWithMocksTest {
     }
 
     @Test
-    void afterAll_stopsClientInstance() throws Exception {
+    void afterAll_stopsClientInstance() {
         Optional<AnnotatedElement> element = Optional.of(mockAnnotatedElement);
         MockServerSettings mockServerSettings = mock(MockServerSettings.class);
         ClientAndServer mockServerClient = mock(ClientAndServer.class);

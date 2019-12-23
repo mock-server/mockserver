@@ -14,7 +14,7 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public class StaticTestExpectationResponseCallback implements ExpectationResponseCallback {
 
-    public static List<HttpRequest> httpRequests = new Vector<HttpRequest>();
+    public static final List<HttpRequest> httpRequests = new Vector<HttpRequest>();
     public static HttpResponse httpResponse = response();
 
     @Override

@@ -16,8 +16,9 @@ import static org.mockserver.model.HttpForward.forward;
 public class HttpForwardTest {
 
     @Test
+    @SuppressWarnings("AccessStaticViaInstance")
     public void shouldAlwaysCreateNewObject() {
-        assertEquals(new HttpForward().forward(), forward());
+        assertEquals(forward(), forward());
         assertNotSame(forward(), forward());
     }
 

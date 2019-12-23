@@ -13,7 +13,7 @@ import static org.mockserver.model.NottableString.string;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class KeysAndValues<T extends KeyAndValue, K extends KeysAndValues> extends ObjectWithJsonToString {
 
-    private Map<NottableString, NottableString> map = new LinkedHashMap<>();
+    private final Map<NottableString, NottableString> map = new LinkedHashMap<>();
 
     public CaseInsensitiveRegexHashMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, List<T> entries, boolean controlPlaneMatcher) {
         CaseInsensitiveRegexHashMap caseInsensitiveRegexHashMap = new CaseInsensitiveRegexHashMap(mockServerLogger, controlPlaneMatcher);

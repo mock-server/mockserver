@@ -26,7 +26,7 @@ import java.io.StringWriter;
 public class StringToXmlDocumentParser extends ObjectWithReflectiveEqualsHashCodeToString {
 
     String normaliseXmlString(String matched, ErrorLogger errorLogger)
-        throws IOException, SAXException, ParserConfigurationException, TransformerException {
+        throws IOException, SAXException, ParserConfigurationException {
         return prettyPrintXmlDocument(buildDocument(matched, errorLogger));
     }
 
@@ -59,17 +59,17 @@ public class StringToXmlDocumentParser extends ObjectWithReflectiveEqualsHashCod
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
         documentBuilder.setErrorHandler(new ErrorHandler() {
             @Override
-            public void warning(SAXParseException exception) throws SAXException {
+            public void warning(SAXParseException exception) {
                 errorLogger.logError(matched, exception);
             }
 
             @Override
-            public void error(SAXParseException exception) throws SAXException {
+            public void error(SAXParseException exception) {
                 errorLogger.logError(matched, exception);
             }
 
             @Override
-            public void fatalError(SAXParseException exception) throws SAXException {
+            public void fatalError(SAXParseException exception) {
                 errorLogger.logError(matched, exception);
             }
         });

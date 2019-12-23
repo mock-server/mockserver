@@ -18,7 +18,7 @@ public class PortBindingSerializerIntegrationTest {
 
 
     @Test
-    public void shouldIgnoreExtraFields() throws IOException {
+    public void shouldIgnoreExtraFields() {
         // given
         String requestBytes = "{" + NEW_LINE +
                 "    \"ports\": [" + NEW_LINE +
@@ -37,7 +37,7 @@ public class PortBindingSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializeCompleteObject() throws IOException {
+    public void shouldDeserializeCompleteObject() {
         // given
         String requestBytes = "{" + NEW_LINE +
                 "    \"ports\": [" + NEW_LINE +
@@ -55,7 +55,7 @@ public class PortBindingSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializePartialObject() throws IOException {
+    public void shouldDeserializePartialObject() {
         // given
         String requestBytes = "{ }";
 
@@ -67,7 +67,7 @@ public class PortBindingSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeCompleteObject() throws IOException {
+    public void shouldSerializeCompleteObject() {
         // when
         String jsonPortBinding = new PortBindingSerializer(new MockServerLogger()).serialize(
                 new PortBinding().setPorts(Arrays.asList(0, 1080, 0))

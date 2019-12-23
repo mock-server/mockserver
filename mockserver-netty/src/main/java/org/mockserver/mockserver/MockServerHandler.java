@@ -47,7 +47,7 @@ import static org.mockserver.unification.PortUnificationHandler.enableSslUpstrea
 public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
     public static final AttributeKey<Boolean> PROXYING = AttributeKey.valueOf("PROXYING");
-    public static final AttributeKey<Set> LOCAL_HOST_HEADERS = AttributeKey.valueOf("LOCAL_HOST_HEADERS");
+    public static final AttributeKey<Set<String>> LOCAL_HOST_HEADERS = AttributeKey.valueOf("LOCAL_HOST_HEADERS");
     private MockServerLogger mockServerLogger;
     private HttpStateHandler httpStateHandler;
     private PortBindingSerializer portBindingSerializer;

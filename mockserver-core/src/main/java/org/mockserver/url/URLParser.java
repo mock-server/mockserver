@@ -15,7 +15,7 @@ public class URLParser {
     }
 
     public static String returnPath(String path) {
-        String result = "";
+        String result;
         if (URLParser.isFullUrl(path)) {
             result = path.replaceAll(schemeHostAndPortRegex, "");
         } else {

@@ -10,7 +10,6 @@ import org.slf4j.event.Level;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 
 /**

@@ -17,7 +17,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -29,7 +28,7 @@ import static org.slf4j.event.Level.TRACE;
  */
 public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWithContentTypeDTO> {
 
-    private static Map<String, Body.Type> fieldNameToType = new HashMap<>();
+    private static final Map<String, Body.Type> fieldNameToType = new HashMap<>();
     private static ObjectMapper objectMapper;
 
     static {
@@ -191,10 +190,9 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
             while ((currentToken = jsonParser.nextToken()) != JsonToken.END_OBJECT) {
                 switch (currentToken) {
                     case START_ARRAY:
-                        break;
                     case START_OBJECT:
-                        break;
-                    case END_OBJECT:
+                    case VALUE_TRUE:
+                    case VALUE_STRING:
                         break;
                     case FIELD_NAME:
                         if (jsonParser.getText().equalsIgnoreCase("not")) {
@@ -203,10 +201,6 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                             jsonParser.nextToken();
                             value = jsonParser.getText();
                         }
-                        break;
-                    case VALUE_TRUE:
-                        break;
-                    case VALUE_STRING:
                         break;
                 }
             }

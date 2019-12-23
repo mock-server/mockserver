@@ -40,7 +40,7 @@ public abstract class AbstractMockingIntegrationTestBase {
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(AbstractMockingIntegrationTestBase.class);
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
-    protected static List<String> headersToIgnore = ImmutableList.of(
+    protected static final List<String> headersToIgnore = ImmutableList.of(
         HttpHeaderNames.SERVER.toString(),
         HttpHeaderNames.EXPIRES.toString(),
         HttpHeaderNames.DATE.toString(),

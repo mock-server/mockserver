@@ -21,7 +21,7 @@ public class DelayDTOTest {
 
         // then
         assertThat(delay.getTimeUnit(), is(TimeUnit.DAYS));
-        assertThat(delay.getValue(), is(5l));
+        assertThat(delay.getValue(), is(5L));
     }
 
     @Test
@@ -33,7 +33,7 @@ public class DelayDTOTest {
 
         // then
         assertThat(delay.getTimeUnit(), is(TimeUnit.DAYS));
-        assertThat(delay.getValue(), is(5l));
+        assertThat(delay.getValue(), is(5L));
     }
 
     @Test
@@ -43,6 +43,6 @@ public class DelayDTOTest {
 
         // then
         assertThat(delay.getTimeUnit(), is(nullValue()));
-        assertThat(delay.getValue(), is(0l));
+        assertThat(delay.getValue(), is(0L));
     }
 }

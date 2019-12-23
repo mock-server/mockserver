@@ -15,7 +15,7 @@ import static org.mockserver.model.HttpResponse.response;
  */
 public class PrecannedTestExpectationResponseCallback implements ExpectationResponseCallback {
 
-    public static HttpResponse httpResponse = response()
+    public static final HttpResponse httpResponse = response()
             .withStatusCode(HttpStatusCode.ACCEPTED_202.code())
             .withHeaders(
                     header("x-callback", "test_callback_header"),

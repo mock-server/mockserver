@@ -49,7 +49,7 @@ public class BookServiceApacheHttpClient implements BookService {
     }
 
     public Book[] getAllBooks() {
-        String responseBody = "";
+        String responseBody;
         try {
             HttpResponse response = httpClient.execute(new HttpGet(new URIBuilder()
                 .setScheme("http")

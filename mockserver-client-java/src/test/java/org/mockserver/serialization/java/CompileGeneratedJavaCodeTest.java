@@ -1,6 +1,5 @@
 package org.mockserver.serialization.java;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
@@ -11,7 +10,6 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -270,7 +268,7 @@ public class CompileGeneratedJavaCodeTest {
         JavaCompiler.CompilationTask task = compiler.getTask(null, compiler.getStandardFileManager(null, null, null), null, null, null,
             Collections.singletonList(
                 new SimpleJavaFileObject(new URI("TestClass"), JavaFileObject.Kind.SOURCE) {
-                    public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+                    public CharSequence getCharContent(boolean ignoreEncodingErrors) {
                         return javaCode;
                     }
                 }

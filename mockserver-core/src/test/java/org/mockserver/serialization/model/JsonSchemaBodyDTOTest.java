@@ -3,7 +3,6 @@ package org.mockserver.serialization.model;
 import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.JsonSchemaBody;
-import org.mockserver.model.JsonSchemaBody;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;

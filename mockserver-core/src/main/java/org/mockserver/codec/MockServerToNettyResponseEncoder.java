@@ -14,7 +14,6 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.slf4j.event.Level;
 
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 

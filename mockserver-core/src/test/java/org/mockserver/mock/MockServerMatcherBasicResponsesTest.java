@@ -19,17 +19,14 @@ public class MockServerMatcherBasicResponsesTest {
     private MockServerMatcher mockServerMatcher;
     private HttpRequest httpRequest;
     private HttpResponse httpResponse;
-    private MockServerLogger mockLogFormatter;
-    private Scheduler scheduler;
-    private WebSocketClientRegistry webSocketClientRegistry;
 
     @Before
     public void prepareTestFixture() {
         httpRequest = new HttpRequest();
         httpResponse = new HttpResponse();
-        mockLogFormatter = mock(MockServerLogger.class);
-        scheduler = mock(Scheduler.class);
-        webSocketClientRegistry = mock(WebSocketClientRegistry.class);
+        MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
+        Scheduler scheduler = mock(Scheduler.class);
+        WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
         mockServerMatcher = new MockServerMatcher(mockLogFormatter, scheduler, webSocketClientRegistry);
     }
 

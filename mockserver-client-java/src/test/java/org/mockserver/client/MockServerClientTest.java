@@ -8,6 +8,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.internal.verification.AtLeast;
+import org.mockito.verification.VerificationMode;
 import org.mockserver.Version;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -28,9 +30,9 @@ import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;
@@ -47,7 +49,7 @@ import static org.mockserver.verify.VerificationTimes.once;
 public class MockServerClientTest {
 
     @Rule
-    public ExpectedException exception = ExpectedException.none();
+    public final ExpectedException exception = ExpectedException.none();
 
     @Mock
     private NettyHttpClient mockHttpClient;
@@ -141,7 +143,7 @@ public class MockServerClientTest {
     }
 
     @Test
-    public void shouldHandleUnmatchingServerVersion() {
+    public void shouldHandleNonMatchingServerVersion() {
         try {
             System.setProperty("MOCKSERVER_VERSION", "some_version");
 
@@ -697,18 +699,21 @@ public class MockServerClientTest {
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withStatusCode(HttpStatusCode.OK_200.code()));
 
         // when
-        boolean running = mockServerClient.isRunning();
+        boolean hasStarted = mockServerClient.hasStarted();
+        boolean hasStopped = mockServerClient.hasStopped();
 
         // then
-        assertTrue(running);
-        verify(mockHttpClient).sendRequest(
-            request()
-                .withHeader(HOST.toString(), "localhost:" + 1080)
-                .withMethod("PUT")
-                .withPath("/mockserver/status"),
-            20000,
-            TimeUnit.MILLISECONDS
-        );
+        assertThat(hasStopped, is(false));
+        assertThat(hasStarted, is(true));
+        verify(mockHttpClient, new AtLeast(1))
+            .sendRequest(
+                request()
+                    .withHeader(HOST.toString(), "localhost:" + 1080)
+                    .withMethod("PUT")
+                    .withPath("/mockserver/status"),
+                20000,
+                TimeUnit.MILLISECONDS
+            );
     }
 
     @Test
@@ -718,10 +723,12 @@ public class MockServerClientTest {
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenThrow(SocketConnectionException.class);
 
         // when
-        boolean running = mockServerClient.isRunning();
+        boolean hasStopped = mockServerClient.hasStopped();
+        boolean hasStarted = mockServerClient.hasStarted();
 
         // then
-        assertFalse(running);
+        assertThat(hasStopped, is(true));
+        assertThat(hasStarted, is(false));
         verify(mockHttpClient, atLeastOnce()).sendRequest(
             request()
                 .withHeader(HOST.toString(), "localhost:" + 1080)

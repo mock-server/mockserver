@@ -3,8 +3,6 @@ package org.mockserver.serialization.java;
 import org.junit.Test;
 import org.mockserver.model.SocketAddress;
 
-import java.io.IOException;
-
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 

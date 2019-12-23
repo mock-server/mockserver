@@ -7,8 +7,8 @@ import org.mockserver.model.StringBody;
  */
 public class StringBodyDTO extends BodyWithContentTypeDTO {
 
-    private String string;
-    private boolean subString;
+    private final String string;
+    private final boolean subString;
 
     public StringBodyDTO(StringBody stringBody) {
         this(stringBody, stringBody.getNot());

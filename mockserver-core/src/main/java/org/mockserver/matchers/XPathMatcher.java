@@ -5,7 +5,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
-import org.slf4j.event.Level;
 
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;

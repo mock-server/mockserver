@@ -27,7 +27,7 @@ public class ExpectationTest {
         HttpClassCallback httpClassCallback = new HttpClassCallback();
         HttpObjectCallback httpObjectCallback = new HttpObjectCallback();
         Times times = Times.exactly(3);
-        TimeToLive timeToLive = TimeToLive.exactly(TimeUnit.HOURS, 5l);
+        TimeToLive timeToLive = TimeToLive.exactly(TimeUnit.HOURS, 5L);
 
         // when
         Expectation expectationThatResponds = new Expectation(httpRequest, times, timeToLive).thenRespond(httpResponse);
@@ -124,9 +124,9 @@ public class ExpectationTest {
         assertFalse(new Expectation(request().withPath("un-matching"), Times.exactly(0), TimeToLive.unlimited()).thenRespond((HttpResponse)null).thenForward((HttpForward)null).isActive());
 
         // when ttl expired should return false
-        assertFalse(new Expectation(null, Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).isActive());
-        assertFalse(new Expectation(request(), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).isActive());
-        assertFalse(new Expectation(request().withPath("un-matching"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0l)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).isActive());
+        assertFalse(new Expectation(null, Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).isActive());
+        assertFalse(new Expectation(request(), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).isActive());
+        assertFalse(new Expectation(request().withPath("un-matching"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).thenRespond((HttpResponse)null).thenForward((HttpForward)null).isActive());
     }
 
     @Test

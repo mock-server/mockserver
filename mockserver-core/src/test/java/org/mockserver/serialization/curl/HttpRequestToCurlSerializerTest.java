@@ -107,7 +107,7 @@ public class HttpRequestToCurlSerializerTest {
                 request()
                         .withQueryStringParameters(
                                 param("parameterName1", "parameterValue1_1", "parameterValue1_2"),
-                                param("another parameter with spaces", "a value with single \'quotes\', double \"quotes\" and spaces")
+                                param("another parameter with spaces", "a value with single 'quotes', double \"quotes\" and spaces")
                         ),
                 new InetSocketAddress("localhost", 80)
         );
@@ -167,7 +167,7 @@ public class HttpRequestToCurlSerializerTest {
                         .withMethod("POST")
                         .withQueryStringParameters(
                                 param("parameterName1", "parameterValue1_1", "parameterValue1_2"),
-                                param("another parameter with spaces", "a value with single \'quotes\', double \"quotes\" and spaces")
+                                param("another parameter with spaces", "a value with single 'quotes', double \"quotes\" and spaces")
                         )
                         .withHeaders(
                                 new Header("headerName1", "headerValue1"),

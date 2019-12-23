@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 public class MockServerResponseToHttpServletResponseEncoderCookieHeaderTest {
 
     @Test
-    public void shouldOnlyMapACookieIfThereIsNoSetCookieHeader() throws UnsupportedEncodingException {
+    public void shouldOnlyMapACookieIfThereIsNoSetCookieHeader() {
         // given
         // - an HttpResponse
         HttpResponse httpResponse = new HttpResponse();

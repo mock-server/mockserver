@@ -36,7 +36,7 @@ import static org.mockserver.model.XmlSchemaBody.xmlSchema;
 public class HttpRequestSerializerIntegrationTest {
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    public final ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void shouldValidateHeaderValueIsList() {
@@ -611,6 +611,7 @@ public class HttpRequestSerializerIntegrationTest {
     }
 
     @Test
+    @SuppressWarnings("RedundantArrayCreation")
     public void shouldSerializeArray() {
         // when
         String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(

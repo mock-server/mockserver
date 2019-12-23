@@ -29,13 +29,11 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.util.Collections;
 import java.util.Date;
 
-import static com.google.common.net.MediaType.JSON_UTF_8;
 import static org.apache.commons.codec.Charsets.UTF_8;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -50,9 +48,9 @@ import static org.mockserver.model.PortBinding.portBinding;
  */
 public class ProxyServletTest {
 
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
-    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
+    private final HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
+    private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private final PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
 
     private HttpStateHandler httpStateHandler;
     private ActionHandler mockActionHandler;

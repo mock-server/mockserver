@@ -67,7 +67,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     private final HttpStateHandler httpStateHandler;
     private HttpRequestSerializer httpRequestSerializer;
     private WebSocketServerHandshaker handshaker;
-    private CircularHashMap<ChannelHandlerContext, HttpRequest> clientRegistry = new CircularHashMap<>(100);
+    private final Map<ChannelHandlerContext, HttpRequest> clientRegistry = new CircularHashMap<>(100);
     private MockServerMatcher mockServerMatcher;
     private MockServerEventLog mockServerEventLog;
     private ThreadPoolExecutor scheduler;

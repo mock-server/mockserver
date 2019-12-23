@@ -85,7 +85,7 @@ public class MockServerRuleTestWithMocks {
         mockServerRuleSinglePort.apply(mockStatement, Description.EMPTY).evaluate();
 
         // then
-        assertThat((ClientAndServer) mockServerClient, sameInstance(mockClientAndServer));
+        assertThat(mockServerClient, sameInstance(mockClientAndServer));
         assertThat(mockServerRuleSinglePort.getPort(), is(httpPort));
         assertThat(mockServerRuleSinglePort.getPorts(), is(new Integer[]{httpPort + 1, httpPort + 2}));
         verify(mockStatement).evaluate();
@@ -98,7 +98,7 @@ public class MockServerRuleTestWithMocks {
         mockServerRuleMultiplePorts.apply(mockStatement, Description.EMPTY).evaluate();
 
         // then
-        assertThat((ClientAndServer) mockServerClient, sameInstance(mockClientAndServer));
+        assertThat(mockServerClient, sameInstance(mockClientAndServer));
         assertThat(mockServerRuleMultiplePorts.getPort(), is(httpPort));
         assertThat(mockServerRuleMultiplePorts.getPorts(), is(new Integer[]{httpPort + 1, httpPort + 2}));
         verify(mockStatement).evaluate();

@@ -24,7 +24,7 @@ final class MockServerEventBus {
     }
 
     enum EventType {
-        STOP, RESET;
+        STOP, RESET
     }
 
     interface SubscriberHandler {

@@ -519,6 +519,7 @@ public class MockServerClient implements Stoppable {
      * @param times       the number of times this request must be matched
      * @throws AssertionError if the request has not been found
      */
+    @SuppressWarnings("DuplicatedCode")
     public MockServerClient verify(HttpRequest httpRequest, VerificationTimes times) throws AssertionError {
         if (httpRequest == null) {
             throw new IllegalArgumentException("verify(HttpRequest, VerificationTimes) requires a non null HttpRequest object");
@@ -547,6 +548,7 @@ public class MockServerClient implements Stoppable {
      *
      * @throws AssertionError if any request has been found
      */
+    @SuppressWarnings({"DuplicatedCode", "UnusedReturnValue"})
     public MockServerClient verifyZeroInteractions() throws AssertionError {
         Verification verification = verification().withRequest(request()).withTimes(exactly(0));
         String result = sendRequest(

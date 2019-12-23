@@ -1,14 +1,11 @@
 package org.mockserver.mock;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
-import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -20,7 +17,6 @@ import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.LogEntrySerializer;
-import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.slf4j.event.Level;
@@ -29,10 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 
-import static com.google.common.net.MediaType.JSON_UTF_8;
-import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -58,11 +51,11 @@ import static org.slf4j.event.Level.INFO;
 public class HttpStateHandlerTest {
 
     @Rule
-    public ExpectedException exception = ExpectedException.none();
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
-    private HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
-    private ExpectationSerializer httpExpectationSerializer = new ExpectationSerializer(new MockServerLogger());
-    private ExpectationToJavaSerializer httpExpectationToJavaSerializer = new ExpectationToJavaSerializer();
+    public final ExpectedException exception = ExpectedException.none();
+    private final HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
+    private final HttpRequestToJavaSerializer httpRequestToJavaSerializer = new HttpRequestToJavaSerializer();
+    private final ExpectationSerializer httpExpectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private final ExpectationToJavaSerializer httpExpectationToJavaSerializer = new ExpectationToJavaSerializer();
     @InjectMocks
     private HttpStateHandler httpStateHandler;
 

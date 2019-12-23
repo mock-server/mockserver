@@ -8,7 +8,7 @@ import org.mockserver.model.XmlBody;
  */
 public class XmlBodyDTO extends BodyWithContentTypeDTO {
 
-    private String xml;
+    private final String xml;
 
     public XmlBodyDTO(XmlBody xmlBody) {
         this(xmlBody, false);

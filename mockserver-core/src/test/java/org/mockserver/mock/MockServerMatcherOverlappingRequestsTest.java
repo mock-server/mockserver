@@ -24,7 +24,7 @@ public class MockServerMatcherOverlappingRequestsTest {
 
     private HttpResponse[] httpResponse;
 
-    private static Scheduler scheduler = new Scheduler(new MockServerLogger());
+    private static final Scheduler scheduler = new Scheduler(new MockServerLogger());
 
     @Before
     public void prepareTestFixture() {

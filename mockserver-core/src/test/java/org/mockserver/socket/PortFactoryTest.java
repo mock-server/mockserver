@@ -15,7 +15,7 @@ public class PortFactoryTest {
     @Test
     public void shouldFindFreePort() throws IOException {
         // when
-        int freePort = new PortFactory().findFreePort();
+        int freePort = PortFactory.findFreePort();
 
         // then
         assertTrue(new ServerSocket(freePort).isBound());

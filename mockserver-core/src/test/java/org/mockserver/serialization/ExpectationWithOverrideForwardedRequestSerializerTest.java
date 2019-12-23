@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -97,7 +96,7 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
         .setTimeToLive(new TimeToLiveDTO(TimeToLive.exactly(TimeUnit.HOURS, 2L)));
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    public final ExpectedException thrown = ExpectedException.none();
 
     @Mock
     private ObjectMapper objectMapper;
@@ -131,6 +130,7 @@ public class ExpectationWithOverrideForwardedRequestSerializerTest {
     }
 
     @Test
+    @SuppressWarnings("RedundantArrayCreation")
     public void shouldSerializeArray() throws IOException {
         // given
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);

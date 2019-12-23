@@ -23,9 +23,6 @@ import org.mockserver.verify.VerificationTimes;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -58,7 +55,7 @@ public class VerificationSerializerTest {
     private VerificationSerializer verificationSerializer;
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    public final ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setupTestFixture() {

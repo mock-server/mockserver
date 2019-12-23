@@ -5,7 +5,6 @@ import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
 import org.mockserver.model.NottableString;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.mockserver.collections.CaseInsensitiveRegexMultiMap.multiMap;

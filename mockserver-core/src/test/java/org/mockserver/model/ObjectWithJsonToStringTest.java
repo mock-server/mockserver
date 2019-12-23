@@ -8,7 +8,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 
 public class ObjectWithJsonToStringTest {
 
-    private class TestObject extends ObjectWithJsonToString {
+    private static class TestObject extends ObjectWithJsonToString {
         private String stringField = "stringField";
         private int intField = 100;
 

@@ -36,9 +36,9 @@ public class DirectProxyViaLoadBalanceIntegrationTest {
     private static ClientAndServer targetClientAndServer;
     private static ClientAndServer loadBalancerClientAndServer;
 
-    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(DirectProxyViaLoadBalanceIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(DirectProxyViaLoadBalanceIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
-    private static NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
+    private static final NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
 
     @BeforeClass
     public static void startServer() {

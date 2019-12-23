@@ -33,7 +33,7 @@ public class HttpProxyContentLengthIntegrationTest {
     private static ClientAndServer targetClientAndServer;
     private static ClientAndServer proxyClientAndServer;
 
-    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(HttpProxyContentLengthIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(HttpProxyContentLengthIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
     @BeforeClass
     public static void startServer() {

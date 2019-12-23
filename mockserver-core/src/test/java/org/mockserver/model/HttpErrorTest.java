@@ -16,8 +16,9 @@ import static org.mockserver.model.HttpError.error;
 public class HttpErrorTest {
 
     @Test
+    @SuppressWarnings("AccessStaticViaInstance")
     public void shouldAlwaysCreateNewObject() {
-        assertEquals(new HttpError().error(), error());
+        assertEquals(error(), error());
         assertNotSame(error(), error());
     }
 

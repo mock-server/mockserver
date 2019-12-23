@@ -12,7 +12,6 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.MediaType;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.scheduler.Scheduler;
@@ -32,13 +31,10 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
-import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.MediaType.APPLICATION_JSON_UTF_8;
@@ -49,9 +45,9 @@ import static org.mockserver.model.PortBinding.portBinding;
  */
 public class MockServerServletTest {
 
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
-    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
+    private final HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
+    private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private final PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
 
     private HttpStateHandler httpStateHandler;
     private ActionHandler mockActionHandler;
@@ -185,7 +181,7 @@ public class MockServerServletTest {
     }
 
     @Test
-    public void shouldStop() throws InterruptedException {
+    public void shouldStop() {
         // given
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
             "PUT",

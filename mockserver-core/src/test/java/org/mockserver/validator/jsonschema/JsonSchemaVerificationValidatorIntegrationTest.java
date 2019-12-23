@@ -13,7 +13,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator
  */
 public class JsonSchemaVerificationValidatorIntegrationTest {
 
-    private JsonSchemaValidator jsonSchemaValidator = jsonSchemaHttpRequestValidator(new MockServerLogger());
+    private final JsonSchemaValidator jsonSchemaValidator = jsonSchemaHttpRequestValidator(new MockServerLogger());
 
     @Test
     public void shouldValidateValidCompleteRequestWithStringBody() {

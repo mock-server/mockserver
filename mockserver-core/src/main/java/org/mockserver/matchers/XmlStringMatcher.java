@@ -17,7 +17,6 @@ import java.io.IOException;
 
 import static org.mockserver.model.NottableString.string;
 import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom
@@ -27,7 +26,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
     private final MockServerLogger mockServerLogger;
     private DiffBuilder diffBuilder;
     private NottableString matcher = string("THIS SHOULD NEVER MATCH");
-    private StringToXmlDocumentParser stringToXmlDocumentParser = new StringToXmlDocumentParser();
+    private final StringToXmlDocumentParser stringToXmlDocumentParser = new StringToXmlDocumentParser();
 
     XmlStringMatcher(MockServerLogger mockServerLogger, final String matcher) {
         this(mockServerLogger, string(matcher));

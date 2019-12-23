@@ -23,7 +23,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator
 public class JsonSchemaExpectationValidatorIntegrationTest {
 
     // given
-    private JsonSchemaValidator jsonSchemaValidator = jsonSchemaExpectationValidator(new MockServerLogger());
+    private final JsonSchemaValidator jsonSchemaValidator = jsonSchemaExpectationValidator(new MockServerLogger());
 
     @Test
     public void shouldValidateSerialisedCompleteDTO() {

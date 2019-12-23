@@ -25,11 +25,9 @@ public class HttpResponseTemplateActionHandlerTest {
 
     private HttpResponseTemplateActionHandler httpResponseTemplateActionHandler;
 
-    private MockServerLogger mockLogFormatter;
-
     @Before
     public void setupMocks() {
-        mockLogFormatter = mock(MockServerLogger.class);
+        MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
         httpResponseTemplateActionHandler = new HttpResponseTemplateActionHandler(mockLogFormatter);
         initMocks(this);
     }

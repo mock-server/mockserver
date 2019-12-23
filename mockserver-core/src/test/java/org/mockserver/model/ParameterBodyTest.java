@@ -2,7 +2,7 @@ package org.mockserver.model;
 
 import org.junit.Test;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -18,7 +18,7 @@ public class ParameterBodyTest {
     public void shouldReturnValuesSetInConstructor() {
         // when
         ParameterBody parameterBody = new ParameterBody(
-                new Parameter("some", "value")
+            new Parameter("some", "value")
         );
 
         // then
@@ -29,8 +29,8 @@ public class ParameterBodyTest {
     @Test
     public void shouldReturnValuesSetInConstructorWithList() {
         // when
-        ParameterBody parameterBody = new ParameterBody(Arrays.asList(
-                new Parameter("some", "value")
+        ParameterBody parameterBody = new ParameterBody(Collections.singletonList(
+            new Parameter("some", "value")
         ));
 
         // then
@@ -42,7 +42,7 @@ public class ParameterBodyTest {
     public void shouldReturnValueSetInStaticConstructor() {
         // when
         ParameterBody parameterBody = params(
-                new Parameter("some", "value")
+            new Parameter("some", "value")
         );
 
         // then
@@ -53,8 +53,8 @@ public class ParameterBodyTest {
     @Test
     public void shouldReturnValueSetInStaticConstructorWithList() {
         // when
-        ParameterBody parameterBody = params(Arrays.asList(
-                new Parameter("some", "value")
+        ParameterBody parameterBody = params(Collections.singletonList(
+            new Parameter("some", "value")
         ));
 
         // then

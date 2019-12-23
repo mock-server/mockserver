@@ -35,8 +35,8 @@ import static org.mockserver.stop.Stop.stopQuietly;
 public class NettyHttpClientErrorHandlingTest {
 
     @Rule
-    public ExpectedException exception = ExpectedException.none();
-    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(NettyHttpClientErrorHandlingTest.class.getSimpleName() + "-eventLoop"));
+    public final ExpectedException exception = ExpectedException.none();
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(NettyHttpClientErrorHandlingTest.class.getSimpleName() + "-eventLoop"));
     private final MockServerLogger mockServerLogger = new MockServerLogger();
 
     @AfterClass

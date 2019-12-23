@@ -21,7 +21,7 @@ import static org.mockserver.model.NottableString.string;
  */
 public class HeadersTest {
     @Test
-    public void shouldBuildHeader() throws Exception {
+    public void shouldBuildHeader() {
         // given
         Headers headers = new Headers();
 
@@ -36,7 +36,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldAddEntriesAsHeaderVarargs() throws Exception {
+    public void shouldAddEntriesAsHeaderVarargs() {
         // given
         Headers headers = new Headers();
 
@@ -57,7 +57,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldAddEntriesAsHeaderList() throws Exception {
+    public void shouldAddEntriesAsHeaderList() {
         // given
         Headers headers = new Headers();
 
@@ -78,7 +78,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldAddEntriesAsMap() throws Exception {
+    public void shouldAddEntriesAsMap() {
         // given
         Headers headers = new Headers();
         Map<String, List<String>> entries = new LinkedHashMap<>();
@@ -99,7 +99,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldAddEntryAsCookie() throws Exception {
+    public void shouldAddEntryAsCookie() {
         // given
         Headers headers = new Headers();
 
@@ -118,7 +118,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldAddEntryAsNameAndValueString() throws Exception {
+    public void shouldAddEntryAsNameAndValueString() {
         // given
         Headers headers = new Headers();
 
@@ -137,7 +137,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldAddEntryAsNameAndValueNottableString() throws Exception {
+    public void shouldAddEntryAsNameAndValueNottableString() {
         // given
         Headers headers = new Headers();
 
@@ -156,7 +156,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldReplaceEntryWithHeader() throws Exception {
+    public void shouldReplaceEntryWithHeader() {
         // given
         Headers headers = new Headers();
         headers.withEntry(header("name_one", "value_one_one", "value_one_two"));
@@ -176,7 +176,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldReplaceEntryWithStrings() throws Exception {
+    public void shouldReplaceEntryWithStrings() {
         // given
         Headers headers = new Headers();
         headers.withEntry(header("name_one", "value_one_one", "value_one_two"));
@@ -196,7 +196,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldReplaceEntryWithHeaderIgnoringCase() throws Exception {
+    public void shouldReplaceEntryWithHeaderIgnoringCase() {
         // given
         Headers headers = new Headers();
         headers.withEntry(header("name_one", "value_one_one", "value_one_two"));
@@ -216,7 +216,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldReplaceEntryWithStringsIgnoringCase() throws Exception {
+    public void shouldReplaceEntryWithStringsIgnoringCase() {
         // given
         Headers headers = new Headers();
         headers.withEntry(header("name_one", "value_one_one", "value_one_two"));
@@ -236,7 +236,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldRetrieveEntryValues() throws Exception {
+    public void shouldRetrieveEntryValues() {
         // given
         Headers headers = new Headers();
         headers.withEntry(header("name_one", "value_one_one", "value_one_two"));
@@ -255,7 +255,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldGetFirstEntry() throws Exception {
+    public void shouldGetFirstEntry() {
         // given
         Headers headers = new Headers();
         headers.withEntry(header("name_one", "value_one_one", "value_one_two"));
@@ -270,7 +270,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldContainEntryByKey() throws Exception {
+    public void shouldContainEntryByKey() {
         // given
         Headers headers = new Headers();
         headers.withEntry(header("name_one", "value_one_one", "value_one_two"));
@@ -283,7 +283,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldContainEntryByKeyAndValueString() throws Exception {
+    public void shouldContainEntryByKeyAndValueString() {
         // given
         Headers headers = new Headers();
         headers.withEntry(header("name_one", "value_one_one", "value_one_two"));
@@ -298,7 +298,7 @@ public class HeadersTest {
     }
 
     @Test
-    public void shouldContainEntryByKeyAndValueNottableString() throws Exception {
+    public void shouldContainEntryByKeyAndValueNottableString() {
         // given
         Headers headers = new Headers();
         headers.withEntry(string("name_one"), not("value_one_one"), not("value_one_two"));

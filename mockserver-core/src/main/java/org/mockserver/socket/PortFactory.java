@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class PortFactory {
 
-    private static Random random = new Random();
+    private static final Random random = new Random();
 
     public static int findFreePort() {
         int[] freePorts = findFreePorts(1);

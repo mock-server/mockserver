@@ -35,10 +35,10 @@ import static org.mockserver.model.Parameter.param;
 public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extends AbstractExtendedSameJVMMockingIntegrationTest {
 
     @Rule
-    public ExpectedException exception = ExpectedException.none();
+    public final ExpectedException exception = ExpectedException.none();
 
     @Test
-    public void shouldReturnResponseByMatchingUrlEncodedPath() throws UnsupportedEncodingException {
+    public void shouldReturnResponseByMatchingUrlEncodedPath() {
         // when
         mockServerClient
             .when(

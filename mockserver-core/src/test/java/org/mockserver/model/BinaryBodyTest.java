@@ -23,10 +23,11 @@ public class BinaryBodyTest {
     private final Base64Converter base64Converter = new Base64Converter();
 
     @Test
+    @SuppressWarnings("AccessStaticViaInstance")
     public void shouldAlwaysCreateNewObject() {
         byte[] body = DatatypeConverter.parseBase64Binary("some_body");
 
-        assertEquals(new BinaryBody(body).binary(body), binary(body));
+        assertEquals(binary(body), binary(body));
         assertNotSame(binary(body), binary(body));
     }
 

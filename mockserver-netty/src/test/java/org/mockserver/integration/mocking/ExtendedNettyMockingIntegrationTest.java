@@ -36,7 +36,7 @@ public class ExtendedNettyMockingIntegrationTest extends AbstractExtendedNettyMo
     }
 
     @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+    public final ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void shouldThrowExceptionIfFailToBindToSocket() {

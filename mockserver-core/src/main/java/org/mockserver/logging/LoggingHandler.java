@@ -166,19 +166,19 @@ public class LoggingHandler extends ChannelDuplexHandler {
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
         logMessage(ctx, "RECEIVED", msg);
         ctx.fireChannelRead(msg);
     }
 
     @Override
-    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
         logMessage(ctx, "WRITE", msg);
         ctx.write(msg, promise);
     }
 
     @Override
-    public void flush(ChannelHandlerContext ctx) throws Exception {
+    public void flush(ChannelHandlerContext ctx) {
         logger.trace(format(ctx, "FLUSH"));
         ctx.flush();
     }

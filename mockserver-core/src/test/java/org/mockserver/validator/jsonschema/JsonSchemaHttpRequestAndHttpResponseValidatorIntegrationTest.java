@@ -13,7 +13,7 @@ import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestAndHttpRe
  */
 public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
 
-    private JsonSchemaValidator jsonSchemaValidator = jsonSchemaHttpRequestAndHttpResponseValidator(new MockServerLogger());
+    private final JsonSchemaValidator jsonSchemaValidator = jsonSchemaHttpRequestAndHttpResponseValidator(new MockServerLogger());
 
     private final String completeSerialisedHttpRequestAndHttpResponse = "{" + NEW_LINE +
         "  \"httpRequest\" : {" + NEW_LINE +

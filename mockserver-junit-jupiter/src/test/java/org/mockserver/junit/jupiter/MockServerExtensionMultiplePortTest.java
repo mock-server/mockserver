@@ -13,7 +13,7 @@ import static org.junit.Assert.assertThat;
 @ExtendWith(MockServerExtension.class)
 @MockServerSettings(ports = {8787, 8888})
 class MockServerExtensionMultiplePortTest {
-    private MockServerClient client;
+    private final MockServerClient client;
 
     public MockServerExtensionMultiplePortTest(MockServerClient client) {
         this.client = client;
@@ -22,7 +22,7 @@ class MockServerExtensionMultiplePortTest {
     @Test
     void injectsClientWithStartedServer() {
         assertThat(client, is(not(nullValue())));
-        assertThat(client.isRunning(), is(true));
+        assertThat(client.hasStarted(), is(true));
     }
 
     @Test

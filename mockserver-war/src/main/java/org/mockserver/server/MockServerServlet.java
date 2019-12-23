@@ -46,7 +46,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
     // serializers
     private PortBindingSerializer portBindingSerializer;
     // mappers
-    private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerRequestDecoder(new MockServerLogger());
+    private HttpServletRequestToMockServerRequestDecoder httpServletRequestToMockServerRequestDecoder;
     // mockserver
     private ActionHandler actionHandler;
     private EventLoopGroup workerGroup = new NioEventLoopGroup(ConfigurationProperties.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));

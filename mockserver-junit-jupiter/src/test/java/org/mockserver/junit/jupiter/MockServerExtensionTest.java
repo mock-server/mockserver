@@ -2,7 +2,6 @@ package org.mockserver.junit.jupiter;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockserver.client.MockServerClient;
 
 import static org.hamcrest.Matchers.nullValue;
@@ -12,7 +11,7 @@ import static org.junit.Assert.assertThat;
 
 @ExtendWith(MockServerExtension.class)
 class MockServerExtensionTest {
-    private MockServerClient client;
+    private final MockServerClient client;
 
     public MockServerExtensionTest(MockServerClient client) {
         this.client = client;
@@ -21,7 +20,7 @@ class MockServerExtensionTest {
     @Test
     void injectsClientWithStartedServer() {
         assertThat(client, is(not(nullValue())));
-        assertThat(client.isRunning(), is(true));
+        assertThat(client.hasStarted(), is(true));
     }
 
     @Test

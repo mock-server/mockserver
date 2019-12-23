@@ -28,7 +28,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class VerificationSequenceSerializationErrorsTest {
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    public final ExpectedException thrown = ExpectedException.none();
     @Mock
     private ObjectMapper objectMapper;
     @Mock
@@ -58,7 +58,7 @@ public class VerificationSequenceSerializationErrorsTest {
     }
 
     @Test
-    public void shouldHandleExceptionWhileDeserializingObject() throws IOException {
+    public void shouldHandleExceptionWhileDeserializingObject() {
         try {
             // when
             verificationSequenceSerializer.deserialize("requestBytes");

@@ -54,7 +54,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
 
     public abstract MockServerClient getProxyClient();
 
-    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(AbstractClientSecureProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(AbstractClientSecureProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
     @AfterClass
     public static void stopEventLoopGroup() {
@@ -336,7 +336,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
     }
 
     @Test
-    public void shouldPreventUnauthenticatedConnectRequestWhenClientConfiguredWithProxyConfiguration() throws Exception {
+    public void shouldPreventUnauthenticatedConnectRequestWhenClientConfiguredWithProxyConfiguration() {
         String existingUsername = ConfigurationProperties.proxyAuthenticationUsername();
         String existingPassword = ConfigurationProperties.proxyAuthenticationPassword();
         try {

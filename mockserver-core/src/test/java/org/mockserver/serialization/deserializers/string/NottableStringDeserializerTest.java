@@ -11,7 +11,6 @@ import java.io.IOException;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.model.Not.not;
 import static org.mockserver.model.NottableString.string;
 
 /**

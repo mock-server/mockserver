@@ -861,11 +861,12 @@ public class MockServerClientIntegrationTest {
         echoServerOne.withNextResponse(response().withStatusCode(200));
 
         // when
-        boolean isRunning = mockServerClientOne.isRunning();
+        boolean hasStarted = mockServerClientOne.hasStarted();
+        boolean hasStopped = mockServerClientOne.hasStopped();
 
         // then
-        assertThat(isRunning, is(true));
-        assertThat(retrieveRequests(request()).size(), is(1));
+        assertThat(hasStopped, is(false));
+        assertThat(hasStarted, is(true));
         String result = verify(verification().withRequest(
             request()
                 .withMethod("PUT")
@@ -886,33 +887,38 @@ public class MockServerClientIntegrationTest {
 
     @Test
     public void shouldQueryRunningStatusWhenNotRunning() {
-        // given
-        int numberOfRetries = 11;
-        HttpResponse[] httpResponses = new HttpResponse[numberOfRetries];
-        Arrays.fill(httpResponses, response().withStatusCode(404));
-        echoServerOne.withNextResponse(httpResponses);
+        try {
+            // given
+            int numberOfRetries = 20;
+            HttpResponse[] httpResponses = new HttpResponse[numberOfRetries];
+            Arrays.fill(httpResponses, response().withStatusCode(404));
+            echoServerOne.withNextResponse(httpResponses);
 
-        // when
-        boolean isRunning = mockServerClientOne.isRunning();
+            // when
+            boolean hasStopped = mockServerClientOne.hasStopped();
+            boolean hasStarted = mockServerClientOne.hasStarted();
 
-        // then
-        assertThat(isRunning, is(false));
-        assertThat(retrieveRequests(request()).size(), is(numberOfRetries));
-        String result = verify(verification().withRequest(
-            request()
-                .withMethod("PUT")
-                .withPath("/mockserver/status")
-                .withHeaders(
-                    new Header("host", "localhost:" + echoServerOne.getPort()),
-                    new Header("accept-encoding", "gzip,deflate"),
-                    new Header("content-length", "0"),
-                    new Header("connection", "keep-alive")
-                )
-                .withSecure(false)
-                .withKeepAlive(true)
-        ));
-        if (result != null && !result.isEmpty()) {
-            throw new AssertionError(result);
+            // then
+            assertThat(hasStopped, is(true));
+            assertThat(hasStarted, is(false));
+            String result = verify(verification().withRequest(
+                request()
+                    .withMethod("PUT")
+                    .withPath("/mockserver/status")
+                    .withHeaders(
+                        new Header("host", "localhost:" + echoServerOne.getPort()),
+                        new Header("accept-encoding", "gzip,deflate"),
+                        new Header("content-length", "0"),
+                        new Header("connection", "keep-alive")
+                    )
+                    .withSecure(false)
+                    .withKeepAlive(true)
+            ));
+            if (result != null && !result.isEmpty()) {
+                throw new AssertionError(result);
+            }
+        } finally {
+            echoServerOne.clearNextResponse();
         }
     }
 

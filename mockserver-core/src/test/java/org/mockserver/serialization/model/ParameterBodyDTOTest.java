@@ -5,7 +5,7 @@ import org.mockserver.model.Body;
 import org.mockserver.model.Parameter;
 import org.mockserver.model.ParameterBody;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -21,7 +21,7 @@ public class ParameterBodyDTOTest {
     public void shouldReturnValuesSetInConstructor() {
         // when
         ParameterBodyDTO parameterBody = new ParameterBodyDTO(new ParameterBody(
-                new Parameter("some", "value")
+            new Parameter("some", "value")
         ));
 
         // then
@@ -33,7 +33,7 @@ public class ParameterBodyDTOTest {
     public void shouldBuildCorrectObject() {
         // when
         ParameterBody parameterBody = new ParameterBodyDTO(new ParameterBody(
-                new Parameter("some", "value")
+            new Parameter("some", "value")
         )).buildObject();
 
         // then
@@ -44,22 +44,22 @@ public class ParameterBodyDTOTest {
     @Test
     public void shouldReturnCorrectObjectFromStaticBuilder() {
         assertThat(params(
-                        new Parameter("some", "value")
-                ),
-                is(
-                        new ParameterBody(
-                                new Parameter("some", "value")
-                        )
+            new Parameter("some", "value")
+            ),
+            is(
+                new ParameterBody(
+                    new Parameter("some", "value")
                 )
+            )
         );
-        assertThat(params(Arrays.asList(
-                        new Parameter("some", "value")
-                )),
-                is(
-                        new ParameterBody(
-                                new Parameter("some", "value")
-                        )
+        assertThat(params(Collections.singletonList(
+            new Parameter("some", "value")
+            )),
+            is(
+                new ParameterBody(
+                    new Parameter("some", "value")
                 )
+            )
         );
     }
 }

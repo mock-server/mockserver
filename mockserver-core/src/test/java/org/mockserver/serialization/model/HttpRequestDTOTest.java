@@ -8,7 +8,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertTrue;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.NottableString.string;
@@ -76,7 +75,7 @@ public class HttpRequestDTOTest {
         HttpRequest builtHttpRequest = new HttpRequestDTO(httpRequest).buildObject();
 
         // then
-        assertThat(builtHttpRequest.getBody(), Is.<org.mockserver.model.Body>is(exact(body)));
+        assertThat(builtHttpRequest.getBody(), Is.is(exact(body)));
         assertThat(builtHttpRequest.getCookieList(), containsInAnyOrder(cookie));
         assertThat(builtHttpRequest.getHeaderList(), containsInAnyOrder(header));
         assertThat(builtHttpRequest.getMethod(), is(string(method)));

@@ -20,7 +20,7 @@ import static org.mockserver.model.Parameter.param;
  */
 public class ParametersDeserializerTest {
 
-    private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     @Test
     public void shouldSerializeThenDeserializer() throws IOException {

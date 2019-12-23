@@ -173,13 +173,13 @@ public class XmlStringMatcherTest {
     @Test
     public void shouldNotMatchNullTest() {
         assertFalse(new XmlStringMatcher(new MockServerLogger(),"some_value").matches(null, string(null)));
-        assertFalse(new XmlStringMatcher(new MockServerLogger(),"some_value").matches((String) null));
+        assertFalse(new XmlStringMatcher(new MockServerLogger(),"some_value").matches(null));
     }
 
     @Test
     public void shouldMatchNullTest() {
         assertTrue(not(new XmlStringMatcher(new MockServerLogger(),"some_value")).matches(null, string(null)));
-        assertTrue(not(new XmlStringMatcher(new MockServerLogger(),"some_value")).matches((String) null));
+        assertTrue(not(new XmlStringMatcher(new MockServerLogger(),"some_value")).matches(null));
     }
 
     @Test

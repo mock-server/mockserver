@@ -4,7 +4,7 @@ import io.netty.util.CharsetUtil;
 import org.junit.Test;
 import org.mockserver.serialization.Base64Converter;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
-import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
@@ -32,7 +31,7 @@ public class HttpResponseTest {
 
     @Test
     public void shouldAlwaysCreateNewObject() {
-        assertEquals(new HttpResponse().response(), response());
+        assertEquals(response(), response());
         assertNotSame(response(), response());
     }
 
@@ -51,13 +50,13 @@ public class HttpResponseTest {
         assertEquals(base64Converter.bytesToBase64String("somebody".getBytes(UTF_8)), new HttpResponse().withBody("somebody".getBytes(UTF_8)).getBodyAsString());
         assertEquals("somebody", new HttpResponse().withBody("somebody").getBodyAsString());
         assertNull(new HttpResponse().withBody((byte[]) null).getBodyAsString());
-        assertEquals(null, new HttpResponse().withBody((String) null).getBodyAsString());
+        assertNull(new HttpResponse().withBody((String) null).getBodyAsString());
     }
 
     @Test
     public void returnsHeaders() {
         assertEquals(new Header("name", "value"), new HttpResponse().withHeaders(new Header("name", "value")).getHeaderList().get(0));
-        assertEquals(new Header("name", "value"), new HttpResponse().withHeaders(Arrays.asList(new Header("name", "value"))).getHeaderList().get(0));
+        assertEquals(new Header("name", "value"), new HttpResponse().withHeaders(Collections.singletonList(new Header("name", "value"))).getHeaderList().get(0));
         assertEquals(new Header("name", "value"), new HttpRequest().withHeader(new Header("name", "value")).getHeaderList().get(0));
         assertEquals(new Header("name", "value_one", "value_two"), new HttpRequest().withHeader(new Header("name", "value_one")).withHeader(new Header("name", "value_two")).getHeaderList().get(0));
     }
@@ -127,7 +126,7 @@ public class HttpResponseTest {
         assertEquals(new Cookie("name", ""), new HttpResponse().withCookies(new Cookie("name", "")).getCookieList().get(0));
         assertEquals(new Cookie("name", null), new HttpResponse().withCookies(new Cookie("name", null)).getCookieList().get(0));
 
-        assertEquals(new Cookie("name", "value"), new HttpResponse().withCookies(Arrays.asList(new Cookie("name", "value"))).getCookieList().get(0));
+        assertEquals(new Cookie("name", "value"), new HttpResponse().withCookies(Collections.singletonList(new Cookie("name", "value"))).getCookieList().get(0));
 
         assertEquals(new Cookie("name", "value"), new HttpResponse().withCookie(new Cookie("name", "value")).getCookieList().get(0));
         assertEquals(new Cookie("name", "value"), new HttpResponse().withCookie("name", "value").getCookieList().get(0));

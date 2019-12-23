@@ -8,7 +8,7 @@ import org.mockserver.model.XPathBody;
  */
 public class XPathBodyDTO extends BodyDTO {
 
-    private String xpath;
+    private final String xpath;
 
     public XPathBodyDTO(XPathBody xPathBody) {
         this(xPathBody, false);

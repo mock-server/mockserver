@@ -36,7 +36,7 @@ public class MockServerResponseEncoderCookieHeaderTest {
     }
 
     @Test
-    public void shouldOnlyMapACookieIfThereIsNoSetCookieHeader() throws UnsupportedEncodingException {
+    public void shouldOnlyMapACookieIfThereIsNoSetCookieHeader() {
         // given
         // - an HttpResponse
         String cookieOne = "cookieName1=\"\"; Expires=Thu, 01-Jan-1970 00:00:10 GMT; Path=/";

@@ -9,15 +9,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class PrintOutCurrentTestRunListener extends RunListener {
 
-    Map<String, Long> startTimes = new ConcurrentHashMap<>();
+    private static final Map<String, Long> START_TIMES = new ConcurrentHashMap<>();
 
     public void testStarted(Description description) {
-        startTimes.put(description.getMethodName(), System.currentTimeMillis());
+        START_TIMES.put(description.getMethodName(), System.currentTimeMillis());
         System.out.print("STARTED: " + description.getMethodName() + "\n");
     }
 
     public void testFinished(Description description) {
-        Long startTime = startTimes.get(description.getMethodName());
+        Long startTime = START_TIMES.get(description.getMethodName());
         Long duration = startTime != null ? System.currentTimeMillis() - startTime : null;
         System.out.print("FINISHED: " + description.getMethodName() + (duration != null ? " duration: " + duration : "") + "\n");
     }

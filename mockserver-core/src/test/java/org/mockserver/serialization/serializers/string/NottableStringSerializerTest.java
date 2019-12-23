@@ -7,7 +7,6 @@ import org.mockserver.model.NottableString;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.mockserver.model.Not.not;
 import static org.mockserver.model.NottableString.string;
 
 public class NottableStringSerializerTest {

@@ -7,6 +7,6 @@ import org.mockserver.client.MockServerClient;
  */
 public interface ExpectationInitializer {
 
-    public void initializeExpectations(MockServerClient mockServerClient);
+    void initializeExpectations(MockServerClient mockServerClient);
 
 }

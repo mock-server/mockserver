@@ -58,7 +58,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
         })));
 
         // and then - should add SOCKS handlers first
-        if (new MockServerLogger().isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE)) {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "LoggingHandler#0",
                 "Socks5CommandRequestDecoder#0",
@@ -116,7 +116,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
         embeddedChannel.writeInbound(Unpooled.wrappedBuffer("GET /somePath HTTP/1.1\r\nHost: some.random.host\r\n\r\n".getBytes(UTF_8)));
 
         // then - should add HTTP handlers last
-        if (new MockServerLogger().isEnabled(TRACE)) {
+        if (MockServerLogger.isEnabled(TRACE)) {
             assertThat(String.valueOf(embeddedChannel.pipeline().names()), embeddedChannel.pipeline().names(), contains(
                 "LoggingHandler#0",
                 "HttpServerCodec#0",

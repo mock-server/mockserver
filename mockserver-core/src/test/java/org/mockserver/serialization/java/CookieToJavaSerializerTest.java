@@ -3,7 +3,6 @@ package org.mockserver.serialization.java;
 import org.junit.Test;
 import org.mockserver.model.Cookie;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;

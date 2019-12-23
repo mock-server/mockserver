@@ -14,8 +14,9 @@ import static org.mockserver.model.HttpClassCallback.callback;
 public class HttpClassCallbackTest {
 
     @Test
+    @SuppressWarnings("AccessStaticViaInstance")
     public void shouldAlwaysCreateNewObject() {
-        assertEquals(new HttpClassCallback().callback(), callback());
+        assertEquals(callback(), callback());
         assertNotSame(callback(), callback());
     }
 

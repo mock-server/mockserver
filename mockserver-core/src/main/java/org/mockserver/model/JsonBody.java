@@ -68,7 +68,7 @@ public class JsonBody extends BodyWithContentType {
     }
 
     private static String toJson(Object object) {
-        String json = "";
+        String json;
         try {
             json = ObjectMapperFactory.createObjectMapper().writeValueAsString(object);
         } catch (JsonProcessingException e) {

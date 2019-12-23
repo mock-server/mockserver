@@ -34,7 +34,7 @@ public class MultiplePortMockingIntegrationTest extends AbstractBasicMockingInte
     public static void startServer() {
         mockServerClient = startClientAndServer(0, PortFactory.findFreePort(), 0, PortFactory.findFreePort());
         List<Integer> boundPorts = ((ClientAndServer) mockServerClient).getLocalPorts();
-        severHttpPort = boundPorts.toArray(new Integer[boundPorts.size()]);
+        severHttpPort = boundPorts.toArray(new Integer[0]);
     }
 
     @AfterClass

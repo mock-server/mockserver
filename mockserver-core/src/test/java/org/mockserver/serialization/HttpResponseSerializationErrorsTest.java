@@ -31,7 +31,7 @@ import static org.mockserver.character.Character.NEW_LINE;
 public class HttpResponseSerializationErrorsTest {
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    public final ExpectedException thrown = ExpectedException.none();
     @Mock
     private ObjectMapper objectMapper;
     @Mock
@@ -74,6 +74,7 @@ public class HttpResponseSerializationErrorsTest {
     }
 
     @Test
+    @SuppressWarnings("RedundantArrayCreation")
     public void shouldHandleNullAndEmptyWhileSerializingArray() {
         // when
         assertEquals("[]", httpResponseSerializer.serialize(new HttpResponse[]{}));

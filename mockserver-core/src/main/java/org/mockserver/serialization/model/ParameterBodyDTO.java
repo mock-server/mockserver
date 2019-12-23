@@ -10,7 +10,7 @@ import java.util.Objects;
  */
 public class ParameterBodyDTO extends BodyWithContentTypeDTO {
 
-    private Parameters parameters;
+    private final Parameters parameters;
 
     public ParameterBodyDTO(ParameterBody parameterBody) {
         this(parameterBody, false);

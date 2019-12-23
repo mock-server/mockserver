@@ -15,6 +15,7 @@ import java.util.List;
 @ChannelHandler.Sharable
 public class HttpContentLengthRemover extends MessageToMessageEncoder<DefaultHttpMessage> {
     @Override
+    @SuppressWarnings("unchecked")
     protected void encode(ChannelHandlerContext ctx, DefaultHttpMessage defaultHttpMessage, List out) {
         if (defaultHttpMessage.headers().contains(HttpHeaders.CONTENT_LENGTH, "", true)) {
             defaultHttpMessage.headers().remove(HttpHeaders.CONTENT_LENGTH);

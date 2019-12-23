@@ -10,7 +10,6 @@ import org.skyscreamer.jsonassert.JSONCompareResult;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.skyscreamer.jsonassert.JSONCompare.compareJSON;
 import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom

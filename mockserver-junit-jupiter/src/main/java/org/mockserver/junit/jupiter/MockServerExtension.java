@@ -35,7 +35,7 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
+    public void beforeAll(ExtensionContext context) {
         List<Integer> ports = new ArrayList<>();
         Optional<MockServerSettings> mockServerSettingsOptional = retrieveAnnotationFromTestClass(context);
         if (mockServerSettingsOptional.isPresent()) {
@@ -63,7 +63,7 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
     }
 
     @Override
-    public void afterAll(ExtensionContext extensionContext) throws Exception {
+    public void afterAll(ExtensionContext extensionContext) {
         if (!perTestSuite && client.isRunning()) {
             client.stop();
         }

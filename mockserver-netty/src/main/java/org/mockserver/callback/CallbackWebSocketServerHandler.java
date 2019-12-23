@@ -31,7 +31,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
     private static final String UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI = "/_mockserver_callback_websocket";
     private final MockServerLogger mockServerLogger;
     private WebSocketServerHandshaker handshaker;
-    private WebSocketClientRegistry webSocketClientRegistry;
+    private final WebSocketClientRegistry webSocketClientRegistry;
 
     public CallbackWebSocketServerHandler(HttpStateHandler httpStateHandler) {
         webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();

@@ -7,7 +7,6 @@ import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.socket.tls.NettySslContextFactory;
-import org.mockserver.socket.tls.SniHandler;
 import org.mockserver.unification.PortUnificationHandler;
 
 @ChannelHandler.Sharable

@@ -9,7 +9,6 @@ import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.PlatformDependent;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.logging.MockServerLogger;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 

@@ -14,10 +14,8 @@ import org.slf4j.event.Level;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.model.HttpRequest.request;

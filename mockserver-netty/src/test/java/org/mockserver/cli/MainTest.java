@@ -35,7 +35,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class MainTest {
 
-    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(MainTest.class.getSimpleName() + "-eventLoop"));
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(MainTest.class.getSimpleName() + "-eventLoop"));
 
     @AfterClass
     public static void stopEventLoopGroup() {
@@ -63,7 +63,7 @@ public class MainTest {
             );
 
             // then
-            assertThat(mockServerClient.isRunning(), is(true));
+            assertThat(mockServerClient.hasStarted(), is(true));
             assertThat(ConfigurationProperties.logLevel().toString(), is("DEBUG"));
         } finally {
             ConfigurationProperties.logLevel(originalLogLevel.toString());
@@ -95,7 +95,7 @@ public class MainTest {
                 );
 
             // then
-            assertThat(mockServerClient.isRunning(), is(true));
+            assertThat(mockServerClient.hasStarted(), is(true));
             assertThat(response.getBodyAsString(), is("port_forwarded_response"));
         } finally {
             stopQuietly(mockServerClient);
@@ -125,7 +125,7 @@ public class MainTest {
                 );
 
             // then
-            assertThat(mockServerClient.isRunning(), is(true));
+            assertThat(mockServerClient.hasStarted(), is(true));
             assertThat(response.getBodyAsString(), is("port_forwarded_response"));
         } finally {
             stopQuietly(mockServerClient);

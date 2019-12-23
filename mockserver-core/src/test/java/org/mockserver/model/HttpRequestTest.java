@@ -3,8 +3,8 @@ package org.mockserver.model;
 import junit.framework.TestCase;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -23,7 +23,7 @@ public class HttpRequestTest {
 
     @Test
     public void shouldAlwaysCreateNewObject() {
-        assertEquals(new HttpRequest().request(), HttpRequest.request());
+        assertEquals(request(), HttpRequest.request());
         assertNotSame(HttpRequest.request(), HttpRequest.request());
     }
 
@@ -52,7 +52,7 @@ public class HttpRequestTest {
     @Test
     public void returnsQueryStringParameters() {
         assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameters(new Parameter("name", "value")).getQueryStringParameterList().get(0));
-        assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameters(Arrays.asList(new Parameter("name", "value"))).getQueryStringParameterList().get(0));
+        assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameters(Collections.singletonList(new Parameter("name", "value"))).getQueryStringParameterList().get(0));
         assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameter(new Parameter("name", "value")).getQueryStringParameterList().get(0));
         assertEquals(new Parameter("name", "value"), new HttpRequest().withQueryStringParameter("name", "value").getQueryStringParameterList().get(0));
         assertEquals(new Parameter("name", "value_one", "value_two"), new HttpRequest().withQueryStringParameter(new Parameter("name", "value_one")).withQueryStringParameter(new Parameter("name", "value_two")).getQueryStringParameterList().get(0));
@@ -67,7 +67,7 @@ public class HttpRequestTest {
     @Test
     public void returnsHeaders() {
         assertEquals(new Header("name", "value"), new HttpRequest().withHeaders(new Header("name", "value")).getHeaderList().get(0));
-        assertEquals(new Header("name", "value"), new HttpRequest().withHeaders(Arrays.asList(new Header("name", "value"))).getHeaderList().get(0));
+        assertEquals(new Header("name", "value"), new HttpRequest().withHeaders(Collections.singletonList(new Header("name", "value"))).getHeaderList().get(0));
         assertEquals(new Header("name", "value"), new HttpRequest().withHeader(new Header("name", "value")).getHeaderList().get(0));
         assertEquals(new Header("name", "value"), new HttpRequest().withHeader("name", "value").getHeaderList().get(0));
         assertEquals(new Header("name", ".*"), new HttpRequest().withHeader(string("name")).getHeaderList().get(0));
@@ -111,7 +111,7 @@ public class HttpRequestTest {
         assertEquals(new Cookie("name", "value"), new HttpRequest().withCookies(new Cookie("name", "value")).getCookieList().get(0));
         assertEquals(new Cookie("name", ""), new HttpRequest().withCookies(new Cookie("name", "")).getCookieList().get(0));
         assertEquals(new Cookie("name", null), new HttpRequest().withCookies(new Cookie("name", null)).getCookieList().get(0));
-        assertEquals(new Cookie("name", "value"), new HttpRequest().withCookies(Arrays.asList(new Cookie("name", "value"))).getCookieList().get(0));
+        assertEquals(new Cookie("name", "value"), new HttpRequest().withCookies(Collections.singletonList(new Cookie("name", "value"))).getCookieList().get(0));
 
         assertEquals(new Cookie("name", "value"), new HttpRequest().withCookie(new Cookie("name", "value")).getCookieList().get(0));
         assertEquals(new Cookie("name", "value"), new HttpRequest().withCookie("name", "value").getCookieList().get(0));

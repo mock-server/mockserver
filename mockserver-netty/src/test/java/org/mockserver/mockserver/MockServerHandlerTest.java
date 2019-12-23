@@ -10,7 +10,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockserver.lifecycle.LifeCycle;
-import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.TimeService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -35,13 +34,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.net.MediaType.JSON_UTF_8;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -67,9 +63,9 @@ public class MockServerHandlerTest {
     private EmbeddedChannel embeddedChannel;
     @InjectMocks
     private MockServerHandler mockServerHandler;
-    private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
-    private ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
-    private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
+    private final HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(new MockServerLogger());
+    private final ExpectationSerializer expectationSerializer = new ExpectationSerializer(new MockServerLogger());
+    private final PortBindingSerializer portBindingSerializer = new PortBindingSerializer(new MockServerLogger());
 
     @BeforeClass
     public static void fixTime() {
@@ -230,7 +226,7 @@ public class MockServerHandlerTest {
     }
 
     @Test
-    public void shouldRetrieveLogMessages() throws InterruptedException {
+    public void shouldRetrieveLogMessages() {
         // given
         httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
         // when

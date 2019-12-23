@@ -4,12 +4,12 @@ import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.*;
-import org.mockserver.serialization.Base64Converter;
-import org.mockserver.streams.IOStreamUtils;
+import org.mockserver.model.Cookie;
+import org.mockserver.model.Header;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.model.NottableString;
 
 import javax.servlet.http.HttpServletResponse;
-import java.nio.charset.Charset;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 
@@ -18,12 +18,9 @@ import static io.netty.handler.codec.http.HttpHeaderNames.*;
  */
 public class MockServerResponseToHttpServletResponseEncoder {
 
-    private final Base64Converter base64Converter = new Base64Converter();
-    private final IOStreamUtils ioStreamUtils;
     private final BodyDecoderEncoder bodyDecoderEncoder;
 
     public MockServerResponseToHttpServletResponseEncoder(MockServerLogger mockServerLogger) {
-        ioStreamUtils = new IOStreamUtils(mockServerLogger);
         bodyDecoderEncoder = new BodyDecoderEncoder(mockServerLogger);
     }
 

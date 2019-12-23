@@ -14,7 +14,7 @@ import static org.mockserver.serialization.ObjectMapperFactory.createObjectMappe
 
 public class TimeToLiveDTOSerializerTest {
 
-    private ObjectMapper objectMapper = createObjectMapper(new TimeToLiveSerializer());
+    private final ObjectMapper objectMapper = createObjectMapper(new TimeToLiveSerializer());
 
     @Test
     public void shouldDeserializeExactTimesToLiveWithDTO() throws JsonProcessingException {

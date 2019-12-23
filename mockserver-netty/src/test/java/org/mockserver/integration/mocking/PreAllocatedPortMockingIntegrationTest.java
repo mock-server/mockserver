@@ -13,7 +13,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class PreAllocatedPortMockingIntegrationTest extends AbstractBasicMockingIntegrationTest {
 
-    private static int severHttpPort = PortFactory.findFreePort();
+    private static final int severHttpPort = PortFactory.findFreePort();
 
     @BeforeClass
     public static void startServer() {

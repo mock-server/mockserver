@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.mockserver.matchers.TimeToLive;
-import org.mockserver.serialization.model.TimeToLiveDTO;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.core.Is.is;
@@ -14,7 +13,7 @@ import static org.mockserver.serialization.ObjectMapperFactory.createObjectMappe
 
 public class TimeToLiveSerializerTest {
 
-    private ObjectMapper objectMapper = createObjectMapper(new TimeToLiveSerializer());
+    private final ObjectMapper objectMapper = createObjectMapper(new TimeToLiveSerializer());
 
     @Test
     public void shouldSerializeUnlimitedTimeToLive() throws JsonProcessingException {

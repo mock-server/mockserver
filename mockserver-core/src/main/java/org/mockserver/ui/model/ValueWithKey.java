@@ -7,8 +7,8 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
  */
 public class ValueWithKey {
 
-    private String key;
-    private Object value;
+    private final String key;
+    private final Object value;
 
     public ValueWithKey(ObjectWithReflectiveEqualsHashCodeToString value) {
         this.value = value;

@@ -185,7 +185,7 @@ public class JsonBodyTest {
         assertThat(jsonBody.getContentType(), is("application/json; charset=utf-16"));
     }
 
-    public class TestObject {
+    public static class TestObject {
         private String fieldOne = "valueOne";
         private String fieldTwo = "valueTwo";
 

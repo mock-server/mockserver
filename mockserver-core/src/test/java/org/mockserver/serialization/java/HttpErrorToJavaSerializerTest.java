@@ -19,7 +19,7 @@ public class HttpErrorToJavaSerializerTest {
     private final Base64Converter base64Converter = new Base64Converter();
 
     @Test
-    public void shouldSerializeFullObjectWithForwardAsJava() throws IOException {
+    public void shouldSerializeFullObjectWithForwardAsJava() {
         assertEquals(NEW_LINE +
                         "        error()" + NEW_LINE +
                         "                .withDelay(new Delay(TimeUnit.MILLISECONDS, 100))" + NEW_LINE +

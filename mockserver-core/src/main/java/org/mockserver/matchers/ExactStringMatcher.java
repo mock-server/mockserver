@@ -9,7 +9,6 @@ import org.mockserver.model.NottableString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.model.NottableString.string;
 import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.TRACE;
 
 /**
  * @author jamesdbloom

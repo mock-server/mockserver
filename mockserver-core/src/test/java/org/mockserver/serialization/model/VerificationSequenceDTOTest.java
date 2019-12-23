@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.mockserver.verify.VerificationSequence;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -80,7 +81,7 @@ public class VerificationSequenceDTOTest {
         VerificationSequenceDTO verificationSequenceDTO = new VerificationSequenceDTO(null);
 
         // then
-        assertThat(verificationSequenceDTO.getHttpRequests(), is(Arrays.<HttpRequestDTO>asList()));
+        assertThat(verificationSequenceDTO.getHttpRequests(), is(Collections.<HttpRequestDTO>emptyList()));
     }
 
     @Test
@@ -89,7 +90,7 @@ public class VerificationSequenceDTOTest {
         VerificationSequenceDTO verificationSequenceDTO = new VerificationSequenceDTO(new VerificationSequence());
 
         // then
-        assertThat(verificationSequenceDTO.getHttpRequests(), is(Arrays.<HttpRequestDTO>asList()));
+        assertThat(verificationSequenceDTO.getHttpRequests(), is(Collections.<HttpRequestDTO>emptyList()));
     }
 
 }

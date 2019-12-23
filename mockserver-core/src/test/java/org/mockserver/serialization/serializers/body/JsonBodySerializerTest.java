@@ -15,7 +15,7 @@ import static org.mockserver.model.Not.not;
 
 public class JsonBodySerializerTest {
 
-    public class TestObject {
+    public static class TestObject {
         private String fieldOne = "valueOne";
         private String fieldTwo = "valueTwo";
 

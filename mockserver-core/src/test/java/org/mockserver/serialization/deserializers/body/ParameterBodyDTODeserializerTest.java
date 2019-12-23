@@ -36,7 +36,7 @@ public class ParameterBodyDTODeserializerTest {
 
         // then
         assertThat(bodyDTO,
-            Is.<BodyDTO>is(new ParameterBodyDTO(params(
+            Is.is(new ParameterBodyDTO(params(
                 param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                 param("queryStringParameterTwoName", "queryStringParameterTwoValue")
             )))
@@ -59,7 +59,7 @@ public class ParameterBodyDTODeserializerTest {
 
         // then
         assertThat(bodyDTO,
-            Is.<BodyDTO>is(new ParameterBodyDTO(params(
+            Is.is(new ParameterBodyDTO(params(
                 param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                 param("queryStringParameterTwoName", "queryStringParameterTwoValue")
             )))
@@ -86,7 +86,7 @@ public class ParameterBodyDTODeserializerTest {
 
         // then
         assertThat(bodyDTO,
-            Is.<BodyDTO>is(new ParameterBodyDTO(params(
+            Is.is(new ParameterBodyDTO(params(
                 param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo"),
                 param("queryStringParameterTwoName", "queryStringParameterTwoValue")
             ), true))
@@ -110,7 +110,7 @@ public class ParameterBodyDTODeserializerTest {
 
         // then
         assertThat(bodyDTO,
-            Is.<BodyDTO>is(new ParameterBodyDTO(params(
+            Is.is(new ParameterBodyDTO(params(
                 param("queryStringParameterTwoName", "queryStringParameterTwoValue"),
                 param("queryStringParameterOneName", "queryStringParameterOneValueOne", "queryStringParameterOneValueTwo")
             ), true))
@@ -151,7 +151,7 @@ public class ParameterBodyDTODeserializerTest {
 
         // then
         assertThat(bodyDTO,
-            Is.<BodyDTO>is(new ParameterBodyDTO(params(
+            Is.is(new ParameterBodyDTO(params(
                 param(not("queryStringParameterOneName"), string("queryStringParameterOneValueOne"), string("queryStringParameterOneValueTwo")),
                 param(not("queryStringParameterTwoName"), string("queryStringParameterTwoValue"))
             )))
@@ -174,7 +174,7 @@ public class ParameterBodyDTODeserializerTest {
 
         // then
         assertThat(bodyDTO,
-            Is.<BodyDTO>is(new ParameterBodyDTO(params(
+            Is.is(new ParameterBodyDTO(params(
                 param(not("queryStringParameterOneName"), string("queryStringParameterOneValueOne"), string("queryStringParameterOneValueTwo")),
                 param(not("queryStringParameterTwoName"), string("queryStringParameterTwoValue"))
             )))
@@ -212,7 +212,7 @@ public class ParameterBodyDTODeserializerTest {
 
         // then
         assertThat(bodyDTO,
-            Is.<BodyDTO>is(new ParameterBodyDTO(params(
+            Is.is(new ParameterBodyDTO(params(
                 param(string("queryStringParameterOneName"), not("queryStringParameterOneValueOne"), not("queryStringParameterOneValueTwo")),
                 param(string("queryStringParameterTwoName"), not("queryStringParameterTwoValue"))
             )))
@@ -235,7 +235,7 @@ public class ParameterBodyDTODeserializerTest {
 
         // then
         assertThat(bodyDTO,
-            Is.<BodyDTO>is(new ParameterBodyDTO(params(
+            Is.is(new ParameterBodyDTO(params(
                 param(string("queryStringParameterOneName"), not("queryStringParameterOneValueOne"), not("queryStringParameterOneValueTwo")),
                 param(string("queryStringParameterTwoName"), not("queryStringParameterTwoValue"))
             )))
@@ -276,7 +276,7 @@ public class ParameterBodyDTODeserializerTest {
 
         // then
         assertThat(bodyDTO,
-            Is.<BodyDTO>is(new ParameterBodyDTO(params(
+            Is.is(new ParameterBodyDTO(params(
                 param(not("queryStringParameterOneName"), not("queryStringParameterOneValueOne"), not("queryStringParameterOneValueTwo")),
                 param(not("queryStringParameterTwoName"), not("queryStringParameterTwoValue"))
             )))
@@ -300,7 +300,7 @@ public class ParameterBodyDTODeserializerTest {
 
         // then
         assertThat(bodyDTO,
-            Is.<BodyDTO>is(new ParameterBodyDTO(params(
+            Is.is(new ParameterBodyDTO(params(
                 param(not("queryStringParameterOneName"), not("queryStringParameterOneValueOne"), not("queryStringParameterOneValueTwo")),
                 param(not("queryStringParameterTwoName"), not("queryStringParameterTwoValue")),
                 param(not("queryStringParameterThreeName"), not("queryStringParameterThreeValueOne"), not("queryStringParameterThreeValueTwo"), not("queryStringParameterThreeValueThree"))
@@ -336,7 +336,7 @@ public class ParameterBodyDTODeserializerTest {
 
         // then
         assertThat(bodyDTO,
-            Is.<BodyDTO>is(new ParameterBodyDTO(params(
+            Is.is(new ParameterBodyDTO(params(
                 param(not("queryStringParameterOneName"), string("queryStringParameterOneValueOne"), not("queryStringParameterOneValueTwo")),
                 param(string("queryStringParameterTwoName"), not("queryStringParameterTwoValue"))
             )))
@@ -359,7 +359,7 @@ public class ParameterBodyDTODeserializerTest {
 
         // then
         assertThat(bodyDTO,
-            Is.<BodyDTO>is(new ParameterBodyDTO(params(
+            Is.is(new ParameterBodyDTO(params(
                 param(not("queryStringParameterOneName"), string("queryStringParameterOneValueOne"), not("queryStringParameterOneValueTwo")),
                 param(string("queryStringParameterTwoName"), not("queryStringParameterTwoValue"))
             )))

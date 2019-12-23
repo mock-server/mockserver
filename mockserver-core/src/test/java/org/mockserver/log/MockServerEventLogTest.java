@@ -67,9 +67,9 @@ public class MockServerEventLogTest {
         }
     }
 
-    private List<LogEntry> retrieveRequestLogEntries(HttpRequest httpRequest) {
+    private List<LogEntry> retrieveRequestLogEntries() {
         CompletableFuture<List<LogEntry>> future = new CompletableFuture<>();
-        mockServerEventLog.retrieveRequestLogEntries(httpRequest, future::complete);
+        mockServerEventLog.retrieveRequestLogEntries(null, future::complete);
         try {
             return future.get();
         } catch (Exception e) {
@@ -435,7 +435,7 @@ public class MockServerEventLogTest {
         assertThat(retrieveRequests(null), empty());
         assertThat(retrieveRecordedExpectations(null), empty());
         assertThat(retrieveMessageLogEntries(null), empty());
-        assertThat(retrieveRequestLogEntries(null), empty());
+        assertThat(retrieveRequestLogEntries(), empty());
         assertThat(retrieveRequestResponseMessageLogEntries(null), empty());
     }
 
@@ -620,7 +620,7 @@ public class MockServerEventLogTest {
         assertThat(retrieveRequests(null), empty());
         assertThat(retrieveRecordedExpectations(null), empty());
         assertThat(retrieveMessageLogEntries(null), empty());
-        assertThat(retrieveRequestLogEntries(null), empty());
+        assertThat(retrieveRequestLogEntries(), empty());
         assertThat(retrieveRequestResponseMessageLogEntries(null), empty());
     }
 }

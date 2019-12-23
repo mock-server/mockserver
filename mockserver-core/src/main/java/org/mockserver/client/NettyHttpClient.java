@@ -24,8 +24,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static java.lang.Boolean.TRUE;
-
 public class NettyHttpClient {
 
     static final AttributeKey<Boolean> SECURE = AttributeKey.valueOf("SECURE");

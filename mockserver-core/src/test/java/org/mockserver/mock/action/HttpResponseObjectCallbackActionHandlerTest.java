@@ -10,7 +10,6 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 import static org.mockserver.model.HttpRequest.request;

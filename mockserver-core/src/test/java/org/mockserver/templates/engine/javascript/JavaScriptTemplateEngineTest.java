@@ -36,7 +36,7 @@ import static org.mockserver.model.HttpResponse.response;
 public class JavaScriptTemplateEngineTest {
 
     @Rule
-    public ExpectedException exception = ExpectedException.none();
+    public final ExpectedException exception = ExpectedException.none();
 
     @Mock
     private MockServerLogger logFormatter;

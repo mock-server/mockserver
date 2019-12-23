@@ -3,13 +3,11 @@ package org.mockserver.integration.mocking;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.hamcrest.CoreMatchers;
-import org.hamcrest.MatcherAssert;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.integration.mocking.initializer.ExpectationInitializerIntegrationExample;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mockserver.MockServer;
@@ -27,7 +25,6 @@ import java.util.concurrent.TimeoutException;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.HttpRequest.request;
@@ -41,7 +38,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
 
     private static NettyHttpClient httpClient;
     private static EventLoopGroup clientEventLoopGroup;
-    private static MockServerLogger mockServerLogger = new MockServerLogger();
+    private static final MockServerLogger mockServerLogger = new MockServerLogger();
 
     @BeforeClass
     public static void createClientAndEventLoopGroup() {

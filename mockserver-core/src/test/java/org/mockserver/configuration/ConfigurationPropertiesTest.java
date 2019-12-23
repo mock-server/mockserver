@@ -31,7 +31,7 @@ import static org.mockserver.configuration.ConfigurationProperties.*;
 public class ConfigurationPropertiesTest {
 
     @Rule
-    public ExpectedException exception = ExpectedException.none();
+    public final ExpectedException exception = ExpectedException.none();
     private String propertiesBeforeTest;
 
     @Before

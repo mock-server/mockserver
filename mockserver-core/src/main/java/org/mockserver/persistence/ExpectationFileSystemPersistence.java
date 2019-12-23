@@ -6,7 +6,6 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
-import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.serializers.response.TimeToLiveSerializer;
 import org.mockserver.ui.MockServerMatcherListener;
 import org.slf4j.event.Level;
@@ -20,7 +19,7 @@ import static org.mockserver.serialization.ObjectMapperFactory.createObjectMappe
 
 public class ExpectationFileSystemPersistence implements MockServerMatcherListener {
 
-    private ObjectMapper objectMapper = createObjectMapper(new TimeToLiveSerializer());
+    private final ObjectMapper objectMapper = createObjectMapper(new TimeToLiveSerializer());
     private final MockServerLogger mockServerLogger;
     private final Path filePath;
 

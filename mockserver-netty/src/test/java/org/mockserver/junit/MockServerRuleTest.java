@@ -16,7 +16,7 @@ import static org.junit.Assert.assertThat;
 public class MockServerRuleTest {
 
     @Rule
-    public MockServerRule mockServerRule = new MockServerRule(this);
+    public final MockServerRule mockServerRule = new MockServerRule(this);
 
     private MockServerClient mockServerClient;
 

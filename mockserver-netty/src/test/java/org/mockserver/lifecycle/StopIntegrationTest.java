@@ -30,7 +30,7 @@ public class StopIntegrationTest {
     private static final int MOCK_SERVER_PORT = PortFactory.findFreePort();
 
     @Rule
-    public ExpectedException exception = ExpectedException.none();
+    public final ExpectedException exception = ExpectedException.none();
 
     @Test
     public void returnsExceptionWhenAlreadyStopped() {
@@ -43,7 +43,7 @@ public class StopIntegrationTest {
 
         // and - start client
         MockServerClient mockServerClient = new MockServerClient("localhost", MOCK_SERVER_PORT);
-        mockServerClient.isRunning();
+        mockServerClient.hasStarted();
         mockServerClient.stop();
 
         // then
@@ -64,15 +64,15 @@ public class StopIntegrationTest {
             mockServerClient = new MockServerClient("localhost", MOCK_SERVER_PORT);
 
             // then
-            assertFalse(mockServerClient.isRunning());
+            assertTrue(mockServerClient.hasStopped());
             new MockServer(MOCK_SERVER_PORT);
-            assertTrue(mockServerClient.isRunning());
+            assertTrue(mockServerClient.hasStarted());
         }
 
-        assertTrue(mockServerClient.isRunning());
+        assertTrue(mockServerClient.hasStarted());
         mockServerClient.stopAsync().get(10, SECONDS);
         mockServerClient = new MockServerClient("localhost", MOCK_SERVER_PORT);
-        assertFalse(mockServerClient.isRunning());
+        assertTrue(mockServerClient.hasStopped());
     }
 
     @Test

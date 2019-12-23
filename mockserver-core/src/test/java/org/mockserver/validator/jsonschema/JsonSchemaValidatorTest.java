@@ -4,9 +4,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.Mock;
 import org.mockserver.logging.MockServerLogger;
-import org.slf4j.Logger;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;

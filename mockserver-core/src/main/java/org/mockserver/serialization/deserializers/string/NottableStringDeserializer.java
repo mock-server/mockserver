@@ -4,11 +4,9 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.model.NottableString;
-import org.mockserver.serialization.model.VerificationTimesDTO;
 
 import java.io.IOException;
 
@@ -24,7 +22,7 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
     }
 
     @Override
-    public NottableString deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public NottableString deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
         if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
             Boolean not = null;
             String string = null;

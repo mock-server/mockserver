@@ -9,7 +9,7 @@ import org.mockserver.model.*;
 @SuppressWarnings("rawtypes")
 public abstract class BodyWithContentTypeDTO extends BodyDTO {
 
-    protected String contentType;
+    protected final String contentType;
 
     public BodyWithContentTypeDTO(Body.Type type, Boolean not, String contentType) {
         super(type, not);

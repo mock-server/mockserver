@@ -56,7 +56,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                         .writeAndFlush(successResponse(request))
                         .addListener(new ChannelFutureListener() {
                             @Override
-                            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                            public void operationComplete(ChannelFuture channelFuture) {
                                 removeCodecSupport(serverCtx);
                                 serverCtx.channel().attr(PROXYING).set(Boolean.TRUE);
 

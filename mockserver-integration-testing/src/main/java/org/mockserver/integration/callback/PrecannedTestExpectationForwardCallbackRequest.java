@@ -3,9 +3,7 @@ package org.mockserver.integration.callback;
 import org.mockserver.mock.action.ExpectationForwardCallback;
 import org.mockserver.model.HttpRequest;
 
-import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom

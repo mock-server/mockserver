@@ -3,7 +3,6 @@ package org.mockserver.serialization.java;
 import org.junit.Test;
 import org.mockserver.model.*;
 
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;

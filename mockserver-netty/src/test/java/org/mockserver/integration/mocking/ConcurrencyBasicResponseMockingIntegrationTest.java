@@ -28,7 +28,7 @@ public class ConcurrencyBasicResponseMockingIntegrationTest {
     private ClientAndServer clientAndServer;
     private NettyHttpClient httpClient;
 
-    private static EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(ConcurrencyResponseWebSocketMockingIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(ConcurrencyResponseWebSocketMockingIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
     @Before
     public void setUp() {

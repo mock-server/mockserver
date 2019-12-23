@@ -13,7 +13,7 @@ import static org.junit.Assert.assertEquals;
 public class HopByHopHeaderFilterTest {
 
     @Test
-    public void shouldNotForwardHopByHopHeaders() throws Exception {
+    public void shouldNotForwardHopByHopHeaders() {
         // given
         HttpRequest httpRequest = new HttpRequest();
         httpRequest.withHeaders(
@@ -37,7 +37,7 @@ public class HopByHopHeaderFilterTest {
     }
 
     @Test
-    public void shouldNotHandleNullRequest() throws Exception {
+    public void shouldNotHandleNullRequest() {
         assertNull(new HopByHopHeaderFilter().onRequest(null));
     }
 }

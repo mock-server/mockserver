@@ -14,7 +14,7 @@ public class JUnitRuleIntegrationTest extends AbstractBasicMockingIntegrationTes
     private static final int MOCK_SERVER_PORT = PortFactory.findFreePort();
 
     @Rule
-    public MockServerRule mockServerRule = new MockServerRule(this, MOCK_SERVER_PORT);
+    public final MockServerRule mockServerRule = new MockServerRule(this, MOCK_SERVER_PORT);
 
     @Before
     @Override

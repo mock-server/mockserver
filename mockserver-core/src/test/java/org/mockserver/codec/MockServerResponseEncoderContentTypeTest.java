@@ -34,7 +34,7 @@ public class MockServerResponseEncoderContentTypeTest {
 
     private List<Object> output;
     private HttpResponse httpResponse;
-    private MockServerLogger mockServerLogger = new MockServerLogger();
+    private final MockServerLogger mockServerLogger = new MockServerLogger();
 
     @Before
     public void setupFixture() {

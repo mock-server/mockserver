@@ -5,24 +5,15 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
-import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
-import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.model.XmlBody.xml;
 

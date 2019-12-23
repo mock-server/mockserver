@@ -16,7 +16,7 @@ import static org.mockserver.model.NottableString.string;
  */
 public class CookiesTest {
     @Test
-    public void shouldBuildCookie() throws Exception {
+    public void shouldBuildCookie() {
         // given
         Cookies cookies = new Cookies();
 
@@ -28,7 +28,7 @@ public class CookiesTest {
     }
 
     @Test
-    public void shouldAddEntriesAsCookieVarargs() throws Exception {
+    public void shouldAddEntriesAsCookieVarargs() {
         // given
         Cookies cookies = new Cookies();
 
@@ -49,7 +49,7 @@ public class CookiesTest {
     }
 
     @Test
-    public void shouldAddEntriesAsCookieList() throws Exception {
+    public void shouldAddEntriesAsCookieList() {
         // given
         Cookies cookies = new Cookies();
 
@@ -70,7 +70,7 @@ public class CookiesTest {
     }
 
     @Test
-    public void shouldAddEntryAsCookie() throws Exception {
+    public void shouldAddEntryAsCookie() {
         // given
         Cookies cookies = new Cookies();
 
@@ -89,7 +89,7 @@ public class CookiesTest {
     }
 
     @Test
-    public void shouldAddEntryAsNameAndValueString() throws Exception {
+    public void shouldAddEntryAsNameAndValueString() {
         // given
         Cookies cookies = new Cookies();
 
@@ -108,7 +108,7 @@ public class CookiesTest {
     }
 
     @Test
-    public void shouldAddEntryAsNameAndValueNottableString() throws Exception {
+    public void shouldAddEntryAsNameAndValueNottableString() {
         // given
         Cookies cookies = new Cookies();
 

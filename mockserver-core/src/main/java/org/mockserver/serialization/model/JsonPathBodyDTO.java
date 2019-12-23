@@ -8,7 +8,7 @@ import org.mockserver.model.JsonPathBody;
  */
 public class JsonPathBodyDTO extends BodyDTO {
 
-    private String jsonPath;
+    private final String jsonPath;
 
     public JsonPathBodyDTO(JsonPathBody jsonPathBody) {
         this(jsonPathBody, false);

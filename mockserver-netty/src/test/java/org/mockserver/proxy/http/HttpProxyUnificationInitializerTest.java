@@ -56,7 +56,7 @@ public class HttpProxyUnificationInitializerTest {
     }
 
     @Test
-    public void shouldSwitchToSOCKS() throws IOException, InterruptedException {
+    public void shouldSwitchToSOCKS() {
         // given - embedded channel
         short localPort = 1234;
         EmbeddedChannel embeddedChannel = new EmbeddedChannel(new MockServerUnificationInitializer(mock(LifeCycle.class), new HttpStateHandler(new MockServerLogger(), mock(Scheduler.class)), null));

@@ -20,7 +20,7 @@ public class DelayTest {
 
         // then
         assertThat(delay.getTimeUnit(), is(TimeUnit.DAYS));
-        assertThat(delay.getValue(), is(5l));
+        assertThat(delay.getValue(), is(5L));
     }
 
     @Test
@@ -30,7 +30,7 @@ public class DelayTest {
 
         // then
         assertThat(delay.getTimeUnit(), is(TimeUnit.MILLISECONDS));
-        assertThat(delay.getValue(), is(2l));
+        assertThat(delay.getValue(), is(2L));
     }
 
     @Test
@@ -40,7 +40,7 @@ public class DelayTest {
 
         // then
         assertThat(delay.getTimeUnit(), is(TimeUnit.SECONDS));
-        assertThat(delay.getValue(), is(3l));
+        assertThat(delay.getValue(), is(3L));
     }
 
     @Test
@@ -50,7 +50,7 @@ public class DelayTest {
 
         // then
         assertThat(delay.getTimeUnit(), is(TimeUnit.MINUTES));
-        assertThat(delay.getValue(), is(4l));
+        assertThat(delay.getValue(), is(4L));
     }
 
     @Test
@@ -60,6 +60,6 @@ public class DelayTest {
 
         // then
         assertThat(delay.getTimeUnit(), is(TimeUnit.DAYS));
-        assertThat(delay.getValue(), is(5l));
+        assertThat(delay.getValue(), is(5L));
     }
 }

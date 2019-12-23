@@ -1,7 +1,6 @@
 package org.mockserver.serialization.model;
 
 import io.netty.util.CharsetUtil;
-import org.apache.commons.lang3.CharSetUtils;
 import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.MediaType;
@@ -9,7 +8,7 @@ import org.mockserver.model.StringBody;
 
 import java.nio.charset.StandardCharsets;
 
-import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
+import static org.mockserver.model.MediaType.PLAIN_TEXT_UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;

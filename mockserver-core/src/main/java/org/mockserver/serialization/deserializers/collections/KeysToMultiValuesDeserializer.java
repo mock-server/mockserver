@@ -10,7 +10,6 @@ import org.mockserver.model.NottableString;
 
 import java.io.IOException;
 
-import static org.mockserver.model.NottableString.deserializeNottableStrings;
 import static org.mockserver.model.NottableString.string;
 
 /**

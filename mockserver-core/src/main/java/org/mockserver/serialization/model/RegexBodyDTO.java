@@ -8,7 +8,7 @@ import org.mockserver.model.RegexBody;
  */
 public class RegexBodyDTO extends BodyDTO {
 
-    private String regex;
+    private final String regex;
 
     public RegexBodyDTO(RegexBody regexBody) {
         this(regexBody, false);

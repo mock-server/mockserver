@@ -4,13 +4,11 @@ import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.mockserver.model.Body;
 import org.mockserver.model.JsonBody;
-import org.mockserver.model.JsonBody;
 import org.mockserver.model.MediaType;
 
 import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.matchers.MatchType.ONLY_MATCHING_FIELDS;
 import static org.mockserver.matchers.MatchType.STRICT;

@@ -8,8 +8,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
-import static org.mockserver.model.HttpResponse.response;
-
 public class HttpForwardActionResult {
     private final HttpRequest httpRequest;
     private final InetSocketAddress remoteAddress;

@@ -18,7 +18,6 @@ import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.model.Cookie.cookie;
@@ -114,6 +113,7 @@ public class HttpRequestSerializerTest {
     }
 
     @Test
+    @SuppressWarnings("RedundantArrayCreation")
     public void shouldSerializeArray() throws IOException {
         // given
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
