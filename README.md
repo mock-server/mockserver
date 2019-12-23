@@ -9,7 +9,9 @@ mock server <join.mock.server@gmail.com>
 
 For usage guide please see: [www.mock-server.com](http://www.mock-server.com/)
 
-For Change Log please see: [Change Log](https://github.com/mock-server/mockserver/blob/master/changelog.md)
+# Change Log
+
+Please see: [Change Log](https://github.com/mock-server/mockserver/blob/master/changelog.md)
 
 # Community
 
