@@ -2,8 +2,8 @@
 
 set -e
 
-export MAVEN_OPTS="$MAVEN_OPTS -Xmx2048m"
-export JAVA_OPTS="$JAVA_OPTS -Xmx2048m"
+export MAVEN_OPTS="$MAVEN_OPTS -Xms2048m -Xmx8192m"
+export JAVA_OPTS="$JAVA_OPTS -Xms2048m -Xmx8192m"
 # -agentpath:/Applications/jprofiler8/bin/macos/libjprofilerti.jnilib=port=25000
 export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
 echo
