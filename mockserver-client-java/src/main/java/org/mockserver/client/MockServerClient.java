@@ -207,15 +207,26 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Returns whether MockServer is running
+     * Returns whether MockServer is running, if called too quickly after starting MockServer
+     * this may return false because MockServer has not yet started, to ensure MockServer has
+     * started use hasStarted()
+     *
+     * @deprecated use hasStopped() or hasStarted() instead
      */
+    @Deprecated
+    @SuppressWarnings("DeprecatedIsStillUsed")
     public boolean isRunning() {
         return isRunning(10, 500, TimeUnit.MILLISECONDS);
     }
 
     /**
-     * Returns whether server MockServer is running, by polling the MockServer a configurable amount of times
+     * Returns whether server MockServer is running, by polling the MockServer a configurable
+     * amount of times.  If called too quickly after starting MockServer this may return false
+     * because MockServer has not yet started, to ensure MockServer has started use hasStarted()
+     *
+     * @deprecated use hasStopped() or hasStarted() instead
      */
+    @Deprecated
     public boolean isRunning(int attempts, long timeout, TimeUnit timeUnit) {
         try {
             HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")));
@@ -232,12 +243,87 @@ public class MockServerClient implements Stoppable {
                 return isRunning(attempts - 1, timeout, timeUnit);
             }
         } catch (SocketConnectionException | IllegalStateException sce) {
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(DEBUG)
+                    .setMessageFormat("Exception while checking if MockServer is running - " + sce.getMessage())
+                    .setThrowable(sce)
+            );
+            return false;
+        }
+    }
+
+    /**
+     * Returns whether MockServer has stopped, if called too quickly after starting MockServer
+     * this may return false because MockServer has not yet started, to ensure MockServer has
+     * started use hasStarted()
+     */
+    public boolean hasStopped() {
+        return hasStopped(10, 500, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Returns whether server MockServer has stopped, by polling the MockServer a configurable
+     * amount of times.  If called too quickly after starting MockServer this may return false
+     * because MockServer has not yet started, to ensure MockServer has started use hasStarted()
+     *
+     */
+    public boolean hasStopped(int attempts, long timeout, TimeUnit timeUnit) {
+        try {
+            HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")));
+            if (httpResponse.getStatusCode() == HttpStatusCode.OK_200.code()) {
+                if (attempts <= 0) {
+                    return false;
+                } else {
+                    try {
+                        timeUnit.sleep(timeout);
+                    } catch (InterruptedException e) {
+                        // ignore interrupted exception
+                    }
+                    return hasStopped(attempts - 1, timeout, timeUnit);
+                }
+            } else {
+                return true;
+            }
+        } catch (SocketConnectionException | IllegalStateException sce) {
+            return true;
+        }
+    }
+
+    /**
+     * Returns whether MockServer has started, if called after MockServer has been stopped
+     * this method will block for 5 seconds while confirming that MockServer is not starting
+     */
+    public boolean hasStarted() {
+        return hasStarted(10, 500, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Returns whether server MockServer has started, by polling the MockServer a configurable amount of times
+     */
+    public boolean hasStarted(int attempts, long timeout, TimeUnit timeUnit) {
+        try {
+            HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("status")));
+            if (httpResponse.getStatusCode() == HttpStatusCode.OK_200.code()) {
+                return true;
+            } else if (attempts <= 0) {
+                return false;
+            } else {
+                try {
+                    timeUnit.sleep(timeout);
+                } catch (InterruptedException e) {
+                    // ignore interrupted exception
+                }
+                return hasStarted(attempts - 1, timeout, timeUnit);
+            }
+        } catch (SocketConnectionException | IllegalStateException sce) {
             if (attempts <= 0) {
                 MOCK_SERVER_LOGGER.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(DEBUG)
-                        .setMessageFormat("Exception while checking if MockServer is running - " + sce.getMessage())
+                        .setMessageFormat("Exception while checking if MockServer has started - " + sce.getMessage())
                         .setThrowable(sce)
                 );
                 return false;
@@ -247,7 +333,7 @@ public class MockServerClient implements Stoppable {
                 } catch (InterruptedException e) {
                     // ignore interrupted exception
                 }
-                return isRunning(attempts - 1, timeout, timeUnit);
+                return hasStarted(attempts - 1, timeout, timeUnit);
             }
         }
     }

@@ -76,6 +76,7 @@ public class StopIntegrationTest {
     }
 
     @Test
+    @Deprecated
     public void reportsIsRunningCorrectlyAfterClientStopped() {
         // start server
         MockServerClient mockServerClient = ClientAndServer.startClientAndServer();
@@ -85,7 +86,34 @@ public class StopIntegrationTest {
 
         // then
         assertFalse(mockServerClient.isRunning());
-        assertFalse(mockServerClient.isRunning(10, 10000, TimeUnit.MILLISECONDS));
+        assertFalse(mockServerClient.isRunning(10, 1000, TimeUnit.MILLISECONDS));
+    }
+
+    @Test
+    public void reportsHasStoppedCorrectlyAfterClientStopped() {
+        // start server
+        MockServerClient mockServerClient = ClientAndServer.startClientAndServer();
+
+        // when
+        mockServerClient.stop();
+
+        // then
+        assertTrue(mockServerClient.hasStopped());
+        assertTrue(mockServerClient.hasStopped(10, 1000, TimeUnit.MILLISECONDS));
+    }
+
+
+    @Test
+    public void reportsHasStartedCorrectlyAfterClientStarted() {
+        // when
+        MockServerClient mockServerClient = ClientAndServer.startClientAndServer();
+
+        // then
+        assertTrue(mockServerClient.hasStarted());
+        assertTrue(mockServerClient.hasStarted(10, 1000, TimeUnit.MILLISECONDS));
+
+        // clean-up
+        mockServerClient.stop();
     }
 
     @Test
