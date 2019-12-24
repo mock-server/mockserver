@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- added stopAsync method to ClientAndServer to allow stop without waiting
+
+### Fixed
+- fixed error where ClientAndServer does fully wait for client to stop
+
+## [5.8.1] - 2019-12-23
+
+### Added
 - changelog
 - added configuration for all CORS headers
 - added support for forward proxy authentication (via configuration)

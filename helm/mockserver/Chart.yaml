@@ -1,6 +1,6 @@
 name: mockserver
-version: "5.8.0"
-appVersion: "5.8.0"
+version: "5.8.1"
+appVersion: "5.8.1"
 description: Chart to deploy MockServer to Kubernetes.  MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby.  MockServer also includes a proxy that introspects all proxied traffic including encrypted SSL traffic and supports Port Forwarding, Web Proxying (i.e. HTTP proxy), HTTPS Tunneling Proxying (using HTTP CONNECT) and SOCKS Proxying (i.e. dynamic port forwarding).
 keywords:
   - mocking

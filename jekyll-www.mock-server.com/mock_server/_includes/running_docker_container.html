@@ -128,7 +128,7 @@ In addition it is possible to <a href="#docker_container_customization">customis
 <pre class="prettyprint lang-java code"><code class="code">version: "2.4"
 services:
   mockServer:
-    image: mockserver/mockserver:mockserver-5.8.0
+    image: mockserver/mockserver:mockserver-5.8.1
     command: -logLevel DEBUG -serverPort 1090 -proxyRemotePort 80 -proxyRemoteHost www.mock-server.com -jvmOptions "-Dmockserver.sslSubjectAlternativeNameDomains='org.mock-server.com,mock-server.com'"
     ports:
       - 1080:1090</code></pre>
@@ -138,7 +138,7 @@ services:
 <pre class="prettyprint lang-java code"><code class="code">version: "2.4"
 services:
   mockServer:
-    image: mockserver/mockserver:mockserver-5.8.0
+    image: mockserver/mockserver:mockserver-5.8.1
     ports:
       - 1080:1090
     environment:
@@ -153,7 +153,7 @@ services:
 <pre class="prettyprint lang-java code"><code class="code">version: "2.4"
 services:
   mockServer:
-    image: mockserver/mockserver:mockserver-5.8.0
+    image: mockserver/mockserver:mockserver-5.8.1
     ports:
       - 1080:1080
     environment:
