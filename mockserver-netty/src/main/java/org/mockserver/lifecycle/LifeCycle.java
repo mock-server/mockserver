@@ -48,7 +48,7 @@ public abstract class LifeCycle implements Stoppable {
         this.httpStateHandler = new HttpStateHandler(this.mockServerLogger, this.scheduler);
     }
 
-    public Future stopAsync() {
+    public Future<String> stopAsync() {
         CompletableFuture<String> stopFuture = new CompletableFuture<>();
         new Scheduler.SchedulerThreadFactory("Stop").newThread(() -> {
             scheduler.shutdown();

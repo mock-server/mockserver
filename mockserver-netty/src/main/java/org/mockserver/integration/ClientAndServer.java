@@ -6,6 +6,7 @@ import org.mockserver.mockserver.MockServer;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 
 /**
  * @author jamesdbloom
@@ -45,6 +46,19 @@ public class ClientAndServer extends MockServerClient {
 
     public boolean hasStarted() {
         return mockServer.isRunning();
+    }
+
+    @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public Future stopAsync() {
+        Future<String> stopAsync = mockServer.stopAsync();
+        if (stopAsync instanceof CompletableFuture) {
+            ((CompletableFuture<String>) stopAsync).thenAccept(ignore -> super.stop());
+        } else {
+            // no need to wait for client to clean up event loop
+            super.stopAsync();
+        }
+        return stopAsync;
     }
 
     @Override
