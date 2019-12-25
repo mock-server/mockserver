@@ -23,10 +23,26 @@
     </properties>
 
     <dependencies>
+        <!-- mockserver -->
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-netty</artifactId>
         </dependency>
+
+        <!-- logging -->
+        <dependency> <!-- will map to any underlying logging framework -->
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>${slf4j.version}</version>
+            <optional>true</optional> <!-- do not impose on project importing mock-server -->
+        </dependency>
+
+        <!-- test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -48,7 +64,6 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
 </project>
