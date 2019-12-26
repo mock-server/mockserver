@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - fixed error where ClientAndServer does fully wait for client to stop
+- fixed ability to specific a log level of OFF
 
 ## [5.8.1] - 2019-12-23
 

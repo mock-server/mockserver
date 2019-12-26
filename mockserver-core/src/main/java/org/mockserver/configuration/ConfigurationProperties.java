@@ -153,7 +153,7 @@ public class ConfigurationProperties {
                 .put("DEBUG", "DEBUG")
                 .put("WARN", "WARN")
                 .put("ERROR", "ERROR")
-                .put("OFF", "OFF")
+                .put("OFF", "ERROR")
                 .build();
         }
         return slf4jOrJavaLoggerToSLF4JLevelMapping;
