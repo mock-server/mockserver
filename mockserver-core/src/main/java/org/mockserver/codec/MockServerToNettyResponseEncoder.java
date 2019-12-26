@@ -11,7 +11,9 @@ import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.*;
+import org.mockserver.model.ConnectionOptions;
+import org.mockserver.model.HttpResponse;
+import org.mockserver.model.NottableString;
 import org.slf4j.event.Level;
 
 import java.util.List;
@@ -78,9 +80,7 @@ public class MockServerToNettyResponseEncoder extends MessageToMessageEncoder<Ht
 
     private void setHeaders(HttpResponse httpResponse, DefaultFullHttpResponse response, ByteBuf body) {
         if (httpResponse.getHeaderMultimap() != null) {
-            for (Map.Entry<NottableString, NottableString> header : httpResponse.getHeaderMultimap().entries()) {
-                response.headers().add(header.getKey().getValue(), header.getValue().getValue());
-            }
+            httpResponse.getHeaderMultimap().forEach((key, value) -> response.headers().add(key.getValue(), value.getValue()));
         }
 
         // Content-Type

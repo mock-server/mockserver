@@ -75,7 +75,7 @@ public class NottableString extends ObjectWithJsonToString implements Comparable
         return nottableString.toString();
     }
 
-    public static List<String> serialiseNottableString(List<NottableString> nottableStrings) {
+    public static List<String> serialiseNottableString(Collection<NottableString> nottableStrings) {
         List<String> strings = new LinkedList<>();
         for (NottableString nottableString : nottableStrings) {
             strings.add(nottableString.toString());

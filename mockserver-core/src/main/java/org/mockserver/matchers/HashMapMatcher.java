@@ -11,6 +11,7 @@ import static org.slf4j.event.Level.DEBUG;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("rawtypes")
 public class HashMapMatcher extends NotMatcher<KeysAndValues> {
 
     private final MockServerLogger mockServerLogger;

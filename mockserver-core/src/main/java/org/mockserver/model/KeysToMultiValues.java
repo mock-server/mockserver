@@ -1,7 +1,6 @@
 package org.mockserver.model;
 
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import org.apache.commons.lang3.ArrayUtils;
 import org.mockserver.collections.CaseInsensitiveRegexMultiMap;
@@ -17,7 +16,7 @@ import static org.mockserver.model.NottableString.*;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends KeysToMultiValues> extends ObjectWithJsonToString {
 
-    private final ListMultimap<NottableString, NottableString> listMultimap = LinkedListMultimap.create();
+    private final Multimap<NottableString, NottableString> listMultimap = LinkedHashMultimap.create();
     private final K k = (K) this;
 
     private CaseInsensitiveRegexMultiMap toCaseInsensitiveRegexMultiMap(MockServerLogger mockServerLogger, final List<T> entries, boolean controlPlaneMatcher) {
@@ -155,7 +154,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         return listMultimap.keySet();
     }
 
-    public List<NottableString> getValues(NottableString key) {
+    public Collection<NottableString> getValues(NottableString key) {
         return listMultimap.get(key);
     }
 
@@ -181,9 +180,12 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         if (!isEmpty()) {
             for (NottableString key : listMultimap.keySet().toArray(new NottableString[0])) {
                 if (key != null && key.equalsIgnoreCase(name)) {
-                    List<NottableString> nottableStrings = listMultimap.get(key);
-                    if (!nottableStrings.isEmpty() && nottableStrings.get(0) != null) {
-                        return nottableStrings.get(0).getValue();
+                    Collection<NottableString> nottableStrings = listMultimap.get(key);
+                    if (!nottableStrings.isEmpty()) {
+                        NottableString next = nottableStrings.iterator().next();
+                        if (next != null) {
+                            return next.getValue();
+                        }
                     }
                 }
             }
@@ -210,7 +212,7 @@ public abstract class KeysToMultiValues<T extends KeyToMultiValue, K extends Key
         if (!isEmpty() && name != null && value != null) {
             for (NottableString entryKey : listMultimap.keySet().toArray(new NottableString[0])) {
                 if (entryKey != null && entryKey.equalsIgnoreCase(name)) {
-                    List<NottableString> nottableStrings = listMultimap.get(entryKey);
+                    Collection<NottableString> nottableStrings = listMultimap.get(entryKey);
                     if (nottableStrings != null) {
                         for (NottableString entryValue : nottableStrings.toArray(new NottableString[0])) {
                             if (value.equalsIgnoreCase(entryValue)) {

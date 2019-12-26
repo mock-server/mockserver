@@ -8,7 +8,7 @@ import org.mockserver.model.KeysToMultiValues;
 import org.mockserver.model.NottableString;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Collection;
 
 import static org.mockserver.model.NottableString.serialiseNottableString;
 
@@ -26,7 +26,7 @@ public abstract class KeysToMultiValuesSerializer<T extends KeysToMultiValues<? 
         jgen.writeStartObject();
         for (NottableString key : collection.keySet()) {
             jgen.writeFieldName(serialiseNottableString(key));
-            List<NottableString> values = collection.getValues(key);
+            Collection<NottableString> values = collection.getValues(key);
             jgen.writeStartArray(values.size());
             for (NottableString nottableString : values) {
                 jgen.writeString(serialiseNottableString(nottableString));

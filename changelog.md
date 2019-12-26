@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - added stopAsync method to ClientAndServer to allow stop without waiting
 
+### Changed
+- performance improvements for header and cookie handling
+
 ### Fixed
 - fixed error where ClientAndServer does fully wait for client to stop
 

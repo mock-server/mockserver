@@ -141,9 +141,7 @@ public class MediaType extends ObjectWithJsonToString {
         this.subtype = isBlank(subtype) ? null : subtype;
         this.parameters = new TreeMap<>(String::compareToIgnoreCase);
         if (parameterMap != null) {
-            for (Map.Entry<String, String> entry : parameterMap.entrySet()) {
-                this.parameters.put(entry.getKey().toLowerCase(), entry.getValue());
-            }
+            parameterMap.forEach((key, value) -> this.parameters.put(key.toLowerCase(), value));
         }
         Charset parsedCharset = null;
         if (isNotBlank(charset)) {
