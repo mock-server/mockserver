@@ -88,7 +88,9 @@ public class NettyHttpProxySOCKSIntegrationTest {
     @Before
     public void resetProxy() {
         if (mockServerClient != null) {
+            System.out.println("mockServerPort reset start = " + mockServerPort);
             mockServerClient.reset();
+            System.out.println("mockServerPort reset end = " + mockServerPort);
         }
     }
 

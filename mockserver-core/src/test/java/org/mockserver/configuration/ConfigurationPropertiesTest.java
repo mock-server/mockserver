@@ -53,7 +53,7 @@ public class ConfigurationPropertiesTest {
     public void shouldSetAndReadNIOEventLoopThreadCount() {
         // given
         System.clearProperty("mockserver.nioEventLoopThreadCount");
-        int eventLoopCount = Math.max(15, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
+        int eventLoopCount = Math.max(20, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
 
         // when
         assertEquals(eventLoopCount, ConfigurationProperties.nioEventLoopThreadCount());
@@ -68,7 +68,7 @@ public class ConfigurationPropertiesTest {
     public void shouldHandleInvalidNIOEventLoopThreadCount() {
         // given
         System.setProperty("mockserver.nioEventLoopThreadCount", "invalid");
-        int eventLoopCount = Math.max(15, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
+        int eventLoopCount = Math.max(20, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
 
         // then
         assertEquals(eventLoopCount, ConfigurationProperties.nioEventLoopThreadCount());
@@ -853,31 +853,53 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
-    public void shouldSetAndReadPersistedExpectationsPath() {
+    public void shouldSetAndReadWatchInitializationJson() {
         // given
-        System.clearProperty("mockserver.persistedExpectationsPath");
+        System.clearProperty("mockserver.watchInitializationJson");
 
         // when
-        assertEquals("persistedExpectations.json", persistedExpectationsPath());
-        persistedExpectationsPath("otherPersistedExpectations.json");
+        assertFalse(watchInitializationJson());
+        watchInitializationJson(true);
 
         // then
-        assertEquals("otherPersistedExpectations.json", persistedExpectationsPath());
-        assertEquals("otherPersistedExpectations.json", System.getProperty("mockserver.persistedExpectationsPath"));
+        assertTrue(watchInitializationJson());
+        assertEquals("" + true, System.getProperty("mockserver.watchInitializationJson"));
     }
 
     @Test
     public void shouldSetAndReadPersistExpectations() {
-        // given
-        System.clearProperty("mockserver.persistExpectations");
+        try {
+            // given
+            System.clearProperty("mockserver.persistExpectations");
 
-        // when
-        assertFalse(persistExpectations());
-        persistExpectations(true);
+            // when
+            assertFalse(persistExpectations());
+            persistExpectations(true);
 
-        // then
-        assertTrue(persistExpectations());
-        assertEquals("" + true, System.getProperty("mockserver.persistExpectations"));
+            // then
+            assertTrue(persistExpectations());
+            assertEquals("" + true, System.getProperty("mockserver.persistExpectations"));
+        } finally {
+            System.clearProperty("mockserver.persistExpectations");
+        }
+    }
+
+    @Test
+    public void shouldSetAndReadPersistedExpectationsPath() {
+        try {
+            // given
+            System.clearProperty("mockserver.persistedExpectationsPath");
+
+            // when
+            assertEquals("persistedExpectations.json", persistedExpectationsPath());
+            persistedExpectationsPath("otherPersistedExpectations.json");
+
+            // then
+            assertEquals("otherPersistedExpectations.json", persistedExpectationsPath());
+            assertEquals("otherPersistedExpectations.json", System.getProperty("mockserver.persistedExpectationsPath"));
+        } finally {
+            System.clearProperty("mockserver.persistedExpectationsPath");
+        }
     }
 
     @Test

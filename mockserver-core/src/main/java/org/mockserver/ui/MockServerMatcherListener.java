@@ -7,6 +7,6 @@ import org.mockserver.mock.MockServerMatcher;
  */
 public interface MockServerMatcherListener {
 
-    void updated(MockServerMatcher mockServerLog);
+    void updated(MockServerMatcher mockServerMatcher, MockServerMatcherNotifier.Cause cause);
 
 }

@@ -19,6 +19,7 @@ import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.servlet.responsewriter.ServletResponseWriter;
+import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -204,14 +205,14 @@ public class MockServerServletTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_one"))
                 .setHttpResponse(response("response_one"))
-                .setExpectation(request("request_one"), response("response_one"))
+                .setExpectation(new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).withId("key_one").thenRespond(response("response_one")))
         );
         httpStateHandler.log(
             new LogEntry()
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_two"))
                 .setHttpResponse(response("response_two"))
-                .setExpectation(request("request_two"), response("response_two"))
+                .setExpectation(new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited()).withId("key_two").thenRespond(response("response_two")))
         );
 
         // when
@@ -225,7 +226,7 @@ public class MockServerServletTest {
 
         // then
         assertResponse(response, 200, expectationSerializer.serialize(Collections.singletonList(
-            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one"))
+            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).withId("key_one").thenRespond(response("response_one"))
         )));
     }
 
@@ -270,39 +271,45 @@ public class MockServerServletTest {
 
     @Test
     public void shouldRetrieveLogMessages() {
-        // given
-        Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
-        httpStateHandler.add(expectationOne);
-        MockHttpServletRequest retrieveLogRequest = buildHttpServletRequest(
-            "PUT",
-            "/mockserver/retrieve",
-            httpRequestSerializer.serialize(request("request_one"))
-        );
-        retrieveLogRequest.setQueryString("type=" + RetrieveType.LOGS.name());
+        try {
+            UUIDService.fixedUUID = true;
+            // given
+            Expectation expectationOne = new Expectation(request("request_one")).thenRespond(response("response_one"));
+            httpStateHandler.add(expectationOne);
+            MockHttpServletRequest retrieveLogRequest = buildHttpServletRequest(
+                "PUT",
+                "/mockserver/retrieve",
+                httpRequestSerializer.serialize(request("request_one"))
+            );
+            retrieveLogRequest.setQueryString("type=" + RetrieveType.LOGS.name());
 
-        // when
-        mockServerServlet.service(retrieveLogRequest, response);
+            // when
+            mockServerServlet.service(retrieveLogRequest, response);
 
-        // then
-        assertThat(response.getStatus(), is(200));
-        assertThat(new String(response.getContentAsByteArray(), UTF_8), containsString("creating expectation:" + NEW_LINE +
-            "" + NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"httpRequest\" : {" + NEW_LINE +
-            "\t    \"path\" : \"request_one\"" + NEW_LINE +
-            "\t  }," + NEW_LINE +
-            "\t  \"times\" : {" + NEW_LINE +
-            "\t    \"unlimited\" : true" + NEW_LINE +
-            "\t  }," + NEW_LINE +
-            "\t  \"timeToLive\" : {" + NEW_LINE +
-            "\t    \"unlimited\" : true" + NEW_LINE +
-            "\t  }," + NEW_LINE +
-            "\t  \"httpResponse\" : {" + NEW_LINE +
-            "\t    \"statusCode\" : 200," + NEW_LINE +
-            "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
-            "\t    \"body\" : \"response_one\"" + NEW_LINE +
-            "\t  }" + NEW_LINE +
-            "\t}" + NEW_LINE));
+            // then
+            assertThat(response.getStatus(), is(200));
+            assertThat(new String(response.getContentAsByteArray(), UTF_8), containsString("creating expectation:" + NEW_LINE +
+                "" + NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                "\t  \"httpRequest\" : {" + NEW_LINE +
+                "\t    \"path\" : \"request_one\"" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"times\" : {" + NEW_LINE +
+                "\t    \"unlimited\" : true" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"timeToLive\" : {" + NEW_LINE +
+                "\t    \"unlimited\" : true" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"httpResponse\" : {" + NEW_LINE +
+                "\t    \"statusCode\" : 200," + NEW_LINE +
+                "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                "\t    \"body\" : \"response_one\"" + NEW_LINE +
+                "\t  }" + NEW_LINE +
+                "\t}" + NEW_LINE));
+        } finally {
+            UUIDService.fixedUUID = false;
+        }
     }
 
     @Test

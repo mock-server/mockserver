@@ -1099,4 +1099,34 @@ public class HttpRequestMatcherTest {
             ).toString()
         );
     }
+
+    @Test
+    public void shouldUpdateMatchingPath() {
+        // given
+        HttpRequestMatcher httpRequestMatcher = new HttpRequestMatcher(mockServerLogger, new HttpRequest().withPath("somePath"));
+
+        // then
+        assertFalse(httpRequestMatcher.matches(null, new HttpRequest().withPath("someOtherPath")));
+
+        // when
+        httpRequestMatcher.update(new HttpRequest().withPath("someOtherPath"));
+
+        // then
+        assertTrue(httpRequestMatcher.matches(null, new HttpRequest().withPath("someOtherPath")));
+    }
+
+    @Test
+    public void shouldUpdateMatchingHeaders() {
+        // given
+        HttpRequestMatcher httpRequestMatcher = new HttpRequestMatcher(mockServerLogger, new HttpRequest().withHeaders(new Header("name", "value")));
+
+        // then
+        assertFalse(httpRequestMatcher.matches(null, new HttpRequest().withHeaders(new Header("name", "otherValue"))));
+
+        // when
+        httpRequestMatcher.update(new HttpRequest().withHeaders(new Header("name", "otherValue")));
+
+        // then
+        assertTrue(httpRequestMatcher.matches(null, new HttpRequest().withHeaders(new Header("name", "otherValue"))));
+    }
 }

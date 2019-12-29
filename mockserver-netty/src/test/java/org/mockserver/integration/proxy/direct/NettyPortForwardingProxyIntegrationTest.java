@@ -37,9 +37,7 @@ public class NettyPortForwardingProxyIntegrationTest {
 
     @Test
     public void shouldForwardRequestsUsingSocketDirectlyHeadersOnly() throws Exception {
-        Socket socket = null;
-        try {
-            socket = new Socket("localhost", mockServer.getLocalPort());
+        try (Socket socket = new Socket("127.0.0.1", mockServer.getLocalPort())) {
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -48,7 +46,7 @@ public class NettyPortForwardingProxyIntegrationTest {
             // - send GET request for headers only
             output.write(("" +
                 "GET /test_headers_only HTTP/1.1\r\n" +
-                "Host: localhost:" + echoServer.getPort() + "\r\n" +
+                "Host: 127.0.0.1:" + echoServer.getPort() + "\r\n" +
                 "X-Test: test_headers_only\r\n" +
                 "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
@@ -56,19 +54,12 @@ public class NettyPortForwardingProxyIntegrationTest {
 
             // then
             assertContains(IOStreamUtils.readInputStreamToString(socket), "X-Test: test_headers_only");
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
         }
     }
 
     @Test
     public void shouldForwardRequestsUsingSocketDirectlyHeadersAndBody() throws Exception {
-        Socket socket = null;
-        try {
-
-            socket = new Socket("localhost", mockServer.getLocalPort());
+        try (Socket socket = new Socket("127.0.0.1", mockServer.getLocalPort())) {
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -76,7 +67,7 @@ public class NettyPortForwardingProxyIntegrationTest {
             // - send GET request for headers and body
             output.write(("" +
                 "GET /test_headers_and_body HTTP/1.1\r\n" +
-                "Host: localhost:" + echoServer.getPort() + "\r\n" +
+                "Host: 127.0.0.1:" + echoServer.getPort() + "\r\n" +
                 "X-Test: test_headers_and_body\r\n" +
                 "Content-Length:" + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "\r\n" +
                 "\r\n" +
@@ -88,19 +79,12 @@ public class NettyPortForwardingProxyIntegrationTest {
             String response = IOStreamUtils.readInputStreamToString(socket);
             assertContains(response, "X-Test: test_headers_and_body");
             assertContains(response, "an_example_body");
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
         }
     }
 
     @Test
     public void shouldForwardRequestsUsingSocketDirectlyNotFound() throws Exception {
-        Socket socket = null;
-        try {
-
-            socket = new Socket("localhost", mockServer.getLocalPort());
+        try (Socket socket = new Socket("127.0.0.1", mockServer.getLocalPort())) {
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -108,17 +92,13 @@ public class NettyPortForwardingProxyIntegrationTest {
             // - send GET request for headers and body
             output.write(("" +
                 "GET /not_found HTTP/1.1\r\n" +
-                "Host: localhost:" + echoServer.getPort() + "\r\n" +
+                "Host: 127.0.0.1:" + echoServer.getPort() + "\r\n" +
                 "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();
 
             // then
             assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 404 Not Found");
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
         }
     }
 }

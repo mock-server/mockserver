@@ -36,7 +36,7 @@ public class NettyHttpClientErrorHandlingTest {
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(NettyHttpClientErrorHandlingTest.class.getSimpleName() + "-eventLoop"));
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(NettyHttpClientErrorHandlingTest.class.getSimpleName() + "-eventLoop"));
     private final MockServerLogger mockServerLogger = new MockServerLogger();
 
     @AfterClass
@@ -70,7 +70,8 @@ public class NettyHttpClientErrorHandlingTest {
             exception.expect(ExecutionException.class);
             exception.expectMessage(anyOf(
                 containsString("Connection reset by peer"),
-                containsString("Channel set as inactive before valid response has been received")
+                containsString("Channel set as inactive before valid response has been received"),
+                containsString("Channel handler removed before valid response has been received")
             ));
 
             // when

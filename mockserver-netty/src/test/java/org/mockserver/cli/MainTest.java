@@ -35,7 +35,7 @@ import static org.mockserver.stop.Stop.stopQuietly;
  */
 public class MainTest {
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(MainTest.class.getSimpleName() + "-eventLoop"));
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(MainTest.class.getSimpleName() + "-eventLoop"));
 
     @AfterClass
     public static void stopEventLoopGroup() {

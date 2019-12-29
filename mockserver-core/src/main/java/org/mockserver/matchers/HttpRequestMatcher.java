@@ -21,6 +21,7 @@ import static org.mockserver.model.NottableString.string;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("rawtypes")
 public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
     private static final String[] excludedFields = {"mockServerLogger", "objectMapper"};
@@ -47,35 +48,43 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     public HttpRequestMatcher(MockServerLogger mockServerLogger, HttpRequest httpRequest) {
-        this.httpRequest = httpRequest;
         this.mockServerLogger = mockServerLogger;
         this.controlPlaneMatcher = true;
-        if (httpRequest != null) {
-            withMethod(httpRequest.getMethod());
-            withPath(httpRequest.getPath());
-            withQueryStringParameters(httpRequest.getQueryStringParameters());
-            withBody(httpRequest.getBody());
-            withHeaders(httpRequest.getHeaders());
-            withCookies(httpRequest.getCookies());
-            withKeepAlive(httpRequest.isKeepAlive());
-            withSsl(httpRequest.isSecure());
+        update(httpRequest);
+    }
+
+    public boolean update(HttpRequest httpRequest) {
+        if (this.httpRequest != null && this.httpRequest.equals(httpRequest)) {
+            return false;
+        } else {
+            this.httpRequest = httpRequest;
+            if (httpRequest != null) {
+                withMethod(httpRequest.getMethod());
+                withPath(httpRequest.getPath());
+                withQueryStringParameters(httpRequest.getQueryStringParameters());
+                withBody(httpRequest.getBody());
+                withHeaders(httpRequest.getHeaders());
+                withCookies(httpRequest.getCookies());
+                withKeepAlive(httpRequest.isKeepAlive());
+                withSsl(httpRequest.isSecure());
+            }
+            return true;
         }
     }
 
     HttpRequestMatcher(MockServerLogger mockServerLogger, Expectation expectation) {
-        this.expectation = expectation;
-        this.httpRequest = expectation.getHttpRequest();
         this.mockServerLogger = mockServerLogger;
         this.controlPlaneMatcher = false;
-        if (httpRequest != null) {
-            withMethod(httpRequest.getMethod());
-            withPath(httpRequest.getPath());
-            withQueryStringParameters(httpRequest.getQueryStringParameters());
-            withBody(httpRequest.getBody());
-            withHeaders(httpRequest.getHeaders());
-            withCookies(httpRequest.getCookies());
-            withKeepAlive(httpRequest.isKeepAlive());
-            withSsl(httpRequest.isSecure());
+        update(expectation);
+    }
+
+    public boolean update(Expectation expectation) {
+        if (this.expectation != null && this.expectation.equals(expectation)) {
+            return false;
+        } else {
+            this.expectation = expectation;
+            update(expectation.getHttpRequest());
+            return true;
         }
     }
 

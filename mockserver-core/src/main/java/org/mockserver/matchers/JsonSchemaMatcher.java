@@ -14,7 +14,7 @@ import static org.slf4j.event.Level.DEBUG;
  * @author jamesdbloom
  */
 public class JsonSchemaMatcher extends BodyMatcher<String> {
-    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger", "jsonSchemaValidator"};
+    private static final String[] EXCLUDED_FIELDS = {"mockServerLogger", "jsonSchemaValidator"};
     private final MockServerLogger mockServerLogger;
     private String schema;
     private JsonSchemaValidator jsonSchemaValidator;

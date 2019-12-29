@@ -10,6 +10,8 @@ import org.mockserver.scheduler.Scheduler;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 
 /**
  * @author jamesdbloom
@@ -17,13 +19,9 @@ import static org.mockito.Mockito.mock;
 public class MockServerMatcherBasicResponsesTest {
 
     private MockServerMatcher mockServerMatcher;
-    private HttpRequest httpRequest;
-    private HttpResponse httpResponse;
 
     @Before
     public void prepareTestFixture() {
-        httpRequest = new HttpRequest();
-        httpResponse = new HttpResponse();
         MockServerLogger mockLogFormatter = mock(MockServerLogger.class);
         Scheduler scheduler = mock(Scheduler.class);
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
@@ -33,7 +31,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenPathMatches() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withPath("somePath")).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withPath("somePath")).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -43,7 +41,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenRegexPathMatches() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withPath("[a-zA-Z]*")).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withPath("[a-zA-Z]*")).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -53,7 +51,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenPathDoesNotMatch() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withPath("somePath")).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withPath("somePath")).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")));
@@ -62,7 +60,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenRegexPathDoesNotMatch() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withPath("[a-z]*")).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withPath("[a-z]*")).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath123")));
@@ -71,7 +69,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenPathMatchesAndAdditionalHeaders() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withPath("somePath")).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withPath("somePath")).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -81,7 +79,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenPathMatchesAndAdditionalQueryStringParameters() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withPath("somePath")).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withPath("somePath")).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -91,7 +89,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenPathMatchesAndAdditionalBodyParameters() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withPath("somePath")).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withPath("somePath")).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -101,7 +99,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenBodyMatches() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withBody(new StringBody("someBody"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withBody(new StringBody("someBody"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -111,7 +109,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenRegexBodyMatches() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withBody(new RegexBody("[a-zA-Z]*"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withBody(new RegexBody("[a-zA-Z]*"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -121,7 +119,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenBodyDoesNotMatch() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withBody(new StringBody("someBody"))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withBody(new StringBody("someBody"))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withBody(new StringBody("someOtherBody"))));
@@ -130,7 +128,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenRegexBodyDoesNotMatch() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withBody(new RegexBody("[a-z]*"))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withBody(new RegexBody("[a-z]*"))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withBody(new StringBody("someOtherBody123"))));
@@ -139,7 +137,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenBodyMatchesAndAdditionalHeaders() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withBody(new StringBody("someBody"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withBody(new StringBody("someBody"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -149,7 +147,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenBodyMatchesAndAdditionalQueryStringParameters() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withBody(new StringBody("someBody"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withBody(new StringBody("someBody"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -159,7 +157,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenAdditionalBodyParameters() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withBody(new ParameterBody(new Parameter("name", "value")))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withBody(new ParameterBody(new Parameter("name", "value")))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -169,7 +167,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenHeaderMatchesExactly() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withHeaders(new Header("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withHeaders(new Header("name", "value"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -179,7 +177,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenHeaderWithMultipleValuesDoesNotMatch() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withHeaders(new Header("name", "value1", "value2"))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withHeaders(new Header("name", "value1", "value2"))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withHeaders(new Header("name", "value1", "value3"))));
@@ -188,7 +186,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenHeaderWithMultipleValuesHasMissingValue() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withHeaders(new Header("name", "value1", "value2"))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withHeaders(new Header("name", "value1", "value2"))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withHeaders(new Header("name", "value1"))));
@@ -197,7 +195,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenHeaderMatchesAndExtraHeaders() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withHeaders(new Header("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withHeaders(new Header("name", "value"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -207,7 +205,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenHeaderMatchesAndPathDifferent() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withHeaders(new Header("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withHeaders(new Header("name", "value"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -217,7 +215,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenQueryStringMatchesExactly() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withQueryStringParameter(new Parameter("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withQueryStringParameter(new Parameter("name", "value"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -227,7 +225,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenBodyParametersMatchesExactly() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withBody(new ParameterBody(new Parameter("name", "value")))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withBody(new ParameterBody(new Parameter("name", "value")))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -237,7 +235,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenQueryStringWithMultipleValuesMatchesExactly() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withQueryStringParameter(new Parameter("name", "value1", "value2"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withQueryStringParameter(new Parameter("name", "value1", "value2"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -247,7 +245,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenBodyParametersWithMultipleValuesMatchesExactly() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withBody(new ParameterBody(new Parameter("name", "value1", "value2")))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withBody(new ParameterBody(new Parameter("name", "value1", "value2")))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -257,7 +255,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenQueryStringWithMultipleValuesDoesNotMatch() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withQueryStringParameter(new Parameter("name", "value1", "value2"))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withQueryStringParameter(new Parameter("name", "value1", "value2"))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withQueryStringParameter(new Parameter("name", "value1", "value3"))));
@@ -266,7 +264,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenBodyParametersWithMultipleValuesDoesNotMatch() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withBody(new ParameterBody(new Parameter("name", "value1", "value2")))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withBody(new ParameterBody(new Parameter("name", "value1", "value2")))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1", "value3")))));
@@ -275,7 +273,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenQueryStringWithMultipleValuesHasMissingValue() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withQueryStringParameter(new Parameter("name", "value1", "value2"))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withQueryStringParameter(new Parameter("name", "value1", "value2"))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withQueryStringParameter(new Parameter("name", "value1"))));
@@ -284,7 +282,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenBodyParametersWithMultipleValuesHasMissingValue() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withBody(new ParameterBody(new Parameter("name", "value1", "value2")))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withBody(new ParameterBody(new Parameter("name", "value1", "value2")))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withBody(new ParameterBody(new Parameter("name", "value1")))));
@@ -293,7 +291,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenQueryStringMatchesAndExtraParameters() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withQueryStringParameter(new Parameter(".*name", "value.*"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withQueryStringParameter(new Parameter(".*name", "value.*"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -306,7 +304,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenBodyParameterMatchesAndExtraParameters() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withBody(new ParameterBody(new Parameter(".*name", "value.*")))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withBody(new ParameterBody(new Parameter(".*name", "value.*")))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -320,7 +318,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenQueryStringParametersMatchesExactly() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withQueryStringParameters(new Parameter("name", "val[a-z]{2}"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withQueryStringParameters(new Parameter("name", "val[a-z]{2}"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -330,7 +328,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenQueryStringParametersWithMultipleValuesMatchesExactly() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withQueryStringParameters(new Parameter("name", "valueOne", "valueTwo"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withQueryStringParameters(new Parameter("name", "valueOne", "valueTwo"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -340,7 +338,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenQueryStringParametersWithMultipleValuesDoesNotMatch() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withQueryStringParameters(new Parameter("name", "valueOne", "valueTwo"))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withQueryStringParameters(new Parameter("name", "valueOne", "valueTwo"))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withQueryStringParameters(new Parameter("name", "valueOne", "valueThree"))));
@@ -349,7 +347,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenQueryStringParametersWithMultipleValuesHasMissingValue() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withQueryStringParameters(new Parameter("name", "valueOne", "valueTwo"))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withQueryStringParameters(new Parameter("name", "valueOne", "valueTwo"))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withQueryStringParameters(new Parameter("name", "valueOne"))));
@@ -358,7 +356,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenQueryStringParameterMatchesAndExtraQueryStringParameters() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withQueryStringParameters(new Parameter("name", "val[a-z]{2}"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withQueryStringParameters(new Parameter("name", "val[a-z]{2}"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -372,7 +370,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenQueryStringParameterMatchesAndExtraBodyParameters() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withBody(new ParameterBody(new Parameter("name", "val[a-z]{2}")))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withBody(new ParameterBody(new Parameter("name", "val[a-z]{2}")))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -386,7 +384,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenQueryStringParameterMatchesAndMultipleQueryStringParameters() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withQueryStringParameters(new Parameter("nameOne", "valueOne"), new Parameter("nameTwo", "valueTwo"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withQueryStringParameters(new Parameter("nameOne", "valueOne"), new Parameter("nameTwo", "valueTwo"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -399,7 +397,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenQueryStringParameterMatchesAndMultipleBodyParameters() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withBody(new ParameterBody(new Parameter("nameOne", "valueOne"), new Parameter("nameTwo", "valueTwo")))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withBody(new ParameterBody(new Parameter("nameOne", "valueOne"), new Parameter("nameTwo", "valueTwo")))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -412,7 +410,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenQueryStringParameterDoesNotMatch() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withQueryStringParameters(new Parameter("nameOne", "valueTwo", "valueTwo"))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withQueryStringParameters(new Parameter("nameOne", "valueTwo", "valueTwo"))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withQueryStringParameters(
@@ -424,7 +422,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenQueryStringParameterDoesNotMatchAndMultipleQueryStringParameters() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withQueryStringParameters(new Parameter("nameOne", "valueTwo"), new Parameter("nameTwo", "valueOne"))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withQueryStringParameters(new Parameter("nameOne", "valueTwo"), new Parameter("nameTwo", "valueOne"))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withQueryStringParameters(
@@ -436,7 +434,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenQueryStringParameterDoesNotMatchAndMultipleBodyParameters() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withBody(new ParameterBody(new Parameter("nameOne", "valueOne"), new Parameter("nameTwo", "valueTwo")))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withBody(new ParameterBody(new Parameter("nameOne", "valueOne"), new Parameter("nameTwo", "valueTwo")))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withBody(new ParameterBody(
@@ -448,7 +446,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenQueryStringParameterMatchesAndPathDifferent() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withQueryStringParameters(new Parameter("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withQueryStringParameters(new Parameter("name", "value"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -458,7 +456,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenBodyParameterMatchesAndPathDifferent() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withBody(new ParameterBody(new Parameter("name", "value")))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withBody(new ParameterBody(new Parameter("name", "value")))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -468,7 +466,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenCookieMatchesExactly() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withCookies(new Cookie("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withCookies(new Cookie("name", "value"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -478,7 +476,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenCookieDoesNotMatchValue() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withCookies(new Cookie("name", "value1"))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withCookies(new Cookie("name", "value1"))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withCookies(new Cookie("name", "value2"))));
@@ -487,7 +485,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void doNotRespondWhenCookieDoesNotMatchName() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withCookies(new Cookie("name1", "value"))).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withCookies(new Cookie("name1", "value"))).thenRespond(response().withBody("someBody")));
 
         // then
         assertNull(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withCookies(new Cookie("name2", "value"))));
@@ -496,7 +494,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenCookieMatchesAndExtraCookies() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withCookies(new Cookie("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withCookies(new Cookie("name", "value"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -506,7 +504,7 @@ public class MockServerMatcherBasicResponsesTest {
     @Test
     public void respondWhenCookieMatchesAndPathDifferent() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withCookies(new Cookie("name", "value"))).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withCookies(new Cookie("name", "value"))).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then

@@ -26,8 +26,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.model.HttpRequest.request;
-import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.TRACE;
+import static org.slf4j.event.Level.*;
 
 /**
  * @author jamesdbloom
@@ -122,12 +121,12 @@ public abstract class LifeCycle implements Stoppable {
     private Integer getFirstBoundPort(List<Future<Channel>> channelFutures) {
         for (Future<Channel> channelOpened : channelFutures) {
             try {
-                return ((InetSocketAddress) channelOpened.get(2, SECONDS).localAddress()).getPort();
+                return ((InetSocketAddress) channelOpened.get(15, SECONDS).localAddress()).getPort();
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
-                        .setType(LogEntry.LogMessageType.TRACE)
-                        .setLogLevel(DEBUG)
+                        .setType(LogEntry.LogMessageType.WARN)
+                        .setLogLevel(WARN)
                         .setMessageFormat("Exception while retrieving port from channel future, ignoring port for this channel - " + throwable.getMessage())
                         .setArguments(throwable)
                 );
@@ -202,7 +201,7 @@ public abstract class LifeCycle implements Stoppable {
         mockServerLogger.logEvent(
             new LogEntry()
                 .setType(SERVER_CONFIGURATION)
-                .setLogLevel(Level.INFO)
+                .setLogLevel(INFO)
                 .setHttpRequest(request())
                 .setMessageFormat(message)
         );

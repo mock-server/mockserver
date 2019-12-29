@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class TimeToLiveDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<TimeToLive> {
 
-    private static final String[] EXCLUDED_FIELDS = {"key", "endDate"};
+    private static final String[] EXCLUDED_FIELDS = {"endDate"};
     private TimeUnit timeUnit;
     private Long timeToLive;
     private Long endDate;

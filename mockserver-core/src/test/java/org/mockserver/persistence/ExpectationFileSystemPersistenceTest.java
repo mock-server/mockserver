@@ -48,6 +48,7 @@ public class ExpectationFileSystemPersistenceTest {
                     request()
                         .withPath("/simpleFirst")
                 )
+                    .withId("one")
                     .thenRespond(
                     response()
                         .withBody("some first response")
@@ -56,6 +57,7 @@ public class ExpectationFileSystemPersistenceTest {
                     request()
                         .withPath("/simpleSecond")
                 )
+                    .withId("two")
                     .thenRespond(
                     response()
                         .withBody("some second response")
@@ -68,6 +70,7 @@ public class ExpectationFileSystemPersistenceTest {
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -81,6 +84,7 @@ public class ExpectationFileSystemPersistenceTest {
                 "    \"body\" : \"some first response\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
                 "  }," + NEW_LINE +

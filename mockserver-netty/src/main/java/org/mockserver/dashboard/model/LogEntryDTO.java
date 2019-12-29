@@ -14,12 +14,12 @@ import static org.mockserver.model.HttpRequest.request;
 public class LogEntryDTO extends ObjectWithJsonToString {
 
     private static final String[] EXCLUDED_FIELDS = {
-        "key",
+        "id",
         "timestamp",
         "message",
         "throwable"
     };
-    private String key;
+    private String id;
     private Level logLevel;
     private long epochTime;
     private String timestamp;
@@ -35,7 +35,7 @@ public class LogEntryDTO extends ObjectWithJsonToString {
     private String message;
 
     public LogEntryDTO(LogEntry logEntry) {
-        setKey(logEntry.key());
+        setId(logEntry.id());
         setLogLevel(logEntry.getLogLevel());
         setTimestamp(logEntry.getTimestamp());
         setEpochTime(logEntry.getEpochTime());
@@ -50,12 +50,12 @@ public class LogEntryDTO extends ObjectWithJsonToString {
         setThrowable(logEntry.getThrowable());
     }
 
-    public String getKey() {
-        return key;
+    public String getId() {
+        return id;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public Level getLogLevel() {

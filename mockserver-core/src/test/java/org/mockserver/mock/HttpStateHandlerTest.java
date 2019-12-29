@@ -79,44 +79,43 @@ public class HttpStateHandlerTest {
                 .setLogLevel(INFO)
                 .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
                 .setHttpRequest(request("request_one"))
-                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
                 .setMessageFormat("no expectation for:{}returning response:{}")
                 .setArguments(request("request_one"), notFoundResponse())
         );
-        LogEntry logEntry = new LogEntry()
-            .setLogLevel(INFO)
-            .setType(EXPECTATION_RESPONSE)
-            .setHttpRequest(request("request_two"))
-            .setHttpResponse(response("response_two"))
-            .setMessageFormat("returning error:{}for request:{}for action:{}")
-            .setArguments(request("request_two"), response("response_two"), response("response_two"));
         httpStateHandler.log(
-            logEntry
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_RESPONSE)
+                .setHttpRequest(request("request_two"))
+                .setHttpResponse(response("response_two"))
+                .setMessageFormat("returning error:{}for request:{}for action:{}")
+                .setArguments(request("request_two"), response("response_two"), response("response_two"))
         );
         httpStateHandler.log(
             new LogEntry()
                 .setLogLevel(INFO)
                 .setType(EXPECTATION_MATCHED)
                 .setHttpRequest(request("request_one"))
-                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
                 .setMessageFormat("request:{}matched expectation:{}")
-                .setArguments(request("request_one"), new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setArguments(request("request_one"), new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
         );
         httpStateHandler.log(
             new LogEntry()
                 .setLogLevel(INFO)
                 .setType(EXPECTATION_MATCHED)
                 .setHttpRequest(request("request_two"))
-                .setExpectation(new Expectation(request("request_two")).thenRespond(response("response_two")))
+                .setExpectation(new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
                 .setMessageFormat("request:{}matched expectation:{}")
-                .setArguments(request("request_two"), new Expectation(request("request_two")).thenRespond(response("response_two")))
+                .setArguments(request("request_two"), new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
         );
         httpStateHandler.log(
             new LogEntry()
                 .setType(TRACE)
                 .setLogLevel(INFO)
                 .setHttpRequest(request("request_four"))
-                .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
+                .setExpectation(new Expectation(request("request_four")).withId("key_four").thenRespond(response("response_four")))
                 .setMessageFormat("some random {} message")
                 .setArguments("argument_one")
         );
@@ -177,6 +176,7 @@ public class HttpStateHandlerTest {
                     " matched expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
+                    "\t  \"id\" : \"key_one\"," + NEW_LINE +
                     "\t  \"httpRequest\" : {" + NEW_LINE +
                     "\t    \"path\" : \"request_one\"" + NEW_LINE +
                     "\t  }," + NEW_LINE +
@@ -203,6 +203,7 @@ public class HttpStateHandlerTest {
                     " matched expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
+                    "\t  \"id\" : \"key_two\"," + NEW_LINE +
                     "\t  \"httpRequest\" : {" + NEW_LINE +
                     "\t    \"path\" : \"request_two\"" + NEW_LINE +
                     "\t  }," + NEW_LINE +
@@ -242,7 +243,7 @@ public class HttpStateHandlerTest {
                 .setLogLevel(INFO)
                 .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
                 .setHttpRequest(request("request_one"))
-                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
                 .setMessageFormat("no expectation for:{}returning response:{}")
                 .setArguments(request("request_one"), notFoundResponse())
         );
@@ -260,24 +261,24 @@ public class HttpStateHandlerTest {
                 .setType(EXPECTATION_MATCHED)
                 .setLogLevel(INFO)
                 .setHttpRequest(request("request_one"))
-                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
                 .setMessageFormat("request:{}matched expectation:{}")
-                .setArguments(request("request_one"), new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setArguments(request("request_one"), new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
         );
         httpStateHandler.log(
             new LogEntry()
                 .setType(EXPECTATION_MATCHED)
                 .setLogLevel(INFO)
                 .setHttpRequest(request("request_two"))
-                .setExpectation(new Expectation(request("request_two")).thenRespond(response("response_two")))
+                .setExpectation(new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
                 .setMessageFormat("request:{}matched expectation:{}")
-                .setArguments(request("request_two"), new Expectation(request("request_two")).thenRespond(response("response_two")))
+                .setArguments(request("request_two"), new Expectation(request("request_two")).withId("key_two").thenRespond(response("response_two")))
         );
         httpStateHandler.log(
             new LogEntry()
                 .setType(TRACE)
                 .setHttpRequest(request("request_four"))
-                .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
+                .setExpectation(new Expectation(request("request_four")).withId("key_four").thenRespond(response("response_four")))
                 .setMessageFormat("some random {} message")
                 .setArguments("argument_one")
         );
@@ -316,6 +317,7 @@ public class HttpStateHandlerTest {
                     " matched expectation:" + NEW_LINE +
                     NEW_LINE +
                     "\t{" + NEW_LINE +
+                    "\t  \"id\" : \"key_one\"," + NEW_LINE +
                     "\t  \"httpRequest\" : {" + NEW_LINE +
                     "\t    \"path\" : \"request_one\"" + NEW_LINE +
                     "\t  }," + NEW_LINE +
@@ -443,10 +445,12 @@ public class HttpStateHandlerTest {
         // given
         httpStateHandler.add(
             new Expectation(request("request_one"))
+                .withId("key_one")
                 .thenRespond(response("response_one"))
         );
         httpStateHandler.add(
             new Expectation(request("request_four"))
+                .withId("key_four")
                 .thenRespond(response("response_four"))
         );
         // given - some log entries
@@ -486,6 +490,7 @@ public class HttpStateHandlerTest {
                     LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                     "" + NEW_LINE +
                     "\t{" + NEW_LINE +
+                    "\t  \"id\" : \"key_one\"," + NEW_LINE +
                     "\t  \"httpRequest\" : {" + NEW_LINE +
                     "\t    \"path\" : \"request_one\"" + NEW_LINE +
                     "\t  }," + NEW_LINE +
@@ -530,6 +535,7 @@ public class HttpStateHandlerTest {
                 ),
             is(response().withBody("" +
                     "[ {" + NEW_LINE +
+                    "  \"id\" : \"key_one\"," + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"request_one\"" + NEW_LINE +
                     "  }," + NEW_LINE +
@@ -565,6 +571,7 @@ public class HttpStateHandlerTest {
         // given
         httpStateHandler.add(
             new Expectation(request("request_one"))
+                .withId("key_one")
                 .thenRespond(response("response_one"))
         );
         // given - some log entries
@@ -572,7 +579,7 @@ public class HttpStateHandlerTest {
             new LogEntry()
                 .setType(TRACE)
                 .setHttpRequest(request("request_four"))
-                .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
+                .setExpectation(new Expectation(request("request_four")).withId("key_four").thenRespond(response("response_four")))
                 .setMessageFormat("some random {} message")
                 .setArguments("argument_one")
         );
@@ -611,6 +618,7 @@ public class HttpStateHandlerTest {
                 ),
             is(response().withBody("" +
                     "[ {" + NEW_LINE +
+                    "  \"id\" : \"key_one\"," + NEW_LINE +
                     "  \"httpRequest\" : {" + NEW_LINE +
                     "    \"path\" : \"request_one\"" + NEW_LINE +
                     "  }," + NEW_LINE +
@@ -886,7 +894,7 @@ public class HttpStateHandlerTest {
                 .setLogLevel(INFO)
                 .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
                 .setHttpRequest(request("request_one"))
-                .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_two")))
+                .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_two")))
                 .setMessageFormat("no expectation for:{}returning response:{}")
                 .setArguments(request("request_one"), notFoundResponse())
         );
@@ -920,6 +928,7 @@ public class HttpStateHandlerTest {
                 "      \"path\" : \"request_one\"" + NEW_LINE +
                 "    }," + NEW_LINE +
                 "    \"expectation\" : {" + NEW_LINE +
+                "      \"id\" : \"key_one\"," + NEW_LINE +
                 "      \"httpRequest\" : {" + NEW_LINE +
                 "        \"path\" : \"request_one\"" + NEW_LINE +
                 "      }," + NEW_LINE +
@@ -1014,7 +1023,7 @@ public class HttpStateHandlerTest {
                 .setLogLevel(Level.INFO)
                 .setHttpRequest(request("request_one"))
                 .setHttpResponse(response("response_one"))
-                .setExpectation(request("request_one"), response("response_one"))
+                .setExpectation(new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).withId("key_one").thenRespond(response("response_one")))
         );
         httpStateHandler.log(
             new LogEntry()
@@ -1022,7 +1031,7 @@ public class HttpStateHandlerTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_two"))
                 .setHttpResponse(response("response_two"))
-                .setExpectation(request("request_two"), response("response_two"))
+                .setExpectation(new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited()).withId("key_two").thenRespond(response("response_two")))
         );
 
         // when
@@ -1036,8 +1045,8 @@ public class HttpStateHandlerTest {
         // then
         assertThat(response,
             is(response().withBody(httpExpectationSerializer.serialize(Arrays.asList(
-                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one")),
-                new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_two"))
+                new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).withId("key_one").thenRespond(response("response_one")),
+                new Expectation(request("request_two"), Times.once(), TimeToLive.unlimited()).withId("key_two").thenRespond(response("response_two"))
             )), MediaType.JSON_UTF_8).withStatusCode(200))
         );
     }

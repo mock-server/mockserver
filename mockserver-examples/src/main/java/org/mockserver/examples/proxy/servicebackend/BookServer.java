@@ -48,7 +48,7 @@ public class BookServer {
         if (serverBootstrap == null) {
             try {
                 serverBootstrap = new ServerBootstrap()
-                    .group(new NioEventLoopGroup(1, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop")))
+                    .group(new NioEventLoopGroup(2, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop")))
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override

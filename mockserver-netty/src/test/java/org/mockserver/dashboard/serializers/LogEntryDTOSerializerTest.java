@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.mockserver.dashboard.model.LogEntryDTO;
 import org.mockserver.log.model.LogEntry;
+import org.mockserver.matchers.TimeToLive;
+import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -35,7 +37,7 @@ public class LogEntryDTOSerializerTest {
             .setHttpRequests(new HttpRequest[]{request("request_one"), request("request_two")})
             .setHttpResponse(response("response_one"))
             .setHttpError(error().withDropConnection(true))
-            .setExpectation(new Expectation(request("request_one")).thenRespond(response("response_one")))
+            .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_one")))
             .setMessageFormat("some random {} formatted string {}")
             .setArguments("one", "two")
             .setThrowable(new RuntimeException("TEST_EXCEPTION"));
@@ -47,7 +49,7 @@ public class LogEntryDTOSerializerTest {
 
         // then
         assertThat(json, containsString("{" + NEW_LINE +
-            "  \"key\" : \"" + logEntry.key() + "\"," + NEW_LINE +
+            "  \"id\" : \"" + logEntry.id() + "\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
             "    \"logLevel\" : \"WARN\"," + NEW_LINE +
             "    \"timestamp\" : \"" + logEntry.getTimestamp() + "\"," + NEW_LINE +
@@ -66,6 +68,7 @@ public class LogEntryDTOSerializerTest {
             "      \"dropConnection\" : true" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"expectation\" : {" + NEW_LINE +
+            "      \"id\" : \"key_one\"," + NEW_LINE +
             "      \"httpRequest\" : {" + NEW_LINE +
             "        \"path\" : \"request_one\"" + NEW_LINE +
             "      }," + NEW_LINE +
@@ -105,10 +108,11 @@ public class LogEntryDTOSerializerTest {
                     .withBody(json("{\"derivationMode\":\"HASHED\",\"deviceUrn\":\"411323184fd0c2bf724713149de137f4dde072c1fd31f0e29256800a1b2c1afc\",\"ciphertextBytesFormat\":\"JSON\"}"))
             )
             .setExpectation(
-                request("request_one")
-                    .withBody("some random string body"),
-                response("response_one")
-                    .withBody(json("{\"derivationMode\":\"HASHED\",\"deviceUrn\":\"411323184fd0c2bf724713149de137f4dde072c1fd31f0e29256800a1b2c1afc\",\"ciphertextBytesFormat\":\"JSON\"}"))
+                new Expectation(request("request_one")
+                    .withBody("some random string body"), Times.once(), TimeToLive.unlimited())
+                    .withId("key_one")
+                    .thenRespond(response("response_one")
+                        .withBody(json("{\"derivationMode\":\"HASHED\",\"deviceUrn\":\"411323184fd0c2bf724713149de137f4dde072c1fd31f0e29256800a1b2c1afc\",\"ciphertextBytesFormat\":\"JSON\"}")))
             );
 
         // when
@@ -118,7 +122,7 @@ public class LogEntryDTOSerializerTest {
 
         // then
         assertThat(json, containsString("{" + NEW_LINE +
-            "  \"key\" : \"" + logEntry.key() + "\"," + NEW_LINE +
+            "  \"id\" : \"" + logEntry.id() + "\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
             "    \"logLevel\" : \"WARN\"," + NEW_LINE +
             "    \"timestamp\" : \"" + logEntry.getTimestamp() + "\"," + NEW_LINE +
@@ -144,6 +148,7 @@ public class LogEntryDTOSerializerTest {
             "      }" + NEW_LINE +
             "    }," + NEW_LINE +
             "    \"expectation\" : {" + NEW_LINE +
+            "      \"id\" : \"key_one\"," + NEW_LINE +
             "      \"httpRequest\" : {" + NEW_LINE +
             "        \"path\" : \"request_one\"," + NEW_LINE +
             "        \"body\" : \"some random string body\"" + NEW_LINE +

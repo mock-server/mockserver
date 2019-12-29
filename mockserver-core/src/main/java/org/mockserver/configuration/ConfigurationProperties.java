@@ -47,7 +47,7 @@ public class ConfigurationProperties {
     private static final String DEFAULT_ENABLE_CORS_FOR_API = "false";
     private static final String DEFAULT_ENABLE_CORS_FOR_ALL_RESPONSES = "false";
     private static final String DEFAULT_PREVENT_CERTIFICATE_DYNAMIC_UPDATE = "false";
-    private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = Math.max(15, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
+    private static final int DEFAULT_NIO_EVENT_LOOP_THREAD_COUNT = Math.max(20, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY = "org/mockserver/socket/CertificateAuthorityPrivateKey.pem";
     private static final String DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE = "org/mockserver/socket/CertificateAuthorityCertificate.pem";
     private static final String DEFAULT_CORS_ALLOW_HEADERS = "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization";
@@ -98,6 +98,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_PROXY_AUTHENTICATION_PASSWORD = "mockserver.proxyAuthenticationPassword";
     private static final String MOCKSERVER_INITIALIZATION_CLASS = "mockserver.initializationClass";
     private static final String MOCKSERVER_INITIALIZATION_JSON_PATH = "mockserver.initializationJsonPath";
+    private static final String MOCKSERVER_WATCH_INITIALIZATION_JSON = "mockserver.watchInitializationJson";
     private static final String MOCKSERVER_PERSISTED_EXPECTATIONS_PATH = "mockserver.persistedExpectationsPath";
     private static final String MOCKSERVER_PERSIST_EXPECTATIONS = "mockserver.persistExpectations";
     private static final String MOCKSERVER_CORS_ALLOW_HEADERS = "mockserver.corsAllowHeaders";
@@ -640,6 +641,14 @@ public class ConfigurationProperties {
 
     public static void initializationJsonPath(String initializationJsonPath) {
         System.setProperty(MOCKSERVER_INITIALIZATION_JSON_PATH, initializationJsonPath);
+    }
+
+    public static boolean watchInitializationJson() {
+        return Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_WATCH_INITIALIZATION_JSON, "MOCKSERVER_WATCH_INITIALIZATION_JSON", "" + false));
+    }
+
+    public static void watchInitializationJson(boolean enable) {
+        System.setProperty(MOCKSERVER_WATCH_INITIALIZATION_JSON, "" + enable);
     }
 
     public static boolean persistExpectations() {

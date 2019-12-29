@@ -140,7 +140,11 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                 } else {
 
-                    actionHandler.processAction(request, responseWriter, ctx, getLocalAddresses(ctx), isProxyingRequest(ctx), false);
+                    try {
+                        actionHandler.processAction(request, responseWriter, ctx, getLocalAddresses(ctx), isProxyingRequest(ctx), false);
+                    } catch (NullPointerException e) {
+                        System.out.println("e = " + e);
+                    }
 
                 }
             }

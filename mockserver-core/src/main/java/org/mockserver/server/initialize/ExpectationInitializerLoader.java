@@ -28,7 +28,7 @@ public class ExpectationInitializerLoader {
     private final MockServerMatcher mockServerMatcher;
 
     public ExpectationInitializerLoader(MockServerLogger mockServerLogger, MockServerMatcher mockServerMatcher) {
-        expectationSerializer = new ExpectationSerializer(mockServerLogger);
+        this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
         this.mockServerLogger = mockServerLogger;
         this.mockServerMatcher = mockServerMatcher;
         addExpectationsFromInitializer();
@@ -37,14 +37,6 @@ public class ExpectationInitializerLoader {
     private void addExpectationsFromInitializer() {
         for (Expectation expectation : loadExpectations()) {
             mockServerMatcher.add(expectation);
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(CREATED_EXPECTATION)
-                    .setLogLevel(Level.INFO)
-                    .setHttpRequest(expectation.getHttpRequest())
-                    .setMessageFormat("creating expectation:{}")
-                    .setArguments(expectation.clone())
-            );
         }
     }
 

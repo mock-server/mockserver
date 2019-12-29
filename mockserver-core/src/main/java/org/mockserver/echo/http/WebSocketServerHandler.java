@@ -10,6 +10,7 @@ import io.netty.util.ReferenceCountUtil;
 import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
 import java.util.List;
@@ -78,7 +79,7 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
         if (handshaker == null) {
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
         } else {
-            final String clientId = httpRequest.headers().contains(CLIENT_REGISTRATION_ID_HEADER) ? httpRequest.headers().get(CLIENT_REGISTRATION_ID_HEADER) : UUID.randomUUID().toString();
+            final String clientId = httpRequest.headers().contains(CLIENT_REGISTRATION_ID_HEADER) ? httpRequest.headers().get(CLIENT_REGISTRATION_ID_HEADER) : UUIDService.getUUID();
             handshaker
                 .handshake(
                     ctx.channel(),

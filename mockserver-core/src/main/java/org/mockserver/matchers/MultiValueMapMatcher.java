@@ -12,8 +12,9 @@ import static org.slf4j.event.Level.DEBUG;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("rawtypes")
 public class MultiValueMapMatcher extends NotMatcher<KeysToMultiValues> {
-    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger"};
+    private static final String[] EXCLUDED_FIELDS = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final CaseInsensitiveRegexMultiMap multiMap;
     private final boolean controlPlaneMatcher;

@@ -15,7 +15,7 @@ import static org.slf4j.event.Level.DEBUG;
  * @author jamesdbloom
  */
 public class JsonStringMatcher extends BodyMatcher<String> {
-    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger"};
+    private static final String[] EXCLUDED_FIELDS = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final String matcher;
     private final MatchType matchType;

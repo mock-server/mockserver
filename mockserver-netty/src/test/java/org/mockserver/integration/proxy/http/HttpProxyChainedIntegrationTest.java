@@ -31,7 +31,7 @@ public class HttpProxyChainedIntegrationTest {
 
     private static ClientAndServer targetClientAndServer;
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(HttpProxyChainedIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(HttpProxyChainedIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
     @BeforeClass
     public static void startServer() {

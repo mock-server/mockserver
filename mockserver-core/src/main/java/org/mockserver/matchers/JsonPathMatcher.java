@@ -17,7 +17,7 @@ import static org.slf4j.event.Level.TRACE;
  * @author jamesdbloom
  */
 public class JsonPathMatcher extends BodyMatcher<String> {
-    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger", "jsonPath"};
+    private static final String[] EXCLUDED_FIELDS = {"mockServerLogger", "jsonPath"};
     private final MockServerLogger mockServerLogger;
     private final String matcher;
     private JsonPath jsonPath;

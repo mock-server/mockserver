@@ -24,7 +24,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -5075,18 +5078,26 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
 
         // then
         assertThat(
-            mockServerClient.retrieveActiveExpectations(request().withPath(calculatePath("some_path.*")), Format.JSON),
-            is(new ExpectationSerializer(new MockServerLogger()).serialize(Arrays.asList(
+            new ExpectationSerializer(new MockServerLogger())
+                .deserializeArray(
+                    mockServerClient
+                        .retrieveActiveExpectations(request().withPath(calculatePath("some_path.*")), Format.JSON)
+                ),
+            arrayContaining(
                 new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
                     .thenRespond(response().withBody("some_body"))
-            )))
+            )
         );
 
         assertThat(
-            mockServerClient.retrieveActiveExpectations(null, Format.JSON),
-            is(new ExpectationSerializer(new MockServerLogger()).serialize(Arrays.asList(
+            new ExpectationSerializer(new MockServerLogger())
+                .deserializeArray(
+                    mockServerClient
+                        .retrieveActiveExpectations(null, Format.JSON)
+                ),
+            arrayContaining(
                 new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
@@ -5095,12 +5106,16 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .thenRespond(response().withBody("some_other_body")),
                 new Expectation(request().withPath(calculatePath("some_forward_path")))
                     .thenForward(forward())
-            )))
+            )
         );
 
         assertThat(
-            mockServerClient.retrieveActiveExpectations(request(), Format.JSON),
-            is(new ExpectationSerializer(new MockServerLogger()).serialize(Arrays.asList(
+            new ExpectationSerializer(new MockServerLogger())
+                .deserializeArray(
+                    mockServerClient
+                        .retrieveActiveExpectations(request(), Format.JSON)
+                ),
+            arrayContaining(
                 new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
                     .thenRespond(response().withBody("some_body")),
                 new Expectation(request().withPath(calculatePath("some_path.*")))
@@ -5109,7 +5124,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .thenRespond(response().withBody("some_other_body")),
                 new Expectation(request().withPath(calculatePath("some_forward_path")))
                     .thenForward(forward())
-            )))
+            )
         );
     }
 

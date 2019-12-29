@@ -33,7 +33,7 @@ public class NettyPortForwardingSecureProxyIntegrationTest {
 
         mockServer = new MockServer(echoServer.getPort(), "127.0.0.1");
 
-        mockServerClient = new MockServerClient("localhost", mockServer.getLocalPort());
+        mockServerClient = new MockServerClient("127.0.0.1", mockServer.getLocalPort());
     }
 
     @AfterClass
@@ -47,7 +47,7 @@ public class NettyPortForwardingSecureProxyIntegrationTest {
     public void shouldForwardRequestsUsingSocketDirectlyHeadersOnly() throws Exception {
         Socket socket = null;
         try {
-            socket = sslSocketFactory().wrapSocket(new Socket("localhost", mockServer.getLocalPort()));
+            socket = sslSocketFactory().wrapSocket(new Socket("127.0.0.1", mockServer.getLocalPort()));
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -56,7 +56,7 @@ public class NettyPortForwardingSecureProxyIntegrationTest {
             // - send GET request for headers only
             output.write(("" +
                 "GET /test_headers_only HTTP/1.1\r\n" +
-                "Host: localhost:" + echoServer.getPort() + "\r\n" +
+                "Host: 127.0.0.1:" + echoServer.getPort() + "\r\n" +
                 "X-Test: test_headers_only\r\n" +
                 "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
@@ -84,7 +84,7 @@ public class NettyPortForwardingSecureProxyIntegrationTest {
         Socket socket = null;
         try {
 
-            socket = sslSocketFactory().wrapSocket(new Socket("localhost", mockServer.getLocalPort()));
+            socket = sslSocketFactory().wrapSocket(new Socket("127.0.0.1", mockServer.getLocalPort()));
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -92,7 +92,7 @@ public class NettyPortForwardingSecureProxyIntegrationTest {
             // - send GET request for headers and body
             output.write(("" +
                 "GET /test_headers_and_body HTTP/1.1\r\n" +
-                "Host: localhost:" + echoServer.getPort() + "\r\n" +
+                "Host: 127.0.0.1:" + echoServer.getPort() + "\r\n" +
                 "X-Test: test_headers_and_body\r\n" +
                 "Content-Length:" + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "\r\n" +
                 "\r\n" +
@@ -125,7 +125,7 @@ public class NettyPortForwardingSecureProxyIntegrationTest {
         Socket socket = null;
         try {
 
-            socket = sslSocketFactory().wrapSocket(new Socket("localhost", mockServer.getLocalPort()));
+            socket = sslSocketFactory().wrapSocket(new Socket("127.0.0.1", mockServer.getLocalPort()));
 
             // given
             OutputStream output = socket.getOutputStream();
@@ -133,7 +133,7 @@ public class NettyPortForwardingSecureProxyIntegrationTest {
             // - send GET request for headers and body
             output.write(("" +
                 "GET /not_found HTTP/1.1\r\n" +
-                "Host: localhost:" + echoServer.getPort() + "\r\n" +
+                "Host: 127.0.0.1:" + echoServer.getPort() + "\r\n" +
                 "\r\n"
             ).getBytes(StandardCharsets.UTF_8));
             output.flush();

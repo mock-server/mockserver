@@ -662,7 +662,7 @@
                     </includes>
                     <systemProperties>
                         <mockserver.disableSystemOut>true</mockserver.disableSystemOut>
-                        <mockserver.nioEventLoopThreadCount>20</mockserver.nioEventLoopThreadCount>
+                        <mockserver.nioEventLoopThreadCount>25</mockserver.nioEventLoopThreadCount>
                     </systemProperties>
                     <argLine>-Duser.language=en -Duser.country=GB</argLine>
                     <disableXmlReport>true</disableXmlReport>

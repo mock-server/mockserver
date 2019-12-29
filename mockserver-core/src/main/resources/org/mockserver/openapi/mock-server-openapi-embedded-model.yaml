@@ -236,6 +236,8 @@ components:
       type: object
       additionalProperties: false
       properties:
+        id:
+          type: string
         httpRequest:
           $ref: "#/components/schemas/HttpRequest"
         httpResponse:

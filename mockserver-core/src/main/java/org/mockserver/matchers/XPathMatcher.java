@@ -17,7 +17,7 @@ import static org.slf4j.event.Level.*;
  * @author jamesdbloom
  */
 public class XPathMatcher extends BodyMatcher<String> {
-    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger", "xpathExpression"};
+    private static final String[] EXCLUDED_FIELDS = {"mockServerLogger", "xpathExpression"};
     private final MockServerLogger mockServerLogger;
     private final String matcher;
     private final StringToXmlDocumentParser stringToXmlDocumentParser = new StringToXmlDocumentParser();

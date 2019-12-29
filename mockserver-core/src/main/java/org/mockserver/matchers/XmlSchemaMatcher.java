@@ -13,7 +13,7 @@ import static org.slf4j.event.Level.DEBUG;
  * @author jamesdbloom
  */
 public class XmlSchemaMatcher extends BodyMatcher<String> {
-    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger", "xmlSchemaValidator"};
+    private static final String[] EXCLUDED_FIELDS = {"mockServerLogger", "xmlSchemaValidator"};
     private final MockServerLogger mockServerLogger;
     private String schema;
     private XmlSchemaValidator xmlSchemaValidator;

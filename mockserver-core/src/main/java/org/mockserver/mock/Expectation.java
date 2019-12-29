@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.*;
+import org.mockserver.uuid.UUIDService;
 
 /**
  * @author jamesdbloom
@@ -11,6 +12,8 @@ import org.mockserver.model.*;
 @SuppressWarnings("rawtypes")
 public class Expectation extends ObjectWithJsonToString {
 
+    private static final String[] excludedFields = {"id"};
+    private String id;
     private final HttpRequest httpRequest;
     private final Times times;
     private final TimeToLive timeToLive;
@@ -33,6 +36,18 @@ public class Expectation extends ObjectWithJsonToString {
         this.httpRequest = httpRequest;
         this.times = times;
         this.timeToLive = timeToLive;
+    }
+
+    public String getId() {
+        if (id == null) {
+            id = UUIDService.getUUID();
+        }
+        return id;
+    }
+
+    public Expectation withId(String key) {
+        this.id = key;
+        return this;
     }
 
     public HttpRequest getHttpRequest() {
@@ -262,6 +277,7 @@ public class Expectation extends ObjectWithJsonToString {
     @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Expectation clone() {
         return new Expectation(httpRequest, times.clone(), timeToLive)
+            .withId(id)
             .thenRespond(httpResponse)
             .thenRespond(httpResponseTemplate)
             .thenRespond(httpResponseClassCallback)
@@ -272,5 +288,11 @@ public class Expectation extends ObjectWithJsonToString {
             .thenForward(httpForwardObjectCallback)
             .thenForward(httpOverrideForwardedRequest)
             .thenError(httpError);
+    }
+
+    @Override
+    @JsonIgnore
+    public String[] fieldsExcludedFromEqualsAndHashCode() {
+        return excludedFields;
     }
 }

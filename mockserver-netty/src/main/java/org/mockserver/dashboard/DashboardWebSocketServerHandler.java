@@ -29,6 +29,7 @@ import org.mockserver.serialization.HttpRequestSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.ui.MockServerLogListener;
 import org.mockserver.ui.MockServerMatcherListener;
+import org.mockserver.ui.MockServerMatcherNotifier;
 import org.slf4j.event.Level;
 
 import java.util.ArrayList;
@@ -274,7 +275,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
     }
 
     @Override
-    public void updated(MockServerMatcher mockServerMatcher) {
+    public void updated(MockServerMatcher mockServerMatcher, MockServerMatcherNotifier.Cause cause) {
         for (Map.Entry<ChannelHandlerContext, HttpRequest> registryEntry : clientRegistry.entrySet()) {
             sendUpdate(registryEntry.getValue(), registryEntry.getKey());
         }
@@ -297,7 +298,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                                 && recordedExpectations.size() < UI_UPDATE_ITEM_LIMIT) {
                                 recordedExpectations.add(
                                     ImmutableMap.of(
-                                        "key", logEntryDTO.key(),
+                                        "key", logEntryDTO.getId(),
                                         "value", new Expectation(logEntryDTO.getHttpRequest(), Times.once(), TimeToLive.unlimited())
                                             .thenRespond(logEntryDTO.getHttpResponse())
                                     )
@@ -305,10 +306,11 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                             }
                             if (requestLogPredicate.test(logEntryDTO)
                                 && recordedRequests.size() < UI_UPDATE_ITEM_LIMIT) {
-                                for (HttpRequest request : logEntryDTO.getHttpRequests()) {
+                                HttpRequest[] httpRequests = logEntryDTO.getHttpRequests();
+                                for (int i = 0; i < httpRequests.length; i++) {
                                     recordedRequests.add(ImmutableMap.of(
-                                        "key", logEntryDTO.key(),
-                                        "value", request
+                                        "key", logEntryDTO.getId() + i,
+                                        "value", httpRequests[i]
                                     ));
                                 }
                             }
@@ -326,7 +328,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                             .stream()
                             .limit(UI_UPDATE_ITEM_LIMIT)
                             .map(expectation -> ImmutableMap.of(
-                                "key", expectation.key(),
+                                "key", expectation.getId(),
                                 "value", expectation
                             ))
                             .collect(Collectors.toList()),

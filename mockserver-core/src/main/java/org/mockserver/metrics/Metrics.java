@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
 public class Metrics {
 
     private static Map<Name, Integer> metrics = new ConcurrentHashMap<>();
@@ -29,12 +30,7 @@ public class Metrics {
     public static void increment(Name name) {
         if (ConfigurationProperties.metricsEnabled()) {
             synchronized (name) {
-                final Integer currentValue = metrics.get(name);
-                if (currentValue != null) {
-                    metrics.put(name, currentValue + 1);
-                } else {
-                    metrics.put(name, 1);
-                }
+                metrics.merge(name, 1, Integer::sum);
             }
         }
     }
@@ -56,12 +52,7 @@ public class Metrics {
         if (ConfigurationProperties.metricsEnabled()) {
             Name name = Name.valueOf("ACTION_" + type.name() + "_COUNT");
             synchronized (name) {
-                final Integer currentValue = metrics.get(name);
-                if (currentValue != null) {
-                    metrics.put(name, currentValue + 1);
-                } else {
-                    metrics.put(name, 1);
-                }
+                metrics.merge(name, 1, Integer::sum);
             }
         }
     }

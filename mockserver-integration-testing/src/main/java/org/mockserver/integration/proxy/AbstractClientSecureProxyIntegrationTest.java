@@ -54,7 +54,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
 
     public abstract MockServerClient getProxyClient();
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(AbstractClientSecureProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(AbstractClientSecureProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
     @AfterClass
     public static void stopEventLoopGroup() {
@@ -63,20 +63,25 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
 
     @Test
     public void shouldConnectToSecurePort() throws Exception {
-        try (Socket socket = new Socket("localhost", getProxyPort())) {
-            // given
-            OutputStream output = socket.getOutputStream();
+        try {
+            try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
+                // given
+                OutputStream output = socket.getOutputStream();
 
-            // when
-            output.write(("" +
-                "CONNECT localhost:443 HTTP/1.1\r\n" +
-                "Host: localhost:" + getServerSecurePort() + "\r\n" +
-                "\r\n"
-            ).getBytes(UTF_8));
-            output.flush();
+                // when
+                output.write(("" +
+                    "CONNECT 127.0.0.1:443 HTTP/1.1\r\n" +
+                    "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
+                    "\r\n"
+                ).getBytes(UTF_8));
+                output.flush();
 
-            // then
-            assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
+                // then
+                assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
+            }
+        } catch (java.net.SocketException se) {
+            System.out.println("getProxyPort() = " + getProxyPort());
+            throw se;
         }
     }
 
@@ -90,14 +95,14 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
             ConfigurationProperties.proxyAuthenticationUsername(username);
             ConfigurationProperties.proxyAuthenticationPassword(password);
 
-            try (Socket socket = new Socket("localhost", getProxyPort())) {
+            try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
                 // given
                 OutputStream output = socket.getOutputStream();
 
                 // when
                 output.write(("" +
-                    "CONNECT localhost:443 HTTP/1.1\r\n" +
-                    "Host: localhost:" + getServerSecurePort() + "\r\n" +
+                    "CONNECT 127.0.0.1:443 HTTP/1.1\r\n" +
+                    "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
                     "\r\n"
                 ).getBytes(UTF_8));
                 output.flush();
@@ -126,14 +131,14 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
             ConfigurationProperties.proxyAuthenticationPassword(password);
             ConfigurationProperties.proxyAuthenticationRealm(realm);
 
-            try (Socket socket = new Socket("localhost", getProxyPort())) {
+            try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
                 // given
                 OutputStream output = socket.getOutputStream();
 
                 // when
                 output.write(("" +
-                    "CONNECT localhost:443 HTTP/1.1\r\n" +
-                    "Host: localhost:" + getServerSecurePort() + "\r\n" +
+                    "CONNECT 127.0.0.1:443 HTTP/1.1\r\n" +
+                    "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
                     "\r\n"
                 ).getBytes(UTF_8));
                 output.flush();
@@ -163,14 +168,14 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
             ConfigurationProperties.proxyAuthenticationPassword(password);
             ConfigurationProperties.proxyAuthenticationRealm(realm);
 
-            try (Socket socket = new Socket("localhost", getProxyPort())) {
+            try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
                 // given
                 OutputStream output = socket.getOutputStream();
 
                 // when
                 output.write(("" +
-                    "CONNECT localhost:443 HTTP/1.1\r\n" +
-                    "Host: localhost:" + getServerSecurePort() + "\r\n" +
+                    "CONNECT 127.0.0.1:443 HTTP/1.1\r\n" +
+                    "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
                     "Proxy-Authorization: Basic " + Base64.encodeBase64String((username + ":" + password).getBytes(UTF_8)) + "\r\n" +
                     "\r\n"
                 ).getBytes(UTF_8));
@@ -189,15 +194,15 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
 
     @Test
     public void shouldForwardRequestsToSecurePortUsingSocketDirectly() throws Exception {
-        try (Socket socket = new Socket("localhost", getProxyPort())) {
+        try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
             // given
             OutputStream output = socket.getOutputStream();
 
             // when
             // - send CONNECT request
             output.write(("" +
-                "CONNECT localhost:443 HTTP/1.1\r\n" +
-                "Host: localhost:" + getServerSecurePort() + "\r\n" +
+                "CONNECT 127.0.0.1:443 HTTP/1.1\r\n" +
+                "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
                 "\r\n"
             ).getBytes(UTF_8));
             output.flush();
@@ -213,7 +218,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                 // - send GET request for headers only
                 output.write(("" +
                     "GET /test_headers_only HTTP/1.1\r\n" +
-                    "Host: localhost:" + getServerSecurePort() + "\r\n" +
+                    "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
                     "X-Test: test_headers_only\r\n" +
                     "Connection: keep-alive\r\n" +
                     "\r\n"
@@ -226,7 +231,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                 // - send GET request for headers and body
                 output.write(("" +
                     "GET /test_headers_and_body HTTP/1.1\r\n" +
-                    "Host: localhost:" + getServerSecurePort() + "\r\n" +
+                    "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
                     "Content-Length: " + "an_example_body".getBytes(UTF_8).length + "\r\n" +
                     "X-Test: test_headers_and_body\r\n" +
                     "\r\n" +
@@ -270,7 +275,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
         HttpPost request = new HttpPost(
             new URIBuilder()
                 .setScheme("https")
-                .setHost("localhost")
+                .setHost("127.0.0.1")
                 .setPort(getServerSecurePort())
                 .setPath("/test_headers_and_body")
                 .build()
@@ -293,15 +298,15 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
 
     @Test
     public void shouldForwardRequestsToSecurePortAndUnknownPath() throws Exception {
-        try (Socket socket = new Socket("localhost", getProxyPort())) {
+        try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
             // given
             OutputStream output = socket.getOutputStream();
 
             // when
             // - send CONNECT request
             output.write(("" +
-                "CONNECT localhost:443 HTTP/1.1\r\n" +
-                "Host: localhost:" + getServerSecurePort() + "\r\n" +
+                "CONNECT 127.0.0.1:443 HTTP/1.1\r\n" +
+                "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
                 "\r\n"
             ).getBytes(UTF_8));
             output.flush();
@@ -316,7 +321,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                 output = sslSocket.getOutputStream();
                 output.write(("" +
                     "GET /not_found HTTP/1.1\r\n" +
-                    "Host: localhost:" + getServerSecurePort() + "\r\n" +
+                    "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
                     "\r\n"
                 ).getBytes(UTF_8));
                 output.flush();
@@ -351,13 +356,13 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                     clientEventLoopGroup,
                     proxyConfiguration(
                         ProxyConfiguration.Type.HTTPS,
-                        "localhost:" + getProxyPort()
+                        "127.0.0.1:" + getProxyPort()
                     ))
                     .sendRequest(
                         request()
                             .withPath("/target")
                             .withSecure(true)
-                            .withHeader(HOST.toString(), "localhost:" + getServerSecurePort())
+                            .withHeader(HOST.toString(), "127.0.0.1:" + getServerSecurePort())
                     )
                     .get(10, SECONDS);
                 fail();
@@ -387,7 +392,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                 clientEventLoopGroup,
                 proxyConfiguration(
                     ProxyConfiguration.Type.HTTPS,
-                    "localhost:" + getProxyPort(),
+                    "127.0.0.1:" + getProxyPort(),
                     username,
                     password
                 ))
@@ -395,7 +400,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                     request()
                         .withPath("/target")
                         .withSecure(true)
-                        .withHeader(HOST.toString(), "localhost:" + getServerSecurePort())
+                        .withHeader(HOST.toString(), "127.0.0.1:" + getServerSecurePort())
                 )
                 .get(10, SECONDS);
 

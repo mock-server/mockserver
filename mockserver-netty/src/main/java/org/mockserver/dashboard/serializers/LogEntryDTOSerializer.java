@@ -19,7 +19,7 @@ public class LogEntryDTOSerializer extends StdSerializer<LogEntryDTO> {
     @Override
     public void serialize(LogEntryDTO logEntry, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
-        jgen.writeObjectField("key", logEntry.getKey());
+        jgen.writeObjectField("id", logEntry.getId());
         jgen.writeObjectFieldStart("value");
         if (logEntry.getLogLevel() != null) {
             jgen.writeObjectField("logLevel", logEntry.getLogLevel());

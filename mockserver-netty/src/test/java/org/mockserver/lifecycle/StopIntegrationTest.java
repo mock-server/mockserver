@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -149,7 +150,10 @@ public class StopIntegrationTest {
             new Socket("localhost", MOCK_SERVER_PORT);
             fail("socket should be closed");
         } catch (IOException ioe) {
-            assertThat(ioe.getMessage(), containsString("Connection refused"));
+            assertThat(ioe.getMessage(), anyOf(
+                containsString("Connection refused"),
+                containsString("Socket closed")
+            ));
         }
     }
 

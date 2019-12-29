@@ -42,7 +42,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
 
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
-        clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(ExpectationFileSystemPersistenceIntegrationTest.class.getSimpleName() + "-eventLoop"));
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(ExpectationFileSystemPersistenceIntegrationTest.class.getSimpleName() + "-eventLoop"));
         httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
     }
 
@@ -69,6 +69,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
                     request()
                         .withPath("/simpleFirst")
                 )
+                    .withId("one")
                     .thenRespond(
                     response()
                         .withBody("some first response")
@@ -77,6 +78,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
                     request()
                         .withPath("/simpleSecond")
                 )
+                    .withId("two")
                     .thenRespond(
                     response()
                         .withBody("some second response")
@@ -96,6 +98,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
 
             // then
             String expectedFileContents = "[ {" + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -109,6 +112,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
                 "    \"body\" : \"some first response\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}, {" + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
                 "  \"httpRequest\" : {" + NEW_LINE +
                 "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
                 "  }," + NEW_LINE +
@@ -124,7 +128,7 @@ public class ExpectationFileSystemPersistenceIntegrationTest {
                 "} ]";
             assertThat(new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), CoreMatchers.is(expectedFileContents));
         } finally {
-            ConfigurationProperties.initializationJsonPath(persistedExpectationsPath);
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
             ConfigurationProperties.persistExpectations(false);
             stopQuietly(mockServer);
         }

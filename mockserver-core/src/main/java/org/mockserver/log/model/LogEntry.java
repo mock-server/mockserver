@@ -10,12 +10,14 @@ import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.UUID;
 
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.model.HttpRequest.request;
@@ -27,11 +29,12 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
     private static final String[] EXCLUDED_FIELDS = {
-        "key",
+        "id",
         "timestamp",
         "message",
         "throwable"
     };
+    private String id;
     private Level logLevel = Level.INFO;
     public static final DateFormat LOG_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private long epochTime = TimeService.currentTimeMillis();
@@ -52,6 +55,14 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
 
     public LogEntry() {
 
+    }
+
+    @JsonIgnore
+    public String id() {
+        if (id == null) {
+            id = UUIDService.getUUID();
+        }
+        return id;
     }
 
     public void clear() {
@@ -375,7 +386,9 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         EXCEPTION,
         CLEARED,
         RETRIEVED,
+        UPDATED_EXPECTATION,
         CREATED_EXPECTATION,
+        REMOVED_EXPECTATION,
         RECEIVED_REQUEST,
         EXPECTATION_RESPONSE,
         EXPECTATION_NOT_MATCHED_RESPONSE,

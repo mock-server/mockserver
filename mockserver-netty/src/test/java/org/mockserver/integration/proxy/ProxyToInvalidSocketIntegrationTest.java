@@ -33,7 +33,7 @@ public class ProxyToInvalidSocketIntegrationTest {
 
     private static ClientAndServer clientAndServer;
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(ProxyToInvalidSocketIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(ProxyToInvalidSocketIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
     private static final NettyHttpClient httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
 

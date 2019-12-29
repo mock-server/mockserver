@@ -33,7 +33,6 @@ public class EchoServer implements Stoppable {
     private final Scheduler scheduler = new Scheduler(mockServerLogger);
     private final MockServerEventLog mockServerEventLog = new MockServerEventLog(mockServerLogger, scheduler, true);
     private final NextResponse nextResponse = new NextResponse();
-    private final NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
     private final CompletableFuture<Integer> boundPort = new CompletableFuture<>();
     private final List<String> registeredClients;
     private final List<Channel> websocketChannels;
@@ -50,8 +49,8 @@ public class EchoServer implements Stoppable {
         websocketChannels = new ArrayList<>();
         textWebSocketFrames = new ArrayList<>();
         new Thread(() -> {
-            bossGroup = new NioEventLoopGroup(1, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
-            workerGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
+            bossGroup = new NioEventLoopGroup(2, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
+            workerGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
             new ServerBootstrap().group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
                 .option(ChannelOption.SO_BACKLOG, 100)
@@ -65,7 +64,6 @@ public class EchoServer implements Stoppable {
                         boundPort.complete(((InetSocketAddress) future.channel().localAddress()).getPort());
                     } else {
                         boundPort.completeExceptionally(future.cause());
-                        eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
                     }
                 });
         }, "MockServer EchoServer Thread").start();
@@ -89,7 +87,6 @@ public class EchoServer implements Stoppable {
         scheduler.shutdown();
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
-        eventLoopGroup.shutdownGracefully(0, 1, TimeUnit.MILLISECONDS);
     }
 
     @Override

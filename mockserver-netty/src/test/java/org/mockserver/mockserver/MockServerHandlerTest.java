@@ -205,7 +205,7 @@ public class MockServerHandlerTest {
                 .setType(FORWARDED_REQUEST)
                 .setHttpRequest(request("request_one"))
                 .setHttpResponse(response("response_one"))
-                .setExpectation(request("request_one"), response("response_one"))
+                .setExpectation(new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).withId("key_one").thenRespond(response("response_one")))
         );
 
         // when
@@ -221,14 +221,14 @@ public class MockServerHandlerTest {
         HttpResponse httpResponse = embeddedChannel.readOutbound();
         assertThat(httpResponse.getStatusCode(), is(200));
         assertThat(httpResponse.getBodyAsString(), is(expectationSerializer.serialize(Collections.singletonList(
-            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).thenRespond(response("response_one"))
+            new Expectation(request("request_one"), Times.once(), TimeToLive.unlimited()).withId("key_one").thenRespond(response("response_one"))
         ))));
     }
 
     @Test
     public void shouldRetrieveLogMessages() {
         // given
-        httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));
+        httpStateHandler.add(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_one")));
         // when
         HttpRequest retrieveLogRequest = request("/mockserver/retrieve")
             .withMethod("PUT")
@@ -246,6 +246,7 @@ public class MockServerHandlerTest {
             is(endsWith(LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - creating expectation:" + NEW_LINE +
                 NEW_LINE +
                 "\t{" + NEW_LINE +
+                "\t  \"id\" : \"key_one\"," + NEW_LINE +
                 "\t  \"httpRequest\" : {" + NEW_LINE +
                 "\t    \"path\" : \"request_one\"" + NEW_LINE +
                 "\t  }," + NEW_LINE +

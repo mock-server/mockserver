@@ -19,7 +19,6 @@ public class LogEntrySerializer extends StdSerializer<LogEntry> {
     @Override
     public void serialize(LogEntry logEntry, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
-        // jgen.writeObjectField("key", Long.hashCode(logEntry.getEpochTime()));
         if (logEntry.getLogLevel() != null) {
             jgen.writeObjectField("logLevel", logEntry.getLogLevel());
         }

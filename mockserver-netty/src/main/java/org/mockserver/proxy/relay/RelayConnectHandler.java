@@ -104,20 +104,17 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
             });
 
         final InetSocketAddress remoteSocket = getDownstreamSocket(serverCtx.channel());
-        bootstrap.connect(remoteSocket).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) {
-                if (!future.isSuccess()) {
-                    failure("Connection failed to " + remoteSocket, future.cause(), serverCtx, failureResponse(request));
-                } else {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(LogEntry.LogMessageType.DEBUG)
-                            .setLogLevel(DEBUG)
-                            .setMessageFormat("Connected to {}")
-                            .setArguments(remoteSocket)
-                    );
-                }
+        bootstrap.connect(remoteSocket).addListener((ChannelFutureListener) future -> {
+            if (!future.isSuccess()) {
+                failure("Connection failed to " + remoteSocket, future.cause(), serverCtx, failureResponse(request));
+            } else {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.DEBUG)
+                        .setLogLevel(DEBUG)
+                        .setMessageFormat("Connected to {}")
+                        .setArguments(remoteSocket)
+                );
             }
         });
     }

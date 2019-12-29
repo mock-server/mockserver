@@ -21,11 +21,11 @@ public class MockServerMatcherNotifier extends ObjectWithReflectiveEqualsHashCod
         this.scheduler = scheduler;
     }
 
-    protected void notifyListeners(final MockServerMatcher notifier) {
+    protected void notifyListeners(final MockServerMatcher notifier, Cause cause) {
         if (listenerAdded && !listeners.isEmpty()) {
             scheduler.submit(() -> {
                 for (MockServerMatcherListener listener : listeners.toArray(new MockServerMatcherListener[0])) {
-                    listener.updated(notifier);
+                    listener.updated(notifier, cause);
                 }
             });
         }
@@ -38,5 +38,10 @@ public class MockServerMatcherNotifier extends ObjectWithReflectiveEqualsHashCod
 
     public void unregisterListener(MockServerMatcherListener listener) {
         listeners.remove(listener);
+    }
+
+    public enum Cause {
+        FILE_WATCHER,
+        API
     }
 }

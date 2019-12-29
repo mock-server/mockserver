@@ -7,6 +7,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
 import org.mockserver.persistence.ExpectationFileSystemPersistence;
+import org.mockserver.persistence.ExpectationFileWatcher;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.*;
@@ -51,6 +52,8 @@ public class HttpStateHandler {
     private final ExpectationInitializerLoader expectationInitializerLoader;
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private final ExpectationFileSystemPersistence expectationFileSystemPersistence;
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
+    private final ExpectationFileWatcher expectationFileWatcher;
     // mockserver
     private MockServerMatcher mockServerMatcher;
     private final MockServerLogger mockServerLogger;
@@ -81,6 +84,7 @@ public class HttpStateHandler {
         this.logEntrySerializer = new LogEntrySerializer(mockServerLogger);
         this.expectationInitializerLoader = new ExpectationInitializerLoader(mockServerLogger, mockServerMatcher);
         this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
+        this.expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, mockServerMatcher);
     }
 
     public MockServerLogger getMockServerLogger() {
@@ -157,14 +161,6 @@ public class HttpStateHandler {
                 }
             }
             mockServerMatcher.add(expectation);
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setLogLevel(Level.INFO)
-                    .setType(CREATED_EXPECTATION)
-                    .setHttpRequest(expectation.getHttpRequest())
-                    .setMessageFormat("creating expectation:{}")
-                    .setArguments(expectation.clone())
-            );
         }
     }
 
@@ -374,14 +370,13 @@ public class HttpStateHandler {
                         break;
                     }
                     case ACTIVE_EXPECTATIONS: {
-                        final Object[] arguments = new Object[]{(httpRequest == null ? request() : httpRequest)};
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(RETRIEVED)
                                 .setLogLevel(Level.INFO)
                                 .setHttpRequest(httpRequest)
                                 .setMessageFormat("retrieving active expectations in " + format.name().toLowerCase() + " that match:{}")
-                                .setArguments(arguments)
+                                .setArguments(httpRequest == null ? request() : httpRequest)
                         );
                         List<Expectation> expectations = mockServerMatcher.retrieveActiveExpectations(httpRequest);
                         switch (format) {

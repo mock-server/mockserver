@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - added stopAsync method to ClientAndServer to allow stop without waiting
+- log events for UPDATED_EXPECTATION and REMOVED_EXPECTATION
+- ability to update existing expectation by id
+- hot re-loading of expectation initialiser file
 
 ### Changed
 - performance improvements for header and cookie handling

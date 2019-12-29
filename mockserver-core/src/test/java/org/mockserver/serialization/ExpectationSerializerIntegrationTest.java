@@ -37,6 +37,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldAllowSingleObjectForArray() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "    \"id\" : \"some_key\"," + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"path\": \"somePath\"" + NEW_LINE +
             "    }," + NEW_LINE +
@@ -51,6 +52,7 @@ public class ExpectationSerializerIntegrationTest {
         // then
         assertArrayEquals(new Expectation[]{
             new ExpectationDTO()
+                .setId("some_key")
                 .setHttpRequest(
                     new HttpRequestDTO()
                         .setPath(string("somePath"))
@@ -92,6 +94,7 @@ public class ExpectationSerializerIntegrationTest {
         // given
         String requestBytes = ("[" +
             "  {" + NEW_LINE +
+            "      \"id\" : \"some_key\"," + NEW_LINE +
             "      \"httpRequest\": {" + NEW_LINE +
             "          \"path\": \"somePath\"" + NEW_LINE +
             "      }," + NEW_LINE +
@@ -100,6 +103,7 @@ public class ExpectationSerializerIntegrationTest {
             "      }" + NEW_LINE +
             "  }," +
             "  {" + NEW_LINE +
+            "      \"id\" : \"some_key\"," + NEW_LINE +
             "      \"httpRequest\": {" + NEW_LINE +
             "          \"path\": \"somePath\"" + NEW_LINE +
             "      }," + NEW_LINE +
@@ -108,6 +112,7 @@ public class ExpectationSerializerIntegrationTest {
             "      }" + NEW_LINE +
             "  }," +
             "  {" + NEW_LINE +
+            "      \"id\" : \"some_key\"," + NEW_LINE +
             "      \"httpRequest\": {" + NEW_LINE +
             "          \"path\": \"somePath\"" + NEW_LINE +
             "      }," + NEW_LINE +
@@ -117,6 +122,7 @@ public class ExpectationSerializerIntegrationTest {
             "  }" +
             "]");
         Expectation expectation = new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -195,6 +201,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeCompleteObjectWithResponse() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -257,6 +264,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -312,6 +320,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeCompleteObjectFromToString() {
         // given
         Expectation expected = new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -374,6 +383,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeCompleteObjectWithParameterRequestBody() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"POST\"," + NEW_LINE +
             "    \"path\" : \"some_pathRequest\"," + NEW_LINE +
@@ -408,6 +418,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("POST"))
@@ -434,6 +445,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeCompleteObjectWithResponseTemplate() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -476,6 +488,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -507,6 +520,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeCompleteObjectWithResponseClassCallback() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -544,6 +558,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -572,6 +587,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeCompleteObjectWithResponseObjectCallback() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -609,6 +625,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -637,6 +654,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeCompleteObjectWithForward() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -676,6 +694,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -707,6 +726,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeCompleteObjectWithForwardTemplate() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -749,6 +769,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -780,6 +801,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeCompleteObjectWithForwardClassCallback() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -817,6 +839,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -845,6 +868,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeCompleteObjectWithForwardObjectCallback() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -882,6 +906,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -910,6 +935,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeCompleteObjectWithOverrideForwardedRequest() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -950,6 +976,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -987,6 +1014,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeCompleteObjectWithError() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1029,6 +1057,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1060,6 +1089,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializePartialObject() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "    \"id\" : \"some_key\"," + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"path\": \"somePath\"" + NEW_LINE +
             "    }," + NEW_LINE +
@@ -1073,6 +1103,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -1088,6 +1119,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeStringRegexBody() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "    \"id\" : \"some_key\"," + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"path\": \"somePath\"," + NEW_LINE +
             "        \"body\" : {" + NEW_LINE +
@@ -1105,6 +1137,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -1121,6 +1154,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldDeserializeParameterBody() {
         // given
         String requestBytes = ("{" + NEW_LINE +
+            "    \"id\" : \"some_key\"," + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"path\": \"somePath\"," + NEW_LINE +
             "        \"body\" : {" + NEW_LINE +
@@ -1144,6 +1178,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -1163,6 +1198,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeCompleteObjectWithResponse() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1211,6 +1247,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1260,6 +1297,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeCompleteObjectWithResponseTemplate() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1289,6 +1327,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1325,6 +1364,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeCompleteObjectWithResponseClassCallback() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1352,6 +1392,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1384,6 +1425,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeCompleteObjectWithResponseObjectCallback() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1411,6 +1453,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1443,6 +1486,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeCompleteObjectWithForward() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1472,6 +1516,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1506,6 +1551,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeCompleteObjectWithForwardTemplate() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1535,6 +1581,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1571,6 +1618,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeCompleteObjectWithForwardClassCallback() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1598,6 +1646,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1630,6 +1679,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeCompleteObjectWithForwardObjectCallback() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1657,6 +1707,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1689,6 +1740,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeCompleteObjectWithOverrideForwardedRequest() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1723,6 +1775,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1762,6 +1815,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeCompleteObjectWithError() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1791,6 +1845,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1828,6 +1883,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeCompleteObjectWithHttpTemplateResponse() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setMethod(string("someMethod"))
@@ -1858,6 +1914,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"method\" : \"someMethod\"," + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
@@ -1895,6 +1952,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializePartialRequestAndResponse() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -1910,6 +1968,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +
@@ -1930,6 +1989,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeStringXPathBody() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -1946,6 +2006,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -1991,6 +2052,7 @@ public class ExpectationSerializerIntegrationTest {
             "    </xs:element>" + NEW_LINE +
             "</xs:schema>";
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2007,6 +2069,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2049,6 +2112,7 @@ public class ExpectationSerializerIntegrationTest {
             "  \"required\": [\"firstName\", \"lastName\"]" + NEW_LINE +
             "}";
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2065,6 +2129,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2090,6 +2155,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         String jsonBody = "{fieldOne: \"valueOne\", \"fieldTwo\": \"valueTwo\"}";
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2105,6 +2171,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2128,6 +2195,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeStringRegexBody() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2143,6 +2211,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2166,6 +2235,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializeStringParameterBody() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2184,6 +2254,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
@@ -2210,6 +2281,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializePartialExpectation() {
         // when
         String jsonExpectation = new ExpectationSerializer(new MockServerLogger()).serialize(new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2223,6 +2295,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("{" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +
@@ -2243,6 +2316,7 @@ public class ExpectationSerializerIntegrationTest {
     public void shouldSerializePartialExpectationArray() {
         // when
         Expectation expectation = new ExpectationDTO()
+            .setId("some_key")
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setPath(string("somePath"))
@@ -2260,6 +2334,7 @@ public class ExpectationSerializerIntegrationTest {
 
         // then
         assertEquals("[ {" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +
@@ -2273,6 +2348,7 @@ public class ExpectationSerializerIntegrationTest {
             "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "}, {" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +
@@ -2286,6 +2362,7 @@ public class ExpectationSerializerIntegrationTest {
             "    \"unlimited\" : true" + NEW_LINE +
             "  }" + NEW_LINE +
             "}, {" + NEW_LINE +
+            "  \"id\" : \"some_key\"," + NEW_LINE +
             "  \"httpRequest\" : {" + NEW_LINE +
             "    \"path\" : \"somePath\"" + NEW_LINE +
             "  }," + NEW_LINE +

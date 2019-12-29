@@ -7,7 +7,6 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
 
 import java.util.concurrent.TimeUnit;
@@ -20,6 +19,7 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
@@ -28,22 +28,18 @@ import static org.mockserver.model.HttpResponse.response;
 public class MockServerMatcherManageExpectationsTest {
 
     private MockServerMatcher mockServerMatcher;
-    private HttpRequest httpRequest;
-    private HttpResponse httpResponse;
 
     @Before
     public void prepareTestFixture() {
         Scheduler scheduler = mock(Scheduler.class);
         WebSocketClientRegistry webSocketClientRegistry = mock(WebSocketClientRegistry.class);
-        httpRequest = new HttpRequest();
-        httpResponse = new HttpResponse();
         mockServerMatcher = new MockServerMatcher(new MockServerLogger(), scheduler, webSocketClientRegistry);
     }
 
     @Test
     public void shouldRemoveExpiredExpectationWhenMatching() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).thenRespond(response().withBody("someBody")));
 
         // then
         assertThat(mockServerMatcher.postProcess(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somePath"))), nullValue());
@@ -53,7 +49,7 @@ public class MockServerMatcherManageExpectationsTest {
     @Test
     public void shouldRemoveExpiredExpectationWhenNotMatching() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).thenRespond(response().withBody("someBody")));
 
         // then
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
@@ -65,15 +61,15 @@ public class MockServerMatcherManageExpectationsTest {
         // when
         mockServerMatcher
             .add(
-                new Expectation(httpRequest.withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L))
-                    .thenRespond(httpResponse.withBody("someBody"))
+                new Expectation(request().withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L))
+                    .thenRespond(response().withBody("someBody"))
             );
         Expectation expectationToExpireAfter3Seconds =
-            new Expectation(httpRequest.withPath("somePath"), Times.unlimited(), TimeToLive.exactly(MILLISECONDS, 1500L))
-                .thenRespond(httpResponse.withBody("someBodyOtherBody"));
+            new Expectation(request().withPath("somePath"), Times.unlimited(), TimeToLive.exactly(MILLISECONDS, 1500L))
+                .thenRespond(response().withBody("someBodyOtherBody"));
         mockServerMatcher
             .add(
-                expectationToExpireAfter3Seconds.thenRespond(httpResponse.withBody("someBody"))
+                expectationToExpireAfter3Seconds.thenRespond(response().withBody("someBody"))
             );
 
         // then
@@ -91,7 +87,7 @@ public class MockServerMatcherManageExpectationsTest {
     @Test
     public void shouldNotRemoveNotExpiredExpectationsWhenMatching() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.HOURS, 1L)).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.HOURS, 1L)).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -102,7 +98,7 @@ public class MockServerMatcherManageExpectationsTest {
     @Test
     public void shouldNotRemoveNotExpiredExpectationsWhenNotMatching() {
         // when
-        mockServerMatcher.add(new Expectation(httpRequest.withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.HOURS, 1L)).thenRespond(httpResponse.withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withPath("somePath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.HOURS, 1L)).thenRespond(response().withBody("someBody")));
 
         // then
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("someOtherPath")), nullValue());
@@ -112,7 +108,7 @@ public class MockServerMatcherManageExpectationsTest {
     @Test
     public void shouldRemoveUsedExpectations() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withPath("somePath"), Times.exactly(1), TimeToLive.unlimited()).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withPath("somePath"), Times.exactly(1), TimeToLive.unlimited()).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -124,7 +120,7 @@ public class MockServerMatcherManageExpectationsTest {
     @Test
     public void shouldNotRemoveNotUsedExpectations() {
         // when
-        Expectation expectation = new Expectation(httpRequest.withPath("somePath"), Times.exactly(2), TimeToLive.unlimited()).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(request().withPath("somePath"), Times.exactly(2), TimeToLive.unlimited()).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
 
         // then
@@ -135,9 +131,9 @@ public class MockServerMatcherManageExpectationsTest {
     @Test
     public void shouldNotRemoveAfterTimesComplete() {
         // when
-        Expectation expectation = new Expectation(new HttpRequest().withPath("somepath"), Times.exactly(2), TimeToLive.unlimited()).thenRespond(httpResponse.withBody("someBody"));
+        Expectation expectation = new Expectation(new HttpRequest().withPath("somepath"), Times.exactly(2), TimeToLive.unlimited()).thenRespond(response().withBody("someBody"));
         mockServerMatcher.add(expectation);
-        Expectation notRemovedExpectation = new Expectation(httpRequest.withPath("someOtherPath"), Times.exactly(2), TimeToLive.unlimited());
+        Expectation notRemovedExpectation = new Expectation(request().withPath("someOtherPath"), Times.exactly(2), TimeToLive.unlimited());
         mockServerMatcher.add(notRemovedExpectation.thenRespond(response().withBody("someOtherBody")));
 
         // then
@@ -154,9 +150,9 @@ public class MockServerMatcherManageExpectationsTest {
     @Test
     public void shouldNotRemoveAfterTimesCompleteOrExpired() {
         // when
-        mockServerMatcher.add(new Expectation(new HttpRequest().withPath("somepath"), Times.exactly(0), TimeToLive.unlimited()).thenRespond(httpResponse.withBody("someBody")));
-        mockServerMatcher.add(new Expectation(httpRequest.withPath("someOtherPath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).thenRespond(response().withBody("someOtherBody")));
-        mockServerMatcher.add(new Expectation(httpRequest.withPath("someOtherPath"), Times.exactly(0), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).thenRespond(response().withBody("someOtherBody")));
+        mockServerMatcher.add(new Expectation(new HttpRequest().withPath("somepath"), Times.exactly(0), TimeToLive.unlimited()).thenRespond(response().withBody("someBody")));
+        mockServerMatcher.add(new Expectation(request().withPath("someOtherPath"), Times.unlimited(), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).thenRespond(response().withBody("someOtherBody")));
+        mockServerMatcher.add(new Expectation(request().withPath("someOtherPath"), Times.exactly(0), TimeToLive.exactly(TimeUnit.MICROSECONDS, 0L)).thenRespond(response().withBody("someOtherBody")));
 
         // then
         assertThat(mockServerMatcher.firstMatchingExpectation(new HttpRequest().withPath("somepath")), nullValue());

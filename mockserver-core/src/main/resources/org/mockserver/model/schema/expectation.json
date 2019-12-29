@@ -3,6 +3,9 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
+        "id": {
+            "type": "string"
+        },
         "httpRequest": {
             "$ref": "#/definitions/httpRequest"
         },

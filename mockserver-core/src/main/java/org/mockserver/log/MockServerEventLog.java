@@ -57,7 +57,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             .withHttpRequest(logEntry.getHttpRequest())
             .withHttpResponse(logEntry.getHttpResponse())
             .withTimestamp(logEntry.getTimestamp());
-    private static final String[] EXCLUDED_FIELDS = {"key", "disruptor"};
+    private static final String[] EXCLUDED_FIELDS = {"id", "disruptor"};
     private MockServerLogger mockServerLogger;
     private Deque<LogEntry> eventLog = new BoundedConcurrentLinkedDeque<>(ConfigurationProperties.maxLogEntries());
     private MatcherBuilder matcherBuilder;

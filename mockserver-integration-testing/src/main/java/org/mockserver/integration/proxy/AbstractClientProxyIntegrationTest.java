@@ -68,7 +68,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
-        clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(AbstractClientProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
+        clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(AbstractClientProxyIntegrationTest.class.getSimpleName() + "-eventLoop"));
     }
 
     @AfterClass
@@ -82,7 +82,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             .setSSLSocketFactory(new SSLConnectionSocketFactory(new KeyStoreFactory(new MockServerLogger()).sslContext(), NoopHostnameVerifier.INSTANCE))
             .setRoutePlanner(new DefaultProxyRoutePlanner(
                 new HttpHost(
-                    System.getProperty("http.proxyHost", "localhost"),
+                    System.getProperty("http.proxyHost", "127.0.0.1"),
                     Integer.parseInt(System.getProperty("http.proxyPort", String.valueOf(getProxyPort())))
                 )
             )).build();
@@ -117,7 +117,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     @Test
     public void shouldForwardRequestsUsingSocketDirectly() throws Exception {
-        try (Socket socket = new Socket("localhost", getProxyPort())) {
+        try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
             // given
             OutputStream output = socket.getOutputStream();
 
@@ -125,7 +125,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             // - send GET request for headers only
             output.write(("" +
                 "GET " + addContextToPath("test_headers_only") + " HTTP/1.1" + NEW_LINE +
-                "Host: localhost:" + getServerPort() + "" + NEW_LINE +
+                "Host: 127.0.0.1:" + getServerPort() + "" + NEW_LINE +
                 "x-test: test_headers_only" + NEW_LINE +
                 "Connection: keep-alive" + NEW_LINE +
                 NEW_LINE
@@ -146,7 +146,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             // - send GET request for headers and body
             output.write(("" +
                 "GET " + addContextToPath("test_headers_and_body") + " HTTP/1.1" + NEW_LINE +
-                "Host: localhost:" + getServerPort() + "" + NEW_LINE +
+                "Host: 127.0.0.1:" + getServerPort() + "" + NEW_LINE +
                 "Content-Length: " + "an_example_body".getBytes(StandardCharsets.UTF_8).length + "" + NEW_LINE +
                 "x-test: test_headers_and_body" + NEW_LINE +
                 NEW_LINE +
@@ -179,7 +179,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         HttpPost request = new HttpPost(
             new URIBuilder()
                 .setScheme("http")
-                .setHost("localhost")
+                .setHost("127.0.0.1")
                 .setPort(getServerPort())
                 .setPath(addContextToPath("test_headers_and_body"))
                 .build()
@@ -214,7 +214,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         HttpPost request = new HttpPost(
             new URIBuilder()
                 .setScheme("http")
-                .setHost("localhost")
+                .setHost("127.0.0.1")
                 .setPort(getServerPort())
                 .setPath(addContextToPath("test_headers_and_body"))
                 .build()
@@ -260,7 +260,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         HttpPost request = new HttpPost(
             new URIBuilder()
                 .setScheme("http")
-                .setHost("localhost")
+                .setHost("127.0.0.1")
                 .setPort(getServerPort())
                 .setPath(addContextToPath("test_headers_and_body"))
                 .build()
@@ -285,7 +285,7 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     @Test
     public void shouldForwardRequestsToUnknownPath() throws Exception {
-        try (Socket socket = new Socket("localhost", getProxyPort())) {
+        try (Socket socket = new Socket("127.0.0.1", getProxyPort())) {
             // given
             OutputStream output = socket.getOutputStream();
 
@@ -293,7 +293,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             // - send GET request
             output.write(("" +
                 "GET " + addContextToPath("not_found") + " HTTP/1.1" + NEW_LINE +
-                "Host: localhost:" + getServerPort() + "" + NEW_LINE +
+                "Host: 127.0.0.1:" + getServerPort() + "" + NEW_LINE +
                 "Connection: close" + NEW_LINE +
                 NEW_LINE
             ).getBytes(StandardCharsets.UTF_8));
@@ -331,7 +331,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         HttpGet request = new HttpGet(
             new URIBuilder()
                 .setScheme("http")
-                .setHost("localhost")
+                .setHost("127.0.0.1")
                 .setPort(getServerPort())
                 .setPath(addContextToPath("some_path"))
                 .build()
@@ -344,7 +344,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         request = new HttpGet(
             new URIBuilder()
                 .setScheme("http")
-                .setHost("localhost")
+                .setHost("127.0.0.1")
                 .setPort(getServerPort())
                 .setPath(addContextToPath("some_path"))
                 .build()
@@ -374,7 +374,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         HttpPost request = new HttpPost(
             new URIBuilder()
                 .setScheme("http")
-                .setHost("localhost")
+                .setHost("127.0.0.1")
                 .setPort(getServerPort())
                 .setPath(addContextToPath("some_path"))
                 .build()
@@ -425,7 +425,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         HttpPost request = new HttpPost(
             new URIBuilder()
                 .setScheme("http")
-                .setHost("localhost")
+                .setHost("127.0.0.1")
                 .setPort(getServerPort())
                 .setPath(addContextToPath("some_path"))
                 .build()
@@ -451,7 +451,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_and_body"))
                     .build()
@@ -461,7 +461,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_only"))
                     .build()
@@ -512,7 +512,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_and_body"))
                     .build()
@@ -522,7 +522,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_only"))
                     .build()
@@ -550,7 +550,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         HttpGet httpGet = new HttpGet(
             new URIBuilder()
                 .setScheme("http")
-                .setHost("localhost")
+                .setHost("127.0.0.1")
                 .setPort(getServerPort())
                 .setPath(addContextToPath("test_headers_only"))
                 .build()
@@ -589,7 +589,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_and_body"))
                     .build()
@@ -623,7 +623,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_and_body"))
                     .build()
@@ -658,7 +658,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_and_body"))
                     .build()
@@ -692,7 +692,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_and_body"))
                     .build()
@@ -702,7 +702,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_and_body"))
                     .build()
@@ -737,7 +737,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_and_body"))
                     .build()
@@ -747,7 +747,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_only"))
                     .build()
@@ -790,7 +790,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_and_body"))
                     .build()
@@ -800,7 +800,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_only"))
                     .build()
@@ -839,7 +839,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_and_body"))
                     .build()
@@ -849,7 +849,7 @@ public abstract class AbstractClientProxyIntegrationTest {
             new HttpGet(
                 new URIBuilder()
                     .setScheme("http")
-                    .setHost("localhost")
+                    .setHost("127.0.0.1")
                     .setPort(getServerPort())
                     .setPath(addContextToPath("test_headers_only"))
                     .build()
@@ -885,7 +885,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
-                .withHeader(HOST.toString(), "localhost:" + getProxyPort())
+                .withHeader(HOST.toString(), "127.0.0.1:" + getProxyPort())
                 .withPath(addContextToPath("mockserver/clear"))
                 .withBody("{" + NEW_LINE +
                     "    \"path\" : 500," + NEW_LINE +
@@ -908,7 +908,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
-                .withHeader(HOST.toString(), "localhost:" + getProxyPort())
+                .withHeader(HOST.toString(), "127.0.0.1:" + getProxyPort())
                 .withPath(addContextToPath("mockserver/verify"))
                 .withBody("{" + NEW_LINE +
                     "    \"httpRequest\": {" + NEW_LINE +
@@ -930,7 +930,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         org.mockserver.model.HttpResponse httpResponse = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null).sendRequest(
             request()
                 .withMethod("PUT")
-                .withHeader(HOST.toString(), "localhost:" + getProxyPort())
+                .withHeader(HOST.toString(), "127.0.0.1:" + getProxyPort())
                 .withPath(addContextToPath("mockserver/verifySequence"))
                 .withBody("{" + NEW_LINE +
                     "    \"httpRequest\": {" + NEW_LINE +

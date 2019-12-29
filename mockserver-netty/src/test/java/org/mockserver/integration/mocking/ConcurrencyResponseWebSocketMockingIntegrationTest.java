@@ -1,13 +1,16 @@
 package org.mockserver.integration.mocking;
 
+import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.*;
 import org.mockserver.client.NettyHttpClient;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
+import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -26,7 +29,7 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
     private ClientAndServer clientAndServer;
     private NettyHttpClient httpClient;
 
-    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(ConcurrencyResponseWebSocketMockingIntegrationTest.class.getSimpleName() + "-eventLoop"));
+    private static final EventLoopGroup clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(ConcurrencyResponseWebSocketMockingIntegrationTest.class.getSimpleName() + "-eventLoop"));
 
     @Before
     public void setUp() {
@@ -34,7 +37,7 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
         clientAndServer
             .when(
                 request()
-                    .withPath("/my/echo")
+                    .withPath("/my/echo.*")
             )
             .respond(request ->
                 response()
@@ -66,38 +69,43 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
 
     @SuppressWarnings("rawtypes")
     private void scheduleTasksAndWaitForResponses(int parallelThreads) throws InterruptedException, ExecutionException, TimeoutException {
-        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(parallelThreads);
+        Level existingLevel = ConfigurationProperties.logLevel();
+        try {
+//            ConfigurationProperties.logLevel("TRACE");
+            ExecutorService executor = Executors.newFixedThreadPool(parallelThreads * 2, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName()));
 
-        List<ScheduledFuture> scheduledFutures = new ArrayList<>();
-        for (int i = 0; i < parallelThreads; i++) {
-            scheduledFutures.add(executor.schedule(new Task(), 500L, MILLISECONDS));
-        }
+            List<CompletableFuture> completableFutures = new ArrayList<>();
+            for (int i = 0; i < parallelThreads; i++) {
+                int counter = i;
+                final CompletableFuture<String> completableFuture = new CompletableFuture<>();
+                executor.execute(() -> ConcurrencyResponseWebSocketMockingIntegrationTest.this.sendRequestAndVerifyResponse(counter, completableFuture));
+                completableFutures.add(completableFuture);
+            }
 
-        for (int i = 0; i < parallelThreads; i++) {
-            scheduledFutures.get(i).get(25L, SECONDS);
+            for (int i = 0; i < parallelThreads; i++) {
+                System.out.println("counter waiting = " + i);
+                completableFutures.get(i).get(120L, SECONDS);
+                System.out.println("counter finished = " + i);
+            }
+        } finally {
+            ConfigurationProperties.logLevel(existingLevel.name());
         }
     }
 
-    private void sendRequestAndVerifyResponse() {
+    private void sendRequestAndVerifyResponse(int counter, CompletableFuture<String> completableFuture) {
         try {
-            String requestBody = "thread: " + Thread.currentThread().getName() + ", random content: " + Math.random();
+            String requestBody = "thread: " + Thread.currentThread().getName() + ", counter: " + counter;
             HttpResponse httpResponse = httpClient.sendRequest(
                 request()
                     .withMethod("POST")
-                    .withPath("/my/echo")
+                    .withPath("/my/echo" + counter)
                     .withBody(requestBody),
                 new InetSocketAddress("localhost", clientAndServer.getLocalPort())
             ).get(20, TimeUnit.MINUTES);
             Assert.assertEquals(requestBody, httpResponse.getBodyAsString());
+            completableFuture.complete(httpResponse.getBodyAsString());
         } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public class Task implements Runnable {
-        @Override
-        public void run() {
-            ConcurrencyResponseWebSocketMockingIntegrationTest.this.sendRequestAndVerifyResponse();
+            completableFuture.completeExceptionally(ex);
         }
     }
 

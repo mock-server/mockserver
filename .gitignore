@@ -26,6 +26,8 @@ mods
 *.sqlite
 test.csv
 TODO.md
+persistedExpectations.json
+mockserverInitialization.json
 
 # Runtime artifacts #
 #####################
@@ -93,4 +95,3 @@ mockserver-proxy-war/tomcat/
 mockserver-proxy-war/tomcat_proxy/
 mockserver-war/tomcat/
 mockserver-war/tomcat_mockserver/
-/mockserverInitialization.json

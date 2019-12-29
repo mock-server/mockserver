@@ -18,7 +18,7 @@ import static org.slf4j.event.Level.TRACE;
  */
 public class RegexStringMatcher extends BodyMatcher<NottableString> {
 
-    private static final String[] EXCLUDED_FIELDS = {"key", "mockServerLogger"};
+    private static final String[] EXCLUDED_FIELDS = {"mockServerLogger"};
     private final MockServerLogger mockServerLogger;
     private final NottableString matcher;
     private final boolean controlPlaneMatcher;
@@ -42,7 +42,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     public boolean matches(final HttpRequest context, NottableString matched) {
         boolean result = false;
 
-        if (matches(matcher.getValue(), matched.getValue(), false)) {
+        if (matcher == null || matches(matcher.getValue(), matched.getValue(), false)) {
             result = true;
         }
 

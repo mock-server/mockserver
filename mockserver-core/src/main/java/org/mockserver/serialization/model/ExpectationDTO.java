@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -10,6 +11,8 @@ import org.mockserver.model.*;
  */
 public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expectation> {
 
+    private static final String[] excludedFields = {"id"};
+    private String id;
     private HttpRequestDTO httpRequest;
     private HttpResponseDTO httpResponse;
     private HttpTemplateDTO httpResponseTemplate;
@@ -26,6 +29,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
 
     public ExpectationDTO(Expectation expectation) {
         if (expectation != null) {
+            this.id = expectation.getId();
             HttpRequest httpRequest = expectation.getHttpRequest();
             if (httpRequest != null) {
                 this.httpRequest = new HttpRequestDTO(httpRequest, httpRequest.getNot());
@@ -142,6 +146,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             timeToLive = TimeToLive.unlimited();
         }
         return new Expectation(httpRequest, times, timeToLive)
+            .withId(this.id)
             .thenRespond(httpResponse)
             .thenRespond(httpResponseTemplate)
             .thenRespond(httpResponseClassCallback)
@@ -152,6 +157,15 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             .thenForward(httpForwardObjectCallback)
             .thenForward(httpOverrideForwardedRequest)
             .thenError(httpError);
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public ExpectationDTO setId(String id) {
+        this.id = id;
+        return this;
     }
 
     public HttpRequestDTO getHttpRequest() {
@@ -269,5 +283,11 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     public ExpectationDTO setTimeToLive(TimeToLiveDTO timeToLive) {
         this.timeToLive = timeToLive;
         return this;
+    }
+
+    @Override
+    @JsonIgnore
+    public String[] fieldsExcludedFromEqualsAndHashCode() {
+        return excludedFields;
     }
 }

@@ -5,6 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.echo.http.EchoServer;
+import org.mockserver.uuid.UUIDService;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
@@ -102,35 +103,41 @@ public class MockServerClientServerValidationErrorsTest {
 
     @Test
     public void shouldHandleOtherClientError() {
-        // given
-        String responseBody = "some_random_response";
-        echoServer.withNextResponse(response()
-            .withStatusCode(401)
-            .withContentType(TEXT_PLAIN)
-            .withBody(responseBody)
-        );
+        try {
+            // given
+            UUIDService.fixedUUID = true;
+            String responseBody = "some_random_response";
+            echoServer.withNextResponse(response()
+                .withStatusCode(401)
+                .withContentType(TEXT_PLAIN)
+                .withBody(responseBody)
+            );
 
-        // then
-        exception.expect(ClientException.class);
-        exception.expectMessage(is("error:" + NEW_LINE +
-            NEW_LINE +
-            "\t" + responseBody + NEW_LINE +
-            NEW_LINE +
-            " while submitted expectation:" + NEW_LINE +
-            NEW_LINE +
-            "\t{" + NEW_LINE +
-            "\t  \"httpRequest\" : { }," + NEW_LINE +
-            "\t  \"times\" : {" + NEW_LINE +
-            "\t    \"unlimited\" : true" + NEW_LINE +
-            "\t  }," + NEW_LINE +
-            "\t  \"timeToLive\" : {" + NEW_LINE +
-            "\t    \"unlimited\" : true" + NEW_LINE +
-            "\t  }," + NEW_LINE +
-            "\t  \"httpResponse\" : { }" + NEW_LINE +
-            "\t}" + NEW_LINE
-        ));
+            // then
+            exception.expect(ClientException.class);
+            exception.expectMessage(is("error:" + NEW_LINE +
+                NEW_LINE +
+                "\t" + responseBody + NEW_LINE +
+                NEW_LINE +
+                " while submitted expectation:" + NEW_LINE +
+                NEW_LINE +
+                "\t{" + NEW_LINE +
+                "\t  \"id\" : \"" + UUIDService.getUUID() + "\"," + NEW_LINE +
+                "\t  \"httpRequest\" : { }," + NEW_LINE +
+                "\t  \"times\" : {" + NEW_LINE +
+                "\t    \"unlimited\" : true" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"timeToLive\" : {" + NEW_LINE +
+                "\t    \"unlimited\" : true" + NEW_LINE +
+                "\t  }," + NEW_LINE +
+                "\t  \"httpResponse\" : { }" + NEW_LINE +
+                "\t}" + NEW_LINE
+            ));
 
-        // when
-        mockServerClient.when(request()).respond(response());
+            // when
+            mockServerClient.when(request()).respond(response());
+        } finally {
+            UUIDService.fixedUUID = false;
+        }
     }
 }
