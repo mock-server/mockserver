@@ -240,7 +240,7 @@ public class ActionHandler {
                                 new LogEntry()
                                     .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
-                                    .setMessageFormat("Failed to connect to proxied socket due to exploratory HTTP proxy for: {}falling back to no proxy: {}")
+                                    .setMessageFormat("Failed to connect to proxied socket due to exploratory HTTP proxy for: {}due to: {} falling back to no proxy")
                                     .setArguments(request, ex.getCause())
                             );
                             returnNotFound(responseWriter, request);
