@@ -90,6 +90,8 @@ public abstract class AbstractClientProxyIntegrationTest {
 
     public abstract int getProxyPort();
 
+    public abstract int getSecureProxyPort();
+
     public abstract MockServerClient getMockServerClient();
 
     public abstract int getServerPort();

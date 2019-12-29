@@ -48,6 +48,11 @@ public class NettyHttpProxyIntegrationTest extends AbstractClientProxyIntegratio
     }
 
     @Override
+    public int getSecureProxyPort() {
+        return mockServerPort;
+    }
+
+    @Override
     public MockServerClient getMockServerClient() {
         return mockServerClient;
     }

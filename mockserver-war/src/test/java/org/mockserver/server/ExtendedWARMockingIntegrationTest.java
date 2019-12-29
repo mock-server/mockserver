@@ -25,6 +25,7 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
     private static final int SERVER_HTTP_PORT = PortFactory.findFreePort();
     private static final int SERVER_HTTPS_PORT = PortFactory.findFreePort();
     private static Tomcat tomcat;
+    private static String originalKeyStoreType;
 
     @BeforeClass
     public static void startServer() throws Exception {
@@ -39,6 +40,8 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
         defaultConnector.setRedirectPort(SERVER_HTTPS_PORT);
 
         // add https connector
+        originalKeyStoreType = ConfigurationProperties.javaKeyStoreType();
+        ConfigurationProperties.javaKeyStoreType("jks");
         new KeyStoreFactory(new MockServerLogger()).loadOrCreateKeyStore();
         Connector httpsConnector = new Connector();
         httpsConnector.setPort(SERVER_HTTPS_PORT);
@@ -68,6 +71,8 @@ public class ExtendedWARMockingIntegrationTest extends AbstractExtendedDeployabl
 
     @AfterClass
     public static void stopServer() throws Exception {
+        ConfigurationProperties.javaKeyStoreType(originalKeyStoreType);
+
         // stop client
         stopQuietly(mockServerClient);
 
