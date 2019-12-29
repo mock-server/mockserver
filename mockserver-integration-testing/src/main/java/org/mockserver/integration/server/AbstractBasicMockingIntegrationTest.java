@@ -1254,19 +1254,22 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_one")),
-                headersToIgnore)
+                headersToIgnore
+            )
         );
         assertEquals(
             notFoundResponse(),
             makeRequest(
                 request().withPath(calculatePath("not_found")),
-                headersToIgnore)
+                headersToIgnore
+            )
         );
         assertEquals(
             response("some_body"),
             makeRequest(
                 request().withPath(calculatePath("some_path_three")),
-                headersToIgnore)
+                headersToIgnore
+            )
         );
 
         // then

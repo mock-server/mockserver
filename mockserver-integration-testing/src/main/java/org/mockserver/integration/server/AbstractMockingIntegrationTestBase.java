@@ -40,6 +40,7 @@ public abstract class AbstractMockingIntegrationTestBase {
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(AbstractMockingIntegrationTestBase.class);
     protected static MockServerClient mockServerClient;
     protected static String servletContext = "";
+    @SuppressWarnings("deprecation")
     protected static final List<String> headersToIgnore = ImmutableList.of(
         HttpHeaderNames.SERVER.toString(),
         HttpHeaderNames.EXPIRES.toString(),
@@ -57,6 +58,7 @@ public abstract class AbstractMockingIntegrationTestBase {
         HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS.toString(),
         HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS.toString(),
         HttpHeaderNames.ACCESS_CONTROL_MAX_AGE.toString(),
+        HttpHeaderNames.KEEP_ALIVE.toString(),
         "version",
         "x-cors"
     );
