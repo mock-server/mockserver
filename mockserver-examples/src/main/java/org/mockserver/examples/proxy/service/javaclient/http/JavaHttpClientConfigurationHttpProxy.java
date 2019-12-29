@@ -1,4 +1,4 @@
-package org.mockserver.examples.proxy.service.googleclient;
+package org.mockserver.examples.proxy.service.javaclient.http;
 
 import org.mockserver.examples.proxy.service.BookService;
 import org.springframework.context.annotation.Bean;
@@ -12,12 +12,12 @@ import org.springframework.context.annotation.PropertySource;
  * @author jamesdbloom
  */
 @Configuration
-@Profile("googleClient")
+@Profile("javaClientHttpProxy")
 @PropertySource({"classpath:application.properties"})
-public class GoogleHttpClientConfiguration {
+public class JavaHttpClientConfigurationHttpProxy {
 
     @Bean
     BookService bookService() {
-        return new BookServiceGoogleHttpClient();
+        return new BookServiceJavaHttpClient();
     }
 }

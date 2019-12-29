@@ -1,4 +1,4 @@
-package org.mockserver.examples.proxy.service.javaclient;
+package org.mockserver.examples.proxy.service.javaclient.socks;
 
 import org.mockserver.examples.proxy.service.BookService;
 import org.springframework.context.annotation.Bean;
@@ -12,9 +12,9 @@ import org.springframework.context.annotation.PropertySource;
  * @author jamesdbloom
  */
 @Configuration
-@Profile("javaClient")
+@Profile("javaClientSocksProxy")
 @PropertySource({"classpath:application.properties"})
-public class JavaHttpClientConfiguration {
+public class JavaHttpClientConfigurationSocksProxy {
 
     @Bean
     BookService bookService() {

@@ -28,12 +28,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
         }
     )
 })
-@ActiveProfiles(profiles = {"googleClient"})
+@ActiveProfiles(profiles = {"googleClientHttpProxy"})
 public class BooksPageGoogleClientHTTPProxyIntegrationTest extends BooksPageIntegrationTest {
-
-    @BeforeClass
-    public static void setProxyType() {
-        System.setProperty("http.proxyType", "HTTP");
-    }
 
 }

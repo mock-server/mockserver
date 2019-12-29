@@ -1,4 +1,4 @@
-package org.mockserver.examples.proxy.service.javaclient;
+package org.mockserver.examples.proxy.service.javaclient.http;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockserver.examples.proxy.model.Book;
@@ -36,7 +36,7 @@ public class BookServiceJavaHttpClient implements BookService {
     }
 
     private HttpURLConnection sendRequestViaProxy(URL url) throws IOException {
-        Proxy proxy = new Proxy(Proxy.Type.valueOf(System.getProperty("http.proxyType")), new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort"))));
+        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort"))));
         return (HttpURLConnection) url.openConnection(proxy);
     }
 

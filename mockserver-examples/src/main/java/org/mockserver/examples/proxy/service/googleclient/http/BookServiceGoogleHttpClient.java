@@ -1,4 +1,4 @@
-package org.mockserver.examples.proxy.service.googleclient;
+package org.mockserver.examples.proxy.service.googleclient.http;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.http.*;
@@ -43,7 +43,7 @@ public class BookServiceGoogleHttpClient implements BookService {
             ProxySelector.setDefault(new ProxySelector() {
                 @Override
                 public List<Proxy> select(URI uri) {
-                    return Collections.singletonList(new Proxy(Proxy.Type.valueOf(System.getProperty("http.proxyType")), new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
+                    return Collections.singletonList(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")))));
                 }
 
                 @Override

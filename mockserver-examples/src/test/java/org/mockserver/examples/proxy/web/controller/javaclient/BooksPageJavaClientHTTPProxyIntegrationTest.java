@@ -28,12 +28,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
         }
     )
 })
-@ActiveProfiles(profiles = {"javaClient"})
+@ActiveProfiles(profiles = {"javaClientHttpProxy"})
 public class BooksPageJavaClientHTTPProxyIntegrationTest extends BooksPageIntegrationTest {
-
-    @BeforeClass
-    public static void setProxyType() {
-        System.setProperty("http.proxyType", "HTTP");
-    }
 
 }

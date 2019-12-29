@@ -1,8 +1,10 @@
 package org.mockserver.examples.proxy.configuration;
 
 import org.mockserver.examples.proxy.service.apacheclient.ApacheHttpClientConfiguration;
-import org.mockserver.examples.proxy.service.googleclient.GoogleHttpClientConfiguration;
-import org.mockserver.examples.proxy.service.javaclient.JavaHttpClientConfiguration;
+import org.mockserver.examples.proxy.service.googleclient.http.GoogleHttpClientConfigurationHttpProxy;
+import org.mockserver.examples.proxy.service.googleclient.socks.GoogleHttpClientConfigurationSocksProxy;
+import org.mockserver.examples.proxy.service.javaclient.http.JavaHttpClientConfigurationHttpProxy;
+import org.mockserver.examples.proxy.service.javaclient.socks.JavaHttpClientConfigurationSocksProxy;
 import org.mockserver.examples.proxy.service.jerseyclient.JerseyClientConfiguration;
 import org.mockserver.examples.proxy.service.jettyclient.JettyHttpClientConfiguration;
 import org.mockserver.examples.proxy.service.springclient.SpringRestTemplateConfiguration;
@@ -23,8 +25,10 @@ import org.springframework.context.annotation.PropertySource;
     ApacheHttpClientConfiguration.class,
     JettyHttpClientConfiguration.class,
     JerseyClientConfiguration.class,
-    GoogleHttpClientConfiguration.class,
-    JavaHttpClientConfiguration.class,
+    GoogleHttpClientConfigurationHttpProxy.class,
+    GoogleHttpClientConfigurationSocksProxy.class,
+    JavaHttpClientConfigurationHttpProxy.class,
+    JavaHttpClientConfigurationSocksProxy.class,
     SpringRestTemplateConfiguration.class
 })
 public class RootConfiguration {

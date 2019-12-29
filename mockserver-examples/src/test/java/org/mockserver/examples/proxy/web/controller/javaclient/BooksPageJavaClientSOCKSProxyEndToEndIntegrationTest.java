@@ -32,19 +32,8 @@ import static org.junit.Assume.assumeThat;
         }
     )
 })
-@ActiveProfiles(profiles = {"backend", "javaClient"})
+@ActiveProfiles(profiles = {"backend", "javaClientSocksProxy"})
 public class BooksPageJavaClientSOCKSProxyEndToEndIntegrationTest extends BooksPageEndToEndIntegrationTest {
-
-    @BeforeClass
-    public static void setProxyType() {
-        assumeThat("SOCKS5 is broken in JRE <9", System.getProperty("java.version"), not(anyOf(
-            startsWith("1.7."), equalTo("1.7"),
-            startsWith("7."), equalTo("7"),
-            startsWith("1.8."), equalTo("1.8"),
-            startsWith("8."), equalTo("8"))
-        ));
-        System.setProperty("http.proxyType", "SOCKS");
-    }
 
     @Override
     @SuppressWarnings("unchecked")
