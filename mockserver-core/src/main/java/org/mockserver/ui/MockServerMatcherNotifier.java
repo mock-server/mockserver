@@ -23,11 +23,9 @@ public class MockServerMatcherNotifier extends ObjectWithReflectiveEqualsHashCod
 
     protected void notifyListeners(final MockServerMatcher notifier, Cause cause) {
         if (listenerAdded && !listeners.isEmpty()) {
-            scheduler.submit(() -> {
-                for (MockServerMatcherListener listener : listeners.toArray(new MockServerMatcherListener[0])) {
-                    listener.updated(notifier, cause);
-                }
-            });
+            for (MockServerMatcherListener listener : listeners.toArray(new MockServerMatcherListener[0])) {
+                scheduler.submit(() -> listener.updated(notifier, cause));
+            }
         }
     }
 

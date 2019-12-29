@@ -1,5 +1,6 @@
 package org.mockserver.persistence;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.callback.WebSocketClientRegistry;
@@ -8,6 +9,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.ui.MockServerMatcherNotifier;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,39 +35,49 @@ public class ExpectationFileSystemPersistenceTest {
     }
 
     @Test
-    public void shouldPersistExpectationsToJson() throws IOException, InterruptedException {
+    public void shouldPersistExpectationsToJsonOnAdd() throws Exception {
         // given
         String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
         ConfigurationProperties.persistExpectations(true);
         try {
-            File persistedExpectations = File.createTempFile("persistedExpectations", "json");
+            File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
 
             // when
             new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
-            Expectation[] expectations = {
+            mockServerMatcher.add(
                 new Expectation(
                     request()
                         .withPath("/simpleFirst")
                 )
                     .withId("one")
                     .thenRespond(
-                    response()
-                        .withBody("some first response")
-                ),
+                        response()
+                            .withBody("some first response")
+                    )
+            );
+            mockServerMatcher.add(
                 new Expectation(
                     request()
                         .withPath("/simpleSecond")
                 )
                     .withId("two")
                     .thenRespond(
-                    response()
-                        .withBody("some second response")
+                        response()
+                            .withBody("some second response")
+                    )
+            );
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleThird")
                 )
-            };
-            for (Expectation expectation : expectations) {
-                mockServerMatcher.add(expectation);
-            }
+                    .withId("three")
+                    .thenRespond(
+                        response()
+                            .withBody("some third response")
+                    )
+            );
             MILLISECONDS.sleep(1500);
 
             // then
@@ -97,10 +109,472 @@ public class ExpectationFileSystemPersistenceTest {
                 "  \"httpResponse\" : {" + NEW_LINE +
                 "    \"body\" : \"some second response\"" + NEW_LINE +
                 "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleThird\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
                 "} ]";
-            assertThat(new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
+            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
         } finally {
-            ConfigurationProperties.initializationJsonPath(persistedExpectationsPath);
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
+            ConfigurationProperties.persistExpectations(false);
+        }
+    }
+
+    @Test
+    public void shouldPersistExpectationsToJsonOnRemove() throws Exception {
+        // given
+        String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
+        ConfigurationProperties.persistExpectations(true);
+        try {
+            File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
+
+            // when
+            new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleFirst")
+                )
+                    .withId("one")
+                    .thenRespond(
+                        response()
+                            .withBody("some first response")
+                    )
+            );
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleSecond")
+                )
+                    .withId("two")
+                    .thenRespond(
+                        response()
+                            .withBody("some second response")
+                    )
+            );
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleThird")
+                )
+                    .withId("three")
+                    .thenRespond(
+                        response()
+                            .withBody("some third response")
+                    )
+            );
+            mockServerMatcher.clear(
+                request()
+                    .withPath("/simpleSecond")
+            );
+            MILLISECONDS.sleep(1500);
+
+            // then
+            String expectedFileContents = "[ {" + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleThird\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "} ]";
+            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
+        } finally {
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
+            ConfigurationProperties.persistExpectations(false);
+        }
+    }
+
+    @Test
+    public void shouldPersistExpectationsToJsonOnUpdate() throws Exception {
+        // given
+        String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
+        ConfigurationProperties.persistExpectations(true);
+        try {
+            File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
+
+            // when
+            new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleFirst")
+                )
+                    .withId("one")
+                    .thenRespond(
+                        response()
+                            .withBody("some first response")
+                    )
+            );
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleSecond")
+                )
+                    .withId("two")
+                    .thenRespond(
+                        response()
+                            .withBody("some second response")
+                    )
+            );
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleThird")
+                )
+                    .withId("three")
+                    .thenRespond(
+                        response()
+                            .withBody("some third response")
+                    )
+            );
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleSecondUpdated")
+                )
+                    .withId("two")
+                    .thenRespond(
+                        response()
+                            .withBody("some second updated response")
+                    )
+            );
+            MILLISECONDS.sleep(1500);
+
+            // then
+            String expectedFileContents = "[ {" + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleSecondUpdated\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second updated response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleThird\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "} ]";
+            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
+        } finally {
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
+            ConfigurationProperties.persistExpectations(false);
+        }
+    }
+
+    @Test
+    public void shouldPersistExpectationsToJsonOnUpdateAll() throws Exception {
+        // given
+        String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
+        ConfigurationProperties.persistExpectations(true);
+        try {
+            File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
+
+            // when
+            new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleFirst")
+                )
+                    .withId("one")
+                    .thenRespond(
+                        response()
+                            .withBody("some first response")
+                    )
+            );
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleSecond")
+                )
+                    .withId("two")
+                    .thenRespond(
+                        response()
+                            .withBody("some second response")
+                    )
+            );
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleThird")
+                )
+                    .withId("three")
+                    .thenRespond(
+                        response()
+                            .withBody("some third response")
+                    )
+            );
+            mockServerMatcher.update(new Expectation[]{
+                new Expectation(
+                    request()
+                        .withPath("/simpleFirst")
+                )
+                    .withId("one")
+                    .thenRespond(
+                    response()
+                        .withBody("some first response")
+                ),
+                new Expectation(
+                    request()
+                        .withPath("/simpleSecondUpdated")
+                )
+                    .withId("two")
+                    .thenRespond(
+                    response()
+                        .withBody("some second updated response")
+                ),
+                new Expectation(
+                    request()
+                        .withPath("/simpleFourth")
+                )
+                    .withId("four")
+                    .thenRespond(
+                    response()
+                        .withBody("some fourth response")
+                )
+            }, MockServerMatcherNotifier.Cause.API);
+            MILLISECONDS.sleep(1500);
+
+            // then
+            String expectedFileContents = "[ {" + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleSecondUpdated\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second updated response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"id\" : \"four\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleFourth\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some fourth response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "} ]";
+            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
+        } finally {
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
+            ConfigurationProperties.persistExpectations(false);
+        }
+    }
+
+    @Test
+    public void shouldPersistExpectationsToJsonOnUpdateAllFromFileWatcher() throws Exception {
+        // given
+        String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
+        ConfigurationProperties.persistExpectations(true);
+        try {
+            File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
+
+            // when
+            new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleFirst")
+                )
+                    .withId("one")
+                    .thenRespond(
+                        response()
+                            .withBody("some first response")
+                    )
+            );
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleSecond")
+                )
+                    .withId("two")
+                    .thenRespond(
+                        response()
+                            .withBody("some second response")
+                    )
+            );
+            mockServerMatcher.add(
+                new Expectation(
+                    request()
+                        .withPath("/simpleThird")
+                )
+                    .withId("three")
+                    .thenRespond(
+                        response()
+                            .withBody("some third response")
+                    )
+            );
+            MILLISECONDS.sleep(1500);
+            mockServerMatcher.update(new Expectation[]{
+                new Expectation(
+                    request()
+                        .withPath("/simpleFirst")
+                )
+                    .withId("one")
+                    .thenRespond(
+                    response()
+                        .withBody("some first response")
+                ),
+                new Expectation(
+                    request()
+                        .withPath("/simpleSecondUpdated")
+                )
+                    .withId("two")
+                    .thenRespond(
+                    response()
+                        .withBody("some second updated response")
+                ),
+                new Expectation(
+                    request()
+                        .withPath("/simpleFourth")
+                )
+                    .withId("four")
+                    .thenRespond(
+                    response()
+                        .withBody("some fourth response")
+                )
+            }, MockServerMatcherNotifier.Cause.FILE_WATCHER);
+            MILLISECONDS.sleep(1500);
+
+            // then
+            String expectedFileContents = "[ {" + NEW_LINE +
+                "  \"id\" : \"one\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleFirst\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some first response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"id\" : \"two\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleSecond\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some second response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "}, {" + NEW_LINE +
+                "  \"id\" : \"three\"," + NEW_LINE +
+                "  \"httpRequest\" : {" + NEW_LINE +
+                "    \"path\" : \"/simpleThird\"" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"times\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"timeToLive\" : {" + NEW_LINE +
+                "    \"unlimited\" : true" + NEW_LINE +
+                "  }," + NEW_LINE +
+                "  \"httpResponse\" : {" + NEW_LINE +
+                "    \"body\" : \"some third response\"" + NEW_LINE +
+                "  }" + NEW_LINE +
+                "} ]";
+            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(expectedFileContents));
+        } finally {
+            ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
             ConfigurationProperties.persistExpectations(false);
         }
     }
