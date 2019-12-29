@@ -47,11 +47,11 @@ public abstract class BooksPageIntegrationTest {
 
     @BeforeClass
     public static void startProxy() {
-        System.setProperty("bookService.port", "" + PortFactory.findFreePort());
         proxy = ClientAndServer.startClientAndServer();
-        mockServer = startClientAndServer(Integer.parseInt(System.getProperty("bookService.port")));
         System.setProperty("http.proxyHost", "127.0.0.1");
         System.setProperty("http.proxyPort", String.valueOf(proxy.getLocalPort()));
+        mockServer = startClientAndServer();
+        System.setProperty("bookService.port", String.valueOf(mockServer.getLocalPort()));
     }
 
     @AfterClass
