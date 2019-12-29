@@ -76,7 +76,7 @@ public class KeyStoreFactory {
             KeyStore keyStore = existingKeyStore;
             if (keyStore == null) {
                 // create new key store
-                keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+                keyStore = KeyStore.getInstance(ConfigurationProperties.javaKeyStoreType());
                 keyStore.load(null, keyStorePassword);
             }
 
@@ -160,7 +160,7 @@ public class KeyStoreFactory {
         File keyStoreFile = new File(ConfigurationProperties.javaKeyStoreFilePath());
         if (keyStoreFile.exists()) {
             try (FileInputStream fileInputStream = new FileInputStream(keyStoreFile)) {
-                keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+                keystore = KeyStore.getInstance(ConfigurationProperties.javaKeyStoreType());
                 keystore.load(fileInputStream, ConfigurationProperties.javaKeyStorePassword().toCharArray());
             } catch (Exception e) {
                 throw new RuntimeException("Exception while loading KeyStore from " + keyStoreFile.getAbsolutePath(), e);

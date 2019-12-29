@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - fixed error where ClientAndServer does fully wait for client to stop
 - fixed ability to specific a log level of OFF
+- fixed bug with keystore type configuration not being used in all places
 
 ### Security
 - updated tomcat (used in integration tests) to version without vulnerabilities
