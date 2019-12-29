@@ -75,7 +75,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
             );
 
         // then
-        MILLISECONDS.sleep(250);
+        MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
         assertThat(causes, contains(MockServerMatcherNotifier.Cause.API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
@@ -109,7 +109,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
             );
 
         // then
-        MILLISECONDS.sleep(250);
+        MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(2));
         assertThat(causes, contains(MockServerMatcherNotifier.Cause.API, MockServerMatcherNotifier.Cause.API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
@@ -120,7 +120,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
         mockServerMatcher.reset();
 
         // then
-        MILLISECONDS.sleep(250);
+        MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(0));
         assertThat(causes, contains(MockServerMatcherNotifier.Cause.API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(0));
@@ -146,7 +146,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
             );
 
         // then
-        MILLISECONDS.sleep(250);
+        MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
         assertThat(causes, contains(MockServerMatcherNotifier.Cause.API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
@@ -165,7 +165,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
             );
 
         // then
-        MILLISECONDS.sleep(250);
+        MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(1));
         assertThat(causes, contains(MockServerMatcherNotifier.Cause.API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(1));
@@ -193,7 +193,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
         String keyFour = UUID.randomUUID().toString();
 
         // then
-        MILLISECONDS.sleep(250);
+        MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
         assertThat(causes, contains(
             MockServerMatcherNotifier.Cause.API,
@@ -216,7 +216,7 @@ public class MockServerMatcherNotificationAndMetricsTest {
         );
 
         // then
-        MILLISECONDS.sleep(250);
+        MILLISECONDS.sleep(500);
         assertThat(mockServerMatcher.httpRequestMatchers.size(), is(3));
         assertThat(causes, contains(MockServerMatcherNotifier.Cause.API));
         assertThat(Metrics.get(Metrics.Name.ACTION_RESPONSE_COUNT), is(3));
