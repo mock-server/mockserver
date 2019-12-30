@@ -4,19 +4,21 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mockserver.MockServer;
+import org.mockserver.persistence.FileWatcher;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ExpectationSerializer;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -32,7 +34,6 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-@Ignore
 public class ExpectationFileWatcherIntegrationTest {
 
     private static NettyHttpClient httpClient;
@@ -65,7 +66,20 @@ public class ExpectationFileWatcherIntegrationTest {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
             // and - mockserver
             mockServer = new MockServer();
+            // and - file watcher to detect persistence file being updated
             MILLISECONDS.sleep(1500);
+            CompletableFuture<String> persistedExpectationsContents = new CompletableFuture<>();
+            new FileWatcher(
+                persistedExpectations.getAbsolutePath(),
+                () -> {
+                    try {
+                        persistedExpectationsContents.complete(new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8));
+                    } catch (IOException ioe) {
+                        persistedExpectationsContents.completeExceptionally(ioe);
+                    }
+                },
+                persistedExpectationsContents::completeExceptionally
+            );
 
             // when
             String watchedFileContents = "[ {" + NEW_LINE +
@@ -113,10 +127,8 @@ public class ExpectationFileWatcherIntegrationTest {
                 "} ]";
             Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
 
-            SECONDS.sleep(20);
-
             // then
-            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8), is(watchedFileContents));
+            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", persistedExpectationsContents.get(60, SECONDS), is(watchedFileContents));
         } finally {
             ConfigurationProperties.initializationJsonPath(initializationJsonPath);
             ConfigurationProperties.watchInitializationJson(false);
@@ -226,14 +238,27 @@ public class ExpectationFileWatcherIntegrationTest {
                 )
                 .get(10, TimeUnit.SECONDS);
 
+            // and - file watcher to detect persistence file being updated
+            MILLISECONDS.sleep(1500);
+            CompletableFuture<String> persistedExpectationsContents = new CompletableFuture<>();
+            new FileWatcher(
+                persistedExpectations.getAbsolutePath(),
+                () -> {
+                    try {
+                        persistedExpectationsContents.complete(new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8));
+                    } catch (IOException ioe) {
+                        persistedExpectationsContents.completeExceptionally(ioe);
+                    }
+                },
+                persistedExpectationsContents::completeExceptionally
+            );
+
             // when
             watchedFileContents = "[]";
             Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
 
-            SECONDS.sleep(20);
-
             // then
-            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath().toAbsolutePath()), StandardCharsets.UTF_8), is(watchedFileContents));
+            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", persistedExpectationsContents.get(60, SECONDS), is(watchedFileContents));
         } finally {
             ConfigurationProperties.initializationJsonPath(initializationJsonPath);
             ConfigurationProperties.watchInitializationJson(false);
@@ -343,6 +368,21 @@ public class ExpectationFileWatcherIntegrationTest {
                 )
                 .get(10, TimeUnit.SECONDS);
 
+            // and - file watcher to detect persistence file being updated
+            MILLISECONDS.sleep(1500);
+            CompletableFuture<String> persistedExpectationsContents = new CompletableFuture<>();
+            new FileWatcher(
+                persistedExpectations.getAbsolutePath(),
+                () -> {
+                    try {
+                        persistedExpectationsContents.complete(new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8));
+                    } catch (IOException ioe) {
+                        persistedExpectationsContents.completeExceptionally(ioe);
+                    }
+                },
+                persistedExpectationsContents::completeExceptionally
+            );
+
             // when
             watchedFileContents = "[ {" + NEW_LINE +
                 "  \"id\" : \"one\"," + NEW_LINE +
@@ -389,10 +429,8 @@ public class ExpectationFileWatcherIntegrationTest {
                 "} ]";
             Files.write(mockserverInitialization.toPath(), watchedFileContents.getBytes(StandardCharsets.UTF_8));
 
-            SECONDS.sleep(20);
-
             // then
-            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", new String(Files.readAllBytes(persistedExpectations.toPath().toAbsolutePath()), StandardCharsets.UTF_8), is(watchedFileContents));
+            assertThat(persistedExpectations.getAbsolutePath() + " does not match expected content", persistedExpectationsContents.get(60, SECONDS), is(watchedFileContents));
         } finally {
             ConfigurationProperties.initializationJsonPath(initializationJsonPath);
             ConfigurationProperties.watchInitializationJson(false);

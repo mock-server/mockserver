@@ -33,7 +33,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
     private final MockServerLogger mockServerLogger;
     private final Path filePath;
     private final boolean initializationPathMatchesPersistencePath;
-    private final static ReentrantLock FILE_WRITE_LOCK = new ReentrantLock();
+    private final ReentrantLock fileWriteLock = new ReentrantLock();
     private final MockServerMatcher mockServerMatcher;
 
     public ExpectationFileSystemPersistence(MockServerLogger mockServerLogger, MockServerMatcher mockServerMatcher) {
@@ -75,7 +75,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
     public void updated(MockServerMatcher mockServerLog, MockServerMatcherNotifier.Cause cause) {
         // ignore non-API changes from the same file
         if (cause == MockServerMatcherNotifier.Cause.API || !initializationPathMatchesPersistencePath) {
-            FILE_WRITE_LOCK.lock();
+            fileWriteLock.lock();
             try {
                 try {
                     try (
@@ -103,7 +103,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                     );
                 }
             } finally {
-                FILE_WRITE_LOCK.unlock();
+                fileWriteLock.unlock();
             }
         }
     }
