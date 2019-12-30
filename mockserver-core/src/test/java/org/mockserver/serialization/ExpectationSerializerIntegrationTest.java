@@ -47,7 +47,7 @@ public class ExpectationSerializerIntegrationTest {
             "}");
 
         // when
-        Expectation[] expectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes);
+        Expectation[] expectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes, false);
 
         // then
         assertArrayEquals(new Expectation[]{
@@ -85,7 +85,7 @@ public class ExpectationSerializerIntegrationTest {
             " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"");
 
         // when
-        new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes);
+        new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes, false);
     }
 
     @Test
@@ -134,7 +134,7 @@ public class ExpectationSerializerIntegrationTest {
             .buildObject();
 
         // when
-        Expectation[] expectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes);
+        Expectation[] expectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes, false);
 
         // then
         assertArrayEquals(new Expectation[]{
@@ -194,7 +194,7 @@ public class ExpectationSerializerIntegrationTest {
             "]");
 
         // when
-        new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes);
+        new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes, false);
     }
 
     @Test

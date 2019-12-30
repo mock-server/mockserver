@@ -9,7 +9,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.verification.AtLeast;
-import org.mockito.verification.VerificationMode;
 import org.mockserver.Version;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
@@ -954,7 +953,7 @@ public class MockServerClientTest {
 
         // and - an expectation
         Expectation[] expectations = {};
-        when(mockExpectationSerializer.deserializeArray("body")).thenReturn(expectations);
+        when(mockExpectationSerializer.deserializeArray("body", true)).thenReturn(expectations);
 
         // when
         assertSame(expectations, mockServerClient.retrieveActiveExpectations(someRequestMatcher));
@@ -972,7 +971,7 @@ public class MockServerClientTest {
             20000,
             TimeUnit.MILLISECONDS
         );
-        verify(mockExpectationSerializer).deserializeArray("body");
+        verify(mockExpectationSerializer).deserializeArray("body", true);
     }
 
     @Test
@@ -980,7 +979,7 @@ public class MockServerClientTest {
         // given
         Expectation[] expectations = {};
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
-        when(mockExpectationSerializer.deserializeArray("body")).thenReturn(expectations);
+        when(mockExpectationSerializer.deserializeArray("body", true)).thenReturn(expectations);
 
         // when
         assertSame(expectations, mockServerClient.retrieveActiveExpectations(null));
@@ -998,7 +997,7 @@ public class MockServerClientTest {
             20000,
             TimeUnit.MILLISECONDS
         );
-        verify(mockExpectationSerializer).deserializeArray("body");
+        verify(mockExpectationSerializer).deserializeArray("body", true);
     }
 
     @Test
@@ -1014,7 +1013,7 @@ public class MockServerClientTest {
 
         // and - an expectation
         Expectation[] expectations = {};
-        when(mockExpectationSerializer.deserializeArray("body")).thenReturn(expectations);
+        when(mockExpectationSerializer.deserializeArray("body", true)).thenReturn(expectations);
 
         // when
         assertSame(expectations, mockServerClient.retrieveRecordedExpectations(someRequestMatcher));
@@ -1032,7 +1031,7 @@ public class MockServerClientTest {
             20000,
             TimeUnit.MILLISECONDS
         );
-        verify(mockExpectationSerializer).deserializeArray("body");
+        verify(mockExpectationSerializer).deserializeArray("body", true);
     }
 
     @Test
@@ -1040,7 +1039,7 @@ public class MockServerClientTest {
         // given
         Expectation[] expectations = {};
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response().withBody("body"));
-        when(mockExpectationSerializer.deserializeArray("body")).thenReturn(expectations);
+        when(mockExpectationSerializer.deserializeArray("body", true)).thenReturn(expectations);
 
         // when
         assertSame(expectations, mockServerClient.retrieveRecordedExpectations(null));
@@ -1058,7 +1057,7 @@ public class MockServerClientTest {
             20000,
             TimeUnit.MILLISECONDS
         );
-        verify(mockExpectationSerializer).deserializeArray("body");
+        verify(mockExpectationSerializer).deserializeArray("body", true);
     }
 
     @Test

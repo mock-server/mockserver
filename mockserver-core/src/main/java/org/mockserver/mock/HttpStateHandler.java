@@ -48,11 +48,7 @@ public class HttpStateHandler {
     private final String uniqueLoopPreventionHeaderValue = "MockServer_" + UUID.randomUUID().toString();
     private final MockServerEventLog mockServerLog;
     private final Scheduler scheduler;
-    @SuppressWarnings({"FieldCanBeLocal", "unused"})
-    private final ExpectationInitializerLoader expectationInitializerLoader;
-    @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private final ExpectationFileSystemPersistence expectationFileSystemPersistence;
-    @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private final ExpectationFileWatcher expectationFileWatcher;
     // mockserver
     private MockServerMatcher mockServerMatcher;
@@ -82,9 +78,9 @@ public class HttpStateHandler {
         this.verificationSerializer = new VerificationSerializer(mockServerLogger);
         this.verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
         this.logEntrySerializer = new LogEntrySerializer(mockServerLogger);
-        this.expectationInitializerLoader = new ExpectationInitializerLoader(mockServerLogger, mockServerMatcher);
         this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
         this.expectationFileWatcher = new ExpectationFileWatcher(mockServerLogger, mockServerMatcher);
+        new ExpectationInitializerLoader(mockServerLogger, mockServerMatcher);
     }
 
     public MockServerLogger getMockServerLogger() {
@@ -446,7 +442,7 @@ public class HttpStateHandler {
 
         if (request.matches("PUT", PATH_PREFIX + "/expectation", "/expectation")) {
 
-            for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString())) {
+            for (Expectation expectation : expectationSerializer.deserializeArray(request.getBodyAsString(), false)) {
                 if (!warDeployment || validateSupportedFeatures(expectation, request, responseWriter)) {
                     add(expectation);
                 }
@@ -562,5 +558,11 @@ public class HttpStateHandler {
 
     public String getUniqueLoopPreventionHeaderValue() {
         return uniqueLoopPreventionHeaderValue;
+    }
+
+    public void stop() {
+        expectationFileSystemPersistence.stop();
+        expectationFileWatcher.stop();
+        getMockServerLog().stop();
     }
 }

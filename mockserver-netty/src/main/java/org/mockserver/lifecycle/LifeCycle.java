@@ -51,7 +51,7 @@ public abstract class LifeCycle implements Stoppable {
         CompletableFuture<String> stopFuture = new CompletableFuture<>();
         new Scheduler.SchedulerThreadFactory("Stop").newThread(() -> {
             scheduler.shutdown();
-            httpStateHandler.getMockServerLog().stop();
+            httpStateHandler.stop();
 
             // Shut down all event loops to terminate all threads.
             bossGroup.shutdownGracefully(5, 5, MILLISECONDS);

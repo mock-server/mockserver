@@ -25,17 +25,21 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockserver.serialization.ObjectMapperFactory.createObjectMapper;
+import static org.slf4j.event.Level.INFO;
 
 public class ExpectationFileSystemPersistence implements MockServerMatcherListener {
 
     private final ObjectMapper objectMapper;
     private final MockServerLogger mockServerLogger;
     private final Path filePath;
+    private final boolean initializationPathMatchesPersistencePath;
     private final static ReentrantLock FILE_WRITE_LOCK = new ReentrantLock();
+    private final MockServerMatcher mockServerMatcher;
 
     public ExpectationFileSystemPersistence(MockServerLogger mockServerLogger, MockServerMatcher mockServerMatcher) {
         if (ConfigurationProperties.persistExpectations()) {
             this.mockServerLogger = mockServerLogger;
+            this.mockServerMatcher = mockServerMatcher;
             this.objectMapper = createObjectMapper(new TimeToLiveSerializer());
             this.filePath = Paths.get(ConfigurationProperties.persistedExpectationsPath());
             try {
@@ -50,17 +54,27 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                         .setThrowable(throwable)
                 );
             }
+            this.initializationPathMatchesPersistencePath = ConfigurationProperties.initializationJsonPath().equals(ConfigurationProperties.persistedExpectationsPath());
             mockServerMatcher.registerListener(this);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.INFO)
+                    .setLogLevel(INFO)
+                    .setMessageFormat("Created expectation file system persistence to " + ConfigurationProperties.persistedExpectationsPath())
+            );
         } else {
             this.mockServerLogger = null;
+            this.mockServerMatcher = null;
             this.objectMapper = null;
             this.filePath = null;
+            this.initializationPathMatchesPersistencePath = true;
         }
     }
 
     @Override
     public void updated(MockServerMatcher mockServerLog, MockServerMatcherNotifier.Cause cause) {
-        if (cause == MockServerMatcherNotifier.Cause.API) {
+        // ignore non-API changes from the same file
+        if (cause == MockServerMatcherNotifier.Cause.API || !initializationPathMatchesPersistencePath) {
             FILE_WRITE_LOCK.lock();
             try {
                 try {
@@ -116,6 +130,12 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing expectation to JSON with value " + Arrays.asList(expectations), e);
+        }
+    }
+
+    public void stop() {
+        if (mockServerMatcher != null) {
+            mockServerMatcher.unregisterListener(this);
         }
     }
 }

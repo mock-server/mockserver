@@ -644,7 +644,7 @@ public class MockServerClient implements Stoppable {
     public Expectation[] retrieveRecordedExpectations(HttpRequest httpRequest) {
         String recordedExpectations = retrieveRecordedExpectations(httpRequest, Format.JSON);
         if (isNotBlank(recordedExpectations) && !recordedExpectations.equals("[]")) {
-            return expectationSerializer.deserializeArray(recordedExpectations);
+            return expectationSerializer.deserializeArray(recordedExpectations, true);
         } else {
             return new Expectation[0];
         }
@@ -823,7 +823,7 @@ public class MockServerClient implements Stoppable {
     public Expectation[] retrieveActiveExpectations(HttpRequest httpRequest) {
         String activeExpectations = retrieveActiveExpectations(httpRequest, Format.JSON);
         if (isNotBlank(activeExpectations) && !activeExpectations.equals("[]")) {
-            return expectationSerializer.deserializeArray(activeExpectations);
+            return expectationSerializer.deserializeArray(activeExpectations, true);
         } else {
             return new Expectation[0];
         }

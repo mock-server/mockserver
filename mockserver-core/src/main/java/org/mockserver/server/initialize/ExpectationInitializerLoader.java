@@ -9,12 +9,10 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.serialization.ExpectationSerializer;
-import org.slf4j.event.Level;
 
 import java.lang.reflect.Constructor;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mockserver.log.model.LogEntry.LogMessageType.CREATED_EXPECTATION;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.slf4j.event.Level.WARN;
 
@@ -63,7 +61,12 @@ public class ExpectationInitializerLoader {
         String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
         if (isNotBlank(initializationJsonPath)) {
             try {
-                return expectationSerializer.deserializeArray(FileReader.readFileFromClassPathOrPath(initializationJsonPath));
+                String jsonExpectations = FileReader.readFileFromClassPathOrPath(initializationJsonPath);
+                if (isNotBlank(jsonExpectations)) {
+                    return expectationSerializer.deserializeArray(jsonExpectations, true);
+                } else {
+                    return new Expectation[0];
+                }
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()

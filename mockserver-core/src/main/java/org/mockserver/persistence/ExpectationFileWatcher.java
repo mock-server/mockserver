@@ -12,82 +12,59 @@ import org.mockserver.ui.MockServerMatcherNotifier;
 import org.slf4j.event.Level;
 
 import java.nio.file.*;
-import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
-import static org.slf4j.event.Level.DEBUG;
-import static org.slf4j.event.Level.WARN;
+import static org.slf4j.event.Level.*;
 
 public class ExpectationFileWatcher {
 
     private final ExpectationSerializer expectationSerializer;
     private final MockServerLogger mockServerLogger;
     private final MockServerMatcher mockServerMatcher;
+    private FileWatcher fileWatcher;
 
     public ExpectationFileWatcher(MockServerLogger mockServerLogger, MockServerMatcher mockServerMatcher) {
         if (ConfigurationProperties.watchInitializationJson()) {
             this.expectationSerializer = new ExpectationSerializer(mockServerLogger);
             this.mockServerLogger = mockServerLogger;
             this.mockServerMatcher = mockServerMatcher;
-
-            WatchService watchService;
-            Path filePath = Paths.get(ConfigurationProperties.initializationClass());
             try {
-                watchService = FileSystems.getDefault().newWatchService();
-                filePath
-                    .register(
-                        watchService,
-                        StandardWatchEventKinds.OVERFLOW,
-                        StandardWatchEventKinds.ENTRY_CREATE,
-                        StandardWatchEventKinds.ENTRY_MODIFY
-                    );
-            } catch (Throwable throwable) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setType(LogEntry.LogMessageType.EXCEPTION)
-                        .setLogLevel(Level.ERROR)
-                        .setMessageFormat("Exception file watcher for " + filePath.toString())
-                        .setThrowable(throwable)
-                );
-                return;
-            }
-
-            new Scheduler.SchedulerThreadFactory(ExpectationFileWatcher.class.getSimpleName()).newThread(() -> {
-                while (true) {
-                    WatchKey key;
-                    try {
-                        // return signaled key, meaning events occurred on the object
-                        key = watchService.take();
-                    } catch (InterruptedException ex) {
-                        return;
-                    }
-
+                fileWatcher = new FileWatcher(ConfigurationProperties.initializationJsonPath(), () -> {
                     if (MockServerLogger.isEnabled(DEBUG)) {
                         mockServerLogger.logEvent(
                             new LogEntry()
                                 .setType(LogEntry.LogMessageType.DEBUG)
                                 .setLogLevel(DEBUG)
-                                .setMessageFormat("Events occurred on expectation file being watched " + key.pollEvents().stream().map(event -> event.kind().name()).collect(Collectors.toList()))
+                                .setMessageFormat("Expectation file watched detected modification on file " + ConfigurationProperties.initializationJsonPath() + " updating expectations")
                         );
                     }
 
-                    try {
-                        addExpectationsFromInitializer();
-                    } catch (Throwable throwable) {
-                        mockServerLogger.logEvent(
-                            new LogEntry()
-                                .setType(LogEntry.LogMessageType.WARN)
-                                .setLogLevel(WARN)
-                                .setMessageFormat("Exception while processing expectation file update " + throwable.getMessage())
-                                .setThrowable(throwable)
-                        );
-                    }
-
-                    // resetting the key goes back ready state
-                    key.reset();
-                }
-            }).start();
+                    addExpectationsFromInitializer();
+                }, throwable -> {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.WARN)
+                            .setLogLevel(WARN)
+                            .setMessageFormat("Exception while processing expectation file update " + throwable.getMessage())
+                            .setThrowable(throwable)
+                    );
+                });
+            } catch (Throwable throwable) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("Exception creating file watcher for " + ConfigurationProperties.initializationJsonPath())
+                        .setThrowable(throwable)
+                );
+            }
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.INFO)
+                    .setLogLevel(INFO)
+                    .setMessageFormat("Created expectation file watcher for " + ConfigurationProperties.initializationJsonPath())
+            );
         } else {
             this.expectationSerializer = null;
             this.mockServerLogger = null;
@@ -103,7 +80,7 @@ public class ExpectationFileWatcher {
         String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
         if (isNotBlank(initializationJsonPath)) {
             try {
-                return expectationSerializer.deserializeArray(FileReader.readFileFromClassPathOrPath(initializationJsonPath));
+                return expectationSerializer.deserializeArray(FileReader.readFileFromClassPathOrPath(initializationJsonPath), true);
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
@@ -117,4 +94,9 @@ public class ExpectationFileWatcher {
         return new Expectation[0];
     }
 
+    public void stop() {
+        if (fileWatcher != null) {
+            fileWatcher.setRunning(false);
+        }
+    }
 }

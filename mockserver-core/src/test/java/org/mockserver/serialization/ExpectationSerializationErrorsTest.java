@@ -12,8 +12,6 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
 
-import java.io.IOException;
-
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -67,6 +65,6 @@ public class ExpectationSerializationErrorsTest {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("1 error:" + NEW_LINE + " - an expectation or expectation array is required but value was \"\"");
         // when
-        expectationSerializer.deserializeArray("");
+        expectationSerializer.deserializeArray("", false);
     }
 }

@@ -82,7 +82,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
         if (!this.workerGroup.isShuttingDown()) {
             this.workerGroup.shutdownGracefully(100, 750, MILLISECONDS).syncUninterruptibly();
         }
-        this.httpStateHandler.getMockServerLog().stop();
+        this.httpStateHandler.stop();
     }
 
     @Override

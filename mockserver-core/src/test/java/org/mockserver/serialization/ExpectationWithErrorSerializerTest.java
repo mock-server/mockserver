@@ -153,7 +153,7 @@ public class ExpectationWithErrorSerializerTest {
         when(objectMapper.readValue(eq("requestBytes"), same(ExpectationDTO.class))).thenReturn(fullExpectationDTO);
 
         // when
-        Expectation[] expectations = expectationSerializer.deserializeArray("requestBytes");
+        Expectation[] expectations = expectationSerializer.deserializeArray("requestBytes", false);
 
         // then
         assertArrayEquals(new Expectation[]{fullExpectation, fullExpectation}, expectations);
@@ -189,6 +189,6 @@ public class ExpectationWithErrorSerializerTest {
             "]");
 
         // when
-        expectationSerializer.deserializeArray("requestBytes");
+        expectationSerializer.deserializeArray("requestBytes", false);
     }
 }

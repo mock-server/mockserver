@@ -120,15 +120,13 @@ public class ExpectationSerializer implements Serializer<Expectation> {
         return Expectation.class;
     }
 
-    public Expectation[] deserializeArray(String jsonExpectations) {
+    public Expectation[] deserializeArray(String jsonExpectations, boolean allowEmpty) {
         List<Expectation> expectations = new ArrayList<>();
         if (isBlank(jsonExpectations)) {
             throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation or expectation array is required but value was \"" + jsonExpectations + "\"");
         } else {
             List<String> jsonExpectationList = jsonArraySerializer.returnJSONObjects(jsonExpectations);
-            if (jsonExpectationList.isEmpty()) {
-                throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation or array of expectations is required");
-            } else {
+            if (!jsonExpectationList.isEmpty()) {
                 List<String> validationErrorsList = new ArrayList<String>();
                 for (String jsonExpecation : jsonExpectationList) {
                     try {
@@ -144,6 +142,8 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                         throw new IllegalArgumentException(validationErrorsList.get(0));
                     }
                 }
+            } else if (!allowEmpty) {
+                throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation or array of expectations is required");
             }
         }
         return expectations.toArray(new Expectation[0]);

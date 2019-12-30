@@ -5081,7 +5081,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             new ExpectationSerializer(new MockServerLogger())
                 .deserializeArray(
                     mockServerClient
-                        .retrieveActiveExpectations(request().withPath(calculatePath("some_path.*")), Format.JSON)
+                        .retrieveActiveExpectations(request().withPath(calculatePath("some_path.*")), Format.JSON),
+                    false
                 ),
             arrayContaining(
                 new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
@@ -5095,7 +5096,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             new ExpectationSerializer(new MockServerLogger())
                 .deserializeArray(
                     mockServerClient
-                        .retrieveActiveExpectations(null, Format.JSON)
+                        .retrieveActiveExpectations(null, Format.JSON),
+                    false
                 ),
             arrayContaining(
                 new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
@@ -5113,7 +5115,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             new ExpectationSerializer(new MockServerLogger())
                 .deserializeArray(
                     mockServerClient
-                        .retrieveActiveExpectations(request(), Format.JSON)
+                        .retrieveActiveExpectations(request(), Format.JSON),
+                    false
                 ),
             arrayContaining(
                 new Expectation(request().withPath(calculatePath("some_path.*")), exactly(4), TimeToLive.unlimited())
@@ -5205,7 +5208,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
 
         // then
         Expectation[] recordedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(
-            mockServerClient.retrieveRecordedExpectations(request().withPath(calculatePath("some_path_one")), Format.JSON)
+            mockServerClient.retrieveRecordedExpectations(request().withPath(calculatePath("some_path_one")), Format.JSON),
+            false
         );
         assertThat(recordedExpectations.length, is(1));
         verifyRequestsMatches(
@@ -5217,7 +5221,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         assertThat(recordedExpectations[0].getHttpResponse().getBodyAsString(), is("some_body_one"));
         // and
         recordedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(
-            mockServerClient.retrieveRecordedExpectations(request(), Format.JSON)
+            mockServerClient.retrieveRecordedExpectations(request(), Format.JSON),
+            false
         );
         assertThat(recordedExpectations.length, is(2));
         verifyRequestsMatches(
@@ -5232,7 +5237,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         assertThat(recordedExpectations[1].getHttpResponse().getBodyAsString(), is("some_body_three"));
         // and
         recordedExpectations = new ExpectationSerializer(new MockServerLogger()).deserializeArray(
-            mockServerClient.retrieveRecordedExpectations(null, Format.JSON)
+            mockServerClient.retrieveRecordedExpectations(null, Format.JSON),
+            false
         );
         assertThat(recordedExpectations.length, is(2));
         verifyRequestsMatches(

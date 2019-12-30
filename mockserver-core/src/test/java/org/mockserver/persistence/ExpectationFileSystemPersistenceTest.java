@@ -1,6 +1,5 @@
 package org.mockserver.persistence;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.callback.WebSocketClientRegistry;
@@ -12,7 +11,6 @@ import org.mockserver.scheduler.Scheduler;
 import org.mockserver.ui.MockServerMatcherNotifier;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
@@ -39,12 +37,13 @@ public class ExpectationFileSystemPersistenceTest {
         // given
         String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
         ConfigurationProperties.persistExpectations(true);
+        ExpectationFileSystemPersistence expectationFileSystemPersistence = null;
         try {
             File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
 
             // when
-            new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
             mockServerMatcher.add(
                 new Expectation(
                     request()
@@ -128,6 +127,9 @@ public class ExpectationFileSystemPersistenceTest {
         } finally {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
             ConfigurationProperties.persistExpectations(false);
+            if (expectationFileSystemPersistence != null) {
+                expectationFileSystemPersistence.stop();
+            }
         }
     }
 
@@ -136,12 +138,13 @@ public class ExpectationFileSystemPersistenceTest {
         // given
         String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
         ConfigurationProperties.persistExpectations(true);
+        ExpectationFileSystemPersistence expectationFileSystemPersistence = null;
         try {
             File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
 
             // when
-            new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
             mockServerMatcher.add(
                 new Expectation(
                     request()
@@ -215,6 +218,9 @@ public class ExpectationFileSystemPersistenceTest {
         } finally {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
             ConfigurationProperties.persistExpectations(false);
+            if (expectationFileSystemPersistence != null) {
+                expectationFileSystemPersistence.stop();
+            }
         }
     }
 
@@ -223,12 +229,13 @@ public class ExpectationFileSystemPersistenceTest {
         // given
         String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
         ConfigurationProperties.persistExpectations(true);
+        ExpectationFileSystemPersistence expectationFileSystemPersistence = null;
         try {
             File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
 
             // when
-            new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
             mockServerMatcher.add(
                 new Expectation(
                     request()
@@ -323,6 +330,9 @@ public class ExpectationFileSystemPersistenceTest {
         } finally {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
             ConfigurationProperties.persistExpectations(false);
+            if (expectationFileSystemPersistence != null) {
+                expectationFileSystemPersistence.stop();
+            }
         }
     }
 
@@ -331,12 +341,13 @@ public class ExpectationFileSystemPersistenceTest {
         // given
         String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
         ConfigurationProperties.persistExpectations(true);
+        ExpectationFileSystemPersistence expectationFileSystemPersistence = null;
         try {
             File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
 
             // when
-            new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
             mockServerMatcher.add(
                 new Expectation(
                     request()
@@ -449,6 +460,9 @@ public class ExpectationFileSystemPersistenceTest {
         } finally {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
             ConfigurationProperties.persistExpectations(false);
+            if (expectationFileSystemPersistence != null) {
+                expectationFileSystemPersistence.stop();
+            }
         }
     }
 
@@ -457,12 +471,16 @@ public class ExpectationFileSystemPersistenceTest {
         // given
         String persistedExpectationsPath = ConfigurationProperties.persistedExpectationsPath();
         ConfigurationProperties.persistExpectations(true);
+        String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
+        ConfigurationProperties.watchInitializationJson(true);
+        ExpectationFileSystemPersistence expectationFileSystemPersistence = null;
         try {
             File persistedExpectations = File.createTempFile("persistedExpectations", ".json");
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
+            ConfigurationProperties.initializationJsonPath(persistedExpectations.getAbsolutePath());
 
             // when
-            new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
+            expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
             mockServerMatcher.add(
                 new Expectation(
                     request()
@@ -576,6 +594,11 @@ public class ExpectationFileSystemPersistenceTest {
         } finally {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectationsPath);
             ConfigurationProperties.persistExpectations(false);
+            ConfigurationProperties.initializationJsonPath(initializationJsonPath);
+            ConfigurationProperties.watchInitializationJson(false);
+            if (expectationFileSystemPersistence != null) {
+                expectationFileSystemPersistence.stop();
+            }
         }
     }
 
