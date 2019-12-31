@@ -40,7 +40,7 @@ public class ConfigurationProperties {
     private static final long DEFAULT_MAX_TIMEOUT = 20;
     private static final int DEFAULT_CONNECT_TIMEOUT = 20000;
     private static final int DEFAULT_MAX_EXPECTATIONS = 5000;
-    private static final int DEFAULT_MAX_WEB_SOCKET_EXPECTATIONS = 1000;
+    private static final int DEFAULT_MAX_WEB_SOCKET_EXPECTATIONS = 1500;
     private static final int DEFAULT_MAX_INITIAL_LINE_LENGTH = Integer.MAX_VALUE;
     private static final int DEFAULT_MAX_HEADER_SIZE = Integer.MAX_VALUE;
     private static final int DEFAULT_MAX_CHUNK_SIZE = Integer.MAX_VALUE;

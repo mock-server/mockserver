@@ -126,7 +126,7 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.maxWebSocketExpectations");
 
         // when
-        assertEquals(1000, maxWebSocketExpectations());
+        assertEquals(1500, maxWebSocketExpectations());
         maxWebSocketExpectations(100);
 
         // then
@@ -140,7 +140,7 @@ public class ConfigurationPropertiesTest {
         System.setProperty("mockserver.maxWebSocketExpectations", "invalid");
 
         // then
-        assertEquals(1000, maxWebSocketExpectations());
+        assertEquals(1500, maxWebSocketExpectations());
     }
 
     @Test
