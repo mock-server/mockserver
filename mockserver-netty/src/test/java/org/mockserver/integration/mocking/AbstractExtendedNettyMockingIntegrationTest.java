@@ -42,6 +42,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.matchers.Times.exactly;
+import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Cookie.cookie;
@@ -197,11 +198,12 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
     @Test
     public void shouldRespondByMultipleParallelObjectCallbacks() {
         // when
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 25; i++) {
             mockServerClient
                 .when(
                     request()
-                        .withPath(calculatePath("object_callback_" + objectCallbackCounter))
+                        .withPath(calculatePath("object_callback_" + objectCallbackCounter)),
+                    once()
                 )
                 .respond(httpRequest -> {
                         MILLISECONDS.sleep(10);
@@ -220,7 +222,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         objectCallbackCounter = 0;
 
         // then
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 25; i++) {
             assertEquals(
                 response()
                     .withStatusCode(ACCEPTED_202.code())
