@@ -28,6 +28,14 @@ public class Expectation extends ObjectWithJsonToString {
     private HttpOverrideForwardedRequest httpOverrideForwardedRequest;
     private HttpError httpError;
 
+    public static Expectation when(HttpRequest httpRequest) {
+        return new Expectation(httpRequest);
+    }
+
+    public static Expectation when(HttpRequest httpRequest, Times times, TimeToLive timeToLive) {
+        return new Expectation(httpRequest, times, timeToLive);
+    }
+
     public Expectation(HttpRequest httpRequest) {
         this(httpRequest, Times.unlimited(), TimeToLive.unlimited());
     }
