@@ -57,13 +57,13 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
     }
 
     @Test
-    @Ignore
+    @Ignore("FAILS RANDOMLY IN CI")
     public void sendMultipleRequestsSingleThreaded() throws ExecutionException, InterruptedException, TimeoutException {
         scheduleTasksAndWaitForResponses(1);
     }
 
     @Test
-    @Ignore
+    @Ignore("FAILS LOCALLY RECENTLY ONLY")
     public void sendMultipleRequestsMultiThreaded() throws ExecutionException, InterruptedException, TimeoutException {
         scheduleTasksAndWaitForResponses(25);
     }
