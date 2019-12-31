@@ -3,7 +3,7 @@ package org.mockserver.dashboard.serializers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
-import org.mockserver.dashboard.model.LogEntryDTO;
+import org.mockserver.dashboard.model.DashboardLogEntryDTO;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
@@ -20,10 +20,10 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.JsonBody.json;
 
-public class LogEntryDTOSerializerTest {
+public class DashboardLogEntryDTOSerializerTest {
 
     final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper(
-        new LogEntryDTOSerializer(),
+        new DashboardLogEntryDTOSerializer(),
         new ThrowableSerializer()
     );
 
@@ -45,11 +45,11 @@ public class LogEntryDTOSerializerTest {
         // when
         String json = objectMapper
             .writerWithDefaultPrettyPrinter()
-            .writeValueAsString(new LogEntryDTO(logEntry));
+            .writeValueAsString(new DashboardLogEntryDTO(logEntry));
 
         // then
         assertThat(json, containsString("{" + NEW_LINE +
-            "  \"id\" : \"" + logEntry.id() + "\"," + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
             "    \"logLevel\" : \"WARN\"," + NEW_LINE +
             "    \"timestamp\" : \"" + logEntry.getTimestamp() + "\"," + NEW_LINE +
@@ -118,11 +118,11 @@ public class LogEntryDTOSerializerTest {
         // when
         String json = objectMapper
             .writerWithDefaultPrettyPrinter()
-            .writeValueAsString(new LogEntryDTO(logEntry));
+            .writeValueAsString(new DashboardLogEntryDTO(logEntry));
 
         // then
         assertThat(json, containsString("{" + NEW_LINE +
-            "  \"id\" : \"" + logEntry.id() + "\"," + NEW_LINE +
+            "  \"key\" : \"" + logEntry.id() + "\"," + NEW_LINE +
             "  \"value\" : {" + NEW_LINE +
             "    \"logLevel\" : \"WARN\"," + NEW_LINE +
             "    \"timestamp\" : \"" + logEntry.getTimestamp() + "\"," + NEW_LINE +

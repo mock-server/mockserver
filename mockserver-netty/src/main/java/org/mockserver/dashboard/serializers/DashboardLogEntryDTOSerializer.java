@@ -3,23 +3,23 @@ package org.mockserver.dashboard.serializers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.mockserver.dashboard.model.LogEntryDTO;
+import org.mockserver.dashboard.model.DashboardLogEntryDTO;
 
 import java.io.IOException;
 
 /**
  * @author jamesdbloom
  */
-public class LogEntryDTOSerializer extends StdSerializer<LogEntryDTO> {
+public class DashboardLogEntryDTOSerializer extends StdSerializer<DashboardLogEntryDTO> {
 
-    public LogEntryDTOSerializer() {
-        super(LogEntryDTO.class);
+    public DashboardLogEntryDTOSerializer() {
+        super(DashboardLogEntryDTO.class);
     }
 
     @Override
-    public void serialize(LogEntryDTO logEntry, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+    public void serialize(DashboardLogEntryDTO logEntry, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeStartObject();
-        jgen.writeObjectField("id", logEntry.getId());
+        jgen.writeObjectField("key", logEntry.getId());
         jgen.writeObjectFieldStart("value");
         if (logEntry.getLogLevel() != null) {
             jgen.writeObjectField("logLevel", logEntry.getLogLevel());

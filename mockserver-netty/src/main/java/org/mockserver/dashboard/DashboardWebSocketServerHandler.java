@@ -13,8 +13,8 @@ import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import org.mockserver.collections.CircularHashMap;
-import org.mockserver.dashboard.model.LogEntryDTO;
-import org.mockserver.dashboard.serializers.LogEntryDTOSerializer;
+import org.mockserver.dashboard.model.DashboardLogEntryDTO;
+import org.mockserver.dashboard.serializers.DashboardLogEntryDTOSerializer;
 import org.mockserver.dashboard.serializers.ThrowableSerializer;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
@@ -51,13 +51,13 @@ import static org.mockserver.model.HttpRequest.request;
 @ChannelHandler.Sharable
 public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapter implements MockServerLogListener, MockServerMatcherListener {
 
-    private static final Predicate<LogEntryDTO> requestLogPredicate = input
+    private static final Predicate<DashboardLogEntryDTO> requestLogPredicate = input
         -> input.getType() == RECEIVED_REQUEST;
-    private static final Predicate<LogEntryDTO> requestResponseLogPredicate = input
+    private static final Predicate<DashboardLogEntryDTO> requestResponseLogPredicate = input
         -> input.getType() == EXPECTATION_RESPONSE
         || input.getType() == EXPECTATION_NOT_MATCHED_RESPONSE
         || input.getType() == FORWARDED_REQUEST;
-    private static final Predicate<LogEntryDTO> recordedExpectationLogPredicate = input
+    private static final Predicate<DashboardLogEntryDTO> recordedExpectationLogPredicate = input
         -> input.getType() == FORWARDED_REQUEST;
     private static final AttributeKey<Boolean> CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET = AttributeKey.valueOf("CHANNEL_UPGRADED_FOR_UI_WEB_SOCKET");
     private static final String UPGRADE_CHANNEL_FOR_UI_WEB_SOCKET_URI = "/_mockserver_ui_websocket";
@@ -173,7 +173,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
         }
         if (objectMapper == null) {
             objectMapper = ObjectMapperFactory.createObjectMapper(
-                new LogEntryDTOSerializer(),
+                new DashboardLogEntryDTOSerializer(),
                 new ThrowableSerializer()
             );
         }
@@ -286,12 +286,12 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
             .retrieveLogEntriesInReverse(
                 httpRequest,
                 logEntry -> true,
-                LogEntryDTO::new,
+                DashboardLogEntryDTO::new,
                 reverseLogEventsStream -> {
                     List<Map<String, Object>> recordedExpectations = new ArrayList<>();
                     List<Map<String, Object>> recordedRequests = new ArrayList<>();
-                    List<LogEntryDTO> recordedRequestResponses = new ArrayList<>();
-                    List<LogEntryDTO> logMessages = new ArrayList<>();
+                    List<DashboardLogEntryDTO> recordedRequestResponses = new ArrayList<>();
+                    List<DashboardLogEntryDTO> logMessages = new ArrayList<>();
                     reverseLogEventsStream
                         .forEach(logEntryDTO -> {
                             if (recordedExpectationLogPredicate.test(logEntryDTO)

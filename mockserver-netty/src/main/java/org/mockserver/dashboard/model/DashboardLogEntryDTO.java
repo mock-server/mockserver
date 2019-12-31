@@ -11,7 +11,7 @@ import org.slf4j.event.Level;
 
 import static org.mockserver.model.HttpRequest.request;
 
-public class LogEntryDTO extends ObjectWithJsonToString {
+public class DashboardLogEntryDTO extends ObjectWithJsonToString {
 
     private static final String[] EXCLUDED_FIELDS = {
         "id",
@@ -34,7 +34,7 @@ public class LogEntryDTO extends ObjectWithJsonToString {
     private Object[] arguments;
     private String message;
 
-    public LogEntryDTO(LogEntry logEntry) {
+    public DashboardLogEntryDTO(LogEntry logEntry) {
         setId(logEntry.id());
         setLogLevel(logEntry.getLogLevel());
         setTimestamp(logEntry.getTimestamp());
@@ -62,7 +62,7 @@ public class LogEntryDTO extends ObjectWithJsonToString {
         return logLevel;
     }
 
-    public LogEntryDTO setLogLevel(Level logLevel) {
+    public DashboardLogEntryDTO setLogLevel(Level logLevel) {
         this.logLevel = logLevel;
         return this;
     }
@@ -71,7 +71,7 @@ public class LogEntryDTO extends ObjectWithJsonToString {
         return epochTime;
     }
 
-    public LogEntryDTO setEpochTime(long epochTime) {
+    public DashboardLogEntryDTO setEpochTime(long epochTime) {
         this.epochTime = epochTime;
         return this;
     }
@@ -88,7 +88,7 @@ public class LogEntryDTO extends ObjectWithJsonToString {
         return type;
     }
 
-    public LogEntryDTO setType(LogEntry.LogMessageType type) {
+    public DashboardLogEntryDTO setType(LogEntry.LogMessageType type) {
         this.type = type;
         return this;
     }
@@ -98,12 +98,12 @@ public class LogEntryDTO extends ObjectWithJsonToString {
         return httpRequests;
     }
 
-    public LogEntryDTO setHttpRequests(HttpRequest[] httpRequests) {
+    public DashboardLogEntryDTO setHttpRequests(HttpRequest[] httpRequests) {
         this.httpRequests = httpRequests;
         return this;
     }
 
-    public LogEntryDTO setHttpRequest(HttpRequest httpRequest) {
+    public DashboardLogEntryDTO setHttpRequest(HttpRequest httpRequest) {
         if (httpRequest != null) {
             this.httpRequests = new HttpRequest[]{httpRequest};
         } else {
@@ -124,7 +124,7 @@ public class LogEntryDTO extends ObjectWithJsonToString {
         return httpResponse;
     }
 
-    public LogEntryDTO setHttpResponse(HttpResponse httpResponse) {
+    public DashboardLogEntryDTO setHttpResponse(HttpResponse httpResponse) {
         this.httpResponse = httpResponse;
         return this;
     }
@@ -133,7 +133,7 @@ public class LogEntryDTO extends ObjectWithJsonToString {
         return httpError;
     }
 
-    public LogEntryDTO setHttpError(HttpError httpError) {
+    public DashboardLogEntryDTO setHttpError(HttpError httpError) {
         this.httpError = httpError;
         return this;
     }
@@ -142,7 +142,7 @@ public class LogEntryDTO extends ObjectWithJsonToString {
         return expectation;
     }
 
-    public LogEntryDTO setExpectation(Expectation expectation) {
+    public DashboardLogEntryDTO setExpectation(Expectation expectation) {
         this.expectation = expectation;
         return this;
     }
@@ -151,7 +151,7 @@ public class LogEntryDTO extends ObjectWithJsonToString {
         return throwable;
     }
 
-    public LogEntryDTO setThrowable(Throwable throwable) {
+    public DashboardLogEntryDTO setThrowable(Throwable throwable) {
         this.throwable = throwable;
         return this;
     }
@@ -160,7 +160,7 @@ public class LogEntryDTO extends ObjectWithJsonToString {
         return messageFormat;
     }
 
-    public LogEntryDTO setMessageFormat(String messageFormat) {
+    public DashboardLogEntryDTO setMessageFormat(String messageFormat) {
         this.messageFormat = messageFormat;
         return this;
     }
@@ -169,7 +169,7 @@ public class LogEntryDTO extends ObjectWithJsonToString {
         return arguments;
     }
 
-    public LogEntryDTO setArguments(Object... arguments) {
+    public DashboardLogEntryDTO setArguments(Object... arguments) {
         this.arguments = arguments;
         return this;
     }
