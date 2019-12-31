@@ -36,7 +36,6 @@ public class WebSocketClientRegistry {
     private final Map<String, ChannelHandlerContext> clientRegistry = Collections.synchronizedMap(new CircularHashMap<>(maxWebSocketExpectations()));
     private final Map<String, WebSocketResponseCallback> responseCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
     private final Map<String, WebSocketRequestCallback> forwardCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
-    private static final ReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock();
 
     public WebSocketClientRegistry(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
@@ -88,31 +87,21 @@ public class WebSocketClientRegistry {
     }
 
     void registerClient(String clientId, ChannelHandlerContext ctx) {
-        READ_WRITE_LOCK.readLock().lock();
         try {
-            try {
-                ctx.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(new WebSocketClientIdDTO().setClientId(clientId))));
-            } catch (Exception e) {
-                throw new WebSocketException("Exception while sending web socket registration client id message to client " + clientId, e);
-            }
-            clientRegistry.put(clientId, ctx);
-            Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
-        } finally {
-            READ_WRITE_LOCK.readLock().unlock();
+            ctx.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(new WebSocketClientIdDTO().setClientId(clientId))));
+        } catch (Exception e) {
+            throw new WebSocketException("Exception while sending web socket registration client id message to client " + clientId, e);
         }
+        clientRegistry.put(clientId, ctx);
+        Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
     }
 
     public void unregisterClient(String clientId) {
-        READ_WRITE_LOCK.readLock().lock();
-        try {
-            ChannelHandlerContext removeChannel = clientRegistry.remove(clientId);
-            if (removeChannel != null && removeChannel.channel().isOpen()) {
-                removeChannel.channel().close();
-            }
-            Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
-        } finally {
-            READ_WRITE_LOCK.readLock().unlock();
+        ChannelHandlerContext removeChannel = clientRegistry.remove(clientId);
+        if (removeChannel != null && removeChannel.channel().isOpen()) {
+            removeChannel.channel().close();
         }
+        Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
     }
 
     public void registerResponseCallbackHandler(String webSocketCorrelationId, WebSocketResponseCallback expectationResponseCallback) {
@@ -164,16 +153,11 @@ public class WebSocketClientRegistry {
         }
     }
 
-    public void reset() {
-        READ_WRITE_LOCK.writeLock().lock();
-        try {
-            forwardCallbackRegistry.clear();
-            responseCallbackRegistry.clear();
-            clientRegistry.forEach((key, value) -> value.channel().close());
-            clientRegistry.clear();
-            clearWebSocketMetrics();
-        } finally {
-            READ_WRITE_LOCK.writeLock().unlock();
-        }
+    public synchronized void reset() {
+        forwardCallbackRegistry.clear();
+        responseCallbackRegistry.clear();
+        clientRegistry.forEach((key, value) -> value.channel().close());
+        clientRegistry.clear();
+        clearWebSocketMetrics();
     }
 }
