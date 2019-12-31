@@ -67,7 +67,7 @@ public class ExpectationFileWatcherIntegrationTest {
             // and - mockserver
             mockServer = new MockServer();
             // and - file watcher to detect persistence file being updated
-            MILLISECONDS.sleep(1500);
+            MILLISECONDS.sleep(2000);
             CompletableFuture<String> persistedExpectationsContents = new CompletableFuture<>();
             new FileWatcher(
                 persistedExpectations.getAbsolutePath(),
@@ -80,7 +80,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 },
                 persistedExpectationsContents::completeExceptionally
             );
-            MILLISECONDS.sleep(1000);
+            MILLISECONDS.sleep(1500);
 
             // when
             String watchedFileContents = "[ {" + NEW_LINE +
@@ -240,7 +240,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 .get(10, TimeUnit.SECONDS);
 
             // and - file watcher to detect persistence file being updated
-            MILLISECONDS.sleep(1500);
+            MILLISECONDS.sleep(2000);
             CompletableFuture<String> persistedExpectationsContents = new CompletableFuture<>();
             new FileWatcher(
                 persistedExpectations.getAbsolutePath(),
@@ -253,7 +253,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 },
                 persistedExpectationsContents::completeExceptionally
             );
-            MILLISECONDS.sleep(1000);
+            MILLISECONDS.sleep(1500);
 
             // when
             watchedFileContents = "[]";
@@ -371,7 +371,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 .get(10, TimeUnit.SECONDS);
 
             // and - file watcher to detect persistence file being updated
-            MILLISECONDS.sleep(1500);
+            MILLISECONDS.sleep(2000);
             CompletableFuture<String> persistedExpectationsContents = new CompletableFuture<>();
             new FileWatcher(
                 persistedExpectations.getAbsolutePath(),
@@ -384,7 +384,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 },
                 persistedExpectationsContents::completeExceptionally
             );
-            MILLISECONDS.sleep(1000);
+            MILLISECONDS.sleep(1500);
 
             // when
             watchedFileContents = "[ {" + NEW_LINE +
