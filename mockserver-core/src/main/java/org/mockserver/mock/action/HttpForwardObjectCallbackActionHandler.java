@@ -13,9 +13,11 @@ import org.mockserver.responsewriter.ResponseWriter;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.BooleanUtils.isFalse;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
+import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
@@ -73,7 +75,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         }
                         // return overridden response
                         try {
-                            return httpResponseCompletableFuture.get();
+                            return httpResponseCompletableFuture.get(maxFutureTimeout(), SECONDS);
                         } catch (Exception e) {
                             mockServerLogger.logEvent(
                                 new LogEntry()

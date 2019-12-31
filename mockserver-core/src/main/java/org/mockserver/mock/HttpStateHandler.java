@@ -24,14 +24,17 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.log.model.LogEntry.LogMessageType.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -392,8 +395,8 @@ public class HttpStateHandler {
                 }
 
                 try {
-                    return httpResponseFuture.get();
-                } catch (ExecutionException | InterruptedException e) {
+                    return httpResponseFuture.get(maxFutureTimeout(), SECONDS);
+                } catch (ExecutionException | InterruptedException | TimeoutException e) {
                     throw new RuntimeException("Exception retrieving state for " + request, e);
                 }
             } catch (IllegalArgumentException iae) {
@@ -513,12 +516,13 @@ public class HttpStateHandler {
         }
 
         try {
-            return canHandle.get();
-        } catch (InterruptedException | ExecutionException ignore) {
+            return canHandle.get(maxFutureTimeout(), SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
             return false;
         }
     }
 
+    @SuppressWarnings("rawtypes")
     private boolean validateSupportedFeatures(Expectation expectation, HttpRequest request, ResponseWriter responseWriter) {
         boolean valid = true;
         Action action = expectation.getAction();

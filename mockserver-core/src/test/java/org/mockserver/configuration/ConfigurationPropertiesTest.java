@@ -227,6 +227,20 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadMaxFutureTimeout() {
+        // given
+        System.clearProperty("mockserver.maxFutureTimeout");
+
+        // when
+        assertEquals(TimeUnit.SECONDS.toMillis(60), maxFutureTimeout());
+        maxFutureTimeout(100);
+
+        // then
+        assertEquals("100", System.getProperty("mockserver.maxFutureTimeout"));
+        assertEquals(100, maxFutureTimeout());
+    }
+
+    @Test
     public void shouldHandleInvalidMaxSocketTimeout() {
         // given
         System.setProperty("mockserver.maxSocketTimeout", "invalid");

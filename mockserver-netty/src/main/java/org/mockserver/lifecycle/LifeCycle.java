@@ -13,7 +13,6 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.stop.Stoppable;
-import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -24,6 +23,7 @@ import java.util.concurrent.Future;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.model.HttpRequest.request;
 import static org.slf4j.event.Level.*;
@@ -188,7 +188,7 @@ public abstract class LifeCycle implements Stoppable {
                     }
                 }, "MockServer thread for port: " + portToBind).start();
 
-                actualPortBindings.add(((InetSocketAddress) channelOpened.get().localAddress()).getPort());
+                actualPortBindings.add(((InetSocketAddress) channelOpened.get(maxFutureTimeout(), SECONDS).localAddress()).getPort());
             } catch (Exception e) {
                 throw new RuntimeException("Exception while binding MockServer to port " + portToBind, e.getCause());
             }

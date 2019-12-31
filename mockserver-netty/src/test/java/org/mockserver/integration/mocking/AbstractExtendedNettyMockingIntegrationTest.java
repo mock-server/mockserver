@@ -206,16 +206,15 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                     once()
                 )
                 .respond(httpRequest -> {
-                        MILLISECONDS.sleep(10);
-                        return response()
-                            .withStatusCode(ACCEPTED_202.code())
-                            .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                            .withHeaders(
-                                header("x-object-callback", "test_object_callback_header_" + objectCallbackCounter)
-                            )
-                            .withBody("an_object_callback_response_" + objectCallbackCounter);
-                    }
-                );
+                    MILLISECONDS.sleep(10);
+                    return response()
+                        .withStatusCode(ACCEPTED_202.code())
+                        .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                        .withHeaders(
+                            header("x-object-callback", "test_object_callback_header_" + objectCallbackCounter)
+                        )
+                        .withBody("an_object_callback_response_" + objectCallbackCounter);
+                });
             objectCallbackCounter++;
         }
 

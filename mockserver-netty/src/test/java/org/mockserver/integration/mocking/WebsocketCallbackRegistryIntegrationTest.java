@@ -193,7 +193,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
             makeRequest(
                 request()
                     .withPath(calculatePath("websocket_forward_handler")),
-                headersToIgnore)
+                headersToIgnore
+            )
         );
 
         // then

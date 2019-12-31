@@ -39,6 +39,7 @@ public class ConfigurationProperties {
     private static final String DEFAULT_LOG_LEVEL = "INFO";
     private static final long DEFAULT_MAX_TIMEOUT = 20;
     private static final int DEFAULT_CONNECT_TIMEOUT = 20000;
+    private static final int DEFAULT_MAX_FUTURE_TIMEOUT = 60;
     private static final int DEFAULT_MAX_EXPECTATIONS = 5000;
     private static final int DEFAULT_MAX_WEB_SOCKET_EXPECTATIONS = 1500;
     private static final int DEFAULT_MAX_INITIAL_LINE_LENGTH = Integer.MAX_VALUE;
@@ -66,6 +67,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_MAX_CHUNK_SIZE = "mockserver.maxChunkSize";
     private static final String MOCKSERVER_NIO_EVENT_LOOP_THREAD_COUNT = "mockserver.nioEventLoopThreadCount";
     private static final String MOCKSERVER_MAX_SOCKET_TIMEOUT = "mockserver.maxSocketTimeout";
+    private static final String MOCKSERVER_MAX_FUTURE_TIMEOUT = "mockserver.maxFutureTimeout";
     private static final String MOCKSERVER_SOCKET_CONNECTION_TIMEOUT = "mockserver.socketConnectionTimeout";
     private static final String MOCKSERVER_JAVA_KEY_STORE_FILE_PATH = "mockserver.javaKeyStoreFilePath";
     private static final String MOCKSERVER_JAVA_KEY_STORE_PASSWORD = "mockserver.javaKeyStorePassword";
@@ -276,6 +278,14 @@ public class ConfigurationProperties {
 
     public static void maxSocketTimeout(long milliseconds) {
         System.setProperty(MOCKSERVER_MAX_SOCKET_TIMEOUT, "" + milliseconds);
+    }
+
+    public static long maxFutureTimeout() {
+        return readLongProperty(MOCKSERVER_MAX_FUTURE_TIMEOUT, "DEFAULT_MAX_FUTURE_TIMEOUT", TimeUnit.SECONDS.toMillis(DEFAULT_MAX_FUTURE_TIMEOUT));
+    }
+
+    public static void maxFutureTimeout(long milliseconds) {
+        System.setProperty(MOCKSERVER_MAX_FUTURE_TIMEOUT, "" + milliseconds);
     }
 
     public static int socketConnectionTimeout() {
