@@ -327,7 +327,7 @@ public class MockServerClientIntegrationTest {
                     "    \"clientId\" : \"" + echoServerOne.getRegisteredClients().get(0) + "\"" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"times\" : {" + NEW_LINE +
-                    "    \"unlimited\" : true" + NEW_LINE +
+                    "    \"remainingTimes\" : 1" + NEW_LINE +
                     "  }," + NEW_LINE +
                     "  \"timeToLive\" : {" + NEW_LINE +
                     "    \"unlimited\" : true" + NEW_LINE +

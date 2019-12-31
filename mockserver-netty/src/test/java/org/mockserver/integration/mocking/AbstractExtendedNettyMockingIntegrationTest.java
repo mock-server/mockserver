@@ -124,7 +124,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             .when(
                 request()
                     .withPath(calculatePath("object_callback")),
-                once()
+                exactly(2)
             )
             .respond(
                 httpRequest -> {
@@ -311,7 +311,6 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -319,22 +318,6 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
                 .withBody(veryLargeString),
             makeRequest(
                 request()
-                    .withPath(calculatePath("object_callback"))
-                    .withMethod("POST")
-                    .withBody(veryLargeString),
-                headersToIgnore
-            )
-        );
-
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody(veryLargeString),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("object_callback"))
                     .withMethod("POST")
                     .withBody(veryLargeString),
