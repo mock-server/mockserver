@@ -206,7 +206,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
     @Test
     public void shouldAllowUseOfSameWebsocketClientInsideCallback() {
         // when
-        int total = 150;
+        int total = 5;
         for (int i = 0; i < total; i++) {
             mockServerClient
                 .when(
@@ -274,7 +274,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
     @Test
     public void shouldAllowUseOfSeparateWebsocketClientInsideCallback() {
         // when
-        for (int i = 0; i < 50; i++) {
+        int total = 5;
+        for (int i = 0; i < total; i++) {
             mockServerClient
                 .when(
                     request()
@@ -301,7 +302,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
         objectCallbackCounter = 0;
 
         // then
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < total; i++) {
             assertEquals(
                 response()
                     .withStatusCode(OK_200.code())

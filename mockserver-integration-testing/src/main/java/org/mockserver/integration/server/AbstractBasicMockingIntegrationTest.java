@@ -546,7 +546,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -565,26 +564,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withBody("an_example_body_http"),
                 headersToIgnore
             )
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header("x-test", "test_headers_and_body_https")
-                )
-                .withBody("{'name': 'value'}"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("echo"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body_https")
-                    )
-                    .withBody("an_example_body_https"),
-                headersToIgnore)
         );
     }
 
@@ -670,7 +649,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -687,28 +665,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                         header("x-test", "test_headers_and_body")
                     )
                     .withBody("an_example_body_http"),
-                headersToIgnore
-            )
-        );
-
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withHeaders(
-                    header("x-callback", "test_callback_header")
-                )
-                .withBody("a_callback_response"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("callback"))
-                    .withMethod("POST")
-                    .withHeaders(
-                        header("x-test", "test_headers_and_body")
-                    )
-                    .withBody("an_example_body_https"),
                 headersToIgnore
             )
         );
@@ -782,7 +738,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         mockServerClient.when(request()).respond(response().withBody("some_body"));
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -793,16 +748,47 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withPath(calculatePath("")),
                 headersToIgnore)
         );
+    }
+
+    @Test
+    public void shouldReturnResponseInHttpAndHttps() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+            )
+            .respond(
+                response()
+                    .withStatusCode(200)
+                    .withBody("some_body_response")
+            );
+
+        // then
+        // - in http
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body_response"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST"),
+                headersToIgnore)
+        );
         // - in https
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body"),
+                .withBody("some_body_response"),
             makeRequest(
                 request()
                     .withSecure(true)
-                    .withPath(calculatePath("")),
+                    .withPath(calculatePath("some_path"))
+                    .withMethod("POST"),
                 headersToIgnore)
         );
     }
@@ -822,25 +808,12 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase()),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST"),
                 headersToIgnore)
@@ -864,7 +837,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -872,20 +844,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("some_string_body_response"),
             makeRequest(
                 request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_path"))
-                    .withBody("some_random_body"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_string_body_response"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withMethod("POST")
                     .withPath(calculatePath("some_path"))
                     .withBody("some_random_body"),
@@ -913,7 +871,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -922,21 +879,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withBody("some_request_body"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path"))
-                    .withHeader("name", "value")
-                    .withBody("some_request_body"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeader("name", "value")
-                .withBody("some_request_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withHeader("name", "value")
                     .withBody("some_request_body"),
@@ -961,7 +903,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -970,25 +911,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withQueryStringParameters(
-                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
-                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
-                    )
-                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withSecure(true)
                     .withPath(calculatePath("some_pathRequest"))
                     .withQueryStringParameters(
                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -1026,7 +948,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
@@ -1034,25 +955,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("some_path"))
-                    .withQueryStringParameters(
-                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
-                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
-                    )
-                    .withBody(exact("some_other_body"))
-                    .withHeaders(header("headerName", "headerValue"))
-                    .withCookies(cookie("cookieName", "cookieValue")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withQueryStringParameters(
                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -1091,7 +993,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
@@ -1099,25 +1000,6 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("some_other_path"))
-                    .withQueryStringParameters(
-                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
-                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
-                    )
-                    .withBody(exact("some_body"))
-                    .withHeaders(header("headerName", "headerValue"))
-                    .withCookies(cookie("cookieName", "cookieValue")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withSecure(true)
                     .withPath(calculatePath("some_other_path"))
                     .withQueryStringParameters(
                         param("queryStringParameterOneName", "queryStringParameterOneValue"),

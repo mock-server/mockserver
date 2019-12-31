@@ -156,7 +156,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -174,29 +173,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body1"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path1")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body2"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("some_path2")),
-                headersToIgnore)
-        );
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body1"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path1")),
                 headersToIgnore)
         );
@@ -208,7 +184,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         mockServerClient
             .when(
                 request()
-                    .withPath(calculatePath("some_path")), exactly(2)
+                    .withPath(calculatePath("some_path")),
+                exactly(2)
             )
             .respond(
                 response()
@@ -216,7 +193,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -227,7 +203,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withPath(calculatePath("some_path")),
                 headersToIgnore)
         );
-        // - in https
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -239,24 +214,12 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withPath(calculatePath("some_path")),
                 headersToIgnore)
         );
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
                 .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path")),
                 headersToIgnore)
         );
@@ -268,7 +231,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         mockServerClient
             .when(
                 request().withPath(calculatePath("some_path")),
-                exactly(2),
+                exactly(1),
                 TimeToLive.exactly(TimeUnit.HOURS, 1L)
             )
             .respond(
@@ -276,7 +239,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -287,36 +249,12 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withPath(calculatePath("some_path")),
                 headersToIgnore)
         );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("some_path")),
-                headersToIgnore)
-        );
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
                 .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path")),
                 headersToIgnore)
         );
@@ -337,7 +275,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -346,20 +283,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody(body, MediaType.PLAIN_TEXT_UTF_8),
             makeRequest(
                 request()
-                    .withPath(calculatePath(""))
-                    .withBody(body, StandardCharsets.UTF_16),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
-                .withBody(body, MediaType.PLAIN_TEXT_UTF_8),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath(""))
                     .withBody(body, StandardCharsets.UTF_16),
                 headersToIgnore)
@@ -382,7 +305,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -392,21 +314,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
-                    .withPath(calculatePath(""))
-                    .withBody(body, StandardCharsets.UTF_8),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
-                .withBody(body, MediaType.PLAIN_TEXT_UTF_8),
-            makeRequest(
-                request()
-                    .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
-                    .withSecure(true)
                     .withPath(calculatePath(""))
                     .withBody(body, StandardCharsets.UTF_8),
                 headersToIgnore)
@@ -430,7 +337,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -440,21 +346,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString())
-                    .withPath(calculatePath(""))
-                    .withBody(body),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString())
-                .withBody(body, StandardCharsets.UTF_16),
-            makeRequest(
-                request()
-                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString())
-                    .withSecure(true)
                     .withPath(calculatePath(""))
                     .withBody(body),
                 headersToIgnore)
@@ -476,7 +367,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -485,19 +375,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody(body, MediaType.PLAIN_TEXT_UTF_8),
             makeRequest(
                 request()
-                    .withPath(calculatePath("")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
-                .withBody(body, MediaType.PLAIN_TEXT_UTF_8),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("")),
                 headersToIgnore)
         );
@@ -517,7 +394,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -526,19 +402,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody(body, CharsetUtil.UTF_8),
             makeRequest(
                 request()
-                    .withPath(calculatePath("")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
-                .withBody(body, CharsetUtil.UTF_8),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("")),
                 headersToIgnore)
         );
@@ -561,7 +424,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -569,20 +431,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_sub_string_body_response"),
             makeRequest(
                 request()
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_path"))
-                    .withBody("some_random_body"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_sub_string_body_response"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withMethod("POST")
                     .withPath(calculatePath("some_path"))
                     .withBody("some_random_body"),
@@ -605,7 +453,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         // should not match (because body matches regex)
         assertEquals(
             response()
@@ -625,32 +472,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_not_regex_body_response"),
             makeRequest(
                 request()
-                    .withMethod("POST")
-                    .withBody("10.2.3.1234"),
-                headersToIgnore)
-        );
-        // - in https
-        // should not match (because body matches regex)
-        assertEquals(
-            response()
-                .withStatusCode(NOT_FOUND_404.code())
-                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withMethod("POST")
-                    .withBody("10.2.3.123"),
-                headersToIgnore)
-        );
-        // should match (because body doesn't matches regex)
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_not_regex_body_response"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withMethod("POST")
                     .withBody("10.2.3.1234"),
                 headersToIgnore)
@@ -672,7 +493,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         // should not match (because body matches regex)
         assertEquals(
             response()
@@ -692,32 +512,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_not_regex_body_response"),
             makeRequest(
                 request()
-                    .withMethod("POST")
-                    .withBody("some_other_body_full_string"),
-                headersToIgnore)
-        );
-        // - in https
-        // should not match (because body matches regex)
-        assertEquals(
-            response()
-                .withStatusCode(NOT_FOUND_404.code())
-                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withMethod("POST")
-                    .withBody("some_body_full_string"),
-                headersToIgnore)
-        );
-        // should match (because body doesn't matches regex)
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_not_regex_body_response"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withMethod("POST")
                     .withBody("some_other_body_full_string"),
                 headersToIgnore)
@@ -739,7 +533,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         // should not match (because body matches regex)
         assertEquals(
             response()
@@ -759,32 +552,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_not_regex_body_response"),
             makeRequest(
                 request()
-                    .withMethod("POST")
-                    .withBody("some_other_body"),
-                headersToIgnore)
-        );
-        // - in https
-        // should not match (because body matches regex)
-        assertEquals(
-            response()
-                .withStatusCode(NOT_FOUND_404.code())
-                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withMethod("POST")
-                    .withBody("some_body"),
-                headersToIgnore)
-        );
-        // should match (because body doesn't matches regex)
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_not_regex_body_response"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withMethod("POST")
                     .withBody("some_other_body"),
                 headersToIgnore)
@@ -797,7 +564,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         mockServerClient.when(request().withBody(xpath("/bookstore/book[price>30]/price")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -805,41 +571,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody(new StringBody("" +
-                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
-                        "<bookstore>" + NEW_LINE +
-                        "  <book category=\"COOKING\">" + NEW_LINE +
-                        "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
-                        "    <author>Giada De Laurentiis</author>" + NEW_LINE +
-                        "    <year>2005</year>" + NEW_LINE +
-                        "    <price>30.00</price>" + NEW_LINE +
-                        "  </book>" + NEW_LINE +
-                        "  <book category=\"CHILDREN\">" + NEW_LINE +
-                        "    <title lang=\"en\">Harry Potter</title>" + NEW_LINE +
-                        "    <author>J K. Rowling</author>" + NEW_LINE +
-                        "    <year>2005</year>" + NEW_LINE +
-                        "    <price>29.99</price>" + NEW_LINE +
-                        "  </book>" + NEW_LINE +
-                        "  <book category=\"WEB\">" + NEW_LINE +
-                        "    <title lang=\"en\">Learning XML</title>" + NEW_LINE +
-                        "    <author>Erik T. Ray</author>" + NEW_LINE +
-                        "    <year>2003</year>" + NEW_LINE +
-                        "    <price>31.95</price>" + NEW_LINE +
-                        "  </book>" + NEW_LINE +
-                        "</bookstore>")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody(new StringBody("" +
@@ -901,7 +632,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(NOT_FOUND_404.code())
@@ -932,34 +662,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
-                        "<notes>" + NEW_LINE +
-                        "    <note>" + NEW_LINE +
-                        "        <to>Bob</to>" + NEW_LINE +
-                        "        <from>Bill</from>" + NEW_LINE +
-                        "        <heading>Reminder</heading>" + NEW_LINE +
-                        "        <body>Buy Bread</body>" + NEW_LINE +
-                        "    </note>" + NEW_LINE +
-                        "    <note>" + NEW_LINE +
-                        "        <to>Jack</to>" + NEW_LINE +
-                        "        <from>Jill</from>" + NEW_LINE +
-                        "        <heading>Reminder</heading>" + NEW_LINE +
-                        "        <body>Wash Shirts</body>" + NEW_LINE +
-                        "    </note>" + NEW_LINE +
-                        "</notes>"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
@@ -994,7 +696,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(NOT_FOUND_404.code())
@@ -1044,34 +745,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "</notes>"),
                 headersToIgnore)
         );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + NEW_LINE +
-                        "<notes>" + NEW_LINE +
-                        "    <note>" + NEW_LINE +
-                        "        <to>Bob</to>" + NEW_LINE +
-                        "        <from>Bill</from>" + NEW_LINE +
-                        "        <heading>Reminder</heading>" + NEW_LINE +
-                        "        <body>Buy Bread</body>" + NEW_LINE +
-                        "    </note>" + NEW_LINE +
-                        "    <note>" + NEW_LINE +
-                        "        <to>Jack</to>" + NEW_LINE +
-                        "        <from>Jill</from>" + NEW_LINE +
-                        "        <heading>Reminder</heading>" + NEW_LINE +
-                        "        <body>Wash Shirts</body>" + NEW_LINE +
-                        "    </note>" + NEW_LINE +
-                        "</notes>"),
-                headersToIgnore)
-        );
     }
 
     @Test
@@ -1083,7 +756,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             "</bookstore>")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -1091,29 +763,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody(new StringBody("" +
-                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
-                        "<bookstore>" + NEW_LINE +
-                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + NEW_LINE +
-                        "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
-                        "    <author>Giada De Laurentiis</author>" + NEW_LINE +
-                        "    <year>2005</year>" + NEW_LINE +
-                        "    <price>30.00</price>" + NEW_LINE +
-                        "  </book>" + NEW_LINE +
-                        "</bookstore>")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody(new StringBody("" +
@@ -1154,7 +803,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -1162,28 +810,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withHeader("Content-Type", "application/xml; charset=utf-8")
-                    .withBody(new StringBody("" +
-                        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
-                        "<bookstore>" + NEW_LINE +
-                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + NEW_LINE +
-                        "    <title>Everyday Italian</title>" + NEW_LINE +
-                        "    <author>我说中国话</author>" + NEW_LINE +
-                        "  </book>" + NEW_LINE +
-                        "</bookstore>")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withHeader("Content-Type", "application/xml; charset=utf-8")
@@ -1223,7 +849,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -1231,28 +856,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withHeader("Content-Type", "application/xml; charset=" + StandardCharsets.ISO_8859_1.name())
-                    .withBody(binary(("" +
-                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
-                        "<bookstore>" + NEW_LINE +
-                        "  <book category=\"COOKING\" nationality=\"ITALIAN\">" + NEW_LINE +
-                        "    <title>Everyday Italian</title>" + NEW_LINE +
-                        "    <author>ÄÑçîüÏ</author>" + NEW_LINE +
-                        "  </book>" + NEW_LINE +
-                        "</bookstore>").getBytes(StandardCharsets.ISO_8859_1))),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withHeader("Content-Type", "application/xml; charset=" + StandardCharsets.ISO_8859_1.name())
@@ -1290,7 +893,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -1303,26 +905,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withBody("{" + NEW_LINE +
                         "    \"id\": 1," + NEW_LINE +
                         "    \"extra ignored field\": \"some value\"," + NEW_LINE +
-                        "    \"name\": \"A green door\"," + NEW_LINE +
-                        "    \"price\": 12.50," + NEW_LINE +
-                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
-                        "}"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody("{" + NEW_LINE +
-                        "    \"id\": 1," + NEW_LINE +
-                        "    \"extra ignored array\": [\"one\", \"two\"]," + NEW_LINE +
                         "    \"name\": \"A green door\"," + NEW_LINE +
                         "    \"price\": 12.50," + NEW_LINE +
                         "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
@@ -1406,7 +988,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -1419,26 +1000,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withBody(json("{" + NEW_LINE +
                         "    \"ταυτότητα\": 1," + NEW_LINE +
                         "    \"επιπλέον αγνοούνται τομέα\": \"κάποια αξία\"," + NEW_LINE +
-                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
-                        "    \"τιμή\": 12.50," + NEW_LINE +
-                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
-                        "}", StandardCharsets.UTF_16, MatchType.ONLY_MATCHING_FIELDS)),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody(json("{" + NEW_LINE +
-                        "    \"ταυτότητα\": 1," + NEW_LINE +
-                        "    \"επιπλέον αγνοούνται σειρά\": [\"ένας\", \"δυο\"]," + NEW_LINE +
                         "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
                         "    \"τιμή\": 12.50," + NEW_LINE +
                         "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
@@ -1469,7 +1030,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -1483,27 +1043,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withBody(json("{" + NEW_LINE +
                         "    \"ταυτότητα\": 1," + NEW_LINE +
                         "    \"επιπλέον αγνοούνται τομέα\": \"κάποια αξία\"," + NEW_LINE +
-                        "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
-                        "    \"τιμή\": 12.50," + NEW_LINE +
-                        "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
-                        "}")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16).toString())
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody(json("{" + NEW_LINE +
-                        "    \"ταυτότητα\": 1," + NEW_LINE +
-                        "    \"επιπλέον αγνοούνται σειρά\": [\"ένας\", \"δυο\"]," + NEW_LINE +
                         "    \"όνομα\": \"μια πράσινη πόρτα\"," + NEW_LINE +
                         "    \"τιμή\": 12.50," + NEW_LINE +
                         "    \"ετικέτες\": [\"σπίτι\", \"πράσινος\"]" + NEW_LINE +
@@ -1532,28 +1071,10 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response("some_body"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody("{" + NEW_LINE +
-                        "    \"id\": 1," + NEW_LINE +
-                        "    \"extra field\": \"some value\"," + NEW_LINE +
-                        "    \"name\": \"A green door\"," + NEW_LINE +
-                        "    \"price\": 12.50," + NEW_LINE +
-                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
-                        "}"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response("some_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody("{" + NEW_LINE +
@@ -1602,7 +1123,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             "}")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -1610,25 +1130,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody("{" + NEW_LINE +
-                        "    \"id\": 1," + NEW_LINE +
-                        "    \"name\": \"A green door\"," + NEW_LINE +
-                        "    \"price\": 12.50," + NEW_LINE +
-                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
-                        "}"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody("{" + NEW_LINE +
@@ -1647,7 +1148,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         mockServerClient.when(request().withBody(jsonPath("$..book[?(@.price <= $['expensive'])]")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -1655,44 +1155,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body"),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody(new StringBody("" +
-                        "{" + NEW_LINE +
-                        "    \"store\": {" + NEW_LINE +
-                        "        \"book\": [" + NEW_LINE +
-                        "            {" + NEW_LINE +
-                        "                \"category\": \"reference\"," + NEW_LINE +
-                        "                \"author\": \"Nigel Rees\"," + NEW_LINE +
-                        "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
-                        "                \"price\": 8.95" + NEW_LINE +
-                        "            }," + NEW_LINE +
-                        "            {" + NEW_LINE +
-                        "                \"category\": \"fiction\"," + NEW_LINE +
-                        "                \"author\": \"Herman Melville\"," + NEW_LINE +
-                        "                \"title\": \"Moby Dick\"," + NEW_LINE +
-                        "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
-                        "                \"price\": 8.99" + NEW_LINE +
-                        "            }" + NEW_LINE +
-                        "        ]," + NEW_LINE +
-                        "        \"bicycle\": {" + NEW_LINE +
-                        "            \"color\": \"red\"," + NEW_LINE +
-                        "            \"price\": 19.95" + NEW_LINE +
-                        "        }" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"expensive\": 10" + NEW_LINE +
-                        "}")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody(new StringBody("" +
@@ -1725,6 +1187,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void shouldReturnPDFResponseByMatchingPath() throws IOException {
         // when
         byte[] pdfBytes = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("test.pdf"));
@@ -1746,7 +1209,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -1759,24 +1221,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody(binary(pdfBytes, MediaType.PDF)),
             makeRequest(
                 request()
-                    .withPath(calculatePath("ws/rest/user/1/document/2.pdf"))
-                    .withMethod("GET"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
-                    header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
-                    header(CONTENT_TYPE.toString(), MediaType.PDF.toString())
-                )
-                .withBody(binary(pdfBytes, MediaType.PDF)),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("ws/rest/user/1/document/2.pdf"))
                     .withMethod("GET"),
                 headersToIgnore)
@@ -1784,6 +1228,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void shouldReturnPNGResponseByMatchingPath() throws IOException {
         // when
         byte[] pngBytes = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("test.png"));
@@ -1804,7 +1249,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -1816,24 +1260,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody(binary(pngBytes, MediaType.PNG)),
             makeRequest(
                 request()
-                    .withPath(calculatePath("ws/rest/user/1/icon/1.png"))
-                    .withMethod("GET"),
-                headersToIgnore)
-        );
-
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
-                    header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
-                )
-                .withBody(binary(pngBytes, MediaType.PNG)),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("ws/rest/user/1/icon/1.png"))
                     .withMethod("GET"),
                 headersToIgnore)
@@ -1841,6 +1267,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void shouldReturnPDFResponseByMatchingBinaryPDFBody() throws IOException {
         // when
         byte[] pdfBytes = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("test.pdf"));
@@ -1862,7 +1289,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -1875,25 +1301,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody(binary(pdfBytes, MediaType.PDF)),
             makeRequest(
                 request()
-                    .withPath(calculatePath("ws/rest/user/1/document/2.pdf"))
-                    .withBody(binary(pdfBytes, MediaType.PDF))
-                    .withMethod("POST"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.pdf\"; filename=\"test.pdf\""),
-                    header(CACHE_CONTROL.toString(), "must-revalidate, post-check=0, pre-check=0"),
-                    header(CONTENT_TYPE.toString(), MediaType.PDF.toString())
-                )
-                .withBody(binary(pdfBytes, MediaType.PDF)),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("ws/rest/user/1/document/2.pdf"))
                     .withBody(binary(pdfBytes, MediaType.PDF))
                     .withMethod("POST"),
@@ -1902,6 +1309,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void shouldReturnPNGResponseByMatchingBinaryPNGBody() throws IOException {
         // when
         byte[] pngBytes = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("test.png"));
@@ -1922,7 +1330,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -1934,24 +1341,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody(binary(pngBytes, MediaType.PNG)),
             makeRequest(
                 request()
-                    .withPath(calculatePath("ws/rest/user/1/icon/1.png"))
-                    .withBody(binary(pngBytes, MediaType.ANY_IMAGE_TYPE))
-                    .withMethod("POST"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withHeaders(
-                    header(CONTENT_DISPOSITION.toString(), "form-data; name=\"test.png\"; filename=\"test.png\""),
-                    header(CONTENT_TYPE.toString(), MediaType.PNG.toString())
-                )
-                .withBody(binary(pngBytes, MediaType.PNG)),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("ws/rest/user/1/icon/1.png"))
                     .withBody(binary(pngBytes, MediaType.ANY_IMAGE_TYPE))
                     .withMethod("POST"),
@@ -1975,18 +1364,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("some_other_path")),
-                headersToIgnore)
-        );
-        // - in https
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -2015,18 +1392,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response"),
-            makeRequest(
-                request()
-                    .withMethod("POST"),
-                headersToIgnore)
-        );
-        // - in https
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -2058,7 +1423,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -2070,29 +1434,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withMethod("POST")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withQueryStringParameters(
-                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
-                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
-                    )
-                    .withBody("some_bodyRequest")
-                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response")
-                .withHeaders(
-                    header("headerNameResponse", "headerValueResponse")
-                ),
-            makeRequest(
-                request()
-                    .withMethod("POST")
-                    .withSecure(true)
                     .withPath(calculatePath("some_pathRequest"))
                     .withQueryStringParameters(
                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2127,7 +1468,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -2140,29 +1480,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withQueryStringParameters(
-                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
-                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
-                    )
-                    .withHeaders(header("headerNameRequest", "headerValueRequest"))
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response")
-                .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
-                .withHeaders(
-                    header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
-                ),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withSecure(true)
                     .withPath(calculatePath("some_pathRequest"))
                     .withQueryStringParameters(
                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -2196,7 +1513,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -2209,28 +1525,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withHeaders(
-                        header("requestHeaderNameOne", "requestHeaderValueOne_One", "requestHeaderValueOne_Two"),
-                        header("requestHeaderNameTwo", "requestHeaderValueTwo")
-                    )
-                    .withCookies(cookie("cookieNameRequest", "cookieValueRequest")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response")
-                .withCookies(cookie("cookieNameResponse", "cookieValueResponse"))
-                .withHeaders(
-                    header(SET_COOKIE.toString(), "cookieNameResponse=cookieValueResponse")
-                ),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withSecure(true)
                     .withPath(calculatePath("some_pathRequest"))
                     .withHeaders(
                         header("requestHeaderNameOne", "requestHeaderValueOne_One", "requestHeaderValueOne_Two"),
@@ -2266,7 +1560,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http - cookie objects
+        // - cookie objects
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -2293,7 +1587,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     ),
                 headersToIgnore)
         );
-        // - in http - cookie header
+        // - cookie header
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -2309,57 +1603,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withHeaders(
-                        header("headerNameRequest", "headerValueRequest"),
-                        header("Cookie", "requestCookieNameOne=requestCookieValueOne; requestCookieNameTwo=requestCookieValueTwo")
-                    ),
-                headersToIgnore)
-        );
-        // - in https - cookie objects
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response")
-                .withCookies(
-                    cookie("responseCookieNameOne", "responseCookieValueOne"),
-                    cookie("responseCookieNameTwo", "responseCookieValueTwo")
-                )
-                .withHeaders(
-                    header(SET_COOKIE.toString(), "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
-                ),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withSecure(true)
-                    .withPath(calculatePath("some_pathRequest"))
-                    .withHeaders(
-                        header("headerNameRequest", "headerValueRequest")
-                    )
-                    .withCookies(
-                        cookie("requestCookieNameOne", "requestCookieValueOne"),
-                        cookie("requestCookieNameTwo", "requestCookieValueTwo")
-                    ),
-                headersToIgnore)
-        );
-        // - in https - cookie header
-        assertEquals(
-            response()
-                .withStatusCode(ACCEPTED_202.code())
-                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                .withBody("some_body_response")
-                .withCookies(
-                    cookie("responseCookieNameOne", "responseCookieValueOne"),
-                    cookie("responseCookieNameTwo", "responseCookieValueTwo")
-                )
-                .withHeaders(
-                    header(SET_COOKIE.toString(), "responseCookieNameOne=responseCookieValueOne", "responseCookieNameTwo=responseCookieValueTwo")
-                ),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withSecure(true)
                     .withPath(calculatePath("some_pathRequest"))
                     .withHeaders(
                         header("headerNameRequest", "headerValueRequest"),
@@ -2643,7 +1886,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http - body string
+        // - body string
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -2667,7 +1910,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     ),
                 headersToIgnore)
         );
-        // - in http - body parameter objects
+        // - body parameter objects
         assertEquals(
             response()
                 .withStatusCode(ACCEPTED_202.code())
@@ -3324,25 +2567,12 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withPath(calculatePath("some_path")),
                 headersToIgnore)
         );
-
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
                 .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path")),
                 headersToIgnore)
         );
@@ -3370,7 +2600,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
@@ -3388,25 +2617,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "}"),
                 headersToIgnore)
         );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody("{" + NEW_LINE +
-                        "    \"id\": 1," + NEW_LINE +
-                        "    \"extra_ignored_array\": [\"one\", \"two\"]," + NEW_LINE +
-                        "    \"name\": \"A green door\"," + NEW_LINE +
-                        "    \"price\": 12.50," + NEW_LINE +
-                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
-                        "}"),
-                headersToIgnore)
-        );
     }
 
     @Test
@@ -3415,41 +2625,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         mockServerClient.when(request().withBody(new XPathBody("/bookstore/book[price>35]/price")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody(new StringBody("" +
-                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
-                        "<bookstore>" + NEW_LINE +
-                        "  <book category=\"COOKING\">" + NEW_LINE +
-                        "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
-                        "    <author>Giada De Laurentiis</author>" + NEW_LINE +
-                        "    <year>2005</year>" + NEW_LINE +
-                        "    <price>30.00</price>" + NEW_LINE +
-                        "  </book>" + NEW_LINE +
-                        "  <book category=\"CHILDREN\">" + NEW_LINE +
-                        "    <title lang=\"en\">Harry Potter</title>" + NEW_LINE +
-                        "    <author>J K. Rowling</author>" + NEW_LINE +
-                        "    <year>2005</year>" + NEW_LINE +
-                        "    <price>29.99</price>" + NEW_LINE +
-                        "  </book>" + NEW_LINE +
-                        "  <book category=\"WEB\">" + NEW_LINE +
-                        "    <title lang=\"en\">Learning XML</title>" + NEW_LINE +
-                        "    <author>Erik T. Ray</author>" + NEW_LINE +
-                        "    <year>2003</year>" + NEW_LINE +
-                        "    <price>31.95</price>" + NEW_LINE +
-                        "  </book>" + NEW_LINE +
-                        "</bookstore>")),
-                headersToIgnore)
-        );
-        // - in https
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
@@ -3500,29 +2675,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             "</bookstore>")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody(new StringBody("" +
-                        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" + NEW_LINE +
-                        "<bookstore>" + NEW_LINE +
-                        "  <book category=\"COOKING\">" + NEW_LINE +
-                        "    <title lang=\"en\">Everyday Italian</title>" + NEW_LINE +
-                        "    <author>Giada De Laurentiis</author>" + NEW_LINE +
-                        "    <year>2005</year>" + NEW_LINE +
-                        "    <price>30.00</price>" + NEW_LINE +
-                        "  </book>" + NEW_LINE +
-                        "</bookstore>")),
-                headersToIgnore)
-        );
-        // - in https
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
@@ -3557,31 +2709,12 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             "}")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
                 .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody("{" + NEW_LINE +
-                        "    \"id\": 1," + NEW_LINE +
-                        "    \"name\": \"---- XXXX WRONG VALUE XXXX ----\"," + NEW_LINE +
-                        "    \"price\": 12.50," + NEW_LINE +
-                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
-                        "}"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody("{" + NEW_LINE +
@@ -3613,32 +2746,12 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
                 .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
             makeRequest(
                 request()
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody("{" + NEW_LINE +
-                        "    \"id\": 1," + NEW_LINE +
-                        "    \"extra field\": \"some value\"," + NEW_LINE +
-                        "    \"name\": \"A green door\"," + NEW_LINE +
-                        "    \"price\": 12.50," + NEW_LINE +
-                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
-                        "}"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withMethod("POST")
                     .withBody("{" + NEW_LINE +
@@ -3687,7 +2800,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             "}")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
@@ -3704,24 +2816,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                         "}"),
                 headersToIgnore)
         );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody("{" + NEW_LINE +
-                        "    \"id\": 1," + NEW_LINE +
-                        "    \"name\": \"A green door\"," + NEW_LINE +
-                        "    \"wrong field name\": 12.50," + NEW_LINE +
-                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
-                        "}"),
-                headersToIgnore)
-        );
     }
 
     @Test
@@ -3730,44 +2824,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         mockServerClient.when(request().withBody(new JsonPathBody("$..book[?(@.price > $['expensive'])]")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withPath(calculatePath("some_path"))
-                    .withMethod("POST")
-                    .withBody(new StringBody("" +
-                        "{" + NEW_LINE +
-                        "    \"store\": {" + NEW_LINE +
-                        "        \"book\": [" + NEW_LINE +
-                        "            {" + NEW_LINE +
-                        "                \"category\": \"reference\"," + NEW_LINE +
-                        "                \"author\": \"Nigel Rees\"," + NEW_LINE +
-                        "                \"title\": \"Sayings of the Century\"," + NEW_LINE +
-                        "                \"price\": 8.95" + NEW_LINE +
-                        "            }," + NEW_LINE +
-                        "            {" + NEW_LINE +
-                        "                \"category\": \"fiction\"," + NEW_LINE +
-                        "                \"author\": \"Herman Melville\"," + NEW_LINE +
-                        "                \"title\": \"Moby Dick\"," + NEW_LINE +
-                        "                \"isbn\": \"0-553-21311-3\"," + NEW_LINE +
-                        "                \"price\": 8.99" + NEW_LINE +
-                        "            }" + NEW_LINE +
-                        "        ]," + NEW_LINE +
-                        "        \"bicycle\": {" + NEW_LINE +
-                        "            \"color\": \"red\"," + NEW_LINE +
-                        "            \"price\": 19.95" + NEW_LINE +
-                        "        }" + NEW_LINE +
-                        "    }," + NEW_LINE +
-                        "    \"expensive\": 10" + NEW_LINE +
-                        "}")),
-                headersToIgnore)
-        );
-        // - in https
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
@@ -3822,17 +2878,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("some_path")),
-                headersToIgnore)
-        );
-        // - in https
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
@@ -3860,17 +2905,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withMethod("GET"),
-                headersToIgnore)
-        );
-        // - in https
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
@@ -4223,7 +3257,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
@@ -4231,25 +3264,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("some_path"))
-                    .withQueryStringParameters(
-                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
-                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
-                    )
-                    .withBody(exact("some_body"))
-                    .withHeaders(header("headerName", "headerValue"))
-                    .withCookies(cookie("cookieOtherName", "cookieValue")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withQueryStringParameters(
                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -4288,7 +3302,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
@@ -4296,25 +3309,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("some_path"))
-                    .withQueryStringParameters(
-                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
-                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
-                    )
-                    .withBody(exact("some_body"))
-                    .withHeaders(header("headerName", "headerValue"))
-                    .withCookies(cookie("cookieName", "cookieOtherValue")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withQueryStringParameters(
                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -4406,7 +3400,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
@@ -4414,25 +3407,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("some_path"))
-                    .withQueryStringParameters(
-                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
-                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
-                    )
-                    .withBody(exact("some_body"))
-                    .withHeaders(header("headerOtherName", "headerValue"))
-                    .withCookies(cookie("cookieName", "cookieValue")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withQueryStringParameters(
                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -4471,7 +3445,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
@@ -4479,25 +3452,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withMethod("GET")
-                    .withPath(calculatePath("some_path"))
-                    .withQueryStringParameters(
-                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
-                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
-                    )
-                    .withBody(exact("some_body"))
-                    .withHeaders(header("headerName", "headerOtherValue"))
-                    .withCookies(cookie("cookieName", "cookieValue")),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(HttpStatusCode.NOT_FOUND_404.code())
-                .withReasonPhrase(HttpStatusCode.NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withMethod("GET")
-                    .withSecure(true)
                     .withPath(calculatePath("some_path"))
                     .withQueryStringParameters(
                         param("queryStringParameterOneName", "queryStringParameterOneValue"),
@@ -4632,7 +3586,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             );
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -4654,32 +3607,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody(regex("\\{type\\: \\'some_random_type\\'\\, value\\: \\'some_random_value\\'\\}")),
             VerificationTimes.exactly(1)
         );
-
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_response"),
-            makeRequest(
-                request()
-                    .withSecure(true)
-                    .withMethod("POST")
-                    .withPath(calculatePath("some_path"))
-                    .withBody("{type: 'some_random_type', value: 'some_random_value'}"),
-                headersToIgnore)
-        );
-        mockServerClient.verify(
-            request()
-                .withSecure(true)
-                .withBody(regex("\\{type\\: \\'some_random_type\\'\\, value\\: \\'some_random_value\\'\\}"))
-        );
-        mockServerClient.verify(
-            request()
-                .withSecure(true)
-                .withBody(regex("\\{type\\: \\'some_random_type\\'\\, value\\: \\'some_random_value\\'\\}")),
-            VerificationTimes.atLeast(1)
-        );
     }
 
     @Test
@@ -4688,7 +3615,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         mockServerClient.when(request().withPath(calculatePath("some_path")), exactly(2)).respond(response());
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -4810,7 +3736,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         mockServerClient.when(request().withPath(calculatePath("some.*path")), exactly(2)).respond(response().withBody("some_body"));
 
         // then
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -4837,36 +3762,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 "  \"method\" : \"GET\"," + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE));
         }
-
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("some_secure_path"))
-                    .withSecure(true),
-                headersToIgnore)
-        );
-        try {
-            mockServerClient.verify(
-                request()
-                    .withPath(calculatePath("some_secure_path"))
-                    .withSecure(false),
-                VerificationTimes.atLeast(1)
-            );
-            fail();
-        } catch (AssertionError ae) {
-            assertThat(ae.getMessage(), startsWith("Request not found at least once, expected:<{" + NEW_LINE +
-                "  \"path\" : \"" + calculatePath("some_secure_path") + "\"," + NEW_LINE +
-                "  \"secure\" : false" + NEW_LINE +
-                "}> but was:<[ {" + NEW_LINE +
-                "  \"method\" : \"GET\"," + NEW_LINE +
-                "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE));
-        }
-
     }
 
     @Test
@@ -5561,7 +4456,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     )
             )
         );
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -5569,18 +4463,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body2"),
             makeRequest(
                 request()
-                    .withBody(xmlBody),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body2"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withBody(xmlBody),
                 headersToIgnore)
         );
@@ -5704,7 +4586,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     )
             )
         );
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -5712,23 +4593,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withBody("some_body2"),
             makeRequest(
                 request()
-                    .withBody("{" + NEW_LINE +
-                        "    \"id\": 1," + NEW_LINE +
-                        "    \"name\": \"A green door\"," + NEW_LINE +
-                        "    \"price\": 12.50," + NEW_LINE +
-                        "    \"tags\": [\"home\", \"green\"]" + NEW_LINE +
-                        "}"),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body2"),
-            makeRequest(
-                request()
-                    .withSecure(true)
                     .withBody("{" + NEW_LINE +
                         "    \"id\": 1," + NEW_LINE +
                         "    \"name\": \"A green door\"," + NEW_LINE +
@@ -5792,7 +4656,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     )
             )
         );
-        // - in http
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -5801,16 +4664,6 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             makeRequest(
                 request()
                     .withBody(params(param("bodyParameterNameTwo", "bodyParameterValueTwo"))),
-                headersToIgnore)
-        );
-        // - in https
-        assertEquals(
-            response()
-                .withStatusCode(NOT_FOUND_404.code())
-                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
-            makeRequest(
-                request()
-                    .withBody(params(param("bodyParameterNameOne", "bodyParameterValueOne"))),
                 headersToIgnore)
         );
     }

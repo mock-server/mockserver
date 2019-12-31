@@ -5,13 +5,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.ClientException;
 import org.mockserver.integration.server.AbstractExtendedSameJVMMockingIntegrationTest;
-import org.mockserver.mock.action.ExpectationResponseCallback;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.MediaType;
-
-import java.io.UnsupportedEncodingException;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.Matchers.containsString;
@@ -144,18 +139,13 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
                     .withPath(calculatePath("object_callback"))
             )
             .respond(
-                new ExpectationResponseCallback() {
-                    @Override
-                    public HttpResponse handle(HttpRequest httpRequest) {
-                        return response()
-                            .withStatusCode(ACCEPTED_202.code())
-                            .withReasonPhrase(ACCEPTED_202.reasonPhrase())
-                            .withHeaders(
-                                header("x-object-callback", "test_object_callback_header")
-                            )
-                            .withBody("an_object_callback_response");
-                    }
-                }
+                httpRequest -> response()
+                    .withStatusCode(ACCEPTED_202.code())
+                    .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                    .withHeaders(
+                        header("x-object-callback", "test_object_callback_header")
+                    )
+                    .withBody("an_object_callback_response")
             );
     }
 
