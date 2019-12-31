@@ -32,8 +32,7 @@ import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.matchers.Times.exactly;
-import static org.mockserver.matchers.Times.unlimited;
+import static org.mockserver.matchers.Times.*;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpError.error;
 import static org.mockserver.model.HttpForward.Scheme.HTTPS;
@@ -299,7 +298,8 @@ public class MockServerClientIntegrationTest {
             .when(
                 request()
                     .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))
+                    .withBody(new StringBody("some_request_body")),
+                once()
             )
             .respond(httpRequest -> response());
 
@@ -348,7 +348,8 @@ public class MockServerClientIntegrationTest {
             .when(
                 request()
                     .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))
+                    .withBody(new StringBody("some_request_body")),
+                once()
             )
             .respond(httpRequest -> response());
 
@@ -376,7 +377,8 @@ public class MockServerClientIntegrationTest {
             .when(
                 request()
                     .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))
+                    .withBody(new StringBody("some_request_body")),
+                once()
             )
             .respond(httpRequest -> response());
 
@@ -403,14 +405,16 @@ public class MockServerClientIntegrationTest {
             .when(
                 request()
                     .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))
+                    .withBody(new StringBody("some_request_body")),
+                once()
             )
             .respond(httpRequest -> response());
         mockServerClientTwo
             .when(
                 request()
                     .withPath("/some_path")
-                    .withBody(new StringBody("some_request_body"))
+                    .withBody(new StringBody("some_request_body")),
+                once()
             )
             .respond(httpRequest -> response());
 

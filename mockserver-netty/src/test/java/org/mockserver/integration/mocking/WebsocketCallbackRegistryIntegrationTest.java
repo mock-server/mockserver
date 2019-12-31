@@ -96,7 +96,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
         mockServerClient
             .when(
                 request()
-                    .withPath(calculatePath("websocket_response_handler"))
+                    .withPath(calculatePath("websocket_response_handler")),
+                once()
             )
             .respond(
                 httpRequest -> {
@@ -168,7 +169,8 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
         mockServerClient
             .when(
                 request()
-                    .withPath(calculatePath("websocket_forward_handler"))
+                    .withPath(calculatePath("websocket_forward_handler")),
+                once()
             )
             .forward(
                 httpRequest ->
@@ -280,14 +282,16 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
             mockServerClient
                 .when(
                     request()
-                        .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter))
+                        .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter)),
+                    once()
                 )
                 .respond(
                     httpRequest -> {
                         new MockServerClient("localhost", getServerPort())
                             .when(
                                 request()
-                                    .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter))
+                                    .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter)),
+                                once()
                             )
                             .respond(innerRequest ->
                                 response()

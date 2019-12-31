@@ -17,6 +17,7 @@ import java.util.concurrent.*;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -34,7 +35,8 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
         clientAndServer
             .when(
                 request()
-                    .withPath("/my/echo.*")
+                    .withPath("/my/echo.*"),
+                once()
             )
             .respond(request ->
                 response()

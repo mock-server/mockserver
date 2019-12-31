@@ -12,6 +12,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
@@ -136,7 +137,8 @@ public abstract class AbstractExtendedDeployableWARMockingIntegrationTest extend
         mockServerClient
             .when(
                 request()
-                    .withPath(calculatePath("object_callback"))
+                    .withPath(calculatePath("object_callback")),
+                once()
             )
             .respond(
                 httpRequest -> response()

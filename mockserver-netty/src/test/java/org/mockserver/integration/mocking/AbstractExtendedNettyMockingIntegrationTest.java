@@ -123,7 +123,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         mockServerClient
             .when(
                 request()
-                    .withPath(calculatePath("object_callback"))
+                    .withPath(calculatePath("object_callback")),
+                once()
             )
             .respond(
                 httpRequest -> {
@@ -252,7 +253,7 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
             .when(
                 request()
                     .withPath(calculatePath("object_callback")),
-                exactly(1)
+                once()
             )
             .respond(
                 httpRequest -> response()
@@ -301,7 +302,8 @@ public abstract class AbstractExtendedNettyMockingIntegrationTest extends Abstra
         mockServerClient
             .when(
                 request()
-                    .withPath(calculatePath("object_callback"))
+                    .withPath(calculatePath("object_callback")),
+                once()
             )
             .respond(
                 httpRequest -> response()
