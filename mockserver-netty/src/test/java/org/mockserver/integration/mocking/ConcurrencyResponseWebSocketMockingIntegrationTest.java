@@ -1,16 +1,13 @@
 package org.mockserver.integration.mocking;
 
-import com.google.common.util.concurrent.SettableFuture;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.*;
 import org.mockserver.client.NettyHttpClient;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
-import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -64,31 +61,25 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
 
     @Test
     public void sendMultipleRequestsMultiThreaded() throws ExecutionException, InterruptedException, TimeoutException {
-        scheduleTasksAndWaitForResponses(100);
+        scheduleTasksAndWaitForResponses(25);
     }
 
     @SuppressWarnings("rawtypes")
     private void scheduleTasksAndWaitForResponses(int parallelThreads) throws InterruptedException, ExecutionException, TimeoutException {
-        Level existingLevel = ConfigurationProperties.logLevel();
-        try {
-//            ConfigurationProperties.logLevel("TRACE");
-            ExecutorService executor = Executors.newFixedThreadPool(parallelThreads * 2, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName()));
+        ExecutorService executor = Executors.newFixedThreadPool(parallelThreads * 2, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName()));
 
-            List<CompletableFuture> completableFutures = new ArrayList<>();
-            for (int i = 0; i < parallelThreads; i++) {
-                int counter = i;
-                final CompletableFuture<String> completableFuture = new CompletableFuture<>();
-                executor.execute(() -> ConcurrencyResponseWebSocketMockingIntegrationTest.this.sendRequestAndVerifyResponse(counter, completableFuture));
-                completableFutures.add(completableFuture);
-            }
+        List<CompletableFuture> completableFutures = new ArrayList<>();
+        for (int i = 0; i < parallelThreads; i++) {
+            int counter = i;
+            final CompletableFuture<String> completableFuture = new CompletableFuture<>();
+            executor.execute(() -> ConcurrencyResponseWebSocketMockingIntegrationTest.this.sendRequestAndVerifyResponse(counter, completableFuture));
+            completableFutures.add(completableFuture);
+        }
 
-            for (int i = 0; i < parallelThreads; i++) {
-                System.out.println("counter waiting = " + i);
-                completableFutures.get(i).get(120L, SECONDS);
-                System.out.println("counter finished = " + i);
-            }
-        } finally {
-            ConfigurationProperties.logLevel(existingLevel.name());
+        for (int i = 0; i < parallelThreads; i++) {
+            System.out.println("counter waiting = " + i);
+            completableFutures.get(i).get(120L, SECONDS);
+            System.out.println("counter finished = " + i);
         }
     }
 
