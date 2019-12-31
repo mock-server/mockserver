@@ -224,7 +224,7 @@ public class ForwardChainExpectation {
     private <T extends HttpObject> String registerWebSocketClient(ExpectationCallback<T> expectationCallback, ExpectationForwardAndResponseCallback expectationForwardResponseCallback) {
         try {
             final WebSocketClient<T> webSocketClient = new WebSocketClient<>(
-                new NioEventLoopGroup(2, new Scheduler.SchedulerThreadFactory(WebSocketClient.class.getSimpleName() + "-eventLoop")),
+                new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(WebSocketClient.class.getSimpleName() + "-eventLoop")),
                 mockServerLogger
             );
             final Future<String> register = webSocketClient.registerExpectationCallback(

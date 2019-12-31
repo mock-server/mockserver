@@ -49,8 +49,8 @@ public class EchoServer implements Stoppable {
         websocketChannels = new ArrayList<>();
         textWebSocketFrames = new ArrayList<>();
         new Thread(() -> {
-            bossGroup = new NioEventLoopGroup(2, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
-            workerGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
+            bossGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"));
+            workerGroup = new NioEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"));
             new ServerBootstrap().group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
                 .option(ChannelOption.SO_BACKLOG, 100)

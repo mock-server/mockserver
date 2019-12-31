@@ -45,7 +45,7 @@ public class MockServerClient implements Stoppable {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClient.class);
     private static final Map<Integer, MockServerEventBus> EVENT_BUS_MAP = new ConcurrentHashMap<>();
-    private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
+    private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
     private final String host;
     private final String contextPath;
     private final Class<MockServerClient> clientClass;
