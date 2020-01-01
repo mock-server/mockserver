@@ -45,6 +45,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private BodyDTO bodyDTOMatcher = null;
     private BooleanMatcher sslMatcher = null;
     private final boolean controlPlaneMatcher;
+    private boolean responseInProgress = false;
     private ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
 
     public HttpRequestMatcher(MockServerLogger mockServerLogger, HttpRequest httpRequest) {
@@ -86,6 +87,16 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
             update(expectation.getHttpRequest());
             return true;
         }
+    }
+
+    public boolean isResponseInProgress() {
+        return responseInProgress;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public HttpRequestMatcher setResponseInProgress(boolean responseInProgress) {
+        this.responseInProgress = responseInProgress;
+        return this;
     }
 
     public Expectation getExpectation() {

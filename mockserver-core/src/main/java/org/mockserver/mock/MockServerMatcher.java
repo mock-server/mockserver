@@ -171,10 +171,11 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
             boolean remainingMatchesDecremented = false;
             if (httpRequestMatcher.matches(httpRequest, httpRequest)) {
                 matchingExpectation = httpRequestMatcher.getExpectation();
+                httpRequestMatcher.setResponseInProgress(true);
                 if (matchingExpectation.decrementRemainingMatches()) {
                     remainingMatchesDecremented = true;
                 }
-            } else if (!httpRequestMatcher.isActive()) {
+            } else if (!httpRequestMatcher.isResponseInProgress() && !httpRequestMatcher.isActive()) {
                 removeHttpRequestMatcher(httpRequestMatcher);
             }
             if (remainingMatchesDecremented) {
@@ -209,12 +210,13 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
 
     Expectation postProcess(Expectation expectation) {
         if (expectation != null) {
-            if (!expectation.isActive()) {
-                for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers) {
-                    if (httpRequestMatcher.getExpectation() == expectation) {
+            for (HttpRequestMatcher httpRequestMatcher : httpRequestMatchers) {
+                if (httpRequestMatcher.getExpectation() == expectation) {
+                    if (!expectation.isActive()) {
                         removeHttpRequestMatcher(httpRequestMatcher);
                         break;
                     }
+                    httpRequestMatcher.setResponseInProgress(false);
                 }
             }
         }
