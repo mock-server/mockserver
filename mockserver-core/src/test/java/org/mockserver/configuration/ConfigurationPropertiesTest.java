@@ -56,12 +56,26 @@ public class ConfigurationPropertiesTest {
         int eventLoopCount = Math.max(20, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
 
         // when
-        assertEquals(eventLoopCount, ConfigurationProperties.nioEventLoopThreadCount());
-        ConfigurationProperties.nioEventLoopThreadCount(2);
+        assertEquals(eventLoopCount, nioEventLoopThreadCount());
+        nioEventLoopThreadCount(2);
 
         // then
         assertEquals("2", System.getProperty("mockserver.nioEventLoopThreadCount"));
-        assertEquals(2, ConfigurationProperties.nioEventLoopThreadCount());
+        assertEquals(2, nioEventLoopThreadCount());
+    }
+
+    @Test
+    public void shouldSetAndReadWebSocketClientEventLoopThreadCount() {
+        // given
+        System.clearProperty("mockserver.webSocketClientEventLoopThreadCount");
+
+        // when
+        assertEquals(5, webSocketClientEventLoopThreadCount());
+        webSocketClientEventLoopThreadCount(2);
+
+        // then
+        assertEquals("2", System.getProperty("mockserver.webSocketClientEventLoopThreadCount"));
+        assertEquals(2, webSocketClientEventLoopThreadCount());
     }
 
     @Test
@@ -71,7 +85,7 @@ public class ConfigurationPropertiesTest {
         int eventLoopCount = Math.max(20, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", NettyRuntime.availableProcessors()));
 
         // then
-        assertEquals(eventLoopCount, ConfigurationProperties.nioEventLoopThreadCount());
+        assertEquals(eventLoopCount, nioEventLoopThreadCount());
     }
 
     @Test

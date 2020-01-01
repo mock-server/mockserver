@@ -3,6 +3,7 @@ package org.mockserver.client;
 import com.google.common.annotations.VisibleForTesting;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.mockserver.client.MockServerEventBus.EventType;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.action.ExpectationCallback;
@@ -227,7 +228,7 @@ public class ForwardChainExpectation {
     private <T extends HttpObject> String registerWebSocketClient(ExpectationCallback<T> expectationCallback, ExpectationForwardAndResponseCallback expectationForwardResponseCallback) {
         try {
             final WebSocketClient<T> webSocketClient = new WebSocketClient<>(
-                new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(WebSocketClient.class.getSimpleName() + "-eventLoop")),
+                new NioEventLoopGroup(ConfigurationProperties.webSocketClientEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(WebSocketClient.class.getSimpleName() + "-eventLoop")),
                 mockServerLogger
             );
             final Future<String> register = webSocketClient.registerExpectationCallback(
