@@ -66,6 +66,7 @@ public class ExpectationFileWatcherIntegrationTest {
             ConfigurationProperties.persistedExpectationsPath(persistedExpectations.getAbsolutePath());
             // and - mockserver
             mockServer = new MockServer();
+            MILLISECONDS.sleep(1000);
             // and - file watcher to detect persistence file being updated
             CompletableFuture<String> persistedExpectationsContents = new CompletableFuture<>();
             new FileWatcher(
@@ -73,13 +74,13 @@ public class ExpectationFileWatcherIntegrationTest {
                 () -> {
                     try {
                         persistedExpectationsContents.complete(new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8));
-                    } catch (IOException ioe) {
-                        persistedExpectationsContents.completeExceptionally(ioe);
+                    } catch (Throwable throwable) {
+                        persistedExpectationsContents.completeExceptionally(throwable);
                     }
                 },
                 persistedExpectationsContents::completeExceptionally
             );
-            MILLISECONDS.sleep(1500);
+            MILLISECONDS.sleep(1000);
 
             // when
             String watchedFileContents = "[ {" + NEW_LINE +
@@ -246,8 +247,8 @@ public class ExpectationFileWatcherIntegrationTest {
                 () -> {
                     try {
                         persistedExpectationsContents.complete(new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8));
-                    } catch (IOException ioe) {
-                        persistedExpectationsContents.completeExceptionally(ioe);
+                    } catch (Throwable throwable) {
+                        persistedExpectationsContents.completeExceptionally(throwable);
                     }
                 },
                 persistedExpectationsContents::completeExceptionally
@@ -377,8 +378,8 @@ public class ExpectationFileWatcherIntegrationTest {
                 () -> {
                     try {
                         persistedExpectationsContents.complete(new String(Files.readAllBytes(persistedExpectations.toPath()), StandardCharsets.UTF_8));
-                    } catch (IOException ioe) {
-                        persistedExpectationsContents.completeExceptionally(ioe);
+                    } catch (Throwable throwable) {
+                        persistedExpectationsContents.completeExceptionally(throwable);
                     }
                 },
                 persistedExpectationsContents::completeExceptionally
