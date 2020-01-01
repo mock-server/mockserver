@@ -2,7 +2,10 @@ package org.mockserver.integration.mocking;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
@@ -17,7 +20,9 @@ import java.util.concurrent.*;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.mockserver.matchers.Times.once;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.mockserver.matchers.Times.unlimited;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -36,7 +41,7 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
             .when(
                 request()
                     .withPath("/my/echo.*"),
-                once()
+                unlimited()
             )
             .respond(request ->
                 response()
@@ -57,13 +62,11 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
     }
 
     @Test
-    @Ignore("FAILS RANDOMLY IN CI")
     public void sendMultipleRequestsSingleThreaded() throws ExecutionException, InterruptedException, TimeoutException {
         scheduleTasksAndWaitForResponses(1);
     }
 
     @Test
-    @Ignore("FAILS LOCALLY RECENTLY ONLY")
     public void sendMultipleRequestsMultiThreaded() throws ExecutionException, InterruptedException, TimeoutException {
         scheduleTasksAndWaitForResponses(25);
     }
@@ -97,7 +100,7 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
                     .withBody(requestBody),
                 new InetSocketAddress("localhost", clientAndServer.getLocalPort())
             ).get(20, TimeUnit.MINUTES);
-            Assert.assertEquals(requestBody, httpResponse.getBodyAsString());
+            assertThat(httpResponse.getBodyAsString(), is(requestBody));
             completableFuture.complete(httpResponse.getBodyAsString());
         } catch (Exception ex) {
             completableFuture.completeExceptionally(ex);
