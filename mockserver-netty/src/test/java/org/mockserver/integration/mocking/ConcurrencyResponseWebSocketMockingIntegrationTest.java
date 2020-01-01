@@ -7,10 +7,13 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.scheduler.Scheduler;
+import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -62,17 +65,25 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
     }
 
     @Test
-    public void sendMultipleRequestsSingleThreaded() throws ExecutionException, InterruptedException, TimeoutException {
+    public void sendMultipleRequestsSingleThreaded() throws Exception {
         scheduleTasksAndWaitForResponses(1);
     }
 
     @Test
-    public void sendMultipleRequestsMultiThreaded() throws ExecutionException, InterruptedException, TimeoutException {
-        scheduleTasksAndWaitForResponses(25);
+    public void sendMultipleRequestsMultiThreaded() throws Exception {
+        String originalLogLevel = ConfigurationProperties.logLevel().name();
+        ConfigurationProperties.logLevel("TRACE");
+        ConfigurationProperties.disableSystemOut(false);
+        try {
+            scheduleTasksAndWaitForResponses(25);
+        } finally {
+            ConfigurationProperties.logLevel(originalLogLevel);
+            ConfigurationProperties.disableSystemOut(true);
+        }
     }
 
     @SuppressWarnings("rawtypes")
-    private void scheduleTasksAndWaitForResponses(int parallelThreads) throws InterruptedException, ExecutionException, TimeoutException {
+    private void scheduleTasksAndWaitForResponses(int parallelThreads) throws Exception {
         ExecutorService executor = Executors.newFixedThreadPool(parallelThreads * 3, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName()));
 
         List<CompletableFuture> completableFutures = new ArrayList<>();
@@ -84,9 +95,17 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
         }
 
         for (int i = 0; i < parallelThreads; i++) {
-            System.out.println("counter waiting = " + i);
-            completableFutures.get(i).get(120L, SECONDS);
-            System.out.println("counter finished = " + i);
+            try {
+                completableFutures.get(i).get(120L, SECONDS);
+            } catch (Throwable throwable) {
+                new MockServerLogger().logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.EXCEPTION)
+                        .setLogLevel(Level.ERROR)
+                        .setMessageFormat("exception waiting for counter " + i)
+                        .setArguments(throwable)
+                );
+            }
         }
     }
 
