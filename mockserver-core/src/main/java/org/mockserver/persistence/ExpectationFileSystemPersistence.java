@@ -25,7 +25,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockserver.serialization.ObjectMapperFactory.createObjectMapper;
-import static org.slf4j.event.Level.INFO;
+import static org.slf4j.event.Level.*;
+import static org.slf4j.event.Level.TRACE;
 
 public class ExpectationFileSystemPersistence implements MockServerMatcherListener {
 
@@ -60,7 +61,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.INFO)
                     .setLogLevel(INFO)
-                    .setMessageFormat("Created expectation file system persistence to " + ConfigurationProperties.persistedExpectationsPath())
+                    .setMessageFormat("Created expectation file system persistence for " + ConfigurationProperties.persistedExpectationsPath())
             );
         } else {
             this.mockServerLogger = null;
@@ -84,7 +85,24 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                         FileLock fileLock = fileChannel.lock()
                     ) {
                         if (fileLock != null) {
-                            byte[] data = serialize(mockServerLog.retrieveActiveExpectations(null)).getBytes(UTF_8);
+                            List<Expectation> expectations = mockServerLog.retrieveActiveExpectations(null);
+                            if (MockServerLogger.isEnabled(TRACE)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setType(LogEntry.LogMessageType.TRACE)
+                                        .setLogLevel(TRACE)
+                                        .setMessageFormat("Persisting expectations to " + ConfigurationProperties.initializationJsonPath() + "{}")
+                                        .setArguments(expectations)
+                                );
+                            } else if (MockServerLogger.isEnabled(DEBUG)) {
+                                mockServerLogger.logEvent(
+                                    new LogEntry()
+                                        .setType(LogEntry.LogMessageType.DEBUG)
+                                        .setLogLevel(DEBUG)
+                                        .setMessageFormat("Persisting expectations to " + ConfigurationProperties.initializationJsonPath())
+                                );
+                            }
+                            byte[] data = serialize(expectations).getBytes(UTF_8);
                             ByteBuffer buffer = ByteBuffer.wrap(data);
                             buffer.put(data);
                             buffer.flip();
