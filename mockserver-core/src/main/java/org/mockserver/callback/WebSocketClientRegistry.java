@@ -23,6 +23,7 @@ import static org.mockserver.configuration.ConfigurationProperties.maxWebSocketE
 import static org.mockserver.metrics.Metrics.Name.*;
 import static org.mockserver.metrics.Metrics.clearWebSocketMetrics;
 import static org.mockserver.model.HttpResponse.response;
+import static org.slf4j.event.Level.TRACE;
 import static org.slf4j.event.Level.WARN;
 
 /**
@@ -94,6 +95,14 @@ public class WebSocketClientRegistry {
         }
         clientRegistry.put(clientId, ctx);
         Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("Registering client " + clientId + "")
+            );
+        }
     }
 
     public void unregisterClient(String clientId) {
@@ -102,39 +111,99 @@ public class WebSocketClientRegistry {
             removeChannel.channel().close();
         }
         Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("Unregistering client " + clientId + "")
+            );
+        }
     }
 
     public void registerResponseCallbackHandler(String webSocketCorrelationId, WebSocketResponseCallback expectationResponseCallback) {
         responseCallbackRegistry.put(webSocketCorrelationId, expectationResponseCallback);
         Metrics.set(WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT, responseCallbackRegistry.size());
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("Registering response callback " + webSocketCorrelationId + "")
+            );
+        }
     }
 
     public void unregisterResponseCallbackHandler(String webSocketCorrelationId) {
         responseCallbackRegistry.remove(webSocketCorrelationId);
         Metrics.set(WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT, responseCallbackRegistry.size());
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("Unregistering response callback " + webSocketCorrelationId + "")
+            );
+        }
     }
 
     public void registerForwardCallbackHandler(String webSocketCorrelationId, WebSocketRequestCallback expectationForwardCallback) {
         forwardCallbackRegistry.put(webSocketCorrelationId, expectationForwardCallback);
         Metrics.set(WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT, forwardCallbackRegistry.size());
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("Registering forward callback " + webSocketCorrelationId + "")
+            );
+        }
     }
 
     public void unregisterForwardCallbackHandler(String webSocketCorrelationId) {
         forwardCallbackRegistry.remove(webSocketCorrelationId);
         Metrics.set(WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT, forwardCallbackRegistry.size());
+        if (MockServerLogger.isEnabled(TRACE)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("Unregistering forward callback " + webSocketCorrelationId + "")
+            );
+        }
     }
 
     public boolean sendClientMessage(String clientId, HttpRequest httpRequest, HttpResponse httpResponse) {
         try {
             if (clientRegistry.containsKey(clientId)) {
+
                 if (httpResponse == null) {
+                    if (MockServerLogger.isEnabled(TRACE)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(LogEntry.LogMessageType.TRACE)
+                                .setLogLevel(TRACE)
+                                .setHttpRequest(httpRequest)
+                                .setMessageFormat("Sending message {} to client " + clientId + "")
+                                .setArguments(httpRequest)
+                        );
+                    }
                     clientRegistry.get(clientId).channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(httpRequest)));
                 } else {
-                    clientRegistry.get(clientId).channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(
-                        new HttpRequestAndHttpResponse()
-                            .withHttpRequest(httpRequest)
-                            .withHttpResponse(httpResponse)
-                    )));
+                    HttpRequestAndHttpResponse httpRequestAndHttpResponse = new HttpRequestAndHttpResponse()
+                        .withHttpRequest(httpRequest)
+                        .withHttpResponse(httpResponse);
+                    if (MockServerLogger.isEnabled(TRACE)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setType(LogEntry.LogMessageType.TRACE)
+                                .setLogLevel(TRACE)
+                                .setHttpRequest(httpRequest)
+                                .setMessageFormat("Sending message {} to client " + clientId + "")
+                                .setArguments(httpRequestAndHttpResponse)
+                        );
+                    }
+                    clientRegistry.get(clientId).channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(httpRequestAndHttpResponse)));
                 }
                 return true;
             } else {
