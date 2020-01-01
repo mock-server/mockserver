@@ -19,4 +19,4 @@ fi
 echo "whoami: "
 whoami
 
-./mvnw clean install $1 -Djava.security.egd=file:/dev/./urandom
+./mvnw -T 2C clean install $1 -Djava.security.egd=file:/dev/urandom -DskipAssembly=true
