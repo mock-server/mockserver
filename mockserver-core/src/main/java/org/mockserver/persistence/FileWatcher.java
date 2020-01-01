@@ -5,6 +5,8 @@ import org.mockserver.scheduler.Scheduler;
 import java.nio.file.*;
 import java.util.function.Consumer;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 public class FileWatcher {
 
     private boolean running = true;
@@ -30,6 +32,8 @@ public class FileWatcher {
                     if (isRunning()) {
                         for (WatchEvent<?> event : key.pollEvents()) {
                             if (event.context() instanceof Path && ((Path) event.context()).getFileName().equals(fileName)) {
+                                // ensure file has been committed to file system
+                                MILLISECONDS.sleep(100);
                                 updatedHandler.run();
                                 break;
                             }
