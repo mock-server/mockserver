@@ -164,6 +164,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
     @Test // same JVM due to dynamic calls to static Metrics class
     public void shouldRemoveWebsocketForwardAndResponseHandlerFromRegistry() {
+        String originalLogLevel = ConfigurationProperties.logLevel().name();
         ConfigurationProperties.logLevel("TRACE");
         ConfigurationProperties.disableSystemOut(false);
         try {
@@ -207,7 +208,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
             Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT), CoreMatchers.is(0));
             Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT), CoreMatchers.is(0));
         } finally {
-            ConfigurationProperties.logLevel("WARN");
+            ConfigurationProperties.logLevel(originalLogLevel);
             ConfigurationProperties.disableSystemOut(true);
         }
     }
@@ -284,6 +285,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
     @Test
     public void shouldAllowUseOfSeparateWebsocketClientInsideCallback() {
+        String originalLogLevel = ConfigurationProperties.logLevel().name();
         ConfigurationProperties.logLevel("TRACE");
         ConfigurationProperties.disableSystemOut(false);
         try {
@@ -342,7 +344,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                 objectCallbackCounter++;
             }
         } finally {
-            ConfigurationProperties.logLevel("WARN");
+            ConfigurationProperties.logLevel(originalLogLevel);
             ConfigurationProperties.disableSystemOut(true);
         }
     }
