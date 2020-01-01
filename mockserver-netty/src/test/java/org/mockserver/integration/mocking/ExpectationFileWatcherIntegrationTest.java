@@ -4,7 +4,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -35,7 +34,6 @@ import static org.mockserver.stop.Stop.stopQuietly;
 /**
  * @author jamesdbloom
  */
-@Ignore("FAILS RANDOMLY IN CI")
 public class ExpectationFileWatcherIntegrationTest {
 
     private static NettyHttpClient httpClient;
@@ -69,7 +67,6 @@ public class ExpectationFileWatcherIntegrationTest {
             // and - mockserver
             mockServer = new MockServer();
             // and - file watcher to detect persistence file being updated
-            MILLISECONDS.sleep(2000);
             CompletableFuture<String> persistedExpectationsContents = new CompletableFuture<>();
             new FileWatcher(
                 persistedExpectations.getAbsolutePath(),
@@ -242,7 +239,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 .get(10, TimeUnit.SECONDS);
 
             // and - file watcher to detect persistence file being updated
-            MILLISECONDS.sleep(2000);
+            MILLISECONDS.sleep(1000);
             CompletableFuture<String> persistedExpectationsContents = new CompletableFuture<>();
             new FileWatcher(
                 persistedExpectations.getAbsolutePath(),
@@ -255,7 +252,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 },
                 persistedExpectationsContents::completeExceptionally
             );
-            MILLISECONDS.sleep(1500);
+            MILLISECONDS.sleep(1000);
 
             // when
             watchedFileContents = "[]";
@@ -373,7 +370,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 .get(10, TimeUnit.SECONDS);
 
             // and - file watcher to detect persistence file being updated
-            MILLISECONDS.sleep(2000);
+            MILLISECONDS.sleep(1000);
             CompletableFuture<String> persistedExpectationsContents = new CompletableFuture<>();
             new FileWatcher(
                 persistedExpectations.getAbsolutePath(),
@@ -386,7 +383,7 @@ public class ExpectationFileWatcherIntegrationTest {
                 },
                 persistedExpectationsContents::completeExceptionally
             );
-            MILLISECONDS.sleep(1500);
+            MILLISECONDS.sleep(1000);
 
             // when
             watchedFileContents = "[ {" + NEW_LINE +
