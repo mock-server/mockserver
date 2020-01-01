@@ -31,14 +31,16 @@ public class HttpResponseObjectCallbackActionHandler {
         final String clientId = httpObjectCallback.getClientId();
         final String webSocketCorrelationId = UUID.randomUUID().toString();
         webSocketClientRegistry.registerResponseCallbackHandler(webSocketCorrelationId, response -> {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(LogEntry.LogMessageType.TRACE)
-                    .setLogLevel(TRACE)
-                    .setHttpRequest(request)
-                    .setMessageFormat("Received response for request {} from client " + clientId)
-                    .setArguments(request)
-            );
+            if (MockServerLogger.isEnabled(TRACE)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setHttpRequest(request)
+                        .setMessageFormat("Received response over websocket {} for request {} from client " + clientId + " for correlationId " + webSocketCorrelationId)
+                        .setArguments(response, request)
+                );
+            }
             webSocketClientRegistry.unregisterResponseCallbackHandler(webSocketCorrelationId);
             if (expectationPostProcessor != null) {
                 expectationPostProcessor.run();
@@ -55,13 +57,13 @@ public class HttpResponseObjectCallbackActionHandler {
                     .setArguments(notFoundResponse())
             );
             actionHandler.writeResponseActionResponse(notFoundResponse(), responseWriter, request, httpObjectCallback, synchronous);
-        } else {
+        } else if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setHttpRequest(request)
-                    .setMessageFormat("Sending request {} to client " + clientId)
+                    .setMessageFormat("Sending request over websocket {} to client " + clientId + " for correlationId " + webSocketCorrelationId)
                     .setArguments(request)
             );
         }
