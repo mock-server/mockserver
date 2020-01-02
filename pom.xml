@@ -662,8 +662,8 @@
                     </includes>
                     <systemProperties>
                         <mockserver.disableSystemOut>true</mockserver.disableSystemOut>
-                        <mockserver.nioEventLoopThreadCount>60</mockserver.nioEventLoopThreadCount>
-                        <mockserver.webSocketClientEventLoopThreadCount>10</mockserver.webSocketClientEventLoopThreadCount>
+                        <mockserver.nioEventLoopThreadCount>20</mockserver.nioEventLoopThreadCount>
+                        <mockserver.webSocketClientEventLoopThreadCount>5</mockserver.webSocketClientEventLoopThreadCount>
                     </systemProperties>
                     <argLine>-Duser.language=en -Duser.country=GB</argLine>
                     <disableXmlReport>true</disableXmlReport>
