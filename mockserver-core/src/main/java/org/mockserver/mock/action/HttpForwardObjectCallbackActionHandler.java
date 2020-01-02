@@ -8,6 +8,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpObjectCallback;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpRequestAndHttpResponse;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 
@@ -62,8 +63,13 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                                         .setType(LogEntry.LogMessageType.TRACE)
                                         .setLogLevel(TRACE)
                                         .setHttpRequest(request)
-                                        .setMessageFormat("Received response over websocket {} from client " + clientId + " for correlationId " + webSocketCorrelationId)
-                                        .setArguments(overriddenResponse)
+                                        .setMessageFormat("Received response over websocket {} for request and response {} from client " + clientId + " for correlationId " + webSocketCorrelationId)
+                                        .setArguments(
+                                            overriddenResponse,
+                                            new HttpRequestAndHttpResponse()
+                                                .withHttpRequest(request)
+                                                .withHttpResponse(response)
+                                        )
                                 );
                             }
                             webSocketClientRegistry.unregisterResponseCallbackHandler(webSocketCorrelationId);

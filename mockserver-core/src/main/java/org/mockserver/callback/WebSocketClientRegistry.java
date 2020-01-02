@@ -16,8 +16,6 @@ import org.mockserver.websocket.WebSocketException;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.mockserver.configuration.ConfigurationProperties.maxWebSocketExpectations;
 import static org.mockserver.metrics.Metrics.Name.*;
@@ -46,6 +44,15 @@ public class WebSocketClientRegistry {
     void receivedTextWebSocketFrame(TextWebSocketFrame textWebSocketFrame) {
         try {
             Object deserializedMessage = webSocketMessageSerializer.deserialize(textWebSocketFrame.text());
+            if (MockServerLogger.isEnabled(TRACE)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("Received message over websocket {}")
+                        .setArguments(deserializedMessage)
+                );
+            }
             if (deserializedMessage instanceof HttpResponse) {
                 HttpResponse httpResponse = (HttpResponse) deserializedMessage;
                 String firstHeader = httpResponse.getFirstHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME);
@@ -176,7 +183,6 @@ public class WebSocketClientRegistry {
     public boolean sendClientMessage(String clientId, HttpRequest httpRequest, HttpResponse httpResponse) {
         try {
             if (clientRegistry.containsKey(clientId)) {
-
                 if (httpResponse == null) {
                     if (MockServerLogger.isEnabled(TRACE)) {
                         mockServerLogger.logEvent(

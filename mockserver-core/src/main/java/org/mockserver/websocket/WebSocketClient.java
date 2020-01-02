@@ -15,6 +15,7 @@ import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.AttributeKey;
 import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.ExpectationCallback;
 import org.mockserver.mock.action.ExpectationForwardAndResponseCallback;
@@ -83,6 +84,11 @@ public class WebSocketClient<T extends HttpObject> {
                             } catch (SSLException e) {
                                 throw new WebSocketException("Exception when configuring SSL Handler", e);
                             }
+                        }
+
+                        // add logging
+                        if (MockServerLogger.isEnabled(TRACE)) {
+                            ch.pipeline().addLast(new LoggingHandler("NettyHttpClient -->"));
                         }
 
                         ch.pipeline()

@@ -80,13 +80,12 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             final CompletableFuture<String> registrationFuture = ch.attr(REGISTRATION_FUTURE).get();
             if (httpResponse.headers().contains(UPGRADE, WEBSOCKET, true) && !handshaker.isHandshakeComplete()) {
                 handshaker.finishHandshake(ch, httpResponse);
-//                final String clientRegistrationId = httpResponse.headers().get(CLIENT_REGISTRATION_ID_HEADER);
                 registrationFuture.complete(clientId);
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("web socket client " + clientId + " connected!")
+                        .setMessageFormat("web socket client " + clientId + " connected")
                 );
             } else if (httpResponse.status().equals(HttpResponseStatus.NOT_IMPLEMENTED)) {
                 String message = readRequestBody(httpResponse);
