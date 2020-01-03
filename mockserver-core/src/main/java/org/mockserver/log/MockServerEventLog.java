@@ -132,7 +132,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         } catch (Throwable throwable) {
             writeToSystemOut(logger, new LogEntry()
                 .setLogLevel(Level.WARN)
-                .setMessageFormat("Exception while shutting down log ring buffer")
+                .setMessageFormat("exception while shutting down log ring buffer")
                 .setThrowable(throwable)
             );
         }
@@ -194,7 +194,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         retrieveLogEntries(
             httpRequest,
             logEntry -> true,
-            (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.collect(Collectors.toList()))
+            (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
 
@@ -202,7 +202,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         retrieveLogEntries(
             httpRequest,
             requestLogPredicate,
-            (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.collect(Collectors.toList()))
+            (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
 
@@ -211,12 +211,12 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             httpRequest,
             requestLogPredicate,
             logEntryToRequest,
-            logEventStream
-                -> listConsumer
-                .accept(logEventStream
+            logEventStream -> listConsumer.accept(
+                logEventStream
+                    .filter(Objects::nonNull)
                     .flatMap(Arrays::stream)
                     .collect(Collectors.toList())
-                )
+            )
         );
     }
 
@@ -224,7 +224,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         retrieveLogEntries(
             httpRequest,
             requestResponseLogPredicate,
-            (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.collect(Collectors.toList()))
+            (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
 
@@ -233,7 +233,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             httpRequest,
             requestResponseLogPredicate,
             logEntryToHttpRequestAndHttpResponse,
-            logEventStream -> listConsumer.accept(logEventStream.collect(Collectors.toList()))
+            logEventStream -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
 
@@ -241,7 +241,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         retrieveLogEntries(
             httpRequest,
             recordedExpectationLogPredicate,
-            (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.collect(Collectors.toList()))
+            (Stream<LogEntry> logEventStream) -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
 
@@ -250,7 +250,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
             httpRequest,
             recordedExpectationLogPredicate,
             logEntryToExpectation,
-            logEventStream -> listConsumer.accept(logEventStream.collect(Collectors.toList()))
+            logEventStream -> listConsumer.accept(logEventStream.filter(Objects::nonNull).collect(Collectors.toList()))
         );
     }
 

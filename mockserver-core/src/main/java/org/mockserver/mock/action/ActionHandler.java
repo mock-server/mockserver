@@ -181,7 +181,7 @@ public class ActionHandler {
                 new LogEntry()
                     .setType(INFO)
                     .setLogLevel(Level.INFO)
-                    .setMessageFormat("Returning CORS response for OPTIONS request")
+                    .setMessageFormat("returning CORS response for OPTIONS request")
             );
 
         } else if (proxyingRequest || potentiallyHttpProxy) {
@@ -192,7 +192,7 @@ public class ActionHandler {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("Received \"x-forwarded-by\" header caused by exploratory HTTP proxy or proxy loop - falling back to no proxy: {}")
+                        .setMessageFormat("received \"x-forwarded-by\" header caused by exploratory HTTP proxy or proxy loop - falling back to no proxy:{}")
                         .setArguments(request)
                 );
                 returnNotFound(responseWriter, request);
@@ -240,7 +240,7 @@ public class ActionHandler {
                                 new LogEntry()
                                     .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
-                                    .setMessageFormat("Failed to connect to proxied socket due to exploratory HTTP proxy for: {}due to: {} falling back to no proxy")
+                                    .setMessageFormat("failed to connect to proxied socket due to exploratory HTTP proxy for:{}due to:{}falling back to no proxy")
                                     .setArguments(request, ex.getCause())
                             );
                             returnNotFound(responseWriter, request);

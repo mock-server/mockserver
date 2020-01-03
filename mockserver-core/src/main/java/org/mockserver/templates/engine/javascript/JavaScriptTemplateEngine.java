@@ -65,8 +65,10 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                         .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setHttpRequest(request)
-                        .setMessageFormat("JavaScript based templating is only available in a JVM with the \"nashorn\" JavaScript engine, " +
-                            "please use a JVM with the \"nashorn\" JavaScript engine, such as Oracle Java 8+")
+                        .setMessageFormat(
+                            "JavaScript based templating is only available in a JVM with the \"nashorn\" JavaScript engine, " +
+                            "please use a JVM with the \"nashorn\" JavaScript engine, such as Oracle Java 8+"
+                        )
                         .setArguments(new RuntimeException("\"nashorn\" JavaScript engine not available"))
                 );
             }

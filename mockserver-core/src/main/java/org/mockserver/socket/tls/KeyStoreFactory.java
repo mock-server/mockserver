@@ -104,7 +104,7 @@ public class KeyStoreFactory {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("Saving key store to file [" + keyStoreFileAbsolutePath + "]")
+                        .setMessageFormat("saving key store to file [" + keyStoreFileAbsolutePath + "]")
                 );
             }
             if (deleteOnExit) {
@@ -139,7 +139,7 @@ public class KeyStoreFactory {
                 new LogEntry()
                     .setType(SERVER_CONFIGURATION)
                     .setLogLevel(DEBUG)
-                    .setMessageFormat("Using protocol {}")
+                    .setMessageFormat("using protocol{}")
                     .setArguments(SSL_CONTEXT_PROTOCOL)
             );
             return SSLContext.getInstance(SSL_CONTEXT_PROTOCOL);
@@ -148,7 +148,7 @@ public class KeyStoreFactory {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.WARN)
                     .setLogLevel(WARN)
-                    .setMessageFormat("Protocol {} not available, falling back to {}")
+                    .setMessageFormat("protocol{}not available, falling back to{}")
                     .setArguments(SSL_CONTEXT_PROTOCOL, SSL_CONTEXT_FALLBACK_PROTOCOL)
             );
             return SSLContext.getInstance(SSL_CONTEXT_FALLBACK_PROTOCOL);

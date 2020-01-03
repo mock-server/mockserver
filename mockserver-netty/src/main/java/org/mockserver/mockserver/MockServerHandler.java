@@ -148,7 +148,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                                 .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
                                 .setHttpRequest(request)
-                                .setMessageFormat("exception processing: {}")
+                                .setMessageFormat("exception processing:{}")
                                 .setArguments(request)
                                 .setThrowable(throwable)
                         );
@@ -162,7 +162,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
-                    .setMessageFormat("exception processing: {} error: {}")
+                    .setMessageFormat("exception processing:{}error:{}")
                     .setArguments(request, iae.getMessage())
             );
             // send request without API CORS headers
@@ -192,7 +192,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception caught by " + server.getClass() + " handler -> closing pipeline " + ctx.channel())
+                    .setMessageFormat("exception caught by " + server.getClass() + " handler -> closing pipeline " + ctx.channel())
                     .setThrowable(cause)
             );
         }

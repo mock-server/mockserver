@@ -78,7 +78,7 @@ public class Main {
                 new LogEntry()
                     .setType(SERVER_CONFIGURATION)
                     .setLogLevel(DEBUG)
-                    .setMessageFormat("Using command line options: {}")
+                    .setMessageFormat("using command line options:{}")
                     .setArguments(Joiner.on(", ").withKeyValueSeparator("=").join(parsedArguments))
             );
 
@@ -102,7 +102,7 @@ public class Main {
                         new LogEntry()
                             .setType(SERVER_CONFIGURATION)
                             .setLogLevel(ConfigurationProperties.logLevel())
-                            .setMessageFormat("Logger level is " + ConfigurationProperties.logLevel() + ", change using:\n - 'ConfigurationProperties.logLevel(String level)' in Java code,\n - '-logLevel' command line argument,\n - 'mockserver.logLevel' JVM system property or,\n - 'mockserver.logLevel' property value in 'mockserver.properties'")
+                            .setMessageFormat("logger level is " + ConfigurationProperties.logLevel() + ", change using:\n - 'ConfigurationProperties.logLevel(String level)' in Java code,\n - '-logLevel' command line argument,\n - 'mockserver.logLevel' JVM system property or,\n - 'mockserver.logLevel' property value in 'mockserver.properties'")
                     );
                 }
             } else {
@@ -114,7 +114,7 @@ public class Main {
                 new LogEntry()
                     .setType(SERVER_CONFIGURATION)
                     .setLogLevel(ERROR)
-                    .setMessageFormat("Exception while starting: {}")
+                    .setMessageFormat("exception while starting:{}")
                     .setThrowable(throwable)
             );
             showUsage();

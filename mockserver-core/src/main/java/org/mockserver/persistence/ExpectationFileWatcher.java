@@ -35,7 +35,8 @@ public class ExpectationFileWatcher {
                             new LogEntry()
                                 .setType(LogEntry.LogMessageType.DEBUG)
                                 .setLogLevel(DEBUG)
-                                .setMessageFormat("Expectation file watcher detected modification on file " + ConfigurationProperties.initializationJsonPath() + " updating expectations")
+                                .setMessageFormat("expectation file watcher updating expectations as modification detected on file{}")
+                                .setArguments(ConfigurationProperties.initializationJsonPath())
                         );
                     }
                     addExpectationsFromInitializer();
@@ -44,7 +45,7 @@ public class ExpectationFileWatcher {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.WARN)
                             .setLogLevel(WARN)
-                            .setMessageFormat("Exception while processing expectation file update " + throwable.getMessage())
+                            .setMessageFormat("exception while processing expectation file update " + throwable.getMessage())
                             .setThrowable(throwable)
                     );
                 });
@@ -53,7 +54,8 @@ public class ExpectationFileWatcher {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("Exception creating file watcher for " + ConfigurationProperties.initializationJsonPath())
+                        .setMessageFormat("exception creating file watcher for{}")
+                        .setArguments(ConfigurationProperties.initializationJsonPath())
                         .setThrowable(throwable)
                 );
             }
@@ -61,7 +63,8 @@ public class ExpectationFileWatcher {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.INFO)
                     .setLogLevel(INFO)
-                    .setMessageFormat("Created expectation file watcher for " + ConfigurationProperties.initializationJsonPath())
+                    .setMessageFormat("created expectation file watcher for{}")
+                    .setArguments(ConfigurationProperties.initializationJsonPath())
             );
         } else {
             this.expectationSerializer = null;
@@ -77,8 +80,8 @@ public class ExpectationFileWatcher {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
-                    .setMessageFormat("Updating expectations from " + ConfigurationProperties.initializationJsonPath() + "{}")
-                    .setArguments(Arrays.asList(expectations))
+                    .setMessageFormat("updating expectations{}from{}")
+                    .setArguments(ConfigurationProperties.initializationJsonPath(), Arrays.asList(expectations))
             );
         }
         mockServerMatcher.update(expectations, MockServerMatcherNotifier.Cause.FILE_WATCHER);
@@ -99,7 +102,7 @@ public class ExpectationFileWatcher {
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)
                         .setLogLevel(WARN)
-                        .setMessageFormat("Exception while loading JSON initialization file with file watcher, ignoring file")
+                        .setMessageFormat("exception while loading JSON initialization file with file watcher, ignoring file")
                         .setThrowable(throwable)
                 );
             }

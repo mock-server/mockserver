@@ -119,7 +119,7 @@ public class MockServer extends LifeCycle {
                 new LogEntry()
                     .setType(SERVER_CONFIGURATION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception binding to port(s) " + portBindings)
+                    .setMessageFormat("exception binding to port(s) " + portBindings)
                     .setThrowable(throwable)
             );
             stop();

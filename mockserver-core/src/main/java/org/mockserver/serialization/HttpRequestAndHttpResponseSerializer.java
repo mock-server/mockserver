@@ -42,7 +42,7 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + httpRequestAndHttpResponse)
+                    .setMessageFormat("exception while serializing HttpRequestAndHttpResponse to JSON with value " + httpRequestAndHttpResponse)
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + httpRequestAndHttpResponse, e);
@@ -71,7 +71,7 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequests))
+                    .setMessageFormat("exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequests))
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequests), e);
@@ -93,7 +93,7 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing {} for HttpRequestAndHttpResponse")
+                            .setMessageFormat("exception while parsing{}for HttpRequestAndHttpResponse")
                             .setArguments(jsonHttpRequest)
                             .setThrowable(e)
                     );
@@ -113,7 +113,7 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing {} for HttpRequestAndHttpResponse")
+                            .setMessageFormat("exception while parsing{}for HttpRequestAndHttpResponse")
                             .setArguments(jsonHttpRequest)
                             .setThrowable(e)
                     );

@@ -82,7 +82,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception loading JSON Schema for Exceptions")
+                    .setMessageFormat("exception loading JSON Schema for Exceptions")
                     .setThrowable(e)
             );
         }
@@ -110,7 +110,7 @@ public class JsonSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStr
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("Exception validating JSON")
+                        .setMessageFormat("exception validating JSON")
                         .setThrowable(e)
                 );
                 return e.getClass().getSimpleName() + " - " + e.getMessage();

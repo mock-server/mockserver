@@ -45,7 +45,7 @@ public class LogEventRequestAndResponseSerializer {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + httpRequestAndHttpResponse)
+                    .setMessageFormat("exception while serializing HttpRequestAndHttpResponse to JSON with value " + httpRequestAndHttpResponse)
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + httpRequestAndHttpResponse, e);
@@ -72,7 +72,7 @@ public class LogEventRequestAndResponseSerializer {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequestAndHttpResponses))
+                    .setMessageFormat("exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequestAndHttpResponses))
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing HttpRequestAndHttpResponse to JSON with value " + Arrays.asList(httpRequestAndHttpResponses), e);
@@ -94,7 +94,7 @@ public class LogEventRequestAndResponseSerializer {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("exception while parsing {} for HttpRequestAndHttpResponse")
+                        .setMessageFormat("exception while parsing{}for HttpRequestAndHttpResponse")
                         .setArguments(jsonHttpRequestAndHttpResponse)
                         .setThrowable(e)
                 );

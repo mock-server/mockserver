@@ -230,13 +230,16 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     @SuppressWarnings("rawtypes")
     private void removeHttpRequestMatcher(HttpRequestMatcher httpRequestMatcher, Cause cause, boolean notifyAndUpdateMetrics) {
         if (httpRequestMatchers.remove(httpRequestMatcher)) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(REMOVED_EXPECTATION)
-                    .setLogLevel(Level.INFO)
-                    .setMessageFormat("removed expectation:{}")
-                    .setArguments(httpRequestMatcher.getExpectation().clone())
-            );
+            if (httpRequestMatcher.getExpectation() != null) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(REMOVED_EXPECTATION)
+                        .setLogLevel(Level.INFO)
+                        .setHttpRequest(httpRequestMatcher.getExpectation().getHttpRequest())
+                        .setMessageFormat("removed expectation:{}")
+                        .setArguments(httpRequestMatcher.getExpectation().clone())
+                );
+            }
             if (httpRequestMatcher.getExpectation() != null) {
                 final Action action = httpRequestMatcher.getExpectation().getAction();
                 if (action instanceof HttpObjectCallback) {

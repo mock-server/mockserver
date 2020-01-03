@@ -43,7 +43,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 .setLogLevel(INFO)
                 .setType(RECEIVED_REQUEST)
                 .setHttpRequest(request)
-                .setMessageFormat("EchoServer received request {}")
+                .setMessageFormat("EchoServer received request{}")
                 .setArguments(request)
         );
 
@@ -79,7 +79,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     .setType(LogEntry.LogMessageType.INFO)
                     .setHttpRequest(request)
                     .setHttpResponse(httpResponse)
-                    .setMessageFormat("EchoServer returning response {} for request {}")
+                    .setMessageFormat("EchoServer returning response{}for request{}")
                     .setArguments(httpResponse, request)
             );
 

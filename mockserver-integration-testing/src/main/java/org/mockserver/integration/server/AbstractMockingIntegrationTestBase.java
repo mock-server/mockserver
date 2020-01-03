@@ -96,7 +96,7 @@ public abstract class AbstractMockingIntegrationTestBase {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.WARN)
                     .setLogLevel(WARN)
-                    .setMessageFormat("Exception while resetting - " + throwable.getMessage())
+                    .setMessageFormat("exception while resetting - " + throwable.getMessage())
                     .setArguments(throwable)
             );
         }

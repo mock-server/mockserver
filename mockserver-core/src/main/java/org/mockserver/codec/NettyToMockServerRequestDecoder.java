@@ -65,7 +65,7 @@ public class NettyToMockServerRequestDecoder extends MessageToMessageDecoder<Ful
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception decoding request {}")
+                    .setMessageFormat("exception decoding request{}")
                     .setArguments(fullHttpRequest)
                     .setThrowable(throwable)
             );
@@ -91,7 +91,7 @@ public class NettyToMockServerRequestDecoder extends MessageToMessageDecoder<Ful
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(httpRequest)
-                    .setMessageFormat("Exception while parsing query string")
+                    .setMessageFormat("exception while parsing query string")
                     .setArguments(iae)
             );
         }

@@ -41,7 +41,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing expectation to JSON with value " + expectation)
+                    .setMessageFormat("exception while serializing expectation to JSON with value " + expectation)
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing expectation to JSON with value " + expectation, e);
@@ -70,7 +70,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing expectation to JSON with value " + Arrays.asList(expectations))
+                    .setMessageFormat("exception while serializing expectation to JSON with value " + Arrays.asList(expectations))
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing expectation to JSON with value " + Arrays.asList(expectations), e);
@@ -94,7 +94,7 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing {} for Expectation")
+                            .setMessageFormat("exception while parsing{}for Expectation")
                             .setArguments(jsonExpectation)
                             .setThrowable(e)
                     );

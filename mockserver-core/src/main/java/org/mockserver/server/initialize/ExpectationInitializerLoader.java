@@ -72,7 +72,7 @@ public class ExpectationInitializerLoader {
                     new LogEntry()
                         .setType(SERVER_CONFIGURATION)
                         .setLogLevel(WARN)
-                        .setMessageFormat("Exception while loading JSON initialization file, ignoring file")
+                        .setMessageFormat("exception while loading JSON initialization file, ignoring file")
                         .setThrowable(throwable)
                 );
             }

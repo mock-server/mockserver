@@ -33,7 +33,7 @@ public class JsonPathMatcher extends BodyMatcher<String> {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.DEBUG)
                         .setLogLevel(DEBUG)
-                        .setMessageFormat("Error while creating xpath expression for [" + matcher + "] assuming matcher not xpath - " + throwable.getMessage())
+                        .setMessageFormat("error while creating xpath expression for [" + matcher + "] assuming matcher not xpath - " + throwable.getMessage())
                         .setArguments(throwable)
                 );
             }
@@ -50,7 +50,7 @@ public class JsonPathMatcher extends BodyMatcher<String> {
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Attempting match against null json path expression for [" + matched + "]")
+                    .setMessageFormat("attempting match against null json path expression for [" + matched + "]")
                     .setThrowable(new RuntimeException("Attempting match against null json path expression for [" + matched + "]"))
             );
         } else if (matcher.equals(matched)) {
@@ -64,7 +64,7 @@ public class JsonPathMatcher extends BodyMatcher<String> {
                         .setType(LogEntry.LogMessageType.DEBUG)
                         .setLogLevel(DEBUG)
                         .setHttpRequest(context)
-                        .setMessageFormat("Failed to perform json path match of {} with {} because {}")
+                        .setMessageFormat("failed to perform json path match of{}with{}because{}")
                         .setArguments(matched, jsonPath, e.getMessage())
                 );
                 alreadyLoggedMatchFailure = true;
@@ -77,7 +77,7 @@ public class JsonPathMatcher extends BodyMatcher<String> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
-                    .setMessageFormat("Failed to perform json path match of {} with {}")
+                    .setMessageFormat("failed to perform json path match of{}with{}")
                     .setArguments(matched, this.matcher)
             );
         }

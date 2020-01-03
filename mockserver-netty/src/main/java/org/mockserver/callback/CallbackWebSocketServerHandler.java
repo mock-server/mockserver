@@ -91,7 +91,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(Level.TRACE)
-                            .setMessageFormat("Registering client " + clientId)
+                            .setMessageFormat("registering client " + clientId)
                     );
                     webSocketClientRegistry.registerClient(clientId, ctx);
                     future.channel().closeFuture().addListener((ChannelFutureListener) closeFuture -> {
@@ -99,7 +99,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                             new LogEntry()
                                 .setType(LogEntry.LogMessageType.TRACE)
                                 .setLogLevel(Level.TRACE)
-                                .setMessageFormat("Unregistering callback for client " + clientId)
+                                .setMessageFormat("unregistering callback for client " + clientId)
                         );
                         webSocketClientRegistry.unregisterClient(clientId);
                     });

@@ -42,7 +42,7 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
                         .setType(LogEntry.LogMessageType.DEBUG)
                         .setLogLevel(DEBUG)
                         .setHttpRequest(context)
-                        .setMessageFormat("Failed to perform xml schema match of {} with {} because {}")
+                        .setMessageFormat("failed to perform xml schema match of{}with{}because{}")
                         .setArguments(matched, this.schema, validation)
                 );
             }
@@ -52,7 +52,7 @@ public class XmlSchemaMatcher extends BodyMatcher<String> {
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to perform xml schema match of {} with {} because {}")
+                    .setMessageFormat("failed to perform xml schema match of{}with{}because{}")
                     .setArguments(matched, this.schema, e.getMessage())
             );
         }

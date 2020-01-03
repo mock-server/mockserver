@@ -37,7 +37,7 @@ public class BooleanMatcher extends ObjectWithReflectiveEqualsHashCodeToString i
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to perform boolean match of {} with {}")
+                    .setMessageFormat("failed to perform boolean match of{}with{}")
                     .setArguments(matched, this.matcher)
             );
         }

@@ -250,7 +250,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception caught by port unification handler -> closing pipeline " + ctx.channel())
+                    .setMessageFormat("exception caught by port unification handler -> closing pipeline " + ctx.channel())
                     .setThrowable(cause)
             );
         }

@@ -98,7 +98,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception creating scheduler " + throwable.getMessage())
+                    .setMessageFormat("exception creating scheduler " + throwable.getMessage())
                     .setThrowable(throwable)
             );
         }
@@ -153,7 +153,8 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
             new LogEntry()
                 .setType(DEBUG)
                 .setLogLevel(Level.DEBUG)
-                .setMessageFormat("Upgraded dashboard connection to support web sockets on url " + webSocketURL)
+                .setMessageFormat("upgraded dashboard connection to support web sockets on url{}")
+                .setArguments(webSocketURL)
         );
         handshaker = new WebSocketServerHandshakerFactory(
             webSocketURL,
@@ -234,7 +235,7 @@ public class DashboardWebSocketServerHandler extends ChannelInboundHandlerAdapte
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("Exception will serialising UI data " + jpe.getMessage())
+                            .setMessageFormat("exception will serialising UI data " + jpe.getMessage())
                             .setThrowable(jpe)
                     );
                 }

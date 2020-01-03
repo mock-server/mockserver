@@ -53,7 +53,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing HttpRequest to JSON with value " + httpRequest)
+                    .setMessageFormat("exception while serializing HttpRequest to JSON with value " + httpRequest)
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing HttpRequest to JSON with value " + httpRequest, e);
@@ -100,7 +100,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequests))
+                    .setMessageFormat("exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequests))
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing HttpRequest to JSON with value " + Arrays.asList(httpRequests), e);
@@ -122,7 +122,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing {} for HttpRequest")
+                            .setMessageFormat("exception while parsing{}for HttpRequest")
                             .setArguments(jsonHttpRequest)
                             .setThrowable(e)
                     );
@@ -142,7 +142,7 @@ public class HttpRequestSerializer implements Serializer<HttpRequest> {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing {} for HttpRequest")
+                            .setMessageFormat("exception while parsing{}for HttpRequest")
                             .setArguments(jsonHttpRequest)
                             .setThrowable(e)
                     );

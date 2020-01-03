@@ -248,7 +248,7 @@ public class MockServerClient implements Stoppable {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(DEBUG)
-                    .setMessageFormat("Exception while checking if MockServer is running - " + sce.getMessage())
+                    .setMessageFormat("exception while checking if MockServer is running - " + sce.getMessage())
                     .setThrowable(sce)
             );
             return false;
@@ -324,7 +324,7 @@ public class MockServerClient implements Stoppable {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(DEBUG)
-                        .setMessageFormat("Exception while checking if MockServer has started - " + sce.getMessage())
+                        .setMessageFormat("exception while checking if MockServer has started - " + sce.getMessage())
                         .setThrowable(sce)
                 );
                 return false;
@@ -365,7 +365,7 @@ public class MockServerClient implements Stoppable {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(DEBUG)
-                    .setMessageFormat("Exception while stopping - " + throwable.getMessage())
+                    .setMessageFormat("exception while stopping - " + throwable.getMessage())
                     .setThrowable(throwable)
             );
         }
@@ -391,7 +391,7 @@ public class MockServerClient implements Stoppable {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("Request rejected because closing down but logging at trace level for information just in case due to some other actual error " + ree)
+                        .setMessageFormat("request rejected while closing down, logging in case due other error " + ree)
                 );
             } catch (Exception e) {
                 if (!ignoreFailure) {
@@ -399,7 +399,7 @@ public class MockServerClient implements Stoppable {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.WARN)
                             .setLogLevel(WARN)
-                            .setMessageFormat("Failed to send stop request to MockServer " + e.getMessage())
+                            .setMessageFormat("failed to send stop request to MockServer " + e.getMessage())
                     );
                 }
             }

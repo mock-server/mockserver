@@ -116,7 +116,7 @@ public class HttpStateHandlerTest {
                 .setLogLevel(INFO)
                 .setHttpRequest(request("request_four"))
                 .setExpectation(new Expectation(request("request_four")).withId("key_four").thenRespond(response("response_four")))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_one")
         );
 
@@ -221,7 +221,7 @@ public class HttpStateHandlerTest {
                     "\t}" + NEW_LINE +
                     NEW_LINE +
                     "------------------------------------" + NEW_LINE +
-                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random " + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
                     NEW_LINE +
                     "\targument_one" + NEW_LINE +
                     NEW_LINE +
@@ -279,7 +279,7 @@ public class HttpStateHandlerTest {
                 .setType(TRACE)
                 .setHttpRequest(request("request_four"))
                 .setExpectation(new Expectation(request("request_four")).withId("key_four").thenRespond(response("response_four")))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_one")
         );
 
@@ -391,6 +391,7 @@ public class HttpStateHandlerTest {
         // given
         httpStateHandler.add(
             new Expectation(request("request_one"))
+                .withId("one")
                 .thenRespond(response("response_one"))
         );
         // given - some log entries
@@ -399,7 +400,7 @@ public class HttpStateHandlerTest {
                 .setType(TRACE)
                 .setHttpRequest(request("request_four"))
                 .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_one")
         );
 
@@ -418,6 +419,27 @@ public class HttpStateHandlerTest {
                         .withQueryStringParameter("type", "logs")
                 ),
             is(response().withBody("" +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"id\" : \"one\"," + NEW_LINE +
+                    "\t  \"httpRequest\" : {" + NEW_LINE +
+                    "\t    \"path\" : \"request_one\"" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"times\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"timeToLive\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"httpResponse\" : {" + NEW_LINE +
+                    "\t    \"statusCode\" : 200," + NEW_LINE +
+                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                    "\t    \"body\" : \"response_one\"" + NEW_LINE +
+                    "\t  }" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
                     LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
                     NEW_LINE +
                     "\t{}" + NEW_LINE +
@@ -459,7 +481,7 @@ public class HttpStateHandlerTest {
                 .setType(TRACE)
                 .setLogLevel(INFO)
                 .setHttpRequest(request("request_one"))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_one")
         );
         httpStateHandler.log(
@@ -467,7 +489,7 @@ public class HttpStateHandlerTest {
                 .setType(TRACE)
                 .setLogLevel(INFO)
                 .setHttpRequest(request("request_four"))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_four")
         );
 
@@ -508,13 +530,34 @@ public class HttpStateHandlerTest {
                     "\t}" + NEW_LINE +
                     "" + NEW_LINE +
                     "------------------------------------" + NEW_LINE +
-                    "" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random " + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - some random" + NEW_LINE +
                     "" + NEW_LINE +
                     "\targument_one" + NEW_LINE +
                     "" + NEW_LINE +
                     " message" + NEW_LINE +
                     "------------------------------------" + NEW_LINE +
-                    "" + LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - removed expectation:" + NEW_LINE +
+                    NEW_LINE +
+                    "\t{" + NEW_LINE +
+                    "\t  \"id\" : \"key_four\"," + NEW_LINE +
+                    "\t  \"httpRequest\" : {" + NEW_LINE +
+                    "\t    \"path\" : \"request_four\"" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"times\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"timeToLive\" : {" + NEW_LINE +
+                    "\t    \"unlimited\" : true" + NEW_LINE +
+                    "\t  }," + NEW_LINE +
+                    "\t  \"httpResponse\" : {" + NEW_LINE +
+                    "\t    \"statusCode\" : 200," + NEW_LINE +
+                    "\t    \"reasonPhrase\" : \"OK\"," + NEW_LINE +
+                    "\t    \"body\" : \"response_four\"" + NEW_LINE +
+                    "\t  }" + NEW_LINE +
+                    "\t}" + NEW_LINE +
+                    NEW_LINE +
+                    "------------------------------------" + NEW_LINE +
+                    LOG_DATE_FORMAT.format(new Date(TimeService.currentTimeMillis())) + " - clearing expectations and logs that match:" + NEW_LINE +
                     "" + NEW_LINE +
                     "\t{" + NEW_LINE +
                     "\t  \"path\" : \"request_four\"" + NEW_LINE +
@@ -580,7 +623,7 @@ public class HttpStateHandlerTest {
                 .setType(TRACE)
                 .setHttpRequest(request("request_four"))
                 .setExpectation(new Expectation(request("request_four")).withId("key_four").thenRespond(response("response_four")))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_one")
         );
 
@@ -659,7 +702,7 @@ public class HttpStateHandlerTest {
         httpStateHandler.log(
             new LogEntry()
                 .setHttpRequest(request("request_two"))
-                .setHttpError(error().withResponseBytes("response_two" .getBytes(UTF_8)))
+                .setHttpError(error().withResponseBytes("response_two".getBytes(UTF_8)))
                 .setType(EXPECTATION_RESPONSE)
         );
 
@@ -1193,7 +1236,7 @@ public class HttpStateHandlerTest {
                 .setType(TRACE)
                 .setHttpRequest(request("request_four"))
                 .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_one")
         );
 

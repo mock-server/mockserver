@@ -51,7 +51,7 @@ public class MockServerLoggerTest {
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(Level.INFO)
                     .setHttpRequest(request)
-                    .setMessageFormat("some random message with {} and {}")
+                    .setMessageFormat("some random message with{}and{}")
                     .setArguments("some" + NEW_LINE + "multi-line" + NEW_LINE + "object", "another" + NEW_LINE + "multi-line" + NEW_LINE + "object")
             );
 
@@ -61,18 +61,18 @@ public class MockServerLoggerTest {
 
             LogEntry messageLogEntry = captor.getValue();
             assertThat(messageLogEntry.getHttpRequests(), is(new HttpRequest[]{request}));
-            assertThat(messageLogEntry.getMessage(), containsString("some random message with " + NEW_LINE +
+            assertThat(messageLogEntry.getMessage(), containsString("some random message with" + NEW_LINE +
                 NEW_LINE +
                 "\tsome" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE +
                 NEW_LINE +
-                " and " + NEW_LINE +
+                " and" + NEW_LINE +
                 NEW_LINE +
                 "\tanother" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE));
-            assertThat(messageLogEntry.getMessageFormat(), containsString("some random message with {} and {}"));
+            assertThat(messageLogEntry.getMessageFormat(), containsString("some random message with{}and{}"));
             assertThat(messageLogEntry.getArguments(), arrayContaining(new Object[]{
                 "some" + NEW_LINE + "multi-line" + NEW_LINE + "object",
                 "another" + NEW_LINE + "multi-line" + NEW_LINE + "object"
@@ -98,18 +98,18 @@ public class MockServerLoggerTest {
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
-                    .setMessageFormat("some random message with {} and {}")
+                    .setMessageFormat("some random message with{}and{}")
                     .setArguments("some" + NEW_LINE + "multi-line" + NEW_LINE + "object", "another" + NEW_LINE + "multi-line" + NEW_LINE + "object")
             );
 
             // then
-            String message = "some random message with " + NEW_LINE +
+            String message = "some random message with" + NEW_LINE +
                 NEW_LINE +
                 "\tsome" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE +
                 NEW_LINE +
-                " and " + NEW_LINE +
+                " and" + NEW_LINE +
                 NEW_LINE +
                 "\tanother" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
@@ -137,7 +137,7 @@ public class MockServerLoggerTest {
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
-                    .setMessageFormat("some random message with {} and {}")
+                    .setMessageFormat("some random message with{}and{}")
                     .setArguments(
                         "some" + NEW_LINE +
                             "multi-line" + NEW_LINE +
@@ -150,13 +150,13 @@ public class MockServerLoggerTest {
             );
 
             // then
-            String message = "some random message with " + NEW_LINE +
+            String message = "some random message with" + NEW_LINE +
                 NEW_LINE +
                 "\tsome" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE +
                 NEW_LINE +
-                " and " + NEW_LINE +
+                " and" + NEW_LINE +
                 NEW_LINE +
                 "\tanother" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
@@ -183,7 +183,7 @@ public class MockServerLoggerTest {
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
-                    .setMessageFormat("some random message with {} and {}")
+                    .setMessageFormat("some random message with{}and{}")
                     .setArguments(
                         "some" + NEW_LINE +
                             "multi-line" + NEW_LINE +
@@ -195,13 +195,13 @@ public class MockServerLoggerTest {
             );
 
             // then
-            String message = "some random message with " + NEW_LINE +
+            String message = "some random message with" + NEW_LINE +
                 NEW_LINE +
                 "\tsome" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +
                 "\tobject" + NEW_LINE +
                 NEW_LINE +
-                " and " + NEW_LINE +
+                " and" + NEW_LINE +
                 NEW_LINE +
                 "\tanother" + NEW_LINE +
                 "\tmulti-line" + NEW_LINE +

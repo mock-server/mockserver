@@ -27,7 +27,7 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing portBinding to JSON with value " + portBinding)
+                    .setMessageFormat("exception while serializing portBinding to JSON with value " + portBinding)
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing portBinding to JSON with value " + portBinding, e);
@@ -44,7 +44,7 @@ public class PortBindingSerializer implements Serializer<PortBinding> {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("exception while parsing {} for PortBinding")
+                        .setMessageFormat("exception while parsing{}for PortBinding")
                         .setArguments(jsonPortBinding)
                         .setThrowable(e)
                 );

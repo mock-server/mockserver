@@ -48,11 +48,11 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("exception parsing schema {}")
+                    .setMessageFormat("exception parsing schema{}")
                     .setArguments(schema)
                     .setThrowable(e)
             );
-            throw new RuntimeException(StringFormatter.formatLogMessage("exception parsing schema {}", schema), e);
+            throw new RuntimeException(StringFormatter.formatLogMessage("exception parsing schema{}", schema), e);
         }
     }
 
@@ -77,7 +77,7 @@ public class XmlSchemaValidator extends ObjectWithReflectiveEqualsHashCodeToStri
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception validating JSON")
+                    .setMessageFormat("exception validating JSON")
                     .setThrowable(e)
             );
             return e.getClass().getSimpleName() + " - " + e.getMessage();

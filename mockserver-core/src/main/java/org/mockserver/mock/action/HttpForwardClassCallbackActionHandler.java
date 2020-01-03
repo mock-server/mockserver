@@ -26,9 +26,9 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private <T extends ExpectationCallback> T instantiateCallback(HttpClassCallback httpClassCallback, Class<T> callbackClass) {
         try {
-            Class expectationResponseCallbackClass = Class.forName(httpClassCallback.getCallbackClass());
-            if (callbackClass.isAssignableFrom(expectationResponseCallbackClass)) {
-                Constructor<? extends T> constructor = expectationResponseCallbackClass.getConstructor();
+            Class expectationCallbackClass = Class.forName(httpClassCallback.getCallbackClass());
+            if (callbackClass.isAssignableFrom(expectationCallbackClass)) {
+                Constructor<? extends T> constructor = expectationCallbackClass.getConstructor();
                 return constructor.newInstance();
             } else {
                 mockServerLogger.logEvent(
@@ -36,7 +36,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
                         .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setHttpRequest(null)
-                        .setMessageFormat(httpClassCallback.getCallbackClass() + " does not implement " + callbackClass.getCanonicalName() + " which required for forwarded requests generated from a class callback")
+                        .setMessageFormat(httpClassCallback.getCallbackClass() + " does not implement " + callbackClass.getName() + " required for forwarded requests with class callback")
                 );
             }
         } catch (ClassNotFoundException e) {
@@ -44,7 +44,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("ClassNotFoundException - while trying to instantiate ExpectationResponseCallback class \"" + httpClassCallback.getCallbackClass() + "\"")
+                    .setMessageFormat("ClassNotFoundException - while trying to instantiate " + callbackClass.getSimpleName() + " class \"" + httpClassCallback.getCallbackClass() + "\"")
                     .setThrowable(e)
             );
         } catch (NoSuchMethodException e) {
@@ -52,7 +52,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("NoSuchMethodException - while trying to create default constructor on ExpectationResponseCallback class \"" + httpClassCallback.getCallbackClass() + "\"")
+                    .setMessageFormat("NoSuchMethodException - while trying to create default constructor on " + callbackClass.getSimpleName() + " class \"" + httpClassCallback.getCallbackClass() + "\"")
                     .setThrowable(e)
             );
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
@@ -60,7 +60,7 @@ public class HttpForwardClassCallbackActionHandler extends HttpForwardAction {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("InvocationTargetException - while trying to execute default constructor on ExpectationResponseCallback class \"" + httpClassCallback.getCallbackClass() + "\"")
+                    .setMessageFormat("InvocationTargetException - while trying to execute default constructor on " + callbackClass.getSimpleName() + " class \"" + httpClassCallback.getCallbackClass() + "\"")
                     .setThrowable(e)
             );
         }

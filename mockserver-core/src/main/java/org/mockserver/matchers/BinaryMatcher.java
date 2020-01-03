@@ -35,7 +35,7 @@ public class BinaryMatcher extends BodyMatcher<byte[]> {
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to perform binary match of {} with {}")
+                    .setMessageFormat("failed to perform binary match of{}with{}")
                     .setArguments(matched, this.matcher)
             );
         }

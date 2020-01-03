@@ -149,7 +149,7 @@ public class XmlSchemaValidatorTest {
         } catch (Exception ex) {
             // then
             assertThat(ex, instanceOf(RuntimeException.class));
-            assertThat(ex.getMessage(), is("exception parsing schema \n\n\tillegal_xml\n"));
+            assertThat(ex.getMessage(), is("exception parsing schema\n\n\tillegal_xml\n"));
         }
     }
 
@@ -162,7 +162,7 @@ public class XmlSchemaValidatorTest {
         } catch (Exception ex) {
             // then
             assertThat(ex, instanceOf(RuntimeException.class));
-            assertThat(ex.getMessage(), is("exception parsing schema \n\n\tnull\n"));
+            assertThat(ex.getMessage(), is("exception parsing schema\n\n\tnull\n"));
         }
     }
 
@@ -175,7 +175,7 @@ public class XmlSchemaValidatorTest {
         } catch (Exception ex) {
             // then
             assertThat(ex, instanceOf(RuntimeException.class));
-            assertThat(ex.getMessage(), is("exception parsing schema \n\n\n"));
+            assertThat(ex.getMessage(), is("exception parsing schema\n\n\n"));
         }
     }
 

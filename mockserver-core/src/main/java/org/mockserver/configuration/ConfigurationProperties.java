@@ -838,7 +838,7 @@ public class ConfigurationProperties {
                             new LogEntry()
                                 .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
-                                .setMessageFormat("Exception loading property file [" + propertyFile() + "]")
+                                .setMessageFormat("exception loading property file [" + propertyFile() + "]")
                                 .setThrowable(e)
                         );
                     }
@@ -849,7 +849,7 @@ public class ConfigurationProperties {
                         new LogEntry()
                             .setType(SERVER_CONFIGURATION)
                             .setLogLevel(DEBUG)
-                            .setMessageFormat("Property file not found on classpath using path [" + propertyFile() + "]")
+                            .setMessageFormat("property file not found on classpath using path [" + propertyFile() + "]")
                     );
                 }
                 try {
@@ -860,7 +860,7 @@ public class ConfigurationProperties {
                             new LogEntry()
                                 .setType(SERVER_CONFIGURATION)
                                 .setLogLevel(DEBUG)
-                                .setMessageFormat("Property file not found using path [" + propertyFile() + "]")
+                                .setMessageFormat("property file not found using path [" + propertyFile() + "]")
                         );
                     }
                 } catch (IOException e) {
@@ -870,7 +870,7 @@ public class ConfigurationProperties {
                             new LogEntry()
                                 .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
-                                .setMessageFormat("Exception loading property file [" + propertyFile() + "]")
+                                .setMessageFormat("exception loading property file [" + propertyFile() + "]")
                                 .setThrowable(e)
                         );
                     }

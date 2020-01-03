@@ -57,7 +57,7 @@ public class ExactStringMatcher extends BodyMatcher<NottableString> {
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to perform exact string match of {} with {}")
+                    .setMessageFormat("failed to perform exact string match of{}with{}")
                     .setArguments(matched, this.matcher)
             );
         }

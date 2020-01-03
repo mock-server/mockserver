@@ -54,7 +54,7 @@ public abstract class SocksProxyHandler<T> extends SimpleChannelInboundHandler<T
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception caught by SOCKS proxy handler -> closing pipeline " + ctx.channel())
+                    .setMessageFormat("exception caught by SOCKS proxy handler -> closing pipeline " + ctx.channel())
                     .setThrowable(cause)
             );
         }

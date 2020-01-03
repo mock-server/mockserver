@@ -75,15 +75,15 @@ public class BodyDecoderEncoder {
             try {
                 byte[] bodyBytes = IOUtils.toByteArray(servletRequest.getInputStream());
                 return bytesToBody(bodyBytes, contentTypeHeader);
-            } catch (IOException ioe) {
+            } catch (Throwable throwable) {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("IOException while reading HttpServletRequest input stream")
-                        .setThrowable(ioe)
+                        .setMessageFormat("exception while reading HttpServletRequest input stream")
+                        .setThrowable(throwable)
                 );
-                throw new RuntimeException("IOException while reading HttpServletRequest input stream", ioe);
+                throw new RuntimeException("IOException while reading HttpServletRequest input stream", throwable);
             }
         }
         return null;

@@ -39,7 +39,7 @@ public class HttpResponseClassCallbackActionHandler {
                         .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setHttpRequest(null)
-                        .setMessageFormat(httpClassCallback.getCallbackClass() + " does not implement " + ExpectationForwardCallback.class.getCanonicalName() + " which required for forwarded requests generated from a class callback")
+                        .setMessageFormat(httpClassCallback.getCallbackClass() + " does not implement " + ExpectationResponseCallback.class.getName() + " required for responses using class callback")
                 );
             }
         } catch (ClassNotFoundException e) {

@@ -59,7 +59,7 @@ public class HttpTemplateOutputDeserializer {
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
-                    .setMessageFormat("Exception transforming json:{}")
+                    .setMessageFormat("exception transforming json:{}")
                     .setArguments(json)
                     .setThrowable(e)
             );

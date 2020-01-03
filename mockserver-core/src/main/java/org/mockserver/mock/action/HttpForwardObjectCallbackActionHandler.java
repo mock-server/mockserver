@@ -46,7 +46,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
                             .setHttpRequest(request)
-                            .setMessageFormat("Received request over websocket {} from client " + clientId + " for correlationId " + webSocketCorrelationId)
+                            .setMessageFormat("received request over websocket{}from client " + clientId + " for correlationId " + webSocketCorrelationId)
                             .setArguments(request)
                     );
                 }
@@ -63,7 +63,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                                         .setType(LogEntry.LogMessageType.TRACE)
                                         .setLogLevel(TRACE)
                                         .setHttpRequest(request)
-                                        .setMessageFormat("Received response over websocket {} for request and response {} from client " + clientId + " for correlationId " + webSocketCorrelationId)
+                                        .setMessageFormat("received response over websocket{}for request and response{}from client " + clientId + " for correlationId " + webSocketCorrelationId)
                                         .setArguments(
                                             overriddenResponse,
                                             new HttpRequestAndHttpResponse()
@@ -85,7 +85,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                                     .setType(LogEntry.LogMessageType.WARN)
                                     .setLogLevel(WARN)
                                     .setHttpRequest(request)
-                                    .setMessageFormat("Returning {} because client " + clientId + " has closed web socket connection")
+                                    .setMessageFormat("returning{}because client " + clientId + " has closed web socket connection")
                                     .setArguments(notFoundResponse())
                             );
                             actionHandler.writeForwardActionResponse(notFoundFuture(request), responseWriter, request, httpObjectCallback, synchronous);
@@ -95,7 +95,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                                     .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setHttpRequest(request)
-                                    .setMessageFormat("Sending response over websocket {} to client " + clientId + " for correlationId " + webSocketCorrelationId)
+                                    .setMessageFormat("sending response over websocket{}to client " + clientId + " for correlationId " + webSocketCorrelationId)
                                     .setArguments(response)
                             );
                         }
@@ -108,7 +108,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                                     .setType(LogEntry.LogMessageType.WARN)
                                     .setLogLevel(WARN)
                                     .setHttpRequest(request)
-                                    .setMessageFormat("Exception receiving overridden response from client " + clientId + " for request {} and original response {}")
+                                    .setMessageFormat("exception receiving overridden response from client " + clientId + " for request{}and original response{}")
                                     .setArguments(request, response)
                             );
                             return response;
@@ -121,7 +121,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
                             .setHttpRequest(request)
-                            .setMessageFormat("Received response for request {} from client " + clientId)
+                            .setMessageFormat("received response for request{}from client " + clientId)
                             .setArguments(request)
                     );
                 }
@@ -140,7 +140,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                             .setType(LogEntry.LogMessageType.DEBUG)
                             .setLogLevel(DEBUG)
                             .setHttpRequest(request)
-                            .setMessageFormat("Error sending request over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
+                            .setMessageFormat("error sending request over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
                     );
                 }
                 webSocketClientRegistry.unregisterForwardCallbackHandler(webSocketCorrelationId);
@@ -153,7 +153,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                     .setType(LogEntry.LogMessageType.WARN)
                     .setLogLevel(WARN)
                     .setHttpRequest(request)
-                    .setMessageFormat("Returning {} because client " + clientId + " has closed web socket connection")
+                    .setMessageFormat("returning{}because client " + clientId + " has closed web socket connection")
                     .setArguments(notFoundResponse())
             );
             actionHandler.writeForwardActionResponse(notFoundFuture(request), responseWriter, request, httpObjectCallback, synchronous);
@@ -163,7 +163,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setHttpRequest(request)
-                    .setMessageFormat("Sending request over websocket {} to client " + clientId + " for correlationId " + webSocketCorrelationId)
+                    .setMessageFormat("sending request over websocket{}to client " + clientId + " for correlationId " + webSocketCorrelationId)
                     .setArguments(request)
             );
         }

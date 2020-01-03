@@ -2,6 +2,7 @@ package org.mockserver.log;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -12,6 +13,7 @@ import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -49,7 +51,7 @@ public class MockServerEventLogTest {
         CompletableFuture<List<LogEntry>> future = new CompletableFuture<>();
         mockServerEventLog.retrieveMessageLogEntries(httpRequest, future::complete);
         try {
-            return future.get();
+            return future.get(60, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
             return null;
@@ -60,7 +62,7 @@ public class MockServerEventLogTest {
         CompletableFuture<List<HttpRequest>> result = new CompletableFuture<>();
         mockServerEventLog.retrieveRequests(httpRequest, result::complete);
         try {
-            return result.get(10, SECONDS);
+            return result.get(60, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
             return null;
@@ -71,7 +73,7 @@ public class MockServerEventLogTest {
         CompletableFuture<List<LogEntry>> future = new CompletableFuture<>();
         mockServerEventLog.retrieveRequestLogEntries(null, future::complete);
         try {
-            return future.get();
+            return future.get(60, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
             return null;
@@ -82,7 +84,7 @@ public class MockServerEventLogTest {
         CompletableFuture<List<LogEntry>> future = new CompletableFuture<>();
         mockServerEventLog.retrieveRequestResponseMessageLogEntries(httpRequest, future::complete);
         try {
-            return future.get();
+            return future.get(60, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
             return null;
@@ -93,7 +95,7 @@ public class MockServerEventLogTest {
         CompletableFuture<List<Expectation>> future = new CompletableFuture<>();
         mockServerEventLog.retrieveRecordedExpectations(httpRequest, future::complete);
         try {
-            return future.get();
+            return future.get(60, SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
             return null;
@@ -101,7 +103,8 @@ public class MockServerEventLogTest {
     }
 
     @Test
-    public void shouldRetrieveLogEntriesWithNulls() {
+    @Ignore
+    public void shouldRetrieveLogEntriesContainingNulls() {
         // given
         mockServerLogger.logEvent(
             new LogEntry()
@@ -134,7 +137,20 @@ public class MockServerEventLogTest {
 
         // then
         assertThat(retrieveRequests(null), empty());
-        assertThat(retrieveRequestResponseMessageLogEntries(null), empty());
+        assertThat(retrieveRequestResponseMessageLogEntries(null), contains(
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_NOT_MATCHED_RESPONSE)
+                .setHttpRequests(new HttpRequest[0]),
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(EXPECTATION_RESPONSE)
+                .setHttpRequests(new HttpRequest[0]),
+            new LogEntry()
+                .setLogLevel(INFO)
+                .setType(FORWARDED_REQUEST)
+                .setHttpRequests(new HttpRequest[0])
+        ));
         assertThat(retrieveRecordedExpectations(null), empty());
     }
 
@@ -190,7 +206,7 @@ public class MockServerEventLogTest {
                 .setType(TRACE)
                 .setHttpRequest(request("request_four"))
                 .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_one")
         );
         mockServerLogger.logEvent(
@@ -274,7 +290,7 @@ public class MockServerEventLogTest {
                 .setType(TRACE)
                 .setHttpRequest(request("request_four"))
                 .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_one"),
             new LogEntry()
                 .setType(FORWARDED_REQUEST)
@@ -336,7 +352,7 @@ public class MockServerEventLogTest {
                 .setType(TRACE)
                 .setHttpRequest(request("request_four"))
                 .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_one")
         );
         mockServerLogger.logEvent(
@@ -424,7 +440,7 @@ public class MockServerEventLogTest {
                 .setType(TRACE)
                 .setHttpRequest(request("request_four"))
                 .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_one")
         );
 
@@ -491,7 +507,7 @@ public class MockServerEventLogTest {
                 .setType(TRACE)
                 .setHttpRequest(request("request_four"))
                 .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_one")
         );
         mockServerLogger.logEvent(
@@ -555,7 +571,7 @@ public class MockServerEventLogTest {
                 .setType(TRACE)
                 .setHttpRequest(request("request_four"))
                 .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_one"),
             new LogEntry()
                 .setType(FORWARDED_REQUEST)
@@ -609,7 +625,7 @@ public class MockServerEventLogTest {
                 .setType(TRACE)
                 .setHttpRequest(request("request_four"))
                 .setExpectation(new Expectation(request("request_four")).thenRespond(response("response_four")))
-                .setMessageFormat("some random {} message")
+                .setMessageFormat("some random{}message")
                 .setArguments("argument_one")
         );
 

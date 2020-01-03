@@ -45,7 +45,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Error while creating xml string matcher for [" + matcher + "]" + e.getMessage())
+                    .setMessageFormat("error while creating xml string matcher for [" + matcher + "]" + e.getMessage())
                     .setThrowable(e)
             );
         }
@@ -88,7 +88,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.DEBUG)
                             .setLogLevel(DEBUG)
-                            .setMessageFormat("Failed to perform xml schema match of {} with {} because {}")
+                            .setMessageFormat("failed to perform xml schema match of{}with{}because{}")
                             .setArguments(matched, this.matcher, diff.toString())
                     );
                 }
@@ -99,7 +99,7 @@ public class XmlStringMatcher extends BodyMatcher<NottableString> {
                         .setType(LogEntry.LogMessageType.DEBUG)
                         .setLogLevel(DEBUG)
                         .setHttpRequest(context)
-                        .setMessageFormat("Failed to perform xml schema match of {} with {} because {}")
+                        .setMessageFormat("failed to perform xml schema match of{}with{}because{}")
                         .setArguments(matched, this.matcher, e.getMessage())
                 );
             }

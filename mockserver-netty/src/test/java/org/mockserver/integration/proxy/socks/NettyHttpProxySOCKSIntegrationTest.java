@@ -376,7 +376,7 @@ public class NettyHttpProxySOCKSIntegrationTest {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("Connection could not be established to proxy at socket [" + sa + "]")
+                            .setMessageFormat("connection could not be established to proxy at socket [" + sa + "]")
                             .setThrowable(ioe)
                     );
                 }

@@ -57,7 +57,7 @@ public class MockServerToNettyResponseEncoder extends MessageToMessageEncoder<Ht
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception encoding response {}")
+                    .setMessageFormat("exception encoding response{}")
                     .setArguments(httpResponse)
                     .setThrowable(throwable)
             );

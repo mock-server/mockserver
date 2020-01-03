@@ -36,7 +36,7 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing verificationSequence to JSON with value " + verificationSequence)
+                    .setMessageFormat("exception while serializing verificationSequence to JSON with value " + verificationSequence)
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing verificationSequence to JSON with value " + verificationSequence, e);
@@ -60,7 +60,7 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing {} for VerificationSequence")
+                            .setMessageFormat("exception while parsing{}for VerificationSequence")
                             .setArguments(jsonVerificationSequence)
                             .setThrowable(e)
                     );

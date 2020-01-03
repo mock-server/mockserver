@@ -79,7 +79,7 @@ public abstract class LifeCycle implements Stoppable {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(DEBUG)
-                    .setMessageFormat("Exception while stopping - " + throwable.getMessage())
+                    .setMessageFormat("exception while stopping - " + throwable.getMessage())
                     .setArguments(throwable)
             );
         }
@@ -127,7 +127,7 @@ public abstract class LifeCycle implements Stoppable {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.WARN)
                         .setLogLevel(WARN)
-                        .setMessageFormat("Exception while retrieving port from channel future, ignoring port for this channel - " + throwable.getMessage())
+                        .setMessageFormat("exception while retrieving port from channel future, ignoring port for this channel - " + throwable.getMessage())
                         .setArguments(throwable)
                 );
             }
@@ -145,7 +145,7 @@ public abstract class LifeCycle implements Stoppable {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("Exception while retrieving port from channel future, ignoring port for this channel")
+                        .setMessageFormat("exception while retrieving port from channel future, ignoring port for this channel")
                         .setArguments(e)
                 );
             }

@@ -127,7 +127,7 @@ public class WebSocketClient<T extends HttpObject> {
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
                             .setHttpRequest(request)
-                            .setMessageFormat("Received request {} over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
+                            .setMessageFormat("received request{}over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
                             .setArguments(request)
                     );
                 }
@@ -140,7 +140,7 @@ public class WebSocketClient<T extends HttpObject> {
                                     .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setHttpRequest(request)
-                                    .setMessageFormat("Returning {} for request {} over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
+                                    .setMessageFormat("returning{}for request{}over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
                                     .setArguments(result, request)
                             );
                         }
@@ -152,7 +152,7 @@ public class WebSocketClient<T extends HttpObject> {
                                 .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
                                 .setHttpRequest(request)
-                                .setMessageFormat("Exception thrown while handling callback for request - " + throwable.getMessage())
+                                .setMessageFormat("exception thrown while handling callback for request - " + throwable.getMessage())
                                 .setThrowable(throwable)
                         );
                         channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(
@@ -173,7 +173,7 @@ public class WebSocketClient<T extends HttpObject> {
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
                             .setHttpRequest(httpRequestAndHttpResponse.getHttpRequest())
-                            .setMessageFormat("Received request and response {} over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
+                            .setMessageFormat("received request and response{}over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
                             .setArguments(httpRequestAndHttpResponse)
                     );
                 }
@@ -186,7 +186,7 @@ public class WebSocketClient<T extends HttpObject> {
                                     .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
                                     .setHttpRequest(httpRequestAndHttpResponse.getHttpRequest())
-                                    .setMessageFormat("Returning response {} for request and response {} over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
+                                    .setMessageFormat("returning response{}for request and response{}over websocket for client " + clientId + " for correlationId " + webSocketCorrelationId)
                                     .setArguments(response, httpRequestAndHttpResponse)
                             );
                         }
@@ -198,7 +198,7 @@ public class WebSocketClient<T extends HttpObject> {
                                 .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
                                 .setHttpRequest(httpRequest)
-                                .setMessageFormat("Exception thrown while handling callback for request and response - " + throwable.getMessage())
+                                .setMessageFormat("exception thrown while handling callback for request and response - " + throwable.getMessage())
                                 .setThrowable(throwable)
                         );
                         channel.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(

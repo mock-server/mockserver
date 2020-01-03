@@ -43,7 +43,7 @@ public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<Ful
                             new LogEntry()
                                 .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
-                                .setMessageFormat("Exception while returning writing " + response)
+                                .setMessageFormat("exception while returning writing " + response)
                                 .setThrowable(future.cause())
                         );
                     }
@@ -69,7 +69,7 @@ public class DownstreamProxyRelayHandler extends SimpleChannelInboundHandler<Ful
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception caught by downstream relay handler -> closing pipeline " + ctx.channel())
+                    .setMessageFormat("exception caught by downstream relay handler -> closing pipeline " + ctx.channel())
                     .setThrowable(cause)
             );
         }

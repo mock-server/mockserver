@@ -17,7 +17,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.UUID;
 
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.model.HttpRequest.request;
@@ -144,11 +143,12 @@ public class LogEntry extends ObjectWithJsonToString implements EventTranslator<
         if (matcher == null) {
             return true;
         }
-        if (httpRequests != null) {
-            for (HttpRequest httpRequest : httpRequests) {
-                if (matcher.matches(httpRequest)) {
-                    return true;
-                }
+        if (httpRequests == null || httpRequests.length == 0) {
+            return true;
+        }
+        for (HttpRequest httpRequest : httpRequests) {
+            if (matcher.matches(httpRequest)) {
+                return true;
             }
         }
         return false;

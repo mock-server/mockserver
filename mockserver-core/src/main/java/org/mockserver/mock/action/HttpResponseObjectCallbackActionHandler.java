@@ -37,7 +37,7 @@ public class HttpResponseObjectCallbackActionHandler {
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setHttpRequest(request)
-                        .setMessageFormat("Received response over websocket {} for request {} from client " + clientId + " for correlationId " + webSocketCorrelationId)
+                        .setMessageFormat("received response over websocket{}for request{}from client " + clientId + " for correlationId " + webSocketCorrelationId)
                         .setArguments(response, request)
                 );
             }
@@ -53,7 +53,7 @@ public class HttpResponseObjectCallbackActionHandler {
                     .setType(LogEntry.LogMessageType.WARN)
                     .setLogLevel(WARN)
                     .setHttpRequest(request)
-                    .setMessageFormat("Returning {} because client " + clientId + " has closed web socket connection")
+                    .setMessageFormat("returning{}because client " + clientId + " has closed web socket connection")
                     .setArguments(notFoundResponse())
             );
             actionHandler.writeResponseActionResponse(notFoundResponse(), responseWriter, request, httpObjectCallback, synchronous);
@@ -63,7 +63,7 @@ public class HttpResponseObjectCallbackActionHandler {
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setHttpRequest(request)
-                    .setMessageFormat("Sending request over websocket {} to client " + clientId + " for correlationId " + webSocketCorrelationId)
+                    .setMessageFormat("sending request over websocket{}to client " + clientId + " for correlationId " + webSocketCorrelationId)
                     .setArguments(request)
             );
         }

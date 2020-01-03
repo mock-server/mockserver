@@ -97,11 +97,11 @@ public class XmlSchemaMatcherTest {
             assertFalse(xmlSchemaMatcher.matches(null, xml));
 
             // then
-            verify(logger).debug("Failed to perform xml schema match of " + NEW_LINE +
+            verify(logger).debug("failed to perform xml schema match of" + NEW_LINE +
                     NEW_LINE +
                     "\tsome_xml" + NEW_LINE +
                     NEW_LINE +
-                    " with " + NEW_LINE +
+                    " with" + NEW_LINE +
                     NEW_LINE +
                     "\t<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
                     "\t<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
@@ -125,7 +125,7 @@ public class XmlSchemaMatcherTest {
                     "\t    </xs:element>" + NEW_LINE +
                     "\t</xs:schema>" + NEW_LINE +
                     NEW_LINE +
-                    " because " + NEW_LINE +
+                    " because" + NEW_LINE +
                     NEW_LINE +
                     "\tvalidator_error" + NEW_LINE,
                 (Throwable) null);
@@ -147,11 +147,11 @@ public class XmlSchemaMatcherTest {
             assertFalse(xmlSchemaMatcher.matches(null, xml));
 
             // then
-            verify(logger).debug("Failed to perform xml schema match of " + NEW_LINE +
+            verify(logger).debug("failed to perform xml schema match of" + NEW_LINE +
                     NEW_LINE +
                     "\tsome_xml" + NEW_LINE +
                     NEW_LINE +
-                    " with " + NEW_LINE +
+                    " with" + NEW_LINE +
                     NEW_LINE +
                     "\t<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + NEW_LINE +
                     "\t<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" attributeFormDefault=\"unqualified\">" + NEW_LINE +
@@ -175,7 +175,7 @@ public class XmlSchemaMatcherTest {
                     "\t    </xs:element>" + NEW_LINE +
                     "\t</xs:schema>" + NEW_LINE +
                     NEW_LINE +
-                    " because " + NEW_LINE +
+                    " because" + NEW_LINE +
                     NEW_LINE +
                     "\tTEST_EXCEPTION" + NEW_LINE,
                 (Throwable) null);

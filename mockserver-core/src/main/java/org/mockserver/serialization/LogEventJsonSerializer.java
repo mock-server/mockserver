@@ -29,7 +29,7 @@ public class LogEventJsonSerializer implements Serializer<LogEntry> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing messageLogEntry to JSON with value " + messageLogEntry)
+                    .setMessageFormat("exception while serializing messageLogEntry to JSON with value " + messageLogEntry)
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing messageLogEntry to JSON with value " + messageLogEntry, e);
@@ -54,7 +54,7 @@ public class LogEventJsonSerializer implements Serializer<LogEntry> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing LogEntry to JSON with value " + Arrays.asList(messageLogEntries))
+                    .setMessageFormat("exception while serializing LogEntry to JSON with value " + Arrays.asList(messageLogEntries))
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing LogEntry to JSON with value " + Arrays.asList(messageLogEntries), e);
@@ -71,7 +71,7 @@ public class LogEventJsonSerializer implements Serializer<LogEntry> {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("exception while parsing {} for LogEntry")
+                        .setMessageFormat("exception while parsing{}for LogEntry")
                         .setArguments(jsonLogEntry)
                         .setThrowable(e)
                 );

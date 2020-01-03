@@ -51,7 +51,7 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
                             new LogEntry()
                                 .setType(LogEntry.LogMessageType.EXCEPTION)
                                 .setLogLevel(Level.ERROR)
-                                .setMessageFormat("Exception while returning response for request \"" + request.method() + " " + request.uri() + "\"")
+                                .setMessageFormat("exception while returning response for request \"" + request.method() + " " + request.uri() + "\"")
                                 .setThrowable(future.cause())
                         );
                     }
@@ -77,7 +77,7 @@ public class UpstreamProxyRelayHandler extends SimpleChannelInboundHandler<FullH
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception caught by upstream relay handler -> closing pipeline " + ctx.channel())
+                    .setMessageFormat("exception caught by upstream relay handler -> closing pipeline " + ctx.channel())
                     .setThrowable(cause)
             );
         }

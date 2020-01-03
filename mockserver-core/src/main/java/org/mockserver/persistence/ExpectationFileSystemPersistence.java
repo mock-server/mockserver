@@ -26,7 +26,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockserver.serialization.ObjectMapperFactory.createObjectMapper;
 import static org.slf4j.event.Level.*;
-import static org.slf4j.event.Level.TRACE;
 
 public class ExpectationFileSystemPersistence implements MockServerMatcherListener {
 
@@ -51,7 +50,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
-                        .setMessageFormat("Exception creating persisted expectations file " + filePath.toString())
+                        .setMessageFormat("exception creating persisted expectations file " + filePath.toString())
                         .setThrowable(throwable)
                 );
             }
@@ -61,7 +60,8 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.INFO)
                     .setLogLevel(INFO)
-                    .setMessageFormat("Created expectation file system persistence for " + ConfigurationProperties.persistedExpectationsPath())
+                    .setMessageFormat("created expectation file system persistence for{}")
+                    .setArguments(ConfigurationProperties.persistedExpectationsPath())
             );
         } else {
             this.mockServerLogger = null;
@@ -91,15 +91,16 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                                     new LogEntry()
                                         .setType(LogEntry.LogMessageType.TRACE)
                                         .setLogLevel(TRACE)
-                                        .setMessageFormat("Persisting expectations to " + ConfigurationProperties.initializationJsonPath() + "{}")
-                                        .setArguments(expectations)
+                                        .setMessageFormat("persisting expectations{}to{}")
+                                        .setArguments(expectations, ConfigurationProperties.initializationJsonPath())
                                 );
                             } else if (MockServerLogger.isEnabled(DEBUG)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
                                         .setType(LogEntry.LogMessageType.DEBUG)
                                         .setLogLevel(DEBUG)
-                                        .setMessageFormat("Persisting expectations to " + ConfigurationProperties.initializationJsonPath())
+                                        .setMessageFormat("persisting expectations to{}")
+                                        .setArguments(ConfigurationProperties.initializationJsonPath())
                                 );
                             }
                             byte[] data = serialize(expectations).getBytes(UTF_8);
@@ -116,7 +117,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("Exception while persisting expectations to " + filePath.toString())
+                            .setMessageFormat("exception while persisting expectations to " + filePath.toString())
                             .setThrowable(throwable)
                     );
                 }
@@ -144,7 +145,7 @@ public class ExpectationFileSystemPersistence implements MockServerMatcherListen
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing expectation to JSON with value " + Arrays.asList(expectations))
+                    .setMessageFormat("exception while serializing expectation to JSON with value " + Arrays.asList(expectations))
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing expectation to JSON with value " + Arrays.asList(expectations), e);

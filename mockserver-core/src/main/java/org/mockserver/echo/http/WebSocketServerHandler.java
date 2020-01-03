@@ -93,7 +93,7 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(Level.TRACE)
-                            .setMessageFormat("Registering client " + clientId)
+                            .setMessageFormat("registering client " + clientId)
                     );
                     registeredClients.add(clientId);
                     websocketChannels.add(future.channel());
@@ -102,7 +102,7 @@ public class WebSocketServerHandler extends ChannelInboundHandlerAdapter {
                             new LogEntry()
                                 .setType(LogEntry.LogMessageType.TRACE)
                                 .setLogLevel(Level.TRACE)
-                                .setMessageFormat("Unregistering callback for client " + clientId)
+                                .setMessageFormat("unregistering callback for client " + clientId)
                         );
                         registeredClients.remove(clientId);
                         websocketChannels.remove(future.channel());

@@ -112,7 +112,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.DEBUG)
                         .setLogLevel(DEBUG)
-                        .setMessageFormat("Connected to {}")
+                        .setMessageFormat("connected to{}")
                         .setArguments(remoteSocket)
                 );
             }

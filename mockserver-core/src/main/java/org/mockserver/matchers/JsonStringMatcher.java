@@ -50,7 +50,7 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                             .setType(LogEntry.LogMessageType.DEBUG)
                             .setLogLevel(DEBUG)
                             .setHttpRequest(context)
-                            .setMessageFormat("Failed to perform json match of {} with {} because {}")
+                            .setMessageFormat("failed to perform json match of{}with{}because{}")
                             .setArguments(matched, this.matcher, jsonCompareResult.getMessage())
                     );
                 }
@@ -61,7 +61,7 @@ public class JsonStringMatcher extends BodyMatcher<String> {
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to perform json match {} with {} because {}")
+                    .setMessageFormat("failed to perform json match{}with{}because{}")
                     .setArguments(matched, this.matcher, e.getMessage())
             );
         }

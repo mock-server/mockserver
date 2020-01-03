@@ -153,7 +153,7 @@ public class MediaType extends ObjectWithJsonToString {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("Ignoring unsupported charset with value \"" + charset + "\"")
+                        .setMessageFormat("ignoring unsupported charset with value \"" + charset + "\"")
                         .setThrowable(throwable)
                 );
             }
@@ -167,7 +167,7 @@ public class MediaType extends ObjectWithJsonToString {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("Ignoring unsupported charset with value \"" + charset + "\"")
+                        .setMessageFormat("ignoring unsupported charset with value \"" + charset + "\"")
                         .setThrowable(throwable)
                 );
             }

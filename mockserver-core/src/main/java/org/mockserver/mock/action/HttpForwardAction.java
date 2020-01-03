@@ -38,7 +38,7 @@ public abstract class HttpForwardAction {
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
                     .setHttpRequest(request)
-                    .setMessageFormat("Exception forwarding request " + request)
+                    .setMessageFormat("exception forwarding request " + request)
                     .setThrowable(e)
             );
         }

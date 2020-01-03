@@ -34,7 +34,7 @@ public class XPathMatcher extends BodyMatcher<String> {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("Error while creating xpath expression for [" + matcher + "] assuming matcher not xpath - " + e.getMessage())
+                        .setMessageFormat("error while creating xpath expression for [" + matcher + "] assuming matcher not xpath - " + e.getMessage())
                         .setArguments(e)
                 );
             }
@@ -50,7 +50,8 @@ public class XPathMatcher extends BodyMatcher<String> {
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
                     .setHttpRequest(context)
-                    .setMessageFormat("Attempting match against null XPath Expression for [" + matched + "]" + new RuntimeException("Attempting match against null XPath Expression for [" + matched + "]"))
+                    .setMessageFormat("attempting match against null XPath Expression for [" + matched + "]")
+                    .setThrowable(new RuntimeException("Attempting match against null XPath Expression for [" + matched + "]"))
             );
         } else if (matcher.equals(matched)) {
             result = true;
@@ -75,7 +76,7 @@ public class XPathMatcher extends BodyMatcher<String> {
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
                         .setHttpRequest(context)
-                        .setMessageFormat("Error while matching xpath [" + matcher + "] against string [" + matched + "] assuming no match - " + e.getMessage())
+                        .setMessageFormat("error while matching xpath [" + matcher + "] against string [" + matched + "] assuming no match - " + e.getMessage())
                 );
             }
         }
@@ -85,7 +86,7 @@ public class XPathMatcher extends BodyMatcher<String> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
-                    .setMessageFormat("Failed to perform xpath match {} with {}")
+                    .setMessageFormat("failed to perform xpath match{}with{}")
                     .setArguments(matched, this.matcher)
             );
         }

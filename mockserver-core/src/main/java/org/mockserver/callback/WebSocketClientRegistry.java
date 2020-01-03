@@ -49,7 +49,7 @@ public class WebSocketClientRegistry {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("Received message over websocket {}")
+                        .setMessageFormat("received message over websocket{}")
                         .setArguments(deserializedMessage)
                 );
             }
@@ -107,7 +107,7 @@ public class WebSocketClientRegistry {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
-                    .setMessageFormat("Registering client " + clientId + "")
+                    .setMessageFormat("registering client " + clientId + "")
             );
         }
     }
@@ -123,7 +123,7 @@ public class WebSocketClientRegistry {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
-                    .setMessageFormat("Unregistering client " + clientId + "")
+                    .setMessageFormat("unregistering client " + clientId + "")
             );
         }
     }
@@ -136,7 +136,7 @@ public class WebSocketClientRegistry {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
-                    .setMessageFormat("Registering response callback " + webSocketCorrelationId + "")
+                    .setMessageFormat("registering response callback " + webSocketCorrelationId)
             );
         }
     }
@@ -149,7 +149,7 @@ public class WebSocketClientRegistry {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
-                    .setMessageFormat("Unregistering response callback " + webSocketCorrelationId + "")
+                    .setMessageFormat("unregistering response callback " + webSocketCorrelationId + "")
             );
         }
     }
@@ -162,7 +162,7 @@ public class WebSocketClientRegistry {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
-                    .setMessageFormat("Registering forward callback " + webSocketCorrelationId + "")
+                    .setMessageFormat("registering forward callback " + webSocketCorrelationId)
             );
         }
     }
@@ -175,7 +175,7 @@ public class WebSocketClientRegistry {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(TRACE)
-                    .setMessageFormat("Unregistering forward callback " + webSocketCorrelationId + "")
+                    .setMessageFormat("unregistering forward callback " + webSocketCorrelationId + "")
             );
         }
     }
@@ -190,7 +190,7 @@ public class WebSocketClientRegistry {
                                 .setType(LogEntry.LogMessageType.TRACE)
                                 .setLogLevel(TRACE)
                                 .setHttpRequest(httpRequest)
-                                .setMessageFormat("Sending message {} to client " + clientId + "")
+                                .setMessageFormat("sending message{}to client " + clientId)
                                 .setArguments(httpRequest)
                         );
                     }
@@ -205,7 +205,7 @@ public class WebSocketClientRegistry {
                                 .setType(LogEntry.LogMessageType.TRACE)
                                 .setLogLevel(TRACE)
                                 .setHttpRequest(httpRequest)
-                                .setMessageFormat("Sending message {} to client " + clientId + "")
+                                .setMessageFormat("sending message{}to client " + clientId + "")
                                 .setArguments(httpRequestAndHttpResponse)
                         );
                     }
@@ -218,7 +218,7 @@ public class WebSocketClientRegistry {
                         .setType(LogEntry.LogMessageType.WARN)
                         .setLogLevel(WARN)
                         .setHttpRequest(httpRequest)
-                        .setMessageFormat("Client " + clientId + " not found for request {} client registry only contains {}")
+                        .setMessageFormat("client " + clientId + " not found for request{}client registry only contains{}")
                         .setArguments(httpRequest, clientRegistry)
                 );
                 return false;

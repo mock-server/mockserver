@@ -53,7 +53,7 @@ public class TimeToLiveDTODeserializer extends StdDeserializer<TimeToLiveDTO> {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.TRACE)
-                            .setMessageFormat("Exception parsing TimeToLiveDTO timeUnit")
+                            .setMessageFormat("exception parsing TimeToLiveDTO timeUnit")
                             .setThrowable(iae)
                     );
                 }

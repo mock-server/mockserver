@@ -249,7 +249,7 @@ public class KeyAndCertificateFactory {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Error while refreshing certificates")
+                    .setMessageFormat("exception while refreshing certificates")
                     .setThrowable(e)
             );
         }
@@ -269,7 +269,7 @@ public class KeyAndCertificateFactory {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.WARN)
                             .setLogLevel(WARN)
-                            .setMessageFormat("Failed to delete dynamic TLS certificate " + type + " PEM file at " + pemFile.getAbsolutePath() + " prior to creating new version")
+                            .setMessageFormat("failed to delete dynamic TLS certificate " + type + " PEM file at " + pemFile.getAbsolutePath() + " prior to creating new version")
                     );
                 }
             }
@@ -279,7 +279,8 @@ public class KeyAndCertificateFactory {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.WARN)
                         .setLogLevel(WARN)
-                        .setMessageFormat("Failed to created dynamic TLS certificate " + type + " PEM file at " + pemFile.getAbsolutePath())
+                        .setMessageFormat("failed to created dynamic TLS certificate " + type + " PEM file at{}")
+                        .setArguments(pemFile.getAbsolutePath())
                 );
             }
         } else {
@@ -289,7 +290,8 @@ public class KeyAndCertificateFactory {
             new LogEntry()
                 .setType(LogEntry.LogMessageType.DEBUG)
                 .setLogLevel(DEBUG)
-                .setMessageFormat("Created dynamic TLS certificate " + type + " PEM file at " + pemFile.getAbsolutePath())
+                .setMessageFormat("created dynamic TLS certificate " + type + " PEM file at{}")
+                .setArguments(pemFile.getAbsolutePath())
         );
         try (FileWriter pemfileWriter = new FileWriter(pemFile)) {
             try (JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(pemfileWriter)) {

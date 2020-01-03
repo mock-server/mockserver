@@ -46,7 +46,7 @@ public class MockServerLogger {
                 new LogEntry()
                     .setType(SERVER_CONFIGURATION)
                     .setLogLevel(ERROR)
-                    .setMessageFormat("Exception while configuring Java logging - " + throwable.getMessage())
+                    .setMessageFormat("exception while configuring Java logging - " + throwable.getMessage())
                     .setThrowable(throwable)
             );
         }

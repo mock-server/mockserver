@@ -43,7 +43,7 @@ public class HashMapMatcher extends NotMatcher<KeysAndValues> {
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Map {} is not a subset of {}")
+                    .setMessageFormat("map{}is not a subset of{}")
                     .setArguments(this.hashMap, values)
             );
             result = false;

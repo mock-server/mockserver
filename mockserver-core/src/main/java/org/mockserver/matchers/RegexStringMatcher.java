@@ -52,7 +52,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     .setType(LogEntry.LogMessageType.DEBUG)
                     .setLogLevel(DEBUG)
                     .setHttpRequest(context)
-                    .setMessageFormat("Failed to perform regex match {} with {}")
+                    .setMessageFormat("failed to perform regex match{}with{}")
                     .setArguments(matched, this.matcher)
             );
         }
@@ -89,7 +89,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("Error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
+                        .setMessageFormat("error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
                 );
             }
             // match as regex - matched -> matcher (control plane only)
@@ -102,7 +102,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("Error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
+                        .setMessageFormat("error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
                 );
             }
             // case insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
@@ -121,7 +121,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
-                            .setMessageFormat("Error while matching regex [" + matcher + "] for string [" + matched + "] and ignoring case " + pse.getMessage())
+                            .setMessageFormat("error while matching regex [" + matcher + "] for string [" + matched + "] and ignoring case " + pse.getMessage())
                     );
                 }
                 // match as regex - matched -> matcher (control plane only)
@@ -134,7 +134,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
-                            .setMessageFormat("Error while matching regex [" + matched + "] for string [" + matcher + "] and ignoring case " + pse.getMessage())
+                            .setMessageFormat("error while matching regex [" + matched + "] for string [" + matcher + "] and ignoring case " + pse.getMessage())
                     );
                 }
             }
@@ -162,7 +162,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("Error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
+                        .setMessageFormat("error while matching regex [" + matcher + "] for string [" + matched + "] " + pse.getMessage())
                 );
             }
             // match as regex - matched -> matcher (control plane only)
@@ -175,7 +175,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                     new LogEntry()
                         .setType(LogEntry.LogMessageType.TRACE)
                         .setLogLevel(TRACE)
-                        .setMessageFormat("Error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
+                        .setMessageFormat("error while matching regex [" + matched + "] for string [" + matcher + "] " + pse.getMessage())
                 );
             }
             // case insensitive comparison is mainly to improve matching in web containers like Tomcat that convert header names to lower case
@@ -194,7 +194,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
-                            .setMessageFormat("Error while matching regex [" + matcher.toLowerCase() + "] for string [" + matched.toLowerCase() + "] " + pse.getMessage())
+                            .setMessageFormat("error while matching regex [" + matcher.toLowerCase() + "] for string [" + matched.toLowerCase() + "] " + pse.getMessage())
                     );
                 }
                 // match as regex - matched -> matcher (control plane only)
@@ -207,7 +207,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.TRACE)
                             .setLogLevel(TRACE)
-                            .setMessageFormat("Error while matching regex [" + matched.toLowerCase() + "] for string [" + matcher.toLowerCase() + "] " + pse.getMessage())
+                            .setMessageFormat("error while matching regex [" + matched.toLowerCase() + "] for string [" + matcher.toLowerCase() + "] " + pse.getMessage())
                     );
                 }
             }

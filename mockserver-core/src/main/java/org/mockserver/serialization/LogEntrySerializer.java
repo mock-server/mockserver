@@ -35,7 +35,7 @@ public class LogEntrySerializer {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing LogEntry to JSON with value " + logEntry)
+                    .setMessageFormat("exception while serializing LogEntry to JSON with value " + logEntry)
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing LogEntry to JSON with value " + logEntry, e);
@@ -58,7 +58,7 @@ public class LogEntrySerializer {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing LogEntry to JSON with value " + Arrays.asList(logEntries))
+                    .setMessageFormat("exception while serializing LogEntry to JSON with value " + Arrays.asList(logEntries))
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing LogEntry to JSON with value " + Arrays.asList(logEntries), e);

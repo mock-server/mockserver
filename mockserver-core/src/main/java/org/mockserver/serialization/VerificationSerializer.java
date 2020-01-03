@@ -36,7 +36,7 @@ public class VerificationSerializer implements Serializer<Verification> {
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.EXCEPTION)
                     .setLogLevel(Level.ERROR)
-                    .setMessageFormat("Exception while serializing verification to JSON with value " + verification)
+                    .setMessageFormat("exception while serializing verification to JSON with value " + verification)
                     .setThrowable(e)
             );
             throw new RuntimeException("Exception while serializing verification to JSON with value " + verification, e);
@@ -60,7 +60,7 @@ public class VerificationSerializer implements Serializer<Verification> {
                         new LogEntry()
                             .setType(LogEntry.LogMessageType.EXCEPTION)
                             .setLogLevel(Level.ERROR)
-                            .setMessageFormat("exception while parsing {} for Verification")
+                            .setMessageFormat("exception while parsing{}for Verification")
                             .setArguments(jsonVerification)
                             .setThrowable(e)
                     );

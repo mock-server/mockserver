@@ -76,7 +76,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                                 new LogEntry()
                                     .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
-                                    .setMessageFormat("Ignoring invalid value for \"type\" field of \"" + entry.getValue() + "\"")
+                                    .setMessageFormat("ignoring invalid value for \"type\" field of \"" + entry.getValue() + "\"")
                             );
                         }
                     }
@@ -105,7 +105,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                                 new LogEntry()
                                     .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
-                                    .setMessageFormat("Ignoring incorrect JsonBodyMatchType with value \"" + entry.getValue() + "\"")
+                                    .setMessageFormat("ignoring incorrect JsonBodyMatchType with value \"" + entry.getValue() + "\"")
                             );
                         }
                     }
@@ -117,7 +117,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                                 new LogEntry()
                                     .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
-                                    .setMessageFormat("Ignoring unsupported boolean with value \"" + entry.getValue() + "\"")
+                                    .setMessageFormat("ignoring unsupported boolean with value \"" + entry.getValue() + "\"")
                             );
                         }
                     }
@@ -132,7 +132,7 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                                 new LogEntry()
                                     .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
-                                    .setMessageFormat("Ignoring unsupported MediaType with value \"" + entry.getValue() + "\"")
+                                    .setMessageFormat("ignoring unsupported MediaType with value \"" + entry.getValue() + "\"")
                             );
                         }
                     }
@@ -144,14 +144,14 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                                 new LogEntry()
                                     .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
-                                    .setMessageFormat("Ignoring unsupported Charset with value \"" + entry.getValue() + "\"")
+                                    .setMessageFormat("ignoring unsupported Charset with value \"" + entry.getValue() + "\"")
                             );
                         } catch (IllegalCharsetNameException icne) {
                             MOCK_SERVER_LOGGER.logEvent(
                                 new LogEntry()
                                     .setType(LogEntry.LogMessageType.TRACE)
                                     .setLogLevel(TRACE)
-                                    .setMessageFormat("Ignoring invalid Charset with value \"" + entry.getValue() + "\"")
+                                    .setMessageFormat("ignoring invalid Charset with value \"" + entry.getValue() + "\"")
                             );
                         }
                     }

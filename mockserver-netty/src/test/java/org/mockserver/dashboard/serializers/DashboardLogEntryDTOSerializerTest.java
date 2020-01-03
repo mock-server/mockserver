@@ -38,7 +38,7 @@ public class DashboardLogEntryDTOSerializerTest {
             .setHttpResponse(response("response_one"))
             .setHttpError(error().withDropConnection(true))
             .setExpectation(new Expectation(request("request_one")).withId("key_one").thenRespond(response("response_one")))
-            .setMessageFormat("some random {} formatted string {}")
+            .setMessageFormat("some random{}formatted string{}")
             .setArguments("one", "two")
             .setThrowable(new RuntimeException("TEST_EXCEPTION"));
 
@@ -84,8 +84,8 @@ public class DashboardLogEntryDTOSerializerTest {
             "        \"body\" : \"response_one\"" + NEW_LINE +
             "      }" + NEW_LINE +
             "    }," + NEW_LINE +
-            "    \"message\" : [ \"some random \", \"\", \"   one\", \"\", \" formatted string \", \"\", \"   two\" ]," + NEW_LINE +
-            "    \"messageFormat\" : \"some random {} formatted string {}\"," + NEW_LINE +
+            "    \"message\" : [ \"some random\", \"\", \"   one\", \"\", \" formatted string\", \"\", \"   two\" ]," + NEW_LINE +
+            "    \"messageFormat\" : \"some random{}formatted string{}\"," + NEW_LINE +
             "    \"arguments\" : [ \"one\", \"two\" ]," + NEW_LINE +
             "    \"throwable\" : [ \"java.lang.RuntimeException: TEST_EXCEPTION\", \"\\tat "));
     }
