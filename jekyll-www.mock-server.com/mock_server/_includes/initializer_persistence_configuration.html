@@ -1,0 +1,86 @@
+<a id="initializer_persistence_configuration" class="anchor" href="#initializer_persistence_configuration">&nbsp;</a>
+
+<h2>Initialization & Persistence Configuration:</h2>
+
+<button id="button_configuration_initialization_class" class="accordion title"><strong>Expectation Initialization Class</strong></button>
+<div class="panel title">
+    <p>The class (and package) used to initialize expectations in MockServer at startup, if set MockServer will load and call this class to initialise expectations when is starts.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.initializationClass(String initializationClass)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.initializationClass=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_INITIALIZATION_CLASS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.initializationClass=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.initializationClass="org.mockserver.server.initialize.ExpectationInitializerExample"</code></pre>
+</div>
+
+<button id="button_configuration_initialization_json_path" class="accordion title"><strong>Expectation Initialization JSON File Path</strong></button>
+<div class="panel title">
+    <p>The path to the json file used to initialize expectations in MockServer at startup, if set MockServer will load this file and initialise expectations for each item in the file when is starts.</p>
+    <p>The expected format of the file is a JSON array of expectations, as per the <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/Expectations" target="_blank">REST API format</a></p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.initializationJsonPath(String initializationJsonPath)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.initializationJsonPath=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_INITIALIZATION_JSON_PATH=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.initializationJsonPath=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.initializationJsonPath="org/mockserver/server/initialize/initializerJson.json"</code></pre>
+</div>
+
+<button id="button_configuration_watch_initialization_json" class="accordion title"><strong>Watch Expectation Initialization JSON File</strong></button>
+<div class="panel title">
+    <p>If enabled the initialization json file will be watched for changes, any changes found will result in expectations being created, remove or updated by matching against their key.</p>
+    <p>If duplicate keys exist only the last duplicate key in the file will be processed and all duplicates except the last duplicate will be removed.</p>
+    <p>The order of expectations in the file is the order in which they are created if they are new, however, re-ordering existing expectations does not change the order they are matched against incoming requests.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.watchInitializationJson(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.watchInitializationJson=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_WATCH_INITIALIZATION_JSON=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.watchInitializationJson=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.watchInitializationJson="org/mockserver/server/initialize/initializerJson.json"</code></pre>
+</div>
+
+<button id="button_configuration_persist_expectations_as_json" class="accordion title"><strong>Persist Expectations As JSON</strong></button>
+<div class="panel title">
+    <p>Enable the persisting of expectations as json, which is updated whenever the expectation state is updated (i.e. add, clear, expires, etc)</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.persistExpectations(boolean persistExpectations)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.persistExpectations=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_PERSIST_EXPECTATIONS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.persistExpectations=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.persistExpectations="true"</code></pre>
+</div>
+
+<button id="button_configuration_persisted_expectations_file_path" class="accordion title"><strong>Persisted Expectations File Path</strong></button>
+<div class="panel title">
+    <p>The file path used to save persisted expectations as json, which is updated whenever the expectation state is updated (i.e. add, clear, expires, etc)</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">persistedExpectations.json</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.persistedExpectationsPath(String persistedExpectationsPath)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.persistedExpectationsPath=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_PERSISTED_EXPECTATIONS_PATH=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.persistedExpectationsPath=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.persistedExpectationsPath="org/mockserver/server/initialize/initializerJson.json"</code></pre>
+</div>

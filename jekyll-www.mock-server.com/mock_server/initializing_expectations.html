@@ -82,6 +82,29 @@ sitemap:
   }
 ]</code></pre>
 
+
+<a id="expectation_initializer_json_file_watcher" class="anchor" href="#expectation_initializer_json_file_watcher">&nbsp;</a>
+
+<h2>Expectation Initializer JSON File Watcher</h2>
+
+<p>If a JSON expectation initializer is specified a file watcher can be enabled that watches for changes in the expectation initializer and updates the expectations when the file is modified.</p>
+<p>If enabled the initialization json file will be watched for changes, any changes found will result in expectations being created, remove or updated by matching against their key.</p>
+<p>If duplicate keys exist only the last duplicate key in the file will be processed and all duplicates except the last duplicate will be removed.</p>
+<p>The order of expectations in the file is the order in which they are created if they are new, however, re-ordering existing expectations does not change the order they are matched against incoming requests.</p>
+
+<pre class="prettyprint lang-javascript code"><code class="code">MOCKSERVER_WATCH_INITIALIZATION_JSON=true \
+MOCKSERVER_INITIALIZATION_JSON_PATH=mockserverInitialization.json \
+java -jar ~/Downloads/mockserver-netty-5.8.1-jar-with-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
+
+<p>or</p>
+
+<pre class="prettyprint lang-javascript code"><code class="code">java \
+-Dmockserver.watchInitializationJson=true \
+-Dmockserver.initializationJsonPath=mockserverInitialization.json \
+-jar ~/Downloads/mockserver-netty-5.8.1-jar-with-dependencies.jar -serverPort 1080,1081 -logLevel INFO</code></pre>
+
+{% include_subpage _includes/clustering.html %}
+
 <a id="maven_plugin_expectation_initializer_class" class="anchor" href="#maven_plugin_expectation_initializer_class">&nbsp;</a>
 
 <h2>Maven Plugin Expectation Initializer Class</h2>
@@ -144,3 +167,5 @@ sitemap:
                 );
     }
 }</code></pre>
+
+{% include_subpage _includes/initializer_persistence_configuration.html %}
