@@ -11,9 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - log events for UPDATED_EXPECTATION and REMOVED_EXPECTATION
 - ability to update existing expectation by id
 - hot re-loading of expectation initialiser file
+- addition configuration for web socket client event loop size
+- addition configuration for action handler thread pool size
 
 ### Changed
 - performance improvements for header and cookie handling
+- improved JSON validation errors by adding link to OpenAPI Specification
 
 ### Fixed
 - fixed error where ClientAndServer does fully wait for client to stop
