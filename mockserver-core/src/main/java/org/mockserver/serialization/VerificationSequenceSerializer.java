@@ -12,6 +12,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.VERIFICATION_FAILED;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
 /**
  * @author jamesdbloom
@@ -45,7 +46,12 @@ public class VerificationSequenceSerializer implements Serializer<VerificationSe
 
     public VerificationSequence deserialize(String jsonVerificationSequence) {
         if (isBlank(jsonVerificationSequence)) {
-            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a verification sequence is required but value was \"" + jsonVerificationSequence + "\"");
+            throw new IllegalArgumentException(
+                "1 error:" + NEW_LINE +
+                    " - a verification sequence is required but value was \"" + jsonVerificationSequence + "\"" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
+            );
         } else {
             String validationErrors = verificationSequenceValidator.isValid(jsonVerificationSequence);
             if (validationErrors.isEmpty()) {

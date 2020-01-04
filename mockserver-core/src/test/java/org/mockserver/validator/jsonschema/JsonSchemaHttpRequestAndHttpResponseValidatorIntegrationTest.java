@@ -7,6 +7,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestAndHttpResponseValidator.jsonSchemaHttpRequestAndHttpResponseValidator;
+import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
 /**
  * @author jamesdbloom
@@ -125,7 +126,9 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                     "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"XPATH\"," + NEW_LINE +
                     "     \"xpath\": \"\"" + NEW_LINE +
-                    "   }"
+                    "   }" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
             ));
     }
 
@@ -140,7 +143,9 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                 "  }"),
             is(
                 "1 error:" + NEW_LINE +
-                    " - object instance has properties which are not allowed by the schema: [\"invalidField\"]"
+                    " - object instance has properties which are not allowed by the schema: [\"invalidField\"]" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
             ));
     }
 
@@ -211,7 +216,9 @@ public class JsonSchemaHttpRequestAndHttpResponseValidatorIntegrationTest {
                     "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"XPATH\"," + NEW_LINE +
                     "     \"xpath\": \"\"" + NEW_LINE +
-                    "   }"
+                    "   }" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
             ));
     }
 

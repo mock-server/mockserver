@@ -20,6 +20,7 @@ import static org.mockserver.model.XPathBody.xpath;
 import static org.mockserver.model.XmlBody.xml;
 import static org.mockserver.model.XmlSchemaBody.xmlSchema;
 import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator.jsonSchemaHttpRequestValidator;
+import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
 /**
  * @author jamesdbloom
@@ -322,7 +323,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"XPATH\"," + NEW_LINE +
                     "     \"xpath\": \"\"" + NEW_LINE +
-                    "   }"
+                    "   }" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
             ));
     }
 
@@ -337,7 +340,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                 "  }"),
             is(
                 "1 error:" + NEW_LINE +
-                    " - object instance has properties which are not allowed by the schema: [\"invalidField\"]"
+                    " - object instance has properties which are not allowed by the schema: [\"invalidField\"]" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
             ));
     }
 
@@ -351,7 +356,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
             is(
                 "2 errors:" + NEW_LINE +
                     " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/method\"" + NEW_LINE +
-                    " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/path\""
+                    " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/path\"" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
             ));
     }
 
@@ -381,7 +388,9 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
                     "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
                     "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
                     "        }" + NEW_LINE +
-                    "    ]"
+                    "    ]" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
             ));
     }
 

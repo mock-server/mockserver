@@ -7,6 +7,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.serialization.model.ExpectationDTO;
 import org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator;
+import org.mockserver.validator.jsonschema.JsonSchemaValidator;
 import org.slf4j.event.Level;
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.List;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.validator.jsonschema.JsonSchemaExpectationValidator.jsonSchemaExpectationValidator;
+import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
 /**
  * @author jamesdbloom
@@ -79,7 +81,12 @@ public class ExpectationSerializer implements Serializer<Expectation> {
 
     public Expectation deserialize(String jsonExpectation) {
         if (isBlank(jsonExpectation)) {
-            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - an expectation is required but value was \"" + jsonExpectation + "\"");
+            throw new IllegalArgumentException(
+                "1 error:" + NEW_LINE
+                    + " - an expectation is required but value was \"" + jsonExpectation + "\"" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
+            );
         } else {
             String validationErrors = expectationValidator.isValid(jsonExpectation);
             if (validationErrors.isEmpty()) {

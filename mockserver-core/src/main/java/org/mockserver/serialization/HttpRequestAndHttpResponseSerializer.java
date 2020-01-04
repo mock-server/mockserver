@@ -17,6 +17,7 @@ import java.util.List;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestAndHttpResponseValidator.jsonSchemaHttpRequestAndHttpResponseValidator;
+import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
 /**
  * @author jamesdbloom
@@ -80,7 +81,12 @@ public class HttpRequestAndHttpResponseSerializer implements Serializer<HttpRequ
 
     public HttpRequestAndHttpResponse deserialize(String jsonHttpRequest) {
         if (isBlank(jsonHttpRequest)) {
-            throw new IllegalArgumentException("1 error:" + NEW_LINE + " - a request is required but value was \"" + jsonHttpRequest + "\"");
+            throw new IllegalArgumentException(
+                "1 error:" + NEW_LINE
+                    + " - a request is required but value was \"" + jsonHttpRequest + "\"" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
+            );
         } else {
             if (jsonHttpRequest.contains("\"httpRequestAndHttpResponse\"")) {
                 try {

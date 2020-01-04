@@ -10,6 +10,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
 /**
  * @author jamesdbloom
@@ -71,7 +72,9 @@ public class JsonSchemaValidatorTest {
     public void shouldHandleJsonMissingRequiredFields() {
         // then
         assertThat(new JsonSchemaValidator(mockServerLogger, JSON_SCHEMA).isValid("{}"), is("1 error:" + NEW_LINE +
-            " - object has missing required properties ([\"arrayField\",\"enumField\"])"));
+            " - object has missing required properties ([\"arrayField\",\"enumField\"])" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL));
     }
 
     @Test

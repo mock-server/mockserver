@@ -55,6 +55,7 @@ import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.JsonSchemaBody.jsonSchema;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.test.Assert.assertContains;
+import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 import static org.mockserver.verify.VerificationTimes.atLeast;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
@@ -901,7 +902,9 @@ public abstract class AbstractClientProxyIntegrationTest {
         assertThat(httpResponse.getBodyAsString(), Is.is("3 errors:" + NEW_LINE +
             " - instance type (string) does not match any allowed primitive type (allowed: [\"boolean\"]) for field \"/keepAlive\"" + NEW_LINE +
             " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/method\"" + NEW_LINE +
-            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/path\""));
+            " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/path\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL));
     }
 
     @Test
@@ -923,7 +926,9 @@ public abstract class AbstractClientProxyIntegrationTest {
         // then
         assertThat(httpResponse.getStatusCode(), Is.is(400));
         assertThat(httpResponse.getBodyAsString(), Is.is("1 error:" + NEW_LINE +
-            " - instance type (integer) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/times\""));
+            " - instance type (integer) does not match any allowed primitive type (allowed: [\"object\"]) for field \"/times\"" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL));
     }
 
     @Test
@@ -947,6 +952,8 @@ public abstract class AbstractClientProxyIntegrationTest {
         // then
         assertThat(httpResponse.getStatusCode(), Is.is(400));
         assertThat(httpResponse.getBodyAsString(), Is.is("1 error:" + NEW_LINE +
-            " - object instance has properties which are not allowed by the schema: [\"httpRequest\"]"));
+            " - object instance has properties which are not allowed by the schema: [\"httpRequest\"]" + NEW_LINE +
+            NEW_LINE +
+            OPEN_API_SPECIFICATION_URL));
     }
 }

@@ -1,9 +1,7 @@
 package org.mockserver.serialization;
 
 import org.apache.commons.text.StringEscapeUtils;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
@@ -15,8 +13,9 @@ import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.Cookie.cookie;
 import static org.mockserver.model.Header.header;
@@ -24,14 +23,12 @@ import static org.mockserver.model.NottableString.string;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
 import static org.mockserver.model.StringBody.exact;
+import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
 /**
  * @author jamesdbloom
  */
 public class ExpectationSerializerIntegrationTest {
-
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void shouldAllowSingleObjectForArray() {
@@ -78,14 +75,20 @@ public class ExpectationSerializerIntegrationTest {
             "        \"extra_field\": \"extra_value\"" + NEW_LINE +
             "    }" + NEW_LINE +
             "}");
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("" +
-            "2 errors:" + NEW_LINE +
-            " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
-            " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"");
 
         // when
-        new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes, false);
+        try {
+            new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes, false);
+            fail();
+        } catch (Throwable throwable) {
+            assertThat(throwable, instanceOf(IllegalArgumentException.class));
+            assertThat(throwable.getMessage(), is("" +
+                "2 errors:" + NEW_LINE +
+                " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+                " - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
+                NEW_LINE +
+                OPEN_API_SPECIFICATION_URL));
+        }
     }
 
     @Test
@@ -179,22 +182,32 @@ public class ExpectationSerializerIntegrationTest {
             "      }" + NEW_LINE +
             "  }" +
             "]");
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("" +
-            "[" + NEW_LINE +
-            "  2 errors:" + NEW_LINE +
-            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
-            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"," + NEW_LINE +
-            "  2 errors:" + NEW_LINE +
-            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
-            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"," + NEW_LINE +
-            "  2 errors:" + NEW_LINE +
-            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
-            "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
-            "]");
 
         // when
-        new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes, false);
+        try {
+            new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes, false);
+            fail();
+        } catch (Throwable throwable) {
+            assertThat(throwable, instanceOf(IllegalArgumentException.class));
+            assertThat(throwable.getMessage(), is("" +
+                "[" + NEW_LINE +
+                "  2 errors:" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
+                "  " + NEW_LINE +
+                "  " + OPEN_API_SPECIFICATION_URL + "," + NEW_LINE +
+                "  2 errors:" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
+                "  " + NEW_LINE +
+                "  " + OPEN_API_SPECIFICATION_URL + "," + NEW_LINE +
+                "  2 errors:" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpRequest\"" + NEW_LINE +
+                "   - object instance has properties which are not allowed by the schema: [\"extra_field\"] for field \"/httpResponse\"" + NEW_LINE +
+                "  " + NEW_LINE +
+                "  " + OPEN_API_SPECIFICATION_URL + NEW_LINE +
+                "]"));
+        }
     }
 
     @Test

@@ -6,6 +6,7 @@ import org.mockserver.logging.MockServerLogger;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
 /**
  * @author jamesdbloom
@@ -132,7 +133,9 @@ public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
                     "     \"not\": false," + NEW_LINE +
                     "     \"type\": \"XPATH\"," + NEW_LINE +
                     "     \"xpath\": \"\"" + NEW_LINE +
-                    "   }"
+                    "   }" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
             ));
     }
 
@@ -149,7 +152,9 @@ public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
                 "]}"),
             is(
                 "1 error:" + NEW_LINE +
-                    " - object instance has properties which are not allowed by the schema: [\"invalidField\"] for field \"/httpRequests/0\""
+                    " - object instance has properties which are not allowed by the schema: [\"invalidField\"] for field \"/httpRequests/0\"" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
             ));
     }
 
@@ -165,7 +170,9 @@ public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
             is(
                 "2 errors:" + NEW_LINE +
                     " - instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/httpRequests/0/method\"" + NEW_LINE +
-                    " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/httpRequests/0/path\""
+                    " - instance type (boolean) does not match any allowed primitive type (allowed: [\"string\"]) for field \"/httpRequests/0/path\"" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
             ));
     }
 
@@ -197,7 +204,9 @@ public class JsonSchemaVerificationSequenceValidatorIntegrationTest {
                     "            \"name\" : \"exampleMultiValuedHeaderName\"," + NEW_LINE +
                     "            \"values\" : [ \"exampleHeaderValueOne\", \"exampleHeaderValueTwo\" ]" + NEW_LINE +
                     "        }" + NEW_LINE +
-                    "    ]"
+                    "    ]" + NEW_LINE +
+                    NEW_LINE +
+                    OPEN_API_SPECIFICATION_URL
             ));
     }
 
