@@ -18,7 +18,10 @@ import org.slf4j.event.Level;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -71,15 +74,7 @@ public class ConcurrencyResponseWebSocketMockingIntegrationTest {
 
     @Test
     public void sendMultipleRequestsMultiThreaded() throws Exception {
-        String originalLogLevel = ConfigurationProperties.logLevel().name();
-        ConfigurationProperties.logLevel("TRACE");
-        ConfigurationProperties.disableSystemOut(false);
-        try {
-            scheduleTasksAndWaitForResponses(25);
-        } finally {
-            ConfigurationProperties.logLevel(originalLogLevel);
-            ConfigurationProperties.disableSystemOut(true);
-        }
+        scheduleTasksAndWaitForResponses(25);
     }
 
     @SuppressWarnings("rawtypes")

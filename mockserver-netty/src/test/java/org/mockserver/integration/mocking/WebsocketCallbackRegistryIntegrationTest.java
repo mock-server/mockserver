@@ -4,7 +4,6 @@ import org.hamcrest.CoreMatchers;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.integration.server.AbstractMockingIntegrationTestBase;
 import org.mockserver.metrics.Metrics;
@@ -164,53 +163,45 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
     @Test // same JVM due to dynamic calls to static Metrics class
     public void shouldRemoveWebsocketForwardAndResponseHandlerFromRegistry() {
-        String originalLogLevel = ConfigurationProperties.logLevel().name();
-        ConfigurationProperties.logLevel("TRACE");
-        ConfigurationProperties.disableSystemOut(false);
-        try {
-            // given
-            Metrics.clear();
-            // when
-            mockServerClient
-                .when(
+        // given
+        Metrics.clear();
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("websocket_forward_handler")),
+                once()
+            )
+            .forward(
+                httpRequest ->
                     request()
-                        .withPath(calculatePath("websocket_forward_handler")),
-                    once()
-                )
-                .forward(
-                    httpRequest ->
-                        request()
-                            .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
-                            .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT)),
-                    (httpRequest, httpResponse) ->
-                        httpResponse
-                            .withHeader("x-response-test", "websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT))
-                );
-
-            // then
-            Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(1));
-
-            // when
-            assertEquals(
-                response()
-                    .withStatusCode(OK_200.code())
-                    .withReasonPhrase(OK_200.reasonPhrase())
-                    .withHeader("x-response-test", "websocket_forward_handler_count_0_1")
-                    .withBody("websocket_forward_handler_count_1_0"),
-                makeRequest(
-                    request()
-                        .withPath(calculatePath("websocket_forward_handler")),
-                    headersToIgnore
-                )
+                        .withHeader("Host", "localhost:" + insecureEchoServer.getPort())
+                        .withBody("websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT)),
+                (httpRequest, httpResponse) ->
+                    httpResponse
+                        .withHeader("x-response-test", "websocket_forward_handler_count_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT) + "_" + Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT))
             );
 
-            // then
-            Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT), CoreMatchers.is(0));
-            Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT), CoreMatchers.is(0));
-        } finally {
-            ConfigurationProperties.logLevel(originalLogLevel);
-            ConfigurationProperties.disableSystemOut(true);
-        }
+        // then
+        Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_CLIENT_COUNT), CoreMatchers.is(1));
+
+        // when
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withHeader("x-response-test", "websocket_forward_handler_count_0_1")
+                .withBody("websocket_forward_handler_count_1_0"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("websocket_forward_handler")),
+                headersToIgnore
+            )
+        );
+
+        // then
+        Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_FORWARD_HANDLER_COUNT), CoreMatchers.is(0));
+        Assert.assertThat(Metrics.get(Metrics.Name.WEBSOCKET_CALLBACK_RESPONSE_HANDLER_COUNT), CoreMatchers.is(0));
     }
 
     private int objectCallbackCounter = 0;
@@ -285,67 +276,59 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
 
     @Test
     public void shouldAllowUseOfSeparateWebsocketClientInsideCallback() {
-        String originalLogLevel = ConfigurationProperties.logLevel().name();
-        ConfigurationProperties.logLevel("TRACE");
-        ConfigurationProperties.disableSystemOut(false);
-        try {
-            // when
-            int total = 5;
-            for (int i = 0; i < total; i++) {
-                mockServerClient
-                    .when(
-                        request()
-                            .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter)),
-                        once()
-                    )
-                    .respond(
-                        httpRequest -> {
-                            new MockServerClient("localhost", getServerPort())
-                                .when(
-                                    request()
-                                        .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter)),
-                                    once()
-                                )
-                                .respond(innerRequest ->
-                                    response()
-                                        .withBody("inner_websocket_client_registration_" + objectCallbackCounter)
-                                );
-                            return response()
-                                .withBody("outer_websocket_client_registration_" + objectCallbackCounter);
-                        }
-                    );
-                objectCallbackCounter++;
-            }
-
-            objectCallbackCounter = 0;
-
-            // then
-            for (int i = 0; i < total; i++) {
-                assertEquals(
-                    response()
-                        .withStatusCode(OK_200.code())
-                        .withReasonPhrase(OK_200.reasonPhrase())
-                        .withBody("outer_websocket_client_registration_" + objectCallbackCounter),
-                    makeRequest(
-                        request()
-                            .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter)),
-                        headersToIgnore)
+        // when
+        int total = 5;
+        for (int i = 0; i < total; i++) {
+            mockServerClient
+                .when(
+                    request()
+                        .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter)),
+                    once()
+                )
+                .respond(
+                    httpRequest -> {
+                        new MockServerClient("localhost", getServerPort())
+                            .when(
+                                request()
+                                    .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter)),
+                                once()
+                            )
+                            .respond(innerRequest ->
+                                response()
+                                    .withBody("inner_websocket_client_registration_" + objectCallbackCounter)
+                            );
+                        return response()
+                            .withBody("outer_websocket_client_registration_" + objectCallbackCounter);
+                    }
                 );
-                assertEquals(
-                    response()
-                        .withStatusCode(OK_200.code())
-                        .withReasonPhrase(OK_200.reasonPhrase())
-                        .withBody("inner_websocket_client_registration_" + objectCallbackCounter),
-                    makeRequest(
-                        request()
-                            .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter)),
-                        headersToIgnore)
-                );
-                objectCallbackCounter++;
-            }
-        } finally {
-            ConfigurationProperties.logLevel(originalLogLevel);
-            ConfigurationProperties.disableSystemOut(true);
+            objectCallbackCounter++;
+        }
+
+        objectCallbackCounter = 0;
+
+        // then
+        for (int i = 0; i < total; i++) {
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withBody("outer_websocket_client_registration_" + objectCallbackCounter),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("outer_websocket_client_registration_" + objectCallbackCounter)),
+                    headersToIgnore)
+            );
+            assertEquals(
+                response()
+                    .withStatusCode(OK_200.code())
+                    .withReasonPhrase(OK_200.reasonPhrase())
+                    .withBody("inner_websocket_client_registration_" + objectCallbackCounter),
+                makeRequest(
+                    request()
+                        .withPath(calculatePath("inner_websocket_client_registration_" + objectCallbackCounter)),
+                    headersToIgnore)
+            );
+            objectCallbackCounter++;
         }
     }
 }
