@@ -1,4 +1,6 @@
 Release Steps
+1. update OpenAPI Specification link
+   1. update org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL to the correct URL
 1. publish RELEASE to maven central 
    1. ./scripts/local_release.sh
    1. https://oss.sonatype.org/index.html#stagingRepositories
