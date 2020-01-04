@@ -103,7 +103,6 @@ public class MockServerEventLogTest {
     }
 
     @Test
-    @Ignore
     public void shouldRetrieveLogEntriesContainingNulls() {
         // given
         mockServerLogger.logEvent(
