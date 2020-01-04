@@ -65,6 +65,21 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadActionHandlerThreadCount() {
+        // given
+        System.clearProperty("mockserver.actionHandlerThreadCount");
+        int actionHandlerThreadCount = Math.max(20, Runtime.getRuntime().availableProcessors());
+
+        // when
+        assertEquals(actionHandlerThreadCount, actionHandlerThreadCount());
+        actionHandlerThreadCount(2);
+
+        // then
+        assertEquals("2", System.getProperty("mockserver.actionHandlerThreadCount"));
+        assertEquals(2, actionHandlerThreadCount());
+    }
+
+    @Test
     public void shouldSetAndReadWebSocketClientEventLoopThreadCount() {
         // given
         System.clearProperty("mockserver.webSocketClientEventLoopThreadCount");

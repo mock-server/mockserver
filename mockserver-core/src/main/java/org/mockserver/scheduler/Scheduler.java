@@ -19,7 +19,7 @@ import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
 public class Scheduler {
 
     private final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(
-        poolSize(),
+        ConfigurationProperties.actionHandlerThreadCount(),
         new SchedulerThreadFactory("Scheduler"),
         new ThreadPoolExecutor.CallerRunsPolicy()
     );
@@ -47,10 +47,6 @@ public class Scheduler {
 
     public Scheduler(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-    }
-
-    private int poolSize() {
-        return Math.max(10, Runtime.getRuntime().availableProcessors() * 2);
     }
 
     public synchronized void shutdown() {
