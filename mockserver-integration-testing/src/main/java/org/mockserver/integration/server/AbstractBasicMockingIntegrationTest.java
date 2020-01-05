@@ -33,10 +33,10 @@ import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverridde
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
-import static org.mockserver.model.HttpStatusCode.ACCEPTED_202;
-import static org.mockserver.model.HttpStatusCode.OK_200;
+import static org.mockserver.model.HttpStatusCode.*;
 import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.validator.jsonschema.JsonSchemaValidator.OPEN_API_SPECIFICATION_URL;
 
@@ -827,10 +827,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
         mockServerClient
             .when(
                 request()
-                    .withBody(
-                        exact("some_random_body")
-                    ),
-                exactly(2)
+                    .withBody(exact("some_random_body"))
             )
             .respond(
                 response()
@@ -843,6 +840,55 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withBody("some_string_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+                    .withBody("some_random_body"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    public void shouldReturnResponseByMatchingNotBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withBody(Not.not(regex(".+")))
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_response_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(NOT_FOUND_404.code())
+                .withReasonPhrase(NOT_FOUND_404.reasonPhrase()),
             makeRequest(
                 request()
                     .withMethod("POST")
@@ -966,6 +1012,29 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withCookies(cookie("cookieName", "cookieValue")),
                 headersToIgnore)
         );
+        assertEquals(
+            response()
+                .withStatusCode(ACCEPTED_202.code())
+                .withReasonPhrase(ACCEPTED_202.reasonPhrase())
+                .withBody("some_body")
+                .withHeaders(
+                    header("headerName", "headerValue"),
+                    header("set-cookie", "cookieName=cookieValue")
+                )
+                .withCookies(cookie("cookieName", "cookieValue")),
+            makeRequest(
+                request()
+                    .withMethod("GET")
+                    .withPath(calculatePath("some_path"))
+                    .withQueryStringParameters(
+                        param("queryStringParameterOneName", "queryStringParameterOneValue"),
+                        param("queryStringParameterTwoName", "queryStringParameterTwoValue")
+                    )
+                    .withBody(exact("some_body"))
+                    .withHeaders(header("headerName", "headerValue"))
+                    .withCookies(cookie("cookieName", "cookieValue")),
+                headersToIgnore)
+        );
     }
 
     @Test
@@ -1014,7 +1083,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
     }
 
     @Test
-    public void shouldVerifyReceivedRequests() {
+    public void shouldVerifyReceivedRequestsSpecificTimesInHttpAndHttps() {
         // when
         mockServerClient
             .when(
@@ -1026,24 +1095,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withBody("some_body")
             );
 
-        // then
-        // - in http
-        assertEquals(
-            response()
-                .withStatusCode(OK_200.code())
-                .withReasonPhrase(OK_200.reasonPhrase())
-                .withBody("some_body"),
-            makeRequest(
-                request()
-                    .withPath(calculatePath("some_path")),
-                headersToIgnore)
-        );
-        mockServerClient.verify(request()
-            .withPath(calculatePath("some_path")));
-        mockServerClient.verify(request()
-            .withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
-
-        // - in https
+        // and
         assertEquals(
             response()
                 .withStatusCode(OK_200.code())
@@ -1055,8 +1107,82 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     .withPath(calculatePath("some_path")),
                 headersToIgnore)
         );
+
+        // then
+        mockServerClient.verify(request().withPath(calculatePath("some_path")));
+        mockServerClient.verify(request().withPath(calculatePath("some_path")), VerificationTimes.exactly(1));
+
+        // when
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+
+        // then
+        mockServerClient.verify(request().withPath(calculatePath("some_path")));
         mockServerClient.verify(request().withPath(calculatePath("some_path")), VerificationTimes.atLeast(1));
         mockServerClient.verify(request().withPath(calculatePath("some_path")), VerificationTimes.exactly(2));
+        mockServerClient.verify(request().withPath(calculatePath("some_path")).withSecure(true), VerificationTimes.exactly(1));
+        mockServerClient.verify(request().withPath(calculatePath("some_path")).withSecure(false), VerificationTimes.exactly(1));
+    }
+
+    @Test
+    public void shouldVerifyNotReceivedRequestWithEmptyBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path_no_body"))
+                    .withBody(Not.not(regex(".+")))
+            )
+            .respond(response());
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path_no_body")),
+                headersToIgnore)
+        );
+
+        // and
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path_with_body"))
+                    .withBody("some_request_body")
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_response_body"),
+            makeRequest(
+                request()
+                    .withPath(calculatePath("some_path_with_body"))
+                    .withBody("some_request_body"),
+                headersToIgnore)
+        );
+
+        mockServerClient.verify(request().withPath(calculatePath("some_path_no_body")));
+        mockServerClient.verify(request().withPath(calculatePath("some_path_no_body")).withBody(regex(".+")), VerificationTimes.atMost(0));
+        mockServerClient.verify(request().withPath(calculatePath("some_path_no_body")).withBody(exact("some_random_body")), VerificationTimes.atMost(0));
+
+        mockServerClient.verify(request().withPath(calculatePath("some_path_with_body")));
+        mockServerClient.verify(request().withPath(calculatePath("some_path_with_body")).withBody("some_request_body"));
+        mockServerClient.verify(request().withPath(calculatePath("some_path_with_body")).withBody(regex(".+")));
+        mockServerClient.verify(request().withPath(calculatePath("some_path_with_body")).withBody(exact("some_other_body")), VerificationTimes.atMost(0));
     }
 
     @Test

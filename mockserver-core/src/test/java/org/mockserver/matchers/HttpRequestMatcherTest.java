@@ -381,13 +381,23 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
-    public void doesNotMatchEmptyBody() {
+    public void doesNotMatchEmptyBodyAgainstMatcherWithStringBody() {
         assertFalse(new HttpRequestMatcher(mockServerLogger, new Expectation(new HttpRequest().withBody(exact("somebody")))).matches(null, new HttpRequest()));
     }
 
     @Test
-    public void doesNotMatchEmptyBodyForControlPlane() {
-        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(exact("somebody"))).matches(null, new HttpRequest()));
+    public void matchesStringBodyAgainstMatcherWithEmptyBody() {
+        assertTrue(new HttpRequestMatcher(mockServerLogger, new Expectation(new HttpRequest())).matches(null, new HttpRequest().withBody(exact("somebody"))));
+    }
+
+    @Test
+    public void matchesEmptyBodyAgainstMatcherWithStringBodyForControlPlane() {
+        assertFalse(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(exact("somebody"))).matches(null, new HttpRequest()));
+    }
+
+    @Test
+    public void doesNotMatchStringBodyAgainstMatcherWithEmptyBodyForControlPlane() {
+        assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest()).matches(null, new HttpRequest().withBody(exact("somebody"))));
     }
 
     @Test

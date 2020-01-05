@@ -413,7 +413,7 @@ public class HttpStateHandler {
 
     public Future<String> verify(Verification verification) {
         CompletableFuture<String> result = new CompletableFuture<>();
-        mockServerLog.verify(verification, result::complete);
+        verify(verification, result::complete);
         return result;
     }
 
@@ -423,7 +423,7 @@ public class HttpStateHandler {
 
     public Future<String> verify(VerificationSequence verification) {
         CompletableFuture<String> result = new CompletableFuture<>();
-        mockServerLog.verify(verification, result::complete);
+        verify(verification, result::complete);
         return result;
     }
 

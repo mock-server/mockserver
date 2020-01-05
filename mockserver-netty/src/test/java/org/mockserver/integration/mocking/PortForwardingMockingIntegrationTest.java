@@ -8,6 +8,7 @@ import org.mockserver.integration.server.AbstractBasicMockingIntegrationTest;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mockserver.MockServer;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.model.Not;
 import org.mockserver.uuid.UUIDService;
 
 import java.util.Arrays;
@@ -24,8 +25,10 @@ import static org.mockserver.model.HttpForward.forward;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpStatusCode.NOT_FOUND_404;
 import static org.mockserver.model.HttpStatusCode.OK_200;
 import static org.mockserver.model.Parameter.param;
+import static org.mockserver.model.RegexBody.regex;
 import static org.mockserver.model.StringBody.exact;
 import static org.mockserver.stop.Stop.stopQuietly;
 
@@ -38,8 +41,7 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
 
     @BeforeClass
     public static void startServer() {
-        mockServerPort = new MockServer(insecureEchoServer.getPort(), "localhost", 0)
-            .getLocalPort();
+        mockServerPort = new MockServer(insecureEchoServer.getPort(), "localhost", 0).getLocalPort();
 
         mockServerClient = new MockServerClient("localhost", mockServerPort);
     }
@@ -478,6 +480,86 @@ public class PortForwardingMockingIntegrationTest extends AbstractBasicMockingIn
         } finally {
             UUIDService.fixedUUID = false;
         }
+    }
+
+    @Test
+    @Override
+    public void shouldReturnResponseByMatchingStringBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withBody(exact("some_random_body"))
+            )
+            .respond(
+                response()
+                    .withBody("some_string_body_response")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_string_body_response"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+                    .withBody("some_random_body"),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase()),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+    }
+
+    @Test
+    @Override
+    public void shouldReturnResponseByMatchingNotBody() {
+        // when
+        mockServerClient
+            .when(
+                request()
+                    .withPath(calculatePath("some_path"))
+                    .withBody(Not.not(regex(".+")))
+            )
+            .respond(
+                response()
+                    .withBody("some_response_body")
+            );
+
+        // then
+        assertEquals(
+            response()
+                .withStatusCode(OK_200.code())
+                .withReasonPhrase(OK_200.reasonPhrase())
+                .withBody("some_response_body"),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path")),
+                headersToIgnore)
+        );
+        assertEquals(
+            response()
+                .withStatusCode(HttpStatusCode.OK_200.code())
+                .withReasonPhrase(HttpStatusCode.OK_200.reasonPhrase())
+                .withBody(exact("some_random_body")),
+            makeRequest(
+                request()
+                    .withMethod("POST")
+                    .withPath(calculatePath("some_path"))
+                    .withBody("some_random_body"),
+                headersToIgnore)
+        );
     }
 
     @Test

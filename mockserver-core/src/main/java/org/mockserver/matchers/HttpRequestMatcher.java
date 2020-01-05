@@ -11,7 +11,6 @@ import org.mockserver.serialization.model.*;
 import org.slf4j.event.Level;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_MATCHED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.EXPECTATION_NOT_MATCHED;
@@ -320,25 +319,23 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
     private boolean bodyMatches(HttpRequest context, HttpRequest request) {
         boolean bodyMatches = true;
         String bodyAsString = request.getBody() != null ? new String(request.getBody().getRawBytes(), request.getBody().getCharset(DEFAULT_HTTP_CHARACTER_SET)) : "";
-        if (isNotBlank(bodyAsString) || !controlPlaneMatcher) {
-            if (bodyMatcher instanceof BinaryMatcher) {
-                bodyMatches = matches(context, bodyMatcher, request.getBodyAsRawBytes());
+        if (bodyMatcher instanceof BinaryMatcher) {
+            bodyMatches = matches(context, bodyMatcher, request.getBodyAsRawBytes());
+        } else {
+            if (bodyMatcher instanceof ExactStringMatcher ||
+                bodyMatcher instanceof SubStringMatcher ||
+                bodyMatcher instanceof RegexStringMatcher ||
+                bodyMatcher instanceof XmlStringMatcher) {
+                bodyMatches = matches(context, bodyMatcher, string(bodyAsString));
             } else {
-                if (bodyMatcher instanceof ExactStringMatcher ||
-                    bodyMatcher instanceof SubStringMatcher ||
-                    bodyMatcher instanceof RegexStringMatcher ||
-                    bodyMatcher instanceof XmlStringMatcher) {
-                    bodyMatches = matches(context, bodyMatcher, string(bodyAsString));
-                } else {
-                    bodyMatches = matches(context, bodyMatcher, bodyAsString);
-                }
+                bodyMatches = matches(context, bodyMatcher, bodyAsString);
             }
-            if (!bodyMatches) {
-                try {
-                    bodyMatches = bodyDTOMatcher.equals(objectMapper.readValue(bodyAsString, BodyDTO.class));
-                } catch (Throwable e) {
-                    // ignore this exception as this exception would typically get thrown for "normal" HTTP requests (i.e. not clear or retrieve)
-                }
+        }
+        if (!bodyMatches) {
+            try {
+                bodyMatches = bodyDTOMatcher.equals(objectMapper.readValue(bodyAsString, BodyDTO.class));
+            } catch (Throwable e) {
+                // ignore this exception as this exception would typically get thrown for "normal" HTTP requests (i.e. not clear or retrieve)
             }
         }
         return bodyMatches;
