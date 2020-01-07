@@ -80,7 +80,14 @@ public class MockServerToNettyResponseEncoder extends MessageToMessageEncoder<Ht
 
     private void setHeaders(HttpResponse httpResponse, DefaultFullHttpResponse response, ByteBuf body) {
         if (httpResponse.getHeaderMultimap() != null) {
-            httpResponse.getHeaderMultimap().forEach((key, value) -> response.headers().add(key.getValue(), value.getValue()));
+            httpResponse
+                .getHeaderMultimap()
+                .entries()
+                .forEach(entry ->
+                    response
+                        .headers()
+                        .add(entry.getKey().getValue(), entry.getValue().getValue())
+                );
         }
 
         // Content-Type
