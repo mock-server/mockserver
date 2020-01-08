@@ -11,6 +11,7 @@ import org.mockserver.model.HttpStatusCode;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpRequest.request;
@@ -152,6 +153,19 @@ public class CallbackActionExamples {
 
     }
 
+    public void forwardObjectCallbackFixContentType() {
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withHeader("Content-Type", "application/encrypted;charset=UTF-8")
+            )
+            .forward(
+                httpRequest ->
+                    httpRequest
+                        .withBody(binary(httpRequest.getBodyAsRawBytes()))
+            );
+    }
+
     public void forwardObjectCallback() {
         new MockServerClient("localhost", 1080)
             .when(
@@ -169,7 +183,6 @@ public class CallbackActionExamples {
                     )
                     .withBody("a_callback_request")
             );
-
     }
 
     @SuppressWarnings("Convert2Lambda")
@@ -207,28 +220,28 @@ public class CallbackActionExamples {
     }
 
     public void forwardObjectCallbackWithResponseOverride() {
-new MockServerClient("localhost", 1080)
-    .when(
-        request()
-            .withPath("/some/path")
-    )
-    .forward(
-        httpRequest ->
-            request()
-                .withPath(httpRequest.getPath())
-                .withMethod("POST")
-                .withHeaders(
-                    header("x-callback", "test_callback_header"),
-                    header("Content-Length", "a_callback_request".getBytes(UTF_8).length),
-                    header("Connection", "keep-alive")
-                )
-                .withBody("a_callback_request"),
-        (httpRequest, httpResponse) ->
-            httpResponse
-                .withHeader("x-response-test", "x-response-test")
-                .removeHeader(CONTENT_LENGTH.toString())
-                .withBody("some_overridden_response_body")
-    );
+        new MockServerClient("localhost", 1080)
+            .when(
+                request()
+                    .withPath("/some/path")
+            )
+            .forward(
+                httpRequest ->
+                    request()
+                        .withPath(httpRequest.getPath())
+                        .withMethod("POST")
+                        .withHeaders(
+                            header("x-callback", "test_callback_header"),
+                            header("Content-Length", "a_callback_request".getBytes(UTF_8).length),
+                            header("Connection", "keep-alive")
+                        )
+                        .withBody("a_callback_request"),
+                (httpRequest, httpResponse) ->
+                    httpResponse
+                        .withHeader("x-response-test", "x-response-test")
+                        .removeHeader(CONTENT_LENGTH.toString())
+                        .withBody("some_overridden_response_body")
+            );
     }
 
     public static class TestExpectationResponseCallback implements ExpectationResponseCallback {

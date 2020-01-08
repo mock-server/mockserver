@@ -9,6 +9,7 @@ import org.mockserver.model.XmlBody;
 public class XmlBodyDTO extends BodyWithContentTypeDTO {
 
     private final String xml;
+    private final byte[] rawBinaryData;
 
     public XmlBodyDTO(XmlBody xmlBody) {
         this(xmlBody, false);
@@ -16,14 +17,19 @@ public class XmlBodyDTO extends BodyWithContentTypeDTO {
 
     public XmlBodyDTO(XmlBody xmlBody, Boolean not) {
         super(Body.Type.XML, not, xmlBody.getContentType());
-        this.xml = xmlBody.getValue();
+        xml = xmlBody.getValue();
+        rawBinaryData = xmlBody.getRawBytes();
     }
 
     public String getXml() {
         return xml;
     }
 
+    public byte[] getRawBinaryData() {
+        return rawBinaryData;
+    }
+
     public XmlBody buildObject() {
-        return new XmlBody(getXml(), getMediaType());
+        return new XmlBody(getXml(), getRawBinaryData(), getMediaType());
     }
 }

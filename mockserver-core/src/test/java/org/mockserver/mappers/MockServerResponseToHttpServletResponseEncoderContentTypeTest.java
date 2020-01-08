@@ -88,19 +88,6 @@ public class MockServerResponseToHttpServletResponseEncoderContentTypeTest {
     }
 
     @Test
-    public void shouldReturnContentTypeForParameterBody() {
-        // given
-        HttpResponse httpResponse = response().withBody(params(param("key", "value")));
-        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
-
-        // when
-        new MockServerResponseToHttpServletResponseEncoder(new MockServerLogger()).mapMockServerResponseToHttpServletResponse(httpResponse, httpServletResponse);
-
-        // then
-        assertEquals("application/x-www-form-urlencoded", httpServletResponse.getHeader("Content-Type"));
-    }
-
-    @Test
     public void shouldReturnNoContentTypeForBodyWithNoAssociatedContentType() {
         // given
         HttpResponse httpResponse = response().withBody(xml("some_value", (MediaType) null));

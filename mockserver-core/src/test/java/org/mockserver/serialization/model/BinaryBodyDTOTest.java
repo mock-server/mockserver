@@ -23,7 +23,7 @@ public class BinaryBodyDTOTest {
         BinaryBodyDTO binaryBody = new BinaryBodyDTO(new BinaryBody(body));
 
         // then
-        assertThat(binaryBody.getValue(), is(DatatypeConverter.printBase64Binary(body)));
+        assertThat(binaryBody.getBase64Bytes(), is(body));
         assertThat(binaryBody.getType(), is(Body.Type.BINARY));
     }
 

@@ -588,7 +588,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", true)))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", null, true, (MediaType) null)))
             ), expectationDTO);
     }
 
@@ -611,7 +611,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", false)))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", null, false, (MediaType) null)))
             ), expectationDTO);
     }
 
@@ -635,7 +635,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", true, MediaType.PLAIN_TEXT_UTF_8)))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", null, true, MediaType.PLAIN_TEXT_UTF_8)))
             ), expectationDTO);
     }
 
@@ -681,7 +681,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", true)))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", null, true, (MediaType) null)))
             ), expectationDTO);
     }
 
@@ -706,7 +706,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", true), true))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", null, true, (MediaType) null), true))
             ), expectationDTO);
     }
 
@@ -730,7 +730,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", true)))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", null, true, (MediaType) null)))
             ), expectationDTO);
     }
 
@@ -935,7 +935,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}", MediaType.JSON_UTF_8, MatchType.STRICT)))
+                    .setBody(new JsonBodyDTO(new JsonBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}", null, MediaType.JSON_UTF_8, MatchType.STRICT)))
             ), expectationDTO);
     }
 
@@ -959,7 +959,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}", MediaType.JSON_UTF_8.withCharset(StandardCharsets.ISO_8859_1), MatchType.ONLY_MATCHING_FIELDS)))
+                    .setBody(new JsonBodyDTO(new JsonBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}", null, MediaType.JSON_UTF_8.withCharset(StandardCharsets.ISO_8859_1), MatchType.ONLY_MATCHING_FIELDS)))
             ), expectationDTO);
     }
 

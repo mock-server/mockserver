@@ -17,32 +17,32 @@ public class StringBodyDTOSerializerTest {
     public void shouldSerializeStringBodyDTO() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body"))),
                 is("\"string_body\""));
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body", false))),
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body", null, false, (MediaType) null))),
             is("\"string_body\""));
     }
 
     @Test
     public void shouldSerializeStringBodyDTOWithSubString() throws JsonProcessingException {
-        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body", true))),
-            is("{\"type\":\"STRING\",\"string\":\"string_body\",\"subString\":true}"));
+        assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body", null, true, (MediaType) null))),
+            is("{\"type\":\"STRING\",\"string\":\"string_body\",\"rawBinaryData\":\"c3RyaW5nX2JvZHk=\",\"subString\":true}"));
     }
 
     @Test
     public void shouldSerializeStringBodyDTOWithCharset() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(new StringBody("string_body", MediaType.PLAIN_TEXT_UTF_8))),
-                is("{\"type\":\"STRING\",\"string\":\"string_body\",\"contentType\":\"text/plain; charset=utf-8\"}"));
+                is("{\"type\":\"STRING\",\"string\":\"string_body\",\"rawBinaryData\":\"c3RyaW5nX2JvZHk=\",\"contentType\":\"text/plain; charset=utf-8\"}"));
     }
 
     @Test
     public void shouldSerializeStringBodyDTOWithNot() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(not(new StringBody("string_body")))),
-                is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\"}"));
+                is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"rawBinaryData\":\"c3RyaW5nX2JvZHk=\"}"));
     }
 
     @Test
     public void shouldSerializeStringBodyDTOWithCharsetAndNot() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new StringBodyDTO(not(new StringBody("string_body", MediaType.PLAIN_TEXT_UTF_8)))),
-                is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"contentType\":\"text/plain; charset=utf-8\"}"));
+                is("{\"not\":true,\"type\":\"STRING\",\"string\":\"string_body\",\"rawBinaryData\":\"c3RyaW5nX2JvZHk=\",\"contentType\":\"text/plain; charset=utf-8\"}"));
     }
 
 }

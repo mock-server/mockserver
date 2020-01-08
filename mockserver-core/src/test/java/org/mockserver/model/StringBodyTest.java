@@ -40,7 +40,7 @@ public class StringBodyTest {
     @Test
     public void shouldReturnValuesSetInConstructorWithSubString() {
         // when
-        StringBody stringBody = new StringBody("some_body", true);
+        StringBody stringBody = new StringBody("some_body", null, true, (MediaType) null);
 
         // then
         assertThat(stringBody.getValue(), is("some_body"));

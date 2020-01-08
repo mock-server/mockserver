@@ -1,4 +1,4 @@
-package org.mockserver.codec.mappers;
+package org.mockserver.mappers;
 
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;

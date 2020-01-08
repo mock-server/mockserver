@@ -2,6 +2,7 @@ package org.mockserver.integration.proxy;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
@@ -12,6 +13,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
@@ -49,6 +51,7 @@ import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockserver.character.Character.NEW_LINE;
+import static org.mockserver.model.BinaryBody.binary;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
@@ -77,7 +80,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
     }
 
-    private HttpClient createHttpClient() {
+    protected HttpClient createHttpClient() {
         return HttpClients
             .custom()
             .setSSLSocketFactory(new SSLConnectionSocketFactory(new KeyStoreFactory(new MockServerLogger()).sslContext(), NoopHostnameVerifier.INSTANCE))
@@ -101,7 +104,7 @@ public abstract class AbstractClientProxyIntegrationTest {
         return (!path.startsWith("/") ? "/" : "") + path;
     }
 
-    private String addContextToPath(String path) {
+    protected String addContextToPath(String path) {
         String cleanedPath = path;
         if (isNotBlank(servletContext)) {
             cleanedPath =

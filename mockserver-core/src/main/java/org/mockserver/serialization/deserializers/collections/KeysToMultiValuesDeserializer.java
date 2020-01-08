@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.mockserver.model.KeysToMultiValues;
 import org.mockserver.model.NottableString;
 
@@ -26,15 +25,15 @@ public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues>
     @Override
     public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         if (p.isExpectedStartArrayToken()) {
-            return deserializeArray(p, ctxt, ctxt.getNodeFactory());
+            return deserializeArray(p, ctxt);
         } else if (p.isExpectedStartObjectToken()) {
-            return deserializeObject(p, ctxt, ctxt.getNodeFactory());
+            return deserializeObject(p, ctxt);
         } else {
             return null;
         }
     }
 
-    private T deserializeObject(JsonParser jsonParser, DeserializationContext ctxt, JsonNodeFactory nodeFactory) throws IOException {
+    private T deserializeObject(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
         T enteries = build();
         NottableString key = string("");
         while (true) {
@@ -54,7 +53,7 @@ public abstract class KeysToMultiValuesDeserializer<T extends KeysToMultiValues>
         }
     }
 
-    private T deserializeArray(JsonParser jsonParser, DeserializationContext ctxt, JsonNodeFactory nodeFactory) throws IOException {
+    private T deserializeArray(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
         T entries = build();
         NottableString key = string("");
         NottableString[] values = null;

@@ -28,6 +28,9 @@ public class StringBodyDTOSerializer extends StdSerializer<StringBodyDTO> {
             }
             jgen.writeStringField("type", stringBodyDTO.getType().name());
             jgen.writeStringField("string", stringBodyDTO.getString());
+            if (stringBodyDTO.getRawBinaryData() != null) {
+                jgen.writeObjectField("rawBinaryData", stringBodyDTO.getRawBinaryData());
+            }
             if (subStringFieldNotDefault) {
                 jgen.writeBooleanField("subString", true);
             }

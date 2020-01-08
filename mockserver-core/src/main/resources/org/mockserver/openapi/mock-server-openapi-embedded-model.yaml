@@ -638,17 +638,6 @@ components:
           description: "json response body"
           additionalProperties: true
         - type: object
-          description: "parameters response body"
-          additionalProperties: false
-          properties:
-            not:
-              type: boolean
-            type:
-              enum:
-                - PARAMETERS
-            parameters:
-              $ref: "#/components/schemas/KeyToMultiValue"
-        - type: object
           description: "string response body"
           additionalProperties: false
           properties:

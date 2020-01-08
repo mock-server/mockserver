@@ -309,19 +309,6 @@ public class MockServerResponseEncoderContentTypeTest {
     }
 
     @Test
-    public void shouldReturnContentTypeForParameterBody() {
-        // given
-        httpResponse.withBody(params(param("key", "value")));
-
-        // when
-        new MockServerToNettyResponseEncoder(mockServerLogger).encode(null, httpResponse, output);
-
-        // then
-        FullHttpResponse fullHttpResponse = (FullHttpResponse) output.get(0);
-        assertThat(fullHttpResponse.headers().getAll("Content-Type"), containsInAnyOrder("application/x-www-form-urlencoded"));
-    }
-
-    @Test
     public void shouldReturnNoContentTypeForBodyWithNoAssociatedContentType() {
         // given
         httpResponse.withBody(xml("some_value", (MediaType) null));

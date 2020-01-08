@@ -11,7 +11,9 @@ import org.mockserver.serialization.model.*;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Base64;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.file.FileReader.openStreamToFileFromClassPathOrPath;
@@ -730,10 +732,13 @@ public class HttpRequestSerializerIntegrationTest {
 
     @Test
     public void shouldSerializeJsonBody() {
+        // given
+        String json = "{\"key\": \"value\"}";
+
         // when
         String jsonHttpRequest = new HttpRequestSerializer(new MockServerLogger()).serialize(
             new HttpRequestDTO()
-                .setBody(BodyDTO.createDTO(json("{ \"key\": \"value\" }")))
+                .setBody(BodyDTO.createDTO(json(json)))
                 .buildObject()
         );
 
@@ -741,7 +746,8 @@ public class HttpRequestSerializerIntegrationTest {
         assertEquals("{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
             "    \"type\" : \"JSON\"," + NEW_LINE +
-            "    \"json\" : \"{ \\\"key\\\": \\\"value\\\" }\"" + NEW_LINE +
+            "    \"json\" : \"" + StringEscapeUtils.escapeJava(json) + "\"," + NEW_LINE +
+            "    \"rawBinaryData\" : \"" + Base64.getEncoder().encodeToString(json.getBytes(UTF_8)) + "\"" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonHttpRequest);
     }
@@ -795,7 +801,8 @@ public class HttpRequestSerializerIntegrationTest {
         assertEquals("{" + NEW_LINE +
             "  \"body\" : {" + NEW_LINE +
             "    \"type\" : \"XML\"," + NEW_LINE +
-            "    \"xml\" : \"<some><xml></xml></some>\"" + NEW_LINE +
+            "    \"xml\" : \"<some><xml></xml></some>\"," + NEW_LINE +
+            "    \"rawBinaryData\" : \"" + Base64.getEncoder().encodeToString("<some><xml></xml></some>".getBytes(UTF_8)) + "\"" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonHttpRequest);
     }

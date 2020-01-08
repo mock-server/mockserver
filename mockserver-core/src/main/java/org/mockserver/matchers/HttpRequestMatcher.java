@@ -317,7 +317,7 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
 
     @SuppressWarnings("unchecked")
     private boolean bodyMatches(HttpRequest context, HttpRequest request) {
-        boolean bodyMatches = true;
+        boolean bodyMatches;
         String bodyAsString = request.getBody() != null ? new String(request.getBody().getRawBytes(), request.getBody().getCharset(DEFAULT_HTTP_CHARACTER_SET)) : "";
         if (bodyMatcher instanceof BinaryMatcher) {
             bodyMatches = matches(context, bodyMatcher, request.getBodyAsRawBytes());
@@ -333,7 +333,8 @@ public class HttpRequestMatcher extends NotMatcher<HttpRequest> {
         }
         if (!bodyMatches) {
             try {
-                bodyMatches = bodyDTOMatcher.equals(objectMapper.readValue(bodyAsString, BodyDTO.class));
+                BodyDTO bodyDTO = objectMapper.readValue(bodyAsString, BodyDTO.class);
+                bodyMatches = bodyDTOMatcher.equals(bodyDTO);
             } catch (Throwable e) {
                 // ignore this exception as this exception would typically get thrown for "normal" HTTP requests (i.e. not clear or retrieve)
             }

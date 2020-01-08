@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - hot re-loading of expectation initialiser file
 - addition configuration for web socket client event loop size
 - addition configuration for action handler thread pool size
+- exposed request raw bytes to object callbacks (allows forwarded requests body parsing that is inconsistent with Content-Type header)
 
 ### Changed
 - performance improvements for header and cookie handling

@@ -2,12 +2,12 @@ package org.mockserver.serialization.serializers.request;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.Test;
-import org.mockserver.serialization.ObjectMapperFactory;
-import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.model.Cookie;
 import org.mockserver.model.Header;
 import org.mockserver.model.JsonSchemaBody;
 import org.mockserver.model.XmlSchemaBody;
+import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.model.HttpRequestDTO;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -94,7 +94,8 @@ public class HttpRequestDTOSerializerTest {
                 "  }," + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"JSON\"," + NEW_LINE +
-                "    \"json\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"" + NEW_LINE +
+                "    \"json\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"," + NEW_LINE +
+                "    \"rawBinaryData\" : \"eyAia2V5IjogInNvbWVfdmFsdWUiIH0=\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}"));
     }
@@ -197,7 +198,8 @@ public class HttpRequestDTOSerializerTest {
                 "  }," + NEW_LINE +
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"XML\"," + NEW_LINE +
-                "    \"xml\" : \"<some><xml></xml></some>\"" + NEW_LINE +
+                "    \"xml\" : \"<some><xml></xml></some>\"," + NEW_LINE +
+                "    \"rawBinaryData\" : \"PHNvbWU+PHhtbD48L3htbD48L3NvbWU+\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}")
         );

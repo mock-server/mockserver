@@ -2,6 +2,8 @@ package org.mockserver.codec;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -11,8 +13,9 @@ import org.slf4j.event.Level;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -50,8 +53,8 @@ public class BodyDecoderEncoder {
             if (body instanceof BinaryBody) {
                 return body.getRawBytes();
             } else if (body.getValue() instanceof String) {
-                Charset responseCharset = MediaType.parse(contentTypeHeader).getCharsetOrDefault();
-                Charset bodyCharset = body.getCharset(responseCharset);
+                Charset contentTypeCharset = MediaType.parse(contentTypeHeader).getCharsetOrDefault();
+                Charset bodyCharset = body.getCharset(contentTypeCharset);
                 return ((String) body.getValue()).getBytes(bodyCharset);
             } else {
                 return body.getRawBytes();
@@ -95,6 +98,7 @@ public class BodyDecoderEncoder {
             if (mediaType.isJson()) {
                 return new JsonBody(
                     new String(bodyBytes, mediaType.getCharsetOrDefault()),
+                    bodyBytes,
                     mediaType,
                     DEFAULT_MATCH_TYPE
                 );

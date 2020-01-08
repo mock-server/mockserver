@@ -15,25 +15,25 @@ public class XmlBodyDTOSerializerTest {
     @Test
     public void shouldSerializeXmlBodyDTO() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XmlBodyDTO(new XmlBody("<some><xml></xml></some>"))),
-                is("{\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\"}"));
+                is("{\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\",\"rawBinaryData\":\"PHNvbWU+PHhtbD48L3htbD48L3NvbWU+\"}"));
     }
 
     @Test
     public void shouldSerializeXmlBodyDTOWithContentType() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XmlBodyDTO(new XmlBody("<some><xml></xml></some>", MediaType.XML_UTF_8))),
-                is("{\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\",\"contentType\":\"text/xml; charset=utf-8\"}"));
+                is("{\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\",\"rawBinaryData\":\"PHNvbWU+PHhtbD48L3htbD48L3NvbWU+\",\"contentType\":\"text/xml; charset=utf-8\"}"));
     }
 
     @Test
     public void shouldSerializeXmlBodyDTOWithNot() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XmlBodyDTO(new XmlBody("<some><xml></xml></some>"), true)),
-                is("{\"not\":true,\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\"}"));
+                is("{\"not\":true,\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\",\"rawBinaryData\":\"PHNvbWU+PHhtbD48L3htbD48L3NvbWU+\"}"));
     }
 
     @Test
     public void shouldSerializeXmlBodyDTOWithNotWithContentType() throws JsonProcessingException {
         assertThat(ObjectMapperFactory.createObjectMapper().writeValueAsString(new XmlBodyDTO(new XmlBody("<some><xml></xml></some>", MediaType.XML_UTF_8), true)),
-                is("{\"not\":true,\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\",\"contentType\":\"text/xml; charset=utf-8\"}"));
+                is("{\"not\":true,\"type\":\"XML\",\"xml\":\"<some><xml></xml></some>\",\"rawBinaryData\":\"PHNvbWU+PHhtbD48L3htbD48L3NvbWU+\",\"contentType\":\"text/xml; charset=utf-8\"}"));
     }
 
 }

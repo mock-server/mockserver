@@ -18,17 +18,21 @@ public class XmlBody extends BodyWithContentType<String> {
     }
 
     public XmlBody(String xml, Charset charset) {
-        this(xml, (charset != null ? MediaType.create("application", "xml").withCharset(charset) : null));
+        this(xml, null, (charset != null ? DEFAULT_CONTENT_TYPE.withCharset(charset) : null));
     }
 
     public XmlBody(String xml, MediaType contentType) {
+        this(xml, null, contentType);
+    }
+
+    public XmlBody(String xml, byte[] rawBinaryData, MediaType contentType) {
         super(Type.XML, contentType);
         this.xml = xml;
 
-        if (xml != null) {
+        if (rawBinaryData == null && xml != null) {
             this.rawBinaryData = xml.getBytes(determineCharacterSet(contentType, DEFAULT_HTTP_CHARACTER_SET));
         } else {
-            this.rawBinaryData = new byte[0];
+            this.rawBinaryData = rawBinaryData;
         }
     }
 

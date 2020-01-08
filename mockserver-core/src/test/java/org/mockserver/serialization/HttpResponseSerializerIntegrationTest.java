@@ -148,34 +148,6 @@ public class HttpResponseSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldDeserializeParameterBody() {
-        // given
-        String requestBytes = "{" + NEW_LINE +
-            "  \"body\" : {" + NEW_LINE +
-            "    \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "    \"parameters\" : [ {" + NEW_LINE +
-            "      \"name\" : \"nameOne\"," + NEW_LINE +
-            "      \"values\" : [ \"valueOne\" ]" + NEW_LINE +
-            "    }, {" + NEW_LINE +
-            "      \"name\" : \"nameTwo\"," + NEW_LINE +
-            "      \"values\" : [ \"valueTwo_One\", \"valueTwo_Two\" ]" + NEW_LINE +
-            "    } ]" + NEW_LINE +
-            "  }" + NEW_LINE +
-            "}";
-
-        // when
-        HttpResponse httpResponse = new HttpResponseSerializer(new MockServerLogger()).deserialize(requestBytes);
-
-        // then
-        assertEquals(new HttpResponseDTO()
-            .setBody(BodyWithContentTypeDTO.createDTO(params(
-                new Parameter("nameOne", "valueOne"),
-                new Parameter("nameTwo", "valueTwo_One", "valueTwo_Two")
-            )))
-            .buildObject(), httpResponse);
-    }
-
-    @Test
     public void shouldDeserializeBinaryBody() throws IOException {
         // given
         String requestBytes = "{" + NEW_LINE +
@@ -434,24 +406,6 @@ public class HttpResponseSerializerIntegrationTest {
     }
 
     @Test
-    public void shouldSerializeParameterBodyViaDTO() {
-        // when
-        String jsonHttpResponse = new HttpResponseSerializer(new MockServerLogger()).serialize(
-            new HttpResponseDTO()
-                .setBody(BodyWithContentTypeDTO.createDTO(params(
-                    new Parameter("nameOne", "valueOne"),
-                    new Parameter("nameTwo", "valueTwo_One", "valueTwo_Two")
-                )))
-                .buildObject()
-        );
-
-        // then
-        assertEquals("{" + NEW_LINE +
-            "  \"body\" : \"nameOne=valueOne&nameTwo=valueTwo_One&nameTwo=valueTwo_Two\"" + NEW_LINE +
-            "}", jsonHttpResponse);
-    }
-
-    @Test
     public void shouldSerializeBinaryBodyViaDTO() throws IOException {
         // when
         String jsonHttpResponse = new HttpResponseSerializer(new MockServerLogger()).serialize(
@@ -513,29 +467,6 @@ public class HttpResponseSerializerIntegrationTest {
             "  \"body\" : {" + NEW_LINE +
             "    \"type\" : \"XML\"," + NEW_LINE +
             "    \"xml\" : \"<some><xml></xml></some>\"" + NEW_LINE +
-            "  }" + NEW_LINE +
-            "}", jsonHttpResponse);
-    }
-
-    @Test
-    public void shouldSerializeParameterBody() throws JsonProcessingException {
-        // when
-        String jsonHttpResponse = OBJECT_WRITER.writeValueAsString(
-            new HttpResponse()
-                .withBody(params(
-                    new Parameter("nameOne", "valueOne"),
-                    new Parameter("nameTwo", "valueTwo_One", "valueTwo_Two")
-                ))
-        );
-
-        // then
-        assertEquals("{" + NEW_LINE +
-            "  \"body\" : {" + NEW_LINE +
-            "    \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "    \"value\" : {" + NEW_LINE +
-            "      \"nameOne\" : [ \"valueOne\" ]," + NEW_LINE +
-            "      \"nameTwo\" : [ \"valueTwo_One\", \"valueTwo_Two\" ]" + NEW_LINE +
-            "    }" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonHttpResponse);
     }

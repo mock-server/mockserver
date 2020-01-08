@@ -347,20 +347,6 @@ public class HttpRequestMatcherTest {
     }
 
     @Test
-    public void doesNotMatchBodyMatchesParameterBodyDTOIncorrectParameters() {
-        assertFalse(new HttpRequestMatcher(
-            mockServerLogger, new HttpRequest().withBody(params(
-                new Parameter("nameOne", "valueOne"),
-                new Parameter("nameTwo", "valueTwo")
-            ))
-        ).matches(
-            null, new HttpRequest().withBody(new ParameterBodyDTO(params(
-                new Parameter("nameOne", "valueOne")
-            )).toString())
-        ));
-    }
-
-    @Test
     public void matchesMatchingBody() {
         assertTrue(new HttpRequestMatcher(mockServerLogger, new HttpRequest().withBody(new StringBody("somebody"))).matches(null, new HttpRequest().withBody("somebody")));
     }

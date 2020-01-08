@@ -9,6 +9,8 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 import org.mockserver.serialization.model.*;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -2189,7 +2191,8 @@ public class ExpectationSerializerIntegrationTest {
             "    \"path\" : \"somePath\"," + NEW_LINE +
             "    \"body\" : {" + NEW_LINE +
             "      \"type\" : \"JSON\"," + NEW_LINE +
-            "      \"json\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"" + NEW_LINE +
+            "      \"json\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"," + NEW_LINE +
+            "      \"rawBinaryData\" : \"" + Base64.getEncoder().encodeToString(jsonBody.getBytes(UTF_8)) + "\"" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +

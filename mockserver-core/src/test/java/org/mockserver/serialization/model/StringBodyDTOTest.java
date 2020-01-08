@@ -36,7 +36,7 @@ public class StringBodyDTOTest {
     @Test
     public void shouldReturnValuesSetInConstructorWithSubString() {
         // when
-        StringBodyDTO stringBody = new StringBodyDTO(new StringBody("some_body", true));
+        StringBodyDTO stringBody = new StringBodyDTO(new StringBody("some_body", null, true, (MediaType) null));
 
         // then
         assertThat(stringBody.getString(), is("some_body"));
@@ -70,7 +70,7 @@ public class StringBodyDTOTest {
     @Test
     public void shouldBuildCorrectObject() {
         // when
-        StringBody stringBody = new StringBodyDTO(new StringBody("some_body", true, CharsetUtil.ISO_8859_1)).buildObject();
+        StringBody stringBody = new StringBodyDTO(new StringBody("some_body", null, true, (CharsetUtil.ISO_8859_1 != null ? MediaType.create("text", "plain").withCharset(CharsetUtil.ISO_8859_1) : null))).buildObject();
 
         // then
         assertThat(stringBody.getValue(), is("some_body"));
@@ -82,7 +82,7 @@ public class StringBodyDTOTest {
     @Test
     public void shouldNotSetDefaultCharset() {
         // when
-        StringBody stringBody = new StringBodyDTO(new StringBody("some_body", true, DEFAULT_HTTP_CHARACTER_SET)).buildObject();
+        StringBody stringBody = new StringBodyDTO(new StringBody("some_body", null, true, (DEFAULT_HTTP_CHARACTER_SET != null ? MediaType.create("text", "plain").withCharset(DEFAULT_HTTP_CHARACTER_SET) : null))).buildObject();
 
         // then
         assertThat(stringBody.getValue(), is("some_body"));
@@ -93,16 +93,16 @@ public class StringBodyDTOTest {
 
     @Test
     public void shouldReturnCorrectObjectFromStaticExactBuilder() {
-        assertThat(exact("some_body"), is(new StringBody("some_body", false)));
+        assertThat(exact("some_body"), is(new StringBody("some_body", null, false, (MediaType) null)));
         assertThat(exact("some_body"), is(new StringBody("some_body")));
-        assertThat(exact("some_body", StandardCharsets.UTF_16), is(new StringBody("some_body", false, StandardCharsets.UTF_16)));
+        assertThat(exact("some_body", StandardCharsets.UTF_16), is(new StringBody("some_body", null, false, (StandardCharsets.UTF_16 != null ? MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16) : null))));
         assertThat(exact("some_body", StandardCharsets.UTF_16), is(new StringBody("some_body", StandardCharsets.UTF_16)));
     }
 
     @Test
     public void shouldReturnCorrectObjectFromStaticSubStringBuilder() {
-        assertThat(subString("some_body"), is(new StringBody("some_body", true)));
-        assertThat(subString("some_body", StandardCharsets.UTF_16), is(new StringBody("some_body", true, StandardCharsets.UTF_16)));
+        assertThat(subString("some_body"), is(new StringBody("some_body", null, true, (MediaType) null)));
+        assertThat(subString("some_body", StandardCharsets.UTF_16), is(new StringBody("some_body", null, true, (StandardCharsets.UTF_16 != null ? MediaType.create("text", "plain").withCharset(StandardCharsets.UTF_16) : null))));
     }
 
     @Test

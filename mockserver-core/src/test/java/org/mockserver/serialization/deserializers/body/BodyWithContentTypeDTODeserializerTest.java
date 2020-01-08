@@ -133,29 +133,6 @@ public class BodyWithContentTypeDTODeserializerTest {
     }
 
     @Test
-    public void shouldParseJsonWithWrongValueFieldTypeInParameterBody() throws IOException {
-        // given
-        String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\" : {" + NEW_LINE +
-            "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "            \"parameters\" : 1" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "}");
-
-        // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
-
-        // then
-        assertEquals(new ExpectationDTO()
-            .setHttpResponse(
-                new HttpResponseDTO()
-                    .setBody(new ParameterBodyDTO(new ParameterBody()))
-            ), expectationDTO);
-    }
-
-    @Test
     public void shouldParseJsonWithWrongTypeFieldTypeInBody() throws IOException {
         // given
         String json = ("{" + NEW_LINE +
@@ -267,149 +244,6 @@ public class BodyWithContentTypeDTODeserializerTest {
                 new HttpResponseDTO()
                     .setBody(new StringBodyDTO(new StringBody("some_value")))
             ), expectationDTO);
-    }
-
-    @Test
-    public void shouldParseJsonWithParametersBody() throws IOException {
-        // given
-        String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\" : {" + NEW_LINE +
-            "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "            \"parameters\" : [ {" + NEW_LINE +
-            "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
-            "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
-            "                }, {" + NEW_LINE +
-            "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
-            "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
-            "            } ]" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "}");
-
-        // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
-
-        // then
-        assertEquals(new ExpectationDTO()
-            .setHttpResponse(
-                new HttpResponseDTO()
-                    .setBody(new ParameterBodyDTO(new ParameterBody(
-                        new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
-                        new Parameter("parameterTwoName", "parameterTwoValue")
-                    )))
-            ), expectationDTO);
-    }
-
-    @Test
-    public void shouldParseJsonWithParametersBodyWithNot() throws IOException {
-        // given
-        String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\" : {" + NEW_LINE +
-            "            \"not\" : true," + NEW_LINE +
-            "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "            \"parameters\" : [ {" + NEW_LINE +
-            "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
-            "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
-            "                }, {" + NEW_LINE +
-            "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
-            "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
-            "            } ]" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "}");
-
-        // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
-
-        // then
-        assertEquals(new ExpectationDTO()
-            .setHttpResponse(
-                new HttpResponseDTO()
-                    .setBody(new ParameterBodyDTO(new ParameterBody(
-                        new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
-                        new Parameter("parameterTwoName", "parameterTwoValue")
-                    ), true))
-            ), expectationDTO);
-    }
-
-    @Test
-    public void shouldParseJsonWithParametersBodyWithNotParameter() throws IOException {
-        // given
-        String json = ("{" + NEW_LINE +
-            "  \"httpResponse\" : {" + NEW_LINE +
-            "    \"body\" : {" + NEW_LINE +
-            "      \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "      \"parameters\" : [ {" + NEW_LINE +
-            "        \"name\" : {" + NEW_LINE +
-            "          \"not\" : true," + NEW_LINE +
-            "          \"value\" : \"parameterOneName\"" + NEW_LINE +
-            "        }," + NEW_LINE +
-            "        \"values\" : [ {" + NEW_LINE +
-            "          \"not\" : true," + NEW_LINE +
-            "          \"value\" : \"parameterOneValueOne\"" + NEW_LINE +
-            "        }, {" + NEW_LINE +
-            "          \"not\" : true," + NEW_LINE +
-            "          \"value\" : \"parameterOneValueTwo\"" + NEW_LINE +
-            "        } ]" + NEW_LINE +
-            "      }, {" + NEW_LINE +
-            "        \"name\" : \"parameterTwoName\"," + NEW_LINE +
-            "        \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
-            "      } ]" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "  }" + NEW_LINE +
-            "}");
-
-        // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
-
-        // then
-        assertEquals(new ExpectationDTO()
-            .setHttpResponse(
-                new HttpResponseDTO()
-                    .setBody(new ParameterBodyDTO(
-                        new ParameterBody(
-                            new Parameter(not("parameterOneName"), not("parameterOneValueOne"), not("parameterOneValueTwo")),
-                            new Parameter("parameterTwoName", "parameterTwoValue")
-                        )
-                    ))
-            ), expectationDTO);
-    }
-
-    @Test
-    public void shouldParseJsonWithParametersBodyWithNotParameterWithExclamationMark() throws IOException {
-        // given
-        String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\" : {" + NEW_LINE +
-            "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "            \"parameters\" : [ {" + NEW_LINE +
-            "                    \"name\" : \"!parameterOneName\"," + NEW_LINE +
-            "                    \"values\" : [ \"!parameterOneValueOne\", \"!parameterOneValueTwo\" ]" + NEW_LINE +
-            "                }, {" + NEW_LINE +
-            "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
-            "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
-            "            } ]" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "}");
-
-        // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
-
-        // then
-        ExpectationDTO expected = new ExpectationDTO()
-            .setHttpResponse(
-                new HttpResponseDTO()
-                    .setBody(new ParameterBodyDTO(
-                        new ParameterBody(
-                            new Parameter(not("parameterOneName"), not("parameterOneValueOne"), not("parameterOneValueTwo")),
-                            new Parameter("parameterTwoName", "parameterTwoValue")
-                        )
-                    ))
-            );
-        assertEquals(expected, expectationDTO);
     }
 
     @Test
@@ -655,7 +489,7 @@ public class BodyWithContentTypeDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpResponse(
                 new HttpResponseDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}", MediaType.JSON_UTF_8, MatchType.ONLY_MATCHING_FIELDS)))
+                    .setBody(new JsonBodyDTO(new JsonBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}", null, MediaType.JSON_UTF_8, MatchType.ONLY_MATCHING_FIELDS)))
             ), expectationDTO);
     }
 
@@ -679,7 +513,7 @@ public class BodyWithContentTypeDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpResponse(
                 new HttpResponseDTO()
-                    .setBody(new JsonBodyDTO(new JsonBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}", MediaType.JSON_UTF_8.withCharset(StandardCharsets.ISO_8859_1), MatchType.ONLY_MATCHING_FIELDS)))
+                    .setBody(new JsonBodyDTO(new JsonBody("{'employees':[{'firstName':'John', 'lastName':'Doe'}]}", null, MediaType.JSON_UTF_8.withCharset(StandardCharsets.ISO_8859_1), MatchType.ONLY_MATCHING_FIELDS)))
             ), expectationDTO);
     }
 
@@ -886,123 +720,6 @@ public class BodyWithContentTypeDTODeserializerTest {
             .setHttpResponse(
                 new HttpResponseDTO()
                     .setBody(new BinaryBodyDTO(new BinaryBody("some_value".getBytes(UTF_8))))
-            ), expectationDTO);
-    }
-
-    @Test
-    public void shouldParseJsonWithParameterBodyWithoutType() throws IOException {
-        // given
-        String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\" : {" + NEW_LINE +
-            "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "            \"parameters\" : [ {" + NEW_LINE +
-            "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
-            "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
-            "                }, {" + NEW_LINE +
-            "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
-            "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
-            "            } ]" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "}");
-
-        // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
-
-        // then
-        assertEquals(new ExpectationDTO()
-            .setHttpResponse(
-                new HttpResponseDTO()
-                    .setBody(new ParameterBodyDTO(new ParameterBody(
-                        new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
-                        new Parameter("parameterTwoName", "parameterTwoValue")
-                    )))
-            ), expectationDTO);
-    }
-
-    @Test
-    public void shouldParseJsonWithParameterBodyInWrongOrder() throws IOException {
-        // given
-        String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\" : {" + NEW_LINE +
-            "            \"parameters\" : [ {" + NEW_LINE +
-            "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
-            "                    \"values\" : [ \"parameterOneValueOne\" ]" + NEW_LINE +
-            "            } ]," + NEW_LINE +
-            "            \"type\" : \"PARAMETERS\"" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "}");
-
-        // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
-
-        // then
-        assertEquals(new ExpectationDTO()
-            .setHttpResponse(
-                new HttpResponseDTO()
-                    .setBody(new ParameterBodyDTO(new ParameterBody(
-                        new Parameter("parameterOneName", "parameterOneValueOne")
-                    )))
-            ), expectationDTO);
-    }
-
-    @Test
-    public void shouldParseJsonWithParameterBodyUsingParametersProperty() throws IOException {
-        // given
-        String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\" : {" + NEW_LINE +
-            "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "            \"parameters\" : [ {" + NEW_LINE +
-            "                    \"name\" : \"parameterOneName\"," + NEW_LINE +
-            "                    \"values\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
-            "                }, {" + NEW_LINE +
-            "                    \"name\" : \"parameterTwoName\"," + NEW_LINE +
-            "                    \"values\" : [ \"parameterTwoValue\" ]" + NEW_LINE +
-            "            } ]" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "}");
-
-        // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
-
-        // then
-        assertEquals(new ExpectationDTO()
-            .setHttpResponse(
-                new HttpResponseDTO()
-                    .setBody(new ParameterBodyDTO(new ParameterBody(
-                        new Parameter("parameterOneName", "parameterOneValueOne", "parameterOneValueTwo"),
-                        new Parameter("parameterTwoName", "parameterTwoValue")
-                    )))
-            ), expectationDTO);
-    }
-
-    @Test
-    public void shouldParseJsonWithInvalidArrayParameterBody() throws IOException {
-        // given
-        String json = ("{" + NEW_LINE +
-            "    \"httpResponse\": {" + NEW_LINE +
-            "        \"body\" : {" + NEW_LINE +
-            "            \"type\" : \"PARAMETERS\"," + NEW_LINE +
-            "            \"wrong_field\" : {" + NEW_LINE +
-            "                    \"parameterOneName\" : [ \"parameterOneValueOne\", \"parameterOneValueTwo\" ]" + NEW_LINE +
-            "                }" + NEW_LINE +
-            "        }" + NEW_LINE +
-            "    }" + NEW_LINE +
-            "}");
-
-        // when
-        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
-
-        // then
-        assertEquals(new ExpectationDTO()
-            .setHttpResponse(
-                new HttpResponseDTO()
-                    .setBody(new ParameterBodyDTO(new ParameterBody()))
             ), expectationDTO);
     }
 

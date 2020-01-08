@@ -7,7 +7,7 @@ import java.nio.charset.Charset;
 /**
  * @author jamesdbloom
  */
-public abstract class BodyWithContentType<T> extends Body {
+public abstract class BodyWithContentType<T> extends Body<T> {
 
     protected final MediaType contentType;
 

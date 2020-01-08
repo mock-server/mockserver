@@ -3,7 +3,7 @@ package org.mockserver.codec;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.http.FullHttpResponse;
-import org.mockserver.codec.mappers.FullHttpResponseToMockServerResponse;
+import org.mockserver.mappers.FullHttpResponseToMockServerResponse;
 import org.mockserver.logging.MockServerLogger;
 
 import java.util.List;

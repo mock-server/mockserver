@@ -2,7 +2,7 @@ package org.mockserver.codec;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
-import org.mockserver.codec.mappers.MockServerHttpRequestToFullHttpRequest;
+import org.mockserver.mappers.MockServerHttpRequestToFullHttpRequest;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 

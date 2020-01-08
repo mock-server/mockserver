@@ -45,7 +45,7 @@ public class JsonBodyDTOTest {
     @Test
     public void shouldReturnValuesSetInConstructorWithMatchTypeAndCharset() {
         // when
-        JsonBodyDTO jsonBody = new JsonBodyDTO(new JsonBody("some_body", StandardCharsets.UTF_16, STRICT));
+        JsonBodyDTO jsonBody = new JsonBodyDTO(new JsonBody("some_body", null, (StandardCharsets.UTF_16 != null ? MediaType.create("application", "json").withCharset(StandardCharsets.UTF_16) : null), STRICT));
 
         // then
         assertThat(jsonBody.getJson(), is("some_body"));
@@ -57,7 +57,7 @@ public class JsonBodyDTOTest {
     @Test
     public void shouldReturnValuesSetInConstructorWithMatchTypeAndMediaType() {
         // when
-        JsonBodyDTO jsonBody = new JsonBodyDTO(new JsonBody("some_body", MediaType.JSON_UTF_8, STRICT));
+        JsonBodyDTO jsonBody = new JsonBodyDTO(new JsonBody("some_body", null, MediaType.JSON_UTF_8, STRICT));
 
         // then
         assertThat(jsonBody.getJson(), is("some_body"));
@@ -93,7 +93,7 @@ public class JsonBodyDTOTest {
     @Test
     public void shouldBuildCorrectObjectWithMatchTypeAndCharset() {
         // when
-        JsonBody jsonBody = new JsonBodyDTO(new JsonBody("some_body", StandardCharsets.UTF_16, STRICT)).buildObject();
+        JsonBody jsonBody = new JsonBodyDTO(new JsonBody("some_body", null, (StandardCharsets.UTF_16 != null ? MediaType.create("application", "json").withCharset(StandardCharsets.UTF_16) : null), STRICT)).buildObject();
 
         // then
         assertThat(jsonBody.getValue(), is("some_body"));

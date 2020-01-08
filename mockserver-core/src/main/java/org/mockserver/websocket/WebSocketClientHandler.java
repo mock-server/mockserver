@@ -7,7 +7,7 @@ import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.websocketx.*;
-import org.mockserver.codec.mappers.FullHttpResponseToMockServerResponse;
+import org.mockserver.mappers.FullHttpResponseToMockServerResponse;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.MediaType;

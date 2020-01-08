@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.proxy.ProxyConfiguration;
@@ -33,7 +34,8 @@ import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
@@ -42,6 +44,7 @@ import static org.mockserver.proxy.ProxyConfiguration.proxyConfiguration;
 import static org.mockserver.socket.tls.SSLSocketFactory.sslSocketFactory;
 import static org.mockserver.test.Assert.assertContains;
 import static org.mockserver.verify.VerificationTimes.exactly;
+import static org.slf4j.event.Level.ERROR;
 
 /**
  * @author jamesdbloom
@@ -80,7 +83,13 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                 assertContains(IOStreamUtils.readInputStreamToString(socket), "HTTP/1.1 200 OK");
             }
         } catch (java.net.SocketException se) {
-            System.out.println("getProxyPort() = " + getProxyPort());
+            new MockServerLogger().logEvent(
+                new LogEntry()
+                    .setLogLevel(ERROR)
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setMessageFormat("Port port " + getProxyPort())
+                    .setThrowable(se)
+            );
             throw se;
         }
     }
