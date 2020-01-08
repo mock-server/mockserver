@@ -47,13 +47,6 @@ Release Steps
    1. cd helm
    1. helm package ./mockserver/
    1. upload to S3 https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq
-1. create copy of document / website for existing version (for minor or major releases)
-   1. create S3 bucket cloning permissions from existing
-   1. copy public policy
-   1. clone existing website: aws s3 sync s3://aws-website-mockserver-nb9hq s3://aws-website-mockserver--8001a --source-region us-east-1 --region eu-west-2 (**Note:** prepend with credentials from secrets manager)
-   1. delete `versions` and helm charts
-   1. create cloud front distribution copying existing settings
-   1. create Route53 A record as alias to cloud front distribution
 1. update repo
    1. update changelog
    1. delete jekyll-www.mock-server.com/_site
@@ -83,6 +76,14 @@ Release Steps
       1. cd _site
       1. copy to https://s3.console.aws.amazon.com/s3/buckets/aws-website-mockserver-nb9hq/?region=us-east-1
       1. invalidate CloudFront cache
+1. create copy of document / website for existing version (for minor or major releases)
+   1. create S3 bucket cloning permissions from existing
+   1. copy public policy
+   1. clone existing website: aws s3 sync s3://aws-website-mockserver-nb9hq s3://aws-website-mockserver--8001a --source-region us-east-1 --region eu-west-2 (**Note:** prepend with credentials from secrets manager)
+   1. delete `versions` and helm charts
+   1. create cloud front distribution copying existing settings
+   1. create Route53 A record as alias to cloud front distribution
+   1. ensure links in README are correct
 1. update homebrew
    1. brew doctor
    1. delete https://github.com/jamesdbloom/homebrew-core
