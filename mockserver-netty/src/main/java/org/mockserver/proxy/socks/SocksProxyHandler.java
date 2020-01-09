@@ -7,9 +7,9 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.slf4j.event.Level;
 
+import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mockserver.MockServerHandler.PROXYING;
 import static org.mockserver.unification.PortUnificationHandler.disableSslDownstream;
@@ -37,7 +37,7 @@ public abstract class SocksProxyHandler<T> extends SimpleChannelInboundHandler<T
         }
 
         // add Subject Alternative Name for SSL certificate
-        server.getScheduler().submit(() -> KeyAndCertificateFactory.addSubjectAlternativeName(addr));
+        server.getScheduler().submit(() -> addSubjectAlternativeName(addr));
 
         ctx.pipeline().replace(this, null, forwarder);
     }

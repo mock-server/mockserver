@@ -16,7 +16,6 @@ import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.servlet.responsewriter.ServletResponseWriter;
-import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.slf4j.event.Level;
 
 import javax.servlet.ServletContextEvent;
@@ -30,6 +29,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.rtsp.RtspResponseStatuses.NOT_IMPLEMENTED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.PortBinding.portBinding;
@@ -94,7 +94,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
 
             request = httpServletRequestToMockServerRequestDecoder.mapHttpServletRequestToMockServerRequest(httpServletRequest);
             final String hostHeader = request.getFirstHeader(HOST.toString());
-            scheduler.submit(() -> KeyAndCertificateFactory.addSubjectAlternativeName(hostHeader));
+            scheduler.submit(() -> addSubjectAlternativeName(hostHeader));
 
             if (!httpStateHandler.handle(request, responseWriter, true)) {
 

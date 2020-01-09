@@ -53,7 +53,7 @@ public class KeyStoreFactory {
 
     public KeyStoreFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        keyAndCertificateFactory = new KeyAndCertificateFactory(mockServerLogger);
+        keyAndCertificateFactory = new KeyAndCertificateFactoryBC(mockServerLogger);
     }
 
     public static String defaultKeyStoreFileName() {
@@ -71,6 +71,7 @@ public class KeyStoreFactory {
     /**
      * Save X509Certificate in KeyStore file.
      */
+    @SuppressWarnings("SameParameterValue")
     private KeyStore saveCertificateAsKeyStore(KeyStore existingKeyStore, boolean deleteOnExit, String keyStoreFileName, String certificationAlias, Key privateKey, char[] keyStorePassword, Certificate[] chain, X509Certificate caCert) {
         try {
             KeyStore keyStore = existingKeyStore;
@@ -178,13 +179,13 @@ public class KeyStoreFactory {
             ConfigurationProperties.deleteGeneratedKeyStoreOnExit(),
             ConfigurationProperties.javaKeyStoreFilePath(),
             KEY_STORE_CERT_ALIAS,
-            keyAndCertificateFactory.mockServerPrivateKey(),
+            keyAndCertificateFactory.privateKey(),
             ConfigurationProperties.javaKeyStorePassword().toCharArray(),
             new X509Certificate[]{
-                keyAndCertificateFactory.mockServerX509Certificate(),
-                keyAndCertificateFactory.mockServerCertificateAuthorityX509Certificate()
+                keyAndCertificateFactory.x509Certificate(),
+                keyAndCertificateFactory.certificateAuthorityX509Certificate()
             },
-            keyAndCertificateFactory.mockServerCertificateAuthorityX509Certificate()
+            keyAndCertificateFactory.certificateAuthorityX509Certificate()
         );
     }
 

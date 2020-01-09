@@ -22,7 +22,7 @@ import org.mockserver.proxy.connect.HttpConnectHandler;
 import org.mockserver.responsewriter.NettyResponseWriter;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.serialization.PortBindingSerializer;
-import org.mockserver.socket.tls.KeyAndCertificateFactory;
+import org.mockserver.socket.tls.KeyAndCertificateFactoryBC;
 import org.slf4j.event.Level;
 
 import java.net.BindException;
@@ -33,6 +33,7 @@ import java.util.Set;
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
 import static org.mockserver.exception.ExceptionHandler.closeOnFlush;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
 import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
@@ -85,7 +86,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
         ResponseWriter responseWriter = new NettyResponseWriter(ctx);
         try {
-            KeyAndCertificateFactory.addSubjectAlternativeName(request.getFirstHeader(HOST.toString()));
+            addSubjectAlternativeName(request.getFirstHeader(HOST.toString()));
 
             if (!httpStateHandler.handle(request, responseWriter, false)) {
 
@@ -132,7 +133,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                         // assume SSL for CONNECT request
                         enableSslUpstreamAndDownstream(ctx.channel());
                         // add Subject Alternative Name for SSL certificate
-                        server.getScheduler().submit(() -> KeyAndCertificateFactory.addSubjectAlternativeName(request.getPath().getValue()));
+                        server.getScheduler().submit(() -> addSubjectAlternativeName(request.getPath().getValue()));
                         ctx.pipeline().addLast(new HttpConnectHandler(server, mockServerLogger, request.getPath().getValue(), -1));
                         ctx.pipeline().remove(this);
                         ctx.fireChannelRead(request);

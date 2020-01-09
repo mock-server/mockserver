@@ -18,7 +18,7 @@ public class NettySslContextFactory {
     private SslContext serverSslContext = null;
 
     public NettySslContextFactory(MockServerLogger mockServerLogger) {
-        keyAndCertificateFactory = new KeyAndCertificateFactory(mockServerLogger);
+        keyAndCertificateFactory = new KeyAndCertificateFactoryBC(mockServerLogger);
         System.setProperty("https.protocols", "SSLv3,TLSv1,TLSv1.1,TLSv1.2");
     }
 
@@ -38,16 +38,16 @@ public class NettySslContextFactory {
 
     public synchronized SslContext createServerSslContext() {
         if (serverSslContext == null
-            || !keyAndCertificateFactory.mockServerX509CertificateCreated()
+            || !keyAndCertificateFactory.certificateCreated()
             || !ConfigurationProperties.preventCertificateDynamicUpdate() && ConfigurationProperties.rebuildServerKeyStore()) {
             try {
                 keyAndCertificateFactory.buildAndSaveCertificates();
                 serverSslContext = SslContextBuilder.forServer(
-                    keyAndCertificateFactory.mockServerPrivateKey(),
+                    keyAndCertificateFactory.privateKey(),
                     // do we need this password??
                     ConfigurationProperties.javaKeyStorePassword(),
-                    keyAndCertificateFactory.mockServerX509Certificate(),
-                    keyAndCertificateFactory.mockServerCertificateAuthorityX509Certificate()
+                    keyAndCertificateFactory.x509Certificate(),
+                    keyAndCertificateFactory.certificateAuthorityX509Certificate()
                 ).build();
                 ConfigurationProperties.rebuildServerKeyStore(false);
             } catch (Exception e) {

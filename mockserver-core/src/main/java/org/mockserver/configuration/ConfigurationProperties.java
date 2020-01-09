@@ -7,6 +7,8 @@ import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import io.netty.util.NettyRuntime;
 import io.netty.util.internal.SystemPropertyUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.util.IPAddress;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyStoreFactory;
@@ -359,6 +361,17 @@ public class ConfigurationProperties {
     public static void sslCertificateDomainName(String domainName) {
         System.setProperty(MOCKSERVER_SSL_CERTIFICATE_DOMAIN_NAME, domainName);
         rebuildServerKeyStore(true);
+    }
+
+    public static void addSubjectAlternativeName(String host) {
+        if (host != null) {
+            String hostWithoutPort = StringUtils.substringBefore(host, ":");
+            if (IPAddress.isValid(hostWithoutPort)) {
+                addSslSubjectAlternativeNameIps(hostWithoutPort);
+            } else {
+                addSslSubjectAlternativeNameDomains(hostWithoutPort);
+            }
+        }
     }
 
     public static String[] sslSubjectAlternativeNameDomains() {
