@@ -544,9 +544,14 @@
                 <version>3.8.0</version>
                 <configuration>
                     <fork>false</fork>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <compilerArgs>
                         <arg>-XDignore.symbol.file</arg>
                         <arg>-Xlint:all</arg>
+                        <!-- lines below should be uncommented if switching to java 9+ -->
+                        <!--<arg>&#45;&#45;add-exports</arg>-->
+                        <!--<arg>java.base/sun.security.x509=ALL-UNNAMED</arg>-->
                     </compilerArgs>
                 </configuration>
                 <executions>
