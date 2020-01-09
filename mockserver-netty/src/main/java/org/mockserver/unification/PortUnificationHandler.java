@@ -15,8 +15,6 @@ import io.netty.handler.codec.socksx.v5.Socks5InitialRequestDecoder;
 import io.netty.handler.codec.socksx.v5.Socks5ServerEncoder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
-import org.apache.commons.collections4.KeyValue;
-import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.mockserver.callback.CallbackWebSocketServerHandler;
 import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -55,7 +53,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
 
     private static final AttributeKey<Boolean> SSL_ENABLED_UPSTREAM = AttributeKey.valueOf("PROXY_SSL_ENABLED_UPSTREAM");
     private static final AttributeKey<Boolean> SSL_ENABLED_DOWNSTREAM = AttributeKey.valueOf("SSL_ENABLED_DOWNSTREAM");
-    private static final Map<KeyValue<InetSocketAddress, String>, Set<String>> localAddressesCache = new ConcurrentHashMap<>();
+    private static final Map<PortBinding, Set<String>> localAddressesCache = new ConcurrentHashMap<>();
 
     protected final MockServerLogger mockServerLogger;
     private final LoggingHandler loggingHandler = new LoggingHandler(PortUnificationHandler.class);
@@ -204,7 +202,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         if (localAddress instanceof InetSocketAddress) {
             InetSocketAddress inetSocketAddress = (InetSocketAddress) localAddress;
             String portExtension = calculatePortExtension(inetSocketAddress, isSslEnabledUpstream(ctx.channel()));
-            DefaultKeyValue<InetSocketAddress, String> cacheKey = new DefaultKeyValue<>(inetSocketAddress, portExtension);
+            PortBinding cacheKey = new PortBinding(inetSocketAddress, portExtension);
             localAddresses = localAddressesCache.get(cacheKey);
             if (localAddresses == null) {
                 localAddresses = calculateLocalAddresses(inetSocketAddress, portExtension);
