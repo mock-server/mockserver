@@ -248,13 +248,6 @@
 
             <!-- templating -->
             <dependency>
-                <groupId>org.jtwig</groupId>
-                <artifactId>jtwig-web</artifactId>
-                <version>5.87.0.RELEASE</version>
-            </dependency>
-
-            <!-- templating -->
-            <dependency>
                 <groupId>org.apache.velocity</groupId>
                 <artifactId>velocity-engine-scripting</artifactId>
                 <version>${velocity.version}</version>
@@ -328,24 +321,9 @@
                 <version>3.9</version>
             </dependency>
             <dependency>
-                <groupId>commons-codec</groupId>
-                <artifactId>commons-codec</artifactId>
-                <version>1.14</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-text</artifactId>
                 <version>1.8</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-collections4</artifactId>
-                <version>4.4</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-io</groupId>
-                <artifactId>commons-io</artifactId>
-                <version>2.6</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
@@ -367,6 +345,18 @@
             </dependency>
 
             <!-- test -->
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>1.14</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>2.6</version>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>

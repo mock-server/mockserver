@@ -1,9 +1,10 @@
 package org.mockserver.file;
 
-import org.apache.commons.io.IOUtils;
+import com.google.common.io.ByteStreams;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * @author jamesdbloom
@@ -12,7 +13,7 @@ public class FileReader {
 
     public static String readFileFromClassPathOrPath(String filePath) {
         try (InputStream inputStream = openStreamToFileFromClassPathOrPath(filePath)) {
-            return IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
+            return new String(ByteStreams.toByteArray(inputStream), UTF_8.name());
         } catch (IOException ioe) {
             throw new RuntimeException("Exception while loading \"" + filePath + "\"", ioe);
         }

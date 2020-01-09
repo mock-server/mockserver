@@ -1,6 +1,6 @@
 package org.mockserver.examples.mockserver;
 
-import org.apache.commons.io.IOUtils;
+import com.google.common.io.ByteStreams;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpStatusCode;
@@ -95,8 +95,9 @@ public class ResponseActionExamples {
             );
     }
 
+    @SuppressWarnings("ConstantConditions")
     public void responseLiteralWithBinaryPNGBody() throws IOException {
-        byte[] pngBytes = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("org/mockserver/examples/mockserver/test.png"));
+        byte[] pngBytes = ByteStreams.toByteArray(getClass().getClassLoader().getResourceAsStream("org/mockserver/examples/mockserver/test.png"));
         new MockServerClient("localhost", 1080)
             .when(
                 request()

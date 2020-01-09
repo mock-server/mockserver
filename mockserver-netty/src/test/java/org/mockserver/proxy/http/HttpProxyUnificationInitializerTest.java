@@ -20,8 +20,6 @@ import org.mockserver.mockserver.MockServerUnificationInitializer;
 import org.mockserver.proxy.socks.Socks5ProxyHandler;
 import org.mockserver.scheduler.Scheduler;
 
-import java.io.IOException;
-
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;

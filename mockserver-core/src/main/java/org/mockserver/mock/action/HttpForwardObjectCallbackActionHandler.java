@@ -1,6 +1,5 @@
 package org.mockserver.mock.action;
 
-import org.apache.commons.codec.binary.Hex;
 import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.callback.WebSocketRequestCallback;
 import org.mockserver.client.NettyHttpClient;

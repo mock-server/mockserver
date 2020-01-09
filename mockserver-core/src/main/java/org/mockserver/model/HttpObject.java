@@ -8,6 +8,7 @@ import java.util.List;
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("rawtypes")
 public interface HttpObject<T extends HttpObject, B extends Body> {
 
     T withBody(String body);

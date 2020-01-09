@@ -4,7 +4,6 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import org.apache.commons.codec.binary.Hex;
 import org.mockserver.codec.MockServerToNettyResponseEncoder;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
@@ -30,6 +29,7 @@ public class EchoServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     private final MockServerLogger mockServerLogger;
     private final MockServerEventLog mockServerEventLog;
     private final EchoServer.NextResponse nextResponse;
+
     EchoServerHandler(EchoServer.Error error, MockServerLogger mockServerLogger, MockServerEventLog mockServerEventLog, EchoServer.NextResponse nextResponse) {
         this.error = error;
         this.mockServerLogger = mockServerLogger;

@@ -1,10 +1,8 @@
 package org.mockserver.codec;
 
+import com.google.common.io.ByteStreams;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.IOUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
@@ -14,8 +12,6 @@ import org.slf4j.event.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -76,7 +72,7 @@ public class BodyDecoderEncoder {
         if (servletRequest != null) {
             String contentTypeHeader = servletRequest.getHeader(CONTENT_TYPE.toString());
             try {
-                byte[] bodyBytes = IOUtils.toByteArray(servletRequest.getInputStream());
+                byte[] bodyBytes = ByteStreams.toByteArray(servletRequest.getInputStream());
                 return bytesToBody(bodyBytes, contentTypeHeader);
             } catch (Throwable throwable) {
                 mockServerLogger.logEvent(

@@ -1,6 +1,6 @@
 package org.mockserver.streams;
 
-import org.apache.commons.io.IOUtils;
+import com.google.common.io.ByteStreams;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.slf4j.event.Level;
@@ -52,7 +52,7 @@ public class IOStreamUtils {
 
     public String readInputStreamToString(ServletRequest request) {
         try {
-            return IOUtils.toString(request.getInputStream(), UTF_8.name());
+            return new String(ByteStreams.toByteArray(request.getInputStream()), UTF_8.name());
         } catch (IOException ioe) {
             mockServerLogger.logEvent(
                 new LogEntry()

@@ -2,7 +2,6 @@ package org.mockserver.integration.proxy;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -30,6 +29,7 @@ import org.mockserver.streams.IOStreamUtils;
 import javax.net.ssl.SSLSocket;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Base64;
 import java.util.UUID;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
@@ -185,7 +185,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                 output.write(("" +
                     "CONNECT 127.0.0.1:443 HTTP/1.1\r\n" +
                     "Host: 127.0.0.1:" + getServerSecurePort() + "\r\n" +
-                    "Proxy-Authorization: Basic " + Base64.encodeBase64String((username + ":" + password).getBytes(UTF_8)) + "\r\n" +
+                        "Proxy-Authorization: Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes(UTF_8)) + "\r\n" +
                     "\r\n"
                 ).getBytes(UTF_8));
                 output.flush();

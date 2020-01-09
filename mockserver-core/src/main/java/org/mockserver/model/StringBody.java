@@ -1,7 +1,5 @@
 package org.mockserver.model;
 
-import org.apache.commons.codec.binary.Hex;
-
 import java.nio.charset.Charset;
 
 import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
@@ -53,7 +51,7 @@ public class StringBody extends BodyWithContentType<String> {
     }
 
     public static StringBody subString(String body) {
-        return new StringBody(body, null, true, (MediaType) null);
+        return new StringBody(body, null, true, null);
     }
 
     public static StringBody subString(String body, Charset charset) {

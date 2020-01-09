@@ -1,11 +1,11 @@
 package org.mockserver.dashboard;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteStreams;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -57,14 +57,14 @@ public class DashboardHandler {
             if (contentStream != null) {
                 final String extension = StringUtils.substringAfterLast(path, ".");
                 if (IS_TEST.contains(extension)) {
-                    final String content = IOUtils.toString(contentStream, UTF_8.name());
+                    final String content = new String(ByteStreams.toByteArray(contentStream), UTF_8.name());
                     response =
                         response()
                             .withHeader(HttpHeaderNames.CONTENT_TYPE.toString(), MIME_MAP.get(extension))
                             .withHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(content.length()))
                             .withBody(content);
                 } else {
-                    final byte[] bytes = IOUtils.toByteArray(contentStream);
+                    final byte[] bytes = ByteStreams.toByteArray(contentStream);
                     response =
                         response()
                             .withHeader(HttpHeaderNames.CONTENT_TYPE.toString(), MIME_MAP.get(extension))
