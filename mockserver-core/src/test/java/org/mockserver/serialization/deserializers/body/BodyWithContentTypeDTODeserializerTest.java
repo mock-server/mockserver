@@ -18,7 +18,6 @@ import static org.mockserver.model.JsonBody.json;
 import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.StringBody.exact;
 
-@SuppressWarnings("UnstableApiUsage")
 public class BodyWithContentTypeDTODeserializerTest {
 
     @Test
@@ -442,6 +441,26 @@ public class BodyWithContentTypeDTODeserializerTest {
             .setHttpResponse(
                 new HttpResponseDTO()
                     .setBody(new JsonBodyDTO(new JsonBody("{\"employees\":[{\"firstName\":\"John\",\"lastName\":\"Doe\"}]}")))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithJsonBodyAsArray() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpResponse\": {" + NEW_LINE +
+            "        \"body\" : [{\"firstName\":\"John\", \"lastName\":\"Doe\"}]" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpResponse(
+                new HttpResponseDTO()
+                    .setBody(new JsonBodyDTO(new JsonBody("[{\"firstName\":\"John\",\"lastName\":\"Doe\"}]")))
             ), expectationDTO);
     }
 

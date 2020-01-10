@@ -106,7 +106,6 @@ public class JsonSchemaValidatorTest {
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", extra: \\\"field\\\"}\"; line: 1, column: 17]"));
     }
 
-
     @Test
     public void shouldHandleJsonIncorrectSubField() {
         assertThat(new JsonSchemaValidator(mockServerLogger, JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }"),
@@ -114,14 +113,12 @@ public class JsonSchemaValidatorTest {
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: {stringField: \\\"1234\\\"} }\"; line: 1, column: 17]"));
     }
 
-
     @Test
     public void shouldHandleJsonMissingSubField() {
         assertThat(new JsonSchemaValidator(mockServerLogger, JSON_SCHEMA).isValid("{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }"),
             is("JsonParseException - Unexpected character ('\\' (code 92)): expected a valid value (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
                 " at [Source: (String)\"{arrayField: [ \\\"one\\\" ], enumField: \\\"one\\\", objectField: { } }\"; line: 1, column: 17]"));
     }
-
 
     @Test
     public void shouldHandleJsonMultipleErrors() {

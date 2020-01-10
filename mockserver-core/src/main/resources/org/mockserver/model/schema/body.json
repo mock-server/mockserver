@@ -52,6 +52,10 @@
             "additionalProperties": true
         },
         {
+            "type": "array",
+            "additionalProperties": true
+        },
+        {
             "type": "object",
             "additionalProperties": false,
             "properties": {

@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ensure all errors are printed to console
 - removed TLSv1.3 to avoid any issues with JVM version that do not support TLSv1.3
 - handle proxying requests without Content-Length header
+- added support for JSON array for raw JSON in requests or responses body
 
 ### Security
 - updated jetty (used in code examples) to version without vulnerabilities

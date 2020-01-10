@@ -262,6 +262,24 @@ public class JsonSchemaHttpRequestValidatorIntegrationTest {
     }
 
     @Test
+    public void shouldValidateValidShortHandJsonObjectBodyType() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+                "    \"body\" : {\"foo\":\"bar\"}" + NEW_LINE +
+                "  }"),
+            is(""));
+    }
+
+    @Test
+    public void shouldValidateValidShortHandJsonArrayBodyType() {
+        // when
+        assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +
+                "    \"body\" : [{\"foo\":\"bar\"},{\"bar\":\"foo\"}]" + NEW_LINE +
+                "  }"),
+            is(""));
+    }
+
+    @Test
     public void shouldValidateInvalidBodyType() {
         // when
         assertThat(jsonSchemaValidator.isValid("{" + NEW_LINE +

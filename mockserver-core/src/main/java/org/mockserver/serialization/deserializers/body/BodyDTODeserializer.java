@@ -18,6 +18,7 @@ import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -228,6 +229,11 @@ public class BodyDTODeserializer extends StdDeserializer<BodyDTO> {
                 }
                 return new JsonBodyDTO(new JsonBody(objectMapper.writeValueAsString(body), JsonBody.DEFAULT_MATCH_TYPE), false);
             }
+        } else if (currentToken == JsonToken.START_ARRAY) {
+            if (objectMapper == null) {
+                objectMapper = ObjectMapperFactory.createObjectMapper();
+            }
+            return new JsonBodyDTO(new JsonBody(objectMapper.writeValueAsString(ctxt.readValue(jsonParser, List.class)), JsonBody.DEFAULT_MATCH_TYPE), false);
         } else if (currentToken == JsonToken.VALUE_STRING) {
             return new StringBodyDTO(new StringBody(jsonParser.getText()));
         }
