@@ -22,6 +22,7 @@ mods
 # Logs and databases #
 ######################
 *.log
+*.log.*
 *.sql
 *.sqlite
 test.csv
