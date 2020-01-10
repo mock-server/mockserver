@@ -545,7 +545,7 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Verify no requests have been have been sent.
+     * Verify no requests have been sent.
      *
      * @throws AssertionError if any request has been found
      */
