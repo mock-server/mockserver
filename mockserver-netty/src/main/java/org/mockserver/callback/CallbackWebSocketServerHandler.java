@@ -10,7 +10,7 @@ import org.mockserver.dashboard.DashboardWebSocketServerHandler;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
-import org.mockserver.mockserver.MockServerHandler;
+import org.mockserver.netty.MockServerHandler;
 import org.mockserver.codec.MockServerServerCodec;
 import org.slf4j.event.Level;
 
@@ -18,7 +18,7 @@ import java.util.UUID;
 
 import static com.google.common.net.HttpHeaders.HOST;
 import static org.mockserver.exception.ExceptionHandler.shouldNotIgnoreException;
-import static org.mockserver.unification.PortUnificationHandler.isSslEnabledUpstream;
+import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledUpstream;
 import static org.mockserver.websocket.WebSocketClient.CLIENT_REGISTRATION_ID_HEADER;
 
 /**

@@ -5,7 +5,7 @@
 
     <servlet>
         <servlet-name>proxy</servlet-name>
-        <servlet-class>org.mockserver.proxy.ProxyServlet</servlet-class>
+        <servlet-class>org.mockserver.proxyservlet.ProxyServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>proxy</servlet-name>

@@ -4,7 +4,7 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockserver.mockserver.MockServer;
+import org.mockserver.netty.MockServer;
 import org.mockserver.socket.PortFactory;
 
 /**

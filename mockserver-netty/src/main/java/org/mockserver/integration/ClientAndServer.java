@@ -1,7 +1,7 @@
 package org.mockserver.integration;
 
 import org.mockserver.client.MockServerClient;
-import org.mockserver.mockserver.MockServer;
+import org.mockserver.netty.MockServer;
 
 import java.net.InetSocketAddress;
 import java.util.List;

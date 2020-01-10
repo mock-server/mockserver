@@ -5,7 +5,7 @@
 
     <servlet>
         <servlet-name>mockServer</servlet-name>
-        <servlet-class>org.mockserver.server.MockServerServlet</servlet-class>
+        <servlet-class>org.mockserver.mockservlet.MockServerServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>mockServer</servlet-name>

@@ -836,7 +836,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <li>be available in the classpath of the MockServer</li>
     </ul>
 
-    <p>If MockServer is started using the <a href="/mock_server/running_mock_server.html#junit_rule">JUnit @Rule</a> <strong>org.mockserver.junit.MockServerRule</strong> or using <strong>org.mockserver.integration.ClientAndServer</strong> or directly using the <strong>org.mockserver.mockserver.MockServerBuilder</strong> then any class present in the main or test classpaths will be visible to MockServer.</p>
+    <p>If MockServer is started using the <a href="/mock_server/running_mock_server.html#junit_rule">JUnit @Rule</a> <strong>org.mockserver.junit.MockServerRule</strong> or using <strong>org.mockserver.integration.ClientAndServer</strong> or directly using the <strong>org.mockserver.netty.MockServer</strong> then any class present in the main or test classpaths will be visible to MockServer.</p>
 
     <p>If MockServer is started using the <a href="/mock_server/running_mock_server.html#maven_plugin">maven plugin</a> only the non-forked goals (such as <span class="element_value">runAndWait</span> and <span class="element_value">start</span>) will be able to load classes from the main and test classpaths.  It is possible to use classes from a separate maven dependency, however, this dependency must be specified in the plugin configuration <span class="element">dependencies</span> section.  Any dependency added to the plugin configuration <span class="element">dependencies</span> section will then be visible to MockServer run using both forked and non-forked goals.</p>
 

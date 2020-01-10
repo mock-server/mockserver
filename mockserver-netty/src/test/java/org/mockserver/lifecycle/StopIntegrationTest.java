@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
-import org.mockserver.mockserver.MockServer;
+import org.mockserver.netty.MockServer;
 import org.mockserver.socket.PortFactory;
 
 import java.io.IOException;

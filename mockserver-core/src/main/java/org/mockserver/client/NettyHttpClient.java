@@ -12,7 +12,7 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.proxy.ProxyConfiguration;
+import org.mockserver.proxyconfiguration.ProxyConfiguration;
 
 import javax.annotation.Nullable;
 import java.io.IOException;

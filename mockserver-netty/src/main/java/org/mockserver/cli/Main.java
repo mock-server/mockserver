@@ -7,7 +7,7 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.configuration.IntegerStringListParser;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.mockserver.MockServer;
+import org.mockserver.netty.MockServer;
 
 import java.io.PrintStream;
 import java.util.*;

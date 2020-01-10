@@ -12,7 +12,7 @@ import io.netty.handler.proxy.Socks5ProxyHandler;
 import org.mockserver.codec.MockServerClientCodec;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.proxy.ProxyConfiguration;
+import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.socket.tls.NettySslContextFactory;
 
 import java.net.InetSocketAddress;

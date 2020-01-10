@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - performance improvements for header and cookie handling
 - improved JSON validation errors by adding link to OpenAPI Specification
+- removed duplicate packages between modules to prepare for java modules
 
 ### Fixed
 - fixed error where ClientAndServer does fully wait for client to stop
