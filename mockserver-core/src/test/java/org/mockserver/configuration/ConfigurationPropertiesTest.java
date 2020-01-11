@@ -546,7 +546,7 @@ public class ConfigurationPropertiesTest {
         assertThat(directoryToSaveDynamicSSLCertificate(), is(""));
         try {
             directoryToSaveDynamicSSLCertificate("some/random/path");
-            fail();
+            fail("expected exception to be thrown");
         } catch (Throwable throwable) {
             assertThat(throwable, instanceOf(RuntimeException.class));
             assertThat(throwable.getMessage(), is("some/random/path does not exist or is not accessible"));

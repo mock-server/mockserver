@@ -1,6 +1,5 @@
 package org.mockserver.mock;
 
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.callback.WebSocketClientRegistry;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
@@ -32,7 +31,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
@@ -96,7 +95,7 @@ public class HttpStateHandler {
             requestMatcher = httpRequestSerializer.deserialize(request.getBodyAsString());
         }
         try {
-            ClearType retrieveType = ClearType.valueOf(StringUtils.defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "ALL"));
+            ClearType retrieveType = ClearType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "ALL"));
             switch (retrieveType) {
                 case LOG:
                     mockServerLog.clear(requestMatcher);
@@ -187,8 +186,8 @@ public class HttpStateHandler {
         if (request != null) {
             try {
                 final HttpRequest httpRequest = isNotBlank(request.getBodyAsString()) ? httpRequestSerializer.deserialize(request.getBodyAsString()) : null;
-                Format format = Format.valueOf(StringUtils.defaultIfEmpty(request.getFirstQueryStringParameter("format").toUpperCase(), "JSON"));
-                RetrieveType retrieveType = RetrieveType.valueOf(StringUtils.defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "REQUESTS"));
+                Format format = Format.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("format").toUpperCase(), "JSON"));
+                RetrieveType retrieveType = RetrieveType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "REQUESTS"));
                 switch (retrieveType) {
                     case LOGS: {
                         final Object[] arguments = new Object[]{(httpRequest == null ? request() : httpRequest)};
@@ -482,7 +481,7 @@ public class HttpStateHandler {
                     .setArguments(verification)
             );
             verify(verification, result -> {
-                if (StringUtils.isEmpty(result)) {
+                if (isEmpty(result)) {
                     responseWriter.writeResponse(request, ACCEPTED);
 
                 } else {
@@ -503,7 +502,7 @@ public class HttpStateHandler {
                     .setArguments(verificationSequence)
             );
             verify(verificationSequence, result -> {
-                if (StringUtils.isEmpty(result)) {
+                if (isEmpty(result)) {
                     responseWriter.writeResponse(request, ACCEPTED);
                 } else {
                     responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());

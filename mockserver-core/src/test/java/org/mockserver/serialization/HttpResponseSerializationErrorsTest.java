@@ -86,7 +86,7 @@ public class HttpResponseSerializationErrorsTest {
         try {
             // when
             httpResponseSerializer.deserialize("responseBytes");
-            fail();
+            fail("expected exception to be thrown");
         } catch (IllegalArgumentException iae) {
             // then
             assertThat(iae.getMessage(), is("JsonParseException - Unrecognized token 'responseBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
@@ -99,7 +99,7 @@ public class HttpResponseSerializationErrorsTest {
         try {
             // when
             httpResponseSerializer.deserializeArray("responseBytes");
-            fail();
+            fail("expected exception to be thrown");
         } catch (IllegalArgumentException iae) {
             // then
             assertThat(iae.getMessage(), is("com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'responseBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +

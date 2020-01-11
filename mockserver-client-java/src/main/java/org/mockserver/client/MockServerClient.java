@@ -2,7 +2,6 @@ package org.mockserver.client;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.Version;
 import org.mockserver.client.MockServerEventBus.EventType;
 import org.mockserver.configuration.ConfigurationProperties;
@@ -28,7 +27,7 @@ import java.util.concurrent.*;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.formatting.StringFormatter.formatLogMessage;
 import static org.mockserver.mock.HttpStateHandler.LOG_SEPARATOR;
@@ -100,7 +99,7 @@ public class MockServerClient implements Stoppable {
      */
     public MockServerClient(String host, int port, String contextPath) {
         this.clientClass = MockServerClient.class;
-        if (StringUtils.isEmpty(host)) {
+        if (isEmpty(host)) {
             throw new IllegalArgumentException("Host can not be null or empty");
         }
         if (contextPath == null) {
@@ -268,7 +267,6 @@ public class MockServerClient implements Stoppable {
      * Returns whether server MockServer has stopped, by polling the MockServer a configurable
      * amount of times.  If called too quickly after starting MockServer this may return false
      * because MockServer has not yet started, to ensure MockServer has started use hasStarted()
-     *
      */
     public boolean hasStopped(int attempts, long timeout, TimeUnit timeUnit) {
         try {
@@ -574,7 +572,7 @@ public class MockServerClient implements Stoppable {
      */
     public HttpRequest[] retrieveRecordedRequests(HttpRequest httpRequest) {
         String recordedRequests = retrieveRecordedRequests(httpRequest, Format.JSON);
-        if (StringUtils.isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
+        if (isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
             return httpRequestSerializer.deserializeArray(recordedRequests);
         } else {
             return new HttpRequest[0];
@@ -609,7 +607,7 @@ public class MockServerClient implements Stoppable {
      */
     public LogEventRequestAndResponse[] retrieveRecordedRequestsAndResponses(HttpRequest httpRequest) {
         String recordedRequests = retrieveRecordedRequestsAndResponses(httpRequest, Format.JSON);
-        if (StringUtils.isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
+        if (isNotEmpty(recordedRequests) && !recordedRequests.equals("[]")) {
             return httpRequestResponseSerializer.deserializeArray(recordedRequests);
         } else {
             return new LogEventRequestAndResponse[0];

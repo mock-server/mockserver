@@ -62,6 +62,7 @@
         <httpcomponents.version>4.4.1</httpcomponents.version>
         <boucycastle.verion>1.64</boucycastle.verion>
         <spring.version>5.2.2.RELEASE</spring.version>
+        <mockito.version>3.2.4</mockito.version>
         <skipTests>false</skipTests>
         <skipAssembly>false</skipAssembly>
         <release.arguments />
@@ -76,6 +77,7 @@
         <module>mockserver-war</module>
         <module>mockserver-proxy-war</module>
         <module>mockserver-examples</module>
+        <module>mockserver-junit-4</module>
         <module>mockserver-junit-jupiter</module>
     </modules>
 
@@ -364,9 +366,21 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
+                <version>5.5.2</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.mockito</groupId>
-                <artifactId>mockito-all</artifactId>
-                <version>1.10.19</version>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

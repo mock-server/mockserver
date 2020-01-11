@@ -1207,7 +1207,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
                     request()
                         .withPath(calculatePath("some_path")), VerificationTimes.atLeast(2)
                 );
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found at least 2 times, expected:<{" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path") + "\"" + NEW_LINE +

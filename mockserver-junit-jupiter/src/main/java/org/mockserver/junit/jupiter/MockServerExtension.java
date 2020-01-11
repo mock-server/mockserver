@@ -12,16 +12,16 @@ import java.util.Optional;
 
 public class MockServerExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback {
     private static ClientAndServer perTestSuiteClient;
-    private final ClientAndServer clientAndServerFactory;
+    private final ClientAndServer clientAndServer;
     private ClientAndServer client;
     private boolean perTestSuite;
 
     public MockServerExtension() {
-        clientAndServerFactory = new ClientAndServer();
+        this.clientAndServer = new ClientAndServer();
     }
 
-    public MockServerExtension(ClientAndServer clientAndServerFactory) {
-        this.clientAndServerFactory = clientAndServerFactory;
+    public MockServerExtension(ClientAndServer clientAndServer) {
+        this.clientAndServer = clientAndServer;
     }
 
     @Override
@@ -54,12 +54,12 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
     private ClientAndServer instantiateClient(List<Integer> ports) {
         if (perTestSuite) {
             if (perTestSuiteClient == null) {
-                perTestSuiteClient = clientAndServerFactory.startClientAndServer(ports);
+                perTestSuiteClient = clientAndServer.startClientAndServer(ports);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> perTestSuiteClient.stop()));
             }
             return perTestSuiteClient;
         }
-        return clientAndServerFactory.startClientAndServer(ports);
+        return clientAndServer.startClientAndServer(ports);
     }
 
     @Override

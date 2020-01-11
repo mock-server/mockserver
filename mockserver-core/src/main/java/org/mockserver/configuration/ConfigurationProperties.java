@@ -7,7 +7,6 @@ import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import io.netty.util.NettyRuntime;
 import io.netty.util.internal.SystemPropertyUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.IPAddress;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -23,8 +22,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.logging.MockServerLogger.configureLogger;
@@ -365,7 +363,7 @@ public class ConfigurationProperties {
 
     public static void addSubjectAlternativeName(String host) {
         if (host != null) {
-            String hostWithoutPort = StringUtils.substringBefore(host, ":");
+            String hostWithoutPort = substringBefore(host, ":");
             if (IPAddress.isValid(hostWithoutPort)) {
                 addSslSubjectAlternativeNameIps(hostWithoutPort);
             } else {

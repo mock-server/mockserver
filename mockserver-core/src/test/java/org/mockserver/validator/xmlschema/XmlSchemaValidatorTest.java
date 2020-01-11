@@ -145,11 +145,11 @@ public class XmlSchemaValidatorTest {
         try {
             // when
             new XmlSchemaValidator(new MockServerLogger(), "illegal_xml");
-            fail();
-        } catch (Exception ex) {
+            fail("expected exception to be thrown");
+        } catch (Throwable throwable) {
             // then
-            assertThat(ex, instanceOf(RuntimeException.class));
-            assertThat(ex.getMessage(), is("exception parsing schema\n\n\tillegal_xml\n"));
+            assertThat(throwable, instanceOf(RuntimeException.class));
+            assertThat(throwable.getMessage(), is("exception parsing schema\n\n\tillegal_xml\n"));
         }
     }
 
@@ -158,11 +158,11 @@ public class XmlSchemaValidatorTest {
         try {
             // when
             new XmlSchemaValidator(new MockServerLogger(), null);
-            fail();
-        } catch (Exception ex) {
+            fail("expected exception to be thrown");
+        } catch (Throwable throwable) {
             // then
-            assertThat(ex, instanceOf(RuntimeException.class));
-            assertThat(ex.getMessage(), is("exception parsing schema\n\n\tnull\n"));
+            assertThat(throwable, instanceOf(RuntimeException.class));
+            assertThat(throwable.getMessage(), is("exception parsing schema\n\n\tnull\n"));
         }
     }
 
@@ -171,11 +171,11 @@ public class XmlSchemaValidatorTest {
         try {
             // when
             new XmlSchemaValidator(new MockServerLogger(), "");
-            fail();
-        } catch (Exception ex) {
+            fail("expected exception to be thrown");
+        } catch (Throwable throwable) {
             // then
-            assertThat(ex, instanceOf(RuntimeException.class));
-            assertThat(ex.getMessage(), is("exception parsing schema\n\n\n"));
+            assertThat(throwable, instanceOf(RuntimeException.class));
+            assertThat(throwable.getMessage(), is("exception parsing schema\n\n\n"));
         }
     }
 

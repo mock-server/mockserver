@@ -1,7 +1,6 @@
 package org.mockserver.server.initialize;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
@@ -13,6 +12,7 @@ import org.mockserver.serialization.ExpectationSerializer;
 import java.lang.reflect.Constructor;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.slf4j.event.Level.WARN;
 
@@ -43,7 +43,7 @@ public class ExpectationInitializerLoader {
             String initializationClass = ConfigurationProperties.initializationClass();
             if (isNotBlank(initializationClass)) {
                 ClassLoader contextClassLoader = ExpectationInitializerLoader.class.getClassLoader();
-                if (contextClassLoader != null && StringUtils.isNotEmpty(initializationClass)) {
+                if (contextClassLoader != null && isNotEmpty(initializationClass)) {
                     Constructor<?> initializerClassConstructor = contextClassLoader.loadClass(initializationClass).getDeclaredConstructor();
                     Object expectationInitializer = initializerClassConstructor.newInstance();
                     if (expectationInitializer instanceof ExpectationInitializer) {

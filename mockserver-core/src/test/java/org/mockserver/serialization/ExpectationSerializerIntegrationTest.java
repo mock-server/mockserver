@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
@@ -81,7 +82,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         try {
             new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes, false);
-            fail();
+            fail("expected exception to be thrown");
         } catch (Throwable throwable) {
             assertThat(throwable, instanceOf(IllegalArgumentException.class));
             assertThat(throwable.getMessage(), is("" +
@@ -188,7 +189,7 @@ public class ExpectationSerializerIntegrationTest {
         // when
         try {
             new ExpectationSerializer(new MockServerLogger()).deserializeArray(requestBytes, false);
-            fail();
+            fail("expected exception to be thrown");
         } catch (Throwable throwable) {
             assertThat(throwable, instanceOf(IllegalArgumentException.class));
             assertThat(throwable.getMessage(), is("" +

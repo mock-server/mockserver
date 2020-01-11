@@ -1,6 +1,6 @@
 package org.mockserver.url;
 
-import org.apache.commons.lang3.StringUtils;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 
 /**
  * @author jamesdbloom
@@ -21,6 +21,6 @@ public class URLParser {
         } else {
             result = path;
         }
-        return StringUtils.substringBefore(result, "?");
+        return substringBefore(result, "?");
     }
 }

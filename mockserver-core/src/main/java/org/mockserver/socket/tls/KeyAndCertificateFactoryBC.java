@@ -1,6 +1,5 @@
 package org.mockserver.socket.tls;
 
-import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.*;
@@ -36,6 +35,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mockserver.configuration.ConfigurationProperties.directoryToSaveDynamicSSLCertificate;
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.WARN;
@@ -86,7 +86,7 @@ public class KeyAndCertificateFactoryBC implements KeyAndCertificateFactory {
 
     public void addSubjectAlternativeName(String host) {
         if (host != null) {
-            String hostWithoutPort = StringUtils.substringBefore(host, ":");
+            String hostWithoutPort = substringBefore(host, ":");
             if (IPAddress.isValid(hostWithoutPort)) {
                 ConfigurationProperties.addSslSubjectAlternativeNameIps(hostWithoutPort);
             } else {

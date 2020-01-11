@@ -3,7 +3,6 @@ package org.mockserver.model;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import io.netty.util.CharsetUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -14,8 +13,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.slf4j.event.Level.TRACE;
 
 @SuppressWarnings("unused")
@@ -90,8 +88,8 @@ public class MediaType extends ObjectWithJsonToString {
                     typeEndIndex = mediaTypeHeader.length();
                 }
                 String typeString = mediaTypeHeader.substring(0, typeEndIndex).trim();
-                type = StringUtils.substringBefore(typeString, "/").trim().toLowerCase();
-                subType = StringUtils.substringAfter(typeString, "/").trim().toLowerCase();
+                type = substringBefore(typeString, "/").trim().toLowerCase();
+                subType = substringAfter(typeString, "/").trim().toLowerCase();
                 if (typeEndIndex < mediaTypeHeader.length()) {
                     typeEndIndex++;
                 }

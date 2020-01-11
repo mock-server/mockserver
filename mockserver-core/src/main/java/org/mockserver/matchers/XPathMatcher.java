@@ -1,7 +1,6 @@
 package org.mockserver.matchers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -11,6 +10,7 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.slf4j.event.Level.*;
 
 /**
@@ -26,7 +26,7 @@ public class XPathMatcher extends BodyMatcher<String> {
     XPathMatcher(MockServerLogger mockServerLogger, String matcher) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
-        if (StringUtils.isNotBlank(matcher)) {
+        if (isNotBlank(matcher)) {
             try {
                 xpathExpression = XPathFactory.newInstance().newXPath().compile(matcher);
             } catch (XPathExpressionException e) {

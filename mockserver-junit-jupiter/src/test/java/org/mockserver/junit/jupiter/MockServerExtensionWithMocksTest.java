@@ -6,9 +6,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.test.TestLoggerExtension;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Parameter;
@@ -16,16 +16,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({
+    MockServerExtension.class,
+    TestLoggerExtension.class,
+})
 class MockServerExtensionWithMocksTest {
-    private MockServerExtension subject;
+    private MockServerExtension mockServerExtension;
+
     @Mock
-    private ClientAndServer mockClientAndServerFactory;
+    private ClientAndServer clientAndServer;
 
     @Mock
     private ParameterContext mockParameterContext;
@@ -41,72 +46,102 @@ class MockServerExtensionWithMocksTest {
 
     @BeforeEach
     void setup() {
-        subject = new MockServerExtension(mockClientAndServerFactory);
+        initMocks(this);
+        mockServerExtension = new MockServerExtension(clientAndServer);
     }
 
     @Test
     void identifiesSupportedParameter() {
-        doReturn(mockParameter).when(mockParameterContext).getParameter();
+        // given
+        when(mockParameterContext.getParameter()).thenReturn(mockParameter);
         doReturn(MockServerClient.class).when(mockParameter).getType();
-        boolean result = subject.supportsParameter(mockParameterContext, null);
+
+        // when
+        boolean result = mockServerExtension.supportsParameter(mockParameterContext, null);
+
+        // then
         assertThat(result, is(true));
     }
 
     @Test
-    void doesNotsupportsRandomParameterType() {
-        doReturn(mockParameter).when(mockParameterContext).getParameter();
+    void doesNotSupportRandomParameterType() {
+        // given
+        when(mockParameterContext.getParameter()).thenReturn(mockParameter);
         doReturn(Object.class).when(mockParameter).getType();
-        boolean result = subject.supportsParameter(mockParameterContext, null);
+
+        // when
+        boolean result = mockServerExtension.supportsParameter(mockParameterContext, null);
+
+        // then
         assertThat(result, is(false));
     }
 
     @Test
     void beforeAdd_startsServerWithRandomPort() {
-        Optional<AnnotatedElement> element = Optional.of(mockAnnotatedElement);
-        MockServerSettings mockServerSettings = mock(MockServerSettings.class);
-        doReturn(Optional.empty()).when(mockExtensionContext).getParent();
-        subject.beforeAll(mockExtensionContext);
-        verify(mockClientAndServerFactory).startClientAndServer(anyList());
+        // given
+        when(mockExtensionContext.getParent()).thenReturn(Optional.empty());
+
+        // when
+        mockServerExtension.beforeAll(mockExtensionContext);
+
+        // then
+        verify(clientAndServer).startClientAndServer(anyList());
     }
 
     @Test
     void beforeAdd_startsServerWithSpecifiedPorts() {
+        // given
         List<Integer> ports = mockServerCreation();
-        subject.beforeAll(mockExtensionContext);
-        verify(mockClientAndServerFactory).startClientAndServer(ports);
+
+        // when
+        mockServerExtension.beforeAll(mockExtensionContext);
+
+        // then
+        verify(clientAndServer).startClientAndServer(ports);
     }
 
     @Test
     void beforeAdd_startsPerTestSuiteServer() {
+        // given
         List<Integer> ports = mockServerCreation();
         ClientAndServer mockServerClient = mock(ClientAndServer.class);
-        doReturn(mockServerClient).when(mockClientAndServerFactory).startClientAndServer(anyList());
-        subject.beforeAll(mockExtensionContext);
-        verify(mockClientAndServerFactory).startClientAndServer(ports);
+        when(clientAndServer.startClientAndServer(anyList())).thenReturn(mockServerClient);
+
+        // when
+        mockServerExtension.beforeAll(mockExtensionContext);
+
+        // then
+        verify(clientAndServer).startClientAndServer(ports);
     }
 
     @Test
     void resolveParameter_returnsClientInstance() {
-        Optional<AnnotatedElement> element = Optional.of(mockAnnotatedElement);
-        MockServerSettings mockServerSettings = mock(MockServerSettings.class);
+        // given
         ClientAndServer mockServerClient = mock(ClientAndServer.class);
-        doReturn(Optional.empty()).when(mockExtensionContext).getParent();
-        doReturn(mockServerClient).when(mockClientAndServerFactory).startClientAndServer(anyList());
-        subject.beforeAll(mockExtensionContext);
-        Object result = subject.resolveParameter(null, null);
+        when(mockExtensionContext.getParent()).thenReturn(Optional.empty());
+        when(clientAndServer.startClientAndServer(anyList())).thenReturn(mockServerClient);
+
+        // when
+        mockServerExtension.beforeAll(mockExtensionContext);
+
+        // then
+        Object result = mockServerExtension.resolveParameter(null, null);
         assertThat(result, is(equalTo(mockServerClient)));
     }
 
     @Test
     void afterAll_stopsClientInstance() {
-        Optional<AnnotatedElement> element = Optional.of(mockAnnotatedElement);
-        MockServerSettings mockServerSettings = mock(MockServerSettings.class);
+        // given
         ClientAndServer mockServerClient = mock(ClientAndServer.class);
-        doReturn(Optional.empty()).when(mockExtensionContext).getParent();
-        doReturn(mockServerClient).when(mockClientAndServerFactory).startClientAndServer(anyList());
-        doReturn(true).when(mockServerClient).isRunning();
-        subject.beforeAll(mockExtensionContext);
-        subject.afterAll(null);
+        when(mockExtensionContext.getParent()).thenReturn(Optional.empty());
+        when(clientAndServer.startClientAndServer(anyList())).thenReturn(mockServerClient);
+        when(mockServerClient.isRunning()).thenReturn(true);
+
+        // when
+        mockServerExtension.beforeAll(mockExtensionContext);
+        mockServerExtension.afterAll(null);
+
+        // then
         verify(mockServerClient).stop();
     }
 
@@ -115,11 +150,11 @@ class MockServerExtensionWithMocksTest {
         List<Integer> ports = Arrays.asList(5555, 4444);
         Optional<AnnotatedElement> element = Optional.of(mockAnnotatedElement);
         MockServerSettings mockServerSettings = mock(MockServerSettings.class);
-        doReturn(ports.stream().mapToInt(Integer::intValue).toArray()).when(mockServerSettings).ports();
-        doReturn(true).when(mockServerSettings).perTestSuite();
-        doReturn(mockServerSettings).when(mockAnnotatedElement).getDeclaredAnnotation(MockServerSettings.class);
-        doReturn(element).when(mockExtensionContext).getElement();
-        doReturn(Optional.empty()).when(mockExtensionContext).getParent();
+        when(mockServerSettings.ports()).thenReturn(ports.stream().mapToInt(Integer::intValue).toArray());
+        when(mockServerSettings.perTestSuite()).thenReturn(true);
+        when(mockAnnotatedElement.getDeclaredAnnotation(MockServerSettings.class)).thenReturn(mockServerSettings);
+        when(mockExtensionContext.getElement()).thenReturn(element);
+        when(mockExtensionContext.getParent()).thenReturn(Optional.empty());
         return ports;
     }
 }

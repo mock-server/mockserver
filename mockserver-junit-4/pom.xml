@@ -8,27 +8,22 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mockserver-client-java</artifactId>
-
-    <name>MockServer Java Client</name>
-    <description>A java client for the MockServer</description>
+    <name>MockServer JUnit 4 Integration</name>
+    <description>A JUnit4 Rule for MockServer</description>
     <url>http://www.mock-server.com</url>
+
+    <artifactId>mockserver-junit-4</artifactId>
 
     <dependencies>
         <!-- mockserver -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>mockserver-core</artifactId>
-        </dependency>
-
-        <!-- commons & guava -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
+            <artifactId>mockserver-netty</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>mockserver-integration-testing</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <!-- logging -->
@@ -46,6 +41,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>

@@ -2,7 +2,6 @@ package org.mockserver.cli;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.configuration.IntegerStringListParser;
 import org.mockserver.log.model.LogEntry;
@@ -13,6 +12,7 @@ import java.io.PrintStream;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.cli.Main.Arguments.*;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
@@ -128,7 +128,7 @@ public class Main {
         Iterator<String> argumentsIterator = Arrays.asList(arguments).iterator();
         while (argumentsIterator.hasNext()) {
             final String next = argumentsIterator.next();
-            String argumentName = StringUtils.substringAfter(next, "-");
+            String argumentName = substringAfter(next, "-");
             if (argumentsIterator.hasNext()) {
                 String argumentValue = argumentsIterator.next();
                 if (!Arguments.names().containsIgnoreCase(argumentName)) {

@@ -3,7 +3,6 @@ package org.mockserver.mock.action;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoopGroup;
 import io.netty.util.AttributeKey;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.client.SocketCommunicationException;
 import org.mockserver.client.SocketConnectionException;
@@ -27,6 +26,7 @@ import java.util.Set;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.*;
 import static org.mockserver.cors.CORSHeaders.isPreflightRequest;
@@ -82,7 +82,7 @@ public class ActionHandler {
         }
         final Expectation expectation = httpStateHandler.firstMatchingExpectation(request);
         Runnable expectationPostProcessor = () -> httpStateHandler.postProcess(expectation);
-        final boolean potentiallyHttpProxy = !StringUtils.isEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString()));
+        final boolean potentiallyHttpProxy = !isEmpty(request.getFirstHeader(HOST.toString())) && !localAddresses.contains(request.getFirstHeader(HOST.toString()));
 
         if (expectation != null && expectation.getAction() != null) {
 

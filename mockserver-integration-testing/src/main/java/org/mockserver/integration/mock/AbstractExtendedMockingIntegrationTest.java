@@ -3667,7 +3667,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         try {
             mockServerClient.verify(request()
                 .withPath(calculatePath("some_path")), VerificationTimes.exactly(0));
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path") + "\"" + NEW_LINE +
@@ -3696,7 +3696,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         try {
             mockServerClient.verify(request()
                 .withPath(calculatePath("some_other_path")), VerificationTimes.exactly(2));
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found exactly 2 times, expected:<{" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_other_path") + "\"" + NEW_LINE +
@@ -3724,7 +3724,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         );
         try {
             mockServerClient.verifyZeroInteractions();
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{ }> but was:<{" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +
@@ -3755,7 +3755,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                     .withSecure(true),
                 VerificationTimes.atLeast(1)
             );
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found at least once, expected:<{" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path") + "\"," + NEW_LINE +
@@ -3822,7 +3822,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         );
         try {
             mockServerClient.verify(request(calculatePath("some_path_two")), request(calculatePath("some_path_one")));
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path_two") + "\"" + NEW_LINE +
@@ -3834,7 +3834,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         }
         try {
             mockServerClient.verify(request(calculatePath("some_path_three")), request(calculatePath("some_path_two")));
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path_three") + "\"" + NEW_LINE +
@@ -3846,7 +3846,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
         }
         try {
             mockServerClient.verify(request(calculatePath("some_path_four")));
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"" + calculatePath("some_path_four") + "\"" + NEW_LINE +

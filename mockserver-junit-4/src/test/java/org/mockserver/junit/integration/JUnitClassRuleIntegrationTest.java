@@ -1,7 +1,8 @@
-package org.mockserver.netty.integration.mock;
+package org.mockserver.junit.integration;
 
 import org.junit.*;
 import org.mockserver.integration.mock.AbstractBasicMockingIntegrationTest;
+import org.mockserver.integration.mock.AbstractMockingIntegrationTestBase;
 import org.mockserver.junit.MockServerRule;
 import org.mockserver.socket.PortFactory;
 
@@ -19,7 +20,7 @@ public class JUnitClassRuleIntegrationTest extends AbstractBasicMockingIntegrati
     @Before
     @Override
     public void resetServer() {
-        mockServerClient.reset();
+        mockServerRule.getClient().reset();
     }
 
     @Override

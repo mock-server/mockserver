@@ -8,7 +8,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ConnectionOptions;
@@ -21,6 +20,7 @@ import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.mockserver.model.ConnectionOptions.isFalseOrNull;
 
 /**
@@ -67,7 +67,7 @@ public class MockServerToNettyResponseEncoder extends MessageToMessageEncoder<Ht
 
     private HttpResponseStatus getStatus(HttpResponse httpResponse) {
         int statusCode = httpResponse.getStatusCode() != null ? httpResponse.getStatusCode() : 200;
-        if (!StringUtils.isEmpty(httpResponse.getReasonPhrase())) {
+        if (!isEmpty(httpResponse.getReasonPhrase())) {
             return new HttpResponseStatus(statusCode, httpResponse.getReasonPhrase());
         } else {
             return HttpResponseStatus.valueOf(statusCode);

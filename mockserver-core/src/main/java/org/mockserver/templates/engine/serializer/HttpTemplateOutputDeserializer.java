@@ -1,18 +1,19 @@
 package org.mockserver.templates.engine.serializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.DTO;
 import org.mockserver.serialization.model.HttpRequestDTO;
 import org.mockserver.serialization.model.HttpResponseDTO;
-import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator;
 import org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator;
 import org.slf4j.event.Level;
 
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.uncapitalize;
 import static org.mockserver.validator.jsonschema.JsonSchemaHttpRequestValidator.jsonSchemaHttpRequestValidator;
 import static org.mockserver.validator.jsonschema.JsonSchemaHttpResponseValidator.jsonSchemaHttpResponseValidator;
 
@@ -41,7 +42,7 @@ public class HttpTemplateOutputDeserializer {
             } else if (dtoClass.isAssignableFrom(HttpRequestDTO.class)) {
                 validationErrors = httpRequestValidator.isValid(json);
             }
-            if (StringUtils.isEmpty(validationErrors)) {
+            if (isEmpty(validationErrors)) {
                 result = objectMapper.readValue(json, dtoClass).buildObject();
             } else {
                 mockServerLogger.logEvent(
@@ -49,7 +50,7 @@ public class HttpTemplateOutputDeserializer {
                         .setType(LogEntry.LogMessageType.EXCEPTION)
                         .setLogLevel(Level.ERROR)
                         .setHttpRequest(request)
-                        .setMessageFormat("validation failed:{}" + StringUtils.uncapitalize(dtoClass.getSimpleName()) + ":{}")
+                        .setMessageFormat("validation failed:{}" + uncapitalize(dtoClass.getSimpleName()) + ":{}")
                         .setArguments(validationErrors, json)
                 );
             }

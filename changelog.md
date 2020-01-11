@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improved JSON validation errors by adding link to OpenAPI Specification
 - removed duplicate packages between modules to prepare for java modules
 - caught Jackson configuration exception to improve resilience with other Jackson versions in classpath
+- moved Junit4 to separate module to reduce size of jar-with-dependencies, simplify code and increase build speed
 
 ### Fixed
 - fixed error where ClientAndServer does fully wait for client to stop

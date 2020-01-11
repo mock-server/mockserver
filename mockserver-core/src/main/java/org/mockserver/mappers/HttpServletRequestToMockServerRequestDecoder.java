@@ -3,7 +3,6 @@ package org.mockserver.mappers;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import org.apache.commons.lang3.StringUtils;
 import org.mockserver.codec.BodyDecoderEncoder;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
@@ -12,6 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
  * @author jamesdbloom
@@ -50,7 +51,7 @@ public class HttpServletRequestToMockServerRequestDecoder {
 
     private void setQueryString(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
         Parameters parameters = new Parameters();
-        if (StringUtils.isNotEmpty(httpServletRequest.getQueryString())) {
+        if (isNotEmpty(httpServletRequest.getQueryString())) {
             parameters.withEntries(new QueryStringDecoder("?" + httpServletRequest.getQueryString()).parameters());
         }
         httpRequest.withQueryStringParameters(parameters);

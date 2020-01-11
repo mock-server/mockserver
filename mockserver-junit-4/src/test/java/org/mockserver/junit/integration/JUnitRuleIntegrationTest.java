@@ -1,4 +1,4 @@
-package org.mockserver.netty.integration.mock;
+package org.mockserver.junit.integration;
 
 import org.junit.*;
 import org.mockserver.integration.mock.AbstractBasicMockingIntegrationTest;

@@ -374,7 +374,7 @@ public abstract class AbstractClientSecureProxyIntegrationTest {
                             .withHeader(HOST.toString(), "127.0.0.1:" + getServerSecurePort())
                     )
                     .get(10, SECONDS);
-                fail();
+                fail("expected exception to be thrown");
             } catch (Throwable throwable) {
                 assertThat(throwable.getCause().getMessage(), containsString("407 Proxy Authentication Required"));
 

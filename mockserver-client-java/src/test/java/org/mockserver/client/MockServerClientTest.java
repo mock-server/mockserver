@@ -108,7 +108,7 @@ public class MockServerClientTest {
             .reset();
 
         // then
-        verify(mockHttpClient).sendRequest(httpRequestArgumentCaptor.capture(), anyInt(), any(TimeUnit.class));
+        verify(mockHttpClient).sendRequest(httpRequestArgumentCaptor.capture(), anyLong(), any(TimeUnit.class));
         List<String> authorizationHeader = httpRequestArgumentCaptor.getValue().getHeader(authorizationKey);
         assertTrue(authorizationHeader.contains(authorizationHeaderValue));
     }
@@ -1073,7 +1073,7 @@ public class MockServerClientTest {
             mockServerClient.verify(httpRequest);
 
             // then
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest));
             verify(mockHttpClient).sendRequest(
@@ -1103,7 +1103,7 @@ public class MockServerClientTest {
             mockServerClient.verify(httpRequest, httpRequest);
 
             // then
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             verify(mockVerificationSequenceSerializer).serialize(new VerificationSequence().withRequests(httpRequest, httpRequest));
             verify(mockHttpClient).sendRequest(
@@ -1195,7 +1195,7 @@ public class MockServerClientTest {
             mockServerClient.verify(httpRequest, atLeast(1));
 
             // then
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             verify(mockVerificationSerializer).serialize(verification().withRequest(httpRequest).withTimes(atLeast(1)));
             verify(mockHttpClient).sendRequest(
@@ -1278,7 +1278,7 @@ public class MockServerClientTest {
         assertEquals(Times.unlimited(), expectation.getTimes());
 
         ArgumentCaptor<HttpRequest> configRequestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
-        verify(mockHttpClient).sendRequest(configRequestCaptor.capture(), anyInt(), any(TimeUnit.class));
+        verify(mockHttpClient).sendRequest(configRequestCaptor.capture(), anyLong(), any(TimeUnit.class));
         assertFalse(configRequestCaptor.getValue().isSecure());
     }
 
@@ -1308,7 +1308,7 @@ public class MockServerClientTest {
         assertEquals(Times.unlimited(), expectation.getTimes());
 
         ArgumentCaptor<HttpRequest> configRequestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
-        verify(mockHttpClient).sendRequest(configRequestCaptor.capture(), anyInt(), any(TimeUnit.class));
+        verify(mockHttpClient).sendRequest(configRequestCaptor.capture(), anyLong(), any(TimeUnit.class));
         assertTrue(configRequestCaptor.getValue().isSecure());
     }
 

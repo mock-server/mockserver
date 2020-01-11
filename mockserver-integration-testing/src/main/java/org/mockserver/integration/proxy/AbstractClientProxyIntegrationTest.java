@@ -606,7 +606,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                     request()
                         .withPath("/test_headers_and_body"), exactly(0)
                 );
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found exactly 0 times, expected:<{" + NEW_LINE +
                 "  \"path\" : \"" + "/test_headers_and_body" + "\"" + NEW_LINE +
@@ -641,7 +641,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                         .withPath("/other_path"),
                     exactly(1)
                 );
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found exactly once, expected:<{" + NEW_LINE +
                 "  \"path\" : \"" + "/other_path" + "\"" + NEW_LINE +
@@ -675,7 +675,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                     request()
                         .withPath("/other_path")
                 );
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"path\" : \"" + "/other_path" + "\"" + NEW_LINE +
@@ -720,7 +720,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                         .withPath("/test_headers_and_body"),
                     atLeast(3)
                 );
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request not found at least 3 times, expected:<{" + NEW_LINE +
                 "  \"path\" : \"" + "/test_headers_and_body" + "\"" + NEW_LINE +
@@ -768,7 +768,7 @@ public abstract class AbstractClientProxyIntegrationTest {
                         .withMethod("GET")
                         .withPath("/test_headers_and_body")
                 );
-            fail();
+            fail("expected exception to be thrown");
         } catch (AssertionError ae) {
             assertThat(ae.getMessage(), startsWith("Request sequence not found, expected:<[ {" + NEW_LINE +
                 "  \"method\" : \"GET\"," + NEW_LINE +

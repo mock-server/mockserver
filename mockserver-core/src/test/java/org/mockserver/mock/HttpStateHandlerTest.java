@@ -1,9 +1,6 @@
 package org.mockserver.mock;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockserver.log.TimeService;
@@ -350,11 +347,11 @@ public class HttpStateHandlerTest {
         try {
             // when
             httpStateHandler.retrieve(request().withQueryStringParameter("type", "invalid"));
-            fail();
-        } catch (Throwable ex) {
+            fail("expected exception to be thrown");
+        } catch (Throwable throwable) {
             // then
-            assertThat(ex, instanceOf(IllegalArgumentException.class));
-            assertThat(ex.getMessage(), is("\"invalid\" is not a valid value for \"type\" parameter, only the following values are supported [logs, requests, request_responses, recorded_expectations, active_expectations]"));
+            assertThat(throwable, instanceOf(IllegalArgumentException.class));
+            assertThat(throwable.getMessage(), is("\"invalid\" is not a valid value for \"type\" parameter, only the following values are supported [logs, requests, request_responses, recorded_expectations, active_expectations]"));
         }
     }
 
@@ -363,11 +360,11 @@ public class HttpStateHandlerTest {
         try {
             // when
             httpStateHandler.retrieve(request().withQueryStringParameter("format", "invalid"));
-            fail();
-        } catch (Throwable ex) {
+            fail("expected exception to be thrown");
+        } catch (Throwable throwable) {
             // then
-            assertThat(ex, instanceOf(IllegalArgumentException.class));
-            assertThat(ex.getMessage(), is("\"invalid\" is not a valid value for \"format\" parameter, only the following values are supported [java, json, log_entries]"));
+            assertThat(throwable, instanceOf(IllegalArgumentException.class));
+            assertThat(throwable.getMessage(), is("\"invalid\" is not a valid value for \"format\" parameter, only the following values are supported [java, json, log_entries]"));
         }
     }
 

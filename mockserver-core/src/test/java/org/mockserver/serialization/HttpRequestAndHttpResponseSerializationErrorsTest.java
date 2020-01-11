@@ -10,16 +10,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequestAndHttpResponse;
-import org.mockserver.serialization.model.HttpRequestDTO;
+import org.mockserver.serialization.model.HttpRequestAndHttpResponseDTO;
 
 import java.io.IOException;
 
+import static junit.framework.TestCase.fail;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.character.Character.NEW_LINE;
 
@@ -48,27 +48,35 @@ public class HttpRequestAndHttpResponseSerializationErrorsTest {
     @Test
     public void shouldHandleExceptionWhileSerializingObject() throws IOException {
         // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing HttpRequestAndHttpResponse to JSON with value { }");
-        // and
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(HttpRequestDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
+        when(objectWriter.writeValueAsString(any(HttpRequestAndHttpResponseDTO.class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
-        // when
-        httpRequestSerializer.serialize(new HttpRequestAndHttpResponse());
+        try {
+            // when
+            httpRequestSerializer.serialize(new HttpRequestAndHttpResponse());
+            fail("expected exception to be thrown");
+        } catch (Throwable throwable) {
+            // then
+            assertThat(throwable, instanceOf(RuntimeException.class));
+            assertThat(throwable.getMessage(), is("Exception while serializing HttpRequestAndHttpResponse to JSON with value { }"));
+        }
     }
 
     @Test
     public void shouldHandleExceptionWhileSerializingArray() throws IOException {
         // given
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Exception while serializing HttpRequestAndHttpResponse to JSON with value [{ }]");
-        // and
         when(objectMapper.writerWithDefaultPrettyPrinter()).thenReturn(objectWriter);
-        when(objectWriter.writeValueAsString(any(HttpRequestDTO[].class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
+        when(objectWriter.writeValueAsString(any(HttpRequestAndHttpResponseDTO[].class))).thenThrow(new RuntimeException("TEST EXCEPTION"));
 
-        // when
-        httpRequestSerializer.serialize(new HttpRequestAndHttpResponse[]{new HttpRequestAndHttpResponse()});
+        try {
+            // when
+            httpRequestSerializer.serialize(new HttpRequestAndHttpResponse[]{new HttpRequestAndHttpResponse()});
+            fail("expected exception to be thrown");
+        } catch (Throwable throwable) {
+            // then
+            assertThat(throwable, instanceOf(RuntimeException.class));
+            assertThat(throwable.getMessage(), is("Exception while serializing HttpRequestAndHttpResponse to JSON with value [{ }]"));
+        }
     }
 
     @Test
@@ -83,7 +91,7 @@ public class HttpRequestAndHttpResponseSerializationErrorsTest {
         try {
             // when
             httpRequestSerializer.deserialize("requestBytes");
-            fail();
+            fail("expected exception to be thrown");
         } catch (IllegalArgumentException iae) {
             // then
             assertThat(iae.getMessage(), is("JsonParseException - Unrecognized token 'requestBytes': was expecting (JSON String, Number (or 'NaN'/'INF'/'+INF'), Array, Object or token 'null', 'true' or 'false')\n" +
@@ -106,12 +114,15 @@ public class HttpRequestAndHttpResponseSerializationErrorsTest {
 
     @Test
     public void shouldValidateInputForArray() {
-        // given
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("1 error:" + NEW_LINE +
-            " - a request or request array is required but value was \"\"");
-
-        // when
-        assertArrayEquals(new HttpRequestAndHttpResponse[]{}, httpRequestSerializer.deserializeArray(""));
+        try {
+            // when
+            assertArrayEquals(new HttpRequestAndHttpResponse[]{}, httpRequestSerializer.deserializeArray(""));
+            fail("expected exception to be thrown");
+        } catch (Throwable throwable) {
+            // then
+            assertThat(throwable, instanceOf(IllegalArgumentException.class));
+            assertThat(throwable.getMessage(), is("1 error:" + NEW_LINE +
+                " - a request or request array is required but value was \"\""));
+        }
     }
 }

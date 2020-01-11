@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
@@ -72,11 +73,11 @@ public class X509GeneratorTest {
         X509AndPrivateKey keyPair = x509Generator.generateRootKeyPair(csr);
         X509CertImpl x509CertImpl = new X509CertImpl(x509Generator.certFromPem(keyPair.getCert()));
 
-        // when -  expiration is verified
+        // when - expiration is verified
         LocalDateTime instantBeforeIssueTime = LocalDateTime.now().minusMonths(1).minusHours(1);
         try {
             x509CertImpl.checkValidity(Date.from(instantBeforeIssueTime.atZone(ZoneId.systemDefault()).toInstant()));
-            fail();
+            fail("expected exception to be thrown");
         } catch (CertificateNotYetValidException cynyve) {
             assertThat(cynyve.getMessage(), containsString("NotBefore"));
         }
@@ -91,11 +92,11 @@ public class X509GeneratorTest {
         X509AndPrivateKey keyPair = x509Generator.generateRootKeyPair(csr);
         X509CertImpl x509CertImpl = new X509CertImpl(x509Generator.certFromPem(keyPair.getCert()));
 
-        // when -  expiration is verified
+        // when - expiration is verified
         LocalDateTime instantAfterIssueTime = LocalDateTime.now().plusDays(VALIDITY).plusHours(1);
         try {
             x509CertImpl.checkValidity(Date.from(instantAfterIssueTime.atZone(ZoneId.systemDefault()).toInstant()));
-            fail();
+            fail("expected exception to be thrown");
         } catch (CertificateExpiredException cynyve) {
             assertThat(cynyve.getMessage(), containsString("NotAfter"));
         }
