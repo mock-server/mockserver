@@ -12,4 +12,4 @@ echo
 echo
 
 # to run from specific module use argument in quotes "-rf mockserver-war"
-./mvnw -T 2C clean install -offline $1 -Djava.security.egd=file:/dev/urandom -DskipAssembly=true
+./mvnw -T 3C clean install -offline $1 -Djava.security.egd=file:/dev/urandom -DskipAssembly=true
