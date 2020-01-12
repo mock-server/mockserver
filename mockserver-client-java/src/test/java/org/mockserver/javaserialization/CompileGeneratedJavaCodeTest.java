@@ -1,10 +1,11 @@
-package org.mockserver.serialization.java;
+package org.mockserver.javaserialization;
 
 import org.junit.Test;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
+import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;

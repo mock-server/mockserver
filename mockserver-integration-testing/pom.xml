@@ -23,6 +23,11 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-client-java</artifactId>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>mockserver-testing</artifactId>
+            <scope>compile</scope>
+        </dependency>
 
         <!-- Netty -->
         <dependency>
