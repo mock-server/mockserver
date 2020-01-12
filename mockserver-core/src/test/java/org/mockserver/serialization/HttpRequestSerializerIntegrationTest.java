@@ -747,7 +747,7 @@ public class HttpRequestSerializerIntegrationTest {
             "  \"body\" : {" + NEW_LINE +
             "    \"type\" : \"JSON\"," + NEW_LINE +
             "    \"json\" : \"" + StringEscapeUtils.escapeJava(json) + "\"," + NEW_LINE +
-            "    \"rawBinaryData\" : \"" + Base64.getEncoder().encodeToString(json.getBytes(UTF_8)) + "\"" + NEW_LINE +
+            "    \"rawBytes\" : \"" + Base64.getEncoder().encodeToString(json.getBytes(UTF_8)) + "\"" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonHttpRequest);
     }
@@ -802,7 +802,7 @@ public class HttpRequestSerializerIntegrationTest {
             "  \"body\" : {" + NEW_LINE +
             "    \"type\" : \"XML\"," + NEW_LINE +
             "    \"xml\" : \"<some><xml></xml></some>\"," + NEW_LINE +
-            "    \"rawBinaryData\" : \"" + Base64.getEncoder().encodeToString("<some><xml></xml></some>".getBytes(UTF_8)) + "\"" + NEW_LINE +
+            "    \"rawBytes\" : \"" + Base64.getEncoder().encodeToString("<some><xml></xml></some>".getBytes(UTF_8)) + "\"" + NEW_LINE +
             "  }" + NEW_LINE +
             "}", jsonHttpRequest);
     }

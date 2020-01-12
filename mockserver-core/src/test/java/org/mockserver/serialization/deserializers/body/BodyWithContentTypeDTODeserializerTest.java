@@ -1,6 +1,5 @@
 package org.mockserver.serialization.deserializers.body;
 
-import io.netty.util.CharsetUtil;
 import org.junit.Test;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.model.*;
@@ -15,7 +14,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.model.JsonBody.json;
-import static org.mockserver.model.NottableString.not;
 import static org.mockserver.model.StringBody.exact;
 
 public class BodyWithContentTypeDTODeserializerTest {
@@ -294,7 +292,7 @@ public class BodyWithContentTypeDTODeserializerTest {
         String json = ("{" + NEW_LINE +
             "    \"httpResponse\": {" + NEW_LINE +
             "        \"body\" : {" + NEW_LINE +
-            "            \"charset\" : \"" + CharsetUtil.ISO_8859_1 + "\"," + NEW_LINE +
+            "            \"charset\" : \"" + StandardCharsets.ISO_8859_1 + "\"," + NEW_LINE +
             "            \"string\" : \"some_value\"" + NEW_LINE +
             "        }" + NEW_LINE +
             "    }" + NEW_LINE +
@@ -307,7 +305,7 @@ public class BodyWithContentTypeDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpResponse(
                 new HttpResponseDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", MediaType.PLAIN_TEXT_UTF_8.withCharset(CharsetUtil.ISO_8859_1))))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", MediaType.PLAIN_TEXT_UTF_8.withCharset(StandardCharsets.ISO_8859_1))))
             ), expectationDTO);
     }
 

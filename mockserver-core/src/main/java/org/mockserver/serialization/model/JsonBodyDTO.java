@@ -11,7 +11,7 @@ public class JsonBodyDTO extends BodyWithContentTypeDTO {
 
     private final String json;
     private final MatchType matchType;
-    private final byte[] rawBinaryData;
+    private final byte[] rawBytes;
 
     public JsonBodyDTO(JsonBody jsonBody) {
         this(jsonBody, false);
@@ -21,7 +21,7 @@ public class JsonBodyDTO extends BodyWithContentTypeDTO {
         super(Body.Type.JSON, not, jsonBody.getContentType());
         json = jsonBody.getValue();
         matchType = jsonBody.getMatchType();
-        rawBinaryData = jsonBody.getRawBytes();
+        rawBytes = jsonBody.getRawBytes();
     }
 
     public String getJson() {
@@ -32,11 +32,11 @@ public class JsonBodyDTO extends BodyWithContentTypeDTO {
         return matchType;
     }
 
-    public byte[] getRawBinaryData() {
-        return rawBinaryData;
+    public byte[] getRawBytes() {
+        return rawBytes;
     }
 
     public JsonBody buildObject() {
-        return new JsonBody(getJson(), getRawBinaryData(), getMediaType(), getMatchType());
+        return new JsonBody(getJson(), getRawBytes(), getMediaType(), getMatchType());
     }
 }

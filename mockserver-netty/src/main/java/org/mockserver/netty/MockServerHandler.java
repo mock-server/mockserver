@@ -6,7 +6,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.base64.Base64;
 import io.netty.util.AttributeKey;
-import io.netty.util.CharsetUtil;
 import org.apache.commons.text.StringEscapeUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.dashboard.DashboardHandler;
@@ -25,6 +24,7 @@ import org.mockserver.serialization.PortBindingSerializer;
 import org.slf4j.event.Level;
 
 import java.net.BindException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -123,7 +123,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                     String username = ConfigurationProperties.proxyAuthenticationUsername();
                     String password = ConfigurationProperties.proxyAuthenticationPassword();
                     if (isNotBlank(username) && isNotBlank(password) &&
-                        !request.containsHeader(PROXY_AUTHORIZATION.toString(), "Basic " + Base64.encode(Unpooled.copiedBuffer(username + ':' + password, CharsetUtil.UTF_8), false).toString(CharsetUtil.US_ASCII))) {
+                        !request.containsHeader(PROXY_AUTHORIZATION.toString(), "Basic " + Base64.encode(Unpooled.copiedBuffer(username + ':' + password, StandardCharsets.UTF_8), false).toString(StandardCharsets.US_ASCII))) {
                         ctx.writeAndFlush(response()
                             .withStatusCode(PROXY_AUTHENTICATION_REQUIRED.code())
                             .withHeader(PROXY_AUTHENTICATE.toString(), "Basic realm=\"" + StringEscapeUtils.escapeJava(ConfigurationProperties.proxyAuthenticationRealm()) + "\", charset=\"UTF-8\""));

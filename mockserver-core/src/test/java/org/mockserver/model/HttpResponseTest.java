@@ -1,9 +1,9 @@
 package org.mockserver.model;
 
-import io.netty.util.CharsetUtil;
 import org.junit.Test;
 import org.mockserver.serialization.Base64Converter;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -180,7 +180,7 @@ public class HttpResponseTest {
                 "  }" + NEW_LINE +
                 "}",
             response()
-                .withBody("some_body", CharsetUtil.ISO_8859_1)
+                .withBody("some_body", StandardCharsets.ISO_8859_1)
                 .withStatusCode(666)
                 .withReasonPhrase("randomPhrase")
                 .withHeaders(new Header("some_header", "some_header_value"))

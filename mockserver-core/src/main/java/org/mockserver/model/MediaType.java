@@ -2,12 +2,12 @@ package org.mockserver.model;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import io.netty.util.CharsetUtil;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -29,7 +29,7 @@ public class MediaType extends ObjectWithJsonToString {
      *     "ISO-8859-1" or its subsets MUST be labeled with an appropriate charset value.
      * </pre>
      */
-    public static final Charset DEFAULT_HTTP_CHARACTER_SET = CharsetUtil.ISO_8859_1;
+    public static final Charset DEFAULT_HTTP_CHARACTER_SET = StandardCharsets.ISO_8859_1;
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ObjectMapperFactory.class);
     private static final char TYPE_SEPARATOR = '/';
     private static final char PARAMETER_START = ';';

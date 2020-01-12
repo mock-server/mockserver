@@ -11,13 +11,13 @@ import static org.mockserver.model.MediaType.DEFAULT_HTTP_CHARACTER_SET;
 /**
  * @author jamesdbloom
  */
-public class JsonBody extends BodyWithContentType {
+public class JsonBody extends BodyWithContentType<String> {
 
     public static final MatchType DEFAULT_MATCH_TYPE = MatchType.ONLY_MATCHING_FIELDS;
     public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.create("application", "json");
     private final String json;
     private final MatchType matchType;
-    private final byte[] rawBinaryData;
+    private final byte[] rawBytes;
 
     public JsonBody(String json) {
         this(json, null, DEFAULT_CONTENT_TYPE, DEFAULT_MATCH_TYPE);
@@ -31,15 +31,15 @@ public class JsonBody extends BodyWithContentType {
         this(json, null, (charset != null ? DEFAULT_CONTENT_TYPE.withCharset(charset) : null), matchType);
     }
 
-    public JsonBody(String json, byte[] rawBinaryData, MediaType contentType, MatchType matchType) {
+    public JsonBody(String json, byte[] rawBytes, MediaType contentType, MatchType matchType) {
         super(Type.JSON, contentType);
         this.json = json;
         this.matchType = matchType;
 
-        if (rawBinaryData == null && json != null) {
-            this.rawBinaryData = json.getBytes(determineCharacterSet(contentType, DEFAULT_HTTP_CHARACTER_SET));
+        if (rawBytes == null && json != null) {
+            this.rawBytes = json.getBytes(determineCharacterSet(contentType, DEFAULT_HTTP_CHARACTER_SET));
         } else {
-            this.rawBinaryData = rawBinaryData;
+            this.rawBytes = rawBytes;
         }
     }
 
@@ -106,7 +106,7 @@ public class JsonBody extends BodyWithContentType {
     }
 
     public byte[] getRawBytes() {
-        return rawBinaryData;
+        return rawBytes;
     }
 
     public MatchType getMatchType() {

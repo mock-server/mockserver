@@ -9,7 +9,7 @@ public class StringBodyDTO extends BodyWithContentTypeDTO {
 
     private final String string;
     private final boolean subString;
-    private final byte[] rawBinaryData;
+    private final byte[] rawBytes;
 
     public StringBodyDTO(StringBody stringBody) {
         this(stringBody, stringBody.getNot());
@@ -19,7 +19,7 @@ public class StringBodyDTO extends BodyWithContentTypeDTO {
         super(stringBody.getType(), not, stringBody.getContentType());
         string = stringBody.getValue();
         subString = stringBody.isSubString();
-        rawBinaryData = stringBody.getRawBytes();
+        rawBytes = stringBody.getRawBytes();
     }
 
     public String getString() {
@@ -30,11 +30,11 @@ public class StringBodyDTO extends BodyWithContentTypeDTO {
         return subString;
     }
 
-    public byte[] getRawBinaryData() {
-        return rawBinaryData;
+    public byte[] getRawBytes() {
+        return rawBytes;
     }
 
     public StringBody buildObject() {
-        return new StringBody(getString(), getRawBinaryData(), isSubString(), getMediaType());
+        return new StringBody(getString(), getRawBytes(), isSubString(), getMediaType());
     }
 }

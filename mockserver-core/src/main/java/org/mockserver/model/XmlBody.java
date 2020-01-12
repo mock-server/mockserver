@@ -11,7 +11,7 @@ public class XmlBody extends BodyWithContentType<String> {
 
     public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.create("application", "xml");
     private final String xml;
-    private final byte[] rawBinaryData;
+    private final byte[] rawBytes;
 
     public XmlBody(String xml) {
         this(xml, DEFAULT_CONTENT_TYPE);
@@ -25,14 +25,14 @@ public class XmlBody extends BodyWithContentType<String> {
         this(xml, null, contentType);
     }
 
-    public XmlBody(String xml, byte[] rawBinaryData, MediaType contentType) {
+    public XmlBody(String xml, byte[] rawBytes, MediaType contentType) {
         super(Type.XML, contentType);
         this.xml = xml;
 
-        if (rawBinaryData == null && xml != null) {
-            this.rawBinaryData = xml.getBytes(determineCharacterSet(contentType, DEFAULT_HTTP_CHARACTER_SET));
+        if (rawBytes == null && xml != null) {
+            this.rawBytes = xml.getBytes(determineCharacterSet(contentType, DEFAULT_HTTP_CHARACTER_SET));
         } else {
-            this.rawBinaryData = rawBinaryData;
+            this.rawBytes = rawBytes;
         }
     }
 
@@ -53,7 +53,7 @@ public class XmlBody extends BodyWithContentType<String> {
     }
 
     public byte[] getRawBytes() {
-        return rawBinaryData;
+        return rawBytes;
     }
 
     @Override

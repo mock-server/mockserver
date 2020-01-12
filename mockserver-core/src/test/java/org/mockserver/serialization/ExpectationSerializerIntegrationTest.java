@@ -2193,7 +2193,7 @@ public class ExpectationSerializerIntegrationTest {
             "    \"body\" : {" + NEW_LINE +
             "      \"type\" : \"JSON\"," + NEW_LINE +
             "      \"json\" : \"" + StringEscapeUtils.escapeJava(jsonBody) + "\"," + NEW_LINE +
-            "      \"rawBinaryData\" : \"" + Base64.getEncoder().encodeToString(jsonBody.getBytes(UTF_8)) + "\"" + NEW_LINE +
+            "      \"rawBytes\" : \"" + Base64.getEncoder().encodeToString(jsonBody.getBytes(UTF_8)) + "\"" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"httpResponse\" : {" + NEW_LINE +

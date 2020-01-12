@@ -1,7 +1,6 @@
 package org.mockserver.model;
 
 import com.google.common.collect.ImmutableMap;
-import io.netty.util.CharsetUtil;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -250,7 +249,7 @@ public class MediaTypeTest {
         );
         for (String contentType : binaryContentTypes) {
             MediaType parse = MediaType.parse(contentType);
-            assertThat("\"" + contentType + "\" should be default charset CharsetUtil.ISO_8859_1", parse.getCharsetOrDefault(), is(CharsetUtil.ISO_8859_1));
+            assertThat("\"" + contentType + "\" should be default charset CharsetUtil.ISO_8859_1", parse.getCharsetOrDefault(), is(StandardCharsets.ISO_8859_1));
         }
     }
 

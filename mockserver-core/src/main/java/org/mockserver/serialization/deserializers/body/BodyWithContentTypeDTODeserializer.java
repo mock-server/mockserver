@@ -50,7 +50,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
     public BodyWithContentTypeDTO deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
         JsonToken currentToken = jsonParser.getCurrentToken();
         String valueJsonValue = "";
-        byte[] rawBinaryData = null;
+        byte[] rawBytes = null;
         Body.Type type = null;
         boolean not = false;
         MediaType contentType = null;
@@ -86,16 +86,16 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                             valueJsonValue = String.valueOf(entry.getValue());
                         }
                     }
-                    if (containsIgnoreCase(key, "rawBinaryData", "base64Bytes")) {
+                    if (containsIgnoreCase(key, "rawBytes", "base64Bytes")) {
                         if (entry.getValue() instanceof String) {
                             try {
-                                rawBinaryData = BASE64_DECODER.decode((String) entry.getValue());
+                                rawBytes = BASE64_DECODER.decode((String) entry.getValue());
                             } catch (Throwable throwable) {
                                 MOCK_SERVER_LOGGER.logEvent(
                                     new LogEntry()
                                         .setType(LogEntry.LogMessageType.TRACE)
                                         .setLogLevel(TRACE)
-                                        .setMessageFormat("invalid base64 encoded rawBinaryData with value \"" + entry.getValue() + "\"")
+                                        .setMessageFormat("invalid base64 encoded rawBytes with value \"" + entry.getValue() + "\"")
                                 );
                             }
                         }
@@ -143,33 +143,33 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                 switch (type) {
                     case BINARY:
                         if (contentType != null) {
-                            return new BinaryBodyDTO(new BinaryBody(rawBinaryData, contentType), not);
+                            return new BinaryBodyDTO(new BinaryBody(rawBytes, contentType), not);
                         } else {
-                            return new BinaryBodyDTO(new BinaryBody(rawBinaryData), not);
+                            return new BinaryBodyDTO(new BinaryBody(rawBytes), not);
                         }
                     case JSON:
                         if (contentType != null) {
-                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBinaryData, contentType, JsonBody.DEFAULT_MATCH_TYPE), not);
+                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, contentType, JsonBody.DEFAULT_MATCH_TYPE), not);
                         } else if (charset != null) {
-                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBinaryData, JsonBody.DEFAULT_CONTENT_TYPE.withCharset(charset), JsonBody.DEFAULT_MATCH_TYPE), not);
+                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_CONTENT_TYPE.withCharset(charset), JsonBody.DEFAULT_MATCH_TYPE), not);
                         } else {
-                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBinaryData, JsonBody.DEFAULT_CONTENT_TYPE, JsonBody.DEFAULT_MATCH_TYPE), not);
+                            return new JsonBodyDTO(new JsonBody(valueJsonValue, rawBytes, JsonBody.DEFAULT_CONTENT_TYPE, JsonBody.DEFAULT_MATCH_TYPE), not);
                         }
                     case STRING:
                         if (contentType != null) {
-                            return new StringBodyDTO(new StringBody(valueJsonValue, rawBinaryData, false, contentType), not);
+                            return new StringBodyDTO(new StringBody(valueJsonValue, rawBytes, false, contentType), not);
                         } else if (charset != null) {
-                            return new StringBodyDTO(new StringBody(valueJsonValue, rawBinaryData, false, StringBody.DEFAULT_CONTENT_TYPE.withCharset(charset)), not);
+                            return new StringBodyDTO(new StringBody(valueJsonValue, rawBytes, false, StringBody.DEFAULT_CONTENT_TYPE.withCharset(charset)), not);
                         } else {
-                            return new StringBodyDTO(new StringBody(valueJsonValue, rawBinaryData, false, null), not);
+                            return new StringBodyDTO(new StringBody(valueJsonValue, rawBytes, false, null), not);
                         }
                     case XML:
                         if (contentType != null) {
-                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBinaryData, contentType), not);
+                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, contentType), not);
                         } else if (charset != null) {
-                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBinaryData, XmlBody.DEFAULT_CONTENT_TYPE.withCharset(charset)), not);
+                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_CONTENT_TYPE.withCharset(charset)), not);
                         } else {
-                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBinaryData, XmlBody.DEFAULT_CONTENT_TYPE), not);
+                            return new XmlBodyDTO(new XmlBody(valueJsonValue, rawBytes, XmlBody.DEFAULT_CONTENT_TYPE), not);
                         }
                 }
             } else if (body.size() > 0) {

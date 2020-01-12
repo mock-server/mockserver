@@ -1,12 +1,11 @@
 package org.mockserver.serialization.deserializers.body;
 
-import io.netty.util.CharsetUtil;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
-import org.mockserver.serialization.ObjectMapperFactory;
-import org.mockserver.serialization.model.*;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.model.*;
+import org.mockserver.serialization.ObjectMapperFactory;
+import org.mockserver.serialization.model.*;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
@@ -483,7 +482,7 @@ public class BodyDTODeserializerTest {
         String json = ("{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"body\" : {" + NEW_LINE +
-            "            \"charset\" : \""+ CharsetUtil.ISO_8859_1 +  "\"," + NEW_LINE +
+            "            \"charset\" : \"" + StandardCharsets.ISO_8859_1 + "\"," + NEW_LINE +
             "            \"string\" : \"some_value\"" + NEW_LINE +
             "        }" + NEW_LINE +
             "    }" + NEW_LINE +
@@ -496,7 +495,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", MediaType.PLAIN_TEXT_UTF_8.withCharset(CharsetUtil.ISO_8859_1))))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", MediaType.PLAIN_TEXT_UTF_8.withCharset(StandardCharsets.ISO_8859_1))))
             ), expectationDTO);
     }
 
@@ -588,7 +587,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", null, true, (MediaType) null)))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", null, true, null)))
             ), expectationDTO);
     }
 
@@ -611,7 +610,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", null, false, (MediaType) null)))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", null, false, null)))
             ), expectationDTO);
     }
 
@@ -645,7 +644,7 @@ public class BodyDTODeserializerTest {
         String json = ("{" + NEW_LINE +
             "    \"httpRequest\": {" + NEW_LINE +
             "        \"body\" : {" + NEW_LINE +
-            "            \"charset\" : \""+ CharsetUtil.ISO_8859_1 +  "\"," + NEW_LINE +
+            "            \"charset\" : \"" + StandardCharsets.ISO_8859_1 + "\"," + NEW_LINE +
             "            \"string\" : \"some_value\"" + NEW_LINE +
             "        }" + NEW_LINE +
             "    }" + NEW_LINE +
@@ -658,7 +657,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", MediaType.PLAIN_TEXT_UTF_8.withCharset(CharsetUtil.ISO_8859_1))))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", MediaType.PLAIN_TEXT_UTF_8.withCharset(StandardCharsets.ISO_8859_1))))
             ), expectationDTO);
     }
 
@@ -681,7 +680,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", null, true, (MediaType) null)))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", null, true, null)))
             ), expectationDTO);
     }
 
@@ -706,7 +705,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", null, true, (MediaType) null), true))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", null, true, null), true))
             ), expectationDTO);
     }
 
@@ -730,7 +729,7 @@ public class BodyDTODeserializerTest {
         assertEquals(new ExpectationDTO()
             .setHttpRequest(
                 new HttpRequestDTO()
-                    .setBody(new StringBodyDTO(new StringBody("some_value", null, true, (MediaType) null)))
+                    .setBody(new StringBodyDTO(new StringBody("some_value", null, true, null)))
             ), expectationDTO);
     }
 

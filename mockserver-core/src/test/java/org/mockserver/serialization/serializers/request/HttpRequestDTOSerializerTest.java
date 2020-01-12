@@ -95,7 +95,7 @@ public class HttpRequestDTOSerializerTest {
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"JSON\"," + NEW_LINE +
                 "    \"json\" : \"{ \\\"key\\\": \\\"some_value\\\" }\"," + NEW_LINE +
-                "    \"rawBinaryData\" : \"eyAia2V5IjogInNvbWVfdmFsdWUiIH0=\"" + NEW_LINE +
+                "    \"rawBytes\" : \"eyAia2V5IjogInNvbWVfdmFsdWUiIH0=\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}"));
     }
@@ -199,7 +199,7 @@ public class HttpRequestDTOSerializerTest {
                 "  \"body\" : {" + NEW_LINE +
                 "    \"type\" : \"XML\"," + NEW_LINE +
                 "    \"xml\" : \"<some><xml></xml></some>\"," + NEW_LINE +
-                "    \"rawBinaryData\" : \"PHNvbWU+PHhtbD48L3htbD48L3NvbWU+\"" + NEW_LINE +
+                "    \"rawBytes\" : \"PHNvbWU+PHhtbD48L3htbD48L3NvbWU+\"" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}")
         );

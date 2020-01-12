@@ -1,7 +1,6 @@
 package org.mockserver.integration.mock;
 
 import com.google.common.util.concurrent.Uninterruptibles;
-import io.netty.util.CharsetUtil;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -392,7 +391,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
             )
             .respond(
                 response()
-                    .withBody(body, CharsetUtil.UTF_8)
+                    .withBody(body, StandardCharsets.UTF_8)
             );
 
         // then
@@ -401,7 +400,7 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
                 .withStatusCode(OK_200.code())
                 .withReasonPhrase(OK_200.reasonPhrase())
                 .withHeader(CONTENT_TYPE.toString(), MediaType.PLAIN_TEXT_UTF_8.toString())
-                .withBody(body, CharsetUtil.UTF_8),
+                .withBody(body, StandardCharsets.UTF_8),
             makeRequest(
                 request()
                     .withPath(calculatePath("")),

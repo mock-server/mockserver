@@ -12,7 +12,7 @@ public class StringBody extends BodyWithContentType<String> {
     public static final MediaType DEFAULT_CONTENT_TYPE = MediaType.create("text", "plain");
     private final boolean subString;
     private final String value;
-    private final byte[] rawBinaryData;
+    private final byte[] rawBytes;
 
     public StringBody(String value) {
         this(value, null, false, null);
@@ -26,15 +26,15 @@ public class StringBody extends BodyWithContentType<String> {
         this(value, null, false, contentType);
     }
 
-    public StringBody(String value, byte[] rawBinaryData, boolean subString, MediaType contentType) {
+    public StringBody(String value, byte[] rawBytes, boolean subString, MediaType contentType) {
         super(Type.STRING, contentType);
         this.value = value;
         this.subString = subString;
 
-        if (rawBinaryData == null && value != null) {
-            this.rawBinaryData = value.getBytes(determineCharacterSet(contentType, DEFAULT_HTTP_CHARACTER_SET));
+        if (rawBytes == null && value != null) {
+            this.rawBytes = value.getBytes(determineCharacterSet(contentType, DEFAULT_HTTP_CHARACTER_SET));
         } else {
-            this.rawBinaryData = rawBinaryData;
+            this.rawBytes = rawBytes;
         }
     }
 
@@ -67,7 +67,7 @@ public class StringBody extends BodyWithContentType<String> {
     }
 
     public byte[] getRawBytes() {
-        return rawBinaryData;
+        return rawBytes;
     }
 
     public boolean isSubString() {
