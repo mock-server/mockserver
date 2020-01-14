@@ -1,8 +1,8 @@
-package org.mockserver.integration.mock;
+package org.mockserver.testing.integration.mock;
 
 import org.junit.Test;
-import org.mockserver.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
-import org.mockserver.integration.callback.PrecannedTestExpectationForwardCallbackRequestAndResponse;
+import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequest;
+import org.mockserver.testing.integration.callback.PrecannedTestExpectationForwardCallbackRequestAndResponse;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.mock.Expectation;
@@ -646,7 +646,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationResponseCallback")
+                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
             );
 
         // then
@@ -2051,7 +2051,7 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             )
             .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.integration.callback.PrecannedTestExpectationResponseCallback")
+                    .withCallbackClass("org.mockserver.testing.integration.callback.PrecannedTestExpectationResponseCallback")
                     .withDelay(new Delay(SECONDS, 3))
             );
 

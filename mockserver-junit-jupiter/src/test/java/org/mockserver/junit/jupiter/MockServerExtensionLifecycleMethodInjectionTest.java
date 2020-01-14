@@ -1,12 +1,12 @@
 package org.mockserver.junit.jupiter;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.test.TestLoggerExtension;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
@@ -15,11 +15,11 @@ import static org.hamcrest.core.IsNot.not;
     MockServerExtension.class,
     TestLoggerExtension.class,
 })
-@MockServerSettings(ports = {8787, 8888})
-class MockServerExtensionMultiplePortTest {
-    private final MockServerClient client;
+class MockServerExtensionLifecycleMethodInjectionTest {
+    private MockServerClient client;
 
-    public MockServerExtensionMultiplePortTest(MockServerClient client) {
+    @BeforeEach
+    public void beforeEachLifecyleMethod(MockServerClient client) {
         this.client = client;
     }
 
@@ -30,7 +30,7 @@ class MockServerExtensionMultiplePortTest {
     }
 
     @Test
-    void usesRequestedPorts() {
-        assertThat(client.remoteAddress().getPort(), is(equalTo(8787)));
+    void usesNonZeroPort() {
+        assertThat(client.remoteAddress().getPort(), is(not(nullValue())));
     }
 }

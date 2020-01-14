@@ -196,9 +196,9 @@
 
 <a id="junit_rule" class="anchor" href="#junit_rule">&nbsp;</a>
 
-<h2>Running MockServer via a JUnit @Rule</h2>
+<h2>Running MockServer via a JUnit 4 @Rule</h2>
 
-<p>MockServer can be run using the <strong>MockServerRule</strong>. The <strong>MockServerRule</strong> starts MockServer (<strong>which now includes the proxy</strong>) on a free port before the any test runs and stops MockServer after all tests have completed.</p>
+<p>MockServer can be run using the <strong>MockServerRule</strong>. The <strong>MockServerRule</strong> starts MockServer (<strong>for both mocking and proxying</strong>) on a free port before the any test runs and stops MockServer after all tests have completed.</p>
 <p>An instance of <strong>MockServerClient</strong> is assigned to any field in the unit test of type <strong>org.mockserver.client.MockServerClient</strong>. Alternatively an instance of <strong>MockServerClient</strong> can be retrieved from the <strong>MockServerRule</strong> using the method <strong>getClient()</strong>.</p>
 
 <pre><code class="code"><span class="annotation">@Rule</span>
@@ -256,6 +256,12 @@
  *                     if false one instance per test class is created
  */</span>
 <span class="keyword">public</span> MockServerRule(Object target, <span class="keyword">boolean</span> per TestSuite, Integer... ports);</code></pre>
+
+<a id="junit_test_extension" class="anchor" href="#junit_test_extension">&nbsp;</a>
+
+<h2>Running MockServer via a JUnit 5 Test Extension</h2>
+
+<p>TODO after integration test completed</p>
 
 <a id="running_from_command_line" class="anchor" href="#running_from_command_line">&nbsp;</a>
 

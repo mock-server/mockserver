@@ -8,7 +8,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.integration.mock.AbstractBasicMockingIntegrationTest;
+import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mockservlet.MockServerServlet;
 import org.mockserver.socket.PortFactory;

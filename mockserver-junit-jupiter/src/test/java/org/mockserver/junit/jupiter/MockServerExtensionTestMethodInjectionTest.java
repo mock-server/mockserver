@@ -14,21 +14,16 @@ import static org.hamcrest.core.IsNot.not;
     MockServerExtension.class,
     TestLoggerExtension.class,
 })
-class MockServerExtensionTest {
-    private final MockServerClient client;
-
-    public MockServerExtensionTest(MockServerClient client) {
-        this.client = client;
-    }
+class MockServerExtensionTestMethodInjectionTest {
 
     @Test
-    void injectsClientWithStartedServer() {
+    void injectsClientWithStartedServer(MockServerClient client) {
         assertThat(client, is(not(nullValue())));
         assertThat(client.hasStarted(), is(true));
     }
 
     @Test
-    void usesNonZeroPort() {
+    void usesNonZeroPort(MockServerClient client) {
         assertThat(client.remoteAddress().getPort(), is(not(nullValue())));
     }
 }

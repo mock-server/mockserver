@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.integration.proxy.AbstractClientSecureProxyIntegrationTest;
+import org.mockserver.testing.integration.proxy.AbstractClientSecureProxyIntegrationTest;
 import org.mockserver.netty.MockServer;
 
 import static org.mockserver.stop.Stop.stopQuietly;

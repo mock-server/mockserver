@@ -1,13 +1,13 @@
-package org.mockserver.integration.mock;
+package org.mockserver.junit.jupiter.integration;
 
 import com.google.common.collect.ImmutableList;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.client.NettyHttpClient;
 import org.mockserver.echo.http.EchoServer;
@@ -66,7 +66,7 @@ public abstract class AbstractMockingIntegrationTestBase {
     protected static EchoServer insecureEchoServer;
     protected static EchoServer secureEchoServer;
 
-    @BeforeClass
+    @BeforeAll
     public static void startEchoServer() {
         if (insecureEchoServer == null) {
             insecureEchoServer = new EchoServer(false);
@@ -76,7 +76,7 @@ public abstract class AbstractMockingIntegrationTestBase {
         }
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void resetServletContext() {
         servletContext = "";
     }
@@ -87,7 +87,7 @@ public abstract class AbstractMockingIntegrationTestBase {
         return getServerPort();
     }
 
-    @Before
+    @BeforeEach
     public void resetServer() {
         try {
             mockServerClient.reset();
@@ -109,13 +109,13 @@ public abstract class AbstractMockingIntegrationTestBase {
     private static EventLoopGroup clientEventLoopGroup;
     static NettyHttpClient httpClient;
 
-    @BeforeClass
+    @BeforeAll
     public static void createClientAndEventLoopGroup() {
         clientEventLoopGroup = new NioEventLoopGroup(3, new Scheduler.SchedulerThreadFactory(AbstractMockingIntegrationTestBase.class.getSimpleName() + "-eventLoop"));
         httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
     }
 
-    @AfterClass
+    @AfterAll
     public static void stopEventLoopGroup() {
         clientEventLoopGroup.shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly();
     }

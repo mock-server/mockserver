@@ -5,7 +5,7 @@ import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
-import org.mockserver.integration.mock.AbstractMockingIntegrationTestBase;
+import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 import org.mockserver.metrics.Metrics;
 
 import static org.junit.Assert.assertEquals;

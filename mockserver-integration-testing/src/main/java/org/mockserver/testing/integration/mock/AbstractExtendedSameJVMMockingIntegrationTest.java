@@ -1,7 +1,7 @@
-package org.mockserver.integration.mock;
+package org.mockserver.testing.integration.mock;
 
 import org.junit.Test;
-import org.mockserver.integration.callback.StaticTestExpectationResponseCallback;
+import org.mockserver.testing.integration.callback.StaticTestExpectationResponseCallback;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.HttpTemplate;
 
@@ -43,7 +43,7 @@ public abstract class AbstractExtendedSameJVMMockingIntegrationTest extends Abst
             )
             .respond(
                 callback()
-                    .withCallbackClass("org.mockserver.integration.callback.StaticTestExpectationResponseCallback")
+                    .withCallbackClass("org.mockserver.testing.integration.callback.StaticTestExpectationResponseCallback")
             );
 
         // then

@@ -14,7 +14,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
+import org.mockserver.testing.integration.proxy.AbstractClientProxyIntegrationTest;
 import org.mockserver.netty.MockServer;
 import org.mockserver.model.HttpStatusCode;
 

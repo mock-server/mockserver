@@ -10,7 +10,7 @@ import org.junit.BeforeClass;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.echo.http.EchoServer;
-import org.mockserver.integration.proxy.AbstractClientProxyIntegrationTest;
+import org.mockserver.testing.integration.proxy.AbstractClientProxyIntegrationTest;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.proxyservlet.ProxyServlet;
 import org.mockserver.socket.PortFactory;

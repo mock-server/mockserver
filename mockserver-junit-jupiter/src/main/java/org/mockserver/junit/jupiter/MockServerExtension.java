@@ -26,7 +26,7 @@ public class MockServerExtension implements ParameterResolver, BeforeAllCallback
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return parameterContext.getParameter().getType().equals(MockServerClient.class);
+        return MockServerClient.class.isAssignableFrom(parameterContext.getParameter().getType());
     }
 
     @Override

@@ -4,7 +4,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.ClientException;
-import org.mockserver.integration.mock.AbstractExtendedSameJVMMockingIntegrationTest;
+import org.mockserver.testing.integration.mock.AbstractExtendedSameJVMMockingIntegrationTest;
 import org.mockserver.model.HttpStatusCode;
 import org.mockserver.model.MediaType;
 

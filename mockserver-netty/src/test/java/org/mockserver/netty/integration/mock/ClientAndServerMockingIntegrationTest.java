@@ -3,7 +3,7 @@ package org.mockserver.netty.integration.mock;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.mockserver.integration.ClientAndServer;
-import org.mockserver.integration.mock.AbstractBasicMockingIntegrationTest;
+import org.mockserver.testing.integration.mock.AbstractBasicMockingIntegrationTest;
 
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.stop.Stop.stopQuietly;

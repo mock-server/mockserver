@@ -20,6 +20,11 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>mockserver-netty</artifactId>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>mockserver-integration-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- logging -->
         <dependency> <!-- will map to any underlying logging framework -->

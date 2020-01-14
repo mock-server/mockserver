@@ -6,7 +6,6 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.test.TestLoggerExtension;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
@@ -15,11 +14,10 @@ import static org.hamcrest.core.IsNot.not;
     MockServerExtension.class,
     TestLoggerExtension.class,
 })
-@MockServerSettings(ports = 8989)
-class MockServerExtensionSinglePortTest {
+class MockServerExtensionConstructorInjectionTest {
     private final MockServerClient client;
 
-    public MockServerExtensionSinglePortTest(MockServerClient client) {
+    public MockServerExtensionConstructorInjectionTest(MockServerClient client) {
         this.client = client;
     }
 
@@ -30,7 +28,7 @@ class MockServerExtensionSinglePortTest {
     }
 
     @Test
-    void usesRequestedPort() {
-        assertThat(client.remoteAddress().getPort(), is(equalTo(8989)));
+    void usesNonZeroPort() {
+        assertThat(client.remoteAddress().getPort(), is(not(nullValue())));
     }
 }

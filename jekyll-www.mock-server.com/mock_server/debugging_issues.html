@@ -655,9 +655,9 @@ mockServerClient("localhost", 1080)
 
 <a id="logging_with_api" class="anchor" href="#logging_with_api">&nbsp;</a>
 
-<h3>Logging with JUnit @Rule or API</h3>
+<h3>Logging with JUnit 4 @Rule, JUnit 5 Test Extension or Java API</h3>
 
-<p>MockServer uses SL4J for logging so if MockSever is being launched using the <a href="/mock_server/running_mock_server.html#junit_rule"><strong>JUnit @Rule</strong></a> or <a href="/mock_server/running_mock_server.html#client_api"><strong>programmatically via an API</strong></a> configure the logging output by configuring <a href="http://www.slf4j.org/faq.html">SLF4J</a></p>
+<p>MockServer uses SL4J for logging so if MockSever is being launched using the <a href="/mock_server/running_mock_server.html#junit_rule">JUnit 4 @Rule</a>, the <a href="/mock_server/running_mock_server.html#junit_test_extension">JUnit 5 Test Extension</a>, <a href="/mock_server/running_mock_server.html#client_api">ClientAndServer</a> or directly using the <strong>org.mockserver.netty.MockServer</strong> the project launching MockServer needs to configure the logging output by configuring <a href="http://www.slf4j.org/faq.html">SLF4J</a></p>
 
 <a id="logging_with_command_line" class="anchor" href="#logging_with_command_line">&nbsp;</a>
 
