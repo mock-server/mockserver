@@ -4,6 +4,7 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -53,7 +54,7 @@ public class KeyStoreFactory {
 
     public KeyStoreFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-        keyAndCertificateFactory = new KeyAndCertificateFactoryBC(mockServerLogger);
+        keyAndCertificateFactory = new BCKeyAndCertificateFactory(mockServerLogger);
     }
 
     public static String defaultKeyStoreFileName() {

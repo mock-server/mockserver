@@ -2,6 +2,7 @@ package org.mockserver.socket.tls;
 
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory;
 
 import java.math.BigInteger;
 
@@ -12,7 +13,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class KeyAndCertificateFactoryBCTest {
 
-    private final KeyAndCertificateFactoryBC keyAndCertificateFactory = new KeyAndCertificateFactoryBC(new MockServerLogger());
+    private final BCKeyAndCertificateFactory keyAndCertificateFactory = new BCKeyAndCertificateFactory(new MockServerLogger());
 
     @Test
     public void shouldCreateCACertWithPositiveSerialNumber() {

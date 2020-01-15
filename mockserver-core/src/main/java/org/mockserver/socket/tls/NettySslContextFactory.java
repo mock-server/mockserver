@@ -5,6 +5,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory;
 
 import javax.net.ssl.SSLException;
 
@@ -18,7 +19,7 @@ public class NettySslContextFactory {
     private SslContext serverSslContext = null;
 
     public NettySslContextFactory(MockServerLogger mockServerLogger) {
-        keyAndCertificateFactory = new KeyAndCertificateFactoryBC(mockServerLogger);
+        keyAndCertificateFactory = new BCKeyAndCertificateFactory(mockServerLogger);
         System.setProperty("https.protocols", "SSLv3,TLSv1,TLSv1.1,TLSv1.2");
     }
 

@@ -1,4 +1,4 @@
-package org.mockserver.socket.tls;
+package org.mockserver.socket.tls.bouncycastle;
 
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -15,12 +15,11 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.IPAddress;
 import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.slf4j.event.Level;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
@@ -28,22 +27,20 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mockserver.configuration.ConfigurationProperties.directoryToSaveDynamicSSLCertificate;
+import static org.mockserver.socket.tls.jdk.X509Generator.*;
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom, ganskef
  */
-public class KeyAndCertificateFactoryBC implements KeyAndCertificateFactory {
+public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
 
     private final MockServerLogger mockServerLogger;
 
@@ -80,7 +77,7 @@ public class KeyAndCertificateFactoryBC implements KeyAndCertificateFactory {
     private String mockServerCertificatePEMFile;
     private String mockServerPrivateKeyPEMFile;
 
-    KeyAndCertificateFactoryBC(MockServerLogger mockServerLogger) {
+    public BCKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
     }
 
@@ -109,7 +106,7 @@ public class KeyAndCertificateFactoryBC implements KeyAndCertificateFactory {
     }
 
     public static void main(String[] args) throws Exception {
-        new KeyAndCertificateFactoryBC(new MockServerLogger()).buildAndSaveCertificateAuthorityCertificates();
+        new BCKeyAndCertificateFactory(new MockServerLogger()).buildAndSaveCertificateAuthorityCertificates();
     }
 
     /**
@@ -227,7 +224,7 @@ public class KeyAndCertificateFactoryBC implements KeyAndCertificateFactory {
             PublicKey mockServerPublicKey = keyPair.getPublic();
 
             // ca keys
-            PrivateKey caPrivateKey = mockServerCertificateAuthorityPrivateKey();
+            PrivateKey caPrivateKey = loadPrivateKeyFromPEMFile(ConfigurationProperties.certificateAuthorityPrivateKey());
             X509Certificate caCert = certificateAuthorityX509Certificate();
 
             // generate mockServer certificate
@@ -317,45 +314,6 @@ public class KeyAndCertificateFactoryBC implements KeyAndCertificateFactory {
 
     public X509Certificate certificateAuthorityX509Certificate() {
         return loadX509FromPEMFile(ConfigurationProperties.certificateAuthorityCertificate());
-    }
-
-    private RSAPrivateKey mockServerCertificateAuthorityPrivateKey() {
-        return loadPrivateKeyFromPEMFile(ConfigurationProperties.certificateAuthorityPrivateKey());
-    }
-
-    /**
-     * Load PrivateKey from PEM file.
-     */
-    private RSAPrivateKey loadPrivateKeyFromPEMFile(String filename) {
-        try {
-            String publicKeyFile = FileReader.readFileFromClassPathOrPath(filename);
-            byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(publicKeyFile.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", ""));
-            return (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(publicKeyBytes));
-        } catch (Exception e) {
-            throw new RuntimeException("Exception reading private key from PEM file", e);
-        }
-    }
-
-    /**
-     * Load X509 from PEM file.
-     */
-    private X509Certificate loadX509FromPEMFile(String filename) {
-        try {
-            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(FileReader.openStreamToFileFromClassPathOrPath(filename));
-        } catch (Exception e) {
-            throw new RuntimeException("Exception reading X509 from PEM file", e);
-        }
-    }
-
-    /**
-     * Check if PEM file exists.
-     */
-    private boolean validX509PEMFileExists(String filename) {
-        try {
-            return CertificateFactory.getInstance("X.509").generateCertificate(FileReader.openStreamToFileFromClassPathOrPath(filename)) != null;
-        } catch (Exception e) {
-            return false;
-        }
     }
 
 }

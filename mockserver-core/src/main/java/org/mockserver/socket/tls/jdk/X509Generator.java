@@ -1,16 +1,22 @@
 package org.mockserver.socket.tls.jdk;
 
 import com.google.common.net.InetAddresses;
+import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.slf4j.event.Level;
 import sun.security.x509.*;
 
+import javax.xml.bind.DatatypeConverter;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.Date;
@@ -207,17 +213,9 @@ public class X509Generator {
             end;
     }
 
-    @SuppressWarnings("unused")
-    byte[] certFromPem(final String cert) {
-        return Base64
-            .getMimeDecoder()
-            .decode(
-                cert
-                    .replaceFirst(X509Generator.BEGIN_CERTIFICATE, EMPTY)
-                    .replaceFirst(X509Generator.END_CERTIFICATE, EMPTY)
-            );
-    }
-
+    /**
+     * Load private key from PEM file.
+     */
     byte[] privateKeyFromPem(final String privateKey) {
         return Base64
             .getMimeDecoder()
@@ -226,6 +224,52 @@ public class X509Generator {
                     .replaceFirst(BEGIN_PRIVATE_KEY, EMPTY)
                     .replaceFirst(END_PRIVATE_KEY, EMPTY)
             );
+    }
+
+    /**
+     * Load X509 from PEM file.
+     */
+    public static X509Certificate loadX509FromPEMFile(String filename) {
+        try {
+            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(FileReader.openStreamToFileFromClassPathOrPath(filename));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception reading X509 from PEM file " + filename, e);
+        }
+    }
+
+    /**
+     * Load X509 from PEM file.
+     */
+    public static X509Certificate loadX509FromPEM(String pem) {
+        try {
+            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(new ByteArrayInputStream(pem.getBytes()));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception reading X509 from PEM \n" + pem, e);
+        }
+    }
+
+    /**
+     * Load PrivateKey from PEM file.
+     */
+    public static RSAPrivateKey loadPrivateKeyFromPEMFile(String filename) {
+        try {
+            String publicKeyFile = FileReader.readFileFromClassPathOrPath(filename);
+            byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(publicKeyFile.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", ""));
+            return (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(publicKeyBytes));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception reading private key from PEM file", e);
+        }
+    }
+
+    /**
+     * Check if PEM file exists.
+     */
+    public static boolean validX509PEMFileExists(String filename) {
+        try {
+            return CertificateFactory.getInstance("X.509").generateCertificate(FileReader.openStreamToFileFromClassPathOrPath(filename)) != null;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
 
