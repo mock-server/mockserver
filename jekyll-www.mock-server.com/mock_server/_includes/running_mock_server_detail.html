@@ -210,7 +210,7 @@
 
 <pre class="prettyprint lang-xml code"><code class="code">&lt;dependency&gt;
     &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
-    &lt;artifactId&gt;mockserver-netty&lt;/artifactId&gt;
+    &lt;artifactId&gt;mockserver-junit-rule&lt;/artifactId&gt;
     &lt;version&gt;5.8.1&lt;/version&gt;
 &lt;/dependency&gt;</code></pre>
 
@@ -261,8 +261,76 @@
 
 <h2>Running MockServer via a JUnit 5 Test Extension</h2>
 
-<p>TODO after integration test completed</p>
+<p>MockServer can be run using the Test Extension <strong>MockServerExtension</strong>. The <strong>MockServerExtension</strong> starts MockServer (<strong>for both mocking and proxying</strong>) before the any test runs and stops MockServer after all tests have completed.</p>
+<p>The port(s) MockServer uses can be controlled using <strong>MockServerSettings</strong></p>
+<p>An instance of <strong>MockServerClient</strong> or <strong>ClientAndServer</strong> is injected into any method using <a href="https://junit.org/junit5/docs/current/user-guide/#extensions-parameter-resolution">Parameter Resolution</a> this includes: constructors, lifecycle methods (like <span class="annotation">@BeforeEach</span> / <span class="annotation">@BeforeAll</span>), or test methods.</p>
 
+<p>The <strong>MockServerExtension</strong> Test Extension can be added to your project by including the following maven dependency:</p>
+
+<pre class="prettyprint lang-xml code"><code class="code">&lt;dependency&gt;
+    &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
+    &lt;artifactId&gt;mockserver-junit-jupiter&lt;/artifactId&gt;
+    &lt;version&gt;5.8.1&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+
+<p>The following code examples show how to use the <strong>MockServerExtension</strong> Test Extension.</p>
+<button id="button_test_extension_specific_ports" class="accordion">configure specific ports</button>
+<div class="panel"><pre class="prettyprint lang-java code"><code class="code">@ExtendWith(MockServerExtension.class)
+@MockServerSettings(ports = {8787, 8888})
+class ExampleTestClass {
+    private final ClientAndServer client;
+
+    public ExampleTestClass(ClientAndServer client) {
+        this.client = client;
+    }
+
+    @Test
+    void testSomething() {
+        // ...
+    }
+
+}</code></pre></div>
+<button id="button_test_extension_constructor_client_injection" class="accordion">inject MockServerClient into constructor</button>
+<div class="panel"><pre class="prettyprint lang-java code"><code class="code">@ExtendWith(MockServerExtension.class)
+class ExampleTestClass {
+    private final ClientAndServer client;
+
+    public ExampleTestClass(ClientAndServer client) {
+        this.client = client;
+    }
+
+    @Test
+    void testSomething() {
+        // ...
+    }
+
+}</code></pre></div>
+<button id="button_test_extension_lifecyle_method_client_injection" class="accordion">inject MockServerClient inject to @BeforeEach</button>
+<div class="panel"><pre class="prettyprint lang-java code"><code class="code">@ExtendWith(MockServerExtension.class)
+class ExampleTestClass {
+    private MockServerClient client;
+
+    @BeforeEach
+    public void beforeEachLifecyleMethod(MockServerClient client) {
+        this.client = client;
+    }
+
+    @Test
+    void testSomething() {
+        // ...
+    }
+
+}</code></pre></div>
+<button id="button_test_extension_test_method_client_injection" class="accordion">inject MockServerClient inject to test method</button>
+<div class="panel"><pre class="prettyprint lang-java code"><code class="code">@ExtendWith(MockServerExtension.class)
+class ExampleTestClass {
+
+    @Test
+    void testSomething(MockServerClient client) {
+        // ...
+    }
+
+}</code></pre></div>
 <a id="running_from_command_line" class="anchor" href="#running_from_command_line">&nbsp;</a>
 
 <h2>Running From Command Line</h2>

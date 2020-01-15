@@ -3,14 +3,12 @@ package org.mockserver.junit.jupiter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.integration.ClientAndServer;
 import org.mockserver.test.TestLoggerExtension;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.hamcrest.core.IsNot.not;
 
 @ExtendWith({
@@ -19,9 +17,9 @@ import static org.hamcrest.core.IsNot.not;
 })
 @MockServerSettings(ports = {8787, 8888})
 class MockServerExtensionConstructorInjectionMultiplePortTest {
-    private final ClientAndServer client;
+    private final MockServerClient client;
 
-    public MockServerExtensionConstructorInjectionMultiplePortTest(ClientAndServer client) {
+    public MockServerExtensionConstructorInjectionMultiplePortTest(MockServerClient client) {
         this.client = client;
     }
 
@@ -33,6 +31,6 @@ class MockServerExtensionConstructorInjectionMultiplePortTest {
 
     @Test
     void usesRequestedPorts() {
-        assertThat(client.getLocalPorts(), hasItems(8787, 8888));
+        assertThat(client.remoteAddress().getPort(), is(equalTo(8787)));
     }
 }
