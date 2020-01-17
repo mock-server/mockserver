@@ -1,5 +1,8 @@
 package org.mockserver.socket.tls.jdk;
 
+/**
+ * @author jamesdbloom
+ */
 public class X509AndPrivateKey {
 
     private String cert;

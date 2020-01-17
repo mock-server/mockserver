@@ -17,7 +17,7 @@ public class KeyAndCertificateFactoryBCTest {
 
     @Test
     public void shouldCreateCACertWithPositiveSerialNumber() {
-        keyAndCertificateFactory.buildAndSaveCertificates();
+        keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
 
         assertTrue("The ca cert serial number is non-negative",
             keyAndCertificateFactory.certificateAuthorityX509Certificate().getSerialNumber().compareTo(BigInteger.ZERO) > 0);
@@ -25,7 +25,7 @@ public class KeyAndCertificateFactoryBCTest {
 
     @Test
     public void shouldCreateClientCertWithPositiveSerialNumber() {
-        keyAndCertificateFactory.buildAndSaveCertificates();
+        keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
 
         assertTrue("The client cert serial number is non-negative",
             keyAndCertificateFactory.x509Certificate().getSerialNumber().compareTo(BigInteger.ZERO) > 0);

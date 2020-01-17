@@ -8,9 +8,9 @@ import org.mockserver.serialization.ObjectMapperFactory;
 import org.slf4j.event.Level;
 import sun.security.x509.*;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
@@ -18,6 +18,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.Date;
 import java.time.Duration;
@@ -31,13 +32,18 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
 
+/**
+ * @author jamesdbloom
+ */
 public class X509Generator {
 
     private static final String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
     private static final String END_CERTIFICATE = "-----END CERTIFICATE-----";
 
     private static final String BEGIN_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----";
+    private static final String BEGIN_RSA_PRIVATE_KEY = "-----BEGIN RSA PRIVATE KEY-----";
     private static final String END_PRIVATE_KEY = "-----END PRIVATE KEY-----";
+    private static final String END_RSA_PRIVATE_KEY = "-----END RSA PRIVATE KEY-----";
 
     private final MockServerLogger mockServerLogger;
 
@@ -54,14 +60,14 @@ public class X509Generator {
                 new CertificateSigningRequest()
                     .setCommonName(ROOT_COMMON_NAME)
                     .setKeyPairSize(DEFAULT_KEY_PAIR_LENGTH)
-                    .setValidity(2 * 365L)
+                    .setValidityInMillis(2 * 365L)
             );
         CertificateSigningRequest csr = new CertificateSigningRequest()
             .setCommonName("test.common.name")
             .setKeyPairSize(DEFAULT_KEY_PAIR_LENGTH)
             .setSubjectAlternativeNames(Collections.singletonList("test.common.name"))
-            .setValidity(DAYS.toMillis(365));
-        X509AndPrivateKey pemKeyPair = x509Generator.generateSignedEphemeralCertificate(csr, rootKeyPair);
+            .setValidityInMillis(DAYS.toMillis(365));
+        X509AndPrivateKey pemKeyPair = x509Generator.generateSignedEphemeralCertificate(csr, rootKeyPair.getPrivateKey());
         System.out.println("keyPair:" + NEW_LINE +
             ObjectMapperFactory
                 .createObjectMapper()
@@ -78,10 +84,10 @@ public class X509Generator {
         return signX509KeyPair(keyPair.getPrivate(), keyPair, x509CertInfo, csr.getSigningAlgorithm());
     }
 
-    public X509AndPrivateKey generateSignedEphemeralCertificate(final CertificateSigningRequest csr, final X509AndPrivateKey rootKeyPair) throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, NoSuchProviderException, SignatureException, InvalidKeySpecException {
+    public X509AndPrivateKey generateSignedEphemeralCertificate(final CertificateSigningRequest csr, final String caPrivateKey) throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, NoSuchProviderException, SignatureException, InvalidKeySpecException {
         final PrivateKey privateKey = KeyFactory
             .getInstance(csr.getKeyPairAlgorithm())
-            .generatePrivate(new PKCS8EncodedKeySpec(privateKeyFromPem(rootKeyPair.getPrivateKey())));
+            .generatePrivate(keySpecFromPEM(caPrivateKey));
         final KeyPair keyPair = generateKeyPair(csr.getKeyPairAlgorithm(), csr.getKeyPairSize());
         final X500Name subject = new X500Name(buildDistinguishedName(csr.getCommonName()));
         final X500Name issuer = new X500Name(buildDistinguishedName(ROOT_COMMON_NAME));
@@ -101,7 +107,7 @@ public class X509Generator {
         X509CertInfo x509CertInfo = new X509CertInfo();
 
         LocalDateTime since = LocalDateTime.now().minusMonths(1);
-        LocalDateTime until = since.plus(Duration.ofMillis(csr.getValidity()));
+        LocalDateTime until = since.plus(Duration.ofMillis(csr.getValidityInMillis()));
 
         CertificateValidity interval = new CertificateValidity(
             Date.from(since.atZone(ZoneId.systemDefault()).toInstant()),
@@ -168,7 +174,6 @@ public class X509Generator {
         x509CertInfo.set(X509CertInfo.EXTENSIONS, certificateExtensions);
     }
 
-
     @SuppressWarnings("UnstableApiUsage")
     private GeneralName buildGeneralName(final String subjectAlternativeName) {
         GeneralName gn = null;
@@ -192,19 +197,19 @@ public class X509Generator {
         X509CertImpl cert = new X509CertImpl(x509CertInfo);
         cert.sign(privateKey, signatureAlgorithm);
         return new X509AndPrivateKey()
-            .setPrivateKey(privateKeyToPem(keyPair.getPrivate().getEncoded()))
-            .setCert(certToPem(cert.getEncoded()));
+            .setPrivateKey(privateKeyToPEM(keyPair.getPrivate().getEncoded()))
+            .setCert(certToPEM(cert.getEncoded()));
     }
 
-    String privateKeyToPem(final byte[] privateKey) {
-        return toPem(privateKey, BEGIN_PRIVATE_KEY, END_PRIVATE_KEY);
+    static String privateKeyToPEM(final byte[] privateKey) {
+        return toPEM(privateKey, BEGIN_PRIVATE_KEY, END_PRIVATE_KEY);
     }
 
-    String certToPem(final byte[] key) {
-        return toPem(key, BEGIN_CERTIFICATE, END_CERTIFICATE);
+    static String certToPEM(final byte[] key) {
+        return toPEM(key, BEGIN_CERTIFICATE, END_CERTIFICATE);
     }
 
-    private String toPem(final byte[] key, final String begin, final String end) {
+    private static String toPEM(final byte[] key, final String begin, final String end) {
         Base64.Encoder encoder = Base64.getMimeEncoder(64, System.lineSeparator().getBytes());
         return begin +
             System.lineSeparator() +
@@ -213,60 +218,57 @@ public class X509Generator {
             end;
     }
 
-    /**
-     * Load private key from PEM file.
-     */
-    byte[] privateKeyFromPem(final String privateKey) {
+    static byte[] privateKeyBytesFromPEM(final String pem) {
         return Base64
             .getMimeDecoder()
             .decode(
-                privateKey
+                pem
                     .replaceFirst(BEGIN_PRIVATE_KEY, EMPTY)
+                    .replaceFirst(BEGIN_RSA_PRIVATE_KEY, EMPTY)
                     .replaceFirst(END_PRIVATE_KEY, EMPTY)
+                    .replaceFirst(END_RSA_PRIVATE_KEY, EMPTY)
             );
     }
 
-    /**
-     * Load X509 from PEM file.
-     */
-    public static X509Certificate loadX509FromPEMFile(String filename) {
-        try {
-            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(FileReader.openStreamToFileFromClassPathOrPath(filename));
-        } catch (Exception e) {
-            throw new RuntimeException("Exception reading X509 from PEM file " + filename, e);
-        }
+    public static KeySpec keySpecFromPEM(final String pem) {
+        return new PKCS8EncodedKeySpec(privateKeyBytesFromPEM(pem));
     }
 
-    /**
-     * Load X509 from PEM file.
-     */
-    public static X509Certificate loadX509FromPEM(String pem) {
+    public static RSAPrivateKey privateKeyFromPEMFile(String filename) {
         try {
-            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(new ByteArrayInputStream(pem.getBytes()));
-        } catch (Exception e) {
-            throw new RuntimeException("Exception reading X509 from PEM \n" + pem, e);
-        }
-    }
-
-    /**
-     * Load PrivateKey from PEM file.
-     */
-    public static RSAPrivateKey loadPrivateKeyFromPEMFile(String filename) {
-        try {
-            String publicKeyFile = FileReader.readFileFromClassPathOrPath(filename);
-            byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(publicKeyFile.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", ""));
-            return (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(publicKeyBytes));
+            return (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(keySpecFromPEM(FileReader.readFileFromClassPathOrPath(filename)));
         } catch (Exception e) {
             throw new RuntimeException("Exception reading private key from PEM file", e);
         }
     }
 
-    /**
-     * Check if PEM file exists.
-     */
+    public static X509Certificate x509FromPEMFile(String filename) {
+        try {
+            return x509FromPEM(FileReader.openStreamToFileFromClassPathOrPath(filename));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception reading X509 from PEM file " + filename, e);
+        }
+    }
+
+    public static X509Certificate x509FromPEM(String pem) {
+        try {
+            return x509FromPEM(new ByteArrayInputStream(pem.getBytes()));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception reading X509 from PEM \n" + pem, e);
+        }
+    }
+
+    private static X509Certificate x509FromPEM(InputStream inputStream) {
+        try {
+            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(inputStream);
+        } catch (Exception e) {
+            throw new RuntimeException("Exception creating X509 from PEM", e);
+        }
+    }
+
     public static boolean validX509PEMFileExists(String filename) {
         try {
-            return CertificateFactory.getInstance("X.509").generateCertificate(FileReader.openStreamToFileFromClassPathOrPath(filename)) != null;
+            return x509FromPEMFile(filename) != null;
         } catch (Exception e) {
             return false;
         }

@@ -42,7 +42,7 @@ public class NettySslContextFactory {
             || !keyAndCertificateFactory.certificateCreated()
             || !ConfigurationProperties.preventCertificateDynamicUpdate() && ConfigurationProperties.rebuildServerKeyStore()) {
             try {
-                keyAndCertificateFactory.buildAndSaveCertificates();
+                keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
                 serverSslContext = SslContextBuilder.forServer(
                     keyAndCertificateFactory.privateKey(),
                     // do we need this password??

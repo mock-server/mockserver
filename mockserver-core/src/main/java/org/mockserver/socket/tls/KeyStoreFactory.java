@@ -173,7 +173,7 @@ public class KeyStoreFactory {
     }
 
     private KeyStore populateKeyStore(KeyStore keyStore) {
-        keyAndCertificateFactory.buildAndSaveCertificates();
+        keyAndCertificateFactory.buildAndSavePrivateKeyAndX509Certificate();
 
         return saveCertificateAsKeyStore(
             keyStore,

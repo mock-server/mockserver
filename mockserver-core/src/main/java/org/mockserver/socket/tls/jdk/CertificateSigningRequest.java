@@ -5,24 +5,29 @@ import java.util.List;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.DAYS;
 
+/**
+ * @author jamesdbloom
+ */
 public class CertificateSigningRequest {
 
+    // defaults
+    public static final String DEFAULT_SIGNING_ALGORITHM = "SHA256withRSA";
+    public static final String DEFAULT_KEY_GENERATION_ALGORITHM = "RSA";
+    public static final int DEFAULT_KEY_PAIR_LENGTH = 2048;
+    public static final int DEFAULT_VALIDITY = 90;
+    // distinguishing name
     public static final String ROOT_COMMON_NAME = "www.mockserver.com";
     public static final String ORGANISATION = "MockServer";
     public static final String LOCALITY = "London";
     public static final String STATE = "England";
     public static final String COUNTRY = "UK";
-    public static final String SHA_256_WITH_RSA = "SHA256withRSA";
-    public static final String KEY_PAIR_ALGORITHM = "RSA";
-    public static final int DEFAULT_KEY_PAIR_LENGTH = 2048;
-    public static final int VALIDITY = 90;
 
     private String commonName;
     private int keyPairSize;
     private List<String> subjectAlternativeNames;
-    private String signingAlgorithm = SHA_256_WITH_RSA;
-    private String keyPairAlgorithm = KEY_PAIR_ALGORITHM;
-    private Long validity = DAYS.toMillis(VALIDITY);
+    private String signingAlgorithm = DEFAULT_SIGNING_ALGORITHM;
+    private String keyPairAlgorithm = DEFAULT_KEY_GENERATION_ALGORITHM;
+    private Long validityInMillis = DAYS.toMillis(DEFAULT_VALIDITY);
 
     static String buildDistinguishedName(String commonName) {
         return format("CN=%s, O=%s, L=%s, ST=%s, C=%s", commonName, ORGANISATION, LOCALITY, STATE, COUNTRY);
@@ -73,12 +78,12 @@ public class CertificateSigningRequest {
         return this;
     }
 
-    public Long getValidity() {
-        return validity;
+    public Long getValidityInMillis() {
+        return validityInMillis;
     }
 
-    public CertificateSigningRequest setValidity(Long validity) {
-        this.validity = validity;
+    public CertificateSigningRequest setValidityInMillis(Long validityInMillis) {
+        this.validityInMillis = validityInMillis;
         return this;
     }
 }
