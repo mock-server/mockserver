@@ -42,7 +42,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     public boolean matches(final HttpRequest context, NottableString matched) {
         boolean result = false;
 
-        if (matcher == null || matches(matcher.getValue(), matched.getValue(), false)) {
+        if (matcher == null || matches(matcher.getValue(), matched.getValue(), true)) {
             result = true;
         }
 
@@ -63,10 +63,10 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     public boolean matches(NottableString matcher, NottableString matched, boolean ignoreCase) {
         if (matcher.isNot() && matched.isNot()) {
             // mutual notted control plane match
-            return matchesInternal(matcher, matched, ignoreCase);
+            return matches(matcher.getValue(), matched.getValue(), ignoreCase);
         } else {
             // data plane & control plan match
-            return (matcher.isNot() || matched.isNot()) ^ matchesInternal(matcher, matched, ignoreCase);
+            return (matcher.isNot() || matched.isNot()) ^ matches(matcher.getValue(), matched.getValue(), ignoreCase);
         }
     }
 
