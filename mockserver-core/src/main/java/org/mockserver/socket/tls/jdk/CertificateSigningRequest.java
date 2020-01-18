@@ -24,7 +24,7 @@ public class CertificateSigningRequest {
 
     private String commonName;
     private int keyPairSize;
-    private List<String> subjectAlternativeNames;
+    private String[] subjectAlternativeNames;
     private String signingAlgorithm = DEFAULT_SIGNING_ALGORITHM;
     private String keyPairAlgorithm = DEFAULT_KEY_GENERATION_ALGORITHM;
     private Long validityInMillis = DAYS.toMillis(DEFAULT_VALIDITY);
@@ -51,11 +51,11 @@ public class CertificateSigningRequest {
         return this;
     }
 
-    public List<String> getSubjectAlternativeNames() {
+    public String[] getSubjectAlternativeNames() {
         return subjectAlternativeNames;
     }
 
-    public CertificateSigningRequest setSubjectAlternativeNames(List<String> subjectAlternativeNames) {
+    public CertificateSigningRequest setSubjectAlternativeNames(String[] subjectAlternativeNames) {
         this.subjectAlternativeNames = subjectAlternativeNames;
         return this;
     }

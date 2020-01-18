@@ -20,10 +20,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.slf4j.event.Level;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
@@ -49,8 +46,8 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    private String mockServerCertificatePEMFile;
-    private String mockServerPrivateKeyPEMFile;
+    private static String mockServerCertificatePEMFile;
+    private static String mockServerPrivateKeyPEMFile;
 
     public BCKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
@@ -65,8 +62,8 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
         try {
             KeyPair caKeyPair = generateKeyPair(ROOT_KEYSIZE);
 
-            saveCertificateAsPEMFile(createCACert(caKeyPair.getPublic(), caKeyPair.getPrivate()), "CertificateAuthorityCertificate.pem", false, "X509 key");
-            saveCertificateAsPEMFile(caKeyPair.getPrivate(), "CertificateAuthorityPrivateKey.pem", false, "private key");
+            saveAsPEMFile(createCACert(caKeyPair.getPublic(), caKeyPair.getPrivate()), "CertificateAuthorityCertificate.pem", false, "X509 key");
+            saveAsPEMFile(caKeyPair.getPrivate(), "PKCS#1CertificateAuthorityPrivateKey.pem", false, "private key");
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -121,7 +118,12 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
             PublicKey mockServerPublicKey = keyPair.getPublic();
 
             // ca keys
-            PrivateKey caPrivateKey = privateKeyFromPEMFile(ConfigurationProperties.certificateAuthorityPrivateKey());
+            PrivateKey caPrivateKey;
+            try {
+                caPrivateKey = privateKeyFromPEMFile(ConfigurationProperties.certificateAuthorityPrivateKey());
+            } catch (Throwable throwable) {
+                caPrivateKey = privateKeyFromPEMFile(ConfigurationProperties.certificateAuthorityPrivateKey().replaceAll("PKCS#8", "PKCS#1"));
+            }
             X509Certificate caCert = certificateAuthorityX509Certificate();
 
             // generate mockServer certificate
@@ -135,8 +137,8 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
                 ConfigurationProperties.sslSubjectAlternativeNameIps()
             );
             String randomUUID = UUID.randomUUID().toString();
-            mockServerCertificatePEMFile = saveCertificateAsPEMFile(mockServerCert, "MockServerCertificate" + randomUUID + ".pem", true, "X509 key");
-            mockServerPrivateKeyPEMFile = saveCertificateAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey" + randomUUID + ".pem", true, "private key");
+            mockServerCertificatePEMFile = saveAsPEMFile(mockServerCert, "MockServerCertificate" + randomUUID + ".pem", true, "X509 key");
+            mockServerPrivateKeyPEMFile = saveAsPEMFile(mockServerPrivateKey, "MockServerPrivateKey" + randomUUID + ".pem", true, "private key");
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -221,9 +223,9 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
     }
 
     /**
-     * Saves X509Certificate as Base-64 encoded PEM file.
+     * Saves object as Base-64 encoded PEM file.
      */
-    private String saveCertificateAsPEMFile(Object x509Certificate, String filename, boolean deleteOnExit, String type) throws IOException {
+    private String saveAsPEMFile(Object object, String filename, boolean deleteOnExit, String type) throws IOException {
         File pemFile;
         if (isNotBlank(directoryToSaveDynamicSSLCertificate()) && new File(directoryToSaveDynamicSSLCertificate()).exists()) {
             pemFile = new File(new File(directoryToSaveDynamicSSLCertificate()), filename);
@@ -261,7 +263,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
         );
         try (FileWriter pemfileWriter = new FileWriter(pemFile)) {
             try (JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(pemfileWriter)) {
-                jcaPEMWriter.writeObject(x509Certificate);
+                jcaPEMWriter.writeObject(object);
             }
         }
         if (deleteOnExit) {

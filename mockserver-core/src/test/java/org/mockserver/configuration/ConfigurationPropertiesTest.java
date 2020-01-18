@@ -515,7 +515,7 @@ public class ConfigurationPropertiesTest {
         System.clearProperty("mockserver.certificateAuthorityPrivateKey");
 
         // when
-        assertEquals("org/mockserver/socket/CertificateAuthorityPrivateKey.pem", certificateAuthorityPrivateKey());
+        assertEquals("org/mockserver/socket/PKCS#8CertificateAuthorityPrivateKey.pem", certificateAuthorityPrivateKey());
         certificateAuthorityPrivateKey("some/private_key.pem");
 
         // then

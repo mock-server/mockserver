@@ -29,8 +29,8 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     private final MockServerLogger mockServerLogger;
     private final X509Generator x509Generator;
 
-    private String mockServerCertificatePEMFile;
-    private String mockServerPrivateKeyPEMFile;
+    private static String mockServerCertificatePEMFile;
+    private static String mockServerPrivateKeyPEMFile;
 
     public JDKKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
@@ -49,7 +49,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
             );
 
             savePEMToFile(x509AndPrivateKey.getCert(), "CertificateAuthorityCertificate.pem", false, "X509 key");
-            savePEMToFile(x509AndPrivateKey.getPrivateKey(), "CertificateAuthorityPrivateKey.pem", false, "private key");
+            savePEMToFile(x509AndPrivateKey.getPrivateKey(), "PKCS#8CertificateAuthorityPrivateKey.pem", false, "private key");
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -65,11 +65,17 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     public void buildAndSavePrivateKeyAndX509Certificate() {
         try {
             String caPrivateKey = FileReader.readFileFromClassPathOrPath(ConfigurationProperties.certificateAuthorityPrivateKey());
-            X509AndPrivateKey x509AndPrivateKey = x509Generator.generateSignedEphemeralCertificate(new CertificateSigningRequest()
-                .setKeyPairAlgorithm(KEY_GENERATION_ALGORITHM)
-                .setSigningAlgorithm(SIGNING_ALGORITHM)
-                .setCommonName(ROOT_COMMON_NAME)
-                .setKeyPairSize(ROOT_KEYSIZE), caPrivateKey);
+            X509AndPrivateKey x509AndPrivateKey = x509Generator.generateSignedEphemeralCertificate(
+                new CertificateSigningRequest()
+                    .setKeyPairAlgorithm(KEY_GENERATION_ALGORITHM)
+                    .setSigningAlgorithm(SIGNING_ALGORITHM)
+                    .setCommonName(ROOT_COMMON_NAME)
+                    .setCommonName(ConfigurationProperties.sslCertificateDomainName())
+                    .setSubjectAlternativeNames(ConfigurationProperties.sslSubjectAlternativeNameDomains())
+                    .setSubjectAlternativeNames(ConfigurationProperties.sslSubjectAlternativeNameIps())
+                    .setKeyPairSize(ROOT_KEYSIZE),
+                caPrivateKey
+            );
 
             String randomUUID = UUID.randomUUID().toString();
             mockServerCertificatePEMFile = savePEMToFile(x509AndPrivateKey.getCert(), "MockServerCertificate" + randomUUID + ".pem", true, "X509 key");

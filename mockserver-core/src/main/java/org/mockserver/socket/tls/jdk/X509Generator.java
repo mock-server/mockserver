@@ -4,7 +4,6 @@ import com.google.common.net.InetAddresses;
 import org.mockserver.file.FileReader;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.serialization.ObjectMapperFactory;
 import org.slf4j.event.Level;
 import sun.security.x509.*;
 
@@ -24,13 +23,15 @@ import java.sql.Date;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Objects;
+import java.util.Random;
 import java.util.stream.Collector;
 
-import static java.util.concurrent.TimeUnit.DAYS;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.mockserver.character.Character.NEW_LINE;
-import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.*;
+import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.ROOT_COMMON_NAME;
+import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.buildDistinguishedName;
 
 /**
  * @author jamesdbloom
@@ -49,31 +50,6 @@ public class X509Generator {
 
     public X509Generator(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;
-    }
-
-    public static void main(String[] args) throws Exception {
-        System.setProperty("ROOT_CA_KEY_PAIR", "<copy keypair document value for relavent environment here>");
-
-        X509Generator x509Generator = new X509Generator(new MockServerLogger());
-        X509AndPrivateKey rootKeyPair = x509Generator
-            .generateRootKeyPair(
-                new CertificateSigningRequest()
-                    .setCommonName(ROOT_COMMON_NAME)
-                    .setKeyPairSize(DEFAULT_KEY_PAIR_LENGTH)
-                    .setValidityInMillis(2 * 365L)
-            );
-        CertificateSigningRequest csr = new CertificateSigningRequest()
-            .setCommonName("test.common.name")
-            .setKeyPairSize(DEFAULT_KEY_PAIR_LENGTH)
-            .setSubjectAlternativeNames(Collections.singletonList("test.common.name"))
-            .setValidityInMillis(DAYS.toMillis(365));
-        X509AndPrivateKey pemKeyPair = x509Generator.generateSignedEphemeralCertificate(csr, rootKeyPair.getPrivateKey());
-        System.out.println("keyPair:" + NEW_LINE +
-            ObjectMapperFactory
-                .createObjectMapper()
-                .writerWithDefaultPrettyPrinter()
-                .writeValueAsString(pemKeyPair)
-        );
     }
 
     public X509AndPrivateKey generateRootKeyPair(final CertificateSigningRequest csr) throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, NoSuchProviderException, SignatureException {
@@ -129,11 +105,11 @@ public class X509Generator {
         return x509CertInfo;
     }
 
-    private void updateWithCertificateExtensions(final X509CertInfo x509CertInfo, final List<String> subjectAlternativeNames) throws IOException, CertificateException {
+    private void updateWithCertificateExtensions(final X509CertInfo x509CertInfo, final String[] subjectAlternativeNames) throws IOException, CertificateException {
         CertificateExtensions certificateExtensions = new CertificateExtensions();
 
-        GeneralNames generalNames = subjectAlternativeNames
-            .stream()
+        GeneralNames generalNames = Arrays
+            .stream(subjectAlternativeNames)
             .map(this::buildGeneralName)
             .filter(Objects::nonNull)
             .collect(
@@ -219,6 +195,15 @@ public class X509Generator {
     }
 
     static byte[] privateKeyBytesFromPEM(final String pem) {
+        if (pem.contains(BEGIN_RSA_PRIVATE_KEY) || pem.contains(END_RSA_PRIVATE_KEY)) {
+            new MockServerLogger().logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.EXCEPTION)
+                    .setLogLevel(Level.ERROR)
+                    .setMessageFormat("Private key provided in unsupported PKCS#1 only PKCS#8 format is support, to convert use openssl, for example{}")
+                    .setArguments("openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt")
+            );
+        }
         return Base64
             .getMimeDecoder()
             .decode(

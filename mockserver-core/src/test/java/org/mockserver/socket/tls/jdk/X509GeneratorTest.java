@@ -11,15 +11,17 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
-import static java.util.Collections.emptyList;
 import static junit.framework.TestCase.fail;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
-import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.ROOT_COMMON_NAME;
 import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.DEFAULT_VALIDITY;
+import static org.mockserver.socket.tls.jdk.CertificateSigningRequest.ROOT_COMMON_NAME;
 import static org.mockserver.socket.tls.jdk.X509Generator.x509FromPEM;
 import static sun.security.x509.BasicConstraintsExtension.IS_CA;
 
@@ -125,7 +127,7 @@ public class X509GeneratorTest {
         CertificateSigningRequest csr = new CertificateSigningRequest()
             .setCommonName(ROOT_COMMON_NAME)
             .setKeyPairSize(KEY_SIZE);
-        List<String> providedSubjectAlternativeNames = Arrays.asList("bob.com", "localhost.com", "127.0.0.1");
+        String[] providedSubjectAlternativeNames = new String[]{"bob.com", "localhost.com", "127.0.0.1"};
         csr.setSubjectAlternativeNames(providedSubjectAlternativeNames);
 
         // and - and a root keypair
@@ -142,7 +144,7 @@ public class X509GeneratorTest {
         // and - the correct values are contained in the correct order
         assertArrayEquals(subjectAlternativeNames
             .stream()
-            .map(subjectAlternativeName -> subjectAlternativeName.get(1)).toArray(), providedSubjectAlternativeNames.toArray());
+            .map(subjectAlternativeName -> subjectAlternativeName.get(1)).toArray(), providedSubjectAlternativeNames);
     }
 
     @Test
@@ -154,7 +156,7 @@ public class X509GeneratorTest {
         CertificateSigningRequest csr = new CertificateSigningRequest()
             .setCommonName(ROOT_COMMON_NAME)
             .setKeyPairSize(KEY_SIZE);
-        csr.setSubjectAlternativeNames(emptyList());
+        csr.setSubjectAlternativeNames(new String[0]);
 
         // and - and a root keypair
         X509AndPrivateKey pemRootKeyPair = x509Generator.generateRootKeyPair(csr);
@@ -177,7 +179,7 @@ public class X509GeneratorTest {
         CertificateSigningRequest csr = new CertificateSigningRequest()
             .setCommonName(ROOT_COMMON_NAME)
             .setKeyPairSize(KEY_SIZE);
-        List<String> providedSubjectAlternativeNames = Arrays.asList("bob@bob.com", "localhost.com", "127.0.0.1");
+        String[] providedSubjectAlternativeNames = new String[]{"bob@bob.com", "localhost.com", "127.0.0.1"};
         csr.setSubjectAlternativeNames(providedSubjectAlternativeNames);
 
         // and - and a root keypair
@@ -243,7 +245,7 @@ public class X509GeneratorTest {
         CertificateSigningRequest csr = new CertificateSigningRequest()
             .setCommonName(ROOT_COMMON_NAME)
             .setKeyPairSize(KEY_SIZE);
-        List<String> providedSubjectAlternativeNames = Arrays.asList("bob.com", "localhost.com", "127.0.0.1");
+        String[] providedSubjectAlternativeNames = new String[]{"bob.com", "localhost.com", "127.0.0.1"};
         csr.setSubjectAlternativeNames(providedSubjectAlternativeNames);
 
         // and - and a root keypair
