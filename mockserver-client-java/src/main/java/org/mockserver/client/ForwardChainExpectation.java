@@ -17,7 +17,7 @@ import org.mockserver.websocket.WebSocketException;
 
 import java.util.concurrent.Future;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 
 /**
@@ -239,7 +239,7 @@ public class ForwardChainExpectation {
                 mockServerClient.isSecure()
             );
             mockServerEventBus.subscribe(webSocketClient::stopClient, EventType.STOP, EventType.RESET);
-            return register.get(maxFutureTimeout(), SECONDS);
+            return register.get(maxFutureTimeout(), MILLISECONDS);
         } catch (Exception e) {
             if (e.getCause() instanceof WebSocketException) {
                 throw new ClientException(e.getCause().getMessage(), e);

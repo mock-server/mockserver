@@ -26,6 +26,7 @@ import java.util.concurrent.*;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
@@ -142,7 +143,7 @@ public class MockServerClient implements Stoppable {
     private int port() {
         if (this.port == null) {
             try {
-                port = portFuture.get(maxFutureTimeout(), SECONDS);
+                port = portFuture.get(maxFutureTimeout(), MILLISECONDS);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }

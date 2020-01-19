@@ -29,7 +29,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
@@ -4728,8 +4728,8 @@ public abstract class AbstractExtendedMockingIntegrationTest extends AbstractBas
 
         });
 
-        Long slowRequestElapsedMillis = slowFuture.get(maxFutureTimeout(), SECONDS);
-        Long fastRequestElapsedMillis = fastFuture.get(maxFutureTimeout(), SECONDS);
+        Long slowRequestElapsedMillis = slowFuture.get(maxFutureTimeout(), MILLISECONDS);
+        Long fastRequestElapsedMillis = fastFuture.get(maxFutureTimeout(), MILLISECONDS);
 
         assertThat("Slow request takes less than expected", slowRequestElapsedMillis, is(greaterThan(4 * 1000L)));
         assertThat("Fast request takes longer than expected", fastRequestElapsedMillis, is(lessThan(1000L)));

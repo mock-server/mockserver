@@ -188,7 +188,7 @@ public abstract class LifeCycle implements Stoppable {
                     }
                 }, "MockServer thread for port: " + portToBind).start();
 
-                actualPortBindings.add(((InetSocketAddress) channelOpened.get(maxFutureTimeout(), SECONDS).localAddress()).getPort());
+                actualPortBindings.add(((InetSocketAddress) channelOpened.get(maxFutureTimeout(), MILLISECONDS).localAddress()).getPort());
             } catch (Exception e) {
                 throw new RuntimeException("Exception while binding MockServer to port " + portToBind, e.getCause());
             }

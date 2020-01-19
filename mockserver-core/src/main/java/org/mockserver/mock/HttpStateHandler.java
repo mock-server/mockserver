@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.lang3.StringUtils.*;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.addSubjectAlternativeName;
@@ -394,7 +394,7 @@ public class HttpStateHandler {
                 }
 
                 try {
-                    return httpResponseFuture.get(maxFutureTimeout(), SECONDS);
+                    return httpResponseFuture.get(maxFutureTimeout(), MILLISECONDS);
                 } catch (ExecutionException | InterruptedException | TimeoutException e) {
                     throw new RuntimeException("Exception retrieving state for " + request, e);
                 }
@@ -515,7 +515,7 @@ public class HttpStateHandler {
         }
 
         try {
-            return canHandle.get(maxFutureTimeout(), SECONDS);
+            return canHandle.get(maxFutureTimeout(), MILLISECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException ignore) {
             return false;
         }

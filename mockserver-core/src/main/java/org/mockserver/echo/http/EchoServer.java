@@ -23,7 +23,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 
 
@@ -73,7 +73,7 @@ public class EchoServer implements Stoppable {
 
         try {
             // wait for proxy to start all channels
-            boundPort.get(maxFutureTimeout(), SECONDS);
+            boundPort.get(maxFutureTimeout(), MILLISECONDS);
             TimeUnit.MILLISECONDS.sleep(5);
         } catch (Exception e) {
             mockServerLogger.logEvent(
@@ -99,7 +99,7 @@ public class EchoServer implements Stoppable {
 
     public Integer getPort() {
         try {
-            return boundPort.get(maxFutureTimeout(), SECONDS);
+            return boundPort.get(maxFutureTimeout(), MILLISECONDS);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
