@@ -37,6 +37,7 @@ import java.util.concurrent.Future;
 
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
 import static org.slf4j.event.Level.TRACE;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
@@ -86,17 +87,13 @@ public class WebSocketClient<T extends HttpObject> {
                             }
                         }
 
+                        ch.pipeline().addLast(new HttpClientCodec());
+                        ch.pipeline().addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
+                        ch.pipeline().addLast(new WebSocketClientHandler(mockServerLogger, clientId, serverAddress, contextPath, WebSocketClient.this, isSecure));
                         // add logging
                         if (MockServerLogger.isEnabled(TRACE)) {
-                            ch.pipeline().addLast(new LoggingHandler("NettyHttpClient -->"));
+                            ch.pipeline().addLast(new LoggingHandler("WebSocketClient last -->"));
                         }
-
-                        ch.pipeline()
-                            .addLast(
-                                new HttpClientCodec(),
-                                new HttpObjectAggregator(Integer.MAX_VALUE),
-                                new WebSocketClientHandler(mockServerLogger, clientId, serverAddress, contextPath, WebSocketClient.this, isSecure)
-                            );
                     }
                 })
                 .connect(serverAddress)
@@ -208,8 +205,23 @@ public class WebSocketClient<T extends HttpObject> {
                         )));
                     }
                 }
-            } else if (!(deserializedMessage instanceof WebSocketClientIdDTO)) {
-                throw new WebSocketException("Unsupported web socket message " + deserializedMessage);
+            } else if (deserializedMessage instanceof WebSocketClientIdDTO) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.TRACE)
+                        .setLogLevel(TRACE)
+                        .setMessageFormat("received client id{}")
+                        .setArguments(deserializedMessage)
+                );
+            } else {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.WARN)
+                        .setLogLevel(WARN)
+                        .setMessageFormat("web socket client received a message that isn't HttpRequest or HttpRequestAndHttpResponse{} which has been deserialized as{}")
+                        .setArguments(textWebSocketFrame.text(), deserializedMessage)
+                );
+                throw new WebSocketException("Unsupported web socket message " + textWebSocketFrame.text());
             }
         } catch (Exception e) {
             throw new WebSocketException("Exception while receiving web socket message", e);

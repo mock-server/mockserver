@@ -1,19 +1,17 @@
 package org.mockserver.websocket;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.channel.*;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
-import org.mockserver.mappers.FullHttpResponseToMockServerResponse;
 import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.mappers.FullHttpResponseToMockServerResponse;
 import org.mockserver.model.MediaType;
 import org.slf4j.event.Level;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.CompletableFuture;
@@ -75,6 +73,13 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, Object msg) {
         Channel ch = ctx.channel();
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(LogEntry.LogMessageType.TRACE)
+                .setLogLevel(TRACE)
+                .setMessageFormat("web socket client handshake handler received{}")
+                .setArguments(msg)
+        );
         if (msg instanceof FullHttpResponse) {
             FullHttpResponse httpResponse = (FullHttpResponse) msg;
             final CompletableFuture<String> registrationFuture = ch.attr(REGISTRATION_FUTURE).get();
@@ -87,6 +92,11 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                         .setLogLevel(TRACE)
                         .setMessageFormat("web socket client " + clientId + " connected")
                 );
+                ch.pipeline().remove(HttpClientCodec.class);
+                // add extra logging
+                if (MockServerLogger.isEnabled(TRACE)) {
+                    ch.pipeline().addFirst(new LoggingHandler("WebSocketClient first -->"));
+                }
             } else if (httpResponse.status().equals(HttpResponseStatus.NOT_IMPLEMENTED)) {
                 String message = readRequestBody(httpResponse);
                 registrationFuture.completeExceptionally(new WebSocketException(message));
@@ -97,7 +107,14 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                         .setMessageFormat(message)
                 );
             } else {
-                registrationFuture.completeExceptionally(new WebSocketException("Unsupported web socket message " + new FullHttpResponseToMockServerResponse(mockServerLogger).mapMockServerResponseToFullHttpResponse(httpResponse)));
+                registrationFuture.completeExceptionally(new WebSocketException("handshake failure unsupported message received " + new FullHttpResponseToMockServerResponse(mockServerLogger).mapMockServerResponseToFullHttpResponse(httpResponse)));
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.WARN)
+                        .setLogLevel(WARN)
+                        .setMessageFormat("web socket client handshake handler received an unsupported FullHttpResponse message{}")
+                        .setArguments(msg)
+                );
             }
         } else if (msg instanceof WebSocketFrame) {
             WebSocketFrame frame = (WebSocketFrame) msg;
@@ -113,7 +130,23 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                         .setMessageFormat("web socket client received request to close")
                 );
                 ch.close();
+            } else {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.WARN)
+                        .setLogLevel(WARN)
+                        .setMessageFormat("web socket client received an unsupported WebSocketFrame message{}")
+                        .setArguments(msg)
+                );
             }
+        } else {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.WARN)
+                    .setLogLevel(WARN)
+                    .setMessageFormat("web socket client received a message of unknown type{}")
+                    .setArguments(msg)
+            );
         }
     }
 
