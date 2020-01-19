@@ -25,7 +25,7 @@ import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.ConfigurationProperties.*;
@@ -204,7 +204,7 @@ public class ActionHandler {
                 final HttpForwardActionResult responseFuture = new HttpForwardActionResult(clonedRequest, httpClient.sendRequest(clonedRequest, remoteAddress, potentiallyHttpProxy ? 1000 : ConfigurationProperties.socketConnectionTimeout()), null, remoteAddress);
                 scheduler.submit(responseFuture, () -> {
                     try {
-                        HttpResponse response = responseFuture.getHttpResponse().get(maxFutureTimeout(), SECONDS);
+                        HttpResponse response = responseFuture.getHttpResponse().get(maxFutureTimeout(), MILLISECONDS);
                         if (response == null) {
                             response = notFoundResponse();
                         }
@@ -300,7 +300,7 @@ public class ActionHandler {
     void writeForwardActionResponse(final HttpForwardActionResult responseFuture, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous) {
         scheduler.submit(responseFuture, () -> {
             try {
-                HttpResponse response = responseFuture.getHttpResponse().get(maxFutureTimeout(), SECONDS);
+                HttpResponse response = responseFuture.getHttpResponse().get(maxFutureTimeout(), MILLISECONDS);
                 responseWriter.writeResponse(request, response, false);
                 mockServerLogger.logEvent(
                     new LogEntry()

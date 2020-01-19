@@ -15,7 +15,7 @@ import org.mockserver.responsewriter.ResponseWriter;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.lang3.BooleanUtils.isFalse;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
@@ -101,7 +101,7 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                         }
                         // return overridden response
                         try {
-                            return httpResponseCompletableFuture.get(maxFutureTimeout(), SECONDS);
+                            return httpResponseCompletableFuture.get(maxFutureTimeout(), MILLISECONDS);
                         } catch (Exception e) {
                             mockServerLogger.logEvent(
                                 new LogEntry()
