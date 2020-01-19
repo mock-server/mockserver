@@ -92,7 +92,6 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
                         .setLogLevel(TRACE)
                         .setMessageFormat("web socket client " + clientId + " connected")
                 );
-                ch.pipeline().remove(HttpClientCodec.class);
                 // add extra logging
                 if (MockServerLogger.isEnabled(TRACE)) {
                     ch.pipeline().addFirst(new LoggingHandler("WebSocketClient first -->"));
