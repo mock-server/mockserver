@@ -19,8 +19,8 @@ import java.util.List;
 import static java.util.Collections.singletonList;
 import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
 import static org.mockserver.mock.action.ActionHandler.REMOTE_SOCKET;
-import static org.mockserver.netty.MockServerHandler.PROXYING;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.netty.MockServerHandler.PROXYING;
 import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
 
 /**

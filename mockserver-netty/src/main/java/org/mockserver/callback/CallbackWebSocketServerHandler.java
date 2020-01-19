@@ -1,17 +1,20 @@
 package org.mockserver.callback;
 
-import io.netty.channel.*;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
+import org.mockserver.codec.MockServerServerCodec;
 import org.mockserver.dashboard.DashboardWebSocketServerHandler;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.netty.MockServerHandler;
-import org.mockserver.codec.MockServerServerCodec;
 import org.slf4j.event.Level;
 
 import java.util.UUID;
