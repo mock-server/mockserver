@@ -56,7 +56,8 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private static final Map<PortBinding, Set<String>> localAddressesCache = new ConcurrentHashMap<>();
 
     protected final MockServerLogger mockServerLogger;
-    private final LoggingHandler loggingHandler = new LoggingHandler(PortUnificationHandler.class);
+    private final LoggingHandler loggingHandlerFirst = new LoggingHandler(PortUnificationHandler.class.getSimpleName() + "-first");
+    private final LoggingHandler loggingHandlerLast = new LoggingHandler(PortUnificationHandler.class.getSimpleName() + "-last");
     private final HttpContentLengthRemover httpContentLengthRemover = new HttpContentLengthRemover();
     private final LifeCycle server;
     private final HttpStateHandler httpStateHandler;
@@ -122,7 +123,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
 
     private void addLoggingHandler(ChannelHandlerContext ctx) {
         if (MockServerLogger.isEnabled(TRACE)) {
-            loggingHandler.addLoggingHandler(ctx);
+            loggingHandlerFirst.addLoggingHandler(ctx);
         }
     }
 
@@ -182,7 +183,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         addLastIfNotPresent(pipeline, httpContentLengthRemover);
         addLastIfNotPresent(pipeline, new HttpObjectAggregator(Integer.MAX_VALUE));
         if (MockServerLogger.isEnabled(TRACE)) {
-            addLastIfNotPresent(pipeline, loggingHandler);
+            addLastIfNotPresent(pipeline, loggingHandlerLast);
         }
         addLastIfNotPresent(pipeline, new CallbackWebSocketServerHandler(httpStateHandler));
         addLastIfNotPresent(pipeline, new DashboardWebSocketServerHandler(httpStateHandler, isSslEnabledUpstream(ctx.channel())));
