@@ -190,7 +190,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
     protected String format(ChannelHandlerContext ctx, String message) {
         String chStr = ctx.channel().toString() + ' ' + message;
         if (logger.isTraceEnabled()) {
-            chStr += NEW_LINE + "channel: " + ctx.channel().id() + NEW_LINE + "pipeline: " + ctx.pipeline().names() + NEW_LINE;
+            chStr += NEW_LINE + "channel: " + ctx.channel().id() + NEW_LINE + "current: " + ctx.name() + NEW_LINE + "pipeline: " + ctx.pipeline().names() + NEW_LINE;
         }
         return chStr;
     }
@@ -261,11 +261,12 @@ public class LoggingHandler extends ChannelDuplexHandler {
         return dump.toString();
     }
 
-    private String formatNonByteBuf(String eventName, Object msg) {
-        return eventName + ": " + msg;
-    }
-
     private String formatByteBufHolder(String eventName, ByteBufHolder msg) {
         return formatByteBuf(eventName, msg.content());
+    }
+
+    private String formatNonByteBuf(String eventName, Object msg) {
+        String msgAsString = msg.toString();
+        return eventName + "(rel:" + msgAsString.length() + ")" + ": " + msgAsString;
     }
 }
