@@ -1,5 +1,6 @@
 package org.mockserver.callback;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.mockserver.collections.CircularHashMap;
@@ -32,7 +33,7 @@ public class WebSocketClientRegistry {
     public static final String WEB_SOCKET_CORRELATION_ID_HEADER_NAME = "WebSocketCorrelationId";
     private final MockServerLogger mockServerLogger;
     private final WebSocketMessageSerializer webSocketMessageSerializer;
-    private final Map<String, ChannelHandlerContext> clientRegistry = Collections.synchronizedMap(new CircularHashMap<>(maxWebSocketExpectations()));
+    private final Map<String, Channel> clientRegistry = Collections.synchronizedMap(new CircularHashMap<>(maxWebSocketExpectations()));
     private final Map<String, WebSocketResponseCallback> responseCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
     private final Map<String, WebSocketRequestCallback> forwardCallbackRegistry = new CircularHashMap<>(maxWebSocketExpectations());
 
@@ -96,11 +97,11 @@ public class WebSocketClientRegistry {
 
     void registerClient(String clientId, ChannelHandlerContext ctx) {
         try {
-            ctx.writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(new WebSocketClientIdDTO().setClientId(clientId))));
+            ctx.channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(new WebSocketClientIdDTO().setClientId(clientId))));
         } catch (Exception e) {
             throw new WebSocketException("Exception while sending web socket registration client id message to client " + clientId, e);
         }
-        clientRegistry.put(clientId, ctx);
+        clientRegistry.put(clientId, ctx.channel());
         Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
         if (MockServerLogger.isEnabled(TRACE)) {
             mockServerLogger.logEvent(
@@ -113,9 +114,9 @@ public class WebSocketClientRegistry {
     }
 
     public void unregisterClient(String clientId) {
-        ChannelHandlerContext removeChannel = clientRegistry.remove(clientId);
-        if (removeChannel != null && removeChannel.channel().isOpen()) {
-            removeChannel.channel().close();
+        Channel removeChannel = clientRegistry.remove(clientId);
+        if (removeChannel != null && removeChannel.isOpen()) {
+            removeChannel.close();
         }
         Metrics.set(WEBSOCKET_CALLBACK_CLIENT_COUNT, clientRegistry.size());
         if (MockServerLogger.isEnabled(TRACE)) {
@@ -194,7 +195,7 @@ public class WebSocketClientRegistry {
                                 .setArguments(httpRequest)
                         );
                     }
-                    clientRegistry.get(clientId).channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(httpRequest)));
+                    clientRegistry.get(clientId).writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(httpRequest)));
                 } else {
                     HttpRequestAndHttpResponse httpRequestAndHttpResponse = new HttpRequestAndHttpResponse()
                         .withHttpRequest(httpRequest)
@@ -209,7 +210,7 @@ public class WebSocketClientRegistry {
                                 .setArguments(httpRequestAndHttpResponse)
                         );
                     }
-                    clientRegistry.get(clientId).channel().writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(httpRequestAndHttpResponse)));
+                    clientRegistry.get(clientId).writeAndFlush(new TextWebSocketFrame(webSocketMessageSerializer.serialize(httpRequestAndHttpResponse)));
                 }
                 return true;
             } else {
@@ -231,7 +232,7 @@ public class WebSocketClientRegistry {
     public synchronized void reset() {
         forwardCallbackRegistry.clear();
         responseCallbackRegistry.clear();
-        clientRegistry.forEach((key, value) -> value.channel().close());
+        clientRegistry.forEach((key, value) -> value.close());
         clientRegistry.clear();
         clearWebSocketMetrics();
     }
