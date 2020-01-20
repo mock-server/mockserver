@@ -293,6 +293,20 @@ public class ConfigurationPropertiesTest {
     }
 
     @Test
+    public void shouldSetAndReadAlwaysCloseSocketConnections() {
+        // given
+        System.clearProperty("mockserver.alwaysCloseSocketConnections");
+
+        // when
+        assertFalse(alwaysCloseSocketConnections());
+        alwaysCloseSocketConnections(true);
+
+        // then
+        assertTrue(alwaysCloseSocketConnections());
+        assertEquals("true", System.getProperty("mockserver.alwaysCloseSocketConnections"));
+    }
+
+    @Test
     public void shouldHandleInvalidSocketConnectionTimeout() {
         // given
         System.setProperty("mockserver.socketConnectionTimeout", "invalid");
