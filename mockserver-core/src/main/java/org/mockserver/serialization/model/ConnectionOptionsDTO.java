@@ -1,11 +1,13 @@
 package org.mockserver.serialization.model;
 
 import org.mockserver.model.ConnectionOptions;
+import org.mockserver.model.Delay;
 import org.mockserver.model.ObjectWithJsonToString;
 
 /**
  * @author jamesdbloom
  */
+@SuppressWarnings("UnusedReturnValue")
 public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<ConnectionOptions> {
 
     private Boolean suppressContentLengthHeader = null;
@@ -13,6 +15,7 @@ public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<
     private Boolean suppressConnectionHeader = null;
     private Boolean keepAliveOverride = null;
     private Boolean closeSocket = null;
+    private DelayDTO closeSocketDelay = null;
 
     public ConnectionOptionsDTO(ConnectionOptions connectionOptions) {
         if (connectionOptions != null) {
@@ -21,6 +24,9 @@ public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<
             suppressConnectionHeader = connectionOptions.getSuppressConnectionHeader();
             keepAliveOverride = connectionOptions.getKeepAliveOverride();
             closeSocket = connectionOptions.getCloseSocket();
+            if (connectionOptions.getCloseSocketDelay() != null) {
+                closeSocketDelay = new DelayDTO(connectionOptions.getCloseSocketDelay());
+            }
         }
     }
 
@@ -33,7 +39,8 @@ public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<
             .withContentLengthHeaderOverride(contentLengthHeaderOverride)
             .withSuppressConnectionHeader(suppressConnectionHeader)
             .withKeepAliveOverride(keepAliveOverride)
-            .withCloseSocket(closeSocket);
+            .withCloseSocket(closeSocket)
+            .withCloseSocketDelay(closeSocketDelay != null ? closeSocketDelay.buildObject() : null);
     }
 
     public Boolean getSuppressContentLengthHeader() {
@@ -78,6 +85,15 @@ public class ConnectionOptionsDTO extends ObjectWithJsonToString implements DTO<
 
     public ConnectionOptionsDTO setCloseSocket(Boolean closeSocket) {
         this.closeSocket = closeSocket;
+        return this;
+    }
+
+    public DelayDTO getCloseSocketDelay() {
+        return closeSocketDelay;
+    }
+
+    public ConnectionOptionsDTO setCloseSocketDelay(DelayDTO closeSocketDelay) {
+        this.closeSocketDelay = closeSocketDelay;
         return this;
     }
 }

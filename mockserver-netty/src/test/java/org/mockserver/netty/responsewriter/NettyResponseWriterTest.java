@@ -1,16 +1,26 @@
 package org.mockserver.netty.responsewriter;
 
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.*;
+import io.netty.util.concurrent.CompleteFuture;
+import io.netty.util.concurrent.EventExecutor;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.Delay;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.netty.responsewriter.NettyResponseWriter;
+import org.mockserver.scheduler.Scheduler;
 
+import java.util.concurrent.CompletableFuture;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItemInArray;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAllResponses;
@@ -19,6 +29,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
 
+@SuppressWarnings("unchecked")
 public class NettyResponseWriterTest {
 
     @Mock
@@ -26,12 +37,19 @@ public class NettyResponseWriterTest {
     @Mock
     private ChannelFuture mockChannelFuture;
     @Mock
-    private MockServerLogger mockServerLogger;
+    private Channel mockChannel;
+    @Mock
+    private Scheduler scheduler;
+
+    private ArgumentCaptor<GenericFutureListener<ChannelFuture>> genericFutureListenerArgumentCaptor;
 
     @Before
     public void setupTestFixture() {
         initMocks(this);
 
+        genericFutureListenerArgumentCaptor = ArgumentCaptor.forClass(GenericFutureListener.class);
+        when(mockChannelFuture.addListener(genericFutureListenerArgumentCaptor.capture())).thenReturn(null);
+        when(mockChannelFuture.channel()).thenReturn(mockChannel);
         when(mockChannelHandlerContext.writeAndFlush(any())).thenReturn(mockChannelFuture);
     }
 
@@ -42,14 +60,14 @@ public class NettyResponseWriterTest {
         HttpResponse response = response("some_response");
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
-                response("some_response")
-                        .withHeader("connection", "close")
+            response("some_response")
+                .withHeader("connection", "close")
         );
-        verify(mockChannelFuture).addListener(ChannelFutureListener.CLOSE);
+        verify(mockChannelFuture).addListener(any(GenericFutureListener.class));
     }
 
     @Test
@@ -58,14 +76,14 @@ public class NettyResponseWriterTest {
         HttpRequest request = request("some_request");
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), null, false);
+        new NettyResponseWriter(mockChannelHandlerContext, scheduler).writeResponse(request.clone(), null, false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
-                notFoundResponse()
-                        .withHeader("connection", "close")
+            notFoundResponse()
+                .withHeader("connection", "close")
         );
-        verify(mockChannelFuture).addListener(ChannelFutureListener.CLOSE);
+        verify(mockChannelFuture).addListener(any(GenericFutureListener.class));
     }
 
     @Test
@@ -78,19 +96,19 @@ public class NettyResponseWriterTest {
             HttpResponse response = response("some_response");
 
             // when
-            new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
+            new NettyResponseWriter(mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
 
             // then
             verify(mockChannelHandlerContext).writeAndFlush(
-                    response
-                            .withHeader("connection", "close")
-                            .withHeader("access-control-allow-origin", "*")
-                            .withHeader("access-control-allow-methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE")
-                            .withHeader("access-control-allow-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
-                            .withHeader("access-control-expose-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
-                            .withHeader("access-control-max-age", "300")
+                response
+                    .withHeader("connection", "close")
+                    .withHeader("access-control-allow-origin", "*")
+                    .withHeader("access-control-allow-methods", "CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE")
+                    .withHeader("access-control-allow-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
+                    .withHeader("access-control-expose-headers", "Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization")
+                    .withHeader("access-control-max-age", "300")
             );
-            verify(mockChannelFuture).addListener(ChannelFutureListener.CLOSE);
+            verify(mockChannelFuture).addListener(any(GenericFutureListener.class));
         } finally {
             enableCORSForAllResponses(enableCORSForAllResponses);
         }
@@ -100,18 +118,18 @@ public class NettyResponseWriterTest {
     public void shouldKeepAlive() {
         // given
         HttpRequest request = request("some_request")
-                .withKeepAlive(true);
+            .withKeepAlive(true);
         HttpResponse response = response("some_response");
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
-                response("some_response")
-                        .withHeader("connection", "keep-alive")
+            response("some_response")
+                .withHeader("connection", "keep-alive")
         );
-        verify(mockChannelFuture, times(0)).addListener(ChannelFutureListener.CLOSE);
+        verify(mockChannelFuture, times(0)).addListener(any(GenericFutureListener.class));
     }
 
     @Test
@@ -119,24 +137,24 @@ public class NettyResponseWriterTest {
         // given
         HttpRequest request = request("some_request");
         HttpResponse response = response("some_response")
-                .withConnectionOptions(
-                        connectionOptions()
-                                .withKeepAliveOverride(true)
-                );
+            .withConnectionOptions(
+                connectionOptions()
+                    .withKeepAliveOverride(true)
+            );
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
-                response("some_response")
-                        .withHeader("connection", "keep-alive")
-                        .withConnectionOptions(
-                                connectionOptions()
-                                        .withKeepAliveOverride(true)
-                        )
+            response("some_response")
+                .withHeader("connection", "keep-alive")
+                .withConnectionOptions(
+                    connectionOptions()
+                        .withKeepAliveOverride(true)
+                )
         );
-        verify(mockChannelFuture).addListener(ChannelFutureListener.CLOSE);
+        verify(mockChannelFuture).addListener(any(GenericFutureListener.class));
     }
 
     @Test
@@ -144,48 +162,77 @@ public class NettyResponseWriterTest {
         // given
         HttpRequest request = request("some_request");
         HttpResponse response = response("some_response")
-                .withConnectionOptions(
-                        connectionOptions()
-                                .withSuppressConnectionHeader(true)
-                );
+            .withConnectionOptions(
+                connectionOptions()
+                    .withSuppressConnectionHeader(true)
+            );
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
 
         // then
         verify(mockChannelHandlerContext).writeAndFlush(
-                response("some_response")
-                        .withConnectionOptions(
-                                connectionOptions()
-                                        .withSuppressConnectionHeader(true)
-                        )
+            response("some_response")
+                .withConnectionOptions(
+                    connectionOptions()
+                        .withSuppressConnectionHeader(true)
+                )
         );
-        verify(mockChannelFuture).addListener(ChannelFutureListener.CLOSE);
+        verify(mockChannelFuture).addListener(any(GenericFutureListener.class));
     }
 
     @Test
-    public void shouldCloseSocket() {
+    public void shouldCloseSocket() throws Exception {
         // given
         HttpRequest request = request("some_request");
         HttpResponse response = response("some_response")
-                .withConnectionOptions(
-                        connectionOptions()
-                                .withCloseSocket(false)
-                );
+            .withConnectionOptions(
+                connectionOptions()
+                    .withCloseSocket(true)
+            );
 
         // when
-        new NettyResponseWriter(mockChannelHandlerContext).writeResponse(request.clone(), response.clone(), false);
+        new NettyResponseWriter(mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
+        genericFutureListenerArgumentCaptor.getValue().operationComplete(mockChannelFuture);
 
         // then
+        verify(mockChannel).close();
         verify(mockChannelHandlerContext).writeAndFlush(
-                response("some_response")
-                        .withHeader("connection", "close")
-                        .withConnectionOptions(
-                                connectionOptions()
-                                        .withCloseSocket(false)
-                        )
+            response("some_response")
+                .withHeader("connection", "close")
+                .withConnectionOptions(
+                    connectionOptions()
+                        .withCloseSocket(true)
+                )
         );
-        verify(mockChannelFuture, times(0)).addListener(ChannelFutureListener.CLOSE);
+    }
+
+    @Test
+    public void shouldDelaySocketClose() throws Exception {
+        // given
+        HttpRequest request = request("some_request");
+        HttpResponse response = response("some_response")
+            .withConnectionOptions(
+                connectionOptions()
+                    .withCloseSocket(true)
+                    .withCloseSocketDelay(new Delay(SECONDS, 3))
+            );
+
+        // when
+        new NettyResponseWriter(mockChannelHandlerContext, scheduler).writeResponse(request.clone(), response.clone(), false);
+        genericFutureListenerArgumentCaptor.getValue().operationComplete(mockChannelFuture);
+
+        // then
+        verify(scheduler).schedule(isA(Runnable.class), eq(false), eq(new Delay(SECONDS, 3)));
+        verify(mockChannelHandlerContext).writeAndFlush(
+            response("some_response")
+                .withHeader("connection", "close")
+                .withConnectionOptions(
+                    connectionOptions()
+                        .withCloseSocket(true)
+                        .withCloseSocketDelay(new Delay(SECONDS, 3))
+                )
+        );
     }
 
 }

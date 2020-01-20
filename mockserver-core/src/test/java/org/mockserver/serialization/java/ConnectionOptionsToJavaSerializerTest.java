@@ -2,7 +2,11 @@ package org.mockserver.serialization.java;
 
 import org.junit.Test;
 import org.mockserver.model.ConnectionOptions;
+import org.mockserver.model.Delay;
 
+import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.mockserver.character.Character.NEW_LINE;
 
@@ -19,7 +23,8 @@ public class ConnectionOptionsToJavaSerializerTest {
                 "                .withContentLengthHeaderOverride(10)" + NEW_LINE +
                 "                .withSuppressConnectionHeader(true)" + NEW_LINE +
                 "                .withKeepAliveOverride(false)" + NEW_LINE +
-                "                .withCloseSocket(true)",
+                "                .withCloseSocket(true)" + NEW_LINE +
+                "                .withCloseSocketDelay(new Delay(TimeUnit.MILLISECONDS, 50))",
             new ConnectionOptionsToJavaSerializer().serialize(1,
                 new ConnectionOptions()
                     .withSuppressContentLengthHeader(false)
@@ -27,6 +32,7 @@ public class ConnectionOptionsToJavaSerializerTest {
                     .withSuppressConnectionHeader(true)
                     .withKeepAliveOverride(false)
                     .withCloseSocket(true)
+                    .withCloseSocketDelay(new Delay(MILLISECONDS, 50))
             )
         );
     }

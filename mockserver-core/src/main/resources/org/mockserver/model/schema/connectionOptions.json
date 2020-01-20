@@ -6,6 +6,9 @@
         "closeSocket": {
             "type": "boolean"
         },
+        "closeSocketDelay": {
+            "$ref": "#/definitions/delay"
+        },
         "contentLengthHeaderOverride": {
             "type": "integer"
         },

@@ -10,6 +10,7 @@ public class ConnectionOptions extends ObjectWithJsonToString {
     private Boolean suppressConnectionHeader = null;
     private Boolean keepAliveOverride = null;
     private Boolean closeSocket = null;
+    private Delay closeSocketDelay = null;
 
     public static ConnectionOptions connectionOptions() {
         return new ConnectionOptions();
@@ -94,5 +95,19 @@ public class ConnectionOptions extends ObjectWithJsonToString {
 
     public Boolean getCloseSocket() {
         return closeSocket;
+    }
+
+    /**
+     * Override how long to delay before closing socket, this value is ignored if socket isn't going to be closed
+     *
+     * @param closeSocketDelay set delay before closing socket
+     */
+    public ConnectionOptions withCloseSocketDelay(Delay closeSocketDelay) {
+        this.closeSocketDelay = closeSocketDelay;
+        return this;
+    }
+
+    public Delay getCloseSocketDelay() {
+        return closeSocketDelay;
     }
 }

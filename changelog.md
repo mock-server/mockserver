@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - addition configuration for web socket client event loop size
 - addition configuration for action handler thread pool size
 - exposed request raw bytes to object callbacks (allows forwarded requests body parsing that is inconsistent with Content-Type header)
+- added support to delay socket closure using connection options
 
 ### Changed
 - performance improvements for header and cookie handling

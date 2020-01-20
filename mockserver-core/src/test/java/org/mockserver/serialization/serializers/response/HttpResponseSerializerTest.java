@@ -11,6 +11,7 @@ import org.mockserver.model.Header;
 
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -42,6 +43,7 @@ public class HttpResponseSerializerTest {
                         .withSuppressConnectionHeader(true)
                         .withKeepAliveOverride(true)
                         .withCloseSocket(true)
+                        .withCloseSocketDelay(new Delay(MILLISECONDS, 100))
                 )
             ),
             is("{" + NEW_LINE +
@@ -63,7 +65,11 @@ public class HttpResponseSerializerTest {
                 "    \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
                 "    \"suppressConnectionHeader\" : true," + NEW_LINE +
                 "    \"keepAliveOverride\" : true," + NEW_LINE +
-                "    \"closeSocket\" : true" + NEW_LINE +
+                "    \"closeSocket\" : true," + NEW_LINE +
+                "    \"closeSocketDelay\" : {" + NEW_LINE +
+                "      \"timeUnit\" : \"MILLISECONDS\"," + NEW_LINE +
+                "      \"value\" : 100" + NEW_LINE +
+                "    }" + NEW_LINE +
                 "  }" + NEW_LINE +
                 "}"));
     }

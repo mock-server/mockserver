@@ -31,6 +31,9 @@ public class ConnectionOptionsToJavaSerializer implements ToJavaSerializer<Conne
             if (connectionOptions.getCloseSocket() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withCloseSocket(").append(connectionOptions.getCloseSocket()).append(")");
             }
+            if (connectionOptions.getCloseSocketDelay() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withCloseSocketDelay(").append(new DelayToJavaSerializer().serialize(0, connectionOptions.getCloseSocketDelay())).append(")");
+            }
         }
         return output.toString();
     }

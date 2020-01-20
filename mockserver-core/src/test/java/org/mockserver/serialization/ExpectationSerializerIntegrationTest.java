@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -266,7 +267,11 @@ public class ExpectationSerializerIntegrationTest {
             "      \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
             "      \"suppressConnectionHeader\" : true," + NEW_LINE +
             "      \"keepAliveOverride\" : true," + NEW_LINE +
-            "      \"closeSocket\" : true" + NEW_LINE +
+            "      \"closeSocket\" : true," + NEW_LINE +
+            "      \"closeSocketDelay\" : {" + NEW_LINE +
+            "        \"timeUnit\" : \"MILLISECONDS\"," + NEW_LINE +
+            "        \"value\" : 100" + NEW_LINE +
+            "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"times\" : {" + NEW_LINE +
@@ -326,6 +331,7 @@ public class ExpectationSerializerIntegrationTest {
                                 .withSuppressConnectionHeader(true)
                                 .withKeepAliveOverride(true)
                                 .withCloseSocket(true)
+                                .withCloseSocketDelay(new Delay(MILLISECONDS, 100))
                         )
                     )
             )
@@ -382,6 +388,7 @@ public class ExpectationSerializerIntegrationTest {
                                 .withSuppressConnectionHeader(true)
                                 .withKeepAliveOverride(true)
                                 .withCloseSocket(true)
+                                .withCloseSocketDelay(new Delay(MILLISECONDS, 100))
                         )
                     )
             )
@@ -1254,6 +1261,7 @@ public class ExpectationSerializerIntegrationTest {
                                 .withSuppressConnectionHeader(true)
                                 .withKeepAliveOverride(true)
                                 .withCloseSocket(true)
+                                .withCloseSocketDelay(new Delay(MILLISECONDS, 100))
                         )
                     )
             )
@@ -1297,7 +1305,11 @@ public class ExpectationSerializerIntegrationTest {
             "      \"contentLengthHeaderOverride\" : 50," + NEW_LINE +
             "      \"suppressConnectionHeader\" : true," + NEW_LINE +
             "      \"keepAliveOverride\" : true," + NEW_LINE +
-            "      \"closeSocket\" : true" + NEW_LINE +
+            "      \"closeSocket\" : true," + NEW_LINE +
+            "      \"closeSocketDelay\" : {" + NEW_LINE +
+            "        \"timeUnit\" : \"MILLISECONDS\"," + NEW_LINE +
+            "        \"value\" : 100" + NEW_LINE +
+            "      }" + NEW_LINE +
             "    }" + NEW_LINE +
             "  }," + NEW_LINE +
             "  \"times\" : {" + NEW_LINE +

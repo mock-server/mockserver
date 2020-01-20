@@ -1,14 +1,17 @@
 package org.mockserver.netty.responsewriter;
 
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.model.ConnectionOptions;
+import org.mockserver.model.Delay;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.responsewriter.ResponseWriter;
+import org.mockserver.scheduler.Scheduler;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.mockserver.configuration.ConfigurationProperties.enableCORSForAPI;
@@ -24,10 +27,12 @@ import static org.mockserver.model.HttpResponse.response;
 public class NettyResponseWriter extends ResponseWriter {
 
     private final ChannelHandlerContext ctx;
+    private final Scheduler scheduler;
     private static final CORSHeaders CORS_HEADERS = new CORSHeaders();
 
-    public NettyResponseWriter(ChannelHandlerContext ctx) {
+    public NettyResponseWriter(ChannelHandlerContext ctx, Scheduler scheduler) {
         this.ctx = ctx;
+        this.scheduler = scheduler;
     }
 
     @Override
@@ -78,10 +83,16 @@ public class NettyResponseWriter extends ResponseWriter {
             closeChannel = !(request.isKeepAlive() != null && request.isKeepAlive());
         }
 
+        ChannelFuture channelFuture = ctx.writeAndFlush(response);
         if (closeChannel || ConfigurationProperties.alwaysCloseSocketConnections()) {
-            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-        } else {
-            ctx.writeAndFlush(response);
+            channelFuture.addListener((ChannelFutureListener) future -> {
+                Delay closeSocketDelay = connectionOptions != null ? connectionOptions.getCloseSocketDelay() : null;
+                if (closeSocketDelay == null) {
+                    future.channel().close();
+                } else {
+                    scheduler.schedule(() -> future.channel().close(), false, closeSocketDelay);
+                }
+            });
         }
     }
 

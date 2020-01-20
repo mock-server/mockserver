@@ -83,7 +83,7 @@ public class MockServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final HttpRequest request) {
 
-        ResponseWriter responseWriter = new NettyResponseWriter(ctx);
+        ResponseWriter responseWriter = new NettyResponseWriter(ctx, httpStateHandler.getScheduler());
         try {
             addSubjectAlternativeName(request.getFirstHeader(HOST.toString()));
 
