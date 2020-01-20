@@ -1,7 +1,7 @@
 package org.mockserver.socket.tls;
 
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory;
+import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -51,7 +51,7 @@ public interface KeyAndCertificateFactory {
     X509Certificate certificateAuthorityX509Certificate();
 
     static void main(String[] args) {
-        new BCKeyAndCertificateFactory(new MockServerLogger()).buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
+        new JDKKeyAndCertificateFactory(new MockServerLogger()).buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
     }
 
 }
