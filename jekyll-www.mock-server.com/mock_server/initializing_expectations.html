@@ -141,7 +141,7 @@ java -jar ~/Downloads/mockserver-netty-5.8.1-jar-with-dependencies.jar -serverPo
     &lt;/<span class="element">executions</span>&gt;
 &lt;/<span class="element">plugin</span>&gt;</code></pre>
 
-<p>The class must implement the <strong>org.mockserver.client.initialize.ExpectationInitializer</strong> interface and have a default constructor with zero arguments, for example:</p>
+<p>The class must implement the <strong>org.mockserver.client.initialize.PluginExpectationInitializer</strong> interface and have a default constructor with zero arguments, for example:</p>
 
 <pre class="prettyprint lang-java code"><code class="code">public class ExampleInitializationClass implements ExpectationInitializer {
 
