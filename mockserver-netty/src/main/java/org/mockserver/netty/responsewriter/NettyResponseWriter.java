@@ -3,6 +3,7 @@ package org.mockserver.netty.responsewriter;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.HttpRequest;
@@ -77,7 +78,7 @@ public class NettyResponseWriter extends ResponseWriter {
             closeChannel = !(request.isKeepAlive() != null && request.isKeepAlive());
         }
 
-        if (closeChannel) {
+        if (closeChannel || ConfigurationProperties.alwaysCloseSocketConnections()) {
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         } else {
             ctx.writeAndFlush(response);
