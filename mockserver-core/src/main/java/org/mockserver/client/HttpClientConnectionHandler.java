@@ -16,7 +16,7 @@ public class HttpClientConnectionHandler extends ChannelDuplexHandler {
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         CompletableFuture<HttpResponse> responseFuture = ctx.channel().attr(RESPONSE_FUTURE).get();
         if (responseFuture != null && !responseFuture.isDone()) {
-            responseFuture.completeExceptionally(new SocketConnectionException("Channel " + "handler removed" + " before valid response has been received"));
+            responseFuture.completeExceptionally(new SocketConnectionException("Channel handler removed before valid response has been received"));
         }
         super.handlerRemoved(ctx);
     }
