@@ -12,7 +12,7 @@
     <description>A JUnit4 Rule for MockServer</description>
     <url>http://www.mock-server.com</url>
 
-    <artifactId>mockserver-junit-4</artifactId>
+    <artifactId>mockserver-junit-four</artifactId>
 
     <dependencies>
         <!-- mockserver -->
