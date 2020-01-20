@@ -180,7 +180,7 @@ public class ConfigurationProperties {
     private static int maxHeaderSize = readIntegerProperty(MOCKSERVER_MAX_HEADER_SIZE, "MOCKSERVER_MAX_HEADER_SIZE", DEFAULT_MAX_HEADER_SIZE);
     private static int maxChunkSize = readIntegerProperty(MOCKSERVER_MAX_CHUNK_SIZE, "MOCKSERVER_MAX_CHUNK_SIZE", DEFAULT_MAX_CHUNK_SIZE);
     private static boolean preventCertificateDynamicUpdate = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE, "MOCKSERVER_PREVENT_CERTIFICATE_DYNAMIC_UPDATE", DEFAULT_PREVENT_CERTIFICATE_DYNAMIC_UPDATE));
-    private static boolean alwaysCloseConnections = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS, "MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS", DEFAULT_MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS));;
+    private static boolean alwaysCloseConnections = Boolean.parseBoolean(readPropertyHierarchically(MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS, "MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS", DEFAULT_MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS));
 
     @VisibleForTesting
     static void reset() {
@@ -405,6 +405,7 @@ public class ConfigurationProperties {
         ALL_SUBJECT_ALTERNATIVE_DOMAINS.clear();
     }
 
+    @SuppressWarnings("unused")
     public static boolean containsSslSubjectAlternativeName(String domainOrIp) {
         return ALL_SUBJECT_ALTERNATIVE_DOMAINS.contains(domainOrIp) || ALL_SUBJECT_ALTERNATIVE_IPS.contains(domainOrIp);
     }
@@ -520,7 +521,7 @@ public class ConfigurationProperties {
     public static void logLevel(String level) {
         if (isNotBlank(level)) {
             if (!getSLF4JOrJavaLoggerToSLF4JLevelMapping().containsKey(level)) {
-                throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of SL4J levels: \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\" or the Java Logger levels: \"FINEST\", \"FINE\", \"INFO\", \"WARNING\", \"SEVERE\", \"OFF\"");
+                throw new IllegalArgumentException("log level \"" + level + "\" is not legal it must be one of SL4J levels: \"TRACE\", \"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"OFF\", or the Java Logger levels: \"FINEST\", \"FINE\", \"INFO\", \"WARNING\", \"SEVERE\", \"OFF\"");
             }
             System.setProperty(MOCKSERVER_LOG_LEVEL, level);
             if (getSLF4JOrJavaLoggerToSLF4JLevelMapping().get(readPropertyHierarchically(MOCKSERVER_LOG_LEVEL, "MOCKSERVER_LOG_LEVEL", DEFAULT_LOG_LEVEL).toUpperCase()).equals("OFF")) {
@@ -556,6 +557,7 @@ public class ConfigurationProperties {
         return readPropertyHierarchically(MOCKSERVER_LOCAL_BOUND_IP, "MOCKSERVER_LOCAL_BOUND_IP", "");
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     public static void localBoundIP(String localBoundIP) {
         System.setProperty(MOCKSERVER_LOCAL_BOUND_IP, InetAddresses.forString(localBoundIP).getHostAddress());
     }
@@ -811,6 +813,7 @@ public class ConfigurationProperties {
         return inetSocketAddress;
     }
 
+    @SuppressWarnings("unused")
     private static List<Integer> readIntegerListProperty(String key, String environmentVariableKey, Integer defaultValue) {
         try {
             return INTEGER_STRING_LIST_PARSER.toList(readPropertyHierarchically(key, "", "" + defaultValue));
@@ -856,6 +859,7 @@ public class ConfigurationProperties {
         }
     }
 
+    @SuppressWarnings("ConstantConditions")
     private static Properties readPropertyFile() {
 
         Properties properties = new Properties();
@@ -936,6 +940,7 @@ public class ConfigurationProperties {
         return properties;
     }
 
+    @SuppressWarnings("ConstantConditions")
     private static String readPropertyHierarchically(String systemPropertyKey, String environmentVariableKey, String defaultValue) {
         String defaultOrEnvironmentVariable = isBlank(System.getenv(environmentVariableKey)) ?
             defaultValue :
