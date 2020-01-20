@@ -65,7 +65,7 @@ public class ConcurrencyBasicResponseMockingIntegrationTest {
     private void scheduleTasksAndWaitForResponses(int parallelThreads) throws InterruptedException, ExecutionException, TimeoutException {
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(parallelThreads);
 
-        List<ScheduledFuture> scheduledFutures = new ArrayList<>();
+        List<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
         for (int i = 0; i < parallelThreads; i++) {
             scheduledFutures.add(executor.schedule(new Task(), 1L, TimeUnit.SECONDS));
         }
@@ -98,6 +98,7 @@ public class ConcurrencyBasicResponseMockingIntegrationTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassCallback implements ExpectationResponseCallback {
         @Override
         public HttpResponse handle(HttpRequest request) {
