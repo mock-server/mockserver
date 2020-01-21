@@ -15,11 +15,9 @@ import org.mockserver.responsewriter.ResponseWriter;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.lang3.BooleanUtils.isFalse;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.mockserver.callback.WebSocketClientRegistry.WEB_SOCKET_CORRELATION_ID_HEADER_NAME;
-import static org.mockserver.configuration.ConfigurationProperties.maxFutureTimeout;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.slf4j.event.Level.*;
 
@@ -53,7 +51,24 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                 final HttpForwardActionResult responseFuture = sendRequest(
                     request.removeHeader(WEB_SOCKET_CORRELATION_ID_HEADER_NAME),
                     null,
-                    isTrue(httpObjectCallback.getResponseCallback()) ? response -> {
+                    null
+                );
+                if (MockServerLogger.isEnabled(TRACE)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(LogEntry.LogMessageType.TRACE)
+                            .setLogLevel(TRACE)
+                            .setHttpRequest(request)
+                            .setMessageFormat("received response for request{}from client " + clientId)
+                            .setArguments(request)
+                    );
+                }
+                webSocketClientRegistry.unregisterForwardCallbackHandler(webSocketCorrelationId);
+                if (expectationPostProcessor != null && isFalse(httpObjectCallback.getResponseCallback())) {
+                    expectationPostProcessor.run();
+                }
+                if (isTrue(httpObjectCallback.getResponseCallback())) {
+                    actionHandler.executeAfterForwardActionResponse(responseFuture, response -> {
                         // register callback for overridden response
                         CompletableFuture<HttpResponse> httpResponseCompletableFuture = new CompletableFuture<>();
                         webSocketClientRegistry.registerResponseCallbackHandler(webSocketCorrelationId, overriddenResponse -> {
@@ -100,36 +115,11 @@ public class HttpForwardObjectCallbackActionHandler extends HttpForwardAction {
                             );
                         }
                         // return overridden response
-                        try {
-                            return httpResponseCompletableFuture.get(maxFutureTimeout(), MILLISECONDS);
-                        } catch (Exception e) {
-                            mockServerLogger.logEvent(
-                                new LogEntry()
-                                    .setType(LogEntry.LogMessageType.WARN)
-                                    .setLogLevel(WARN)
-                                    .setHttpRequest(request)
-                                    .setMessageFormat("exception receiving overridden response from client " + clientId + " for request{}and original response{}")
-                                    .setArguments(request, response)
-                            );
-                            return response;
-                        }
-                    } : null
-                );
-                if (MockServerLogger.isEnabled(TRACE)) {
-                    mockServerLogger.logEvent(
-                        new LogEntry()
-                            .setType(LogEntry.LogMessageType.TRACE)
-                            .setLogLevel(TRACE)
-                            .setHttpRequest(request)
-                            .setMessageFormat("received response for request{}from client " + clientId)
-                            .setArguments(request)
-                    );
+                        actionHandler.writeForwardActionResponse(responseFuture.setHttpResponse(httpResponseCompletableFuture), responseWriter, request, httpObjectCallback, synchronous);
+                    }, synchronous);
+                } else {
+                    actionHandler.writeForwardActionResponse(responseFuture, responseWriter, request, httpObjectCallback, synchronous);
                 }
-                webSocketClientRegistry.unregisterForwardCallbackHandler(webSocketCorrelationId);
-                if (expectationPostProcessor != null && isFalse(httpObjectCallback.getResponseCallback())) {
-                    expectationPostProcessor.run();
-                }
-                actionHandler.writeForwardActionResponse(responseFuture, responseWriter, request, httpObjectCallback, synchronous);
             }
 
             @Override

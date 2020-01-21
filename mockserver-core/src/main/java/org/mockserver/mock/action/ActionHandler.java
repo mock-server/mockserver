@@ -22,6 +22,7 @@ import org.slf4j.event.Level;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
@@ -295,6 +296,10 @@ public class ActionHandler {
             );
             responseWriter.writeResponse(request, response, false);
         }, synchronous, response.getDelay());
+    }
+
+    void executeAfterForwardActionResponse(final HttpForwardActionResult responseFuture, final Consumer<HttpResponse> command, final boolean synchronous) {
+        scheduler.submit(responseFuture, command, synchronous);
     }
 
     void writeForwardActionResponse(final HttpForwardActionResult responseFuture, final ResponseWriter responseWriter, final HttpRequest request, final Action action, boolean synchronous) {

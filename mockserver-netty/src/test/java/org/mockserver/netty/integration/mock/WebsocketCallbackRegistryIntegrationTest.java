@@ -4,10 +4,12 @@ import org.hamcrest.CoreMatchers;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.metrics.Metrics;
+import org.mockserver.mock.action.ExpectationForwardAndResponseCallback;
 import org.mockserver.model.Header;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 
 import java.io.BufferedReader;
@@ -25,6 +27,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.matchers.Times.once;
 import static org.mockserver.model.ConnectionOptions.connectionOptions;
+import static org.mockserver.model.HttpClassCallback.callback;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.model.HttpStatusCode.OK_200;
@@ -52,7 +55,6 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
     public int getServerPort() {
         return ((ClientAndServer) mockServerClient).getLocalPort();
     }
-
 
     @Test // same JVM due to dynamic calls to static Metrics class
     public void shouldRemoveWebsocketCallbackClientFromRegistryForClientReset() {
@@ -224,7 +226,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
     @Test
     public void shouldAllowUseOfSameWebsocketClientInsideCallback() {
         // when
-        int total = 5;
+        int total = 50;
         for (int i = 0; i < total; i++) {
             mockServerClient
                 .when(
@@ -292,7 +294,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
     @Test
     public void shouldAllowUseOfSeparateWebsocketClientInsideCallback() {
         // when
-        int total = 5;
+        int total = 50;
         for (int i = 0; i < total; i++) {
             mockServerClient
                 .when(
@@ -348,9 +350,7 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
     }
 
     @Test
-    @Ignore
-    public void shouldForwardModifiedRequestAndReturnModifiedResponse() throws Exception {
-        ConfigurationProperties.logLevel("WARN");
+    public void shouldForwardLargeNumberOfModifiedRequestAndReturnModifiedResponseByWebSocket() throws Exception {
         ClientAndServer proxy = null;
         try {
             mockServerClient
@@ -381,13 +381,13 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                         .replaceHeader(new Header("host", "localhost:" + (Integer) getServerPort())),
                     (httpRequest, httpResponse) ->
                         httpResponse
+                            .withReasonPhrase("OK " + httpRequest.getFirstHeader("Counter"))
                             .withBody("modified body response " + httpRequest.getFirstHeader("Counter"))
                             .withHeader("AddedHeader", addedHeader)
                             .removeHeader("Content-Length")
                 );
 
-            for (int counter = 0; counter < 250; ++counter) {
-                System.out.println("Running test :" + counter);
+            for (int counter = 0; counter < 500; ++counter) {
                 try {
                     URL url = new URL("http://localhost:" + proxy.getLocalPort() + "/api/v1/employees");
                     HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -412,12 +412,95 @@ public class WebsocketCallbackRegistryIntegrationTest extends AbstractMockingInt
                     e.printStackTrace();
                     throw e;
                 }
-                System.out.println("Finishing test :" + counter);
             }
         } finally {
             if (proxy != null) {
                 proxy.close();
             }
+        }
+    }
+
+    @Test
+    public void shouldForwardLargeNumberOfModifiedRequestAndReturnModifiedResponseByClassCallback() throws Exception {
+        ClientAndServer proxy = null;
+        try {
+            mockServerClient
+                .when(
+                    request()
+                        .withMethod("GET")
+                        .withPath("/api/v1/employees")
+                )
+                .respond(
+                    response()
+                        .withBody("original body response")
+                        .withConnectionOptions(
+                            connectionOptions()
+                                .withSuppressContentLengthHeader(true)
+                                .withCloseSocket(true)
+                        )
+                );
+            TestExpectationForwardAndResponseCallback.addedHeader = UUID.randomUUID().toString();
+            TestExpectationForwardAndResponseCallback.serverPort = getServerPort();
+            proxy = startClientAndServer();
+            proxy
+                .when(
+                    request()
+                        .withPath("/api/v1/employees")
+                )
+                .forward(callback(TestExpectationForwardAndResponseCallback.class));
+
+            for (int counter = 0; counter < 500; ++counter) {
+                try {
+                    URL url = new URL("http://localhost:" + proxy.getLocalPort() + "/api/v1/employees");
+                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                    con.setRequestMethod("GET");
+                    con.setRequestProperty("Counter", "" + counter);
+                    int responseCode = con.getResponseCode();
+                    StringBuilder textBuilder = new StringBuilder();
+                    try (Reader reader = new BufferedReader(new InputStreamReader(con.getInputStream(), Charset.forName(StandardCharsets.UTF_8.name())))) {
+                        int c;
+                        while ((c = reader.read()) != -1) {
+                            textBuilder.append((char) c);
+                        }
+                    }
+                    String body = textBuilder.toString();
+                    con.disconnect();
+
+                    // then
+                    assertThat(responseCode, is(200));
+                    assertThat(con.getHeaderField("AddedHeader"), is(TestExpectationForwardAndResponseCallback.addedHeader));
+                    assertThat(body, is("modified body response " + counter));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw e;
+                }
+            }
+        } finally {
+            if (proxy != null) {
+                proxy.close();
+            }
+        }
+    }
+
+    public static class TestExpectationForwardAndResponseCallback implements ExpectationForwardAndResponseCallback {
+
+        static String addedHeader;
+        static Integer serverPort;
+
+        @Override
+        public HttpRequest handle(HttpRequest httpRequest) {
+            return httpRequest
+                .clone()
+                .replaceHeader(new Header("host", "localhost:" + serverPort));
+        }
+
+        @Override
+        public HttpResponse handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+            return httpResponse
+                .withReasonPhrase("OK " + httpRequest.getFirstHeader("Counter"))
+                .withBody("modified body response " + httpRequest.getFirstHeader("Counter"))
+                .withHeader("AddedHeader", addedHeader)
+                .removeHeader("Content-Length");
         }
     }
 }

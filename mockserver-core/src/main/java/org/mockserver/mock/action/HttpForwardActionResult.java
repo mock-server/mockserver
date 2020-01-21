@@ -13,7 +13,7 @@ public class HttpForwardActionResult {
     private final InetSocketAddress remoteAddress;
     private CompletableFuture<HttpResponse> httpResponse;
     private final Function<HttpResponse, HttpResponse> overrideHttpResponse;
-    private AtomicBoolean overrideHttpResponseApplied = new AtomicBoolean(false);
+    private final AtomicBoolean overrideHttpResponseApplied = new AtomicBoolean(false);
 
     HttpForwardActionResult(HttpRequest httpRequest, CompletableFuture<HttpResponse> httpResponse, Function<HttpResponse, HttpResponse> overrideHttpResponse) {
         this(httpRequest, httpResponse, overrideHttpResponse, null);
@@ -46,8 +46,9 @@ public class HttpForwardActionResult {
         return httpResponse;
     }
 
-    Function<HttpResponse, HttpResponse> getOverrideHttpResponse() {
-        return overrideHttpResponse;
+    public HttpForwardActionResult setHttpResponse(CompletableFuture<HttpResponse> httpResponse) {
+        this.httpResponse = httpResponse;
+        return this;
     }
 
     public InetSocketAddress getRemoteAddress() {

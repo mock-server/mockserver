@@ -6,9 +6,11 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.action.HttpForwardActionResult;
 import org.mockserver.model.Delay;
+import org.mockserver.model.HttpResponse;
 import org.slf4j.event.Level;
 
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockserver.log.model.LogEntry.LogMessageType.WARN;
@@ -63,6 +65,20 @@ public class Scheduler {
     private void run(Runnable command) {
         try {
             command.run();
+        } catch (Throwable throwable) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(WARN)
+                    .setLogLevel(Level.INFO)
+                    .setMessageFormat(throwable.getMessage())
+                    .setThrowable(throwable)
+            );
+        }
+    }
+
+    private <T> void run(T input, Consumer<T> command) {
+        try {
+            command.accept(input);
         } catch (Throwable throwable) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -133,6 +149,22 @@ public class Scheduler {
                 run(command);
             } else {
                 future.getHttpResponse().whenCompleteAsync((httpResponse, throwable) -> command.run(), scheduler);
+            }
+        }
+    }
+
+    public void submit(HttpForwardActionResult future, Consumer<HttpResponse> consumer, boolean synchronous) {
+        if (future != null) {
+            if (synchronous) {
+                try {
+                    run(future.getHttpResponse().get(ConfigurationProperties.maxSocketTimeout(), MILLISECONDS), consumer);
+                } catch (TimeoutException e) {
+                    future.getHttpResponse().completeExceptionally(new SocketCommunicationException("Response was not received after " + ConfigurationProperties.maxSocketTimeout() + " milliseconds, to make the proxy wait longer please use \"mockserver.maxSocketTimeout\" system property or ConfigurationProperties.maxSocketTimeout(long milliseconds)", e.getCause()));
+                } catch (InterruptedException | ExecutionException ex) {
+                    future.getHttpResponse().completeExceptionally(ex);
+                }
+            } else {
+                future.getHttpResponse().whenCompleteAsync((httpResponse, throwable) -> consumer.accept(httpResponse), scheduler);
             }
         }
     }

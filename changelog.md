@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fixed bug with keystore type configuration not being used in all places
 - added file locking and jvm locking for expectation persistence file to avoid file corruption
 - fixed verification incorrectly matching verifier non-empty bodies against empty request bodies
+- stopped response callbacks for proxied requests blocking threads
 
 ### Security
 - updated tomcat (used in integration tests) to version without vulnerabilities
