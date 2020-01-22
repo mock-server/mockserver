@@ -49,7 +49,7 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
             );
 
             savePEMToFile(x509AndPrivateKey.getCert(), "CertificateAuthorityCertificate.pem", false, "X509 key");
-            savePEMToFile(x509AndPrivateKey.getPrivateKey(), "PKCS#8CertificateAuthorityPrivateKey.pem", false, "private key");
+            savePEMToFile(x509AndPrivateKey.getPrivateKey(), "PKCS8CertificateAuthorityPrivateKey.pem", false, "private key");
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()

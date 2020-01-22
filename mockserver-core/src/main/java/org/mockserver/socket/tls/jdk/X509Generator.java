@@ -198,8 +198,8 @@ public class X509Generator {
         if (pem.contains(BEGIN_RSA_PRIVATE_KEY) || pem.contains(END_RSA_PRIVATE_KEY)) {
             new MockServerLogger().logEvent(
                 new LogEntry()
-                    .setType(LogEntry.LogMessageType.EXCEPTION)
-                    .setLogLevel(Level.ERROR)
+                    .setType(LogEntry.LogMessageType.WARN)
+                    .setLogLevel(Level.WARN)
                     .setMessageFormat("Private key provided in unsupported PKCS#1 only PKCS#8 format is support, to convert use openssl, for example{}")
                     .setArguments("openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt")
             );

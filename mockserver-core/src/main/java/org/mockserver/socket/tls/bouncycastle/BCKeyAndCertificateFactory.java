@@ -63,7 +63,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
             KeyPair caKeyPair = generateKeyPair(ROOT_KEYSIZE);
 
             saveAsPEMFile(createCACert(caKeyPair.getPublic(), caKeyPair.getPrivate()), "CertificateAuthorityCertificate.pem", false, "X509 key");
-            saveAsPEMFile(caKeyPair.getPrivate(), "PKCS#1CertificateAuthorityPrivateKey.pem", false, "private key");
+            saveAsPEMFile(caKeyPair.getPrivate(), "PKCS1CertificateAuthorityPrivateKey.pem", false, "private key");
         } catch (Exception e) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -122,7 +122,7 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
             try {
                 caPrivateKey = privateKeyFromPEMFile(ConfigurationProperties.certificateAuthorityPrivateKey());
             } catch (Throwable throwable) {
-                caPrivateKey = privateKeyFromPEMFile(ConfigurationProperties.certificateAuthorityPrivateKey().replaceAll("PKCS#8", "PKCS#1"));
+                caPrivateKey = privateKeyFromPEMFile(ConfigurationProperties.certificateAuthorityPrivateKey().replaceAll("PKCS8", "PKCS1"));
             }
             X509Certificate caCert = certificateAuthorityX509Certificate();
 
