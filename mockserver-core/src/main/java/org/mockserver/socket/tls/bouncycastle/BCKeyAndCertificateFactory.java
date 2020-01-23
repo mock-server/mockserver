@@ -46,8 +46,8 @@ public class BCKeyAndCertificateFactory implements KeyAndCertificateFactory {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    private static String mockServerCertificatePEMFile;
-    private static String mockServerPrivateKeyPEMFile;
+    private String mockServerCertificatePEMFile;
+    private String mockServerPrivateKeyPEMFile;
 
     public BCKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;

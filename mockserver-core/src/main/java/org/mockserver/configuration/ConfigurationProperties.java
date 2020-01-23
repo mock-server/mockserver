@@ -467,7 +467,8 @@ public class ConfigurationProperties {
     }
 
     /**
-     * Override the default certificate authority private key
+     * Override the default certificate authority private key, key must be in PKCS#8 format PEM file
+     * To convert a PKCS#1 (i.e. default for Bouncy Castle) to a PKCS#8 the following command can be used: openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt
      *
      * @param certificateAuthorityPrivateKey location of the PEM file containing the certificate authority private key
      */

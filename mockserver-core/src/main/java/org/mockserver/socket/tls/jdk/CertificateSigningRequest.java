@@ -30,7 +30,7 @@ public class CertificateSigningRequest {
     private Long validityInMillis = DAYS.toMillis(DEFAULT_VALIDITY);
 
     static String buildDistinguishedName(String commonName) {
-        return format("CN=%s, O=%s, L=%s, ST=%s, C=%s", commonName, ORGANISATION, LOCALITY, STATE, COUNTRY);
+        return format("C=%s, ST=%s, L=%s, O=%s, CN=%s", COUNTRY, STATE, LOCALITY, ORGANISATION, commonName);
     }
 
     public String getCommonName() {

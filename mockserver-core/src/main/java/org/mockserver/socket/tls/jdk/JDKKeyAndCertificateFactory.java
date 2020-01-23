@@ -29,8 +29,8 @@ public class JDKKeyAndCertificateFactory implements KeyAndCertificateFactory {
     private final MockServerLogger mockServerLogger;
     private final X509Generator x509Generator;
 
-    private static String mockServerCertificatePEMFile;
-    private static String mockServerPrivateKeyPEMFile;
+    private String mockServerCertificatePEMFile;
+    private String mockServerPrivateKeyPEMFile;
 
     public JDKKeyAndCertificateFactory(MockServerLogger mockServerLogger) {
         this.mockServerLogger = mockServerLogger;

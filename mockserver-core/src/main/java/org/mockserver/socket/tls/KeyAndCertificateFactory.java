@@ -1,8 +1,10 @@
 package org.mockserver.socket.tls;
 
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.socket.tls.bouncycastle.BCKeyAndCertificateFactory;
+import org.mockserver.socket.tls.jdk.JDKKeyAndCertificateFactory;
 
+import java.io.File;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Date;
@@ -51,7 +53,10 @@ public interface KeyAndCertificateFactory {
     X509Certificate certificateAuthorityX509Certificate();
 
     static void main(String[] args) {
-        new BCKeyAndCertificateFactory(new MockServerLogger()).buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
+        String workingDirectory = new File(".").getAbsolutePath();
+        ConfigurationProperties.directoryToSaveDynamicSSLCertificate(workingDirectory);
+        new JDKKeyAndCertificateFactory(new MockServerLogger()).buildAndSaveCertificateAuthorityPrivateKeyAndX509Certificate();
+        System.out.println("saved files to:" + workingDirectory);
     }
 
 }

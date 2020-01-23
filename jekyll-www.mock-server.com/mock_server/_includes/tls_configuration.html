@@ -137,7 +137,8 @@
 
 <button id="button_configuration_tls_certificate_authority_private_key" class="accordion title"><strong>TLS Certificate Authority Private Key</strong></button>
 <div class="panel title">
-    <p>Location of custom file for Certificate Authority for TLS, the private key must be a PEM file and must match the <strong>TLS Certificate Authority X509 Certificate</strong>.</p>
+    <p>Location of custom file for Certificate Authority for TLS, the private key must be a PKCS#8 PEM file and must match the <strong>TLS Certificate Authority X509 Certificate</strong>.</p>
+    <p>To convert a PKCS#1 PEM file (i.e. default for Bouncy Castle) to a PKCS#8 PEM file the following command can be used: <code class="code">openssl pkcs8 -topk8 -inform PEM -in private_key_PKCS_1.pem -out private_key_PKCS_8.pem -nocrypt</code></p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.certificateAuthorityPrivateKey(String certificateAuthorityPrivateKey)</code></pre>
