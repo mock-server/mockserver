@@ -7,7 +7,6 @@ import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import io.netty.util.NettyRuntime;
 import io.netty.util.internal.SystemPropertyUtil;
-import org.bouncycastle.util.IPAddress;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyStoreFactory;
@@ -373,10 +372,11 @@ public class ConfigurationProperties {
         rebuildServerKeyStore(true);
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     public static void addSubjectAlternativeName(String host) {
         if (host != null) {
             String hostWithoutPort = substringBefore(host, ":");
-            if (IPAddress.isValid(hostWithoutPort)) {
+            if (InetAddresses.isInetAddress(hostWithoutPort)) {
                 addSslSubjectAlternativeNameIps(hostWithoutPort);
             } else {
                 addSslSubjectAlternativeNameDomains(hostWithoutPort);

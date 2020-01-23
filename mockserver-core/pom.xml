@@ -70,16 +70,6 @@
             <artifactId>jzlib</artifactId>
         </dependency>
 
-        <!-- SSL X509 -->
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk15on</artifactId>
-        </dependency>
-
         <!-- templating -->
         <dependency>
             <groupId>org.apache.velocity</groupId>
