@@ -112,7 +112,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             <li>a <strong><a href="#button_javascript_templated_response">javascript template</a></strong></li>
             <li>a <strong><a href="#button_javascript_velocity_templated_response">velocity template</a></strong></li>
             <li>a <strong><a href="#button_response_class_callback">class callback</a></strong> (must be present in classpath)</li>
-            <li>a <strong><a href="#button_response_method_or_closure_callback">object or closure callback</a></strong> (via WebSocket)</li>
+            <li>a <strong><a href="#button_response_method_or_closure_callback">method / closure callback</a></strong> (via WebSocket)</li>
         </ul></li>
     <li><strong><a href="#forward_action">forward</a></strong> - forwards modified requests and returns modified response by using
         <ul>
@@ -121,7 +121,7 @@ mockServerClient("localhost", 1080).mockAnyResponse({
             <li>a <strong><a href="#button_javascript_templated_forward">javascript template (request only)</a></strong></li>
             <li>a <strong><a href="#button_javascript_velocity_templated_forward">velocity template (request only)</a></strong></li>
             <li>a <strong><a href="#button_forward_class_callback">class callback for request and / or response</a></strong> (must be present in classpath)</li>
-            <li>a <strong><a href="#button_forward_method_or_closure_callback">object or closure callback for request and / or response</a></strong> (via WebSocket)</li>
+            <li>a <strong><a href="#button_forward_method_or_closure_callback">method / closure callback for request and / or response</a></strong> (via WebSocket)</li>
         </ul></li>
     <li><strong><a href="#error_action">error</a></strong> - returns an invalid response as a sequence of bytes or closes the connection</li>
 </ul>

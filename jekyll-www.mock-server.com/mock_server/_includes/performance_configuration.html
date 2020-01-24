@@ -35,7 +35,7 @@
         <li>serialising and writing expectation or proxied responses</li>
         <li>handling response delays in a non-blocking way (i.e. using a scheduler)</li>
         <li>executing class callbacks</li>
-        <li>handling object callbacks (using web sockets)</li>
+        <li>handling method / closure callbacks (using web sockets)</li>
     </ul>
     <p>Type: <span class="keyword">int</span> Default: <span class="this_value">maximum of 20 or available processors count</span></p>
     <p>Java Code:</p>
@@ -52,8 +52,8 @@
 
 <button id="button_configuration_web_socket_event_loop_thread_count" class="accordion title"><strong>Number of Web Socket Client Event Loop Threads</strong></button>
 <div class="panel title">
-    <p>Number of threads for each expectation with an object callback (i.e. web socket client) in the <strong>org.mockserver.client.MockServerClient</strong></p>
-    <p>This setting only effects the Java client and how many object callbacks it can handle</p>
+    <p>Number of threads for each expectation with a method / closure callback (i.e. web socket client) in the <strong>org.mockserver.client.MockServerClient</strong></p>
+    <p>This setting only effects the Java client and how requests each method / closure callbacks it can handle, the default is 5 which should be suitable except in extreme cases.</p>
     <p>Type: <span class="keyword">int</span> Default: <span class="this_value">5</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.webSocketClientEventLoopThreadCount(int count)</code></pre>

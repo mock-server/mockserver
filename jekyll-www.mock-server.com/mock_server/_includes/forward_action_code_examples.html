@@ -799,6 +799,8 @@ mockServerClient("localhost", 1080).mockAnyResponse({
                     .withBody("a_callback_request")
     );</code></pre>
     </div>
+    <p>When using <span class="inline_code">org.mockserver.client.MockServerClient</span> each method / closure callback has a separate web socket client.  To ensure the number of total threads does not grow too large for large numbers of method / closure callback expectations the default event loop thread pool for the web socket client is kept fairly low.  However, if an extremely large load is matched against a single method / closure callback expectation the event loop thread pool may not be large enough for its web socket client.</p>
+    <p>The number of threads for the event loop thread pool for each web socket client (i.e. for each expectation with a method / closure callback) <a href="/mock_server/configuration_properties.html#button_configuration_web_socket_event_loop_thread_count">can be configured and is described in the configuration section</a>.</p>
 </div>
 <button id="button_forward_method_or_closure_callback_with_resp" class="accordion">method / closure callback to override request & response</button>
 <div class="panel">
@@ -860,4 +862,6 @@ mockServerClient("localhost", 1080).mockAnyResponse({
                 .withBody("some_overridden_response_body")
     );</code></pre>
     </div>
+    <p>When using <span class="inline_code">org.mockserver.client.MockServerClient</span> each method / closure callback has a separate web socket client.  To ensure the number of total threads does not grow too large for large numbers of method / closure callback expectations the default event loop thread pool for the web socket client is kept fairly low.  However, if an extremely large load is matched against a single method / closure callback expectation the event loop thread pool may not be large enough for its web socket client.</p>
+    <p>The number of threads for the event loop thread pool for each web socket client (i.e. for each expectation with a method / closure callback) <a href="/mock_server/configuration_properties.html#button_configuration_web_socket_event_loop_thread_count">can be configured and is described in the configuration section</a>.</p>
 </div>

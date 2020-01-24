@@ -566,6 +566,72 @@ mockServerClient("localhost", 1080).mockAnyResponse({
         <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_response_literal_with_connection_options_to_close_socket_after_delay" class="accordion">literal response with connection options to close socket after a delay</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .respond(
+        response()
+            .withBody("some_response_body")
+            .withConnectionOptions(
+                connectionOptions()
+                    .withCloseSocket(true)
+                    .withCloseSocketDelay(new Delay(MILLISECONDS, 500))
+            )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest" : {
+        "path" : "/some/path"
+    },
+    "httpResponse" : {
+        "body" : "some_response_body",
+        "connectionOptions" : {
+            "closeSocket" : true,
+            "closeSocketDelay" : {
+                "timeUnit" : "MILLISECONDS",
+                "value" : 500
+            }
+        }
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest" : {
+        "path" : "/some/path"
+    },
+    "httpResponse" : {
+        "body" : "some_response_body",
+        "connectionOptions" : {
+            "closeSocket" : true,
+            "closeSocketDelay" : {
+                "timeUnit" : "MILLISECONDS",
+                "value" : 500
+            }
+        }
+    }
+}'</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.8.x#/expectation/put_expectation" target="_blank">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_javascript_templated_response" class="accordion">javascript templated response</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
@@ -964,13 +1030,14 @@ mockServerClient("localhost", 1080)
         }
     );</code></pre>
     </div>
+    <p>When using <span class="inline_code">org.mockserver.client.MockServerClient</span> each method / closure callback has a separate web socket client.  To ensure the number of total threads does not grow too large for large numbers of method / closure callback expectations the default event loop thread pool for the web socket client is kept fairly low.  However, if an extremely large load is matched against a single method / closure callback expectation the event loop thread pool may not be large enough for its web socket client.</p>
+    <p>The number of threads for the event loop thread pool for each web socket client (i.e. for each expectation with a method / closure callback) <a href="/mock_server/configuration_properties.html#button_configuration_web_socket_event_loop_thread_count">can be configured and is described in the configuration section</a>.</p>
 </div>
-<button id="button_response_create_expecation_within_closure_callback" class="accordion">create expectation within closure callback</button>
+<button id="button_response_create_expecation_within_closure_callback" class="accordion">create expectation within method / closure callback</button>
 <div class="panel">
     <button class="accordion inner">Java 7</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
-mockServerClient
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .when(
         request()
             .withPath("/some/path")
@@ -1001,8 +1068,7 @@ mockServerClient
     </div>
     <button class="accordion inner">Java 8+</button>
     <div class="panel">
-        <pre class="prettyprint lang-java code"><code class="code">MockServerClient mockServerClient = new MockServerClient("localhost", 1080);
-mockServerClient
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
     .when(
         request()
             .withPath("/some/path")
@@ -1076,4 +1142,6 @@ mockServerClient("localhost", 1080)
         }
     );</code></pre>
     </div>
+    <p>When using <span class="inline_code">org.mockserver.client.MockServerClient</span> each method / closure callback has a separate web socket client.  To ensure the number of total threads does not grow too large for large numbers of method / closure callback expectations the default event loop thread pool for the web socket client is kept fairly low.  However, if an extremely large load is matched against a single method / closure callback expectation the event loop thread pool may not be large enough for its web socket client.</p>
+    <p>The number of threads for the event loop thread pool for each web socket client (i.e. for each expectation with a method / closure callback) <a href="/mock_server/configuration_properties.html#button_configuration_web_socket_event_loop_thread_count">can be configured and is described in the configuration section</a>.</p>
 </div>
