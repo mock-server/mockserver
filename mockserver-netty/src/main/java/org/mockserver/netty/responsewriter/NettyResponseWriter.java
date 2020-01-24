@@ -6,6 +6,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.cors.CORSHeaders;
+import org.mockserver.log.model.LogEntry;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.ConnectionOptions;
 import org.mockserver.model.Delay;
 import org.mockserver.model.HttpRequest;
@@ -20,17 +22,21 @@ import static org.mockserver.mock.HttpStateHandler.PATH_PREFIX;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
+import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
  */
 public class NettyResponseWriter extends ResponseWriter {
 
+    private final MockServerLogger mockServerLogger;
     private final ChannelHandlerContext ctx;
     private final Scheduler scheduler;
     private static final CORSHeaders CORS_HEADERS = new CORSHeaders();
 
-    public NettyResponseWriter(ChannelHandlerContext ctx, Scheduler scheduler) {
+    public NettyResponseWriter(MockServerLogger mockServerLogger, ChannelHandlerContext ctx, Scheduler scheduler) {
+        this.mockServerLogger = mockServerLogger;
         this.ctx = ctx;
         this.scheduler = scheduler;
     }
@@ -88,12 +94,50 @@ public class NettyResponseWriter extends ResponseWriter {
             channelFuture.addListener((ChannelFutureListener) future -> {
                 Delay closeSocketDelay = connectionOptions != null ? connectionOptions.getCloseSocketDelay() : null;
                 if (closeSocketDelay == null) {
-                    future.channel().close();
+                    disconnectAndCloseChannel(future);
                 } else {
-                    scheduler.schedule(() -> future.channel().close(), false, closeSocketDelay);
+                    scheduler.schedule(() -> disconnectAndCloseChannel(future), false, closeSocketDelay);
                 }
             });
         }
+    }
+
+    private void disconnectAndCloseChannel(ChannelFuture future) {
+        future
+            .channel()
+            .disconnect()
+            .addListener(disconnectFuture -> {
+                    if (disconnectFuture.isSuccess()) {
+                        future
+                            .channel()
+                            .close()
+                            .addListener(closeFuture -> {
+                                if (disconnectFuture.isSuccess()) {
+                                    mockServerLogger
+                                        .logEvent(new LogEntry()
+                                            .setType(LogEntry.LogMessageType.DEBUG)
+                                            .setLogLevel(DEBUG)
+                                            .setMessageFormat("disconnected and closed socket " + future.channel().localAddress())
+                                        );
+                                } else {
+                                    mockServerLogger
+                                        .logEvent(new LogEntry()
+                                            .setType(LogEntry.LogMessageType.WARN)
+                                            .setLogLevel(WARN)
+                                            .setMessageFormat("exception closing socket " + future.channel().localAddress())
+                                            .setThrowable(disconnectFuture.cause()));
+                                }
+                            });
+                    } else {
+                        mockServerLogger
+                            .logEvent(new LogEntry()
+                                .setType(LogEntry.LogMessageType.WARN)
+                                .setLogLevel(WARN)
+                                .setMessageFormat("exception disconnecting socket " + future.channel().localAddress())
+                                .setThrowable(disconnectFuture.cause()));
+                    }
+                }
+            );
     }
 
 }

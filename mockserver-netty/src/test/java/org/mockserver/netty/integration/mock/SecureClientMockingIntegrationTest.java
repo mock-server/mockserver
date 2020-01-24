@@ -5,13 +5,14 @@ import org.junit.BeforeClass;
 import org.mockserver.cli.Main;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.socket.PortFactory;
+import org.mockserver.testing.integration.mock.AbstractExtendedSameJVMMockingIntegrationTest;
 
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * @author jamesdbloom
  */
-public class SecureClientMockingIntegrationTest extends AbstractExtendedNettyMockingIntegrationTest {
+public class SecureClientMockingIntegrationTest extends AbstractExtendedSameJVMMockingIntegrationTest {
 
     private static final int severHttpPort = PortFactory.findFreePort();
 

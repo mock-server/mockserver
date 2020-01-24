@@ -3,14 +3,14 @@ package org.mockserver.netty.integration.mock;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
-import org.mockserver.testing.integration.mock.AbstractExtendedSameJVMMockingIntegrationTest;
-import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.MatcherBuilder;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.model.*;
 import org.mockserver.socket.PortFactory;
 import org.mockserver.streams.IOStreamUtils;
+import org.mockserver.testing.integration.mock.AbstractExtendedSameJVMMockingIntegrationTest;
+import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
 import org.mockserver.verify.VerificationTimes;
 
 import javax.net.ssl.SSLSocket;
