@@ -3,7 +3,7 @@ servers:
   - url: 'http://localhost:1080/'
   - url: 'https://localhost:1080/'
 info:
-  title: Mock Server API
+  title: MockServer API
   version: "5.8.x"
   description: >-
     MockServer enables easy mocking of any system you integrate with via HTTP or HTTPS with clients written in Java, JavaScript and Ruby and a simple REST API (as shown below).
