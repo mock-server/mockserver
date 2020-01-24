@@ -247,8 +247,8 @@ public class MockServerClient implements Stoppable {
             MOCK_SERVER_LOGGER.logEvent(
                 new LogEntry()
                     .setType(LogEntry.LogMessageType.TRACE)
-                    .setLogLevel(DEBUG)
-                    .setMessageFormat("exception while checking if MockServer is running - " + sce.getMessage())
+                    .setLogLevel(TRACE)
+                    .setMessageFormat("exception while checking if MockServer is running - " + sce.getMessage() + " if MockServer was stopped this exception is expected")
                     .setThrowable(sce)
             );
             return false;
